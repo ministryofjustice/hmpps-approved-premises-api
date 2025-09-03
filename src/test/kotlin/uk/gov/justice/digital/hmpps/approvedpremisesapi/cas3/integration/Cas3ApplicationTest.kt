@@ -1209,6 +1209,129 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
+    @Test
+    fun `Submit Temporary Accommodation application with out of region fields returns 200 and persists out of region data`() {
+      givenAUser { submittingUser, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val applicationId = UUID.randomUUID()
+          val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+
+          val mainProbationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(submittingUser.probationRegion)
+            withName("Main PDU")
+          }
+
+          val outOfRegionProbationRegion = givenAProbationRegion(name = "Out Of Region Probation Region")
+
+          val outOfRegionProbationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(outOfRegionProbationRegion)
+            withName("Out Of Region PDU")
+          }
+
+          temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withCreatedByUser(submittingUser)
+            withProbationRegion(submittingUser.probationRegion)
+            withName(offenderName)
+            withData(
+              """
+                {}
+              """,
+            )
+          }
+
+          val cas3SubmitApplication = Cas3SubmitApplication(
+            translatedDocument = {},
+            arrivalDate = LocalDate.now(),
+            summaryData = object {
+              val num = 50
+              val text = "Out of region test!"
+            },
+            probationDeliveryUnitId = mainProbationDeliveryUnit.id,
+            outOfRegionProbationRegionId = outOfRegionProbationRegion.id,
+            outOfRegionPduId = outOfRegionProbationDeliveryUnit.id,
+          )
+
+          callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+            .expectStatus()
+            .isOk
+
+          val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
+          val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
+
+          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Out of region test!\"}")
+          assertThat(persistedApplication.name).isEqualTo(offenderName)
+
+          assertThat(persistedApplication.probationRegion.id).isEqualTo(submittingUser.probationRegion.id)
+          assertThat(persistedApplication.probationDeliveryUnit!!.id).isEqualTo(mainProbationDeliveryUnit.id)
+
+          assertThat(persistedApplication.outOfRegionProbationRegion).isNotNull
+          assertThat(persistedApplication.outOfRegionProbationRegion!!.id).isEqualTo(outOfRegionProbationRegion.id)
+          assertThat(persistedApplication.outOfRegionProbationRegion!!.name).isEqualTo("Out Of Region Probation Region")
+
+          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit).isNotNull
+          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit!!.id).isEqualTo(outOfRegionProbationDeliveryUnit.id)
+          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit!!.name).isEqualTo("Out Of Region PDU")
+          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit!!.probationRegion.id).isEqualTo(outOfRegionProbationRegion.id)
+        }
+      }
+    }
+
+    @Test
+    fun `Submit Temporary Accommodation application without out of region fields returns 200 and persists null out of region data`() {
+      givenAUser { submittingUser, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val applicationId = UUID.randomUUID()
+          val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(submittingUser.probationRegion)
+            withName("Main PDU")
+          }
+
+          temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withCreatedByUser(submittingUser)
+            withProbationRegion(submittingUser.probationRegion)
+            withName(offenderName)
+            withData(
+              """
+                {}
+              """,
+            )
+          }
+
+          val cas3SubmitApplication = Cas3SubmitApplication(
+            translatedDocument = {},
+            arrivalDate = LocalDate.now(),
+            summaryData = object {
+              val num = 42
+              val text = "Not out of region test!"
+            },
+            probationDeliveryUnitId = probationDeliveryUnit.id,
+          )
+
+          callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+            .expectStatus()
+            .isOk
+
+          val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
+          val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
+
+          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":42,\"text\":\"Not out of region test!\"}")
+          assertThat(persistedApplication.name).isEqualTo(offenderName)
+
+          assertThat(persistedApplication.probationRegion.id).isEqualTo(submittingUser.probationRegion.id)
+          assertThat(persistedApplication.probationDeliveryUnit!!.id).isEqualTo(probationDeliveryUnit.id)
+
+          assertThat(persistedApplication.outOfRegionProbationRegion).isNull()
+          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit).isNull()
+        }
+      }
+    }
+
     private fun callCasApiAndAssertApiResponse(jwt: String, applicationId: UUID, submitApplication: SubmitTemporaryAccommodationApplication) = webTestClient.post()
       .uri("/applications/$applicationId/submission")
       .header("Authorization", "Bearer $jwt")

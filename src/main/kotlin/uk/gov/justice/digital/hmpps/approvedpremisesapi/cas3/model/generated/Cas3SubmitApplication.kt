@@ -81,4 +81,9 @@ data class Cas3SubmitApplication(
 
   @Schema(example = "null", description = "Any object")
   @get:JsonProperty("translatedDocument") val translatedDocument: Any? = null,
+
+  val outOfRegionPduId: UUID? = null,
+
+  val outOfRegionProbationRegionId: UUID? = null,
+
 )

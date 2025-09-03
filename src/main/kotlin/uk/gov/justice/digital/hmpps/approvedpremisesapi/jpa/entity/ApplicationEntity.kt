@@ -525,6 +525,12 @@ class TemporaryAccommodationApplicationEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "out_of_region_probation_region_id")
+  var outOfRegionProbationRegion: ProbationRegionEntity?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "out_of_region_probation_delivery_unit_id")
+  var outOfRegionProbationDeliveryUnit: ProbationDeliveryUnitEntity?,
 ) : ApplicationEntity(
   id,
   crn,

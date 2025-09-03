@@ -55,6 +55,9 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var dutyToReferOutcome: Yielded<String?> = { null }
   private var prisonReleaseTypes: Yielded<String?> = { null }
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity?> = { null }
+  private var outOfRegionProbationRegion: Yielded<ProbationRegionEntity?> = { null }
+  private var outOfRegionProbationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity?> = { null }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -203,6 +206,14 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.probationDeliveryUnit = { probationDeliveryUnit }
   }
 
+  fun withOutOfRegionProbationRegion(probationRegion: ProbationRegionEntity?) = apply {
+    this.outOfRegionProbationRegion = { probationRegion }
+  }
+
+  fun withoutOfRegionProbationDeliveryUnit(outOfRegionProbationDeliveryUnit: ProbationDeliveryUnitEntity?) = apply {
+    this.outOfRegionProbationDeliveryUnit = { outOfRegionProbationDeliveryUnit }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -237,6 +248,8 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     name = this.name(),
     prisonReleaseTypes = this.prisonReleaseTypes(),
     probationDeliveryUnit = this.probationDeliveryUnit(),
+    outOfRegionProbationRegion = this.outOfRegionProbationRegion(),
+    outOfRegionProbationDeliveryUnit = this.outOfRegionProbationDeliveryUnit(),
   )
 
   fun withDefaults() = TemporaryAccommodationApplicationEntityFactory()

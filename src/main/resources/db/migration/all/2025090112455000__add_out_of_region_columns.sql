@@ -1,0 +1,7 @@
+
+ALTER TABLE temporary_accommodation_applications ADD COLUMN out_of_region_probation_region_id UUID NULL;
+ALTER TABLE temporary_accommodation_applications ADD FOREIGN KEY (out_of_region_probation_region_id) REFERENCES probation_regions(id);
+
+
+ALTER TABLE temporary_accommodation_applications ADD COLUMN out_of_region_probation_delivery_unit_id UUID NULL;
+ALTER TABLE temporary_accommodation_applications ADD FOREIGN KEY (out_of_region_probation_delivery_unit_id) REFERENCES probation_delivery_units(id);
