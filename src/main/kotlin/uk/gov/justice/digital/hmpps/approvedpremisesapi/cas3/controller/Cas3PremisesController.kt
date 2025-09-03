@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Departure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewDeparture
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSortBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
