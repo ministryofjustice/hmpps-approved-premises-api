@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -47,7 +48,7 @@ class Cas2v2ApplicationService(
   private val cas2LockableApplicationRepository: Cas2LockableApplicationRepository,
   private val cas2ApplicationSummaryRepository: ApplicationSummaryRepository,
   private val cas2v2OffenderService: Cas2v2OffenderService,
-  private val cas2v2UserAccessService: Cas2v2UserAccessService,
+  private val cas2UserAccessService: Cas2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
@@ -122,7 +123,7 @@ class Cas2v2ApplicationService(
       return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
     }
 
-    val canAccess = cas2v2UserAccessService.userCanViewCas2v2Application(user, applicationEntity)
+    val canAccess = cas2UserAccessService.userCanViewApplication(user, applicationEntity)
 
     return if (canAccess) {
       CasResult.Success(applicationEntity)
