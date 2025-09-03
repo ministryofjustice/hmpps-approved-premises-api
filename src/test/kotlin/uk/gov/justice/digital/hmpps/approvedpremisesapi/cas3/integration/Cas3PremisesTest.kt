@@ -4293,6 +4293,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
             .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
+            .jsonPath("$.items[0].date").isEqualTo(futureDepartureDate)
         }
       }
     }
@@ -4330,6 +4331,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
             .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
+            .jsonPath("$.items[0].date").isEqualTo(futureDepartureDate)
         }
       }
     }
@@ -4369,6 +4371,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
             .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
+            .jsonPath("$.items[0].date").isEqualTo(futureDepartureDate)
         }
       }
     }
@@ -4402,6 +4405,52 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
             .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
+            .jsonPath("$.items[0].date").isEqualTo(futureEndDate)
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive premises returns 200 when there are booking and void after 3 months will return the bedspace with the latest blocking date`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremisesWithRoomsAndBeds(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, rooms, beds ->
+          val bed = beds.first()
+          val futureVoidEndDate = LocalDate.now().plusMonths(4)
+          val latestBlockingDate = futureVoidEndDate.plusWeeks(1)
+
+          bookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn("CRN123")
+            withYieldedPremises { premises }
+            withYieldedBed { bed }
+            withStatus(BookingStatus.provisional)
+            withArrivalDate(LocalDate.now().minusDays(1))
+            withDepartureDate(latestBlockingDate)
+          }
+
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBed(bed)
+            withPremises(premises)
+            withStartDate(LocalDate.now().plusDays(1))
+            withEndDate(futureVoidEndDate)
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+
+          webTestClient.get()
+            .uri("/cas3/premises/${premises.id}/can-archive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.items").isArray
+            .jsonPath("$.items.length()").isEqualTo(1)
+            .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
+            .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
+            .jsonPath("$.items[0].date").isEqualTo(latestBlockingDate)
         }
       }
     }
@@ -4510,8 +4559,10 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items.length()").isEqualTo(2)
             .jsonPath("$.items[0].entityId").isEqualTo(bed1.id.toString())
             .jsonPath("$.items[0].entityReference").isEqualTo(bed1.room.name)
+            .jsonPath("$.items[0].date").isEqualTo(futureDepartureDate)
             .jsonPath("$.items[1].entityId").isEqualTo(bed2.id.toString())
             .jsonPath("$.items[1].entityReference").isEqualTo(bed2.room.name)
+            .jsonPath("$.items[1].date").isEqualTo(futureVoidEndDate)
         }
       }
     }
@@ -4650,6 +4701,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
             .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
+            .jsonPath("$.items[0].date").isEqualTo(justUnder3Months.plusDays(3))
         }
       }
     }
