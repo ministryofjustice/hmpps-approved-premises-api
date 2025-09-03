@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchivePremises
@@ -170,7 +169,7 @@ class Cas3PremisesController(
 
     val result = Cas3PremisesBedspaceTotals(
       id = premises.id,
-      status = if (premises.status == PropertyStatus.active) Cas3PremisesStatus.online else Cas3PremisesStatus.archived,
+      status = if (premises.isPremisesArchived()) Cas3PremisesStatus.archived else Cas3PremisesStatus.online,
       premisesEndDate = premises.endDate,
       totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
       totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,

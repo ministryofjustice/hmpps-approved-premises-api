@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Characterist
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
-import java.time.LocalDate
 
 @Component
 class Cas3PremisesTransformer(
@@ -40,9 +39,7 @@ class Cas3PremisesTransformer(
     archiveHistory = archiveHistory,
   )
 
-  private fun getPremisesStatus(premises: TemporaryAccommodationPremisesEntity) = if (premises.isPremisesArchived() ||
-    premises.startDate.isAfter(LocalDate.now())
-  ) {
+  private fun getPremisesStatus(premises: TemporaryAccommodationPremisesEntity) = if (premises.isPremisesArchived()) {
     Cas3PremisesStatus.archived
   } else {
     Cas3PremisesStatus.online
