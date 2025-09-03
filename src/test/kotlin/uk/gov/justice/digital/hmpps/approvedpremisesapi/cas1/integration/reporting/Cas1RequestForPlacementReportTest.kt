@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
@@ -194,6 +195,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(headers).contains("initial_assessor_username")
         assertThat(headers).contains("initial_assessor_name")
         assertThat(headers).contains("last_appealed_assessor_username")
+        assertThat(headers).contains("sentence_type")
+        assertThat(headers).contains("release_type")
 
         val actual = DataFrame
           .readCSV(completeCsvString.byteInputStream())
@@ -369,6 +372,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_withdrawal_date).isEqualTo("2022-01-12T10:15:00Z")
       assertThat(row.request_for_placement_withdrawal_reason).isEqualTo("duplicate_application")
       assertThat(row.crn).isEqualTo("StandardRFPNotAssessed")
+      assertThat(row.release_type).isEqualTo("notApplicable")
+      assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
 
@@ -414,6 +419,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2020-12-01T09:15:45Z")
       assertThat(row.request_for_placement_withdrawal_date).isEqualTo("2021-03-15T00:10:00Z")
       assertThat(row.request_for_placement_withdrawal_reason).isEqualTo("DUPLICATE_PLACEMENT_REQUEST")
+      assertThat(row.release_type).isEqualTo("notApplicable")
+      assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
 
@@ -514,6 +521,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(row.request_for_placement_withdrawal_reason).isNull()
       }
       assertThat(row.crn).isEqualTo("${type}PlacementAppAssessed")
+      assertThat(row.release_type).isEqualTo("awaitingSentence")
+      assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
 
@@ -570,6 +579,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_withdrawal_date).isNull()
       assertThat(row.request_for_placement_withdrawal_reason).isNull()
       assertThat(row.crn).isEqualTo("PlacementAppRejected")
+      assertThat(row.release_type).isEqualTo("awaitingSentence")
+      assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
 
@@ -656,6 +667,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     val request_for_placement_withdrawal_date: String?,
     val request_for_placement_withdrawal_reason: String?,
     val crn: String?,
+    val sentence_type: String?,
+    val release_type: String?,
   )
 
   private fun createAndSubmitApplication(
@@ -876,9 +889,9 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         placementType = placementType,
         placementDates = placementDates,
         requestedPlacementPeriods = emptyList(),
-        releaseType = ReleaseTypeOption.licence,
-        sentenceType = null,
-        situationType = null,
+        releaseType = ReleaseTypeOption.inCommunity,
+        sentenceType = SentenceTypeOption.bailPlacement,
+        situationType = SituationOption.awaitingSentence,
       ),
     )
   }

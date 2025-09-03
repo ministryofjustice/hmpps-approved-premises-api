@@ -50,6 +50,11 @@ class Cas1RequestForPlacementReportRepository(
       WHEN pr.id IS NULL THEN apa.withdrawal_reason
       ELSE pr.withdrawal_reason
     END AS request_for_placement_withdrawal_reason,
+    apa.sentence_type AS apa_sentence_type,
+    CASE 
+      WHEN apa.release_type = 'inCommunity' THEN apa.situation
+      ELSE apa.release_type
+    END AS release_type,
     raw_applications_report.*
     
   FROM placement_applications_placeholder pap
@@ -103,6 +108,11 @@ UNION ALL
     to_char(CAST(pa.decision_made_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_decision_made_date,
     to_char(withdrawn_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_withdrawal_date,
     pa.withdrawal_reason AS request_for_placement_withdrawal_reason,
+    pa.sentence_type AS apa_sentence_type,
+    CASE
+      WHEN pa.release_type = 'inCommunity' THEN pa.situation
+      ELSE pa.release_type
+    END AS release_type,
     raw_applications_report.*
     
   FROM
