@@ -6,10 +6,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 
 @Service("Cas2v2UserAccessService")
 class Cas2v2UserAccessService(
-  private val cas2v2UserService: Cas2v2UserService,
+  private val cas2UserService: Cas2UserService,
 ) {
   fun userCanViewCas2v2Application(
     user: Cas2UserEntity,
@@ -17,7 +18,7 @@ class Cas2v2UserAccessService(
   ): Boolean {
     val isPrisonBailReferral = application.applicationOrigin == ApplicationOrigin.prisonBail &&
       application.submittedAt != null &&
-      cas2v2UserService.userForRequestHasRole(
+      cas2UserService.userForRequestHasRole(
         listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
       )
 
@@ -37,7 +38,7 @@ class Cas2v2UserAccessService(
   fun userCanAddNote(user: Cas2UserEntity, application: Cas2ApplicationEntity): Boolean {
     if (
       application.applicationOrigin == ApplicationOrigin.prisonBail &&
-      cas2v2UserService.userForRequestHasRole(
+      cas2UserService.userForRequestHasRole(
         listOf(
           SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"),
         ),

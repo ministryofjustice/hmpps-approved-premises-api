@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
@@ -105,6 +107,20 @@ class Cas2UserService(
   }
 
   private fun getExistingCas2User(username: String, userType: Cas2UserType): Cas2UserEntity? = cas2UserRepository.findByUsernameAndUserType(username, userType)
+
+  fun requiresCaseLoadIdCheck(): Boolean = !userForRequestHasRole(
+    listOf(
+      SimpleGrantedAuthority("ROLE_CAS2_COURT_BAIL_REFERRER"),
+      SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"),
+    ),
+  )
+
+  fun userForRequestHasRole(grantedAuthorities: List<GrantedAuthority>): Boolean {
+    val roles = getRolesForUserForRequest()
+    return roles?.any { it in grantedAuthorities } ?: false
+  }
+
+  fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority>? = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
 
   private fun getCas2UserEntityForNomisUser(username: String, jwt: String): Cas2UserEntity {
     val nomisUserDetails: NomisUserDetail = when (

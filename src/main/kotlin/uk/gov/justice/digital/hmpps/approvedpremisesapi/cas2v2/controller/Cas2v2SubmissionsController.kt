@@ -15,10 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -36,14 +36,14 @@ class Cas2v2SubmissionsController(
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val cas2v2OffenderService: Cas2v2OffenderService,
   private val offenderService: Cas2OffenderService,
-  private val userService: Cas2v2UserService,
+  private val userService: Cas2UserService,
 ) {
 
   @GetMapping("/submissions")
   fun submissionsGet(
     @RequestParam page: Int?,
   ): ResponseEntity<List<Cas2v2SubmittedApplicationSummary>> {
-    userService.ensureUserPersisted()
+    userService.getCas2UserForRequest()
 
     val sortDirection = SortDirection.asc
     val sortBy = "submittedAt"
@@ -59,8 +59,7 @@ class Cas2v2SubmissionsController(
   fun submissionsApplicationIdGet(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<Cas2v2SubmittedApplication> {
-    userService.ensureUserPersisted()
-    val user = userService.getUserForRequest()
+    userService.getCas2UserForRequest()
 
     val applicationResult = cas2v2ApplicationService.getSubmittedCas2v2ApplicationForAssessor(applicationId)
     val application = extractEntityFromCasResult(applicationResult)
@@ -73,7 +72,7 @@ class Cas2v2SubmissionsController(
   fun submissionsPost(
     @RequestBody submitCas2v2Application: SubmitCas2v2Application,
   ): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest()
+    val user = userService.getCas2UserForRequest()
     val submitResult = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
     ensureEntityFromCasResultIsSuccess(submitResult)
 
