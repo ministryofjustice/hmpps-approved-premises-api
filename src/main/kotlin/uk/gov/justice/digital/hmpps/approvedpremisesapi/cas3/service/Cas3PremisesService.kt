@@ -584,7 +584,7 @@ class Cas3PremisesService(
 
   fun canArchivePremisesInFuture(premisesId: UUID): Cas3ValidationResults {
     val maximumPremisesArchiveDate = LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
-    val affectedBedspaces = mutableListOf<Cas3ValidationResult>()
+    var affectedBedspaces = mutableListOf<Cas3ValidationResult>()
 
     val overlapBookings = bookingRepository.findActiveOverlappingBookingByPremisesId(premisesId, LocalDate.now())
 
@@ -612,6 +612,12 @@ class Cas3PremisesService(
         ),
       )
     }
+
+    affectedBedspaces = affectedBedspaces
+      .groupBy { it.entityId }
+      .mapValues { it.value.sortedByDescending { it.date }.take(1) }
+      .map { it.value.first() }
+      .toMutableList()
 
     return Cas3ValidationResults(
       items = affectedBedspaces,
