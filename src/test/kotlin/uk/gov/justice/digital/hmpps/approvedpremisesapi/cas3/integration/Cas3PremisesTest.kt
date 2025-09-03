@@ -4292,7 +4292,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items").isArray
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
-            .jsonPath("$.items[0].entityReference").isEqualTo(bed.name)
+            .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
         }
       }
     }
@@ -4329,7 +4329,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items").isArray
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
-            .jsonPath("$.items[0].entityReference").isEqualTo(bed.name)
+            .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
         }
       }
     }
@@ -4368,7 +4368,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items").isArray
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
-            .jsonPath("$.items[0].entityReference").isEqualTo(bed.name)
+            .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
         }
       }
     }
@@ -4401,7 +4401,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items").isArray
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
-            .jsonPath("$.items[0].entityReference").isEqualTo(bed.name)
+            .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
         }
       }
     }
@@ -4509,9 +4509,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items").isArray
             .jsonPath("$.items.length()").isEqualTo(2)
             .jsonPath("$.items[0].entityId").isEqualTo(bed1.id.toString())
-            .jsonPath("$.items[0].entityReference").isEqualTo(bed1.name)
+            .jsonPath("$.items[0].entityReference").isEqualTo(bed1.room.name)
             .jsonPath("$.items[1].entityId").isEqualTo(bed2.id.toString())
-            .jsonPath("$.items[1].entityReference").isEqualTo(bed2.name)
+            .jsonPath("$.items[1].entityReference").isEqualTo(bed2.room.name)
         }
       }
     }
@@ -4649,7 +4649,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             .jsonPath("$.items").isArray
             .jsonPath("$.items.length()").isEqualTo(1)
             .jsonPath("$.items[0].entityId").isEqualTo(bed.id.toString())
-            .jsonPath("$.items[0].entityReference").isEqualTo(bed.name)
+            .jsonPath("$.items[0].entityReference").isEqualTo(bed.room.name)
         }
       }
     }

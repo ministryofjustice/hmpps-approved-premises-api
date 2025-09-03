@@ -594,7 +594,7 @@ class Cas3PremisesService(
         affectedBedspaces.add(
           Cas3ValidationResult(
             entityId = it.bed!!.id,
-            entityReference = it.bed!!.name,
+            entityReference = it.bed!!.room.name,
             date = bookingTurnaround,
           ),
         )
@@ -607,7 +607,7 @@ class Cas3PremisesService(
       affectedBedspaces.add(
         Cas3ValidationResult(
           entityId = it.bed!!.id,
-          entityReference = it.bed!!.name,
+          entityReference = it.bed!!.room.name,
           date = it.endDate,
         ),
       )
