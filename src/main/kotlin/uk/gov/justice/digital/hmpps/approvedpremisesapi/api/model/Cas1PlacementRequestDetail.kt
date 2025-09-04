@@ -13,7 +13,6 @@ data class Cas1PlacementRequestDetail(
   val location: String,
   val radius: Int,
   val essentialCriteria: List<PlacementCriteria>,
-  val desirableCriteria: List<PlacementCriteria>,
   val id: UUID,
   val person: Person,
   val risks: PersonRisks,

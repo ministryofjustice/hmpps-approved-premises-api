@@ -140,7 +140,6 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result.location).isEqualTo(transformedPlacementRequest.location)
     assertThat(result.radius).isEqualTo(transformedPlacementRequest.radius)
     assertThat(result.essentialCriteria).isEqualTo(transformedPlacementRequest.essentialCriteria)
-    assertThat(result.desirableCriteria).isEqualTo(transformedPlacementRequest.desirableCriteria)
     assertThat(result.person).isEqualTo(transformedPlacementRequest.person)
     assertThat(result.risks).isEqualTo(transformedPlacementRequest.risks)
     assertThat(result.applicationId).isEqualTo(transformedPlacementRequest.applicationId)
