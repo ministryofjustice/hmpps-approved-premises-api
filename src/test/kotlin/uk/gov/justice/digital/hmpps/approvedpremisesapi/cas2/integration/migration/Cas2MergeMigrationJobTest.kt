@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -19,7 +20,7 @@ const val NO_OF_EXTERNAL_USERS_TO_MIGRATE = 120
 const val NO_OF_CAS2V2_USERS_TO_MIGRATE = 130
 const val TOTAL_NO_OF_USERS_TO_MIGRATE = NO_OF_NOMIS_USERS_TO_MIGRATE + NO_OF_CAS2V2_USERS_TO_MIGRATE + NO_OF_EXTERNAL_USERS_TO_MIGRATE
 
-class Cas2UserMigrationJobTest : IntegrationTestBase() {
+class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var migrationJobService: MigrationJobService
@@ -28,7 +29,7 @@ class Cas2UserMigrationJobTest : IntegrationTestBase() {
   lateinit var cas2v2Users: List<Cas2v2UserEntity>
 
   @BeforeEach
-  fun setupDataRequiredForDataMigrationCas2UsersTable() {
+  fun setupData() {
     nomisUsers = generateSequence {
       nomisUserEntityFactory.produceAndPersist {
         withActiveCaseloadId(randomStringUpperCase(3))
@@ -43,19 +44,19 @@ class Cas2UserMigrationJobTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `should migrate all data required to new cas2 user table and run the job twice`() {
-    migrationJobService.runMigrationJob(MigrationJobType.migrateUsersToCas2UsersTable, 1)
+  fun `should migrate all data required to cas2`() {
+    migrationJobService.runMigrationJob(MigrationJobType.migrateDataToCas2Tables, 1)
     val migratedUsers = assertExpectedNumberOfUsersWereMigrated()
     assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers)
   }
 
   @Test
   fun `running the migration job twice does not create duplicate rows`() {
-    migrationJobService.runMigrationJob(MigrationJobType.migrateUsersToCas2UsersTable, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.migrateDataToCas2Tables, 1)
     var migratedUsers = assertExpectedNumberOfUsersWereMigrated()
     assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers)
 
-    migrationJobService.runMigrationJob(MigrationJobType.migrateUsersToCas2UsersTable, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.migrateDataToCas2Tables, 1)
     migratedUsers = assertExpectedNumberOfUsersWereMigrated()
     assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers)
   }
@@ -113,14 +114,14 @@ class Cas2UserMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2UserEntity.name).isEqualTo(externalUserEntity.name)
     assertThat(cas2UserEntity.username).isEqualTo(externalUserEntity.username)
     assertThat(cas2UserEntity.email).isEqualTo(externalUserEntity.email)
-    assertThat(cas2UserEntity.userType).isEqualTo(Cas2UserType.NOMIS)
+    assertThat(cas2UserEntity.userType).isEqualTo(Cas2UserType.EXTERNAL)
     assertThat(cas2UserEntity.nomisStaffId).isNull()
     assertThat(cas2UserEntity.activeNomisCaseloadId).isNull()
     assertThat(cas2UserEntity.deliusStaffCode).isNull()
     assertThat(cas2UserEntity.deliusTeamCodes).isNull()
     assertThat(cas2UserEntity.isEnabled).isEqualTo(externalUserEntity.isEnabled)
     assertThat(cas2UserEntity.isActive).isEqualTo(true)
-    assertThat(cas2UserEntity.externalType).isEqualTo(Cas2UserType.EXTERNAL)
+    assertThat(cas2UserEntity.externalType).isEqualTo(externalUserEntity.origin)
     assertThat(cas2UserEntity.nomisAccountType).isNull()
   }
 
@@ -129,7 +130,7 @@ class Cas2UserMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2UserEntity.name).isEqualTo(cas2v2UserEntity.name)
     assertThat(cas2UserEntity.username).isEqualTo(cas2v2UserEntity.username)
     assertThat(cas2UserEntity.email).isEqualTo(cas2v2UserEntity.email)
-    assertThat(cas2UserEntity.userType).isEqualTo(cas2v2UserEntity.userType)
+    assertThat(cas2UserEntity.userType).isEqualTo(getUserType(cas2v2UserEntity))
     assertThat(cas2UserEntity.nomisStaffId).isEqualTo(cas2v2UserEntity.nomisStaffId)
     assertThat(cas2UserEntity.activeNomisCaseloadId).isEqualTo(cas2v2UserEntity.activeNomisCaseloadId)
     assertThat(cas2UserEntity.deliusStaffCode).isEqualTo(cas2v2UserEntity.deliusStaffCode)
@@ -138,5 +139,11 @@ class Cas2UserMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2UserEntity.isActive).isEqualTo(cas2v2UserEntity.isActive)
     assertThat(cas2UserEntity.externalType).isNull()
     assertThat(cas2UserEntity.nomisAccountType).isNull()
+  }
+
+  fun getUserType(user: Cas2v2UserEntity) = when (user.userType) {
+    Cas2v2UserType.NOMIS -> Cas2UserType.NOMIS
+    Cas2v2UserType.DELIUS -> Cas2UserType.DELIUS
+    Cas2v2UserType.EXTERNAL -> Cas2UserType.EXTERNAL
   }
 }

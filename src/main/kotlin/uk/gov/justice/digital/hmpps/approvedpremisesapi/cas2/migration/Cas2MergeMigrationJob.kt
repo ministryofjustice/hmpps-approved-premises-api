@@ -16,7 +16,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Component
-class Cas2UserMigrationJob(
+class Cas2MergeMigrationJob(
   private val cas2UserRepository: Cas2UserRepository,
   private val cas2v2UserRepository: Cas2v2UserRepository,
   private val nomisUserRepository: NomisUserRepository,
@@ -27,24 +27,29 @@ class Cas2UserMigrationJob(
   override val shouldRunInTransaction: Boolean = java.lang.Boolean.FALSE
 
   override fun process(pageSize: Int) {
-    migrationLogger.info("Starting nomis migration process...")
+    migrationLogger.info("Starting cas2 merge migration process...")
+    migrateAllUsersToCas2UsersTable()
+    migrationLogger.info("Completed cas2 merge migration process...")
+  }
+
+  private fun migrateAllUsersToCas2UsersTable() {
+    migrationLogger.info("Starting users migration process...")
     val nomisIds = nomisUserRepository.findNomisUserIds()
     super.processInBatches(nomisIds, batchSize = 100) { batchIds ->
       migrateNomisUserDataToCas2UsersTable(batchIds)
     }
     migrationLogger.info("Completed nomis migration process...")
-    migrationLogger.info("Starting external migration process...")
     val externalIds = externalUserRepository.findExternalUserIds()
     super.processInBatches(externalIds, batchSize = 100) { batchIds ->
       migrateExternalUserDataToCas2UsersTable(batchIds)
     }
     migrationLogger.info("Completed external migration process...")
-    migrationLogger.info("Starting cas2v2 migration process...")
     val cas2v2Ids = cas2v2UserRepository.findCas2v2UserIds()
     super.processInBatches(cas2v2Ids, batchSize = 100) { batchIds ->
       migrateCas2v2UserDataToCas2UsersTable(batchIds)
     }
     migrationLogger.info("Completed cas2v2 migration process...")
+    migrationLogger.info("Completed users migration process...")
   }
 
   private fun migrateNomisUserDataToCas2UsersTable(nomisIds: List<UUID>) {
@@ -130,7 +135,7 @@ class Cas2UserMigrationJob(
     )
   }
 
-  fun getUserType(user: Cas2v2UserEntity) = when (user.userType) {
+  private fun getUserType(user: Cas2v2UserEntity) = when (user.userType) {
     Cas2v2UserType.NOMIS -> Cas2UserType.NOMIS
     Cas2v2UserType.DELIUS -> Cas2UserType.DELIUS
     Cas2v2UserType.EXTERNAL -> Cas2UserType.EXTERNAL
