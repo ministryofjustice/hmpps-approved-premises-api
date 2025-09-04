@@ -2321,6 +2321,38 @@ class Cas3v2BookingServiceTest {
     }
   }
 
+  @Nested
+  inner class CreateTurnaround {
+    val booking = createCas3Booking()
+
+    @Test
+    fun `createTurnaround returns FieldValidationError if the number of working days is a negative integer`() {
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
+      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
+      every { mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+
+      val result = cas3BookingService.createTurnaround(booking, -1)
+
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.workingDays", "isNotAPositiveInteger")
+    }
+
+    @Test
+    fun `createTurnaround returns Success with the persisted entity if the number of working days is a positive integer`() {
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
+      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
+      every { mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+
+      val result = cas3BookingService.createTurnaround(booking, 2)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.booking).isEqualTo(booking)
+        assertThat(it.workingDayCount).isEqualTo(2)
+      }
+    }
+  }
+
   private fun createCas3Booking(
     arrivalDate: LocalDate = LocalDate.now().randomDateBefore(14),
     departureDate: LocalDate = LocalDate.now().randomDateAfter(14),

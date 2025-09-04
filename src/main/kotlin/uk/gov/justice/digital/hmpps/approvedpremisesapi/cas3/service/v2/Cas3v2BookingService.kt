@@ -105,18 +105,13 @@ class Cas3v2BookingService(
 
     val expectedLastUnavailableDate =
       workingDayService.addWorkingDays(departureDate, premises.turnaroundWorkingDays)
-    getBookingWithConflictingDates(arrivalDate, closedDate = expectedLastUnavailableDate, bookingId = null, bedspaceId)?.let {
-      return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate()} which overlaps with the desired dates"
-    }
-
-    getVoidBedspaceWithConflictingDates(
+    throwIfBookingDatesConflict(arrivalDate, departureDate = expectedLastUnavailableDate, thisEntityId = null, bedspaceId)
+    throwIfVoidBedspaceDatesConflict(
       startDate = arrivalDate,
       endDate = expectedLastUnavailableDate,
       bookingId = null,
       bedspaceId = bedspaceId,
-    )?.let {
-      return@validatedCasResult it.id hasConflictError "A Void Bedspace already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
-    }
+    )
 
     cas3BedspaceRepository.findArchivedBedspaceByBedspaceIdAndDate(bedspaceId, departureDate)?.let {
       return@validatedCasResult it.id hasConflictError "BedSpace is archived from ${it.endDate} which overlaps with the desired dates"
@@ -422,14 +417,8 @@ class Cas3v2BookingService(
     val expectedLastUnavailableDate =
       workingDayService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
 
-    getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bedspace.id)?.let {
-      return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate()} which overlaps with the desired dates"
-    }
-
-    getVoidBedspaceWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bedspace.id)?.let {
-      return@validatedCasResult it.id hasConflictError "A Void Bedspace already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
-    }
-
+    throwIfBookingDatesConflict(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bedspace.id)
+    throwIfVoidBedspaceDatesConflict(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bedspace.id)
     if (booking.arrivalDate.isAfter(newDepartureDate)) {
       return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
     }
@@ -449,6 +438,32 @@ class Cas3v2BookingService(
     updateBooking(booking)
 
     return CasResult.Success(extensionEntity)
+  }
+
+  @Transactional
+  fun createTurnaround(
+    booking: Cas3BookingEntity,
+    workingDays: Int,
+  ) = validatedCasResult<Cas3v2TurnaroundEntity> {
+    if (workingDays < 0) {
+      "$.workingDays" hasValidationError "isNotAPositiveInteger"
+    }
+    val expectedLastUnavailableDate = workingDayService.addWorkingDays(booking.departureDate, workingDays)
+    throwIfBookingDatesConflict(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bedspace.id)
+    throwIfVoidBedspaceDatesConflict(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bedspace.id)
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+    val turnaround = cas3v2TurnaroundRepository.save(
+      Cas3v2TurnaroundEntity(
+        id = UUID.randomUUID(),
+        workingDayCount = workingDays,
+        createdAt = OffsetDateTime.now(),
+        booking = booking,
+      ),
+    )
+    return CasResult.Success(turnaround)
   }
 
   private fun findAndCloseAssessment(booking: Cas3BookingEntity, user: UserEntity) {
