@@ -57,6 +57,7 @@ class Cas2v2ApplicationService(
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
+  fun getCas2v2ApplicationsByCrn(crn: String): List<Cas2v2ApplicationEntity> = cas2v2ApplicationRepository.findAllByCrn(crn)
 
   fun getCas2v2Applications(
     prisonCode: String?,
@@ -358,7 +359,7 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("ThrowsCount")
-  private fun retrievePrisonCode(application: Cas2v2ApplicationEntity): String {
+  fun retrievePrisonCode(application: Cas2v2ApplicationEntity): String {
     val inmateDetailResult = cas2v2OffenderService.getInmateDetailByNomsNumber(
       crn = application.crn,
       nomsNumber = application.nomsNumber.toString(),

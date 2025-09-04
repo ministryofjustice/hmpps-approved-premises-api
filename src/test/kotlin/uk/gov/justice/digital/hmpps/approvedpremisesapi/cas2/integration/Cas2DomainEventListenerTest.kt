@@ -41,7 +41,7 @@ import java.util.UUID
 
 const val OCCURRING_AT = "2025-03-25T10:15:23.000+00:00"
 
-class Cas2DomainEventListenerTest : IntegrationTestBase() {
+class Cas2v2DomainEventListenerTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService

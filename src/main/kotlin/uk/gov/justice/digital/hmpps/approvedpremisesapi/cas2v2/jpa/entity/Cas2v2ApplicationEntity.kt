@@ -41,6 +41,8 @@ interface Cas2v2ApplicationRepository : JpaRepository<Cas2v2ApplicationEntity, U
       "AND a NOT IN (SELECT application FROM Cas2v2AssessmentEntity)",
   )
   fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2v2ApplicationEntity>
+
+  fun findAllByCrn(crn: String): List<Cas2v2ApplicationEntity>
 }
 
 @Repository
