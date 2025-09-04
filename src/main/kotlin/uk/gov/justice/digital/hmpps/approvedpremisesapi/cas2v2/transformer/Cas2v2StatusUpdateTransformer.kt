@@ -32,6 +32,7 @@ class Cas2v2StatusUpdateTransformer(
     label = jpa.label,
   )
 
+  // NOT UNIT TESTED
   fun transformJpaSummaryToLatestStatusUpdateApi(jpa: Cas2v2ApplicationSummaryEntity): LatestCas2v2StatusUpdate? {
     if (jpa.latestStatusUpdateStatusId !== null) {
       return LatestCas2v2StatusUpdate(

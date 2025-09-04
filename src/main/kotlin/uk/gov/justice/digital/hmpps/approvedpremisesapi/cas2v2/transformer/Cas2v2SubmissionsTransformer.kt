@@ -19,6 +19,7 @@ class Cas2v2SubmissionsTransformer(
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
 ) {
 
+  // NOT UNIT TESTED
   fun transformJpaToApiRepresentation(
     jpa: Cas2v2ApplicationEntity,
     personInfo: PersonInfoResult
