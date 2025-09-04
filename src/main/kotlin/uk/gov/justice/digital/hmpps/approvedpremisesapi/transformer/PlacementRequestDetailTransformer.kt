@@ -41,7 +41,6 @@ class PlacementRequestDetailTransformer(
       location = placementRequest.location,
       radius = placementRequest.radius,
       essentialCriteria = placementRequest.essentialCriteria,
-      desirableCriteria = placementRequest.desirableCriteria,
       person = placementRequest.person,
       risks = placementRequest.risks,
       applicationId = placementRequest.applicationId,

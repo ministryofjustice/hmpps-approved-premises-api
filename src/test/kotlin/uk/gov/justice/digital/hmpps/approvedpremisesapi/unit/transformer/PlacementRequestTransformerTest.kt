@@ -169,11 +169,6 @@ class PlacementRequestTransformerTest {
             PlacementCriteria.isSemiSpecialistMentalHealth,
             PlacementCriteria.isRecoveryFocussed,
           ),
-          desirableCriteria = listOf(
-            PlacementCriteria.isWheelchairDesignated,
-            PlacementCriteria.isSingle,
-            PlacementCriteria.hasEnSuite,
-          ),
           person = mockPersonInfo,
           risks = mockRisks,
           applicationId = application.id,
