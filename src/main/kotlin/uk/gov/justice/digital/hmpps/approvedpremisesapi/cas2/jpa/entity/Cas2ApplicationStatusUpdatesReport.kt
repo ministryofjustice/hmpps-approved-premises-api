@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import java.util.UUID
-
+// TODO besscerule check this works with the addition of application origin and the different order of statusDetails for Cas2v2 reports
 @Repository
 interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEventEntity, UUID> {
   @Query(
@@ -13,6 +13,7 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
     SELECT
         CAST(events.id AS TEXT) AS id,
         CAST(events.application_id AS TEXT) AS applicationId,
+        applications.application_origin as applicationOrigin,
         events.data -> 'eventDetails' -> 'personReference' ->> 'noms' AS personNoms,
         events.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS personCrn,
         events.data -> 'eventDetails' -> 'newStatus' ->> 'name' AS newStatus,
@@ -25,12 +26,15 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
         COUNT(distinct location_assignments.id) as numberOfLocationTransfers,
         CASE WHEN COUNT(distinct pom_assignments.id) = 0 THEN 0 ELSE COUNT(distinct pom_assignments.id) - 1 END as numberOfPomTransfers
     FROM domain_events events
+      INNER JOIN cas_2_applications applications ON events.application_id = applications.id
              LEFT JOIN cas_2_application_assignments as pom_assignments on events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_user_id is NOT NULL
              LEFT JOIN cas_2_application_assignments as location_assignments on events.application_id = location_assignments.application_id and location_assignments.allocated_pom_user_id is NULL
              LEFT JOIN LATERAL jsonb_array_elements(events.data -> 'eventDetails' -> 'newStatus' -> 'statusDetails') as details ON true
     WHERE events.type = 'CAS2_APPLICATION_STATUS_UPDATED'
       AND events.occurred_at  > CURRENT_DATE - 365
-    GROUP BY events.id
+      AND applications.application_origin IS NOT NULL
+    GROUP BY events.id,
+    applications.application_origin
     ORDER BY updatedAt DESC;
     """,
     nativeQuery = true,
@@ -49,4 +53,5 @@ interface Cas2ApplicationStatusUpdatedReportRow {
   fun getStatusDetails(): String
   fun getNumberOfLocationTransfers(): String
   fun getNumberOfPomTransfers(): String
+  fun getApplicationOrigin(): String
 }

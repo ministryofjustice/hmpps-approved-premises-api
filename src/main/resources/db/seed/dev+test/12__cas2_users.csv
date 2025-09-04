@@ -1,0 +1,10 @@
+username,name,email,userType
+ROGER_SMITH_FAKE,Roger Smith (Fake),roger.smith@fake.example.com,NOMIS
+SARAH_JONES_FAKE,Sarah Jones (Fake),sarah.jones@fake.example.com,NOMIS
+HILARY_HUGHES_FAKE,Hilary Hughes (Fake),hilary.hughes@fake.example.com,NOMIS
+POM_USER,Prison Officer,prison.officer@fake.example.com,NOMIS
+CAS2_LICENCE_USER,Licence Case-Admin,licence.case.admin@fake.example.com,NOMIS
+CAS2V2_NOMIS_PB,Nick Nomis-Bail,nick.bail@example.com,NOMIS
+CAS2_ASSESSOR_USER,CAS2 Assessor (NACRO),cas2.assessor@nacro.org.uk,EXTERNAL
+CLARE_AMES_FAKE,Clare Ames (Fake Assessor),clare.ames@fake.external.example.com,EXTERNAL
+CARY_ASH,Cary Ash (Fake Assessor),cary.ash@fake.external.example.com,EXTERNAL

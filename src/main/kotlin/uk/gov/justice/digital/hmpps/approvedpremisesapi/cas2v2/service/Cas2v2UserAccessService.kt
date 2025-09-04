@@ -3,21 +3,22 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 
 @Service("Cas2v2UserAccessService")
 class Cas2v2UserAccessService(
-  private val cas2v2UserService: Cas2v2UserService,
+  private val cas2UserService: Cas2UserService,
 ) {
   fun userCanViewCas2v2Application(
-    user: Cas2v2UserEntity,
-    application: Cas2v2ApplicationEntity,
+    user: Cas2UserEntity,
+    application: Cas2ApplicationEntity,
   ): Boolean {
     val isPrisonBailReferral = application.applicationOrigin == ApplicationOrigin.prisonBail &&
       application.submittedAt != null &&
-      cas2v2UserService.userForRequestHasRole(
+      cas2UserService.userForRequestHasRole(
         listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
       )
 
@@ -27,17 +28,17 @@ class Cas2v2UserAccessService(
 
     if (application.submittedAt == null) return false
 
-    return if (user.userType == Cas2v2UserType.NOMIS) {
+    return if (user.userType == Cas2UserType.NOMIS) {
       offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeNomisCaseloadId)
     } else {
       false
     }
   }
 
-  fun userCanAddNote(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity): Boolean {
+  fun userCanAddNote(user: Cas2UserEntity, application: Cas2ApplicationEntity): Boolean {
     if (
       application.applicationOrigin == ApplicationOrigin.prisonBail &&
-      cas2v2UserService.userForRequestHasRole(
+      cas2UserService.userForRequestHasRole(
         listOf(
           SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"),
         ),
@@ -47,14 +48,14 @@ class Cas2v2UserAccessService(
     }
 
     return when (user.userType) {
-      Cas2v2UserType.NOMIS ->
+      Cas2UserType.NOMIS ->
         user.id == application.createdByUser.id ||
           offenderIsFromSamePrisonAsUser(
             application.referringPrisonCode,
             user.activeNomisCaseloadId,
           )
-      Cas2v2UserType.DELIUS -> user.id == application.createdByUser.id
-      Cas2v2UserType.EXTERNAL -> true
+      Cas2UserType.DELIUS -> user.id == application.createdByUser.id
+      Cas2UserType.EXTERNAL -> true
     }
   }
 

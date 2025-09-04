@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -13,7 +13,7 @@ import kotlin.random.Random
 
 @Component
 class Cas2v2UsersSeedJob(
-  private val repository: Cas2v2UserRepository,
+  private val repository: Cas2UserRepository,
 ) : SeedJob<Cas2v2UserSeedCsvRow>(
   requiredHeaders = setOf(
     "username",
@@ -64,7 +64,7 @@ class Cas2v2UsersSeedJob(
   @SuppressWarnings("MagicNumber")
   private fun createCas2v2User(row: Cas2v2UserSeedCsvRow) {
     repository.save(
-      Cas2v2UserEntity(
+      Cas2UserEntity(
         id = UUID.randomUUID(),
         username = row.username,
         email = row.email,
@@ -83,9 +83,9 @@ class Cas2v2UsersSeedJob(
   }
 
   private fun userType(type: String) = when (type) {
-    Cas2v2UserType.NOMIS.toString() -> Cas2v2UserType.NOMIS
-    Cas2v2UserType.DELIUS.toString() -> Cas2v2UserType.DELIUS
-    else -> Cas2v2UserType.EXTERNAL
+    Cas2UserType.NOMIS.toString() -> Cas2UserType.NOMIS
+    Cas2UserType.DELIUS.toString() -> Cas2UserType.DELIUS
+    else -> Cas2UserType.EXTERNAL
   }
 }
 
@@ -93,7 +93,7 @@ data class Cas2v2UserSeedCsvRow(
   val username: String,
   val email: String,
   val name: String,
-  val userType: Cas2v2UserType,
+  val userType: Cas2UserType,
   val nomisStaffId: Long?,
   val activeNomisCaseloadId: String?,
   val deliusTeamCodes: List<String>?,

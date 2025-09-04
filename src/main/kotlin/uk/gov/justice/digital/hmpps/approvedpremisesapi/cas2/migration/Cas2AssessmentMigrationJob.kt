@@ -37,6 +37,7 @@ class Cas2AssessmentMigrationJob(
               id = UUID.randomUUID(),
               application = application,
               createdAt = OffsetDateTime.now(),
+              applicationOrigin = application.applicationOrigin,
             ),
           )
         }

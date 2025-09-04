@@ -10,11 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -25,9 +25,10 @@ import java.util.UUID
 
 class TimelineEventsTransformerTest {
 
-  private val user = NomisUserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
 
-  private val cas2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
+  private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
+    .withCreatedByUser(user)
 
   private val submittedCas2ApplicationFactory = Cas2ApplicationEntityFactory()
     .withCreatedByUser(user)
@@ -41,14 +42,15 @@ class TimelineEventsTransformerTest {
   inner class WhenThereAreTimelineEvents {
     @Test
     fun `transforms the timeline events from a submitted application`() {
+      val cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).withName("Anne Assessor")
+        .produce()
       val statusCreatedAt = OffsetDateTime.now().minusDays(2)
       val statusUpdateEntity = Cas2StatusUpdateEntityFactory()
         .withCreatedAt(statusCreatedAt)
         .withLabel("status update")
         .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
-          ExternalUserEntityFactory().withName("Anne Assessor")
-            .produce(),
+          cas2User,
         ).produce()
 
       val statusWithDetailCreatedAt = OffsetDateTime.now().minusDays(1)
@@ -73,24 +75,24 @@ class TimelineEventsTransformerTest {
         .withLabel("status update with details")
         .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
-          ExternalUserEntityFactory().withName("Anne Other Assessor")
+          Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).withName("Anne Other Assessor")
             .produce(),
         )
         .produce()
 
-      val nomisUser = NomisUserEntityFactory().withName("Some Nomis User").produce()
+      val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withName("Some Nomis User").produce()
 
       val noteCreatedAt = OffsetDateTime.now().minusDays(3)
       val note = Cas2ApplicationNoteEntity(
         id = UUID.randomUUID(),
         createdAt = noteCreatedAt,
-        createdByUser = nomisUser,
+        createdByCas2User = nomisUser,
         application = submittedCas2ApplicationFactory.produce(),
         body = "a comment",
         assessment = Cas2AssessmentEntityFactory().produce(),
       )
 
-      val pomUser = NomisUserEntityFactory().withName("Pom User").produce()
+      val pomUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withName("Pom User").produce()
       val application = submittedCas2ApplicationFactory.produce()
 
       val firstApplicationAssignment = Cas2ApplicationAssignmentEntity(
@@ -167,7 +169,7 @@ class TimelineEventsTransformerTest {
             type = TimelineEventType.cas2Note,
             occurredAt = noteCreatedAt.toInstant(),
             label = "Note",
-            createdByName = note.getUser().name,
+            createdByName = note.createdByCas2User.name,
             body = "a comment",
           ),
           Cas2TimelineEvent(

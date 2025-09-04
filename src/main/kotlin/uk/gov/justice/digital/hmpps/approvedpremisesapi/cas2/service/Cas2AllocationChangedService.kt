@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
@@ -65,7 +65,7 @@ class Cas2AllocationChangedService(
   private fun addApplicationAssignmentAndSendEmails(
     application: Cas2ApplicationEntity,
     pomAllocationPrisonCode: String,
-    pomAllocatedToOffender: NomisUserEntity,
+    pomAllocatedToOffender: Cas2UserEntity,
   ) {
     // We don't send emails for same prison allocations, so only send emails on the first allocation.
     val isFirstPomAllocationAtPrison = application.currentPomUserId == null

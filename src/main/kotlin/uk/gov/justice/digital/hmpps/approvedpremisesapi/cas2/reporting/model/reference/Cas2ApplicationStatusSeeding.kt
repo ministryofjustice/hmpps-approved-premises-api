@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.util.UUID
 
 object Cas2ApplicationStatusSeeding {
-
+// TODO besscerule added cas2 to all cas 2v2 as we are now using cas2 entities and repositories
   val statuses = listOf(
     Cas2PersistedApplicationStatus(
       id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
@@ -22,43 +22,43 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("3df29b1b-e2fc-4df7-b4b8-0527cd9e3a6f"),
           name = "applicantDetails",
           label = "Applicant details",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("28926b7b-2056-478c-95fe-a611967b8fab"),
           name = "concernsToOthers",
           label = "Concerns to others",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("76be117e-c496-489c-a69d-ef26a05a6f64"),
           name = "concernsToTheApplicant",
           label = "Concerns to the applicant",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("03718bee-a0f1-4a5d-b095-e23c2b1211ab"),
           name = "currentAllegedOffences",
           label = "Current alleged offences",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("53f17f5b-c3bb-4bd2-9ccb-b5f0664aa104"),
           name = "previousUnspentConvictions",
           label = "Previous unspent convictions",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("4c8e39ea-0f8b-4131-a781-cac706f38914"),
           name = "probationAndOASys",
           label = "Probation & OASys",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("0e78cbc4-4139-4402-8a8a-763d9ca5d93b"),
           name = "fundingAndID",
           label = "Funding & ID",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("05669c8a-d65c-48d2-a5e4-0c3f6fc8977b"),
@@ -200,19 +200,19 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("37aa6cab-1ef7-497e-8a8c-624c9ab69f5a"),
           name = "applicantBailedToNonCAS2Accommodation",
           label = "Applicant bailed to non CAS2 accommodation",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("566f7a9e-00c4-431d-9b3c-af87ff78379d"),
           name = "applicantRemandedInCustody",
           label = "Applicant remanded in custody",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("74397513-72f8-4efc-9ecf-32adf8c1db8a"),
           name = "applicantUnableToAffordRent",
           label = "Applicant unable to afford rent",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
       ),
     ),
@@ -262,13 +262,13 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("3acf6010-820a-458d-ae8d-1d8a937af890"),
           name = "changeOfCircumstances",
           label = "Change of circumstances",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("cc5e63f7-c37a-46f5-a83a-5953e40881c6"),
           name = "sentencingHearingBooked",
           label = "Sentencing hearing booked",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("766a1675-b917-4532-8485-6ec0380f4f4c"),
@@ -280,31 +280,31 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("c985337e-b9a7-4609-ac9b-fb8b5ec4a48a"),
           name = "applicantBailedToNonCAS2Accommodation",
           label = "Applicant bailed to non CAS2 accommodation",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("170787fa-8474-40e7-bdf7-c9f072ce06ef"),
           name = "applicantGivenCommunitySentence",
           label = "Applicant given community sentence",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("fec969b5-6cab-459e-a595-8337e43b34a8"),
           name = "applicantGivenCustodialSentence",
           label = "Applicant given custodial sentence",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("3440c6c1-b5ff-4b76-ae48-ecf80a3cec49"),
           name = "otherSentence",
           label = "Other sentence",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("cf339ef6-bcd7-47ae-8f54-b0011a46a3c8"),
           name = "applicantRemandedInCustody",
           label = "Applicant remanded in custody",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
       ),
     ),
@@ -318,7 +318,7 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("ba46bbe0-8fb6-4539-cccc-5586e6bfe8b6"),
           name = "nacroAssessedAsHighRisk",
           label = "NACRO assessed as high risk",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2v2, ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("ba46bbe0-8fb6-4539-895d-5586e6bfe8b6"),

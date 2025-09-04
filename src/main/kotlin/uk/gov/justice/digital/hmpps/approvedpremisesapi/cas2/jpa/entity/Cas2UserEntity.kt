@@ -8,6 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
@@ -29,6 +30,8 @@ enum class Cas2UserType(val authSource: String) {
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
   fun findByUsername(username: String): Cas2UserEntity?
   fun findByUsernameAndUserType(username: String, type: Cas2UserType): Cas2UserEntity?
+  fun findByUserType(type: Cas2UserType): List<Cas2UserEntity>
+  fun findByNomisStaffId(nomisStaffId: Long): Cas2UserEntity?
 }
 
 @Entity
@@ -45,13 +48,18 @@ data class Cas2UserEntity(
   @Enumerated(EnumType.STRING)
   var userType: Cas2UserType,
 
+  // External specific fields that are only expected to have values if the
+  // accountType is Cas2UserType.EXTERNAL
+  var externalType: String? = null,
+
   // Nomis specific fields that are only expected to have values if the
-  // accountType is Cas2v2UserType.NOMIS
+  // accountType is Cas2UserType.NOMIS
   var nomisStaffId: Long? = null,
   var activeNomisCaseloadId: String? = null,
+  var nomisAccountType: String? = null,
 
   // Delius specific fields that are only expected to have values if the
-  // accountType is Cas2v2UserType.DELIUS
+  // accountType is Cas2UserType.DELIUS
   @Convert(converter = StringListConverter::class)
   var deliusTeamCodes: List<String>?,
   var deliusStaffCode: String?,
@@ -62,8 +70,13 @@ data class Cas2UserEntity(
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,
 
-  @OneToMany(mappedBy = "createdByCas2User")
+  @UpdateTimestamp
+  private val updatedAt: OffsetDateTime? = null,
+
+  @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
+
+  // TODO removed Cas2User as no longer necessary as just one user type
 ) {
   override fun toString() = "CAS2 user $id"
 
