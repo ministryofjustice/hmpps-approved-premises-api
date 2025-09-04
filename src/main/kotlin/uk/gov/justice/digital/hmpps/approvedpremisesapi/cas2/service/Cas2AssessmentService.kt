@@ -23,6 +23,7 @@ class Cas2AssessmentService(
       id = UUID.randomUUID(),
       createdAt = OffsetDateTime.now(),
       application = cas2ApplicationEntity,
+      applicationOrigin = cas2ApplicationEntity.applicationOrigin,
     ),
   )
 

@@ -6,16 +6,16 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -31,14 +31,11 @@ class StartupScriptConfigTest {
   private val mockSeedLogger = mockk<SeedLogger>()
   private val logEntries = mutableListOf<LogEntry>()
 
-  private val mockNomisUserRepository = mockk<NomisUserRepository>()
-  private val mockNomisUserEntity = mockk<NomisUserEntity>()
-
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockApplicationEntity = mockk<Cas2ApplicationEntity>(relaxed = true)
 
-  private val mockExternalUserRepository = mockk<ExternalUserRepository>()
-  private val mockExternalUserEntity = mockk<ExternalUserEntity>()
+  private val mockCas2UserRepository = mockk<Cas2UserRepository>()
+  private val mockCas2UserEntity = mockk<Cas2UserEntity>()
 
   private val mockStatusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val mockStatusUpdateEntity = mockk<Cas2StatusUpdateEntity>()
@@ -55,9 +52,8 @@ class StartupScriptConfigTest {
   private val autoScript = Cas2StartupScript(
     mockSeedLogger,
     seedConfig,
-    mockNomisUserRepository,
     mockApplicationRepository,
-    mockExternalUserRepository,
+    mockCas2UserRepository,
     mockStatusUpdateRepository,
     mockAssessmentRepository,
     mockApplicationService,
@@ -74,10 +70,7 @@ class StartupScriptConfigTest {
     seedConfig.onStartup.script.noms = "NOMS123"
     seedConfig.onStartup.script.prisonCode = "PRI"
 
-    every { mockNomisUserRepository.findAll() } answers { listOf(mockNomisUserEntity) }
-    every { mockNomisUserEntity.nomisUsername } answers { "SMITHJ_GEN" }
-
-    every { mockExternalUserRepository.findAll() } answers { listOf(mockExternalUserEntity) }
+    every { mockCas2UserRepository.findAll() } answers { listOf(mockCas2UserEntity) }
 
     every { mockApplicationRepository.save(any()) } answers { mockApplicationEntity }
     every { mockApplicationRepository.saveAndFlush(any()) } answers { mockApplicationEntity }
@@ -91,9 +84,16 @@ class StartupScriptConfigTest {
 
     every { mockAssessmentRepository.save(any()) } answers { mockAssessmentEntity }
 
+    val cas2NomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+
+    every { mockCas2UserRepository.findByUserType(Cas2UserType.NOMIS) } answers { listOf(cas2NomisUser) }
+
+    val cas2ExternalUser = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
+
+    every { mockCas2UserRepository.findByUserType(Cas2UserType.EXTERNAL) } answers { listOf(cas2ExternalUser) }
+
     every { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) } answers { }
     every { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) } answers { }
-    every { mockNomisUserEntity.activeCaseloadId } returns "ABC"
     mockkStatic(::insertHdcDates)
   }
 

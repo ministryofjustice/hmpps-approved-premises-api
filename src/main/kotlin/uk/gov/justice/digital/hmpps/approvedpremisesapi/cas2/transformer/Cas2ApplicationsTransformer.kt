@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import java.util.UUID
 
 @Component()
 class Cas2ApplicationsTransformer(
@@ -27,7 +26,7 @@ class Cas2ApplicationsTransformer(
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
-    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getNomisUserById(jpa.currentPomUserId!!) }
+    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getCas2UserById(jpa.currentPomUserId!!) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     return Cas2Application(
       id = jpa.id,
@@ -58,10 +57,10 @@ class Cas2ApplicationsTransformer(
     personName: String,
   ): Cas2ApplicationSummary = Cas2ApplicationSummary(
     id = jpaSummary.id,
-    createdByUserId = UUID.fromString(jpaSummary.getCreatedById()),
-    createdByUserName = jpaSummary.getCreatedByUsername(),
+    createdByUserId = jpaSummary.userId,
+    createdByUserName = jpaSummary.userName,
     // BAIL-WIP The two allocated POM fields are left unchanged as it will currently ALWAYS be a nomis user.
-    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.userId),
+    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: jpaSummary.userId,
     allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.userName,
     currentPrisonName = jpaSummary.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it)?.prisonName }
       ?: jpaSummary.currentPrisonCode,

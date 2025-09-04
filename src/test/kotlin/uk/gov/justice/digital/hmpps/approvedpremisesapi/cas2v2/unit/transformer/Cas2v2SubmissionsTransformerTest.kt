@@ -15,11 +15,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2AssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2TimelineEventsTransformer
@@ -51,9 +51,10 @@ class Cas2v2SubmissionsTransformerTest {
     mockCas2v2AssessmentsTransformer,
   )
 
-  private val user = Cas2v2UserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory().produce()
 
-  private val cas2v2ApplicationFactory = Cas2v2ApplicationEntityFactory().withCreatedByUser(user)
+  private val cas2v2ApplicationFactory = Cas2ApplicationEntityFactory()
+    .withCreatedByUser(user)
 
   private val submittedCas2v2ApplicationFactory = cas2v2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
@@ -82,7 +83,7 @@ class Cas2v2SubmissionsTransformerTest {
   inner class TransformJpaToApi {
     @Test
     fun `transforms to API representation with NomisUser, no data, status updates and assessment`() {
-      val assessmentEntity = Cas2v2AssessmentEntityFactory()
+      val assessmentEntity = Cas2AssessmentEntityFactory()
         .withApplication(submittedCas2v2ApplicationFactory.produce())
         .withNacroReferralId("OH123")
         .withAssessorName("Assessor name")
@@ -120,11 +121,11 @@ class Cas2v2SubmissionsTransformerTest {
   inner class TransformJpaSummaryToCas2v2SubmittedSummary {
     @Test
     fun `transforms submitted summary application to API summary representation `() {
-      val applicationSummary = Cas2v2ApplicationSummaryEntity(
+      val applicationSummary = Cas2ApplicationSummaryEntity(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRN123",
         nomsNumber = "NOMS456",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
+        userId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
         userName = "first last",
         createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
         submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
@@ -132,6 +133,10 @@ class Cas2v2SubmissionsTransformerTest {
         latestStatusUpdateLabel = null,
         latestStatusUpdateStatusId = null,
         prisonCode = "BRI",
+        allocatedPomUserId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
+        currentPrisonCode = "BRI",
+        allocatedPomName = "first last",
+        assignmentDate = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
       )
 
       val expectedSubmittedApplicationSummary = Cas2v2SubmittedApplicationSummary(

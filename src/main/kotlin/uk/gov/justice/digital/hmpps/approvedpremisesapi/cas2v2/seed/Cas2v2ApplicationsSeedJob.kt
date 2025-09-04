@@ -5,16 +5,16 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
@@ -27,10 +27,10 @@ import java.util.UUID
 @Component
 @SuppressWarnings("LongParameterList")
 class Cas2v2ApplicationsSeedJob(
-  private val repository: Cas2v2ApplicationRepository,
-  private val cas2v2UserRepository: Cas2v2UserRepository,
-  private val statusUpdateRepository: Cas2v2StatusUpdateRepository,
-  private val assessmentRepository: Cas2v2AssessmentRepository,
+  private val repository: Cas2ApplicationRepository,
+  private val cas2UserRepository: Cas2UserRepository,
+  private val statusUpdateRepository: Cas2StatusUpdateRepository,
+  private val assessmentRepository: Cas2AssessmentRepository,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
 ) : SeedJob<Cas2v2ApplicationSeedCsvRow>(
@@ -60,7 +60,7 @@ class Cas2v2ApplicationsSeedJob(
       return log.info("Skipping ${row.id}: already seeded")
     }
 
-    val applicant = cas2v2UserRepository.findByUsername(row.createdBy) ?: throw RuntimeException("Could not find applicant with cas2v2user ${row.createdBy}")
+    val applicant = cas2UserRepository.findByUsername(row.createdBy) ?: throw RuntimeException("Could not find applicant with cas2v2user ${row.createdBy}")
 
     try {
       createApplication(row, applicant)
@@ -69,14 +69,14 @@ class Cas2v2ApplicationsSeedJob(
     }
   }
 
-  private fun createApplication(row: Cas2v2ApplicationSeedCsvRow, cas2v2UserEntity: Cas2v2UserEntity) {
+  private fun createApplication(row: Cas2v2ApplicationSeedCsvRow, cas2UserEntity: Cas2UserEntity) {
     val application = repository.save(
-      Cas2v2ApplicationEntity(
+      Cas2ApplicationEntity(
         id = row.id,
         crn = row.crn,
         nomsNumber = row.nomsNumber,
         createdAt = row.createdAt,
-        createdByUser = cas2v2UserEntity,
+        createdByUser = cas2UserEntity,
         applicationOrigin = row.applicationOrigin,
         bailHearingDate = row.bailHearingDate.toLocalDate(),
         data = dataFor(state = row.state, nomsNumber = row.nomsNumber),
@@ -94,7 +94,7 @@ class Cas2v2ApplicationsSeedJob(
     }
   }
 
-  private fun applyFirstClassFields(application: Cas2v2ApplicationEntity, row: Cas2v2ApplicationSeedCsvRow) {
+  private fun applyFirstClassFields(application: Cas2ApplicationEntity, row: Cas2v2ApplicationSeedCsvRow) {
     repository.saveAndFlush(
       application.apply {
         referringPrisonCode = row.referringPrisonCode
@@ -106,12 +106,12 @@ class Cas2v2ApplicationsSeedJob(
     )
   }
 
-  private fun createStatusUpdate(idx: Int, application: Cas2v2ApplicationEntity) {
+  private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     log.info("Seeding status update $idx for application ${application.id}")
-    val assessor = cas2v2UserRepository.findAll().random()
+    val assessor = cas2UserRepository.findAll().random()
     val status = findStatusAtPosition(idx)
     statusUpdateRepository.save(
-      Cas2v2StatusUpdateEntity(
+      Cas2StatusUpdateEntity(
         id = UUID.randomUUID(),
         application = application,
         assessment = application.assessment,
@@ -124,14 +124,15 @@ class Cas2v2ApplicationsSeedJob(
     )
   }
 
-  private fun createAssessment(application: Cas2v2ApplicationEntity) {
+  private fun createAssessment(application: Cas2ApplicationEntity) {
     val id = UUID.randomUUID()
     log.info("Seeding assessment $id for application ${application.id}")
     val assessment = assessmentRepository.save(
-      Cas2v2AssessmentEntity(
+      Cas2AssessmentEntity(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
+        applicationOrigin = application.applicationOrigin,
       ),
     )
     application.assessment = assessment

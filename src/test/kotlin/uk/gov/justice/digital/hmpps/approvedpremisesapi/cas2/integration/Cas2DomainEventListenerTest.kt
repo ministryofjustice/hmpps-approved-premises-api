@@ -15,7 +15,7 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
@@ -179,7 +179,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
               withAssessor(assessor)
             }
 
-            val pomAllocation = PomAllocation(Manager(newUserEntity.nomisStaffId), Prison(newOmu.prisonCode))
+            val pomAllocation = PomAllocation(Manager(newUserEntity.nomisStaffId!!), Prison(newOmu.prisonCode))
             val url = "/allocation/${application.nomsNumber}/primary_pom"
             val detailUrl = managePomCasesBaseUrl + url
             mockSuccessfulGetCallWithJsonResponse(
@@ -229,7 +229,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
               withAssessor(assessor)
             }
 
-            val pomAllocation = PomAllocation(Manager(newUserEntity.nomisStaffId), Prison(newOmu.prisonCode))
+            val pomAllocation = PomAllocation(Manager(newUserEntity.nomisStaffId!!), Prison(newOmu.prisonCode))
             val url = "/allocation/${application.nomsNumber}/primary_pom"
             val detailUrl = managePomCasesBaseUrl + url
             mockSuccessfulGetCallWithJsonResponse(
@@ -276,7 +276,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             offenderDetails,
           )
 
-          val pomAllocation = PomAllocation(Manager(newUserEntity.nomisStaffId), Prison(oldOmu.prisonCode))
+          val pomAllocation = PomAllocation(Manager(newUserEntity.nomisStaffId!!), Prison(oldOmu.prisonCode))
           val url = "/allocation/${application.nomsNumber}/primary_pom"
           val detailUrl = managePomCasesBaseUrl + url
 
@@ -315,6 +315,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             withApplication(application)
             withLabel("Status Update")
             withAssessor(assessor)
+            withCreatedAt(OffsetDateTime.now())
           }
 
           val nomisStaffInformationResponse = NomisStaffInformationFactory().produce()
@@ -342,7 +343,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             nomisUserDetailsResponse,
           )
 
-          assertThat(nomisUserRepository.findByNomisUsername(nomisUsername = newUserName)).isNull()
+          assertThat(cas2UserRepository.findByUsername(username = newUserName)).isNull()
 
           val event = stubEvent(eventType, detailUrl, application.nomsNumber)
           publishMessageToTopic(eventType, event)
@@ -356,7 +357,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
           assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
 
-          val missingUser = nomisUserRepository.findByNomisUsername(newUserName)
+          val missingUser = cas2UserRepository.findByUsername(newUserName)
           assertThat(updatedApplication.currentPomUserId).isEqualTo(missingUser!!.id)
 
           verifyEmailsSentForAllocationChangedCase(
@@ -364,7 +365,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             pomManagerEmail = nomisUserDetailsResponse.primaryEmail!!,
           )
 
-          assertThat(nomisUserRepository.findByNomisUsername(nomisUsername = newUserName)).isNotNull
+          assertThat(cas2UserRepository.findByUsername(username = newUserName)).isNotNull
         }
       }
     }
@@ -372,7 +373,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
   private fun verifyEmailsSentForPrisonerUpdatedCase(
     application: Cas2ApplicationEntity,
-    userEntity: NomisUserEntity,
+    userEntity: Cas2UserEntity,
     oldOmu: OffenderManagementUnitEntity,
     newOmu: OffenderManagementUnitEntity,
   ) {
@@ -507,7 +508,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   }
 
   private fun createApplicationAndInitialAssignment(
-    allocatedPom: NomisUserEntity,
+    allocatedPom: Cas2UserEntity,
     offenderDetails: OffenderDetailSummary,
     omu: OffenderManagementUnitEntity = oldOmu,
   ): Cas2ApplicationEntity {
@@ -524,7 +525,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   }
 
   private fun createApplicationAndApplicationAssignmentsWithoutLocationEvent(
-    user: NomisUserEntity,
+    user: Cas2UserEntity,
     offenderDetails: OffenderDetailSummary,
   ): Cas2ApplicationEntity {
     val application = cas2ApplicationEntityFactory.produceAndPersist {

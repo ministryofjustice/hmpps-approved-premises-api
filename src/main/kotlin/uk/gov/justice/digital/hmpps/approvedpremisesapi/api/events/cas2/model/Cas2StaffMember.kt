@@ -1,51 +1,33 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonValue
-import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- * A member of prison or CAS2 staff
- * @param staffIdentifier
- * @param name
- * @param username
- * @param cas2StaffIdentifier
- * @param usertype
- */
+// TODO besscerule this is an external facing model so this will impact the frontends as staffIdentifier has changed from Long to String
+
 data class Cas2StaffMember(
 
-  @Schema(example = "1501234567", required = true, description = "")
-  @get:JsonProperty("staffIdentifier", required = true) val staffIdentifier: kotlin.Long,
+  val staffIdentifier: String,
 
-  @Schema(example = "John Smith", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  val name: String,
 
-  @Schema(example = "SMITHJ_GEN", description = "")
-  @get:JsonProperty("username") val username: kotlin.String? = null,
+  val username: String? = null,
 
-  @Schema(example = "null", description = "")
-  @get:JsonProperty("cas2StaffIdentifier") val cas2StaffIdentifier: kotlin.String? = null,
-
-  @Schema(example = "null", description = "")
-  @get:JsonProperty("usertype") val usertype: Cas2StaffMember.Usertype? = null,
+  val usertype: Usertype? = null,
 ) {
 
-  /**
-   *
-   * Values: nomis,delius
-   */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-  enum class Usertype(@get:JsonValue val value: kotlin.String) {
+  enum class Usertype(val value: String) {
 
     nomis("nomis"),
     delius("delius"),
-    ;
+
+    // TODO besscerule added in auth as we now have it set up with external users
+    auth("auth"), ;
 
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Usertype = values().first { it -> it.value == value }
+      fun forValue(value: String): Usertype = entries.first { it.value == value }
     }
   }
 }

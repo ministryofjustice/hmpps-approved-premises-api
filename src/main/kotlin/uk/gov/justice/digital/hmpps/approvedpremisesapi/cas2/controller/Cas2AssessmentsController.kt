@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Applic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ExternalUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.AssessmentsTransformer
@@ -38,7 +38,7 @@ class Cas2AssessmentsController(
   private val assessmentsTransformer: AssessmentsTransformer,
   private val applicationNotesTransformer: ApplicationNotesTransformer,
   private val statusUpdateService: StatusUpdateService,
-  private val externalUserService: ExternalUserService,
+  private val cas2UserService: Cas2UserService,
 ) {
 
   @SuppressWarnings("ThrowsCount")
@@ -92,7 +92,7 @@ class Cas2AssessmentsController(
     val result = statusUpdateService.createForAssessment(
       assessmentId = assessmentId,
       statusUpdate = cas2AssessmentStatusUpdate,
-      assessor = externalUserService.getUserForRequest(),
+      assessor = cas2UserService.getCas2UserForRequest(),
     )
 
     processAuthorisationFor(assessmentId, result)
