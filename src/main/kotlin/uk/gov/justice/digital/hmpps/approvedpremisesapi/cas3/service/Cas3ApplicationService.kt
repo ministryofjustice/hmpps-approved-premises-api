@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -31,6 +32,7 @@ class Cas3ApplicationService(
   private val assessmentService: AssessmentService,
   private val cas3DomainEventService: Cas3DomainEventService,
   private val objectMapper: ObjectMapper,
+  private val probationRegionRepository: ProbationRegionRepository,
 ) {
   @SuppressWarnings("ReturnCount")
   @Transactional
@@ -90,6 +92,12 @@ class Cas3ApplicationService(
       personReleaseDate = submitApplication.personReleaseDate
       prisonReleaseTypes = submitApplication.prisonReleaseTypes?.joinToString(",")
       probationDeliveryUnit = submitApplication.probationDeliveryUnitId?.let {
+        probationDeliveryUnitRepository.findByIdOrNull(it)
+      }
+      outOfRegionProbationRegion = submitApplication.outOfRegionProbationRegionId?.let {
+        probationRegionRepository.findByIdOrNull(it)
+      }
+      outOfRegionProbationDeliveryUnit = submitApplication.outOfRegionPduId?.let {
         probationDeliveryUnitRepository.findByIdOrNull(it)
       }
     }

@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -44,6 +45,7 @@ class Cas3ApplicationServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
+  private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
 
   private val cas3ApplicationService = Cas3ApplicationService(
     mockApplicationRepository,
@@ -54,6 +56,7 @@ class Cas3ApplicationServiceTest {
     mockAssessmentService,
     mockCas3DomainEventService,
     mockObjectMapper,
+    mockProbationRegionRepository,
   )
 
   val user = UserEntityFactory()
@@ -413,6 +416,62 @@ class Cas3ApplicationServiceTest {
       verify(exactly = 1) {
         mockCas3DomainEventService.saveDraftReferralDeletedEvent(inProgressApplication, user)
       }
+    }
+  }
+
+  @Nested
+  inner class OutOfRegionFields {
+
+    @Test
+    fun `should persist and retrieve both out of region probation region and PDU fields when set`() {
+      val outOfRegionProbationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+
+      val outOfRegionPdu = mockk<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity>()
+      every { outOfRegionPdu.id } returns UUID.randomUUID()
+      every { outOfRegionPdu.name } returns "Out Of Region PDU"
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withOutOfRegionProbationRegion(outOfRegionProbationRegion)
+        .withoutOfRegionProbationDeliveryUnit(outOfRegionPdu)
+        .produce()
+
+      every { mockApplicationRepository.save(any()) } returns application
+
+      val savedApplication = mockApplicationRepository.save(application)
+
+      assertThat(savedApplication.outOfRegionProbationRegion).isNotNull
+      assertThat(savedApplication.outOfRegionProbationRegion!!.id).isEqualTo(outOfRegionProbationRegion.id)
+      assertThat(savedApplication.outOfRegionProbationDeliveryUnit).isNotNull
+      assertThat(savedApplication.outOfRegionProbationDeliveryUnit!!.id).isEqualTo(outOfRegionPdu.id)
+      assertThat(savedApplication.outOfRegionProbationDeliveryUnit!!.name).isEqualTo("Out Of Region PDU")
+
+      verify { mockApplicationRepository.save(application) }
+    }
+
+    @Test
+    fun `should persist and retrieve null out of region fields when not set`() {
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withOutOfRegionProbationRegion(null)
+        .withoutOfRegionProbationDeliveryUnit(null)
+        .produce()
+
+      every { mockApplicationRepository.save(any()) } returns application
+
+      val savedApplication = mockApplicationRepository.save(application)
+
+      assertThat(savedApplication.outOfRegionProbationRegion).isNull()
+      assertThat(savedApplication.outOfRegionProbationDeliveryUnit).isNull()
+
+      assertThat(savedApplication.probationRegion).isNotNull
+      assertThat(savedApplication.probationRegion.id).isEqualTo(user.probationRegion.id)
+
+      verify { mockApplicationRepository.save(application) }
     }
   }
 }

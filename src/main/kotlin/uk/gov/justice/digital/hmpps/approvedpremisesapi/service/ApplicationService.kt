@@ -208,6 +208,8 @@ class ApplicationService(
     isConcerningArsonBehaviour = null,
     prisonReleaseTypes = null,
     probationDeliveryUnit = null,
+    outOfRegionProbationRegion = null,
+    outOfRegionProbationDeliveryUnit = null,
   )
 
   fun updateApprovedPremisesApplicationStatus(applicationId: UUID, status: ApprovedPremisesApplicationStatus) {
