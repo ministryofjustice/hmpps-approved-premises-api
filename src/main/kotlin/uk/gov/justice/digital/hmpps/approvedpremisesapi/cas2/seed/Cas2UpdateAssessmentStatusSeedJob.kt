@@ -5,7 +5,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
-
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
@@ -18,58 +17,58 @@ class Cas2UpdateAssessmentStatusSeedJob(
   private val applicationRepository: Cas2ApplicationRepository,
   private val externalUserRepository: ExternalUserRepository,
   private val cas2UpdateService: StatusUpdateService,
-) :
-  SeedJob<Cas2AssessmentUpdateStatusSeedRow>(
-    requiredHeaders =
-      setOf(
-        "assessmentId",
-        "applicationId",
-        "assessorUsername",
-        "newStatus",
-        "newStatusDetails"
-      ),
-  ) {
+) : SeedJob<Cas2AssessmentUpdateStatusSeedRow>(
+  requiredHeaders =
+  setOf(
+    "assessmentId",
+    "applicationId",
+    "assessorUsername",
+    "newStatus",
+    "newStatusDetails",
+  ),
+) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun deserializeRow(columns: Map<String, String>) =
-    Cas2AssessmentUpdateStatusSeedRow(
-      assessmentId = UUID.fromString(columns["assessmentId"]!!.trim()),
-      applicationId = UUID.fromString(columns["applicationId"]!!.trim()),
-      assessorUsername = columns["assessorUsername"]!!.trim(),
-      newStatus = columns["newStatus"]!!.trim(),
-      newStatusDetails = columns["newStatusDetails"]?.split("||") ?: emptyList()
-    )
+  override fun deserializeRow(columns: Map<String, String>) = Cas2AssessmentUpdateStatusSeedRow(
+    assessmentId = UUID.fromString(columns["assessmentId"]!!.trim()),
+    applicationId = UUID.fromString(columns["applicationId"]!!.trim()),
+    assessorUsername = columns["assessorUsername"]!!.trim(),
+    newStatus = columns["newStatus"]!!.trim(),
+    newStatusDetails = columns["newStatusDetails"]?.split("||") ?: emptyList(),
+  )
 
   override fun processRow(row: Cas2AssessmentUpdateStatusSeedRow) {
-    log.info("Processing assessment cancellation for assessment ${row.assessmentId} " +
-      "for application ${row.applicationId}")
+    log.info(
+      "Processing assessment cancellation for assessment ${row.assessmentId} " +
+        "for application ${row.applicationId}",
+    )
 
     val assessment =
       assessmentRepository.findByIdOrNull(row.assessmentId)
         ?: throw CastAssessmentUpdateStatusException(
-          "Assessment with id ${row.assessmentId} not found"
+          "Assessment with id ${row.assessmentId} not found",
         )
 
     val application = applicationRepository.findByIdOrNull(row.applicationId)
-    ?: throw CastAssessmentUpdateStatusException(
-      "Application with id ${row.applicationId} not found"
-    )
+      ?: throw CastAssessmentUpdateStatusException(
+        "Application with id ${row.applicationId} not found",
+      )
 
     val assessor =
       externalUserRepository.findByUsername(row.assessorUsername)
         ?: throw CastAssessmentUpdateStatusException(
-          "Assessor with username ${row.assessorUsername} not found"
+          "Assessor with username ${row.assessorUsername} not found",
         )
 
     if (assessment.application.id != application.id) {
       throw CastAssessmentUpdateStatusException(
-        "Application with id ${row.applicationId} not found on assessment ${row.assessmentId}"
+        "Application with id ${row.applicationId} not found on assessment ${row.assessmentId}",
       )
     }
 
     if (assessor.name != assessment.assessorName) {
       throw CastAssessmentUpdateStatusException(
-        "Assessor name ${assessor.name} does not match the assessor name on assesment ${row.assessmentId}"
+        "Assessor name ${assessor.name} does not match the assessor name on assesment ${row.assessmentId}",
       )
     }
 
@@ -77,7 +76,7 @@ class Cas2UpdateAssessmentStatusSeedJob(
       assessmentId = assessment.id,
       statusUpdate = Cas2AssessmentStatusUpdate(
         newStatus = row.newStatus,
-        newStatusDetails = row.newStatusDetails
+        newStatusDetails = row.newStatusDetails,
       ),
       assessor = assessor,
     )
@@ -87,7 +86,6 @@ class Cas2UpdateAssessmentStatusSeedJob(
 class CastAssessmentUpdateStatusException(
   message: String,
 ) : RuntimeException(message)
-
 
 data class Cas2AssessmentUpdateStatusSeedRow(
   val assessmentId: UUID,

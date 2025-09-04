@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.seed
 
-import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
@@ -10,11 +9,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
+import java.util.UUID
 
 class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
   @Test
   fun `Update an assessment status with reasons`() {
-
     // given
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
@@ -26,7 +25,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
             withIsActive(true)
             withName("nomis user")
             withEmail("nomis@justice.gov.uk")
-          }
+          },
         )
         withCrn("A123456")
         withData("{}")
@@ -71,14 +70,14 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     assertThat(statusUpdate.statusId).isNotNull()
     assertThat(statusUpdate.description)
       .isEqualTo(
-        "The application has been cancelled."
+        "The application has been cancelled.",
       )
     assertThat(statusUpdate.label).isEqualTo("Referral cancelled")
 
     // Verify status update details
     val statusUpdateDetails =
       cas2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(
-        statusUpdate.id
+        statusUpdate.id,
       )
     assertThat(statusUpdateDetails).isNotNull()
     assertThat(statusUpdateDetails!!.label).isIn("Incomplete referral")
@@ -86,7 +85,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val domainResults = domainEventRepository.findByApplicationId(application.id)
     assertThat(domainResults).hasSize(1)
 
-    val result = domainResults.first();
+    val result = domainResults.first()
 
     assertThat(result.applicationId).isEqualTo(application.id)
     assertThat(result.type).isEqualTo(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
@@ -110,7 +109,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
             withIsActive(true)
             withName("nomis user")
             withEmail("nomis@justice.gov.uk")
-          }
+          },
         )
         withCrn("C345678")
         withData("{}")
@@ -131,7 +130,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         applicationId = application.id,
         assessorUsername = assessor.username,
         newStatus = "awaitingDecision",
-        newStatusDetails = emptyList()
+        newStatusDetails = emptyList(),
       )
 
     // When
@@ -155,7 +154,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
             withIsActive(true)
             withName("nomis user")
             withEmail("nomis@justice.gov.uk")
-          }
+          },
         )
         withCrn("D901234")
         withData("{}")
@@ -182,7 +181,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         applicationId = nonExistentApplicationId,
         assessorUsername = assessor.username,
         newStatus = "awaitingDecision",
-        newStatusDetails = emptyList()
+        newStatusDetails = emptyList(),
       )
 
     // When
@@ -206,7 +205,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
             withIsActive(true)
             withName("nomis user")
             withEmail("nomis@justice.gov.uk")
-          }
+          },
         )
         withCrn("E567890")
         withData("{}")
@@ -225,7 +224,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         applicationId = application.id,
         assessorUsername = "non.existent.user",
         newStatus = "awaitingDecision",
-        newStatusDetails = emptyList()
+        newStatusDetails = emptyList(),
       )
 
     // When
@@ -284,7 +283,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         applicationId = application2.id, // Different application
         assessorUsername = assessor.username,
         newStatus = "awaitingDecision",
-        newStatusDetails = emptyList()
+        newStatusDetails = emptyList(),
       )
 
     // When
@@ -308,7 +307,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
             withIsActive(true)
             withName("nomis user")
             withEmail("nomis@justice.gov.uk")
-          }
+          },
         )
         withCrn("H345678")
         withData("{}")
@@ -334,7 +333,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         applicationId = application.id,
         assessorUsername = assessor.username,
         newStatus = "awaitingDecision",
-        newStatusDetails = emptyList()
+        newStatusDetails = emptyList(),
       )
 
     // When
@@ -358,7 +357,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
             withIsActive(true)
             withName("nomis user")
             withEmail("nomis@justice.gov.uk")
-          }
+          },
         )
         withCrn("I901234")
         withData("{}")
@@ -385,7 +384,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         assessorUsername = assessor.username,
         newStatus = "nonExistentStatus", // Non-existent status - this is intentional for
         // testing
-        newStatusDetails = emptyList()
+        newStatusDetails = emptyList(),
       )
 
     // When
@@ -409,7 +408,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
             withIsActive(true)
             withName("nomis user")
             withEmail("nomis@justice.gov.uk")
-          }
+          },
         )
         withCrn("J567890")
         withData("{}")
@@ -435,7 +434,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         applicationId = application.id,
         assessorUsername = assessor.username,
         newStatus = "moreInfoRequested",
-        newStatusDetails = listOf("personalInformation")
+        newStatusDetails = listOf("personalInformation"),
       )
 
     val seedRow2 =
@@ -444,7 +443,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         applicationId = application.id,
         assessorUsername = assessor.username,
         newStatus = "cancelled",
-        newStatusDetails = listOf("incompleteReferral")
+        newStatusDetails = listOf("incompleteReferral"),
       )
 
     // When
@@ -461,11 +460,11 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
 
     assertThat(statusUpdates[0].description)
       .isEqualTo(
-        "The referrer must provide information requested for the application to progress."
+        "The referrer must provide information requested for the application to progress.",
       )
     assertThat(statusUpdates[1].description)
       .isEqualTo(
-        "The application has been cancelled."
+        "The application has been cancelled.",
       )
 
     // then
@@ -511,7 +510,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         row.applicationId.toString(),
         row.assessorUsername,
         row.newStatus,
-        row.newStatusDetails.joinToString("||")
+        row.newStatusDetails.joinToString("||"),
       )
         .newRow()
     }
@@ -519,4 +518,3 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     return builder.build()
   }
 }
-
