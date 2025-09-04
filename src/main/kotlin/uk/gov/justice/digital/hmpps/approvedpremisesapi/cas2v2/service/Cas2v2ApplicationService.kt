@@ -14,14 +14,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ApplicationSummaryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2LockableApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -43,11 +44,11 @@ import java.util.UUID
 
 @Service("Cas2v2ApplicationService")
 class Cas2v2ApplicationService(
-  private val cas2v2ApplicationRepository: Cas2v2ApplicationRepository,
-  private val cas2v2LockableApplicationRepository: Cas2v2LockableApplicationRepository,
-  private val cas2v2ApplicationSummaryRepository: Cas2v2ApplicationSummaryRepository,
+  private val cas2ApplicationRepository: Cas2ApplicationRepository,
+  private val cas2LockableApplicationRepository: Cas2LockableApplicationRepository,
+  private val cas2ApplicationSummaryRepository: ApplicationSummaryRepository,
   private val cas2v2OffenderService: Cas2v2OffenderService,
-  private val cas2v2UserAccessService: Cas2v2UserAccessService,
+  private val cas2UserAccessService: Cas2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
@@ -64,14 +65,14 @@ class Cas2v2ApplicationService(
     applicationOrigin: ApplicationOrigin?,
     limitByUser: Boolean,
     crnOrNomsNumber: String?,
-    user: Cas2v2UserEntity,
+    user: Cas2UserEntity,
     pageCriteria: PageCriteria<String>,
-  ): Pair<MutableList<Cas2v2ApplicationSummaryEntity>, PaginationMetadata?> {
-    var spec: Specification<Cas2v2ApplicationSummaryEntity> =
+  ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    var spec: Specification<Cas2ApplicationSummaryEntity> =
       Specification { _, _, cb -> cb.conjunction() } // Start with no-op
 
     if (limitByUser) {
-      spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasUserId(user.id.toString()))
+      spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasUserId(user.id))
     }
 
     if (crnOrNomsNumber != null) {
@@ -90,24 +91,23 @@ class Cas2v2ApplicationService(
       spec = spec.and(Cas2v2ApplicationSummarySpecifications.isSubmitted(isSubmitted))
     }
 
-    val response = cas2v2ApplicationSummaryRepository.findAll(spec, getPageableOrAllPages(pageCriteria))
-
+    val response = cas2ApplicationSummaryRepository.findAll(spec, getPageableOrAllPages(pageCriteria))
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }
 
-  fun getAllSubmittedCas2v2ApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2v2ApplicationSummaryEntity>, PaginationMetadata?> {
+  fun getAllSubmittedCas2v2ApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 
-    val response = cas2v2ApplicationSummaryRepository.findBySubmittedAtIsNotNull(pageable)
+    val response = cas2ApplicationSummaryRepository.findBySubmittedAtIsNotNull(pageable)
 
     val metadata = getMetadata(response, pageCriteria)
 
     return Pair(response.content, metadata)
   }
 
-  fun getSubmittedCas2v2ApplicationForAssessor(applicationId: UUID): CasResult<Cas2v2ApplicationEntity> {
-    val applicationEntity = cas2v2ApplicationRepository.findSubmittedApplicationById(applicationId)
+  fun getSubmittedCas2v2ApplicationForAssessor(applicationId: UUID): CasResult<Cas2ApplicationEntity> {
+    val applicationEntity = cas2ApplicationRepository.findSubmittedApplicationById(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     return CasResult.Success(
@@ -115,15 +115,15 @@ class Cas2v2ApplicationService(
     )
   }
 
-  fun getCas2v2ApplicationForUser(applicationId: UUID, user: Cas2v2UserEntity): CasResult<Cas2v2ApplicationEntity> {
-    val applicationEntity = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
+  fun getCas2v2ApplicationForUser(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
+    val applicationEntity = cas2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (applicationEntity.abandonedAt != null) {
       return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
     }
 
-    val canAccess = cas2v2UserAccessService.userCanViewCas2v2Application(user, applicationEntity)
+    val canAccess = cas2UserAccessService.userCanViewApplication(user, applicationEntity)
 
     return if (canAccess) {
       CasResult.Success(applicationEntity)
@@ -135,10 +135,10 @@ class Cas2v2ApplicationService(
   @SuppressWarnings("TooGenericExceptionThrown")
   fun createCas2v2Application(
     crn: String,
-    user: Cas2v2UserEntity,
+    user: Cas2UserEntity,
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
-  ) = validated<Cas2v2ApplicationEntity> {
+  ) = validated<Cas2ApplicationEntity> {
     val offenderDetailsResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)
 
     val offenderDetails = when (offenderDetailsResult) {
@@ -154,7 +154,7 @@ class Cas2v2ApplicationService(
 
     val id = UUID.randomUUID()
 
-    val entityToSave = Cas2v2ApplicationEntity(
+    val entityToSave = Cas2ApplicationEntity(
       id = id,
       crn = crn,
       createdByUser = user,
@@ -168,7 +168,7 @@ class Cas2v2ApplicationService(
       bailHearingDate = bailHearingDate,
     )
 
-    val createdApplication = cas2v2ApplicationRepository.save(
+    val createdApplication = cas2ApplicationRepository.save(
       entityToSave,
     )
 
@@ -179,10 +179,10 @@ class Cas2v2ApplicationService(
   fun updateCas2v2Application(
     applicationId: UUID,
     data: String?,
-    user: Cas2v2UserEntity,
+    user: Cas2UserEntity,
     bailHearingDate: LocalDate?,
-  ): CasResult<Cas2v2ApplicationEntity> {
-    val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
+  ): CasResult<Cas2ApplicationEntity> {
+    val application = cas2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
@@ -203,14 +203,14 @@ class Cas2v2ApplicationService(
       this.data = removeXssCharacters(data)
     }
 
-    val savedApplication = cas2v2ApplicationRepository.save(application)
+    val savedApplication = cas2ApplicationRepository.save(application)
 
     return CasResult.Success(savedApplication)
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonCas2v2Application(applicationId: UUID, user: Cas2v2UserEntity): CasResult<Cas2v2ApplicationEntity> {
-    val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
+  fun abandonCas2v2Application(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
+    val application = cas2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
@@ -230,7 +230,7 @@ class Cas2v2ApplicationService(
       this.data = null
     }
 
-    val savedApplication = cas2v2ApplicationRepository.save(application)
+    val savedApplication = cas2ApplicationRepository.save(application)
 
     return CasResult.Success(savedApplication)
   }
@@ -239,13 +239,13 @@ class Cas2v2ApplicationService(
   @Transactional
   fun submitCas2v2Application(
     submitCas2v2Application: SubmitCas2v2Application,
-    user: Cas2v2UserEntity,
-  ): CasResult<Cas2v2ApplicationEntity> {
+    user: Cas2UserEntity,
+  ): CasResult<Cas2ApplicationEntity> {
     val applicationId = submitCas2v2Application.applicationId
 
-    cas2v2LockableApplicationRepository.acquirePessimisticLock(applicationId)
+    cas2LockableApplicationRepository.acquirePessimisticLock(applicationId)
 
-    var application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
+    var application = cas2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
@@ -298,7 +298,7 @@ class Cas2v2ApplicationService(
       return CasResult.GeneralValidationError(error.message.toString())
     }
 
-    application = cas2v2ApplicationRepository.save(application)
+    application = cas2ApplicationRepository.save(application)
 
     createCas2ApplicationSubmittedEvent(application)
 
@@ -309,7 +309,7 @@ class Cas2v2ApplicationService(
     return CasResult.Success(application)
   }
 
-  fun createCas2ApplicationSubmittedEvent(application: Cas2v2ApplicationEntity) {
+  fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
@@ -340,7 +340,8 @@ class Cas2v2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByUser.nomisStaffId ?: 0,
+                // TODO besscerule - check what we want to happen when nomisStaffId doesn't exist? - so it's delius
+                staffIdentifier = (application.createdByUser.nomisStaffId ?: 0).toString(),
                 name = application.createdByUser.name,
                 username = application.createdByUser.username,
                 usertype = Cas2StaffMember.Usertype.valueOf(application.createdByUser.userType.authSource),
@@ -353,12 +354,12 @@ class Cas2v2ApplicationService(
     )
   }
 
-  fun createAssessment(application: Cas2v2ApplicationEntity) {
+  fun createAssessment(application: Cas2ApplicationEntity) {
     cas2v2AssessmentService.createCas2v2Assessment(application)
   }
 
   @SuppressWarnings("ThrowsCount")
-  private fun retrievePrisonCode(application: Cas2v2ApplicationEntity): String {
+  private fun retrievePrisonCode(application: Cas2ApplicationEntity): String {
     val inmateDetailResult = cas2v2OffenderService.getInmateDetailByNomsNumber(
       crn = application.crn,
       nomsNumber = application.nomsNumber.toString(),
@@ -372,7 +373,7 @@ class Cas2v2ApplicationService(
     return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
   }
 
-  private fun sendEmailApplicationSubmitted(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity) {
+  private fun sendEmailApplicationSubmitted(user: Cas2UserEntity, application: Cas2ApplicationEntity) {
     val applicationOrigin = application.applicationOrigin.toString()
 
     val templateId = when (applicationOrigin) {

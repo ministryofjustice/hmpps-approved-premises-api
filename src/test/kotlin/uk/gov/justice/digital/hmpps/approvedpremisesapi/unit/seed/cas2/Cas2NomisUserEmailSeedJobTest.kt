@@ -9,9 +9,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.transformCas2UserEntityToNomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2NomisUserEmailSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsernameEmailRow
 
@@ -35,8 +37,8 @@ class Cas2NomisUserEmailSeedJobTest {
 
   @Test
   fun `updates email address`() {
-    val user = NomisUserEntityFactory().withEmail(null).produce()
-    every { nomisUserRepository.findByNomisUsername("testuser") } returns user
+    val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withEmail(null).produce()
+    every { nomisUserRepository.findByNomisUsername("testuser") } returns transformCas2UserEntityToNomisUserEntity(user)
 
     val slot = slot<NomisUserEntity>()
     every { nomisUserRepository.save(capture(slot)) } answers { firstArg() }

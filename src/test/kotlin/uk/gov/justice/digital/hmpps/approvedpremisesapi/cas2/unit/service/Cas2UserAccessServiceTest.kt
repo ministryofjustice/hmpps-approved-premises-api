@@ -1,11 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import java.time.OffsetDateTime
 
 class Cas2UserAccessServiceTest {
@@ -13,17 +20,19 @@ class Cas2UserAccessServiceTest {
   @Nested
   inner class UserCanViewApplication {
 
-    private val userAccessService = Cas2UserAccessService()
+    val mockkCas2UserService = mockk<Cas2UserService>()
+
+    private val userAccessService = Cas2UserAccessService(mockkCas2UserService)
 
     @Nested
     inner class WhenTransferredApplication {
       val referringPrisonCode = "other"
       val transferredToPrisonCode = "prison"
 
-      private val user = NomisUserEntityFactory().withActiveCaseloadId(transferredToPrisonCode).produce()
-      private val samePrisonUser = NomisUserEntityFactory().withActiveCaseloadId(transferredToPrisonCode).produce()
-      private val otherUser = NomisUserEntityFactory().withActiveCaseloadId(referringPrisonCode).produce()
-      private val otherPrisonUser = NomisUserEntityFactory().withActiveCaseloadId(referringPrisonCode).produce()
+      private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withActiveNomisCaseloadId(transferredToPrisonCode).produce()
+      private val samePrisonUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withActiveNomisCaseloadId(transferredToPrisonCode).produce()
+      private val otherUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withActiveNomisCaseloadId(referringPrisonCode).produce()
+      private val otherPrisonUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withActiveNomisCaseloadId(referringPrisonCode).produce()
 
       @Test
       fun `returns true if currently allocated POM or if in same prison`() {
@@ -58,7 +67,7 @@ class Cas2UserAccessServiceTest {
 
     @Nested
     inner class WhenApplicationCreatedByUser {
-      private val user = NomisUserEntityFactory()
+      private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
         .produce()
 
       @Test
@@ -76,9 +85,9 @@ class Cas2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationNotSubmitted {
-        private val user = NomisUserEntityFactory()
+        private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
           .produce()
-        private val anotherUser = NomisUserEntityFactory()
+        private val anotherUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
           .produce()
 
         @Test
@@ -93,11 +102,11 @@ class Cas2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationMadeForDifferentPrison {
-        private val user = NomisUserEntityFactory()
-          .withActiveCaseloadId("my-prison")
+        private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+          .withActiveNomisCaseloadId("my-prison")
           .produce()
-        private val anotherUser = NomisUserEntityFactory()
-          .withActiveCaseloadId("different-prison").produce()
+        private val anotherUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+          .withActiveNomisCaseloadId("different-prison").produce()
 
         @Test
         fun `returns false`() {
@@ -112,11 +121,11 @@ class Cas2UserAccessServiceTest {
 
         @Nested
         inner class WhenNoPrisonData {
-          private val userWithNoPrison = NomisUserEntityFactory()
-            .withActiveCaseloadId("my-prison")
+          private val userWithNoPrison = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+            .withActiveNomisCaseloadId("my-prison")
             .produce()
-          private val anotherUserWithNoPrison = NomisUserEntityFactory()
-            .withActiveCaseloadId("different-prison").produce()
+          private val anotherUserWithNoPrison = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+            .withActiveNomisCaseloadId("different-prison").produce()
 
           @Test
           fun `returns false`() {
@@ -132,11 +141,11 @@ class Cas2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationMadeForSamePrison {
-        private val user = NomisUserEntityFactory()
-          .withActiveCaseloadId("my-prison")
+        private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+          .withActiveNomisCaseloadId("my-prison")
           .produce()
-        private val anotherUser = NomisUserEntityFactory()
-          .withActiveCaseloadId("my-prison")
+        private val anotherUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+          .withActiveNomisCaseloadId("my-prison")
           .produce()
 
         @Test
@@ -159,6 +168,67 @@ class Cas2UserAccessServiceTest {
             .produce()
 
           assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+        }
+      }
+
+      @Nested
+      inner class PrisonBailApplications {
+        private val referrerOne = Cas2UserEntityFactory()
+          .produce()
+        private val referrerTwo = Cas2UserEntityFactory()
+          .produce()
+
+        private val submittedPrisonApplication = Cas2ApplicationEntityFactory()
+          .withApplicationOrigin(ApplicationOrigin.prisonBail)
+          .withCreatedByUser(referrerOne)
+          .withSubmittedAt(OffsetDateTime.now())
+          .produce()
+
+        private val unsubmittedPrisonApplication = Cas2ApplicationEntityFactory()
+          .withApplicationOrigin(ApplicationOrigin.prisonBail)
+          .withCreatedByUser(referrerOne)
+          .produce()
+
+        @Nested
+        inner class WhenApplicationIsPrisonBail {
+
+          @Nested
+          inner class WhenLoggedInAsPrisonReferrer {
+            @BeforeEach
+            fun setup() {
+              every {
+                mockkCas2UserService.userForRequestHasRole(
+                  listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
+                )
+              } returns true
+            }
+
+            @Test
+            fun `access submitted prison bail applications`() {
+              assertThat(
+                userAccessService.userCanViewApplication(
+                  referrerTwo,
+                  submittedPrisonApplication,
+                ),
+              ).isTrue
+            }
+
+            @Test
+            fun `cannot access unsubmitted prison bail applications`() {
+              assertThat(
+                userAccessService.userCanViewApplication(
+                  referrerTwo,
+                  unsubmittedPrisonApplication,
+                ),
+              ).isFalse
+            }
+
+            @Test
+            fun `access a note to any application that is of origin prisonBail`() {
+              assertThat(userAccessService.userCanAddNote(referrerTwo, submittedPrisonApplication)).isTrue
+              assertThat(userAccessService.userCanAddNote(referrerTwo, unsubmittedPrisonApplication)).isTrue
+            }
+          }
         }
       }
     }

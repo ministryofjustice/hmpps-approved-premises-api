@@ -2,11 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class NomisUserEntityFactory : Factory<NomisUserEntity> {
@@ -19,13 +19,13 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
   private var isEnabled: Yielded<Boolean> = { true }
   private var isActive: Yielded<Boolean> = { true }
   private var activeCaseloadId: Yielded<String?> = { null }
-  private var applications: Yielded<MutableList<Cas2ApplicationEntity>> = { mutableListOf() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
 
-  fun withActiveCaseloadId(activeCaseloadId: String) = apply {
+  fun withActiveCaseloadId(activeCaseloadId: String?) = apply {
     this.activeCaseloadId = { activeCaseloadId }
   }
 
@@ -45,16 +45,16 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
     this.nomisStaffId = { nomisStaffId }
   }
 
-  fun withApplications(applications: MutableList<Cas2ApplicationEntity>) = apply {
-    this.applications = { applications }
-  }
-
   fun withEmail(email: String?) = apply {
     this.email = { email }
   }
 
   fun withIsActive(isActive: Boolean) = apply {
     this.isActive = { isActive }
+  }
+
+  fun withIsEnabled(isEnabled: Boolean) = apply {
+    this.isEnabled = { isEnabled }
   }
 
   override fun produce(): NomisUserEntity = NomisUserEntity(
@@ -66,7 +66,7 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
     isEnabled = this.isEnabled(),
     isActive = this.isActive(),
     email = this.email(),
-    applications = this.applications(),
     activeCaseloadId = this.activeCaseloadId(),
+    createdAt = this.createdAt(),
   )
 }
