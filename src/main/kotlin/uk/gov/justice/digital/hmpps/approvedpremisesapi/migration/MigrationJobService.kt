@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.UpdateSen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2NoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2StatusUpdateMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2UserMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3MigrateNewBedspaceModelDataJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateApplicationOffenderNameJob
@@ -67,6 +68,7 @@ class MigrationJobService(
         MigrationJobType.cas1BackfillAutomaticPlacementApplications -> getBean(Cas1BackfillAutomaticPlacementApplicationsJob::class)
         MigrationJobType.cas1BackfillKeyWorkerUserAssignments -> getBean(Cas1BackfillKeyWorkerUserAssignmentsJob::class)
         MigrationJobType.cas1CapacityPerformanceTest -> getBean(Cas1CapacityPerformanceTestJob::class)
+        MigrationJobType.migrateUsersToCas2UsersTable -> getBean(Cas2UserMigrationJob::class)
       }
 
       if (job.shouldRunInTransaction) {

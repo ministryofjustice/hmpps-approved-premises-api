@@ -1,0 +1,142 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.migration
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+
+const val NO_OF_NOMIS_USERS_TO_MIGRATE = 110
+const val NO_OF_EXTERNAL_USERS_TO_MIGRATE = 120
+const val NO_OF_CAS2V2_USERS_TO_MIGRATE = 130
+const val TOTAL_NO_OF_USERS_TO_MIGRATE = NO_OF_NOMIS_USERS_TO_MIGRATE + NO_OF_CAS2V2_USERS_TO_MIGRATE + NO_OF_EXTERNAL_USERS_TO_MIGRATE
+
+class Cas2UserMigrationJobTest : IntegrationTestBase() {
+
+  @Autowired
+  lateinit var migrationJobService: MigrationJobService
+  lateinit var nomisUsers: List<NomisUserEntity>
+  lateinit var externalUsers: List<ExternalUserEntity>
+  lateinit var cas2v2Users: List<Cas2v2UserEntity>
+
+  @BeforeEach
+  fun setupDataRequiredForDataMigrationCas2UsersTable() {
+    nomisUsers = generateSequence {
+      nomisUserEntityFactory.produceAndPersist {
+        withActiveCaseloadId(randomStringUpperCase(3))
+      }
+    }.take(NO_OF_NOMIS_USERS_TO_MIGRATE).toList()
+    externalUsers = generateSequence {
+      externalUserEntityFactory.produceAndPersist()
+    }.take(NO_OF_EXTERNAL_USERS_TO_MIGRATE).toList()
+    cas2v2Users = generateSequence {
+      cas2v2UserEntityFactory.produceAndPersist()
+    }.take(NO_OF_CAS2V2_USERS_TO_MIGRATE).toList()
+  }
+
+  @Test
+  fun `should migrate all data required to new cas2 user table and run the job twice`() {
+    migrationJobService.runMigrationJob(MigrationJobType.migrateUsersToCas2UsersTable, 1)
+    val migratedUsers = assertExpectedNumberOfUsersWereMigrated()
+    assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers)
+  }
+
+  @Test
+  fun `running the migration job twice does not create duplicate rows`() {
+    migrationJobService.runMigrationJob(MigrationJobType.migrateUsersToCas2UsersTable, 1)
+    var migratedUsers = assertExpectedNumberOfUsersWereMigrated()
+    assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers)
+
+    migrationJobService.runMigrationJob(MigrationJobType.migrateUsersToCas2UsersTable, 1)
+    migratedUsers = assertExpectedNumberOfUsersWereMigrated()
+    assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers)
+  }
+
+  private fun assertExpectedNumberOfUsersWereMigrated(): List<Cas2UserEntity> {
+    val migratedPremises = cas2UserRepository.findAll()
+    assertThat(migratedPremises.size).isEqualTo(TOTAL_NO_OF_USERS_TO_MIGRATE)
+    return migratedPremises
+  }
+
+  private fun assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers: List<Cas2UserEntity>) {
+    migratedUsers.forEach { migratedUser ->
+      val nomisUser = nomisUsers.firstOrNull { it.id == migratedUser.id }
+      if (nomisUser != null) {
+        assertThatNomisUsersMatch(
+          cas2UserEntity = migratedUser,
+          nomisUserEntity = nomisUser,
+        )
+      } else {
+        val externalUser = externalUsers.firstOrNull { it.id == migratedUser.id }
+        if (externalUser != null) {
+          assertThatExternalUsersMatch(
+            cas2UserEntity = migratedUser,
+            externalUserEntity = externalUser,
+          )
+        } else {
+          val cas2v2User = cas2v2Users.firstOrNull { it.id == migratedUser.id }!!
+          assertThatCas2v2UsersMatch(
+            cas2UserEntity = migratedUser,
+            cas2v2UserEntity = cas2v2User,
+          )
+        }
+      }
+    }
+  }
+
+  private fun assertThatNomisUsersMatch(cas2UserEntity: Cas2UserEntity, nomisUserEntity: NomisUserEntity) {
+    assertThat(cas2UserEntity.id).isEqualTo(nomisUserEntity.id)
+    assertThat(cas2UserEntity.name).isEqualTo(nomisUserEntity.name)
+    assertThat(cas2UserEntity.username).isEqualTo(nomisUserEntity.nomisUsername)
+    assertThat(cas2UserEntity.email).isEqualTo(nomisUserEntity.email)
+    assertThat(cas2UserEntity.userType).isEqualTo(Cas2UserType.NOMIS)
+    assertThat(cas2UserEntity.nomisStaffId).isEqualTo(nomisUserEntity.nomisStaffId)
+    assertThat(cas2UserEntity.activeNomisCaseloadId).isEqualTo(nomisUserEntity.activeCaseloadId)
+    assertThat(cas2UserEntity.deliusStaffCode).isNull()
+    assertThat(cas2UserEntity.deliusTeamCodes).isNull()
+    assertThat(cas2UserEntity.isEnabled).isEqualTo(nomisUserEntity.isEnabled)
+    assertThat(cas2UserEntity.isActive).isEqualTo(nomisUserEntity.isActive)
+    assertThat(cas2UserEntity.externalType).isNull()
+    assertThat(cas2UserEntity.nomisAccountType).isEqualTo(nomisUserEntity.accountType)
+  }
+
+  private fun assertThatExternalUsersMatch(cas2UserEntity: Cas2UserEntity, externalUserEntity: ExternalUserEntity) {
+    assertThat(cas2UserEntity.id).isEqualTo(externalUserEntity.id)
+    assertThat(cas2UserEntity.name).isEqualTo(externalUserEntity.name)
+    assertThat(cas2UserEntity.username).isEqualTo(externalUserEntity.username)
+    assertThat(cas2UserEntity.email).isEqualTo(externalUserEntity.email)
+    assertThat(cas2UserEntity.userType).isEqualTo(Cas2UserType.NOMIS)
+    assertThat(cas2UserEntity.nomisStaffId).isNull()
+    assertThat(cas2UserEntity.activeNomisCaseloadId).isNull()
+    assertThat(cas2UserEntity.deliusStaffCode).isNull()
+    assertThat(cas2UserEntity.deliusTeamCodes).isNull()
+    assertThat(cas2UserEntity.isEnabled).isEqualTo(externalUserEntity.isEnabled)
+    assertThat(cas2UserEntity.isActive).isEqualTo(true)
+    assertThat(cas2UserEntity.externalType).isEqualTo(Cas2UserType.EXTERNAL)
+    assertThat(cas2UserEntity.nomisAccountType).isNull()
+  }
+
+  private fun assertThatCas2v2UsersMatch(cas2UserEntity: Cas2UserEntity, cas2v2UserEntity: Cas2v2UserEntity) {
+    assertThat(cas2UserEntity.id).isEqualTo(cas2v2UserEntity.id)
+    assertThat(cas2UserEntity.name).isEqualTo(cas2v2UserEntity.name)
+    assertThat(cas2UserEntity.username).isEqualTo(cas2v2UserEntity.username)
+    assertThat(cas2UserEntity.email).isEqualTo(cas2v2UserEntity.email)
+    assertThat(cas2UserEntity.userType).isEqualTo(cas2v2UserEntity.userType)
+    assertThat(cas2UserEntity.nomisStaffId).isEqualTo(cas2v2UserEntity.nomisStaffId)
+    assertThat(cas2UserEntity.activeNomisCaseloadId).isEqualTo(cas2v2UserEntity.activeNomisCaseloadId)
+    assertThat(cas2UserEntity.deliusStaffCode).isEqualTo(cas2v2UserEntity.deliusStaffCode)
+    assertThat(cas2UserEntity.deliusTeamCodes).isEqualTo(cas2v2UserEntity.deliusTeamCodes)
+    assertThat(cas2UserEntity.isEnabled).isEqualTo(cas2v2UserEntity.isEnabled)
+    assertThat(cas2UserEntity.isActive).isEqualTo(cas2v2UserEntity.isActive)
+    assertThat(cas2UserEntity.externalType).isNull()
+    assertThat(cas2UserEntity.nomisAccountType).isNull()
+  }
+}
