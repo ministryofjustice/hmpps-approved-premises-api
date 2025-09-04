@@ -8,6 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
@@ -45,19 +46,27 @@ data class Cas2UserEntity(
   @Enumerated(EnumType.STRING)
   var userType: Cas2UserType,
 
+  // External specific fields that are only expected to have values if the
+  // accountType is Cas2UserType.EXTERNAL
+  var externalType: String? = null,
+
   // Nomis specific fields that are only expected to have values if the
-  // accountType is Cas2v2UserType.NOMIS
+  // accountType is Cas2UserType.NOMIS
   var nomisStaffId: Long? = null,
   var activeNomisCaseloadId: String? = null,
+  var nomisAccountType: String? = null,
 
   // Delius specific fields that are only expected to have values if the
-  // accountType is Cas2v2UserType.DELIUS
+  // accountType is Cas2UserType.DELIUS
   @Convert(converter = StringListConverter::class)
   var deliusTeamCodes: List<String>?,
   var deliusStaffCode: String?,
 
   var isEnabled: Boolean,
   var isActive: Boolean,
+
+  @UpdateTimestamp
+  private val updatedAt: OffsetDateTime? = null,
 
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,
