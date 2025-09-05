@@ -512,6 +512,18 @@ class Cas3PremisesService(
       "$.startDate" hasValidationError "invalidStartDateInTheFuture"
     }
 
+    if (startDate.isBefore(premises.startDate)) {
+      return Cas3FieldValidationError(
+        mapOf(
+          "$.startDate" to Cas3ValidationMessage(
+            entityId = premises.id.toString(),
+            message = "startDateBeforePremisesStartDate",
+            value = premises.startDate.toString(),
+          ),
+        ),
+      )
+    }
+
     var room = RoomEntity(
       id = UUID.randomUUID(),
       name = trimmedReference,
