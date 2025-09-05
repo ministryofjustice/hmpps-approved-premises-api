@@ -61,4 +61,6 @@ interface Cas3BedspacesRepository : JpaRepository<Cas3BedspacesEntity, UUID> {
   """,
   )
   fun findArchivedBedspaceByBedspaceIdAndDate(bedspaceId: UUID, endDate: LocalDate): Cas3BedspacesEntity?
+
+  fun findByPremisesId(premisesId: UUID): List<Cas3BedspacesEntity>
 }

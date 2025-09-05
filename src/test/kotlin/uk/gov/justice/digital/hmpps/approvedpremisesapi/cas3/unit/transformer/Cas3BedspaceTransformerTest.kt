@@ -65,28 +65,31 @@ class Cas3BedspaceTransformerTest {
 
   @ParameterizedTest
   @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer.Cas3BedspaceTransformerTest#startDateAndStatusProvider")
-  fun `transformJpaToApi transforms the BedspaceEntity into Cas3Bedspace correctly`(startDate: LocalDate) {
+  fun `transformJpaToApi transforms the BedspaceEntity into Cas3Bedspace correctly`(startDate: LocalDate, status: Cas3BedspaceStatus, scheduledUnarchiveDate: LocalDate?) {
     val premises = Cas3PremisesEntityFactory()
       .withDefaults()
       .produce()
 
     val bedspace = Cas3BedspaceEntityFactory()
       .withPremises(premises)
+      .withReference(randomStringMultiCaseWithNumbers(10))
+      .withNotes(randomStringLowerCase(100))
       .withStartDate(startDate)
       .withEndDate(startDate.plusDays(180))
       .withCreatedAt(OffsetDateTime.now().minusDays(100))
       .produce()
 
-    val result = cas3BedspaceTransformer.transformJpaToApi(bedspace, Cas3BedspaceStatus.online)
+    val result = cas3BedspaceTransformer.transformJpaToApi(bedspace, status)
 
     assertThat(result).isEqualTo(
       Cas3Bedspace(
         id = bedspace.id,
         reference = bedspace.reference,
-        startDate = bedspace.createdAt!!.toLocalDate(),
+        startDate = bedspace.createdAt.toLocalDate(),
         endDate = bedspace.endDate,
         notes = bedspace.notes,
-        status = Cas3BedspaceStatus.online,
+        scheduleUnarchiveDate = scheduledUnarchiveDate,
+        status = status,
         bedspaceCharacteristics = bedspace.characteristics.map(cas3BedspaceCharacteristicTransformer::transformJpaToApi),
       ),
     )
