@@ -19,6 +19,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import java.time.LocalDate
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -37,6 +38,10 @@ data class Cas3PremisesEntity(
   @Enumerated(value = EnumType.STRING)
   var status: PropertyStatus,
   var notes: String,
+  @Column(name = "start_date")
+  var startDate: LocalDate,
+  @Column(name = "end_date")
+  var endDate: LocalDate?,
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "probation_delivery_unit_id")

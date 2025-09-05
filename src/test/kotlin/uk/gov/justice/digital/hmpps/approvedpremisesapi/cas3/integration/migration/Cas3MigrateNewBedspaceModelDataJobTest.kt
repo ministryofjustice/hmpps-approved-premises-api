@@ -50,6 +50,8 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
             pickRandomCharacteristicAndRemoveFromList(premisesCharacteristicsCopy),
           ),
         )
+        withStartDate(LocalDate.now().minusDays(100))
+        withEndDate(LocalDate.now().plusDays(180))
       }
     }.take(NO_OF_PREMISES_TO_MIGRATE).toList()
 
@@ -113,6 +115,8 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
     assertThat(cas3PremisesEntity.status).isEqualTo(temporaryAccommodationPremisesEntity.status)
     assertThat(cas3PremisesEntity.notes).isEqualTo(temporaryAccommodationPremisesEntity.notes)
     assertThat(cas3PremisesEntity.turnaroundWorkingDays).isEqualTo(temporaryAccommodationPremisesEntity.turnaroundWorkingDays)
+    assertThat(cas3PremisesEntity.startDate).isEqualTo(temporaryAccommodationPremisesEntity.startDate)
+    assertThat(cas3PremisesEntity.endDate).isEqualTo(temporaryAccommodationPremisesEntity.endDate)
   }
 
   private fun assertThatBedspacesMatchRoomsAndBeds(cas3PremisesEntity: Cas3PremisesEntity, temporaryAccommodationPremisesEntity: TemporaryAccommodationPremisesEntity) {

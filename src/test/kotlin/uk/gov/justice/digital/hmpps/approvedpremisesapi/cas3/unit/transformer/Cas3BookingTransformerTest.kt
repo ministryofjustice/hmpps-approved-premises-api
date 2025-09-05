@@ -118,6 +118,8 @@ class Cas3BookingTransformerTest {
     ).produce(),
     bedspaces = mutableListOf(),
     turnaroundWorkingDays = 3,
+    startDate = LocalDate.now().minusDays(100),
+    endDate = null,
   )
 
   private val bedspaceCharacteristic = Cas3BedspaceCharacteristicEntityFactory().produce()
