@@ -19,13 +19,13 @@ interface MoveOnCategoryRepository : JpaRepository<MoveOnCategoryEntity, UUID> {
   @Query("SELECT d FROM MoveOnCategoryEntity d WHERE d.serviceScope = 'approved-premises' AND d.isActive = true")
   fun findActiveForCas1(): List<MoveOnCategoryEntity>
 
-  @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.serviceScope IN (:serviceName, '*')")
+  @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.serviceScope IN (:serviceName, '*') ORDER")
   fun findAllByServiceScope(serviceName: String): List<MoveOnCategoryEntity>
 
   @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.isActive = true AND m.serviceScope IN (:serviceName, '*')")
   fun findActiveByServiceScope(serviceName: String): List<MoveOnCategoryEntity>
 
-  @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.isActive = true")
+  @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.isActive = true ORDER BY m.name ASC")
   fun findActive(): List<MoveOnCategoryEntity>
 }
 

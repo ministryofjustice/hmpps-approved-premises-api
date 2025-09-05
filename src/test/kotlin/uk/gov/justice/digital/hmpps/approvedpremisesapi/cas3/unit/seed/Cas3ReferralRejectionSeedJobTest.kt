@@ -5,7 +5,6 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3ReferralRejectionSeedCsvRow
@@ -118,7 +117,7 @@ class Cas3ReferralRejectionSeedJobTest {
         )
         .produce()
 
-    every { mockReferralRejectionReasonRepository.findByNameAndActive(notExistRejectionReason, ServiceName.temporaryAccommodation.value) } returns null
+    every { mockReferralRejectionReasonRepository.findByNameAndActive(notExistRejectionReason) } returns null
 
     assertThatThrownBy {
       seedJob.processRow(Cas3ReferralRejectionSeedCsvRow(assessmentId, notExistRejectionReason, null, false, deliusUsername))
@@ -139,8 +138,8 @@ class Cas3ReferralRejectionSeedJobTest {
 
     every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns assessment
 
-    every { mockReferralRejectionReasonRepository.findByNameAndActive("rejection reason", ServiceName.temporaryAccommodation.value) } returns
-      ReferralRejectionReasonEntity(UUID.randomUUID(), "rejection reason", true, ServiceName.temporaryAccommodation.value, 1)
+    every { mockReferralRejectionReasonRepository.findByNameAndActive("rejection reason") } returns
+      ReferralRejectionReasonEntity(UUID.randomUUID(), "rejection reason", true, 1)
 
     every { mockAssessmentRepository.save(any()) } throws RuntimeException("Failed to update assessment with id $assessmentId")
 
