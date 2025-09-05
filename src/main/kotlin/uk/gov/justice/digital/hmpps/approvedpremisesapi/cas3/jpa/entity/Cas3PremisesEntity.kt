@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import java.time.LocalDate
 import java.util.UUID
+import org.springframework.data.jpa.repository.Query
 
 @SuppressWarnings("LongParameterList")
 @Entity
@@ -71,4 +72,7 @@ data class Cas3PremisesEntity(
 )
 
 @Repository
-interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID>
+interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID> {
+  @Query
+  fun countByNameIgnoreCase(name: String): Int
+}
