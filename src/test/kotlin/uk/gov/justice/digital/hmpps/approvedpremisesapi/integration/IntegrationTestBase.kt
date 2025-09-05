@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.ExternalUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.NomisUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CancellationEntityFactory
@@ -70,6 +71,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.v2.Cas3v2ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.v2.Cas3v2TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
@@ -291,6 +294,9 @@ import java.util.UUID
 @ActiveProfiles("test")
 @Tag("integration")
 abstract class IntegrationTestBase {
+  @Autowired
+  private lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
+
   @Autowired
   lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
@@ -643,6 +649,7 @@ abstract class IntegrationTestBase {
   lateinit var assessmentClarificationNoteEntityFactory: PersistedFactory<AssessmentClarificationNoteEntity, UUID, AssessmentClarificationNoteEntityFactory>
   lateinit var assessmentReferralHistoryUserNoteEntityFactory: PersistedFactory<AssessmentReferralHistoryUserNoteEntity, UUID, AssessmentReferralHistoryUserNoteEntityFactory>
   lateinit var assessmentReferralHistorySystemNoteEntityFactory: PersistedFactory<AssessmentReferralHistorySystemNoteEntity, UUID, AssessmentReferralHistorySystemNoteEntityFactory>
+  lateinit var cas3BedspaceCharacteristicEntityFactory: PersistedFactory<Cas3BedspaceCharacteristicEntity, UUID, Cas3BedspaceCharacteristicEntityFactory>
   lateinit var characteristicEntityFactory: PersistedFactory<CharacteristicEntity, UUID, CharacteristicEntityFactory>
   lateinit var roomEntityFactory: PersistedFactory<RoomEntity, UUID, RoomEntityFactory>
   lateinit var bedEntityFactory: PersistedFactory<BedEntity, UUID, BedEntityFactory>
@@ -761,6 +768,7 @@ abstract class IntegrationTestBase {
     assessmentClarificationNoteEntityFactory = PersistedFactory({ AssessmentClarificationNoteEntityFactory() }, assessmentClarificationNoteRepository)
     assessmentReferralHistoryUserNoteEntityFactory = PersistedFactory({ AssessmentReferralHistoryUserNoteEntityFactory() }, assessmentReferralUserNoteRepository)
     assessmentReferralHistorySystemNoteEntityFactory = PersistedFactory({ AssessmentReferralHistorySystemNoteEntityFactory() }, assessmentReferralSystemNoteRepository)
+    cas3BedspaceCharacteristicEntityFactory = PersistedFactory({ Cas3BedspaceCharacteristicEntityFactory() }, cas3BedspaceCharacteristicRepository)
     characteristicEntityFactory = PersistedFactory({ CharacteristicEntityFactory() }, characteristicRepository)
     roomEntityFactory = PersistedFactory({ RoomEntityFactory() }, roomRepository)
     bedEntityFactory = PersistedFactory({ BedEntityFactory() }, bedRepository)

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingTopicException
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlin.reflect.KClass
@@ -249,6 +251,20 @@ class Cas3v2DomainEventService(
     } else {
       log.info("Not emitting SNS event for domain event because domain-events.cas3.emit-enabled does not contain '${domainEvent.data.eventType}'")
     }
+  }
+
+  @Transactional
+  fun savePremisesUnarchiveEvent(premises: Cas3PremisesEntity, currentStartDate: LocalDate, newStartDate: LocalDate, currentEndDate: LocalDate) {
+    val user = userService.getUserForRequest()
+    val domainEvent = cas3v2DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.crn,
+      nomsNumber = domainEvent.nomsNumber,
+      triggerSourceType = TriggerSourceType.USER,
+      false,
+    )
   }
 
   @Suppress("CyclomaticComplexMethod")

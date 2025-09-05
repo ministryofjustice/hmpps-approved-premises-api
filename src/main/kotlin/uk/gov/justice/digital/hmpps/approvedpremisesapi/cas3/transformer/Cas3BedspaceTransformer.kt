@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 
@@ -30,7 +29,7 @@ class Cas3BedspaceTransformer(
     startDate = jpa.startDate!!,
     endDate = jpa.endDate,
     notes = jpa.notes,
-    status = Cas3BedspaceStatus.online, // sets online as default for now - will change when we get there
+    status = jpa.getCas3BedspaceStatus(),
     bedspaceCharacteristics = jpa.characteristics.map(cas3BedspaceCharacteristicTransformer::transformJpaToApi),
     archiveHistory = archiveHistory,
   )

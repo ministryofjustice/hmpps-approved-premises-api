@@ -6,6 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Arri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledUpdatedEvent
@@ -28,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.net.URI
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -105,6 +109,31 @@ class Cas3v2DomainEventBuilder(
           notes = "",
           bookedBy = populateStaffMember(user),
         ),
+      ),
+    )
+  }
+
+  fun getPremisesUnarchiveEvent(
+    premises: Cas3PremisesEntity,
+    currentStartDate: LocalDate,
+    newStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    user: UserEntity,
+  ): DomainEvent<CAS3PremisesUnarchiveEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = CAS3PremisesUnarchiveEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.premisesUnarchived,
+        eventDetails = buildCAS3PremisesUnarchiveEventDetails(premises, currentStartDate, newStartDate, currentEndDate, user),
       ),
     )
   }
@@ -304,6 +333,20 @@ class Cas3v2DomainEventBuilder(
     applicationUrl = application.toUrl(),
     reasonDetail = null,
     recordedBy = user?.let { populateStaffMember(it) },
+  )
+
+  private fun buildCAS3PremisesUnarchiveEventDetails(
+    premises: Cas3PremisesEntity,
+    currentStartDate: LocalDate,
+    newStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    user: UserEntity,
+  ) = CAS3PremisesUnarchiveEventDetails(
+    premisesId = premises.id,
+    userId = user.id,
+    currentStartDate = currentStartDate,
+    newStartDate = newStartDate,
+    currentEndDate = currentEndDate,
   )
 
   private fun populateStaffMember(it: UserEntity) = StaffMember(

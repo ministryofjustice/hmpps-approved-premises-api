@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
@@ -17,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 
 class CharacteristicServiceTest {
   private val characteristicRepository = mockk<CharacteristicRepository>()
-
-  private val characteristicService = CharacteristicService(characteristicRepository)
+  private val bedspaceCharacteristicRepository = mockk<Cas3BedspaceCharacteristicRepository>()
+  private val characteristicService = CharacteristicService(characteristicRepository, bedspaceCharacteristicRepository)
 
   @Test
   fun `serviceScopeMatches returns false if the characteristic has the wrong service scope`() {
