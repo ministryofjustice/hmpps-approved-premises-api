@@ -53,7 +53,7 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
     LEFT JOIN probation_delivery_units pdu ON taa.probation_delivery_unit_id = pdu.id 
     LEFT JOIN bookings b on b.application_id = ap.id AND b.service='temporary-accommodation'
     LEFT JOIN premises premises ON premises.id = b.premises_id and premises.service='temporary-accommodation'
-    LEFT JOIN referral_rejection_reasons rrr ON aa.referral_rejection_reason_id = rrr.id AND rrr.service_scope='temporary-accommodation'
+    LEFT JOIN referral_rejection_reasons rrr ON aa.referral_rejection_reason_id = rrr.id
     WHERE
       a.service = 'temporary-accommodation'
       AND ap.submitted_at BETWEEN :startDate AND :endDate

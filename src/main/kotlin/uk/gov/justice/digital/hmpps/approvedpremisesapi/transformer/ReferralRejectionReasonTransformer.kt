@@ -10,6 +10,5 @@ class ReferralRejectionReasonTransformer {
     id = jpa.id,
     name = jpa.name,
     isActive = jpa.isActive,
-    serviceScope = jpa.serviceScope,
   )
 }
