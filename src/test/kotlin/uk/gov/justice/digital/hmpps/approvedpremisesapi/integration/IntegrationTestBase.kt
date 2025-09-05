@@ -295,7 +295,7 @@ abstract class IntegrationTestBase {
   lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
   @Autowired
-  private lateinit var cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
+  lateinit var cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @Suppress("SpringJavaInjectionPointsAutowiringInspection")
