@@ -583,10 +583,10 @@ class Cas3PremisesService(
   }
 
   fun canArchivePremisesInFuture(premisesId: UUID): Cas3ValidationResults {
-    val maximumPremisesArchiveDate = LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
+    val maximumPremisesArchiveDate = LocalDate.now(clock).plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
     var affectedBedspaces = mutableListOf<Cas3ValidationResult>()
 
-    val overlapBookings = bookingRepository.findActiveOverlappingBookingByPremisesId(premisesId, LocalDate.now())
+    val overlapBookings = bookingRepository.findActiveOverlappingBookingByPremisesId(premisesId, LocalDate.now(clock))
 
     overlapBookings.map {
       val bookingTurnaround = workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
@@ -706,7 +706,7 @@ class Cas3PremisesService(
     val threeMonthsFromToday = LocalDate.now(clock).plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
     val blockingArchiveDates = mutableListOf<LocalDate>()
 
-    val overlapBookings = bookingRepository.findActiveOverlappingBookingByBed(bedspaceId, LocalDate.now())
+    val overlapBookings = bookingRepository.findActiveOverlappingBookingByBed(bedspaceId, LocalDate.now(clock))
 
     overlapBookings.map {
       val bookingTurnaround = workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
@@ -724,10 +724,10 @@ class Cas3PremisesService(
       blockingArchiveDates += overlappingVoid.endDate
     }
 
-    if (blockingArchiveDates.isEmpty()) {
-      return CasResult.Success(null)
+    return if (blockingArchiveDates.isEmpty()) {
+      CasResult.Success(null)
     } else {
-      return CasResult.Success(Cas3ValidationResult(bedspaceId, bedEntity.room.name, blockingArchiveDates.max()))
+      CasResult.Success(Cas3ValidationResult(bedspaceId, bedEntity.room.name, blockingArchiveDates.max()))
     }
   }
 
