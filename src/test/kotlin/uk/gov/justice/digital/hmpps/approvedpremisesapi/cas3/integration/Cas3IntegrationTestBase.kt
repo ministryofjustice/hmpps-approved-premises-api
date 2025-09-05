@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -215,6 +217,29 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     archiveHistory = archiveHistory,
   )
 
+  protected fun createCas3Bedspace(
+    bedspace: Cas3BedspacesEntity,
+    bedspaceStatus: Cas3BedspaceStatus,
+    scheduleUnarchiveDate: LocalDate? = null,
+    archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList(),
+  ) = Cas3Bedspace(
+    id = bedspace.id,
+    reference = bedspace.reference,
+    startDate = bedspace.createdAt!!.toLocalDate(),
+    bedspaceCharacteristics = bedspace.characteristics.map { characteristic ->
+      Cas3BedspaceCharacteristic(
+        id = characteristic.id,
+        description = characteristic.description,
+        name = characteristic.name,
+      )
+    },
+    endDate = bedspace.endDate,
+    status = bedspaceStatus,
+    scheduleUnarchiveDate = scheduleUnarchiveDate,
+    notes = bedspace.notes,
+    archiveHistory = archiveHistory,
+  )
+
   protected fun pickRandomCharacteristicAndRemoveFromList(characteristics: MutableList<CharacteristicEntity>): CharacteristicEntity {
     val randomCharacteristic = randomOf(characteristics)
     characteristics.remove(randomCharacteristic)
@@ -260,6 +285,37 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
   @SuppressWarnings("LongParameterList")
   protected fun createBedspaceUnarchiveDomainEvent(
     bedspace: BedEntity,
+    premisesId: UUID,
+    userId: UUID,
+    newStartDate: LocalDate,
+    cancelledAt: OffsetDateTime? = null,
+  ) = domainEventFactory.produceAndPersist {
+    withService(ServiceName.temporaryAccommodation)
+    withCas3BedspaceId(bedspace.id)
+    withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+    withCas3CancelledAt(cancelledAt)
+    withData(
+      objectMapper.writeValueAsString(
+        CAS3BedspaceUnarchiveEvent(
+          id = UUID.randomUUID(),
+          timestamp = OffsetDateTime.now().toInstant(),
+          eventType = EventType.bedspaceUnarchived,
+          eventDetails = CAS3BedspaceUnarchiveEventDetails(
+            bedspaceId = bedspace.id,
+            premisesId = premisesId,
+            userId = userId,
+            currentStartDate = bedspace.startDate!!,
+            currentEndDate = bedspace.endDate!!,
+            newStartDate = newStartDate,
+          ),
+        ),
+      ),
+    )
+  }
+
+  @SuppressWarnings("LongParameterList")
+  protected fun createBedspaceUnarchiveDomainEvent(
+    bedspace: Cas3BedspacesEntity,
     premisesId: UUID,
     userId: UUID,
     newStartDate: LocalDate,

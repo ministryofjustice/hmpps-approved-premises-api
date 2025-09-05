@@ -2,12 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
@@ -32,16 +34,43 @@ class Cas3v2BedspaceController(
     @PathVariable premisesId: UUID,
     @RequestBody newBedspace: Cas3NewBedspace,
   ): ResponseEntity<Cas3Bedspace> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+    val bedspace = extractEntityFromCasResult(cas3v2BedspacesService.createBedspace(premises, newBedspace.reference, newBedspace.startDate, newBedspace.notes, newBedspace.characteristicIds))
+    val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(bedspace)
+    return ResponseEntity.status(HttpStatus.CREATED).body(
+      cas3BedspaceTransformer.transformJpaToApi(
+        jpa = bedspace,
+        status = bedspaceStatus,
+      ),
+    )
+  }
+
+  @GetMapping("/premises/{premisesId}/bedspaces")
+  fun getBedspaces(@PathVariable premisesId: UUID): ResponseEntity<Cas3Bedspaces> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+    val bedspaces = cas3v2BedspacesService.getPremisesBedspaces(premises.id)
+    val bedspacesArchiveHistory = cas3v2BedspacesService.getBedspacesArchiveHistory(bedspaces.map { it.id })
+    val totalBedspaceByStatus = extractEntityFromCasResult(cas3v2BedspacesService.getBedspaceTotals(premises))
+    val result = Cas3Bedspaces(
+      bedspaces = bedspaces.map { bedspace ->
+        val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(bedspace)
+        val archiveHistory = bedspacesArchiveHistory
+          .firstOrNull { bedspaceArchiveHistory -> bedspaceArchiveHistory.bedspaceId == bedspace.id }
+          ?.actions ?: emptyList()
+        cas3BedspaceTransformer.transformJpaToApi(bedspace, bedspaceStatus, archiveHistory)
+      },
+      totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
+      totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
+      totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
+    )
+    return ResponseEntity.ok(result)
+  }
+
+  private fun getAndCheckUserCanViewPremises(premisesId: UUID): Cas3PremisesEntity {
     val premises = cas3v2PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
     if (!userAccessService.currentUserCanViewPremises(premises)) {
       throw ForbiddenProblem()
     }
-    val bedspace = cas3v2BedspacesService.createBedspace(premises, newBedspace.reference, newBedspace.startDate, newBedspace.notes, newBedspace.characteristicIds)
-    return ResponseEntity.status(HttpStatus.CREATED).body(
-      cas3BedspaceTransformer.transformJpaToApi(
-        jpa = extractEntityFromCasResult(bedspace),
-        status = Cas3BedspaceStatus.online,
-      ),
-    )
+    return premises
   }
 }
