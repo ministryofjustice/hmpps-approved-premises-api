@@ -758,6 +758,15 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
+    fun `When create a new bedspace with a start date before premises start date returns FieldValidationError with the correct message`() {
+      val premises = createPremisesEntity()
+
+      val result = premisesService.createBedspace(premises, randomStringMultiCaseWithNumbers(10), premises.startDate.minusDays(5), null, emptyList())
+
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.startDate", premises.id.toString(), "startDateBeforePremisesStartDate", premises.startDate.toString())
+    }
+
+    @Test
     fun `When create a new bedspace with a non exist characteristic returns FieldValidationError with the correct message`() {
       val premises = createPremisesEntity()
       val bedspace = createBedspace(premises, LocalDate.now().plusDays(3))

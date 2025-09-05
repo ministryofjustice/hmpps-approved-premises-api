@@ -1888,6 +1888,33 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `When create a new bedspace with start date before premises start date returns 400`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = createPremises(user.probationRegion)
+
+        val newBedspace = Cas3NewBedspace(
+          reference = "",
+          startDate = premises.startDate.minusDays(3),
+          characteristicIds = emptyList(),
+        )
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(newBedspace)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.startDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("startDateBeforePremisesStartDate")
+          .jsonPath("$.invalid-params[0].entityId").isEqualTo(premises.id.toString())
+          .jsonPath("$.invalid-params[0].value").isEqualTo(premises.startDate.toString())
+      }
+    }
+
+    @Test
     fun `When create a new bedspace with an unknown characteristic returns 400`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = createPremises(user.probationRegion)
