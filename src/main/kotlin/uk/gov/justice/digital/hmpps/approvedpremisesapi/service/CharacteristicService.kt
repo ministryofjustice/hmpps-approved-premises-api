@@ -4,6 +4,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
@@ -15,6 +17,7 @@ import java.util.UUID
 @Service
 class CharacteristicService(
   val characteristicRepository: CharacteristicRepository,
+  val bedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository,
 ) {
   fun getCharacteristic(characteristicId: UUID): CharacteristicEntity? = characteristicRepository.findByIdOrNull(characteristicId)
 
@@ -31,6 +34,8 @@ class CharacteristicService(
       else -> return false
     }
   }
+
+  fun getCas3BedspaceCharacteristic(characteristicId: UUID): Cas3BedspaceCharacteristicEntity? = bedspaceCharacteristicRepository.findByIdOrNull(characteristicId)
 
   fun getCas3Characteristics(): List<CharacteristicEntity> = characteristicRepository.findActiveByServiceScopeAndModelScope(
     ServiceName.temporaryAccommodation.value,

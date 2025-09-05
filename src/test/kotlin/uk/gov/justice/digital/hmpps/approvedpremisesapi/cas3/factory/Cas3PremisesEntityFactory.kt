@@ -89,6 +89,14 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
       .produce(),
   )
 
+  fun withStartDate(startDate: LocalDate) = apply {
+    this.startDate = { startDate }
+  }
+
+  fun withEndDate(endDate: LocalDate?) = apply {
+    this.endDate = { endDate }
+  }
+
   fun withCharacteristics(characteristics: MutableList<Cas3PremisesCharacteristicEntity>) = apply {
     this.characteristics = { characteristics }
   }

@@ -27,6 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.CAS3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.CAS3PersonDepartedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingConfirmedEvent
@@ -48,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
@@ -56,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFa
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -1539,7 +1544,76 @@ class Cas3v2DomainEventServiceTest {
     }
   }
 
-  private fun createCas3PremisesBookingEntity(): Cas3BookingEntity {
+  @Test
+  fun `savePremisesUnarchiveEvent saves event but does not emit it`() {
+    val occurredAt = Instant.now()
+    val currentStartDate = LocalDate.now().minusDays(20)
+    val currentEndDate = LocalDate.now().minusDays(10)
+    val newStartDate = LocalDate.now().plusDays(5)
+    val (_, premises) = createApplicationAndPremises()
+    val user = UserEntityFactory()
+      .withProbationRegion(premises.probationDeliveryUnit.probationRegion)
+      .produce()
+
+    val eventDetails = CAS3PremisesUnarchiveEventDetails(
+      premisesId = premises.id,
+      userId = user.id,
+      currentStartDate = currentStartDate,
+      newStartDate = newStartDate,
+      currentEndDate = currentEndDate,
+    )
+    val data = CAS3PremisesUnarchiveEvent(
+      eventDetails = eventDetails,
+      id = UUID.randomUUID(),
+      timestamp = occurredAt,
+      eventType = EventType.premisesUnarchived,
+    )
+    val domainEventId = UUID.randomUUID()
+
+    val domainEvent = DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = data,
+    )
+
+    every { cas3DomainEventBuilderMock.getPremisesUnarchiveEvent(eq(premises), eq(currentStartDate), eq(newStartDate), eq(currentEndDate), eq(user)) } returns domainEvent
+    every { domainEventRepositoryMock.save(any()) } returns null
+    every { userService.getUserForRequest() } returns user
+    every { userService.getUserForRequestOrNull() } returns user
+
+    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate)
+
+    val slot = slot<DomainEventEntity>()
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEvent.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_PREMISES_UNARCHIVED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEvent.crn) },
+      { assertThat(savedEvent.cas3PremisesId).isEqualTo(premises.id) },
+      { assertThat(savedEvent.cas3BedspaceId).isNull() },
+      { assertThat(savedEvent.applicationId).isNull() },
+      { assertThat(savedEvent.cas1SpaceBookingId).isNull() },
+      { assertThat(savedEvent.assessmentId).isNull() },
+      { assertThat(savedEvent.service).isEqualTo("CAS3") },
+      { assertThat(savedEvent.bookingId).isNull() },
+      { assertThat(savedEvent.nomsNumber).isNull() },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEvent.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEvent.data)) },
+      { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
+      { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
+    )
+  }
+
+  private fun createApplicationAndPremises(): Pair<TemporaryAccommodationApplicationEntity, Cas3PremisesEntity> {
     val probationRegion = ProbationRegionEntityFactory()
       .withYieldedApArea { ApAreaEntityFactory().produce() }
       .produce()
@@ -1562,9 +1636,14 @@ class Cas3v2DomainEventServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
+    return applicationEntity to premises
+  }
+
+  private fun createCas3PremisesBookingEntity(): Cas3BookingEntity {
+    val (application, premises) = createApplicationAndPremises()
     val bookingEntity = Cas3BookingEntityFactory()
       .withPremises(premises)
-      .withApplication(applicationEntity)
+      .withApplication(application)
       .withBedspace(
         Cas3BedspaceEntityFactory()
           .withPremises(premises)
