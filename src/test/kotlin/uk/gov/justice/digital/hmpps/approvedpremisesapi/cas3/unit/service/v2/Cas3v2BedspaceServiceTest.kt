@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
@@ -25,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2Do
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
@@ -36,7 +36,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas3v2BedspaceServiceTest {
-  private val mockCharacteristicServiceMock = mockk<CharacteristicService>()
+  private val mockCharacteristicService = mockk<CharacteristicService>()
   private val mockCas3BedspacesRepository = mockk<Cas3BedspacesRepository>()
   private val mockCas3v2PremisesService = mockk<Cas3v2PremisesService>()
   private val mockCas3v2DomainEventService = mockk<Cas3v2DomainEventService>()
@@ -44,7 +44,7 @@ class Cas3v2BedspaceServiceTest {
   private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   private val cas3v2BedspacesService = Cas3v2BedspacesService(
-    mockCharacteristicServiceMock,
+    mockCharacteristicService,
     mockCas3BedspacesRepository,
     mockCas3v2PremisesService,
     mockCas3v2DomainEventService,
@@ -173,7 +173,7 @@ class Cas3v2BedspaceServiceTest {
 
       val nonExistCharacteristicId = UUID.randomUUID()
 
-      every { mockCharacteristicServiceMock.getCas3BedspaceCharacteristic(nonExistCharacteristicId) } returns null
+      every { mockCharacteristicService.getCas3BedspaceCharacteristic(nonExistCharacteristicId) } returns null
 
       val result = cas3v2BedspacesService.createBedspace(
         premises,
@@ -418,6 +418,164 @@ class Cas3v2BedspaceServiceTest {
     }
   }
 
+  @Nested
+  inner class UpdateBedspace {
+    @Test
+    fun `When update a bedspace returns Success with correct result when validation passed`() {
+      val (premises, bedspace) = createPremisesAndBedspace()
+      val updateBedspaceReference = randomStringMultiCaseWithNumbers(10)
+      val updateBedspaceNotes = randomStringMultiCaseWithNumbers(100)
+      val updateBedspaceCharacteristic = Cas3BedspaceCharacteristicEntityFactory()
+        .produceMany()
+        .take(3)
+        .toList()
+
+      val updatedBedspace = Cas3BedspacesEntity(
+        id = bedspace.id,
+        reference = updateBedspaceReference,
+        startDate = bedspace.startDate,
+        endDate = bedspace.endDate,
+        createdAt = bedspace.createdAt,
+        notes = updateBedspaceNotes,
+        premises = premises,
+        characteristics = updateBedspaceCharacteristic.toMutableList(),
+      )
+
+      every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
+      every { mockCharacteristicService.getCas3BedspaceCharacteristic(any()) } answers {
+        val characteristicId = it.invocation.args[0] as UUID
+        updateBedspaceCharacteristic.firstOrNull { it.id == characteristicId }
+      }
+      every { mockCas3BedspacesRepository.save(any()) } returns updatedBedspace
+
+      val result = cas3v2BedspacesService.updateBedspace(
+        premises,
+        bedspace.id,
+        bedspaceReference = updateBedspaceReference,
+        notes = updateBedspaceNotes,
+        characteristicIds = updateBedspaceCharacteristic.map { it.id },
+      )
+
+      assertThatCasResult(result).isSuccess().with { bed ->
+        assertThat(updatedBedspace.reference).isEqualTo(updateBedspaceReference)
+        assertThat(updatedBedspace.notes).isEqualTo(updateBedspaceNotes)
+        assertThat(updatedBedspace).isEqualTo(updatedBedspace)
+        assertThat(updatedBedspace.premises).isEqualTo(premises)
+      }
+    }
+
+    @Test
+    fun `When updating a non existing bedspace returns a NotFound with the correct message`() {
+      val (premises, _) = createPremisesAndBedspace()
+      val nonExistingBedspaceId = UUID.randomUUID()
+
+      every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, nonExistingBedspaceId) } returns null
+
+      val result = cas3v2BedspacesService.updateBedspace(
+        premises,
+        bedspaceId = nonExistingBedspaceId,
+        bedspaceReference = randomStringMultiCaseWithNumbers(10),
+        notes = randomStringMultiCaseWithNumbers(100),
+        characteristicIds = emptyList(),
+      )
+
+      assertThatCasResult(result).isNotFound("Bedspace", nonExistingBedspaceId)
+    }
+
+    @Test
+    fun `When updating a bedspace that belongs to different premises returns a NotFound with the correct message`() {
+      val anotherPremises = createPremises()
+      val (_, bedspace) = createPremisesAndBedspace()
+
+      every { mockCas3BedspacesRepository.findCas3Bedspace(anotherPremises.id, bedspace.id) } returns null
+
+      val result = cas3v2BedspacesService.updateBedspace(
+        anotherPremises,
+        bedspace.id,
+        bedspaceReference = randomStringMultiCaseWithNumbers(10),
+        notes = randomStringMultiCaseWithNumbers(100),
+        characteristicIds = emptyList(),
+      )
+
+      assertThatCasResult(result).isNotFound("Bedspace", bedspace.id)
+    }
+
+    @Test
+    fun `When update a bedspace with an empty bedspace reference returns FieldValidationError with the correct message`() {
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
+
+      val result = cas3v2BedspacesService.updateBedspace(
+        premises,
+        bedspace.id,
+        bedspaceReference = "",
+        notes = randomStringMultiCaseWithNumbers(100),
+        characteristicIds = emptyList(),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "empty")
+    }
+
+    @Test
+    fun `When update a bedspace with reference less than 3 characters returns FieldValidationError with the correct message`() {
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
+
+      val result = cas3v2BedspacesService.updateBedspace(
+        premises,
+        bedspace.id,
+        bedspaceReference = "AB",
+        notes = randomStringMultiCaseWithNumbers(100),
+        characteristicIds = emptyList(),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "bedspaceReferenceNotMeetMinimumLength")
+    }
+
+    @Test
+    fun `When update a bedspace with reference containing only special characters returns FieldValidationError with the correct message`() {
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
+
+      val result = cas3v2BedspacesService.updateBedspace(
+        premises,
+        bedspace.id,
+        bedspaceReference = "!@#$%",
+        notes = randomStringMultiCaseWithNumbers(100),
+        characteristicIds = emptyList(),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "bedspaceReferenceMustIncludeLetterOrNumber")
+    }
+
+    @Test
+    fun `When update a bedspace with duplicate reference returns FieldValidationError with the correct message`() {
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      val existingRoom = Cas3BedspaceEntityFactory()
+        .withReference("EXISTING_REF")
+        .withPremises(premises)
+        .produce()
+
+      premises.bedspaces.add(existingRoom)
+
+      every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
+
+      val result = cas3v2BedspacesService.updateBedspace(
+        premises,
+        bedspace.id,
+        bedspaceReference = "existing_ref",
+        notes = null,
+        characteristicIds = emptyList(),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reference", "bedspaceReferenceExists")
+    }
+  }
+
   private fun createPremisesAndBedspace(
     premisesStatus: Cas3PremisesStatus = Cas3PremisesStatus.online,
     premisesEndDate: LocalDate? = null,
@@ -505,7 +663,7 @@ class Cas3v2BedspaceServiceTest {
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
-    CAS3_BEDSPACE_ARCHIVED,
+    DomainEventType.CAS3_BEDSPACE_ARCHIVED,
   )
 
   @SuppressWarnings("LongParameterList")

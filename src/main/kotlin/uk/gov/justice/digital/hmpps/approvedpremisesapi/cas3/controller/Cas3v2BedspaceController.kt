@@ -5,12 +5,14 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UpdateBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BedspaceTransformer
@@ -64,6 +66,20 @@ class Cas3v2BedspaceController(
       totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
     )
     return ResponseEntity.ok(result)
+  }
+
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}")
+  fun updateBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+    @RequestBody updateBedspace: Cas3UpdateBedspace,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+    val updatedBedspace = extractEntityFromCasResult(
+      cas3v2BedspacesService.updateBedspace(premises, bedspaceId, updateBedspace.reference, updateBedspace.notes, updateBedspace.characteristicIds),
+    )
+    val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(updatedBedspace)
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(updatedBedspace, bedspaceStatus))
   }
 
   private fun getAndCheckUserCanViewPremises(premisesId: UUID): Cas3PremisesEntity {

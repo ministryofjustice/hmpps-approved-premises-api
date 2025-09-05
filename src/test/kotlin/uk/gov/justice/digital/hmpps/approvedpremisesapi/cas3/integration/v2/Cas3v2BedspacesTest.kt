@@ -14,10 +14,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UpdateBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -488,6 +491,104 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
         status,
         archiveHistory = history.map { Cas3BedspaceArchiveAction(it.first, it.second) },
       )
+    }
+  }
+
+  @Nested
+  inner class UpdateBedspace {
+    @Test
+    fun `When updating a bedspace returns OK with correct body when given valid data`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = LocalDate.now().randomDateBefore(360), endDate = null)
+        val bedspaceCharacteristics = cas3BedspaceCharacteristicEntityFactory.produceAndPersistMultiple(5)
+        val updateBedspace = Cas3UpdateBedspace(
+          reference = randomStringMultiCaseWithNumbers(10),
+          characteristicIds = bedspaceCharacteristics.map { it.id },
+          notes = randomStringMultiCaseWithNumbers(30),
+        )
+
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(updateBedspace)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("reference").isEqualTo(updateBedspace.reference)
+          .jsonPath("notes").isEqualTo(updateBedspace.notes.toString())
+          .jsonPath("bedspaceCharacteristics[*].id").isEqualTo(bedspaceCharacteristics.map { it.id.toString() })
+          .jsonPath("bedspaceCharacteristics[*].name").isEqualTo(bedspaceCharacteristics.map { it.name })
+      }
+    }
+
+    @Test
+    fun `When updating a bedspace without notes it will default to empty`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = LocalDate.now().randomDateBefore(360), endDate = null)
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            Cas3UpdateBedspace(
+              reference = randomStringMultiCaseWithNumbers(10),
+              notes = null,
+              characteristicIds = emptyList(),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("notes").isEmpty()
+      }
+    }
+
+    @Test
+    fun `When updating a bedspace with empty reference returns Bad Request`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = LocalDate.now().randomDateBefore(360), endDate = null)
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            Cas3UpdateBedspace(
+              reference = "",
+              notes = randomStringMultiCaseWithNumbers(120),
+              characteristicIds = emptyList(),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.reference")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
+      }
+    }
+
+    @Test
+    fun `When updating a bedspace with an unknown characteristic returns Bad Request`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate = LocalDate.now().randomDateBefore(360), endDate = null)
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            Cas3UpdateBedspace(
+              reference = randomStringMultiCaseWithNumbers(12),
+              notes = randomStringMultiCaseWithNumbers(120),
+              characteristicIds = listOf(UUID.randomUUID()),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+      }
     }
   }
 }
