@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.External
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedException
 import java.util.UUID
 
 @Component
@@ -45,29 +46,29 @@ class Cas2UpdateAssessmentStatusSeedJob(
 
     val assessment =
       assessmentRepository.findByIdOrNull(row.assessmentId)
-        ?: throw CastAssessmentUpdateStatusException(
+        ?: throw SeedException(
           "Assessment with id ${row.assessmentId} not found",
         )
 
     val application = applicationRepository.findByIdOrNull(row.applicationId)
-      ?: throw CastAssessmentUpdateStatusException(
+      ?: throw SeedException(
         "Application with id ${row.applicationId} not found",
       )
 
     val assessor =
       externalUserRepository.findByUsername(row.assessorUsername)
-        ?: throw CastAssessmentUpdateStatusException(
+        ?: throw SeedException(
           "Assessor with username ${row.assessorUsername} not found",
         )
 
     if (assessment.application.id != application.id) {
-      throw CastAssessmentUpdateStatusException(
+      throw SeedException(
         "Application with id ${row.applicationId} not found on assessment ${row.assessmentId}",
       )
     }
 
     if (assessor.name != assessment.assessorName) {
-      throw CastAssessmentUpdateStatusException(
+      throw SeedException(
         "Assessor name ${assessor.name} does not match the assessor name on assesment ${row.assessmentId}",
       )
     }
@@ -82,10 +83,6 @@ class Cas2UpdateAssessmentStatusSeedJob(
     )
   }
 }
-
-class CastAssessmentUpdateStatusException(
-  message: String,
-) : RuntimeException(message)
 
 data class Cas2AssessmentUpdateStatusSeedRow(
   val assessmentId: UUID,
