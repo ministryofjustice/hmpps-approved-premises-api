@@ -16,4 +16,6 @@ and c3p.address_line1 = p.address_line1
 and (c3p.address_line2 = p.address_line2 OR (c3p.address_line2 IS NULL AND p.address_line2 IS NULL))
 and (c3p.town = p.town OR (c3p.town IS NULL AND p.town IS NULL))
 and c3p.status = p.status
+and (c3p.start_date = tap.start_date
+and (c3p.end_date = tap.end_date OR (c3p.end_date IS NULL AND tap.end_date IS NULL))
 and (c3p.notes = p.notes OR (c3p.notes IS NULL AND p.notes IS NULL));

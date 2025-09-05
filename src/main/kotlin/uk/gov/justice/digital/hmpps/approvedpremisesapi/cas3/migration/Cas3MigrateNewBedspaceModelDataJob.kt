@@ -88,6 +88,8 @@ class Cas3MigrateNewBedspaceModelDataJob(
       bedspaces = emptyList<Cas3BedspacesEntity>().toMutableList(),
       characteristics = emptyList<Cas3PremisesCharacteristicEntity>().toMutableList(),
       bookings = emptyList<Cas3BookingEntity>().toMutableList(),
+      startDate = premise.startDate,
+      endDate = premise.endDate,
     )
   }
 

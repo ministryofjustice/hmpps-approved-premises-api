@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.LocalDate
 import java.util.UUID
 
 class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
@@ -32,6 +33,8 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
   private var bedspaces: Yielded<MutableList<Cas3BedspacesEntity>> = { mutableListOf() }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.entries) }
   private var turnaroundWorkingDays: Yielded<Int> = { 3 }
+  private var startDate: Yielded<LocalDate> = { LocalDate.now().minusDays(180) }
+  private var endDate: Yielded<LocalDate?> = { null }
 
   fun withDefaults() = apply {
     withDefaultProbationDeliveryUnit()
@@ -109,5 +112,7 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     probationDeliveryUnit = this.probationDeliveryUnit!!.invoke(),
     bedspaces = this.bedspaces(),
     turnaroundWorkingDays = this.turnaroundWorkingDays(),
+    startDate = this.startDate(),
+    endDate = this.endDate(),
   )
 }
