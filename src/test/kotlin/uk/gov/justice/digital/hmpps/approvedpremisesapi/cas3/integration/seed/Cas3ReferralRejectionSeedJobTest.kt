@@ -28,7 +28,7 @@ class Cas3ReferralRejectionSeedJobTest : SeedTestBase() {
       withAllocatedToUser(user)
     }
 
-    val rejectedReason = "Another reason (please add)"
+    val rejectedReason = "CAS1/AP alternative suitable accommodation provided"
     val rejectedReasonDetail = randomStringLowerCase(30)
 
     seed(

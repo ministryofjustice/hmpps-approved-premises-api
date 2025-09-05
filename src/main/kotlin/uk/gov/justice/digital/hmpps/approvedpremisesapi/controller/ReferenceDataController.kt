@@ -119,15 +119,13 @@ class ReferenceDataController(
     xServiceName: ServiceName?,
     includeInactive: Boolean?,
   ): ResponseEntity<List<MoveOnCategory>> {
-    val moveOnCategories = when (xServiceName != null) {
-      true -> when (includeInactive) {
-        true -> moveOnCategoryRepository.findAllByServiceScope(xServiceName.value)
-        else -> moveOnCategoryRepository.findActiveByServiceScope(xServiceName.value)
-      }
-      false -> when (includeInactive) {
-        true -> moveOnCategoryRepository.findAll()
-        else -> moveOnCategoryRepository.findActive()
-      }
+    val moveOnCategories = when {
+      xServiceName == null && includeInactive == true -> moveOnCategoryRepository.findAll()
+      xServiceName == null -> moveOnCategoryRepository.findActive()
+      includeInactive == true -> moveOnCategoryRepository.findAllByServiceScope(xServiceName.value)
+      else -> moveOnCategoryRepository.findActiveByServiceScope(xServiceName.value)
+    }.let {
+      if (xServiceName == ServiceName.temporaryAccommodation) it.sortedBy { category -> category.name } else it
     }
 
     return ResponseEntity.ok(moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi))
@@ -150,7 +148,7 @@ class ReferenceDataController(
 
   override fun referenceDataLostBedReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<LostBedReason>> {
     val voidBedspaceReasons = when (xServiceName == ServiceName.temporaryAccommodation) {
-      true -> cas3VoidBedspaceReasonRepository.findAll()
+      true -> cas3VoidBedspaceReasonRepository.findAll().sortedBy { reason -> reason.name }
       false -> throw ForbiddenProblem()
     }
 
