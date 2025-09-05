@@ -4270,7 +4270,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
           val bed = beds.first()
-          val futureDepartureDate = LocalDate.now().plusMonths(4)
+          val futureDepartureDate = LocalDate.now(clock).plusMonths(4)
 
           bookingEntityFactory.produceAndPersist {
             withServiceName(ServiceName.temporaryAccommodation)
@@ -4278,7 +4278,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             withYieldedPremises { premises }
             withYieldedBed { bed }
             withStatus(BookingStatus.provisional)
-            withArrivalDate(LocalDate.now().minusDays(1))
+            withArrivalDate(LocalDate.now(clock).minusDays(1))
             withDepartureDate(futureDepartureDate)
           }
 
@@ -4306,7 +4306,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
           val bed = beds.first()
-          val futureDepartureDate = LocalDate.now().plusMonths(4)
+          val futureDepartureDate = LocalDate.now(clock).plusMonths(4)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withServiceName(ServiceName.temporaryAccommodation)
@@ -4314,7 +4314,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             withYieldedPremises { premises }
             withYieldedBed { bed }
             withStatus(BookingStatus.arrived)
-            withArrivalDate(LocalDate.now().minusDays(1))
+            withArrivalDate(LocalDate.now(clock).minusDays(1))
             withDepartureDate(futureDepartureDate)
           }
 
@@ -4344,14 +4344,14 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
           val bed = beds.first()
-          val futureDepartureDate = LocalDate.now().plusMonths(5)
+          val futureDepartureDate = LocalDate.now(clock).plusMonths(5)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premises)
             withBed(bed)
             withCrn("CRN123")
-            withArrivalDate(LocalDate.now().plusDays(1))
+            withArrivalDate(LocalDate.now(clock).plusDays(1))
             withDepartureDate(futureDepartureDate)
             withStatus(BookingStatus.confirmed)
           }
@@ -4384,12 +4384,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
           val bed = beds.first()
-          val futureEndDate = LocalDate.now().plusMonths(4)
+          val futureEndDate = LocalDate.now(clock).plusMonths(4)
 
           cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
-            withStartDate(LocalDate.now().plusDays(1))
+            withStartDate(LocalDate.now(clock).plusDays(1))
             withEndDate(futureEndDate)
             withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
@@ -4418,7 +4418,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
           val bed = beds.first()
-          val futureVoidEndDate = LocalDate.now().plusMonths(4)
+          val futureVoidEndDate = LocalDate.now(clock).plusMonths(4)
           val latestBlockingDate = futureVoidEndDate.plusWeeks(1)
 
           bookingEntityFactory.produceAndPersist {
@@ -4427,14 +4427,14 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             withYieldedPremises { premises }
             withYieldedBed { bed }
             withStatus(BookingStatus.provisional)
-            withArrivalDate(LocalDate.now().minusDays(1))
+            withArrivalDate(LocalDate.now(clock).minusDays(1))
             withDepartureDate(latestBlockingDate)
           }
 
           cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
-            withStartDate(LocalDate.now().plusDays(1))
+            withStartDate(LocalDate.now(clock).plusDays(1))
             withEndDate(futureVoidEndDate)
             withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
@@ -4463,14 +4463,14 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
           val bed = beds.first()
-          val nearFutureDepartureDate = LocalDate.now().plusMonths(2) // Within 3 months
+          val nearFutureDepartureDate = LocalDate.now(clock).plusMonths(2) // Within 3 months
 
           bookingEntityFactory.produceAndPersist {
             withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premises)
             withBed(bed)
             withCrn("CRN123")
-            withArrivalDate(LocalDate.now().plusDays(1))
+            withArrivalDate(LocalDate.now(clock).plusDays(1))
             withDepartureDate(nearFutureDepartureDate)
             withStatus(BookingStatus.provisional)
           }
@@ -4496,12 +4496,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
           val bed = beds.first()
-          val nearFutureEndDate = LocalDate.now().plusMonths(2)
+          val nearFutureEndDate = LocalDate.now(clock).plusMonths(2)
 
           cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
-            withStartDate(LocalDate.now().plusDays(1))
+            withStartDate(LocalDate.now(clock).plusDays(1))
             withEndDate(nearFutureEndDate)
             withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
@@ -4528,14 +4528,14 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         ) { premises, rooms, beds ->
           val bed1 = beds[0]
           val bed2 = beds[1]
-          val futureDepartureDate = LocalDate.now().plusMonths(4)
-          val futureVoidEndDate = LocalDate.now().plusMonths(5)
+          val futureDepartureDate = LocalDate.now(clock).plusMonths(4)
+          val futureVoidEndDate = LocalDate.now(clock).plusMonths(5)
 
           bookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed1)
             withCrn("CRN111")
-            withArrivalDate(LocalDate.now().plusDays(1))
+            withArrivalDate(LocalDate.now(clock).plusDays(1))
             withDepartureDate(futureDepartureDate)
             withStatus(BookingStatus.provisional)
           }
@@ -4543,7 +4543,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed2)
             withPremises(premises)
-            withStartDate(LocalDate.now().plusDays(1))
+            withStartDate(LocalDate.now(clock).plusDays(1))
             withEndDate(futureVoidEndDate)
             withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
@@ -4575,13 +4575,13 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
           val bed = beds.first()
-          val futureDepartureDate = LocalDate.now().plusMonths(4)
+          val futureDepartureDate = LocalDate.now(clock).plusMonths(4)
 
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed)
             withCrn("CRN000")
-            withArrivalDate(LocalDate.now().plusDays(1))
+            withArrivalDate(LocalDate.now(clock).plusDays(1))
             withDepartureDate(futureDepartureDate)
             withStatus(BookingStatus.provisional)
           }
@@ -4640,13 +4640,13 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
           val bed = beds.first()
-          val exactlyThreeMonthsDate = LocalDate.now().plusMonths(3).minusDays(1)
+          val exactlyThreeMonthsDate = LocalDate.now(clock).plusMonths(3).minusDays(1)
 
           bookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed)
             withCrn("CRN333")
-            withArrivalDate(LocalDate.now().plusDays(1))
+            withArrivalDate(LocalDate.now(clock).plusDays(1))
             withDepartureDate(exactlyThreeMonthsDate)
             withStatus(BookingStatus.provisional)
           }
@@ -4671,8 +4671,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           region = userEntity.probationRegion,
           bedspaceCount = 1,
         ) { premises, rooms, beds ->
+
           val bed = beds.first()
-          val justUnder3Months = LocalDate.now().plusMonths(3).minusDays(2)
+          val justUnder3Months = LocalDate.now(clock).plusMonths(3).minusDays(2)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -4680,7 +4681,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             withPremises(premises)
             withBed(bed)
             withCrn("CRN333")
-            withArrivalDate(LocalDate.now().plusDays(1))
+            withArrivalDate(LocalDate.now(clock).plusDays(1))
             withDepartureDate(justUnder3Months)
             withStatus(BookingStatus.provisional)
           }
@@ -5031,7 +5032,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     fun `Can archive a bedspace for a Premises that's not in the user's region returns 403 Forbidden`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val premises = createPremises(probationRegionEntityFactory.produceAndPersist())
-        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(360), endDate = null)
+        val bedspace = createBedspaceInPremises(premises, startDate = LocalDate.now(clock).minusDays(360), endDate = null)
 
         webTestClient.get()
           .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/can-archive")
