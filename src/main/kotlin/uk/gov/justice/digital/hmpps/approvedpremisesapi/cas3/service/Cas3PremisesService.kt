@@ -639,7 +639,15 @@ class Cas3PremisesService(
     }
 
     if (endDate.isBefore(premises.startDate)) {
-      return "$.endDate" hasSingleValidationError "endDateBeforePremisesStartDate"
+      return Cas3FieldValidationError(
+        mapOf(
+          "$.endDate" to Cas3ValidationMessage(
+            entityId = premises.id.toString(),
+            message = "endDateBeforePremisesStartDate",
+            value = premises.startDate.toString(),
+          ),
+        ),
+      )
     }
 
     cas3DomainEventService.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED))

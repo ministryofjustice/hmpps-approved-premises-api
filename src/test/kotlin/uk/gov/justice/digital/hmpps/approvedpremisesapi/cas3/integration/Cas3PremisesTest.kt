@@ -2891,6 +2891,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("$.title").isEqualTo("Bad Request")
           .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.endDate")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("endDateBeforePremisesStartDate")
+          .jsonPath("$.invalid-params[0].entityId").isEqualTo(premises.id.toString())
+          .jsonPath("$.invalid-params[0].value").isEqualTo(premises.startDate.toString())
       }
     }
 
