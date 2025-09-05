@@ -373,7 +373,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         referralRejectionReasonEntityFactory.produceAndPersist {
           withName(randomStringMultiCaseWithNumbers(6))
           withIsActive(true)
-          withServiceScope("TEMPORARY_ACCOMMODATION")
           withSortOrder(1)
         },
       )

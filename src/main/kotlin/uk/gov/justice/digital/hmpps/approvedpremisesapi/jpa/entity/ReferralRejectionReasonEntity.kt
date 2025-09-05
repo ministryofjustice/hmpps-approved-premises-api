@@ -12,11 +12,11 @@ import java.util.UUID
 
 @Repository
 interface ReferralRejectionReasonRepository : JpaRepository<ReferralRejectionReasonEntity, UUID> {
-  @Query("SELECT m FROM ReferralRejectionReasonEntity m WHERE m.serviceScope = :serviceName OR m.serviceScope = '*' ORDER BY m.name")
-  fun findAllByServiceScope(serviceName: String): List<ReferralRejectionReasonEntity>
+  @Query("SELECT m FROM ReferralRejectionReasonEntity m ORDER BY m.name")
+  fun findAllByServiceScope(): List<ReferralRejectionReasonEntity>
 
-  @Query("SELECT rr FROM ReferralRejectionReasonEntity rr WHERE rr.serviceScope = :serviceName AND rr.name = :name AND rr.isActive = true")
-  fun findByNameAndActive(name: String, serviceName: String): ReferralRejectionReasonEntity?
+  @Query("SELECT rr FROM ReferralRejectionReasonEntity rr WHERE rr.name = :name AND rr.isActive = true")
+  fun findByNameAndActive(name: String): ReferralRejectionReasonEntity?
 }
 
 @Entity
@@ -28,7 +28,6 @@ data class ReferralRejectionReasonEntity(
   val id: UUID,
   val name: String,
   val isActive: Boolean,
-  val serviceScope: String,
   val sortOrder: Int,
 ) {
   override fun toString() = "ReferralRejectionReasonEntity:$id"
