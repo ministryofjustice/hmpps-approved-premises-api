@@ -706,9 +706,7 @@ class ReferenceDataTest : IntegrationTestBase() {
   @Test
   fun `Get Cancellation Reasons for only temporary accommodation returns 200 with correct body`() {
     val expectedJson = """
-      [{"id":"7c54c8f5-14df-4836-af9c-c66a6021a375","name":"Person on probation failed to arrive","isActive":false,"serviceScope":"temporary-accommodation"},
-      {"id":"8afe2dc8-f024-4ab1-a98d-0e321e317b19","name":"Withdrawn by referrer (e.g. recalled, further custody, placement related risk concern)","isActive":false,"serviceScope":"temporary-accommodation"},
-      {"id":"d2a0d037-53db-4bb2-b9f7-afa07948a3f5","name":"Recording Error (e.g. a data entry error)","isActive":true,"serviceScope":"temporary-accommodation"},
+      [{"id":"d2a0d037-53db-4bb2-b9f7-afa07948a3f5","name":"Recording Error (e.g. a data entry error)","isActive":true,"serviceScope":"temporary-accommodation"},
       {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d480","name":"CAS1/AP alternative suitable accommodation provided","isActive":true,"serviceScope":"temporary-accommodation"},
       {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d481","name":"CAS2 alternative accommodation provided","isActive":true,"serviceScope":"temporary-accommodation"},
       {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d482","name":"Changes to booking - new booking not required","isActive":true,"serviceScope":"temporary-accommodation"},

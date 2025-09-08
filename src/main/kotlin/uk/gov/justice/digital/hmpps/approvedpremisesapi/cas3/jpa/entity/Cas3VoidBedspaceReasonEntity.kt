@@ -6,11 +6,16 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.hibernate.annotations.Immutable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface Cas3VoidBedspaceReasonRepository : JpaRepository<Cas3VoidBedspaceReasonEntity, UUID>
+interface Cas3VoidBedspaceReasonRepository : JpaRepository<Cas3VoidBedspaceReasonEntity, UUID> {
+
+  @Query("SELECT v FROM Cas3VoidBedspaceReasonEntity v WHERE v.isActive = true ORDER by v.name ASC")
+  fun findAllActive(): List<Cas3VoidBedspaceReasonEntity>
+}
 
 @Entity
 @Table(name = "cas3_void_bedspace_reasons")
