@@ -5,6 +5,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -12,6 +13,9 @@ import java.util.UUID
 @Repository
 interface ExternalUserRepository : JpaRepository<ExternalUserEntity, UUID> {
   fun findByUsername(userName: String): ExternalUserEntity?
+
+  @Query("SELECT n.id FROM ExternalUserEntity n")
+  fun findExternalUserIds(): List<UUID>
 }
 
 @Entity
