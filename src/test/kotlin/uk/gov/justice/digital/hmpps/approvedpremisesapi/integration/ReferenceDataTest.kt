@@ -934,27 +934,27 @@ class ReferenceDataTest : IntegrationTestBase() {
   @Test
   fun `Get Referral Rejection Reason for only temporary accommodation returns 200 with correct body`() {
     val expectedJson = """
-      [{"id":"f47ac10b-58cc-4372-a567-0e02b2c3d470","name":"CAS1/AP alternative suitable accommodation provided","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d471","name":"CAS2 alternative accommodation provided","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"11506230-49a8-48b5-bdf5-20f51324e8a5","name":"They’re not eligible (not because of NRPF)","serviceScope":"temporary-accommodation","isActive":false},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d472","name":"Consent not given by person on probation","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d473","name":"Local authority alternative suitable accommodation provided (includes Priority Need)","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"155ee6dc-ac2a-40d2-a350-90b63fb34a06","name":"No bedspace available in PDU","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"21b8569c-ef2e-4059-8676-323098d16aa5","name":"No recourse to public funds (NRPF)","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d474","name":"Not eligible (e.g. already released into the community, HDC)","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"88c3b8d5-77c8-4c52-84f0-ec9073e4df50","name":"Not enough time on their licence or post-sentence supervision (PSS)","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"85799bf8-8b64-4903-9ab8-b08a77f1a9d3","name":"Another reason (please add)","serviceScope":"temporary-accommodation","isActive":false},
-      {"id":"a1c7d402-77b5-4335-a67b-eba6a71c70bf","name":"Not enough time to place","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d475","name":"Other alternative accommodation provided (e.g. friends or family)","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d476","name":"Out of region referral","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d477","name":"Person has had maximum CAS3 placements on current sentence","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d478","name":"Previous behavioural concerns in CAS3","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d479","name":"Referral submitted too early","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d480","name":"Remanded in custody or detained","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"90e9d919-9a39-45cd-b405-7039b5640668","name":"Risk or needs cannot be safely managed in CAS3","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"b19ba749-408f-48c0-907c-11eace2dcf67","name":"Single occupancy bedspace not available","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"311de468-078b-4c39-ae42-8d41575b7726","name":"Suitable bedspace not available (not related to single occupancy availability)","serviceScope":"temporary-accommodation","isActive":true},
-      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d481","name":"Supplier unable to accommodate (e.g. arson needs cannot be met)","serviceScope":"temporary-accommodation","isActive":true}]
+      [{"id":"f47ac10b-58cc-4372-a567-0e02b2c3d470","name":"CAS1/AP alternative suitable accommodation provided","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d471","name":"CAS2 alternative accommodation provided","isActive":true},
+      {"id":"11506230-49a8-48b5-bdf5-20f51324e8a5","name":"They’re not eligible (not because of NRPF)","isActive":false},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d472","name":"Consent not given by person on probation","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d473","name":"Local authority alternative suitable accommodation provided (includes Priority Need)","isActive":true},
+      {"id":"155ee6dc-ac2a-40d2-a350-90b63fb34a06","name":"No bedspace available in PDU","isActive":true},
+      {"id":"21b8569c-ef2e-4059-8676-323098d16aa5","name":"No recourse to public funds (NRPF)","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d474","name":"Not eligible (e.g. already released into the community, HDC)","isActive":true},
+      {"id":"88c3b8d5-77c8-4c52-84f0-ec9073e4df50","name":"Not enough time on their licence or post-sentence supervision (PSS)","isActive":true},
+      {"id":"85799bf8-8b64-4903-9ab8-b08a77f1a9d3","name":"Another reason (please add)","isActive":false},
+      {"id":"a1c7d402-77b5-4335-a67b-eba6a71c70bf","name":"Not enough time to place","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d475","name":"Other alternative accommodation provided (e.g. friends or family)","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d476","name":"Out of region referral","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d477","name":"Person has had maximum CAS3 placements on current sentence","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d478","name":"Previous behavioural concerns in CAS3","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d479","name":"Referral submitted too early","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d480","name":"Remanded in custody or detained","isActive":true},
+      {"id":"90e9d919-9a39-45cd-b405-7039b5640668","name":"Risk or needs cannot be safely managed in CAS3","isActive":true},
+      {"id":"b19ba749-408f-48c0-907c-11eace2dcf67","name":"Single occupancy bedspace not available","isActive":true},
+      {"id":"311de468-078b-4c39-ae42-8d41575b7726","name":"Suitable bedspace not available (not related to single occupancy availability)","isActive":true},
+      {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d481","name":"Supplier unable to accommodate (e.g. arson needs cannot be met)","isActive":true}]
     """.trimIndent()
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
