@@ -12,6 +12,7 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -41,7 +42,15 @@ data class Cas3BedspacesEntity(
     inverseJoinColumns = [JoinColumn(name = "bedspace_characteristics_id")],
   )
   var characteristics: MutableList<Cas3BedspaceCharacteristicEntity>,
-)
+) {
+  fun isBedspaceUpcoming() = this.startDate?.isAfter(LocalDate.now()) ?: false
+  fun isBedspaceArchived() = this.endDate != null && this.endDate!! <= LocalDate.now()
+  fun getBedspaceStatus() = when {
+    this.isBedspaceUpcoming() -> Cas3BedspaceStatus.upcoming
+    this.isBedspaceArchived() -> Cas3BedspaceStatus.archived
+    else -> Cas3BedspaceStatus.online
+  }
+}
 
 @Repository
 interface Cas3BedspacesRepository : JpaRepository<Cas3BedspacesEntity, UUID> {

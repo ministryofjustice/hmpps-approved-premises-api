@@ -1320,13 +1320,17 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         // online bedspaces
         val bedspaceOne = createBedspaceInPremises(premises, startDate = LocalDate.now().minusMonths(6), endDate = null)
+        bedspaceOne.createdAt = OffsetDateTime.now().minusMonths(7)
+        bedRepository.saveAndFlush(bedspaceOne)
         expectedBedspaces.add(createCas3Bedspace(bedspaceOne, bedspaceOne.room, Cas3BedspaceStatus.online))
 
         val bedspaceTwo = createBedspaceInPremises(premises, startDate = LocalDate.now().minusMonths(5), endDate = LocalDate.now().plusDays(5))
+        bedspaceTwo.createdAt = OffsetDateTime.now().minusMonths(5)
+        bedRepository.saveAndFlush(bedspaceTwo)
         expectedBedspaces.add(createCas3Bedspace(bedspaceTwo, bedspaceTwo.room, Cas3BedspaceStatus.online))
 
         // upcoming bedspaces
-        val bedspaceThree = createBedspaceInPremises(premises, startDate = LocalDate.now().randomDateAfter(30), endDate = null)
+        val bedspaceThree = createBedspaceInPremises(premises, startDate = LocalDate.now().plusDays(5), endDate = null)
         expectedBedspaces.add(createCas3Bedspace(bedspaceThree, bedspaceThree.room, Cas3BedspaceStatus.upcoming))
 
         // archived bedspaces
@@ -1560,6 +1564,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           listOf(roomCharacteristicOne, roomCharacteristicTwo),
         )
 
+        bedspace.createdAt = OffsetDateTime.now().minusDays(70)
+        bedRepository.saveAndFlush(bedspace)
+
         val archiveBedspaceYesterday = LocalDate.now().minusDays(1)
         createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, null, archiveBedspaceYesterday)
 
@@ -1602,7 +1609,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val expectedBedspace = Cas3Bedspace(
           id = bedspace.id,
           reference = bedspace.room.name,
-          startDate = bedspace.startDate!!,
+          startDate = LocalDate.now().minusDays(70),
           endDate = bedspace.endDate,
           status = Cas3BedspaceStatus.online,
           archiveHistory = listOf(
@@ -1820,7 +1827,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .isCreated
           .expectBody()
           .jsonPath("reference").isEqualTo(newBedspace.reference)
-          .jsonPath("startDate").isEqualTo(newBedspace.startDate.toString())
+          .jsonPath("startDate").isEqualTo(LocalDate.now())
           .jsonPath("notes").isEqualTo(newBedspace.notes)
           .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
           .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
@@ -3632,6 +3639,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val originalEndDate = LocalDate.now().minusDays(3)
 
         val scheduledBedspaceToUnarchived = createBedspaceInPremises(premises, originalStartDate, originalEndDate)
+        scheduledBedspaceToUnarchived.createdAt = OffsetDateTime.now().minusDays(120)
+        bedRepository.saveAndFlush(scheduledBedspaceToUnarchived)
 
         createBedspaceUnarchiveDomainEvent(scheduledBedspaceToUnarchived, premises.id, userEntity.id, LocalDate.now().minusDays(30))
         val lastBedspaceUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(scheduledBedspaceToUnarchived, premises.id, userEntity.id, LocalDate.now().plusDays(10))
@@ -3644,7 +3653,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .isOk
           .expectBody()
           .jsonPath("id").isEqualTo(scheduledBedspaceToUnarchived.id)
-          .jsonPath("startDate").isEqualTo(originalStartDate)
+          .jsonPath("startDate").isEqualTo("2025-05-11")
           .jsonPath("endDate").isEqualTo(originalEndDate)
 
         // Verify the bedspace was updated
