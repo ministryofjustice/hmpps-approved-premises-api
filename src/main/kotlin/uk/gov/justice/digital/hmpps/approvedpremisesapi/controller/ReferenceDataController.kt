@@ -186,7 +186,7 @@ class ReferenceDataController(
     xServiceName: ServiceName?,
   ): ResponseEntity<List<ReferralRejectionReason>> {
     val referralRejectionReasons = when (xServiceName == ServiceName.temporaryAccommodation) {
-      true -> referralRejectionReasonRepository.findAll().sortedBy { it.name }
+      true -> referralRejectionReasonRepository.findAllActive()
       else -> throw ForbiddenProblem()
     }
 
