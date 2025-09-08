@@ -51,7 +51,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -90,13 +89,13 @@ class Cas1AssessmentServiceTest {
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val applicationStatusService = mockk<Cas1ApplicationStatusService>()
-  private val assessmentClarificationNoteListener = mockk<AssessmentClarificationNoteListener>()
   private val approvedPremisesAssessmentRepositoryMock = mockk<ApprovedPremisesAssessmentRepository>()
   private val lockableAssessmentRepositoryMock = mockk<LockableAssessmentRepository>()
   private val userAllocatorMock = mockk<UserAllocator>()
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val cas1PlacementApplicationServiceMock = mockk<Cas1PlacementApplicationService>()
   private val placementApplicationPlaceholderRepositoryMock = mockk<PlacementApplicationPlaceholderRepository>()
+  private val cas1ApplicationStatusServiceMock = mockk<Cas1ApplicationStatusService>()
 
   private val cas1AssessmentService = Cas1AssessmentService(
     userAccessServiceMock,
@@ -109,13 +108,13 @@ class Cas1AssessmentServiceTest {
     cas1AssessmentDomainEventService,
     cas1PlacementRequestEmailService,
     applicationStatusService,
-    assessmentClarificationNoteListener,
     approvedPremisesAssessmentRepositoryMock,
     lockableAssessmentRepositoryMock,
     cas1TaskDeadlineServiceMock,
     userAllocatorMock,
     placementApplicationPlaceholderRepositoryMock,
     cas1PlacementApplicationServiceMock,
+    cas1ApplicationStatusServiceMock,
     Clock.systemDefaultZone(),
   )
 
@@ -539,7 +538,7 @@ class Cas1AssessmentServiceTest {
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
-      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
+      every { cas1ApplicationStatusServiceMock.assessmentClarificationNoteCreated(any()) } returns Unit
       every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
         it.invocation.args[0] as AssessmentClarificationNoteEntity
       }
@@ -560,7 +559,7 @@ class Cas1AssessmentServiceTest {
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
 
-      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
+      every { cas1ApplicationStatusServiceMock.assessmentClarificationNoteCreated(any()) } returns Unit
       verify(exactly = 1) {
         assessmentClarificationNoteRepositoryMock.save(
           match {
@@ -607,7 +606,7 @@ class Cas1AssessmentServiceTest {
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
-      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
+      every { cas1ApplicationStatusServiceMock.assessmentClarificationNoteCreated(any()) } returns Unit
       every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
         it.invocation.args[0] as AssessmentClarificationNoteEntity
       }
@@ -628,7 +627,7 @@ class Cas1AssessmentServiceTest {
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
 
-      every { assessmentClarificationNoteListener.prePersist(any()) } returns Unit
+      every { cas1ApplicationStatusServiceMock.assessmentClarificationNoteCreated(any()) } returns Unit
       verify(exactly = 1) {
         assessmentClarificationNoteRepositoryMock.save(
           match {

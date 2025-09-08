@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -409,6 +410,104 @@ class Cas1ApplicationStatusServiceTest {
       verify { applicationRepository.save(application) }
 
       assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+    }
+  }
+
+  @Nested
+  inner class AssessmentClarificationNoteCreated {
+    @Test
+    fun `if created with no response, set application status to REQUESTED_FURTHER_INFORMATION`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val clarificationNote = AssessmentClarificationNoteEntityFactory()
+        .withAssessment(assessment)
+        .withCreatedBy(UserEntityFactory().withDefaults().produce())
+        .withResponse(null)
+        .produce()
+
+      service.assessmentClarificationNoteCreated(clarificationNote)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+    }
+
+    @Test
+    fun `if created with response already present, do not change status`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val clarificationNote = AssessmentClarificationNoteEntityFactory()
+        .withAssessment(assessment)
+        .withCreatedBy(UserEntityFactory().withDefaults().produce())
+        .withResponse("some response")
+        .produce()
+
+      service.assessmentClarificationNoteCreated(clarificationNote)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
+    }
+  }
+
+  @Nested
+  inner class AssessmentClarificationNoteUpdated {
+    @Test
+    fun `if updated with response present, set application status to ASSESSMENT_IN_PROGRESS`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val clarificationNote = AssessmentClarificationNoteEntityFactory()
+        .withAssessment(assessment)
+        .withCreatedBy(UserEntityFactory().withDefaults().produce())
+        .withResponse("now answered")
+        .produce()
+
+      service.assessmentClarificationNoteUpdated(clarificationNote)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+    }
+
+    @Test
+    fun `if updated with no response, do not change status`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val clarificationNote = AssessmentClarificationNoteEntityFactory()
+        .withAssessment(assessment)
+        .withCreatedBy(UserEntityFactory().withDefaults().produce())
+        .withResponse(null)
+        .produce()
+
+      service.assessmentClarificationNoteUpdated(clarificationNote)
+
+      assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
     }
   }
 }

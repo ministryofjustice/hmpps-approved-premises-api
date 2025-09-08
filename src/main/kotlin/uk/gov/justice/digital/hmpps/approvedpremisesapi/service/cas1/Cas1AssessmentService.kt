@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -53,13 +52,13 @@ class Cas1AssessmentService(
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val applicationStatusService: Cas1ApplicationStatusService,
-  private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
   private val approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentRepository,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
   private val taskDeadlineService: Cas1TaskDeadlineService,
   private val userAllocator: UserAllocator,
   private val placementApplicationPlaceholderRepository: PlacementApplicationPlaceholderRepository,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
+  private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val clock: Clock,
 ) {
 
@@ -212,7 +211,7 @@ class Cas1AssessmentService(
       response = null,
       responseReceivedOn = null,
     )
-    prePersistClarificationNote(clarificationNoteToSave)
+    createAssessmentClarificationNote(clarificationNoteToSave)
     val clarificationNoteEntity = assessmentClarificationNoteRepository.save(clarificationNoteToSave)
 
     cas1AssessmentDomainEventService.furtherInformationRequested(assessment, clarificationNoteEntity)
@@ -250,7 +249,7 @@ class Cas1AssessmentService(
     clarificationNoteEntity.response = response
     clarificationNoteEntity.responseReceivedOn = responseReceivedOn
 
-    preUpdateClarificationNote(clarificationNoteEntity)
+    updateAssessmentClarificationNote(clarificationNoteEntity)
     val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
 
     val assessmentToUpdate = clarificationNoteEntity.assessment as ApprovedPremisesAssessmentEntity
@@ -460,12 +459,12 @@ class Cas1AssessmentService(
     return requiredQualifications
   }
 
-  private fun prePersistClarificationNote(note: AssessmentClarificationNoteEntity) {
-    assessmentClarificationNoteListener.prePersist(note)
+  private fun createAssessmentClarificationNote(note: AssessmentClarificationNoteEntity) {
+    cas1ApplicationStatusService.assessmentClarificationNoteCreated(note)
   }
 
-  private fun preUpdateClarificationNote(note: AssessmentClarificationNoteEntity) {
-    assessmentClarificationNoteListener.preUpdate(note)
+  private fun updateAssessmentClarificationNote(note: AssessmentClarificationNoteEntity) {
+    cas1ApplicationStatusService.assessmentClarificationNoteUpdated(note)
   }
 
   @SuppressWarnings("ReturnCount")
