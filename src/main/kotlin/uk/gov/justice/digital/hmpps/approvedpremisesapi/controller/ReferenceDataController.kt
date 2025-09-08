@@ -139,7 +139,11 @@ class ReferenceDataController(
 
   override fun referenceDataCancellationReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<CancellationReason>> {
     val cancellationReasons = when (xServiceName != null) {
-      true -> cancellationReasonRepository.findAllByServiceScope(xServiceName.value)
+      true -> if (xServiceName == ServiceName.temporaryAccommodation) {
+        cancellationReasonRepository.findAllByServiceScopeIsActive(xServiceName.value)
+      } else {
+        cancellationReasonRepository.findAllByServiceScope(xServiceName.value)
+      }
       false -> cancellationReasonRepository.findAll()
     }
 
@@ -148,7 +152,7 @@ class ReferenceDataController(
 
   override fun referenceDataLostBedReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<LostBedReason>> {
     val voidBedspaceReasons = when (xServiceName == ServiceName.temporaryAccommodation) {
-      true -> cas3VoidBedspaceReasonRepository.findAll().sortedBy { reason -> reason.name }
+      true -> cas3VoidBedspaceReasonRepository.findAllActive()
       false -> throw ForbiddenProblem()
     }
 
