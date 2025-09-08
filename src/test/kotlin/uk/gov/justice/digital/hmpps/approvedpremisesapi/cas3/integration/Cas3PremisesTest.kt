@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -73,6 +74,9 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3PremisesTest : Cas3IntegrationTestBase() {
+  @Autowired
+  private lateinit var premisesRepository: PremisesRepository
+
   @Autowired
   lateinit var cas3FutureBookingTransformer: Cas3FutureBookingTransformer
 
@@ -1173,6 +1177,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     fun `Get Premises by ID returns OK with correct body when a premises is archived with future end date`(args: Pair<LocalDate, Cas3PremisesStatus>) {
       val (endDate, status) = args
       givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR), premisesStatus = PropertyStatus.archived, premisesEndDate = endDate) { user, jwt, premises ->
+        premises.createdAt = OffsetDateTime.now().minusDays(120)
+        premisesRepository.save(premises)
+
         val expectedPremises = createCas3Premises(
           premises,
           user.probationRegion,
@@ -1290,7 +1297,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         localAuthorityArea.identifier,
         localAuthorityArea.name,
       ),
-      startDate = premises.startDate,
+      startDate = premises.createdAt?.toLocalDate(),
       endDate = premises.endDate,
       status = status,
       characteristics = premises.characteristics.sortedBy { it.id }.map { characteristic ->
@@ -3784,6 +3791,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       ) { userEntity, jwt, premises ->
         clock.setNow(LocalDateTime.parse("2025-07-16T21:33:04"))
 
+        premises.createdAt = OffsetDateTime.now().minusDays(60)
+        premisesRepository.saveAndFlush(premises)
+
         val bedspace = createBedspaceInPremises(premises, previousStartDate, previousEndDate)
 
         createPremisesUnarchiveDomainEvent(
@@ -3841,7 +3851,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         // Verify that premise was updated
         val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
         assertThat(updatedPremises.status).isEqualTo(PropertyStatus.archived)
-        assertThat(updatedPremises.startDate).isEqualTo(previousStartDate)
+        assertThat(updatedPremises.startDate).isEqualTo(premises.createdAt?.toLocalDate())
         assertThat(updatedPremises.endDate).isEqualTo(previousEndDate)
 
         val updatedPremisesUnarchiveDomainEvent = domainEventRepository.findByIdOrNull(lastPremisesUnarchiveDomainEvent.id)

@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3PremisesTransformerTest {
@@ -59,6 +60,8 @@ class Cas3PremisesTransformerTest {
       .withCharacteristics(characteristics)
       .withStatus(PropertyStatus.active)
       .produce()
+
+    premises.createdAt = OffsetDateTime.now().minusDays(360)
 
     // online bedspaces
     createRoomWithOneBedspace(premises, LocalDate.now().minusDays(5), null)
@@ -110,7 +113,7 @@ class Cas3PremisesTransformerTest {
         probationRegion = probationRegion,
         probationDeliveryUnit = probationDeliveryUnit,
         characteristics = listOf(characteristic),
-        startDate = premises.startDate,
+        startDate = premises.createdAt?.toLocalDate(),
         endDate = premises.endDate,
         status = Cas3PremisesStatus.online,
         notes = premises.notes,
@@ -141,6 +144,8 @@ class Cas3PremisesTransformerTest {
       .withProbationDeliveryUnit(probationDeliveryUnitEntity)
       .withStatus(PropertyStatus.active)
       .produce()
+
+    premises.createdAt = OffsetDateTime.now().minusDays(130)
 
     // online bedspaces
     createRoomWithOneBedspace(premises, LocalDate.now().minusDays(7), null)
@@ -176,7 +181,7 @@ class Cas3PremisesTransformerTest {
         probationRegion = probationRegion,
         probationDeliveryUnit = probationDeliveryUnit,
         characteristics = emptyList(),
-        startDate = premises.startDate,
+        startDate = premises.createdAt?.toLocalDate(),
         endDate = premises.endDate,
         status = Cas3PremisesStatus.online,
         notes = premises.notes,

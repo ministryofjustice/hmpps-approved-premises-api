@@ -28,7 +28,7 @@ class Cas3PremisesTransformer(
     probationRegion = probationRegionTransformer.transformJpaToApi(premisesEntity.probationRegion),
     probationDeliveryUnit = premisesEntity.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) }!!,
     characteristics = premisesEntity.characteristics.map(characteristicTransformer::transformJpaToApi).sortedBy { it.id },
-    startDate = premisesEntity.startDate,
+    startDate = premisesEntity.createdAt?.toLocalDate(),
     endDate = premisesEntity.endDate,
     status = getPremisesStatus(premisesEntity),
     notes = premisesEntity.notes,
