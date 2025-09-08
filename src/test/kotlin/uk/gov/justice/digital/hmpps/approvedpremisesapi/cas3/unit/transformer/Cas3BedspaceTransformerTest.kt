@@ -2,6 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
@@ -15,6 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Characterist
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.stream.Stream
 
 class Cas3BedspaceTransformerTest {
 
@@ -22,8 +27,9 @@ class Cas3BedspaceTransformerTest {
   private val cas3BedspaceCharacteristicTransformer = Cas3BedspaceCharacteristicTransformer()
   private val cas3BedspaceTransformer = Cas3BedspaceTransformer(characteristicTransformer, cas3BedspaceCharacteristicTransformer)
 
-  @Test
-  fun `transformJpaToApi transforms the BedEntity into Cas3Bedspace correctly`() {
+  @ParameterizedTest
+  @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer.Cas3BedspaceTransformerTest#startDateAndStatusProvider")
+  fun `transformJpaToApi transforms the BedEntity into Cas3Bedspace correctly`(startDate: LocalDate, status: Cas3BedspaceStatus) {
     val premises = TemporaryAccommodationPremisesEntityFactory()
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
@@ -36,9 +42,10 @@ class Cas3BedspaceTransformerTest {
 
     val bed = BedEntityFactory()
       .withName(randomStringMultiCaseWithNumbers(10))
-      .withStartDate(LocalDate.now().minusDays(90))
-      .withEndDate(LocalDate.now().plusDays(180))
+      .withStartDate(startDate)
+      .withEndDate(startDate.plusDays(180))
       .withRoom(room)
+      .withCreatedAt { OffsetDateTime.now().minusDays(100) }
       .produce()
 
     val result = cas3BedspaceTransformer.transformJpaToApi(bed)
@@ -47,9 +54,9 @@ class Cas3BedspaceTransformerTest {
       Cas3Bedspace(
         id = bed.id,
         reference = room.name,
-        startDate = bed.startDate!!,
+        startDate = bed.createdAt!!.toLocalDate(),
         endDate = bed.endDate,
-        status = Cas3BedspaceStatus.online,
+        status = status,
         notes = room.notes,
         characteristics = emptyList(),
       ),
@@ -72,12 +79,21 @@ class Cas3BedspaceTransformerTest {
       Cas3Bedspace(
         id = bedspace.id,
         reference = bedspace.reference,
-        startDate = bedspace.startDate!!,
+        startDate = bedspace.createdAt!!.toLocalDate(),
         endDate = bedspace.endDate,
         notes = bedspace.notes,
         status = Cas3BedspaceStatus.online,
         bedspaceCharacteristics = bedspace.characteristics.map(cas3BedspaceCharacteristicTransformer::transformJpaToApi),
       ),
+    )
+  }
+
+  companion object {
+    @JvmStatic
+    fun startDateAndStatusProvider() = Stream.of(
+      Arguments.of(LocalDate.now().minusDays(90).toString(), Cas3BedspaceStatus.online),
+      Arguments.of(LocalDate.now().minusDays(300).toString(), Cas3BedspaceStatus.archived),
+      Arguments.of(LocalDate.now().plusDays(7).toString(), Cas3BedspaceStatus.upcoming),
     )
   }
 }

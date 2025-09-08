@@ -192,7 +192,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
   protected fun createCas3Bedspace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus, archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList()) = Cas3Bedspace(
     id = bed.id,
     reference = room.name,
-    startDate = bed.startDate!!,
+    startDate = bed.createdAt!!.toLocalDate(),
     characteristics = room.characteristics.map { characteristic ->
       Characteristic(
         id = characteristic.id,
