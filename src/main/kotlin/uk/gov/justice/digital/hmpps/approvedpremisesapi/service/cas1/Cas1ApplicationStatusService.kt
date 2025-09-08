@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -97,6 +98,18 @@ class Cas1ApplicationStatusService(
     val anyActiveBookings = spaceBookingsForApplication.any { it.isActive() }
     if (!anyActiveBookings) {
       lastBookingCancelled(spaceBooking.application!!)
+    }
+  }
+
+  fun assessmentClarificationNoteCreated(clarificationNote: AssessmentClarificationNoteEntity) {
+    if (clarificationNote.response == null && clarificationNote.assessment.application is ApprovedPremisesApplicationEntity) {
+      (clarificationNote.assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION
+    }
+  }
+
+  fun assessmentClarificationNoteUpdated(clarificationNote: AssessmentClarificationNoteEntity) {
+    if (clarificationNote.response != null && clarificationNote.assessment.application is ApprovedPremisesApplicationEntity) {
+      (clarificationNote.assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
     }
   }
 
