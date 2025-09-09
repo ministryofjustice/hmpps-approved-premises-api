@@ -19,7 +19,7 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
   private var characteristics: Yielded<MutableList<Cas3BedspaceCharacteristicEntity>> = { mutableListOf() }
   private var reference: Yielded<String> = { randomStringUpperCase(6) }
   private var notes: Yielded<String?> = { null }
-  private var startDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(6) }
+  private var startDate: Yielded<LocalDate?> = { LocalDate.now().randomDateBefore(6) }
   private var endDate: Yielded<LocalDate?> = { LocalDate.now().randomDateAfter(6) }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
 
@@ -43,7 +43,7 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
     this.notes = { notes }
   }
 
-  fun withStartDate(startDate: LocalDate) = apply {
+  fun withStartDate(startDate: LocalDate?) = apply {
     this.startDate = { startDate }
   }
 

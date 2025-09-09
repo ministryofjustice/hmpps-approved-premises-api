@@ -17,7 +17,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.BedspaceStatusHelper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUUID
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -208,15 +208,12 @@ data class BedEntity(
   @CreationTimestamp
   var createdAt: OffsetDateTime?,
 ) {
-  fun isActive(now: LocalDate) = Companion.isActive(now, endDate)
-  fun isCas3BedspaceOnline() = (this.startDate == null || this.startDate!! <= LocalDate.now()) && (this.endDate == null || this.endDate!! > LocalDate.now())
-  fun isCas3BedspaceUpcoming() = this.startDate?.isAfter(LocalDate.now()) == true
-  fun isCas3BedspaceArchived() = this.endDate != null && this.endDate!! <= LocalDate.now()
-  fun getCas3BedspaceStatus() = when {
-    this.isCas3BedspaceUpcoming() -> Cas3BedspaceStatus.upcoming
-    this.isCas3BedspaceArchived() -> Cas3BedspaceStatus.archived
-    else -> Cas3BedspaceStatus.online
-  }
+  fun isActive(now: LocalDate) = BedspaceStatusHelper.isActive(now = now, endDate = endDate)
+  fun isCas3BedspaceOnline() = BedspaceStatusHelper.isCas3BedspaceOnline(startDate = startDate, endDate = endDate)
+  fun isCas3BedspaceUpcoming() = BedspaceStatusHelper.isCas3BedspaceUpcoming(startDate = startDate)
+  fun isCas3BedspaceArchived() = BedspaceStatusHelper.isCas3BedspaceArchived(endDate = endDate)
+  fun getCas3BedspaceStatus() = BedspaceStatusHelper.getBedspaceStatus(startDate = startDate, endDate = endDate)
+
   override fun toString() = "BedEntity: $id"
 
   companion object {
