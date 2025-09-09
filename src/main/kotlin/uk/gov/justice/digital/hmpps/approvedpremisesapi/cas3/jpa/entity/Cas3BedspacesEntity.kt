@@ -43,15 +43,14 @@ data class Cas3BedspacesEntity(
   )
   var characteristics: MutableList<Cas3BedspaceCharacteristicEntity>,
 ) {
-  fun isBedspaceUpcoming() = BedspaceStatusCalculator.isCas3BedspaceUpcoming(startDate = startDate)
-  fun isBedspaceArchived() = BedspaceStatusCalculator.isCas3BedspaceArchived(endDate = endDate)
-  fun getBedspaceStatus() = BedspaceStatusCalculator.getBedspaceStatus(startDate = startDate, endDate = endDate)
+  fun isBedspaceUpcoming() = BedspaceStatusHelper.isCas3BedspaceUpcoming(startDate = startDate)
+  fun isBedspaceArchived() = BedspaceStatusHelper.isCas3BedspaceArchived(endDate = endDate)
+  fun getBedspaceStatus() = BedspaceStatusHelper.getBedspaceStatus(startDate = startDate, endDate = endDate)
 }
 
-object BedspaceStatusCalculator {
+object BedspaceStatusHelper {
   fun isActive(now: LocalDate, endDate: LocalDate?): Boolean = endDate == null || endDate.isAfter(now)
   fun isCas3BedspaceOnline(startDate: LocalDate?, endDate: LocalDate?) = (startDate == null || startDate <= LocalDate.now()) && (endDate == null || endDate > LocalDate.now())
-
   fun isCas3BedspaceUpcoming(startDate: LocalDate?) = startDate?.isAfter(LocalDate.now()) ?: false
   fun isCas3BedspaceArchived(endDate: LocalDate?) = endDate != null && endDate <= LocalDate.now()
   fun getBedspaceStatus(startDate: LocalDate?, endDate: LocalDate?) = when {
