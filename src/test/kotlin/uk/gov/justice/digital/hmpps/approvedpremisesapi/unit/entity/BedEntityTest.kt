@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.entity
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
@@ -16,18 +17,47 @@ class BedEntityTest {
   @Nested
   inner class CasBedspaceStatus {
     @Test
-    fun `getCas3BedspaceStatus returns the correct status of the bedspace`() {
-      val upcomingBedEntity = createPremisesWithOneBed(LocalDate.now().plusDays(1).randomDateAfter(180), null)
-      assert(upcomingBedEntity.getCas3BedspaceStatus() == Cas3BedspaceStatus.upcoming)
+    fun `returns upcoming when startDate is in the future`() {
+      val upcomingBedEntity = createPremisesWithOneBed(
+        LocalDate.now().plusDays(1).randomDateAfter(180),
+        null,
+      )
 
-      val archivedBedEntity = createPremisesWithOneBed(LocalDate.now().randomDateBefore(120), LocalDate.now().randomDateBefore(90))
-      assert(archivedBedEntity.getCas3BedspaceStatus() == Cas3BedspaceStatus.archived)
+      assertThat(upcomingBedEntity.getCas3BedspaceStatus())
+        .isEqualTo(Cas3BedspaceStatus.upcoming)
+    }
 
-      val onlineBedEntityWithoutEndDate = createPremisesWithOneBed(LocalDate.now().randomDateBefore(120), null)
-      assert(onlineBedEntityWithoutEndDate.getCas3BedspaceStatus() == Cas3BedspaceStatus.online)
+    @Test
+    fun `returns archived when endDate is in the past`() {
+      val archivedBedEntity = createPremisesWithOneBed(
+        LocalDate.now().randomDateBefore(120),
+        LocalDate.now().randomDateBefore(90),
+      )
 
-      val onlineBedEntityWithEndDate = createPremisesWithOneBed(LocalDate.now().randomDateBefore(180), LocalDate.now().randomDateAfter(180))
-      assert(onlineBedEntityWithEndDate.getCas3BedspaceStatus() == Cas3BedspaceStatus.online)
+      assertThat(archivedBedEntity.getCas3BedspaceStatus())
+        .isEqualTo(Cas3BedspaceStatus.archived)
+    }
+
+    @Test
+    fun `returns online when startDate is in the past and no endDate`() {
+      val onlineBedEntityWithoutEndDate = createPremisesWithOneBed(
+        LocalDate.now().randomDateBefore(120),
+        null,
+      )
+
+      assertThat(onlineBedEntityWithoutEndDate.getCas3BedspaceStatus())
+        .isEqualTo(Cas3BedspaceStatus.online)
+    }
+
+    @Test
+    fun `returns online when startDate is in the past and endDate is in the future`() {
+      val onlineBedEntityWithEndDate = createPremisesWithOneBed(
+        LocalDate.now().randomDateBefore(180),
+        LocalDate.now().randomDateAfter(180),
+      )
+
+      assertThat(onlineBedEntityWithEndDate.getCas3BedspaceStatus())
+        .isEqualTo(Cas3BedspaceStatus.online)
     }
 
     private fun createPremisesWithOneBed(bedspaceStartDate: LocalDate?, bedspaceEndDate: LocalDate?): BedEntity {
