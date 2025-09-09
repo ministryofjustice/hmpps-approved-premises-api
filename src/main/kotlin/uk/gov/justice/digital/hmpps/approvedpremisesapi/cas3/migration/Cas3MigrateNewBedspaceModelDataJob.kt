@@ -6,6 +6,8 @@ import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Component
@@ -152,6 +154,12 @@ interface TemporaryAccommodationPremisesRepository : JpaRepository<TemporaryAcco
 
   @Query("SELECT tap FROM TemporaryAccommodationPremisesEntity tap WHERE tap.id IN :ids")
   fun findTemporaryAccommodationPremisesByIds(ids: List<UUID>): List<TemporaryAccommodationPremisesEntity>
+
+  @Query("SELECT tap FROM TemporaryAccommodationPremisesEntity tap WHERE tap.createdAt IS NULL")
+  fun <T : TemporaryAccommodationPremisesEntity> findTemporaryAccommodationPremisesByCreatedAtNull(
+    type: Class<T>,
+    pageable: Pageable?,
+  ): Slice<TemporaryAccommodationPremisesEntity>
 }
 
 @Repository
