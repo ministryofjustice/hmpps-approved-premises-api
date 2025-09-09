@@ -3642,15 +3642,16 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       ) { userEntity, jwt, premises ->
         clock.setNow(LocalDateTime.parse("2025-08-27T15:21:34"))
 
-        val originalStartDate = LocalDate.now().minusDays(10)
-        val originalEndDate = LocalDate.now().minusDays(3)
+        val originalStartDate = LocalDate.now(clock).minusDays(10)
+        val originalEndDate = LocalDate.now(clock).minusDays(3)
 
+        val createdAt = OffsetDateTime.now().minusDays(120)
         val scheduledBedspaceToUnarchived = createBedspaceInPremises(premises, originalStartDate, originalEndDate)
-        scheduledBedspaceToUnarchived.createdAt = OffsetDateTime.now().minusDays(120)
+        scheduledBedspaceToUnarchived.createdAt = createdAt
         bedRepository.saveAndFlush(scheduledBedspaceToUnarchived)
 
-        createBedspaceUnarchiveDomainEvent(scheduledBedspaceToUnarchived, premises.id, userEntity.id, LocalDate.now().minusDays(30))
-        val lastBedspaceUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(scheduledBedspaceToUnarchived, premises.id, userEntity.id, LocalDate.now().plusDays(10))
+        createBedspaceUnarchiveDomainEvent(scheduledBedspaceToUnarchived, premises.id, userEntity.id, LocalDate.now(clock).minusDays(30))
+        val lastBedspaceUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(scheduledBedspaceToUnarchived, premises.id, userEntity.id, LocalDate.now(clock).plusDays(10))
 
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/bedspaces/${scheduledBedspaceToUnarchived.id}/cancel-unarchive")
@@ -3660,7 +3661,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .isOk
           .expectBody()
           .jsonPath("id").isEqualTo(scheduledBedspaceToUnarchived.id)
-          .jsonPath("startDate").isEqualTo("2025-05-11")
+          .jsonPath("startDate").isEqualTo(createdAt.toLocalDate())
           .jsonPath("endDate").isEqualTo(originalEndDate)
 
         // Verify the bedspace was updated
