@@ -16,7 +16,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import java.time.LocalDate
@@ -36,7 +36,7 @@ data class Cas3PremisesEntity(
   var town: String?,
 
   @Enumerated(value = EnumType.STRING)
-  var status: PropertyStatus,
+  var status: Cas3PremisesStatus,
   var notes: String,
   @Column(name = "start_date")
   var startDate: LocalDate,

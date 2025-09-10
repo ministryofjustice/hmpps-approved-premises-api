@@ -84,7 +84,7 @@ class Cas3MigrateNewBedspaceModelDataJob(
       town = premise.town,
       localAuthorityArea = premise.localAuthorityArea,
       turnaroundWorkingDays = premise.turnaroundWorkingDays,
-      status = premise.status,
+      status = premise.cas3PremisesStatus,
       notes = premise.notes,
       probationDeliveryUnit = premise.probationDeliveryUnit!!,
       bedspaces = emptyList<Cas3BedspacesEntity>().toMutableList(),

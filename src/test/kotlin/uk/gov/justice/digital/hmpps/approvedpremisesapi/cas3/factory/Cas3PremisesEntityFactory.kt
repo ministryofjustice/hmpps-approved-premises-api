@@ -2,10 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
@@ -31,7 +31,7 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
   private var service: Yielded<String> = { "CAS3" }
   private var characteristics: Yielded<MutableList<Cas3PremisesCharacteristicEntity>> = { mutableListOf() }
   private var bedspaces: Yielded<MutableList<Cas3BedspacesEntity>> = { mutableListOf() }
-  private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.entries) }
+  private var status: Yielded<Cas3PremisesStatus> = { randomOf(Cas3PremisesStatus.entries) }
   private var turnaroundWorkingDays: Yielded<Int> = { 3 }
   private var startDate: Yielded<LocalDate> = { LocalDate.now().minusDays(180) }
   private var endDate: Yielded<LocalDate?> = { null }
@@ -101,7 +101,7 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     this.characteristics = { characteristics }
   }
 
-  fun withStatus(status: PropertyStatus) = apply {
+  fun withStatus(status: Cas3PremisesStatus) = apply {
     this.status = { status }
   }
 
