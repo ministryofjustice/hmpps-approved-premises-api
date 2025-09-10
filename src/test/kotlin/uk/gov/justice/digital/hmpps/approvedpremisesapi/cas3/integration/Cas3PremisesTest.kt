@@ -1297,7 +1297,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         localAuthorityArea.identifier,
         localAuthorityArea.name,
       ),
-      startDate = premises.createdAt?.toLocalDate(),
+      startDate = premises.createdAt.toLocalDate(),
       endDate = premises.endDate,
       status = status,
       characteristics = premises.characteristics.sortedBy { it.id }.map { characteristic ->
