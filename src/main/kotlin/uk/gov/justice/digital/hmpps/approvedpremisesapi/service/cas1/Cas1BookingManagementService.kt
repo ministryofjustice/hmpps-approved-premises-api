@@ -40,7 +40,6 @@ class Cas1BookingManagementService(
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val lockableCas1SpaceBookingEntityRepository: LockableCas1SpaceBookingEntityRepository,
   private val userService: UserService,
-  private val cas1KeyWorkerService: Cas1KeyWorkerService,
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
   private val springEventPublisher: SpringEventPublisher,
 ) {
@@ -188,8 +187,8 @@ class Cas1BookingManagementService(
       return fieldValidationError
     }
 
-    if (keyWorker.staffCode == null && keyWorker.userId == null) {
-      return CasResult.GeneralValidationError("Either staffCode or userId must be provided")
+    if (keyWorker.userId == null) {
+      return CasResult.GeneralValidationError("UserId must be provided")
     }
 
     existingCas1SpaceBooking!!
@@ -198,26 +197,13 @@ class Cas1BookingManagementService(
       return existingCas1SpaceBooking.id hasConflictError "The booking has already been cancelled"
     }
 
-    val staffCodeAndUser = if (keyWorker.staffCode != null) {
-      val user = cas1KeyWorkerService.findByDeliusStaffCode(keyWorker.staffCode)
+    val user = userService.findByIdOrNull(keyWorker.userId)
+      ?: return CasResult.GeneralValidationError("Cannot find user with id ${keyWorker.userId}")
 
-      if (user == null) {
-        log.warn("Could not find user for staffCode ${keyWorker.staffCode} when assigning keyworker")
-      }
-
-      StaffCodeAndUser(
-        staffCode = keyWorker.staffCode,
-        user = user,
-      )
-    } else {
-      val user = userService.findByIdOrNull(keyWorker.userId!!)
-        ?: return CasResult.GeneralValidationError("Cannot find user with id ${keyWorker.userId}")
-
-      StaffCodeAndUser(
-        staffCode = user.deliusStaffCode,
-        user = user,
-      )
-    }
+    val staffCodeAndUser = StaffCodeAndUser(
+      staffCode = user.deliusStaffCode,
+      user = user,
+    )
 
     val staffMemberResponse = staffMemberService.getStaffMemberByCode(staffCodeAndUser.staffCode)
     if (staffMemberResponse !is CasResult.Success) {

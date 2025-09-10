@@ -250,8 +250,6 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.tier).isEqualTo("A")
 
       val keyWorkerAllocation = result.keyWorkerAllocation!!
-      assertThat(keyWorkerAllocation.keyWorker.name).isEqualTo("Mr Key Worker")
-      assertThat(keyWorkerAllocation.keyWorker.code).isEqualTo("K123")
       assertThat(keyWorkerAllocation.allocatedAt).isEqualTo(LocalDate.parse("2007-12-03"))
       assertThat(keyWorkerAllocation.userId).isEqualTo(keyWorkerUser.id)
       assertThat(keyWorkerAllocation.name).isEqualTo("Mr Key Worker")
@@ -456,8 +454,6 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.isNonArrival).isEqualTo(true)
       assertThat(result.tier).isEqualTo("M1")
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
-      assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
-      assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isEqualTo(cancelled)
       assertThat(result.plannedTransferRequested).isFalse()
@@ -529,8 +525,6 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.isNonArrival).isEqualTo(false)
       assertThat(result.tier).isEqualTo("A")
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
-      assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
-      assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
       assertThat(result.keyWorkerAllocation!!.userId).isEqualTo(keyWorkerId)
       assertThat(result.keyWorkerAllocation!!.name).isEqualTo("the keyworker name")
       assertThat(result.keyWorkerAllocation!!.emailAddress).isEqualTo("the keyworker email")

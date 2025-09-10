@@ -7,6 +7,5 @@ import java.util.UUID
  * either the staff code or user id can be provided
  */
 data class Cas1AssignKeyWorker(
-  val staffCode: String?,
   val userId: UUID?,
 )
