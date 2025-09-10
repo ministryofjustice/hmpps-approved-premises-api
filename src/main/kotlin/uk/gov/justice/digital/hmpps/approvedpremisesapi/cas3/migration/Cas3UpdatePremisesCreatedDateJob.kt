@@ -27,7 +27,7 @@ class Cas3UpdatePremisesCreatedDateJob(
     try {
       while (hasNext) {
         log.info("Getting page $page for max page size $pageSize")
-        slice = premisesRepository.findTemporaryAccommodationPremisesByCreatedAtNull(TemporaryAccommodationPremisesEntity::class.java, PageRequest.of(page - 1, pageSize))
+        slice = premisesRepository.findTemporaryAccommodationPremisesByCreatedAtNull(TemporaryAccommodationPremisesEntity::class.java, PageRequest.of(0, pageSize))
 
         premisesIds = slice.map { it.id.toString() }.toSet()
 
