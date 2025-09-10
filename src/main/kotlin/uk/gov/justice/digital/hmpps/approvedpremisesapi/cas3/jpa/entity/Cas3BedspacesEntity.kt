@@ -46,6 +46,7 @@ data class Cas3BedspacesEntity(
   fun isBedspaceUpcoming() = BedspaceStatusHelper.isCas3BedspaceUpcoming(startDate = startDate)
   fun isBedspaceArchived() = BedspaceStatusHelper.isCas3BedspaceArchived(endDate = endDate)
   fun getBedspaceStatus() = BedspaceStatusHelper.getBedspaceStatus(startDate = startDate, endDate = endDate)
+  fun isBedspaceOnline() = BedspaceStatusHelper.isCas3BedspaceOnline(startDate = startDate, endDate = endDate)
 }
 
 object BedspaceStatusHelper {
