@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
@@ -17,7 +18,11 @@ class Cas3PremisesTransformer(
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
   private val characteristicTransformer: CharacteristicTransformer,
 ) {
-  fun transformDomainToApi(premisesEntity: TemporaryAccommodationPremisesEntity, archiveHistory: List<Cas3PremisesArchiveAction> = emptyList()) = Cas3Premises(
+  fun transformDomainToApi(
+    premisesEntity: TemporaryAccommodationPremisesEntity,
+    totalBedspacesByStatus: TemporaryAccommodationPremisesTotalBedspacesByStatus,
+    archiveHistory: List<Cas3PremisesArchiveAction> = emptyList(),
+  ) = Cas3Premises(
     id = premisesEntity.id,
     reference = premisesEntity.name,
     addressLine1 = premisesEntity.addressLine1,
@@ -33,9 +38,9 @@ class Cas3PremisesTransformer(
     status = getPremisesStatus(premisesEntity),
     notes = premisesEntity.notes,
     turnaroundWorkingDays = premisesEntity.turnaroundWorkingDays,
-    totalOnlineBedspaces = premisesEntity.getTotalOnlineBedspaces(),
-    totalUpcomingBedspaces = premisesEntity.getTotalUpcomingBedspaces(),
-    totalArchivedBedspaces = premisesEntity.getTotalArchivedBedspaces(),
+    totalOnlineBedspaces = totalBedspacesByStatus.onlineBedspaces,
+    totalUpcomingBedspaces = totalBedspacesByStatus.upcomingBedspaces,
+    totalArchivedBedspaces = totalBedspacesByStatus.archivedBedspaces,
     archiveHistory = archiveHistory,
   )
 
@@ -43,17 +48,5 @@ class Cas3PremisesTransformer(
     Cas3PremisesStatus.archived
   } else {
     Cas3PremisesStatus.online
-  }
-
-  private fun TemporaryAccommodationPremisesEntity.getTotalOnlineBedspaces() = this.rooms.sumOf { room ->
-    room.beds.count { it.isCas3BedspaceOnline() }
-  }
-
-  private fun TemporaryAccommodationPremisesEntity.getTotalUpcomingBedspaces() = this.rooms.sumOf { room ->
-    room.beds.count { it.isCas3BedspaceUpcoming() }
-  }
-
-  private fun TemporaryAccommodationPremisesEntity.getTotalArchivedBedspaces() = this.rooms.sumOf { room ->
-    room.beds.count { it.isCas3BedspaceArchived() }
   }
 }

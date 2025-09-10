@@ -153,6 +153,65 @@ class Cas3PremisesServiceTest {
   }
 
   @Nested
+  inner class GetBedspaceStatus {
+    @Test
+    fun `Get bedspace status returns Online status when the bedspace does not have an end date today or in the past or a start date in the future`() {
+      val premises = createPremisesEntity()
+      val bedspace = createBedspace(premises, LocalDate.now().minusDays(30))
+
+      every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
+
+      val result = premisesService.getBedspaceStatus(bedspace)
+
+      assertThat(result).isEqualTo(Cas3BedspaceStatus.online)
+    }
+
+    @Test
+    fun `Get bedspace status returns archive status when the bedspace end date is today or earlier`() {
+      val premises = createPremisesEntity()
+      val bedspace = createBedspace(premises, LocalDate.now().minusDays(75), LocalDate.now())
+
+      every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
+
+      val result = premisesService.getBedspaceStatus(bedspace)
+
+      assertThat(result).isEqualTo(Cas3BedspaceStatus.archived)
+    }
+
+    @Test
+    fun `Get bedspace status returns archive status when the bedspace is scheduled to be unarchive in the future`() {
+      val premises = createPremisesEntity()
+      val bedspaceUnarchiveDate = LocalDate.now().plusDays(3)
+      val bedspace = createBedspace(premises, bedspaceUnarchiveDate)
+
+      val bedspaceUnarchiveEvent = createBedspaceUnarchiveEvent(premisesId = premises.id, bedspaceId = bedspace.id, userId = UUID.randomUUID(), newStartDate = bedspaceUnarchiveDate)
+      val bedspaceUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(bedspaceUnarchiveEvent)
+
+      val bedspaceArchiveEvent = createBedspaceArchiveEvent(premisesId = premises.id, bedspaceId = bedspace.id, userId = UUID.randomUUID(), currentEndDate = null, endDate = LocalDate.now().minusDays(21))
+      val bedspaceArchiveDomainEvent = createBedspaceArchiveDomainEvent(bedspaceArchiveEvent)
+
+      every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)) } returns listOf(bedspaceUnarchiveDomainEvent)
+      every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED)) } returns listOf(bedspaceArchiveDomainEvent)
+
+      val result = premisesService.getBedspaceStatus(bedspace)
+
+      assertThat(result).isEqualTo(Cas3BedspaceStatus.archived)
+    }
+
+    @Test
+    fun `Get bedspace status returns upcoming status when the bedspace has a future start date and is newly created`() {
+      val premises = createPremisesEntity()
+      val bedspace = createBedspace(premises, LocalDate.now().plusDays(7))
+
+      every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
+
+      val result = premisesService.getBedspaceStatus(bedspace)
+
+      assertThat(result).isEqualTo(Cas3BedspaceStatus.upcoming)
+    }
+  }
+
+  @Nested
   inner class CreatePremises {
     @Test
     fun `When create a new premises returns Success with correct result when validation passed`() {
@@ -1181,6 +1240,7 @@ class Cas3PremisesServiceTest {
       val bedspaceTwo = createBedspace(premises, archiveDate.plusDays(2))
 
       every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED)) } returns emptyList()
+      every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspaceTwo.id, listOf(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)) } returns emptyList()
       every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(bedspace, bedspaceTwo)
 
       val result = premisesService.archivePremises(premises, archiveDate)
@@ -3234,17 +3294,17 @@ class Cas3PremisesServiceTest {
       // Unarchive event scheduled for in 2 days
       val newStartDateIn2DaysUnarchive = LocalDate.now().plusDays(2)
       val dataIn2DaysUnarchive = createBedspaceUnarchiveEvent(premisesId = premisesId, bedspaceId = bedspaceId, userId = userId, newStartDate = newStartDateIn2DaysUnarchive)
-      val domainEventIn2Days = createUnarchiveDomainEvent(dataIn2DaysUnarchive)
+      val domainEventIn2Days = createBedspaceUnarchiveDomainEvent(dataIn2DaysUnarchive)
 
       // Unarchive event scheduled for 2 days ago
       val newStartDate2DaysAgoUnarchive = LocalDate.now().minusDays(2)
       val data2DaysAgoUnarchive = createBedspaceUnarchiveEvent(premisesId = premisesId, bedspaceId = bedspaceId, userId = userId, newStartDate = newStartDate2DaysAgoUnarchive)
-      val domainEvent2DaysAgo = createUnarchiveDomainEvent(data2DaysAgoUnarchive)
+      val domainEvent2DaysAgo = createBedspaceUnarchiveDomainEvent(data2DaysAgoUnarchive)
 
       // Unarchive event scheduled for 3 days ago
       val newStartDate3DaysAgoUnarchive = LocalDate.now().minusDays(3)
       val data3DaysAgoUnarchive = createBedspaceUnarchiveEvent(premisesId = premisesId, bedspaceId = bedspaceId, userId = userId, newStartDate = newStartDate3DaysAgoUnarchive)
-      val domainEvent3DaysAgo = createUnarchiveDomainEvent(data3DaysAgoUnarchive)
+      val domainEvent3DaysAgo = createBedspaceUnarchiveDomainEvent(data3DaysAgoUnarchive)
 
       every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspaceId, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED)) } returns
         listOf(
@@ -3324,7 +3384,7 @@ class Cas3PremisesServiceTest {
         userId = userId,
         newStartDate = LocalDate.now().minusWeeks(2),
       )
-      val bedOneUnarchiveDomainEventTwoWeeksAgo = createUnarchiveDomainEvent(bedOneUnarchiveEventTwoWeeksAgo)
+      val bedOneUnarchiveDomainEventTwoWeeksAgo = createBedspaceUnarchiveDomainEvent(bedOneUnarchiveEventTwoWeeksAgo)
 
       val bedThreeUnarchiveEventTwoWeeksAgo = createBedspaceUnarchiveEvent(
         premisesId = premisesId,
@@ -3332,7 +3392,7 @@ class Cas3PremisesServiceTest {
         userId = userId,
         newStartDate = LocalDate.now().minusWeeks(1),
       )
-      val bedThreeUnarchiveDomainEventOneWeeksAgo = createUnarchiveDomainEvent(bedThreeUnarchiveEventTwoWeeksAgo)
+      val bedThreeUnarchiveDomainEventOneWeeksAgo = createBedspaceUnarchiveDomainEvent(bedThreeUnarchiveEventTwoWeeksAgo)
 
       every {
         cas3DomainEventServiceMock.getBedspacesActiveDomainEvents(
@@ -3386,33 +3446,6 @@ class Cas3PremisesServiceTest {
             ),
           )
         },
-      )
-    }
-
-    private fun createUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
-      data.id,
-      data.eventDetails.premisesId,
-      data.eventDetails.bedspaceId,
-      data.timestamp.atOffset(ZoneOffset.UTC),
-      objectMapper.writeValueAsString(data),
-      DomainEventType.CAS3_BEDSPACE_UNARCHIVED,
-    )
-
-    private fun createBedspaceUnarchiveEvent(premisesId: UUID, bedspaceId: UUID, userId: UUID, newStartDate: LocalDate): CAS3BedspaceUnarchiveEvent {
-      val eventId = UUID.randomUUID()
-      val occurredAt = OffsetDateTime.now()
-      return CAS3BedspaceUnarchiveEvent(
-        id = eventId,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bedspaceUnarchived,
-        eventDetails = CAS3BedspaceUnarchiveEventDetails(
-          bedspaceId = bedspaceId,
-          premisesId = premisesId,
-          userId = userId,
-          currentStartDate = LocalDate.now(),
-          currentEndDate = LocalDate.now(),
-          newStartDate = newStartDate,
-        ),
       )
     }
   }
@@ -4242,6 +4275,33 @@ class Cas3PremisesServiceTest {
         premisesId = premisesId,
         currentEndDate = currentEndDate,
         endDate = endDate,
+      ),
+    )
+  }
+
+  private fun createBedspaceUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
+    data.id,
+    data.eventDetails.premisesId,
+    data.eventDetails.bedspaceId,
+    data.timestamp.atOffset(ZoneOffset.UTC),
+    objectMapper.writeValueAsString(data),
+    DomainEventType.CAS3_BEDSPACE_UNARCHIVED,
+  )
+
+  private fun createBedspaceUnarchiveEvent(premisesId: UUID, bedspaceId: UUID, userId: UUID, newStartDate: LocalDate): CAS3BedspaceUnarchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3BedspaceUnarchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bedspaceUnarchived,
+      eventDetails = CAS3BedspaceUnarchiveEventDetails(
+        bedspaceId = bedspaceId,
+        premisesId = premisesId,
+        userId = userId,
+        currentStartDate = LocalDate.now(),
+        currentEndDate = LocalDate.now(),
+        newStartDate = newStartDate,
       ),
     )
   }
