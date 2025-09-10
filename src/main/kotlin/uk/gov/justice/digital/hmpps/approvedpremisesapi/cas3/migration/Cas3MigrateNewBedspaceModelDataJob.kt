@@ -134,7 +134,7 @@ class Cas3MigrateNewBedspaceModelDataJob(
   ).map {
     Cas3PremisesCharacteristicEntity(
       id = it.id,
-      name = it.propertyName,
+      name = it.propertyName!!,
       description = it.name,
       isActive = it.isActive,
     )
