@@ -17,6 +17,7 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   updateCas3BookingOffenderName("update_cas3_booking_offender_name"),
   updateCas3BedspaceStartDate("update_cas3_bedspace_start_date"),
   updateCas3PremisesStartDate("update_cas3_premises_start_date"),
+  updateCas3PremisesCreatedAt("update_cas3_premises_created_at"),
   updateCas3DomainEventTypeForPersonDepartedUpdated("update_cas3_domain_event_type_for_person_departed_updated"),
   updateCas1ApprovedPremisesAssessmentReportProperties("update_cas1_approved_premises_assessment_report_properties"),
   cas1UpdateRoomCodes("cas1_update_room_codes"),
