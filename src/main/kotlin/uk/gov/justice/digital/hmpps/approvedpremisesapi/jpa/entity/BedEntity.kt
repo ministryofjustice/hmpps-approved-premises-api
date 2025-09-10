@@ -74,6 +74,23 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
   @Modifying
   @Query("UPDATE BedEntity b SET b.code = :code WHERE b.id = :id")
   fun updateCode(id: UUID, code: String)
+
+  @Query(
+    """
+      SELECT b.*
+      FROM beds b
+      INNER JOIN rooms r ON b.room_id = r.id
+      INNER JOIN premises p ON r.premises_id = p.id
+      WHERE p.service = :service
+      AND b.created_at IS NULL
+    """,
+    nativeQuery = true,
+  )
+  fun <T : BedEntity> findBedByCreatedAtNull(
+    service: String,
+    type: Class<T>,
+    pageable: Pageable?,
+  ): Slice<BedEntity>
 }
 
 @Repository
