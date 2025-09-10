@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
@@ -17,6 +20,41 @@ class Cas3PremisesTransformer(
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
   private val characteristicTransformer: CharacteristicTransformer,
 ) {
+  private fun PropertyStatus.toCas3PremisesStatus(): Cas3PremisesStatus = when (this) {
+    PropertyStatus.archived -> Cas3PremisesStatus.archived
+    PropertyStatus.active -> Cas3PremisesStatus.online
+  }
+
+  fun toCas3Premises(premises: Cas3PremisesEntity, archiveHistory: List<Cas3PremisesArchiveAction>? = emptyList()) = Cas3Premises(
+    id = premises.id,
+    reference = premises.name,
+    addressLine1 = premises.addressLine1,
+    addressLine2 = premises.addressLine2,
+    postcode = premises.postcode,
+    town = premises.town,
+    localAuthorityArea = localAuthorityAreaTransformer.transformJpaToApi(premises.localAuthorityArea!!),
+    probationRegion = probationRegionTransformer.transformJpaToApi(premises.probationDeliveryUnit.probationRegion),
+    probationDeliveryUnit = probationDeliveryUnitTransformer.transformJpaToApi(premises.probationDeliveryUnit),
+    status = premises.status.toCas3PremisesStatus(),
+    totalOnlineBedspaces = premises.getTotalOnlineBedspaces(),
+    totalUpcomingBedspaces = premises.getTotalUpcomingBedspaces(),
+    totalArchivedBedspaces = premises.getTotalArchivedBedspaces(),
+    characteristics = null,
+    premisesCharacteristics = premises.characteristics.map { it ->
+      PremisesCharacteristic(
+        it.id,
+        it.name,
+        it.description,
+      ) // TODO more work here
+    },
+    startDate = premises.startDate,
+    endDate = premises.endDate,
+    notes = premises.notes,
+    turnaroundWorkingDays = premises.turnaroundWorkingDays,
+    archiveHistory = archiveHistory,
+  )
+
+  @Deprecated("This will be removed as part of the Cas3v2 premsises work")
   fun transformDomainToApi(premisesEntity: TemporaryAccommodationPremisesEntity, archiveHistory: List<Cas3PremisesArchiveAction> = emptyList()) = Cas3Premises(
     id = premisesEntity.id,
     reference = premisesEntity.name,

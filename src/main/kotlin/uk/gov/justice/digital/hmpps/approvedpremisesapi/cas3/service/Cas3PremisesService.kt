@@ -1590,7 +1590,7 @@ class Cas3PremisesService(
     return CasResult.Success(archiveHistory)
   }
 
-  private fun Cas3PremisesStatus.transformStatus() = when (this) {
+  fun Cas3PremisesStatus.transformStatus() = when (this) {
     Cas3PremisesStatus.archived -> PropertyStatus.archived.toString()
     Cas3PremisesStatus.online -> PropertyStatus.active.toString()
   }

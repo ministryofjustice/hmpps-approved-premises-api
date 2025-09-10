@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
 import jakarta.transaction.Transactional
-import java.time.LocalDate
-import java.util.UUID
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -20,6 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import java.time.LocalDate
+import java.util.UUID
 
 @Service
 class Cas3v2PremisesService(
@@ -47,7 +47,6 @@ class Cas3v2PremisesService(
     notes: String?,
     turnaroundWorkingDays: Int?,
   ): CasResult<Cas3PremisesEntity> = validatedCasResult {
-
     val localAuthorityArea = localAuthorityAreaId?.let { localAuthorityAreaRepository.findByIdOrNull(it) }
     val probationDeliveryUnit =
       probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
@@ -106,7 +105,6 @@ class Cas3v2PremisesService(
     turnaroundWorkingDays: Int?,
     localAuthorityArea: LocalAuthorityAreaEntity?,
   ): ValidationErrors {
-
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
     if (probationRegion == null) {
       "$.probationRegionId" hasValidationError "doesNotExist"

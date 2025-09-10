@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesStatus
@@ -23,6 +24,7 @@ data class Cas3Premises(
   val totalUpcomingBedspaces: Int,
   val totalArchivedBedspaces: Int,
   val characteristics: List<Characteristic>? = null,
+  val premisesCharacteristics: List<PremisesCharacteristic> = emptyList(),
   val startDate: LocalDate?,
   val endDate: LocalDate? = null,
   val notes: String? = null,

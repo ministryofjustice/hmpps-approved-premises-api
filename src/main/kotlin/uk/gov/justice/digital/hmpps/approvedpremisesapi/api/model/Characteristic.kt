@@ -4,6 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import java.util.UUID
 
+data class PremisesCharacteristic(
+  val id: UUID,
+  val name: String,
+  val description: String,
+)
+
 data class Characteristic(
   val id: UUID,
   val name: String,

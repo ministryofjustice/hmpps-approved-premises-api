@@ -15,13 +15,13 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import java.time.LocalDate
 import java.util.UUID
-import org.springframework.data.jpa.repository.Query
 
 @SuppressWarnings("LongParameterList")
 @Entity
@@ -69,7 +69,11 @@ data class Cas3PremisesEntity(
   )
   var characteristics: MutableList<Cas3PremisesCharacteristicEntity>,
 
-)
+) {
+  fun getTotalOnlineBedspaces() = this.bedspaces.count { it.isBedspaceOnline() }
+  fun getTotalUpcomingBedspaces() = this.bedspaces.count { it.isBedspaceUpcoming() }
+  fun getTotalArchivedBedspaces() = this.bedspaces.count { it.isBedspaceArchived() }
+}
 
 @Repository
 interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID> {
