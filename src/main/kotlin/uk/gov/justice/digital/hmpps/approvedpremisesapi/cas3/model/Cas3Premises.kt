@@ -23,7 +23,7 @@ data class Cas3Premises(
   val totalUpcomingBedspaces: Int,
   val totalArchivedBedspaces: Int,
   val characteristics: List<Characteristic>? = null,
-  val startDate: LocalDate?,
+  val startDate: LocalDate,
   val endDate: LocalDate? = null,
   val notes: String? = null,
   val turnaroundWorkingDays: Int? = null,

@@ -230,7 +230,7 @@ abstract class PremisesEntity(
   @Enumerated(value = EnumType.STRING)
   var status: PropertyStatus,
   @CreationTimestamp
-  var createdAt: OffsetDateTime? = null,
+  var createdAt: OffsetDateTime = OffsetDateTime.now(),
 )
 
 @SuppressWarnings("LongParameterList")
