@@ -275,6 +275,21 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       }
 
       allPremises.addAll(archivedPremises)
+
+      val archivedPremisesWithStartDateInTheFuture = getListPremisesByStatus(
+        probationRegion = probationRegion,
+        probationDeliveryUnit = probationDeliveryUnit,
+        localAuthorityArea = localAuthorityArea,
+        numberOfPremises = 3,
+        propertyStatus = PropertyStatus.archived,
+        startDate = LocalDate.now().plusDays(3),
+      ).map { premises ->
+        val upcomingBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.upcoming)
+        premisesSearchResult.add(createPremisesSearchResult(premises, (upcomingBedspacesSearchResult)))
+        premises
+      }
+
+      allPremises.addAll(archivedPremisesWithStartDateInTheFuture)
     }
 
     val premisesSearchResults = Cas3PremisesSearchResults(

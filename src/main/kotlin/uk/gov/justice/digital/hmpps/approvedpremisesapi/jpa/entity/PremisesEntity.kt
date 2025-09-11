@@ -71,7 +71,7 @@ SELECT
           )
         AND (
           (:premisesStatus = 'active' AND (tap.end_date IS NULL OR tap.end_date > CURRENT_DATE))
-          OR (:premisesStatus = 'archived' AND tap.end_date IS NOT NULL AND tap.end_date <= CURRENT_DATE)
+          OR (:premisesStatus = 'archived' AND (tap.end_date IS NOT NULL AND tap.end_date <= CURRENT_DATE) OR tap.start_date > CURRENT_DATE)
           OR (:premisesStatus IS NULL)
         )
       """,
