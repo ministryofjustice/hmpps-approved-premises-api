@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2Statu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3MigrateNewBedspaceModelDataJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateApplicationOffenderNameJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBedSpaceStartDateJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBedspaceCreatedDateJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBookingOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
@@ -57,7 +56,6 @@ class MigrationJobService(
         MigrationJobType.updateCas1BackfillUserApArea -> getBean(Cas1BackfillUserApArea::class)
         MigrationJobType.updateCas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
         MigrationJobType.updateCas3BookingOffenderName -> getBean(Cas3UpdateBookingOffenderNameJob::class)
-        MigrationJobType.updateCas3BedspaceStartDate -> getBean(Cas3UpdateBedSpaceStartDateJob::class)
         MigrationJobType.updateCas3PremisesStartDate -> getBean(Cas3UpdatePremisesStartDateJob::class)
         MigrationJobType.updateCas3PremisesCreatedAt -> getBean(Cas3UpdatePremisesCreatedDateJob::class)
         MigrationJobType.updateCas3BedspaceCreatedAt -> getBean(Cas3UpdateBedspaceCreatedDateJob::class)

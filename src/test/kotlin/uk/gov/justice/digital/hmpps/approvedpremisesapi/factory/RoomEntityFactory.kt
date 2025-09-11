@@ -84,7 +84,7 @@ class BedEntityFactory : Factory<BedEntity> {
   private var room: Yielded<RoomEntity>? = null
   private var startDate: Yielded<LocalDate?>? = null
   private var endDate: Yielded<LocalDate?>? = null
-  private var createdAt: Yielded<OffsetDateTime>? = { OffsetDateTime.now() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
 
   fun withDefaults() = apply {
     withRoom(RoomEntityFactory().withDefaults().produce())
@@ -126,7 +126,7 @@ class BedEntityFactory : Factory<BedEntity> {
     this.endDate = endDate
   }
 
-  fun withCreatedAt(createdAt: Yielded<OffsetDateTime>?) = apply {
+  fun withCreatedAt(createdAt: Yielded<OffsetDateTime>) = apply {
     this.createdAt = createdAt
   }
 
@@ -137,6 +137,6 @@ class BedEntityFactory : Factory<BedEntity> {
     room = this.room?.invoke() ?: throw java.lang.RuntimeException("Must provide a room"),
     endDate = this.endDate?.invoke(),
     startDate = this.startDate?.invoke(),
-    createdAt = this.createdAt?.invoke(),
+    createdAt = this.createdAt.invoke(),
   )
 }
