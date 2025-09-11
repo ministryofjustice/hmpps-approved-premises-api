@@ -179,7 +179,7 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
-    fun `Get bedspace status returns archive status when the bedspace is scheduled to be unarchive in the future`() {
+    fun `Get bedspace status returns upcoming status when the bedspace is scheduled to be unarchive in the future`() {
       val premises = createPremisesEntity()
       val bedspaceUnarchiveDate = LocalDate.now().plusDays(3)
       val bedspace = createBedspace(premises, bedspaceUnarchiveDate)
@@ -195,7 +195,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.getBedspaceStatus(bedspace)
 
-      assertThat(result).isEqualTo(Cas3BedspaceStatus.archived)
+      assertThat(result).isEqualTo(Cas3BedspaceStatus.upcoming)
     }
 
     @Test
