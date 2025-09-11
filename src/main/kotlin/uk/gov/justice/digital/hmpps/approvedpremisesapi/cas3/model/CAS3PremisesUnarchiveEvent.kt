@@ -8,24 +8,15 @@ import java.util.UUID
 
 data class CAS3PremisesUnarchiveEvent(
   val eventDetails: CAS3PremisesUnarchiveEventDetails,
-
   override val id: UUID,
-
   override val timestamp: Instant,
-
   override val eventType: EventType,
 ) : CAS3Event
 
 data class CAS3PremisesUnarchiveEventDetails(
-
   val premisesId: UUID,
-
   val userId: UUID,
-
   val currentStartDate: LocalDate,
-
   val newStartDate: LocalDate,
-
-  val currentEndDate: LocalDate,
-
+  val currentEndDate: LocalDate?,
 )

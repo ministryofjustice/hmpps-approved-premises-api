@@ -239,7 +239,7 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun savePremisesUnarchiveEvent(premises: TemporaryAccommodationPremisesEntity, currentStartDate: LocalDate, newStartDate: LocalDate, currentEndDate: LocalDate) {
+  fun savePremisesUnarchiveEvent(premises: TemporaryAccommodationPremisesEntity, currentStartDate: LocalDate, newStartDate: LocalDate, currentEndDate: LocalDate?) {
     val user = userService.getUserForRequest()
     val domainEvent = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user)
 

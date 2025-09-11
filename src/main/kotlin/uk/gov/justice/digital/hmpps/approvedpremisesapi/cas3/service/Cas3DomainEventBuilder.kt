@@ -255,7 +255,7 @@ class Cas3DomainEventBuilder(
     premises: TemporaryAccommodationPremisesEntity,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
-    currentEndDate: LocalDate,
+    currentEndDate: LocalDate?,
     user: UserEntity,
   ): DomainEvent<CAS3PremisesUnarchiveEvent> {
     val domainEventId = UUID.randomUUID()
@@ -488,7 +488,7 @@ class Cas3DomainEventBuilder(
     premises: PremisesEntity,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
-    currentEndDate: LocalDate,
+    currentEndDate: LocalDate?,
     user: UserEntity,
   ) = CAS3PremisesUnarchiveEventDetails(
     premisesId = premises.id,
