@@ -26,10 +26,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3NonA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Arrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
@@ -167,20 +165,10 @@ class Cas3BookingTransformerTest {
   private val nullDepartureEntity: Cas3DepartureEntity? = null
   private val nullConfirmationEntity: Cas3v2ConfirmationEntity? = null
 
-  private val bedspaceModel = Cas3Bedspace(
+  private val bedspaceSummaryModel = Cas3BedspaceSummary(
     id = bedspaceEntity.id,
     reference = bedspaceEntity.reference,
-    startDate = bedspaceEntity.startDate!!,
     endDate = bedspaceEntity.endDate,
-    notes = bedspaceEntity.notes,
-    status = Cas3BedspaceStatus.online,
-    bedspaceCharacteristics = listOf(
-      Cas3BedspaceCharacteristic(
-        id = bedspaceCharacteristic.id,
-        description = bedspaceCharacteristic.description,
-        name = bedspaceCharacteristic.name,
-      ),
-    ),
   )
 
   init {
@@ -188,7 +176,7 @@ class Cas3BookingTransformerTest {
     every { mockNonArrivalTransformer.transformJpaToApi(null) } returns null
     every { mockCancellationTransformer.transformJpaToApi(null) } returns null
     every { mockCas3ConfirmationTransformer.transformJpaToApi(nullConfirmationEntity) } returns null
-    every { mockBedspaceTransformer.transformJpaToApi(bedspaceEntity) } returns bedspaceModel
+    every { mockBedspaceTransformer.transformJpaToCas3BedspaceSummary(bedspaceEntity) } returns bedspaceSummaryModel
     every { mockDepartureTransformer.transformJpaToApi(nullDepartureEntity) } returns null
 
     every { mockPersonTransformer.transformModelToPersonApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(
@@ -251,7 +239,7 @@ class Cas3BookingTransformerTest {
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -319,7 +307,7 @@ class Cas3BookingTransformerTest {
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -388,7 +376,7 @@ class Cas3BookingTransformerTest {
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -468,7 +456,7 @@ class Cas3BookingTransformerTest {
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -593,7 +581,7 @@ class Cas3BookingTransformerTest {
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -778,7 +766,7 @@ class Cas3BookingTransformerTest {
         ),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -978,7 +966,7 @@ class Cas3BookingTransformerTest {
         turnaroundStartDate = departedAt.toLocalDate().plusDays(1),
         effectiveEndDate = expectedEffectiveEndDate,
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -1178,7 +1166,7 @@ class Cas3BookingTransformerTest {
         turnaroundStartDate = departedAt.toLocalDate().plusDays(1),
         effectiveEndDate = expectedEffectiveEndDate,
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -1411,7 +1399,7 @@ class Cas3BookingTransformerTest {
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -1480,7 +1468,7 @@ class Cas3BookingTransformerTest {
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }
@@ -1597,7 +1585,7 @@ class Cas3BookingTransformerTest {
         turnaroundStartDate = LocalDate.parse("2022-08-31"),
         effectiveEndDate = LocalDate.parse("2022-09-05"),
         premises = Cas3BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
-        bedspace = bedspaceModel,
+        bedspace = bedspaceSummaryModel,
       ),
     )
   }

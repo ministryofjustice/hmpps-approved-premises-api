@@ -48,7 +48,7 @@ class Cas3BedspaceTransformerTest {
       .withCreatedAt { OffsetDateTime.now().minusDays(100) }
       .produce()
 
-    val result = cas3BedspaceTransformer.transformJpaToApi(bed)
+    val result = cas3BedspaceTransformer.transformJpaToApi(bed, status)
 
     assertThat(result).isEqualTo(
       Cas3Bedspace(
@@ -73,7 +73,7 @@ class Cas3BedspaceTransformerTest {
       .withPremises(premises)
       .produce()
 
-    val result = cas3BedspaceTransformer.transformJpaToApi(bedspace)
+    val result = cas3BedspaceTransformer.transformJpaToApi(bedspace, Cas3BedspaceStatus.online)
 
     assertThat(result).isEqualTo(
       Cas3Bedspace(

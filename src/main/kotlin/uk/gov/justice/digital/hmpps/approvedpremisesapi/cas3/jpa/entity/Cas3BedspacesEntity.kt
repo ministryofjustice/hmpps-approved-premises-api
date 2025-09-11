@@ -12,7 +12,6 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -43,22 +42,11 @@ data class Cas3BedspacesEntity(
   )
   var characteristics: MutableList<Cas3BedspaceCharacteristicEntity>,
 ) {
-  fun isBedspaceUpcoming() = BedspaceStatusHelper.isCas3BedspaceUpcoming(startDate = startDate)
-  fun isBedspaceArchived() = BedspaceStatusHelper.isCas3BedspaceArchived(endDate = endDate)
-  fun getBedspaceStatus() = BedspaceStatusHelper.getBedspaceStatus(startDate = startDate, endDate = endDate)
-  fun isBedspaceOnline() = BedspaceStatusHelper.isCas3BedspaceOnline(startDate = startDate, endDate = endDate)
+  fun isBedspaceOnline() = BedspaceStatusHelper.isBedspaceOnline(startDate = startDate, endDate = endDate)
 }
 
 object BedspaceStatusHelper {
-  fun isActive(now: LocalDate, endDate: LocalDate?): Boolean = endDate == null || endDate.isAfter(now)
-  fun isCas3BedspaceOnline(startDate: LocalDate?, endDate: LocalDate?) = (startDate == null || startDate <= LocalDate.now()) && (endDate == null || endDate > LocalDate.now())
-  fun isCas3BedspaceUpcoming(startDate: LocalDate?) = startDate?.isAfter(LocalDate.now()) ?: false
-  fun isCas3BedspaceArchived(endDate: LocalDate?) = endDate != null && endDate <= LocalDate.now()
-  fun getBedspaceStatus(startDate: LocalDate?, endDate: LocalDate?) = when {
-    this.isCas3BedspaceUpcoming(startDate) -> Cas3BedspaceStatus.upcoming
-    this.isCas3BedspaceArchived(endDate) -> Cas3BedspaceStatus.archived
-    else -> Cas3BedspaceStatus.online
-  }
+  fun isBedspaceOnline(startDate: LocalDate?, endDate: LocalDate?) = (startDate == null || startDate <= LocalDate.now()) && (endDate == null || endDate > LocalDate.now())
 }
 
 @Repository

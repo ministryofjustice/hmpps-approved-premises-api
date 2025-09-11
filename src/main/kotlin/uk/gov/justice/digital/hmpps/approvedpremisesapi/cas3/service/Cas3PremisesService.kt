@@ -685,7 +685,7 @@ class Cas3PremisesService(
 
     val activeBedspaces = bedspaceRepository.findByRoomPremisesId(premises.id)
       .asSequence()
-      .filter { (it.isCas3BedspaceOnline() || it.isCas3BedspaceUpcoming()) && (it.endDate == null || it.endDate!! > endDate) }
+      .filter { (it.isCas3BedspaceOnline() || isCas3BedspaceUpcoming(it)) && (it.endDate == null || it.endDate!! > endDate) }
 
     if (activeBedspaces.any()) {
       val lastUpcomingBedspace = activeBedspaces.maxByOrNull { it.startDate!! }
@@ -848,7 +848,7 @@ class Cas3PremisesService(
     val bedspace = bedspaceRepository.findCas3Bedspace(premises.id, bedspaceId)
       ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
 
-    if (!bedspace.isCas3BedspaceArchived()) {
+    if (!isCas3BedspaceArchived(bedspace)) {
       return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotArchived"
     }
 
@@ -954,7 +954,7 @@ class Cas3PremisesService(
     }
 
     // Check if bedspace is already archived
-    if (bedspace.isCas3BedspaceArchived()) {
+    if (isCas3BedspaceArchived(bedspace)) {
       return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceAlreadyArchived"
     }
 
@@ -1164,13 +1164,19 @@ class Cas3PremisesService(
       TemporaryAccommodationPremisesTotalBedspacesByStatus(
         premisesId = premises.id,
         bedspaces.count { it.isCas3BedspaceOnline() },
-        bedspaces.count { it.isCas3BedspaceUpcoming() },
-        bedspaces.count { it.isCas3BedspaceArchived() },
+        bedspaces.count { isCas3BedspaceUpcoming(it) },
+        bedspaces.count { isCas3BedspaceArchived(it) },
       ),
     )
   }
 
   fun getBedspaceCount(premises: PremisesEntity): Int = premisesRepository.getBedCount(premises)
+
+  fun getBedspaceStatus(bedspace: BedEntity) = when {
+    isCas3BedspaceUpcoming(bedspace) -> Cas3BedspaceStatus.upcoming
+    isCas3BedspaceArchived(bedspace) -> Cas3BedspaceStatus.archived
+    else -> Cas3BedspaceStatus.online
+  }
 
   @Suppress("ComplexCondition")
   fun createVoidBedspaces(
@@ -1594,4 +1600,16 @@ class Cas3PremisesService(
     Cas3PremisesStatus.archived -> PropertyStatus.archived.toString()
     Cas3PremisesStatus.online -> PropertyStatus.active.toString()
   }
+
+  private fun isCas3BedspaceArchived(bedspace: BedEntity) = (bedspace.endDate != null && bedspace.endDate!! <= LocalDate.now()) ||
+    (
+      bedspace.startDate!! > LocalDate.now() &&
+        cas3DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED)).any()
+      )
+
+  private fun isCas3BedspaceUpcoming(bedspace: BedEntity) = (bedspace.startDate?.isAfter(LocalDate.now()) ?: false) &&
+    cas3DomainEventService.getBedspaceActiveDomainEvents(
+      bedspace.id,
+      listOf(DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
+    ).isEmpty()
 }

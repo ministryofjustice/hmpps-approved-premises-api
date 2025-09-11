@@ -40,7 +40,7 @@ class Cas3BookingTransformer(
       cancellations = jpa.cancellations.map { cancellationTransformer.transformJpaToApi(it)!! },
       confirmation = confirmationTransformer.transformJpaToApi(jpa.confirmation),
       extensions = jpa.extensions.map(extensionTransformer::transformJpaToApi),
-      bedspace = cas3BedspaceTransformer.transformJpaToApi(jpa.bedspace),
+      bedspace = cas3BedspaceTransformer.transformJpaToCas3BedspaceSummary(jpa.bedspace),
       originalArrivalDate = jpa.originalArrivalDate,
       originalDepartureDate = jpa.originalDepartureDate,
       createdAt = jpa.createdAt.toInstant(),

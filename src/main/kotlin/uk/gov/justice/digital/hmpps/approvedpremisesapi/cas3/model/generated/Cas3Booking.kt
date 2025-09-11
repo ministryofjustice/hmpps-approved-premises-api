@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceSummary
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -59,7 +59,7 @@ data class Cas3Booking(
   @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
 
   @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("bedspace", required = true) val bedspace: Cas3Bedspace,
+  @get:JsonProperty("bedspace", required = true) val bedspace: Cas3BedspaceSummary,
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("status", required = true) val status: Cas3BookingStatus,
