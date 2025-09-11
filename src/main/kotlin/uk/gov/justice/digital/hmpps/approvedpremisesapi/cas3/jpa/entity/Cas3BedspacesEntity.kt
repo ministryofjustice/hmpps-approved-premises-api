@@ -32,7 +32,7 @@ data class Cas3BedspacesEntity(
   val notes: String?,
   val startDate: LocalDate?,
   val endDate: LocalDate?,
-  val createdAt: OffsetDateTime,
+  val createdAt: OffsetDateTime?,
 
   @ManyToMany
   @JoinTable(
