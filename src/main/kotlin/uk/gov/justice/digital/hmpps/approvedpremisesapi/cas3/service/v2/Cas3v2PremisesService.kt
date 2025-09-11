@@ -21,7 +21,7 @@ class Cas3v2PremisesService(
 
   fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate) {
     val currentStartDate = premises.startDate
-    val currentEndDate = premises.endDate!!
+    val currentEndDate = premises.endDate
     premises.startDate = restartDate
     premises.endDate = null
     premises.status = PropertyStatus.active

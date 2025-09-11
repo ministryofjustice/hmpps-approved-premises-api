@@ -198,7 +198,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
   ) = Cas3Bedspace(
     id = bed.id,
     reference = room.name,
-    startDate = bed.createdAt!!.toLocalDate(),
+    startDate = bed.createdAt.toLocalDate(),
     characteristics = room.characteristics.map { characteristic ->
       Characteristic(
         id = characteristic.id,
