@@ -843,41 +843,6 @@ class BedUtilisationReportGeneratorTest {
   }
 
   @Test
-  fun `bedspaceStartDate show nothing when bedspace start date is null`() {
-    val startDate = LocalDate.of(2024, 2, 1)
-    val endDate = LocalDate.of(2024, 2, 29)
-    val apArea = ApAreaEntityFactory().produce()
-
-    val probationRegion1 = ProbationRegionEntityFactory().withApArea(apArea).produce()
-
-    val localAuthorityArea1 = LocalAuthorityEntityFactory().produce()
-
-    val premises = TemporaryAccommodationPremisesEntityFactory().withLocalAuthorityArea(localAuthorityArea1)
-      .withProbationRegion(probationRegion1).produce()
-
-    val room = RoomEntityFactory().withPremises(premises).produce()
-
-    val bed = BedEntityFactory().withRoom(room).withCreatedAt(null).produce()
-
-    val bedUtilisationBedspaceReportData = convertToCas3BedUtilisationBedspaceReportData(bed)
-    val bedUtilisationReportData = BedUtilisationReportData(
-      bedUtilisationBedspaceReportData,
-      listOf(),
-      listOf(),
-      listOf(),
-      listOf(),
-    )
-
-    val result = bedUtilisationReportGenerator.createReport(
-      listOf(bedUtilisationReportData),
-      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
-    )
-
-    assertThat(result.count()).isEqualTo(1)
-    assertThat(result[0][BedUtilisationReportRow::bedspaceStartDate]).isNull()
-  }
-
-  @Test
   fun `bedspaceEndDate show nothing when bedspace end date is null`() {
     val startDate = LocalDate.of(2024, 2, 1)
     val endDate = LocalDate.of(2024, 2, 29)

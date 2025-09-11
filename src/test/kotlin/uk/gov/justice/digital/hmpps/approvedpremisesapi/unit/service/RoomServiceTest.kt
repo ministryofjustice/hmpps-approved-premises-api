@@ -322,7 +322,6 @@ class RoomServiceTest {
 
     val bed = BedEntityFactory()
       .withRoom(room)
-      .withCreatedAt(null)
       .produce()
 
     room.beds.add(bed)

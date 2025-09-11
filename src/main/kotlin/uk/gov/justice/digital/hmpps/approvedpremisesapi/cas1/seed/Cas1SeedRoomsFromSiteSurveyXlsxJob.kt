@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
 import java.io.File
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.Boolean
 
@@ -230,7 +231,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         room = room,
         startDate = null,
         endDate = null,
-        createdAt = null,
+        createdAt = OffsetDateTime.now(),
       ),
     )
     changesLog.info("Created new bed with code ${bed.bedCode} and name ${bed.bedName} in room code ${bed.roomCode}.")
