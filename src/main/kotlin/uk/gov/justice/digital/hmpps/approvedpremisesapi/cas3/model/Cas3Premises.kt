@@ -25,6 +25,7 @@ data class Cas3Premises(
   val characteristics: List<Characteristic>? = null,
   val startDate: LocalDate,
   val endDate: LocalDate? = null,
+  val scheduleUnarchiveDate: LocalDate? = null,
   val notes: String? = null,
   val turnaroundWorkingDays: Int? = null,
   val archiveHistory: List<Cas3PremisesArchiveAction>? = emptyList(),

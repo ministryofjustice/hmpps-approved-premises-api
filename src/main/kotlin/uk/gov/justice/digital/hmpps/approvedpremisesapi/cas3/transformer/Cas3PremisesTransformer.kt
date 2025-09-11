@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Characterist
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
+import java.time.LocalDate
 
 @Component
 class Cas3PremisesTransformer(
@@ -35,6 +36,7 @@ class Cas3PremisesTransformer(
     characteristics = premisesEntity.characteristics.map(characteristicTransformer::transformJpaToApi).sortedBy { it.id },
     startDate = premisesEntity.createdAt.toLocalDate(),
     endDate = premisesEntity.endDate,
+    scheduleUnarchiveDate = isPremisesScheduleToUnarchive(premisesEntity),
     status = getPremisesStatus(premisesEntity),
     notes = premisesEntity.notes,
     turnaroundWorkingDays = premisesEntity.turnaroundWorkingDays,
@@ -49,4 +51,6 @@ class Cas3PremisesTransformer(
   } else {
     Cas3PremisesStatus.online
   }
+
+  private fun isPremisesScheduleToUnarchive(premises: TemporaryAccommodationPremisesEntity) = premises.startDate.takeIf { it.isAfter(LocalDate.now()) }
 }

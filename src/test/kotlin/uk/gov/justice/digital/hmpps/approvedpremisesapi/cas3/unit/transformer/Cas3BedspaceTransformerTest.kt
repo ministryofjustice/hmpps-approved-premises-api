@@ -28,7 +28,7 @@ class Cas3BedspaceTransformerTest {
 
   @ParameterizedTest
   @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer.Cas3BedspaceTransformerTest#startDateAndStatusProvider")
-  fun `transformJpaToApi transforms the BedEntity into Cas3Bedspace correctly`(startDate: LocalDate, status: Cas3BedspaceStatus) {
+  fun `transformJpaToApi transforms the BedEntity into Cas3Bedspace correctly`(startDate: LocalDate, status: Cas3BedspaceStatus, scheduledUnarchiveDate: LocalDate?) {
     val premises = TemporaryAccommodationPremisesEntityFactory()
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
@@ -55,6 +55,7 @@ class Cas3BedspaceTransformerTest {
         reference = room.name,
         startDate = bed.createdAt!!.toLocalDate(),
         endDate = bed.endDate,
+        scheduleUnarchiveDate = scheduledUnarchiveDate,
         status = status,
         notes = room.notes,
         characteristics = emptyList(),
@@ -94,9 +95,9 @@ class Cas3BedspaceTransformerTest {
   companion object {
     @JvmStatic
     fun startDateAndStatusProvider() = Stream.of(
-      Arguments.of(LocalDate.now().minusDays(90).toString(), Cas3BedspaceStatus.online),
-      Arguments.of(LocalDate.now().minusDays(300).toString(), Cas3BedspaceStatus.archived),
-      Arguments.of(LocalDate.now().plusDays(7).toString(), Cas3BedspaceStatus.upcoming),
+      Arguments.of(LocalDate.now().minusDays(90).toString(), Cas3BedspaceStatus.online, null),
+      Arguments.of(LocalDate.now().minusDays(300).toString(), Cas3BedspaceStatus.archived, null),
+      Arguments.of(LocalDate.now().plusDays(7).toString(), Cas3BedspaceStatus.upcoming, LocalDate.now().plusDays(7).toString()),
     )
   }
 }

@@ -268,6 +268,66 @@ class Cas3PremisesTransformerTest {
     assertThat(result.status).isEqualTo(Cas3PremisesStatus.archived)
   }
 
+  @Test
+  fun `transformDomainToApi includes scheduled unarchive date for premises scheduled to unarchive`() {
+    val probationRegionEntity = ProbationRegionEntityFactory()
+      .withDefaults()
+      .produce()
+    val probationDeliveryUnitEntity = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegionEntity)
+      .produce()
+    val startDate = LocalDate.now().plusDays(3)
+    val endDate = null
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withProbationRegion(probationRegionEntity)
+      .withProbationDeliveryUnit(probationDeliveryUnitEntity)
+      .withStatus(PropertyStatus.archived)
+      .withStartDate(startDate)
+      .withEndDate(endDate)
+      .produce()
+
+    val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+    every { probationRegionTransformer.transformJpaToApi(probationRegionEntity) } returns probationRegion
+
+    val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
+    every { probationDeliveryUnitTransformer.transformJpaToApi(probationDeliveryUnitEntity) } returns probationDeliveryUnit
+
+    val archiveHistory = listOf(
+      Cas3PremisesArchiveAction(
+        status = Cas3PremisesStatus.archived,
+        date = LocalDate.now().minusDays(90),
+      ),
+      Cas3PremisesArchiveAction(
+        status = Cas3PremisesStatus.online,
+        date = startDate,
+      ),
+    )
+
+    val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
+      premisesId = premises.id,
+      onlineBedspaces = 1,
+      upcomingBedspaces = 0,
+      archivedBedspaces = 1,
+    )
+
+    val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, archiveHistory)
+
+    assertThat(result.archiveHistory).isEqualTo(
+      listOf(
+        Cas3PremisesArchiveAction(
+          status = Cas3PremisesStatus.archived,
+          date = LocalDate.now().minusDays(90),
+        ),
+        Cas3PremisesArchiveAction(
+          status = Cas3PremisesStatus.online,
+          date = startDate,
+        ),
+      ),
+    )
+    assertThat(result.status).isEqualTo(Cas3PremisesStatus.archived)
+    assertThat(result.scheduleUnarchiveDate).isEqualTo(startDate)
+  }
+
   private fun createRoomWithOneBedspace(premises: PremisesEntity, startDate: LocalDate, endDate: LocalDate?): RoomEntity {
     val room = RoomEntityFactory()
       .withPremises(premises)
