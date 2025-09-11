@@ -1878,7 +1878,7 @@ class Cas3PremisesServiceTest {
 
       val result = premisesService.archiveBedspace(bedspaceTwo.id, premises, LocalDate.now().minusDays(5))
 
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.endDate", "endDateBeforeBedspaceStartDate")
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", bedspaceTwo.id.toString(), "endDateBeforeBedspaceStartDate", bedspaceTwo.startDate.toString())
     }
 
     @Test

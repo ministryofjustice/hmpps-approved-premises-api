@@ -769,7 +769,15 @@ class Cas3PremisesService(
     }
 
     if (endDate.isBefore(bedspace.startDate)) {
-      return "$.endDate" hasSingleValidationError "endDateBeforeBedspaceStartDate"
+      return Cas3FieldValidationError(
+        mapOf(
+          "$.endDate" to Cas3ValidationMessage(
+            entityId = bedspace.id.toString(),
+            message = "endDateBeforeBedspaceStartDate",
+            value = bedspace.startDate.toString(),
+          ),
+        ),
+      )
     }
 
     cas3DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED))
