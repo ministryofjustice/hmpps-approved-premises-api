@@ -2627,6 +2627,47 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `Unarchive bedspace when premises is online returns 200 OK and unarchive bedspace successfully`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { userEntity.probationRegion }
+          withEndDate(null)
+          withStatus(PropertyStatus.active)
+        }
+
+        val archivedBedspace = createBedspaceInPremises(premises, startDate = LocalDate.now().minusDays(180), endDate = LocalDate.now().minusDays(40))
+
+        val restartDate = LocalDate.now().plusDays(1)
+
+        webTestClient.post()
+          .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            mapOf("restartDate" to restartDate.toString()),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        // Verify the bedspace was updated
+        val updatedBedspace = bedRepository.findById(archivedBedspace.id).get()
+        assertThat(updatedBedspace.startDate).isEqualTo(restartDate)
+        assertThat(updatedBedspace.endDate).isNull()
+
+        // Verify the premises was not updated
+        val updatedPremises = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
+        assertThat(updatedPremises).isNotNull()
+        assertThat(updatedPremises?.startDate).isEqualTo(premises.startDate)
+        assertThat(updatedPremises?.endDate).isNull()
+
+        val allEvents = domainEventRepository.findAll()
+        assertThat(allEvents).hasSize(1)
+        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+      }
+    }
+
+    @Test
     fun `Unarchive bedspace returns 400 when restart date is too far in the past`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
