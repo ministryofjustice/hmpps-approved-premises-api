@@ -1609,15 +1609,7 @@ class Cas3PremisesService(
     Cas3PremisesStatus.online -> PropertyStatus.active.toString()
   }
 
-  private fun isCas3BedspaceArchived(bedspace: BedEntity) = (bedspace.endDate != null && bedspace.endDate!! <= LocalDate.now()) ||
-    (
-      bedspace.startDate!! > LocalDate.now() &&
-        cas3DomainEventService.getBedspaceActiveDomainEvents(bedspace.id, listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED)).any()
-      )
+  private fun isCas3BedspaceArchived(bedspace: BedEntity) = (bedspace.endDate != null && bedspace.endDate!! <= LocalDate.now())
 
-  private fun isCas3BedspaceUpcoming(bedspace: BedEntity) = (bedspace.startDate?.isAfter(LocalDate.now()) ?: false) &&
-    cas3DomainEventService.getBedspaceActiveDomainEvents(
-      bedspace.id,
-      listOf(DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
-    ).isEmpty()
+  private fun isCas3BedspaceUpcoming(bedspace: BedEntity) = (bedspace.startDate?.isAfter(LocalDate.now()) ?: false)
 }
