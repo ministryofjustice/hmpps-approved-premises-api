@@ -189,7 +189,13 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     )
   }
 
-  protected fun createCas3Bedspace(bed: BedEntity, room: RoomEntity, bedspaceStatus: Cas3BedspaceStatus, archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList()) = Cas3Bedspace(
+  protected fun createCas3Bedspace(
+    bed: BedEntity,
+    room: RoomEntity,
+    bedspaceStatus: Cas3BedspaceStatus,
+    scheduleUnarchiveDate: LocalDate? = null,
+    archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList(),
+  ) = Cas3Bedspace(
     id = bed.id,
     reference = room.name,
     startDate = bed.createdAt!!.toLocalDate(),
@@ -204,6 +210,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     },
     endDate = bed.endDate,
     status = bedspaceStatus,
+    scheduleUnarchiveDate = scheduleUnarchiveDate,
     notes = room.notes,
     archiveHistory = archiveHistory,
   )

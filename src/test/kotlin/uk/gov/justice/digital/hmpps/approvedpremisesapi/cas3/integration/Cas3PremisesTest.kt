@@ -1218,6 +1218,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           premises.probationDeliveryUnit!!,
           premises.localAuthorityArea!!,
           Cas3PremisesStatus.archived,
+          premises.startDate,
           totalOnlineBedspaces = 0,
           totalUpcomingBedspaces = 0,
           totalArchivedBedspaces = 0,
@@ -1280,6 +1281,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       probationDeliveryUnit: ProbationDeliveryUnitEntity,
       localAuthorityArea: LocalAuthorityAreaEntity,
       status: Cas3PremisesStatus,
+      scheduleUnarchiveDate: LocalDate? = null,
       totalOnlineBedspaces: Int,
       totalUpcomingBedspaces: Int,
       totalArchivedBedspaces: Int,
@@ -1299,6 +1301,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       ),
       startDate = premises.createdAt.toLocalDate(),
       endDate = premises.endDate,
+      scheduleUnarchiveDate = scheduleUnarchiveDate,
       status = status,
       characteristics = premises.characteristics.sortedBy { it.id }.map { characteristic ->
         Characteristic(
@@ -1338,7 +1341,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         // upcoming bedspaces
         val bedspaceThree = createBedspaceInPremises(premises, startDate = LocalDate.now().plusDays(5), endDate = null)
-        expectedBedspaces.add(createCas3Bedspace(bedspaceThree, bedspaceThree.room, Cas3BedspaceStatus.upcoming))
+        expectedBedspaces.add(createCas3Bedspace(bedspaceThree, bedspaceThree.room, Cas3BedspaceStatus.upcoming, bedspaceThree.startDate))
 
         // archived bedspaces
         val bedspaceFour = createBedspaceInPremises(
@@ -1408,7 +1411,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         // upcoming bedspaces
         val bedspaceThree = createBedspaceInPremises(premises, startDate = LocalDate.now().randomDateAfter(30), endDate = null)
-        expectedBedspaces.add(createCas3Bedspace(bedspaceThree, bedspaceThree.room, Cas3BedspaceStatus.upcoming))
+        expectedBedspaces.add(createCas3Bedspace(bedspaceThree, bedspaceThree.room, Cas3BedspaceStatus.upcoming, bedspaceThree.startDate))
 
         // archived bedspaces
         val bedspaceFour = createBedspaceInPremises(premises, startDate = LocalDate.now().minusMonths(4), endDate = LocalDate.now().minusDays(1))
