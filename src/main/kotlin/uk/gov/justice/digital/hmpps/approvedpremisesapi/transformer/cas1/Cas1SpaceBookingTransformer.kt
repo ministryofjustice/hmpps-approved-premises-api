@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -104,11 +103,6 @@ class Cas1SpaceBookingTransformer(
     val assignedAt = keyWorkerAssignedAt
     return if (staffCode != null && name != null) {
       Cas1KeyWorkerAllocation(
-        keyWorker = StaffMember(
-          code = staffCode,
-          keyWorker = true,
-          name = name,
-        ),
         allocatedAt = assignedAt?.toLocalDate(),
         name = name,
         userId = keyWorkerUser?.id,
@@ -219,11 +213,6 @@ class Cas1SpaceBookingTransformer(
     keyWorkerAllocation = searchResult.keyWorkerStaffCode?.let { staffCode ->
       Cas1KeyWorkerAllocation(
         allocatedAt = searchResult.keyWorkerAssignedAt?.toLocalDate(),
-        keyWorker = StaffMember(
-          code = staffCode,
-          keyWorker = true,
-          name = searchResult.keyWorkerName!!,
-        ),
         name = searchResult.keyWorkerName!!,
         userId = searchResult.keyWorkerUserId,
         emailAddress = searchResult.keyWorkerEmail,

@@ -45,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingManagementService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1KeyWorkerService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.ArrivalRecorded
@@ -87,9 +86,6 @@ class Cas1BookingManagementServiceTest {
 
   @MockK
   lateinit var userService: UserService
-
-  @MockK
-  lateinit var cas1KeyWorkerService: Cas1KeyWorkerService
 
   @MockK
   lateinit var cas1ChangeRequestService: Cas1ChangeRequestService
@@ -1109,7 +1105,7 @@ class Cas1BookingManagementServiceTest {
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(staffCode = null, userId = userId),
+        keyWorker = Cas1AssignKeyWorker(userId = userId),
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -1127,7 +1123,7 @@ class Cas1BookingManagementServiceTest {
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(staffCode = null, userId = userId),
+        keyWorker = Cas1AssignKeyWorker(userId = userId),
       )
 
       assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
@@ -1135,51 +1131,6 @@ class Cas1BookingManagementServiceTest {
 
       assertThat(result.validationMessages).anySatisfy { key, value ->
         key == "$.bookingId" && value == "doesNotExist"
-      }
-    }
-
-    @Test
-    fun `Returns validation error if no staff record exists with the given staff code, when staff code provided directly`() {
-      every { cas1KeyWorkerService.findByDeliusStaffCode("StaffCode1") } returns null
-      every {
-        staffMemberService.getStaffMemberByCode("StaffCode1")
-      } returns CasResult.NotFound("staff", "qcode")
-
-      val result = service.recordKeyWorkerAssignedForBooking(
-        premisesId = UUID.randomUUID(),
-        bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(staffCode = "StaffCode1", userId = null),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.keyWorker.staffCode" && value == "notFound"
-      }
-    }
-
-    @Test
-    fun `Returns validation error if no staff record exists with the given staff code, when user id provided`() {
-      every {
-        staffMemberService.getStaffMemberByCode("StaffCode1")
-      } returns CasResult.NotFound("staff", "qcode")
-
-      every {
-        userService.findByIdOrNull(userId)
-      } returns UserEntityFactory().withDefaults().withDeliusStaffCode("StaffCode1").produce()
-
-      val result = service.recordKeyWorkerAssignedForBooking(
-        premisesId = UUID.randomUUID(),
-        bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(staffCode = null, userId = userId),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.keyWorker.staffCode" && value == "notFound"
       }
     }
 
@@ -1196,98 +1147,10 @@ class Cas1BookingManagementServiceTest {
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(staffCode = null, userId = userId),
+        keyWorker = Cas1AssignKeyWorker(userId = userId),
       )
 
       assertThatCasResult(result).isGeneralValidationError("Cannot find user with id $userId")
-    }
-
-    @Test
-    fun `Given a staff code, updates existing space booking with key worker information and raises domain event, user cannot be resolved`() {
-      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
-
-      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1SpaceBookingManagementDomainEventService.keyWorkerAssigned(any(), any(), any(), any()) } returns Unit
-      every { cas1KeyWorkerService.findByDeliusStaffCode("StaffCode1") } returns null
-
-      val staffDetail = StaffDetailFactory.staffDetail(
-        code = "StaffCode1",
-        name = PersonName(
-          forename = "Jeff Jeffity",
-          surname = "Jefferson",
-        ),
-      )
-
-      every {
-        staffMemberService.getStaffMemberByCode("StaffCode1")
-      } returns CasResult.Success(staffDetail)
-
-      val result = service.recordKeyWorkerAssignedForBooking(
-        premisesId = UUID.randomUUID(),
-        bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(staffCode = "StaffCode1", userId = null),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-
-      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
-      assertThat(existingSpaceBooking.premises).isEqualTo(updatedSpaceBooking.premises)
-      assertThat(existingSpaceBooking.placementRequest).isEqualTo(updatedSpaceBooking.placementRequest)
-      assertThat(existingSpaceBooking.application).isEqualTo(updatedSpaceBooking.application)
-      assertThat(existingSpaceBooking.createdAt).isEqualTo(updatedSpaceBooking.createdAt)
-      assertThat(existingSpaceBooking.createdBy).isEqualTo(updatedSpaceBooking.createdBy)
-      assertThat(existingSpaceBooking.crn).isEqualTo(updatedSpaceBooking.crn)
-
-      assertThat(updatedSpaceBooking.keyWorkerUser).isNull()
-      assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo("StaffCode1")
-      assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("Jeff Jeffity Jefferson")
-      assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
-    }
-
-    @Test
-    fun `Given a staff code, updates existing space booking with key worker information and raises domain event, user can be resolved`() {
-      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
-
-      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1SpaceBookingManagementDomainEventService.keyWorkerAssigned(any(), any(), any(), any()) } returns Unit
-
-      val user = UserEntityFactory().withDefaults().withDeliusStaffCode("StaffCode1").produce()
-      every { cas1KeyWorkerService.findByDeliusStaffCode("StaffCode1") } returns user
-
-      val staffDetail = StaffDetailFactory.staffDetail(
-        code = "StaffCode1",
-        name = PersonName(
-          forename = "Jeff Jeffity",
-          surname = "Jefferson",
-        ),
-      )
-
-      every {
-        staffMemberService.getStaffMemberByCode("StaffCode1")
-      } returns CasResult.Success(staffDetail)
-
-      val result = service.recordKeyWorkerAssignedForBooking(
-        premisesId = UUID.randomUUID(),
-        bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(staffCode = "StaffCode1", userId = null),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      result as CasResult.Success
-
-      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
-      assertThat(existingSpaceBooking.premises).isEqualTo(updatedSpaceBooking.premises)
-      assertThat(existingSpaceBooking.placementRequest).isEqualTo(updatedSpaceBooking.placementRequest)
-      assertThat(existingSpaceBooking.application).isEqualTo(updatedSpaceBooking.application)
-      assertThat(existingSpaceBooking.createdAt).isEqualTo(updatedSpaceBooking.createdAt)
-      assertThat(existingSpaceBooking.createdBy).isEqualTo(updatedSpaceBooking.createdBy)
-      assertThat(existingSpaceBooking.crn).isEqualTo(updatedSpaceBooking.crn)
-
-      assertThat(updatedSpaceBooking.keyWorkerUser).isEqualTo(user)
-      assertThat(updatedSpaceBooking.keyWorkerStaffCode).isEqualTo("StaffCode1")
-      assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("Jeff Jeffity Jefferson")
-      assertThat(updatedSpaceBooking.keyWorkerAssignedAt).isWithinTheLastMinute()
     }
 
     @Test
@@ -1315,7 +1178,7 @@ class Cas1BookingManagementServiceTest {
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
         bookingId = UUID.randomUUID(),
-        keyWorker = Cas1AssignKeyWorker(staffCode = null, userId = userId),
+        keyWorker = Cas1AssignKeyWorker(userId = userId),
       )
 
       assertThatCasResult(result).isSuccess().with {

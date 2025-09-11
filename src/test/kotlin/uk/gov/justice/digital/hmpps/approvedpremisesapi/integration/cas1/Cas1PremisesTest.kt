@@ -1302,8 +1302,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(bookingSummary1.characteristics[0].value).isEqualTo(CAS1_PROPERTY_NAME_SINGLE_ROOM)
 
       val bookingSummary1KeyWorkerAllocation = bookingSummary1.keyWorkerAllocation!!
-      assertThat(bookingSummary1KeyWorkerAllocation.keyWorker.name).isEqualTo("key worker 1 name")
-      assertThat(bookingSummary1KeyWorkerAllocation.keyWorker.code).isEqualTo("key worker 1 code")
       assertThat(bookingSummary1KeyWorkerAllocation.userId).isEqualTo(spaceBookingOfflineApplicationKeyWorker.id)
       assertThat(bookingSummary1KeyWorkerAllocation.name).isEqualTo("key worker 1 name")
       assertThat(bookingSummary1KeyWorkerAllocation.emailAddress).isEqualTo(spaceBookingOfflineApplicationKeyWorker.email)
