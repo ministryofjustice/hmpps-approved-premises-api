@@ -15,7 +15,7 @@ import java.util.UUID
 
 fun IntegrationTestBase.givenACas3Premises(
   probationRegion: ProbationRegionEntity,
-  status: PropertyStatus = randomOf(PropertyStatus.entries),
+  status: Cas3PremisesStatus = randomOf(Cas3PremisesStatus.entries),
   endDate: LocalDate? = null,
 ) = givenACas3Premises(
   probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {

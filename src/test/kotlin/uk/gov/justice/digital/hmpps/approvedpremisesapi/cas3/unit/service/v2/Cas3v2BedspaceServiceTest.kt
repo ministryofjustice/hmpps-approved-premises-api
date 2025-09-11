@@ -6,12 +6,12 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
@@ -61,7 +61,7 @@ class Cas3v2BedspaceServiceTest {
     fun `When create a new bedspace in a scheduled to archive premises returns Success and unarchive the premises`() {
       val bedspaceStartDate = LocalDate.now().plusDays(5)
       val (premises, bedspace) = createPremisesAndBedspace(
-        premisesStatus = PropertyStatus.archived,
+        premisesStatus = Cas3PremisesStatus.archived,
         premisesEndDate = LocalDate.now().plusDays(2),
         bedspaceStartDate,
       )
@@ -89,7 +89,7 @@ class Cas3v2BedspaceServiceTest {
 
     @Test
     fun `When create a new bedspace with empty bedspace reference returns FieldValidationError with the correct message`() {
-      val premises = createPremises(status = PropertyStatus.active)
+      val premises = createPremises(status = Cas3PremisesStatus.online)
 
       val result = cas3v2BedspacesService.createBedspace(
         premises,
@@ -104,7 +104,7 @@ class Cas3v2BedspaceServiceTest {
 
     @Test
     fun `When create a new bedspace with a start date more than 7 days in the past returns FieldValidationError with the correct message`() {
-      val premises = createPremises(status = PropertyStatus.active)
+      val premises = createPremises(status = Cas3PremisesStatus.online)
 
       val result = cas3v2BedspacesService.createBedspace(
         premises,
@@ -119,7 +119,7 @@ class Cas3v2BedspaceServiceTest {
 
     @Test
     fun `When create a new bedspace with a start date more than 7 days in the future returns FieldValidationError with the correct message`() {
-      val premises = createPremises(status = PropertyStatus.active)
+      val premises = createPremises(status = Cas3PremisesStatus.online)
 
       val result = cas3v2BedspacesService.createBedspace(
         premises,
@@ -134,7 +134,7 @@ class Cas3v2BedspaceServiceTest {
 
     @Test
     fun `When create a new bedspace with a start date before premises start date returns FieldValidationError with the correct message`() {
-      val premises = createPremises(status = PropertyStatus.active)
+      val premises = createPremises(status = Cas3PremisesStatus.online)
 
       val result = cas3v2BedspacesService.createBedspace(
         premises,
@@ -149,7 +149,7 @@ class Cas3v2BedspaceServiceTest {
 
     @Test
     fun `When create a new bedspace with a non exist characteristic returns FieldValidationError with the correct message`() {
-      val premises = createPremises(status = PropertyStatus.active)
+      val premises = createPremises(status = Cas3PremisesStatus.online)
 
       val nonExistCharacteristicId = UUID.randomUUID()
 
@@ -226,7 +226,7 @@ class Cas3v2BedspaceServiceTest {
   }
 
   private fun createPremisesAndBedspace(
-    premisesStatus: PropertyStatus = PropertyStatus.active,
+    premisesStatus: Cas3PremisesStatus = Cas3PremisesStatus.online,
     premisesEndDate: LocalDate? = null,
     bedspaceStartDate: LocalDate = LocalDate.now(),
     bedspaceEndDate: LocalDate? = null,
@@ -242,7 +242,7 @@ class Cas3v2BedspaceServiceTest {
 
   private fun createPremises(
     id: UUID = UUID.randomUUID(),
-    status: PropertyStatus = PropertyStatus.active,
+    status: Cas3PremisesStatus = Cas3PremisesStatus.online,
     startDate: LocalDate = LocalDate.now().minusDays(180),
     endDate: LocalDate? = null,
   ) = Cas3PremisesEntityFactory()
