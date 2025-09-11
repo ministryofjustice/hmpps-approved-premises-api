@@ -51,6 +51,10 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
     this.endDate = { endDate }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce(): Cas3BedspacesEntity = Cas3BedspacesEntity(
     id = this.id(),

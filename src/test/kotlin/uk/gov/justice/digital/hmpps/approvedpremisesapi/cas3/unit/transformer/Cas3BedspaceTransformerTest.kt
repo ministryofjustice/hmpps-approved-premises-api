@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -63,14 +62,18 @@ class Cas3BedspaceTransformerTest {
     )
   }
 
-  @Test
-  fun `transformJpaToApi transforms the BedspaceEntity into Cas3Bedspace correctly`() {
+  @ParameterizedTest
+  @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer.Cas3BedspaceTransformerTest#startDateAndStatusProvider")
+  fun `transformJpaToApi transforms the BedspaceEntity into Cas3Bedspace correctly`(startDate: LocalDate) {
     val premises = Cas3PremisesEntityFactory()
       .withDefaults()
       .produce()
 
     val bedspace = Cas3BedspaceEntityFactory()
       .withPremises(premises)
+      .withStartDate(startDate)
+      .withEndDate(startDate.plusDays(180))
+      .withCreatedAt(OffsetDateTime.now().minusDays(100))
       .produce()
 
     val result = cas3BedspaceTransformer.transformJpaToApi(bedspace, Cas3BedspaceStatus.online)

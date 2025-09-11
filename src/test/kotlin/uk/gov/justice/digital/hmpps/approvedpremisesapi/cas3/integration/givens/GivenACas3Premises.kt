@@ -10,12 +10,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
 import java.util.UUID
 
-fun IntegrationTestBase.givenACas3Premises(probationRegion: ProbationRegionEntity) = givenACas3Premises(
+fun IntegrationTestBase.givenACas3Premises(
+  probationRegion: ProbationRegionEntity,
+  status: PropertyStatus = randomOf(PropertyStatus.entries),
+  endDate: LocalDate? = null,
+) = givenACas3Premises(
   probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
     withProbationRegion(probationRegion)
   },
+  status = status,
+  endDate = endDate,
 )
 
 fun IntegrationTestBase.givenACas3Premises(
@@ -28,6 +35,8 @@ fun IntegrationTestBase.givenACas3Premises(
   postCode: String = randomPostCode(),
   characteristics: List<Cas3PremisesCharacteristicEntity> = emptyList(),
   id: UUID = UUID.randomUUID(),
+  startDate: LocalDate = LocalDate.now().minusDays(180),
+  endDate: LocalDate? = null,
 ): Cas3PremisesEntity = cas3PremisesEntityFactory
   .produceAndPersist {
     withId(id)
@@ -37,4 +46,6 @@ fun IntegrationTestBase.givenACas3Premises(
     withStatus(status)
     withPostcode(postCode)
     withCharacteristics(characteristics.toMutableList())
+    withStartDate(startDate)
+    withEndDate(endDate)
   }

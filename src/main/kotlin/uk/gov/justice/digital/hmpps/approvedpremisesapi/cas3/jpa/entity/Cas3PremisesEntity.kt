@@ -68,7 +68,9 @@ data class Cas3PremisesEntity(
   )
   var characteristics: MutableList<Cas3PremisesCharacteristicEntity>,
 
-)
+) {
+  fun isPremisesScheduledToArchive(): Boolean = status == PropertyStatus.archived && endDate != null && endDate!! > LocalDate.now()
+}
 
 @Repository
 interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID>

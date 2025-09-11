@@ -43,6 +43,16 @@ class UserAccessService(
     else -> false
   }
 
+  fun currentUserCanViewPremises(premises: Cas3PremisesEntity): Boolean {
+    val user = userService.getUserForRequest()
+    return userCanAccessRegion(
+      user,
+      ServiceName.temporaryAccommodation,
+      premises.probationDeliveryUnit.probationRegion.id,
+    ) &&
+      user.hasRole(UserRole.CAS3_ASSESSOR)
+  }
+
   fun currentUserCanManagePremises(premises: PremisesEntity) = userCanManagePremises(userService.getUserForRequest(), premises)
 
   fun userCanManagePremises(user: UserEntity, premises: PremisesEntity) = when (premises) {

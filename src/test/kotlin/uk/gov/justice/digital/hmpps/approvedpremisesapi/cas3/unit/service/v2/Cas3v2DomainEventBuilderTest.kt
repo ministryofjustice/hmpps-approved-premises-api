@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.Instant
@@ -114,6 +115,34 @@ class Cas3v2DomainEventBuilderTest {
       assertThat(data.confirmedBy?.username).isEqualTo(user.deliusUsername)
       assertThat(data.confirmedBy?.probationRegionCode).isEqualTo(user.probationRegion.deliusCode)
       assertThat(event.data.eventType).isEqualTo(EventType.bookingConfirmed)
+    })
+  }
+
+  @Test
+  fun `getPremisesUnarchiveEvent transforms the premises information correctly to a domain event`() {
+    val currentStartDate = LocalDate.now().minusDays(20)
+    val currentEndDate = LocalDate.now().minusDays(10)
+    val newStartDate = LocalDate.now().plusDays(5)
+    val probationRegion = probationRegionEntity()
+    val premises = cas3PremisesEntity(probationRegion)
+    premises.endDate = currentEndDate
+    val user = userEntity(probationRegion)
+
+    val event = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user)
+
+    assertAll({
+      assertThat(event.applicationId).isNull()
+      assertThat(event.bookingId).isNull()
+      assertThat(event.crn).isNull()
+      assertThat(event.nomsNumber).isNull()
+      assertThat(event.data.eventType).isEqualTo(EventType.premisesUnarchived)
+      assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+      assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
+      assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
+      assertThat(event.occurredAt).isWithinTheLastMinute()
+      assertThat(event.data.timestamp).isWithinTheLastMinute()
+      assertThat(event.id).isEqualTo(event.data.id)
     })
   }
 
