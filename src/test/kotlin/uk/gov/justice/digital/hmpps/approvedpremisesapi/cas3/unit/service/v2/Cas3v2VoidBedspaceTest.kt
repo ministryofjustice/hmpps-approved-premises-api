@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
@@ -70,6 +71,7 @@ class Cas3v2VoidBedspaceTest {
         referenceNumber = "12345",
         notes = "notes",
         bedspace = bedspace,
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThatCasResult(result).isSuccess().with {
@@ -113,6 +115,7 @@ class Cas3v2VoidBedspaceTest {
         referenceNumber = "12345",
         notes = "notes",
         bedspace = bedspace,
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThatCasResult(result)
@@ -134,6 +137,7 @@ class Cas3v2VoidBedspaceTest {
         referenceNumber = "12345",
         notes = "notes",
         bedspace = bedspace,
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThatCasResult(result)
@@ -154,6 +158,7 @@ class Cas3v2VoidBedspaceTest {
         referenceNumber = "12345",
         notes = "notes",
         bedspace = bedspace,
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThatCasResult(result)

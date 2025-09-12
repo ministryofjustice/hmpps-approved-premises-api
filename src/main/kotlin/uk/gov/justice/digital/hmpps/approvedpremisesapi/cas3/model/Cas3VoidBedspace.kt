@@ -26,6 +26,7 @@ data class Cas3VoidBedspaceRequest(
   val reasonId: UUID,
   val referenceNumber: String? = null,
   val notes: String? = null,
+  val costCentre: Cas3CostCentre? = null,
 )
 
 data class Cas3VoidBedspaceCancellation(val cancellationNotes: String?)
@@ -39,4 +40,9 @@ data class Cas3VoidBedspaceReason(
 enum class Cas3VoidBedspaceStatus(@JsonValue val value: String) {
   ACTIVE("active"),
   CANCELLED("cancelled"),
+}
+
+enum class Cas3CostCentre(@JsonValue val value: String) {
+  HMPPS("HMPPS"),
+  SUPPLIER("SUPPLIER"),
 }

@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Beds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -26,6 +27,7 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
   private var voidBedspaceCancellation: Yielded<Cas3VoidBedspaceCancellationEntity>? = null
   private var bed: Yielded<BedEntity>? = null
   private var bedspace: Yielded<Cas3BedspacesEntity>? = null
+  private var costCentre: Yielded<Cas3CostCentre>? = { Cas3CostCentre.HMPPS }
   private var cancellationDate: Yielded<OffsetDateTime>? = null
   private var cancellationNotes: Yielded<String>? = null
 
@@ -81,6 +83,10 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     this.cancellationNotes = { cancellationNotes }
   }
 
+  fun withCostCentre(costCentre: Cas3CostCentre) = apply {
+    this.costCentre = { costCentre }
+  }
+
   @Deprecated("This will be replaced by produceV2")
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce() = Cas3VoidBedspaceEntity(
@@ -94,6 +100,7 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     bed = this.bed?.let { it() },
     cancellation = this.voidBedspaceCancellation?.invoke(),
     bedspace = this.bedspace?.let { it() },
+    costCentre = this.costCentre?.let { it() },
     cancellationDate = this.cancellationDate?.let { it() },
     cancellationNotes = this.cancellationNotes?.let { it() },
   )
@@ -110,6 +117,7 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     bed = null,
     cancellation = null,
     bedspace = this.bedspace?.let { it() } ?: Cas3BedspaceEntityFactory().produce(),
+    costCentre = this.costCentre?.let { it() },
     cancellationDate = this.cancellationDate?.let { it() },
     cancellationNotes = this.cancellationNotes?.let { it() },
   )
