@@ -42,6 +42,7 @@ import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 import kotlin.reflect.KClass
 
 @SuppressWarnings("TooManyFunctions", "TooGenericExceptionThrown", "")
@@ -286,4 +287,14 @@ class Cas3v2DomainEventService(
     CAS3BedspaceUnarchiveEvent::class -> DomainEventType.CAS3_BEDSPACE_UNARCHIVED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
+
+  fun getBedspacesActiveDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesActiveDomainEventsByType(
+    cas3BedspaceIds = ids,
+    bedspaceDomainEventTypes = bedspaceDomainEventTypes.map { it.toString() },
+  )
+
+  fun getBedspaceActiveDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesActiveDomainEventsByType(
+    listOf(id),
+    bedspaceDomainEventTypes.map { it.toString() },
+  )
 }

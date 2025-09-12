@@ -32,6 +32,7 @@ class Cas3BedspaceTransformer(
     reference = jpa.reference,
     startDate = jpa.createdAt.toLocalDate(),
     endDate = jpa.endDate,
+    scheduleUnarchiveDate = isBedspaceScheduledToUnarchive(jpa),
     notes = jpa.notes,
     status = status,
     bedspaceCharacteristics = jpa.characteristics.map(cas3BedspaceCharacteristicTransformer::transformJpaToApi),
@@ -45,4 +46,5 @@ class Cas3BedspaceTransformer(
   )
 
   fun isBedspaceScheduledToUnarchive(bedspace: BedEntity) = bedspace.startDate?.takeIf { it.isAfter(LocalDate.now()) }
+  fun isBedspaceScheduledToUnarchive(bedspace: Cas3BedspacesEntity) = bedspace.startDate?.takeIf { it.isAfter(LocalDate.now()) }
 }
