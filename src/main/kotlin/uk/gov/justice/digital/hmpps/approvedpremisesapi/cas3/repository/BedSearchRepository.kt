@@ -65,7 +65,7 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
         ) AND 
         pdu.id IN (:probation_delivery_unit_ids) AND
         p.probation_region_id = :probation_region_id AND 
-        p.status = 'active' AND 
+        (tap.end_date IS NULL OR tap.end_date > :start_date) AND 
         p.service = 'temporary-accommodation' AND
         (b.end_date IS NULL OR b.end_date > :end_date)
         ORDER BY pdu.name, p.name, r.name;
