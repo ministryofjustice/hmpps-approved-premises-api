@@ -58,6 +58,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Cas3Fi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceActive
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceArchived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceOnline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.Clock
@@ -640,17 +645,17 @@ class Cas3PremisesService(
   @Transactional
   fun archivePremises(
     premises: TemporaryAccommodationPremisesEntity,
-    endDate: LocalDate,
+    archiveEndDate: LocalDate,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
-    if (endDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_PREMISES_IN_PAST))) {
+    if (archiveEndDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_PREMISES_IN_PAST))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInThePast"
     }
 
-    if (endDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE))) {
+    if (archiveEndDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInTheFuture"
     }
 
-    if (endDate.isBefore(premises.startDate)) {
+    if (archiveEndDate.isBefore(premises.startDate)) {
       return Cas3FieldValidationError(
         mapOf(
           "$.endDate" to Cas3ValidationMessage(
@@ -666,7 +671,7 @@ class Cas3PremisesService(
       .sortedByDescending { it.createdAt }
       .asSequence()
       .map { objectMapper.readValue(it.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate }
-      .firstOrNull { it >= endDate }
+      .firstOrNull { it >= archiveEndDate }
       ?.let { archiveDate ->
         return Cas3FieldValidationError(
           mapOf(
@@ -685,12 +690,21 @@ class Cas3PremisesService(
 
     val activeBedspaces = bedspaceRepository.findByRoomPremisesId(premises.id)
       .asSequence()
-      .filter { (it.isCas3BedspaceOnline() || isCas3BedspaceUpcoming(it)) && (it.endDate == null || it.endDate!! > endDate) }
+      .filter {
+        (
+          isCas3BedspaceOnline(
+            it.startDate,
+            it.endDate,
+          ) ||
+            isCas3BedspaceUpcoming(it.startDate)
+          ) &&
+          isCas3BedspaceActive(it.endDate, archiveEndDate)
+      }
 
     if (activeBedspaces.any()) {
       val lastUpcomingBedspace = activeBedspaces.maxByOrNull { it.startDate!! }
 
-      if (lastUpcomingBedspace != null && lastUpcomingBedspace.startDate!! > endDate) {
+      if (lastUpcomingBedspace != null && lastUpcomingBedspace.startDate!! > archiveEndDate) {
         return Cas3FieldValidationError(
           mapOf(
             "$.endDate" to Cas3ValidationMessage(
@@ -702,18 +716,18 @@ class Cas3PremisesService(
         )
       }
 
-      canArchivePremisesBedspaces(premises.id, endDate)?.let {
+      canArchivePremisesBedspaces(premises.id, archiveEndDate)?.let {
         return Cas3FieldValidationError(it.validationMessages.entries.associate { entry -> entry.key to entry.value })
       }
     }
 
     // archive premises
-    val archivedPremises = archivePremisesAndSaveDomainEvent(premises, endDate)
+    val archivedPremises = archivePremisesAndSaveDomainEvent(premises, archiveEndDate)
 
     if (activeBedspaces.any()) {
       // archive all online bedspaces
       activeBedspaces.forEach { bedspace ->
-        archiveBedspaceAndSaveDomainEvent(bedspace, endDate)
+        archiveBedspaceAndSaveDomainEvent(bedspace, archiveEndDate)
       }
     }
 
@@ -856,7 +870,7 @@ class Cas3PremisesService(
     val bedspace = bedspaceRepository.findCas3Bedspace(premises.id, bedspaceId)
       ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
 
-    if (!isCas3BedspaceArchived(bedspace)) {
+    if (!isCas3BedspaceArchived(bedspace.endDate)) {
       return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotArchived"
     }
 
@@ -962,7 +976,7 @@ class Cas3PremisesService(
     }
 
     // Check if bedspace is already archived
-    if (isCas3BedspaceArchived(bedspace)) {
+    if (isCas3BedspaceArchived(bedspace.endDate)) {
       return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceAlreadyArchived"
     }
 
@@ -1075,7 +1089,7 @@ class Cas3PremisesService(
     val bedspace = bedspaceRepository.findByIdOrNull(bedspaceId)
       ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
 
-    if (bedspace.isCas3BedspaceOnline()) {
+    if (isCas3BedspaceOnline(startDate = bedspace.startDate, endDate = bedspace.endDate)) {
       return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceAlreadyOnline"
     }
 
@@ -1171,20 +1185,16 @@ class Cas3PremisesService(
     return CasResult.Success(
       TemporaryAccommodationPremisesTotalBedspacesByStatus(
         premisesId = premises.id,
-        bedspaces.count { it.isCas3BedspaceOnline() },
-        bedspaces.count { isCas3BedspaceUpcoming(it) },
-        bedspaces.count { isCas3BedspaceArchived(it) },
+        bedspaces.count { isCas3BedspaceOnline(it.startDate, it.endDate) },
+        bedspaces.count { isCas3BedspaceUpcoming(it.startDate) },
+        bedspaces.count { isCas3BedspaceArchived(it.endDate) },
       ),
     )
   }
 
   fun getBedspaceCount(premises: PremisesEntity): Int = premisesRepository.getBedCount(premises)
 
-  fun getBedspaceStatus(bedspace: BedEntity) = when {
-    isCas3BedspaceUpcoming(bedspace) -> Cas3BedspaceStatus.upcoming
-    isCas3BedspaceArchived(bedspace) -> Cas3BedspaceStatus.archived
-    else -> Cas3BedspaceStatus.online
-  }
+  fun getBedspaceStatus(bedspace: BedEntity) = BedspaceStatusHelper.getBedspaceStatus(bedspace.startDate, bedspace.endDate)
 
   @Suppress("ComplexCondition")
   fun createVoidBedspaces(
@@ -1608,8 +1618,4 @@ class Cas3PremisesService(
     Cas3PremisesStatus.archived -> PropertyStatus.archived.toString()
     Cas3PremisesStatus.online -> PropertyStatus.active.toString()
   }
-
-  private fun isCas3BedspaceArchived(bedspace: BedEntity) = (bedspace.endDate != null && bedspace.endDate!! <= LocalDate.now())
-
-  private fun isCas3BedspaceUpcoming(bedspace: BedEntity) = (bedspace.startDate?.isAfter(LocalDate.now()) ?: false)
 }
