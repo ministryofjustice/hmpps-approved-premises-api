@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import java.util.UUID
 
 class ReferenceDataTest : IntegrationTestBase() {
@@ -44,9 +43,6 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var cancellationReasonTransformer: CancellationReasonTransformer
-
-  @Autowired
-  lateinit var staffMemberTransformer: StaffMemberTransformer
 
   @Autowired
   lateinit var localAuthorityAreaTransformer: LocalAuthorityAreaTransformer

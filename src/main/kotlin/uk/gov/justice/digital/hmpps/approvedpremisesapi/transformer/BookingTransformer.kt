@@ -39,8 +39,6 @@ class BookingTransformer(
       arrivalDate = jpa.arrivalDate,
       departureDate = jpa.departureDate,
       serviceName = enumConverterFactory.getConverter(ServiceName::class.java).convert(jpa.service) ?: throw InternalServerErrorProblem("Could not convert '${jpa.service}' to a ServiceName"),
-      // key worker is a legacy CAS1 only field that is no longer populated. This will be removed once migration to space bookings is complete
-      keyWorker = null,
       status = determineStatus(jpa),
       arrival = cas3ArrivalTransformer.transformJpaToArrival(jpa.arrival),
       departure = departureTransformer.transformJpaToApi(jpa.departure),

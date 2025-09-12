@@ -1,20 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.exactly
-import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.toMap
 import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
@@ -25,16 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSumm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancyParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesController.Cas1CurrentKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesNewLocalRestriction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -69,7 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
@@ -1564,169 +1552,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withCreatedBy(user)
 
         configuration.invoke(this)
-      }
-    }
-  }
-
-  @Nested
-  inner class GetPremisesStaff : IntegrationTestBase() {
-
-    @Autowired
-    lateinit var staffMemberTransformer: StaffMemberTransformer
-
-    @Test
-    fun `Request without JWT returns 401`() {
-      webTestClient.get()
-        .uri("/cas1/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/staff")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, mode = EnumSource.Mode.EXCLUDE, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR"])
-    fun `Role without CAS1_VIEW_PREMISES is denied`(role: UserRole) {
-      val (_, jwt) = givenAUser(roles = listOf(role))
-
-      webTestClient.get()
-        .uri("/cas1/premises/${UUID.randomUUID()}/staff")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
-    fun `Returns an empty list if delius team can't be found and raises an alert`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        val qCode = "NON_EXISTENT_TEAM_QCODE"
-
-        val premises = givenAnApprovedPremises(qCode = qCode)
-
-        wiremockServer.stubFor(
-          WireMock.get(urlEqualTo("/secure/teams/$qCode/staff"))
-            .willReturn(
-              WireMock.aResponse()
-                .withHeader("Content-Type", "application/json")
-                .withStatus(404),
-            ),
-        )
-
-        val result = webTestClient.get()
-          .uri("/cas1/premises/${premises.id}/staff")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .bodyAsListOfObjects<StaffMember>()
-
-        assertThat(result).isEmpty()
-
-        mockSentryService.assertErrorMessageRaised("404 returned when finding staff members for qcode 'NON_EXISTENT_TEAM_QCODE'")
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
-    fun `Returns 200 with correct body when user has the CAS1_PREMISES_VIEW permission`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        val qCode = "FOUND"
-
-        val premises = givenAnApprovedPremises(qCode = qCode)
-
-        val staffMembers = listOf(
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-        )
-
-        wiremockServer.stubFor(
-          WireMock.get(urlEqualTo("/approved-premises/$qCode/staff"))
-            .willReturn(
-              WireMock.aResponse()
-                .withHeader("Content-Type", "application/json")
-                .withStatus(200)
-                .withBody(
-                  objectMapper.writeValueAsString(
-                    StaffMembersPage(
-                      content = staffMembers,
-                    ),
-                  ),
-                ),
-            ),
-        )
-
-        webTestClient.get()
-          .uri("/cas1/premises/${premises.id}/staff")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              staffMembers.map(staffMemberTransformer::transformDomainToApi),
-            ),
-          )
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
-    @Disabled
-    fun `Caches response`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        val qCode = "FOUND"
-
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-          withQCode(qCode)
-        }
-
-        val staffMembers = listOf(
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-          ContextStaffMemberFactory().produce(),
-        )
-
-        wiremockServer.stubFor(
-          WireMock.get(urlEqualTo("/cas1/approved-premises/$qCode/staff"))
-            .willReturn(
-              WireMock.aResponse()
-                .withHeader("Content-Type", "application/json")
-                .withStatus(200)
-                .withBody(
-                  objectMapper.writeValueAsString(
-                    StaffMembersPage(
-                      content = staffMembers,
-                    ),
-                  ),
-                ),
-            ),
-        )
-
-        repeat(2) {
-          webTestClient.get()
-            .uri("/cas1/premises/${premises.id}/staff")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                staffMembers.map(staffMemberTransformer::transformDomainToApi),
-              ),
-            )
-        }
-
-        wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/approved-premises/$qCode/staff")))
       }
     }
   }

@@ -42,10 +42,6 @@ data class BookingBody(
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("serviceName", required = true) val serviceName: ServiceName,
 
-  @Schema(example = "null", description = "KeyWorker is a legacy field only used by CAS1. It is not longer being captured or populated")
-  @Deprecated(message = "")
-  @get:JsonProperty("keyWorker") val keyWorker: StaffMember? = null,
-
   @Schema(example = "null", description = "")
   @get:JsonProperty("bed") val bed: Bed? = null,
 )
