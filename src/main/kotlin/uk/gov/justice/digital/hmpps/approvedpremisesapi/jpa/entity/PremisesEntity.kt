@@ -104,6 +104,19 @@ SELECT
     nativeQuery = true,
   )
   fun findTemporaryAccommodationPremisesByService(service: String, pageable: Pageable): Slice<TemporaryAccommodationPremisesEntity>
+
+  @Query(
+    """
+    SELECT *
+    FROM temporary_accommodation_premises tap
+    INNER JOIN premises p ON tap.premises_id = p.id
+    WHERE p.status = 'archived'
+    AND tap.end_date IS NULL
+    ORDER BY p.id
+    """,
+    nativeQuery = true,
+  )
+  fun findCas3ArchivedPremisesWithoutEndDate(pageable: Pageable): Slice<TemporaryAccommodationPremisesEntity>
 }
 
 @Repository
