@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.v2
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -24,7 +24,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = givenACas3Premises(
           user.probationRegion,
-          status = PropertyStatus.active,
+          status = Cas3PremisesStatus.online,
         )
         val bedspaceCharacteristics = cas3BedspaceCharacteristicEntityFactory.produceAndPersistMultiple(5)
         val newBedspace = Cas3NewBedspace(
@@ -55,7 +55,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = givenACas3Premises(
           user.probationRegion,
-          status = PropertyStatus.archived,
+          status = Cas3PremisesStatus.archived,
           endDate = LocalDate.now().plusDays(3),
         )
         val bedspaceCharacteristics = cas3BedspaceCharacteristicEntityFactory.produceAndPersistMultiple(5)
@@ -82,7 +82,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
 
         // verify premises is unarchived
         val updatedPremises = cas3PremisesRepository.findById(premises.id).get()
-        assertThat(updatedPremises.status).isEqualTo(PropertyStatus.active)
+        assertThat(updatedPremises.status).isEqualTo(Cas3PremisesStatus.online)
         assertThat(updatedPremises.startDate).isEqualTo(newBedspace.startDate)
         assertThat(updatedPremises.endDate).isNull()
 
@@ -97,7 +97,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = givenACas3Premises(
           user.probationRegion,
-          status = PropertyStatus.active,
+          status = Cas3PremisesStatus.online,
         )
         val newBedspace = Cas3NewBedspace(
           reference = randomStringMultiCaseWithNumbers(10),
@@ -122,7 +122,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = givenACas3Premises(
           user.probationRegion,
-          status = PropertyStatus.active,
+          status = Cas3PremisesStatus.online,
         )
         val newBedspace = Cas3NewBedspace(
           reference = "",
@@ -149,7 +149,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = givenACas3Premises(
           user.probationRegion,
-          status = PropertyStatus.active,
+          status = Cas3PremisesStatus.online,
         )
         val newBedspace = Cas3NewBedspace(
           reference = "",
@@ -178,7 +178,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = givenACas3Premises(
           user.probationRegion,
-          status = PropertyStatus.active,
+          status = Cas3PremisesStatus.online,
         )
         val newBedspace = Cas3NewBedspace(
           reference = randomStringMultiCaseWithNumbers(7),

@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
@@ -15,7 +15,7 @@ import java.util.UUID
 
 fun IntegrationTestBase.givenACas3Premises(
   probationRegion: ProbationRegionEntity,
-  status: PropertyStatus = randomOf(PropertyStatus.entries),
+  status: Cas3PremisesStatus = randomOf(Cas3PremisesStatus.entries),
   endDate: LocalDate? = null,
 ) = givenACas3Premises(
   probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
@@ -31,7 +31,7 @@ fun IntegrationTestBase.givenACas3Premises(
     withProbationRegion(probationRegionEntityFactory.produceAndPersist())
   },
   localAuthorityArea: LocalAuthorityAreaEntity = localAuthorityEntityFactory.produceAndPersist(),
-  status: PropertyStatus = randomOf(PropertyStatus.entries),
+  status: Cas3PremisesStatus = randomOf(Cas3PremisesStatus.entries),
   postCode: String = randomPostCode(),
   characteristics: List<Cas3PremisesCharacteristicEntity> = emptyList(),
   id: UUID = UUID.randomUUID(),

@@ -17,7 +17,7 @@ interface Cas3PremisesCharacteristicRepository : JpaRepository<Cas3PremisesChara
 data class Cas3PremisesCharacteristicEntity(
   @Id
   var id: UUID,
-  var name: String?,
+  var name: String,
   var description: String,
   var isActive: Boolean,
 )

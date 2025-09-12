@@ -2,11 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import java.time.LocalDate
 import java.util.UUID
 
@@ -24,7 +24,7 @@ class Cas3v2PremisesService(
     val currentEndDate = premises.endDate
     premises.startDate = restartDate
     premises.endDate = null
-    premises.status = PropertyStatus.active
+    premises.status = Cas3PremisesStatus.online
     cas3PremisesRepository.save(premises)
     cas3v2DomainEventService.savePremisesUnarchiveEvent(
       premises,

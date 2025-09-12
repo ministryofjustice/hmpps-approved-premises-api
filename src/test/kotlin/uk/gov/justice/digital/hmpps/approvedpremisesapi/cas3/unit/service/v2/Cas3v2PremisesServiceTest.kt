@@ -8,11 +8,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import java.time.LocalDate
@@ -37,14 +37,14 @@ class Cas3v2PremisesServiceTest {
       val restartDate = LocalDate.now().plusDays(5)
       val premises = Cas3PremisesEntityFactory()
         .withDefaults()
-        .withStatus(PropertyStatus.archived)
+        .withStatus(Cas3PremisesStatus.archived)
         .withNotes("test notes")
         .withStartDate(startDate)
         .withEndDate(endDate)
         .produce()
 
       val updatedPremises = premises.copy(
-        status = PropertyStatus.active,
+        status = Cas3PremisesStatus.online,
         startDate = restartDate,
         endDate = null,
       )
@@ -63,7 +63,7 @@ class Cas3v2PremisesServiceTest {
       assertAll(
         { assertThat(savedPremises.id).isEqualTo(premises.id) },
         { assertThat(savedPremises.notes).isEqualTo(premises.notes) },
-        { assertThat(savedPremises.status).isEqualTo(PropertyStatus.active) },
+        { assertThat(savedPremises.status).isEqualTo(Cas3PremisesStatus.online) },
         { assertThat(savedPremises.startDate).isEqualTo(restartDate) },
         { assertThat(savedPremises.endDate).isNull() },
       )

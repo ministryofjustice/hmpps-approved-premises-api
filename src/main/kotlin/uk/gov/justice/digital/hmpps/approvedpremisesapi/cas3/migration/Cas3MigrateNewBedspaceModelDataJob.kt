@@ -84,7 +84,7 @@ class Cas3MigrateNewBedspaceModelDataJob(
       town = premise.town,
       localAuthorityArea = premise.localAuthorityArea,
       turnaroundWorkingDays = premise.turnaroundWorkingDays,
-      status = premise.status,
+      status = premise.cas3PremisesStatus,
       notes = premise.notes,
       probationDeliveryUnit = premise.probationDeliveryUnit!!,
       bedspaces = emptyList<Cas3BedspacesEntity>().toMutableList(),
@@ -134,7 +134,7 @@ class Cas3MigrateNewBedspaceModelDataJob(
   ).map {
     Cas3PremisesCharacteristicEntity(
       id = it.id,
-      name = it.propertyName,
+      name = it.propertyName!!,
       description = it.name,
       isActive = it.isActive,
     )
