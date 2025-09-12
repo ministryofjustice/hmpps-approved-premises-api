@@ -895,6 +895,132 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `It sorts by firstBookingPremisesName when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val alphaHouse = givenAnApprovedPremises(name = "Alpha House")
+          val midwayLodge = givenAnApprovedPremises(name = "Midway Lodge")
+          val zuluPlace = givenAnApprovedPremises(name = "Zulu Place")
+
+          val alphaHousePR = createPlacementRequest(offenderDetails, user)
+          val midwayLodgePR = createPlacementRequest(offenderDetails, user)
+          val zuluPlacePR = createPlacementRequest(offenderDetails, user)
+
+          givenACas1SpaceBooking(
+            crn = offenderDetails.otherIds.crn,
+            application = alphaHousePR.application,
+            placementRequest = alphaHousePR,
+            canonicalArrivalDate = LocalDate.now().plusDays(1),
+            canonicalDepartureDate = LocalDate.now().plusDays(10),
+            premises = alphaHouse,
+          )
+
+          givenACas1SpaceBooking(
+            crn = offenderDetails.otherIds.crn,
+            application = midwayLodgePR.application,
+            placementRequest = midwayLodgePR,
+            canonicalArrivalDate = LocalDate.now().plusDays(1),
+            canonicalDepartureDate = LocalDate.now().plusDays(10),
+            premises = midwayLodge,
+          )
+
+          givenACas1SpaceBooking(
+            crn = offenderDetails.otherIds.crn,
+            application = zuluPlacePR.application,
+            placementRequest = zuluPlacePR,
+            canonicalArrivalDate = LocalDate.now().plusDays(1),
+            canonicalDepartureDate = LocalDate.now().plusDays(10),
+            premises = zuluPlace,
+          )
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=name&sortDirection=asc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(alphaHousePR.id.toString())
+            .jsonPath("$[1].id").isEqualTo(midwayLodgePR.id.toString())
+            .jsonPath("$[2].id").isEqualTo(zuluPlacePR.id.toString())
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=name&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(zuluPlacePR.id.toString())
+            .jsonPath("$[1].id").isEqualTo(midwayLodgePR.id.toString())
+            .jsonPath("$[2].id").isEqualTo(alphaHousePR.id.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by firstBookingArrivalDate when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val premises = givenAnApprovedPremises()
+
+          val earlyPR = createPlacementRequest(offenderDetails, user)
+          val midPR = createPlacementRequest(offenderDetails, user)
+          val latePR = createPlacementRequest(offenderDetails, user)
+
+          givenACas1SpaceBooking(
+            crn = offenderDetails.otherIds.crn,
+            application = earlyPR.application,
+            placementRequest = earlyPR,
+            canonicalArrivalDate = LocalDate.of(2025, 1, 1),
+            canonicalDepartureDate = LocalDate.of(2025, 1, 10),
+            premises = premises,
+          )
+
+          givenACas1SpaceBooking(
+            crn = offenderDetails.otherIds.crn,
+            application = midPR.application,
+            placementRequest = midPR,
+            canonicalArrivalDate = LocalDate.of(2025, 1, 5),
+            canonicalDepartureDate = LocalDate.of(2025, 1, 12),
+            premises = premises,
+          )
+
+          givenACas1SpaceBooking(
+            crn = offenderDetails.otherIds.crn,
+            application = latePR.application,
+            placementRequest = latePR,
+            canonicalArrivalDate = LocalDate.of(2025, 1, 10),
+            canonicalDepartureDate = LocalDate.of(2025, 1, 20),
+            premises = premises,
+          )
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=canonical_arrival_date&sortDirection=asc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(earlyPR.id.toString())
+            .jsonPath("$[1].id").isEqualTo(midPR.id.toString())
+            .jsonPath("$[2].id").isEqualTo(latePR.id.toString())
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=canonical_arrival_date&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(latePR.id.toString())
+            .jsonPath("$[1].id").isEqualTo(midPR.id.toString())
+            .jsonPath("$[2].id").isEqualTo(earlyPR.id.toString())
+        }
+      }
+    }
+
+    @Test
     fun `It sorts by personRisksTier when the user is a manager`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->

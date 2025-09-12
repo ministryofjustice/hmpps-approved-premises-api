@@ -70,6 +70,8 @@ class Cas1PlacementRequestService(
         PlacementRequestSortField.requestType -> "requestType"
         PlacementRequestSortField.personName -> "personName"
         PlacementRequestSortField.personRisksTier -> "personTier"
+        PlacementRequestSortField.firstBookingPremisesName -> "bookingPremisesName"
+        PlacementRequestSortField.firstBookingArrivalDate -> "bookingArrivalDate"
       },
     )
 

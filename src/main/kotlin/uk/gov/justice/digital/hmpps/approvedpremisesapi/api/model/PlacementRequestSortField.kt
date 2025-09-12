@@ -17,6 +17,8 @@ enum class PlacementRequestSortField(@get:JsonValue val value: kotlin.String) {
   requestType("request_type"),
   personName("person_name"),
   personRisksTier("person_risks_tier"),
+  firstBookingPremisesName("name"),
+  firstBookingArrivalDate("canonical_arrival_date"),
   ;
 
   companion object {
