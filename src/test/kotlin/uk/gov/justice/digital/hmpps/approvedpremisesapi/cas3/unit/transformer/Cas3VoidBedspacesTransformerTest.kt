@@ -178,6 +178,7 @@ class Cas3VoidBedspacesTransformerTest {
       premises = null,
       cancellation = null,
       bed = null,
+      costCentre = "HMPPS",
     )
 
     @Test

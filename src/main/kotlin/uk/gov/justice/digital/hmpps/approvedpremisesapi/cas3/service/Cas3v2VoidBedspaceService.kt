@@ -56,6 +56,7 @@ class Cas3v2VoidBedspaceService(
         cancellationNotes = null,
         bed = null,
         premises = null,
+        costCentre = null,
       ),
     )
 

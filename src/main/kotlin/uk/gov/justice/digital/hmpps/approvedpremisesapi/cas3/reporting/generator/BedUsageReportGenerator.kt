@@ -49,6 +49,7 @@ class BedUsageReportGenerator(
         bookingStatus = bookingTransformer.determineStatus(booking),
         voidCategory = null,
         voidNotes = null,
+        costCentre = null,
         uniquePropertyRef = premises.id.toShortBase58(),
         uniqueBedspaceRef = this.room.id.toShortBase58(),
       )
@@ -75,6 +76,7 @@ class BedUsageReportGenerator(
           bookingStatus = null,
           voidCategory = null,
           voidNotes = null,
+          costCentre = null,
           uniquePropertyRef = premises.id.toShortBase58(),
           uniqueBedspaceRef = this.room.id.toShortBase58(),
         )
@@ -99,6 +101,7 @@ class BedUsageReportGenerator(
         bookingStatus = null,
         voidCategory = lostBed.reason.name,
         voidNotes = lostBed.notes,
+        costCentre = lostBed.costCentre,
         uniquePropertyRef = premises.id.toShortBase58(),
         uniqueBedspaceRef = this.room.id.toShortBase58(),
       )
