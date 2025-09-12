@@ -41,13 +41,7 @@ data class Cas3BedspacesEntity(
     inverseJoinColumns = [JoinColumn(name = "bedspace_characteristics_id")],
   )
   var characteristics: MutableList<Cas3BedspaceCharacteristicEntity>,
-) {
-  fun isBedspaceOnline() = BedspaceStatusHelper.isBedspaceOnline(startDate = startDate, endDate = endDate)
-}
-
-object BedspaceStatusHelper {
-  fun isBedspaceOnline(startDate: LocalDate?, endDate: LocalDate?) = (startDate == null || startDate <= LocalDate.now()) && (endDate == null || endDate > LocalDate.now())
-}
+)
 
 @Repository
 interface Cas3BedspacesRepository : JpaRepository<Cas3BedspacesEntity, UUID> {
