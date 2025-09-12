@@ -94,6 +94,7 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     bed = this.bed?.let { it() },
     cancellation = this.voidBedspaceCancellation?.invoke(),
     bedspace = this.bedspace?.let { it() },
+    costCentre = null,
     cancellationDate = this.cancellationDate?.let { it() },
     cancellationNotes = this.cancellationNotes?.let { it() },
   )
@@ -110,6 +111,7 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     bed = null,
     cancellation = null,
     bedspace = this.bedspace?.let { it() } ?: Cas3BedspaceEntityFactory().produce(),
+    costCentre = null,
     cancellationDate = this.cancellationDate?.let { it() },
     cancellationNotes = this.cancellationNotes?.let { it() },
   )

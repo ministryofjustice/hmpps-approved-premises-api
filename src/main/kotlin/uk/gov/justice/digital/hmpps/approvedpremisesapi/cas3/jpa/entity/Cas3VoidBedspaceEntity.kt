@@ -136,7 +136,7 @@ class Cas3VoidBedspaceEntity(
   var bedspace: Cas3BedspacesEntity?,
   var cancellationDate: OffsetDateTime?,
   var cancellationNotes: String?,
-
+  var costCentre: String?,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

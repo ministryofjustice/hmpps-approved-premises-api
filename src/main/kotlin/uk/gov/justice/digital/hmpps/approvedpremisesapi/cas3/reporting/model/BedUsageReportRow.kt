@@ -20,6 +20,7 @@ data class BedUsageReportRow(
   val bookingStatus: BookingStatus?,
   val voidCategory: String?,
   val voidNotes: String?,
+  val costCentre: String?,
   val uniquePropertyRef: String,
   val uniqueBedspaceRef: String,
 )

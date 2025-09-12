@@ -1222,6 +1222,7 @@ class Cas3PremisesService(
         cancellationDate = null,
         cancellationNotes = null,
         bedspace = null,
+        costCentre = null,
       ),
     )
 
