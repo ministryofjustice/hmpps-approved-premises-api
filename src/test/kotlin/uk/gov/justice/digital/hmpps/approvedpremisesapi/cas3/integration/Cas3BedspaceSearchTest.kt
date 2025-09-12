@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesComplete
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenATemporaryAccommodationPremisesWithRoomsAndBeds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.BedspaceFilters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchResult
@@ -49,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -78,9 +81,9 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class BedSearchForTemporaryAccommodationPremises {
+  inner class BedspaceSearchForPremises {
     @Test
-    fun `Searching for a Bed without JWT returns 401`() {
+    fun `Searching for a bedspace without JWT returns 401`() {
       webTestClient.post()
         .uri("/cas3/bedspaces/search")
         .bodyValue(
@@ -96,40 +99,74 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed returns 200 with correct body`() {
-      val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
-        withProbationRegion(probationRegion)
+    fun `Searching for a bedspace returns 200 with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremisesWithRoomsAndBeds(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, rooms, beds ->
+          val bed = beds.first()
+          val searchPdu = premises.probationDeliveryUnit!!
+          webTestClient.post()
+            .uri("cas3/bedspaces/search")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas3BedspaceSearchParameters(
+                startDate = LocalDate.parse("2023-03-23"),
+                durationDays = 7,
+                probationDeliveryUnits = listOf(searchPdu.id),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                Cas3BedspaceSearchResults(
+                  resultsRoomCount = 1,
+                  resultsPremisesCount = 1,
+                  resultsBedCount = 1,
+                  results = listOf(
+                    createBedspaceSearchResult(
+                      premises,
+                      bed.room,
+                      bed,
+                      searchPdu.name,
+                      numberOfBeds = 1,
+                      numberOfBookedBeds = 0,
+                      premisesCharacteristics = listOf(),
+                      roomCharacteristics = listOf(),
+                      overlaps = listOf(),
+                    ),
+                  ),
+                ),
+              ),
+            )
+        }
       }
+    }
 
-      givenAUser(
-        probationRegion = probationRegion,
-      ) { _, jwt ->
-        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(probationRegion)
-          withLocalAuthorityArea(localAuthorityArea)
-          withProbationDeliveryUnit(searchPdu)
-          withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
-          withNotes(randomStringMultiCaseWithNumbers(100))
-        }
-
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withName("Matching Bed")
-          withRoom(room)
-        }
-
+    @Test
+    fun `Searching for a bedspace returns an upcoming bedspace in the schedule to unarchive premises when the bedspace is online within the search range`() {
+      givenATemporaryAccommodationPremisesComplete(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().plusDays(3),
+        premisesEndDate = null,
+        premisesStatus = PropertyStatus.archived,
+        bedspaceCount = 1,
+        bedStartDates = listOf(
+          LocalDate.now().plusDays(3),
+        ),
+      ) { user, jwt, premises, rooms, bedspaces ->
+        val bedspace = bedspaces.first()
+        val searchPdu = premises.probationDeliveryUnit!!
         webTestClient.post()
           .uri("cas3/bedspaces/search")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             Cas3BedspaceSearchParameters(
-              startDate = LocalDate.parse("2023-03-23"),
+              startDate = LocalDate.now().plusDays(7),
               durationDays = 7,
               probationDeliveryUnits = listOf(searchPdu.id),
             ),
@@ -147,8 +184,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                 results = listOf(
                   createBedspaceSearchResult(
                     premises,
-                    room,
-                    bed,
+                    bedspace.room,
+                    bedspace,
                     searchPdu.name,
                     numberOfBeds = 1,
                     numberOfBookedBeds = 0,
@@ -164,7 +201,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed returns results that do not include beds with current turnarounds`() {
+    fun `Searching for a bedspace returns results that do not include bedspaces with current turnarounds`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -218,7 +255,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed returns results when existing booking departure-date is same as search start-date`() {
+    fun `Searching for a bedspace returns results when existing booking departure date is same as search start date`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -273,7 +310,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @CsvSource("true,cas3/bedspaces/search", "false,cas3/bedspaces/search")
-    fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings for rooms in the same premises`(sexualRisk: Boolean, baseUrl: String) {
+    fun `Searching for a bedspace returns results which include overlapping bookings for rooms in the same premises`(sexualRisk: Boolean, baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -487,7 +524,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings across multiple premises`() {
+    fun `Searching for a bedspace returns results which include overlapping bookings across multiple premises`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -675,7 +712,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed returns results which do not include non-overlapping bookings`() {
+    fun `Searching for a bedspace returns results which do not include non-overlapping bookings`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -771,7 +808,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed returns results which do not consider cancelled bookings as overlapping`() {
+    fun `Searching for a bedspace returns results which do not consider cancelled bookings as overlapping`() {
       givenAUser(
         probationRegion = probationRegion,
       ) { user, jwt ->
@@ -888,7 +925,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bedspace in a Shared Property returns only bedspaces in shared properties`() {
+    fun `Searching for a bedspace in a Shared Property returns only bedspaces in shared properties`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -897,7 +934,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val premises = createPremisesAndBedsWithCharacteristics(
+        val premises = createPremisesAndBedspacesWithCharacteristics(
           localAuthorityArea,
           searchPdu,
         )
@@ -993,7 +1030,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Bed Search filter only returns included premises filters`() {
+    fun `Bedspace search filter only returns included premises filters`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1006,7 +1043,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val characteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.premises)
         val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.premises)
 
-        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+        val premisesOne = createPremisesWithCharacteristics(
           UUID.randomUUID(),
           "Premises One",
           probationRegion,
@@ -1015,7 +1052,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           mutableListOf(characteristicOne),
         )
 
-        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics(
+        val premisesTwo = createPremisesWithCharacteristics(
           UUID.randomUUID(),
           "Premises Two",
           probationRegion,
@@ -1047,7 +1084,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Bed Search filter does not return excluded premises filters`() {
+    fun `Bedspace search filter does not return excluded premises filters`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1060,7 +1097,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val characteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.premises)
         val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.premises)
 
-        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+        val premisesOne = createPremisesWithCharacteristics(
           UUID.randomUUID(),
           "Premises One",
           probationRegion,
@@ -1069,7 +1106,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           mutableListOf(characteristicOne),
         )
 
-        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics(
+        val premisesTwo = createPremisesWithCharacteristics(
           UUID.randomUUID(),
           "Premises Two",
           probationRegion,
@@ -1101,7 +1138,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Bed Search filter only returns included bedspace filters`() {
+    fun `Bedspace search filter only returns included bedspace filters`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1114,7 +1151,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val characteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.room)
         val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.room)
 
-        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+        val premisesOne = createPremisesWithCharacteristics(
           UUID.randomUUID(),
           "Premises One",
           probationRegion,
@@ -1145,7 +1182,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Bed Search filter does not return excluded bedspace filters`() {
+    fun `Bedspace search filter does not return excluded bedspace filters`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1158,7 +1195,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val characteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.room)
         val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.room)
 
-        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+        val premisesOne = createPremisesWithCharacteristics(
           UUID.randomUUID(),
           "Premises One",
           probationRegion,
@@ -1190,7 +1227,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Bed Search filter returns correct results with multiple bedspace filters`() {
+    fun `Bedspace search filter returns correct results with multiple bedspace filters`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1205,7 +1242,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val premisesCharacteristicThree =
           produceCharacteristic("CharacteristicThree", Characteristic.ModelScope.premises)
 
-        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+        val premisesOne = createPremisesWithCharacteristics(
           UUID.randomUUID(),
           "Premises One",
           probationRegion,
@@ -1214,7 +1251,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           mutableListOf(premisesCharacteristicOne),
         )
 
-        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics(
+        val premisesTwo = createPremisesWithCharacteristics(
           UUID.randomUUID(),
           "Premises Two",
           probationRegion,
@@ -1223,7 +1260,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           mutableListOf(premisesCharacteristicOne, premisesCharacteristicTwo),
         )
 
-        val premisesThree = createTemporaryAccommodationPremisesWithCharacteristics(
+        val premisesThree = createPremisesWithCharacteristics(
           UUID.randomUUID(),
           "Premises Three",
           probationRegion,
@@ -1285,31 +1322,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       }
     }
 
-    private fun produceCharacteristic(
-      propertyName: String,
-      modelScope: Characteristic.ModelScope,
-    ): CharacteristicEntity {
-      val characteristicTwo = characteristicRepository.save(
-        CharacteristicEntityFactory().withPropertyName(propertyName)
-          .withServiceScope(ServiceName.temporaryAccommodation.value)
-          .withModelScope(modelScope.value).produce(),
-      )
-      return characteristicTwo
-    }
-
-    private fun getResponseForRequest(jwt: String, searchParameters: Cas3BedspaceSearchParameters) = webTestClient.post()
-      .uri("cas3/bedspaces/search")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(searchParameters)
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody(Cas3BedspaceSearchResults::class.java)
-      .returnResult()
-      .responseBody!!
-
     @Test
-    fun `Searching for a Temporary Accommodation Bedspace in a Single Occupancy Property returns only bedspaces in properties with single occupancy`() {
+    fun `Searching for a bedspace in a Single Occupancy Property returns only bedspaces in properties with single occupancy`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1318,7 +1332,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val premises = createPremisesAndBedsWithCharacteristics(
+        val premises = createPremisesAndBedspacesWithCharacteristics(
           localAuthorityArea,
           searchPdu,
         )
@@ -1415,7 +1429,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation with wheelchair accessible returns only bedspaces with wheelchair accessible`() {
+    fun `Searching for a bedspace with wheelchair accessible returns only bedspaces with wheelchair accessible`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1424,7 +1438,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-        val premises = createPremisesAndBedsWithCharacteristics(
+        val premises = createPremisesAndBedspacesWithCharacteristics(
           localAuthorityArea,
           searchPdu,
         )
@@ -1501,7 +1515,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           }
 
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-          val premises = createPremisesAndBedsWithCharacteristics(
+          val premises = createPremisesAndBedspacesWithCharacteristics(
             localAuthorityArea,
             searchPdu,
           )
@@ -1689,7 +1703,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           }
 
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-          val premises = createPremisesAndBedsWithCharacteristics(
+          val premises = createPremisesAndBedspacesWithCharacteristics(
             localAuthorityArea,
             searchPdu,
           )
@@ -1865,54 +1879,54 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search start date`() {
+    fun `Searching for a bedspace should not return bedspace when given premises bedspace endDate is same as search start date`() {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
-        val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, searchStartDate)
+        val searchPdu = createPremisesWithBedspaceEndDate(searchStartDate, searchStartDate)
 
         searchCas3BedspaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is between search start date and end date`() {
+    fun `Searching for a bedspace should not return bedspace when given premises bedspace endDate is between search start date and end date`() {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(2)
-        val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
+        val searchPdu = createPremisesWithBedspaceEndDate(searchStartDate, bedEndDate)
 
         searchCas3BedspaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search end date`() {
+    fun `Searching for a bedspace should not return bed when given premises bedspace endDate is same as search end date`() {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(durationDays.toLong() - 1)
-        val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
+        val searchPdu = createPremisesWithBedspaceEndDate(searchStartDate, bedEndDate)
 
         searchCas3BedspaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate less than than search start date`() {
+    fun `Searching for a bedspace should not return bed when given premises bedspace endDate less than than search start date`() {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.minusDays(1)
-        val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
+        val searchPdu = createPremisesWithBedspaceEndDate(searchStartDate, bedEndDate)
 
         searchCas3BedspaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed should return single bed when given premises has got 2 rooms where one with endDate and another room without enddate`() {
+    fun `Searching for a bedspace should return single bed when given premises has got 2 rooms where one with endDate and another room without end date`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1991,7 +2005,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed should return bed when given premises bedspace endDate after search end date`() {
+    fun `Searching for a bedspace should return bed when given premises bedspace endDate after search end date`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -2061,19 +2075,19 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed should return no bed when given premises has got 2 rooms where one with endDate in the passed and another room with matching end date`() {
+    fun `Searching for a bedspace should return no bed when given premises has got 2 rooms where one with endDate in the passed and another room with matching end date`() {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(1)
-        val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
+        val searchPdu = createPremisesWithBedspaceEndDate(searchStartDate, bedEndDate)
 
         searchCas3BedspaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed should return bed matches searching pdu`() {
+    fun `Searching for a bedspace should return bed matches searching pdu`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withName(randomStringLowerCase(8))
         withProbationRegion(probationRegion)
@@ -2201,7 +2215,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a Temporary Accommodation Bed in multiple pdus should return bed matches searching pdus`() {
+    fun `Searching for a bedspace in multiple pdus should return bedspace matches searching pdus`() {
       val pduOne = probationDeliveryUnitFactory.produceAndPersist {
         withName("Probation Delivery Unit One")
         withProbationRegion(probationRegion)
@@ -2353,7 +2367,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @SuppressWarnings("LongParameterList")
-    private fun createTemporaryAccommodationPremisesWithCharacteristics(
+    private fun createPremisesWithCharacteristics(
       premisesId: UUID,
       premisesName: String,
       probationRegion: ProbationRegionEntity,
@@ -2398,7 +2412,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       return Pair(room, bed)
     }
 
-    private fun createTemporaryAccommodationWithBedSpaceEndDate(
+    private fun createPremisesWithBedspaceEndDate(
       searchStartDate: LocalDate,
       bedEndDate: LocalDate,
     ): ProbationDeliveryUnitEntity {
@@ -2474,7 +2488,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       overlaps = overlaps,
     )
 
-    private fun createPremisesAndBedsWithCharacteristics(
+    private fun createPremisesAndBedspacesWithCharacteristics(
       localAuthorityArea: LocalAuthorityAreaEntity,
       pdu: ProbationDeliveryUnitEntity,
     ): List<PremisesEntity> {
@@ -2485,7 +2499,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       val premisesPubNearbyCharacteristic = getPremisesPubNearByCharacteristic()
       val wheelchairAccessibleCharacteristic = getWheelchairAccessibleCharacteristic()
 
-      val premisesSingleOccupancy = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesSingleOccupancy = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_SINGLE_OCCUPANCY_ID),
         "Premises Single Occupancy",
         probationRegion,
@@ -2495,7 +2509,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       )
       createBedspace(premisesSingleOccupancy, "Premises Single Occupancy Room One", listOf())
 
-      val premisesSingleOccupancyWithWheelchairAccessible = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesSingleOccupancyWithWheelchairAccessible = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WHEELCHAIR_ACCESSIBILITY_ID),
         "Premises Single Occupancy with Wheelchair Accessible",
         probationRegion,
@@ -2509,7 +2523,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         listOf(wheelchairAccessibleCharacteristic!!),
       )
 
-      val premisesSharedProperty = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesSharedProperty = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_SHARED_PROPERTY_ID),
         "Premises Shared Property",
         probationRegion,
@@ -2525,7 +2539,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         listOf(wheelchairAccessibleCharacteristic),
       )
 
-      val premisesMenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesMenOnly = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_MEN_ONLY_ID),
         "Premises Men Only",
         probationRegion,
@@ -2535,7 +2549,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       )
       createBedspace(premisesMenOnly, "Premises Men Only Room One", listOf())
 
-      val premisesWomenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesWomenOnly = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_WOMEN_ONLY_ID),
         "Premises Women Only",
         probationRegion,
@@ -2545,7 +2559,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       )
       createBedspace(premisesWomenOnly, "Premises Women Only Room One", listOf())
 
-      val premisesPubNearby = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesPubNearby = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_PUB_NEARBY_ID),
         "Premises Pub Nearby",
         probationRegion,
@@ -2555,7 +2569,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       )
       createBedspace(premisesPubNearby, "Premises Pub Nearby Room One", listOf())
 
-      val premisesSingleOccupancyMenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesSingleOccupancyMenOnly = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_SINGLE_OCCUPANCY_MEN_ONLY_ID),
         "Premises Single Occupancy - Men Only",
         probationRegion,
@@ -2569,7 +2583,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         listOf(),
       )
 
-      val premisesSingleOccupancyWomenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesSingleOccupancyWomenOnly = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WOMEN_ONLY_ID),
         "Premises Single Occupancy - Women Only",
         probationRegion,
@@ -2583,7 +2597,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         listOf(),
       )
 
-      val premisesSharedPropertyMenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesSharedPropertyMenOnly = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_SHARED_PROPERTY_MEN_ONLY_ID),
         "Premises Shared Property - Men Only",
         probationRegion,
@@ -2597,7 +2611,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         listOf(),
       )
 
-      val premisesSharedPropertyWomenOnly = createTemporaryAccommodationPremisesWithCharacteristics(
+      val premisesSharedPropertyWomenOnly = createPremisesWithCharacteristics(
         UUID.fromString(PREMISES_SHARED_PROPERTY_WOMEN_ONLY_ID),
         "Premises Shared Property - Women Only",
         probationRegion,
@@ -2624,6 +2638,29 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         premisesPubNearby,
       )
     }
+
+    private fun produceCharacteristic(
+      propertyName: String,
+      modelScope: Characteristic.ModelScope,
+    ): CharacteristicEntity {
+      val characteristicTwo = characteristicRepository.save(
+        CharacteristicEntityFactory().withPropertyName(propertyName)
+          .withServiceScope(ServiceName.temporaryAccommodation.value)
+          .withModelScope(modelScope.value).produce(),
+      )
+      return characteristicTwo
+    }
+
+    private fun getResponseForRequest(jwt: String, searchParameters: Cas3BedspaceSearchParameters) = webTestClient.post()
+      .uri("cas3/bedspaces/search")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(searchParameters)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(Cas3BedspaceSearchResults::class.java)
+      .returnResult()
+      .responseBody!!
 
     private fun createAssessment(user: UserEntity, crn: String, sexualRisk: Boolean? = null): Pair<TemporaryAccommodationApplicationEntity, AssessmentEntity> {
       val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
