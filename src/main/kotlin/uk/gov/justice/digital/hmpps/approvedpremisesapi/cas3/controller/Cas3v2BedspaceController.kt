@@ -54,7 +54,7 @@ class Cas3v2BedspaceController(
     val premises = getAndCheckUserCanViewPremises(premisesId)
     val bedspaces = cas3v2BedspacesService.getPremisesBedspaces(premises.id)
     val bedspacesArchiveHistory = cas3v2BedspacesService.getBedspacesArchiveHistory(bedspaces.map { it.id })
-    val totalBedspaceByStatus = extractEntityFromCasResult(cas3v2BedspacesService.getBedspaceTotals(premises))
+    val totalBedspaceByStatus = extractEntityFromCasResult(cas3v2PremisesService.getBedspaceTotals(premises.id))
     val result = Cas3Bedspaces(
       bedspaces = bedspaces.map { bedspace ->
         val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(bedspace)
@@ -73,7 +73,7 @@ class Cas3v2BedspaceController(
   @GetMapping("/premises/{premisesId}/bedspace-totals")
   fun getBedspaceTotals(@PathVariable premisesId: UUID): ResponseEntity<Cas3PremisesBedspaceTotals> {
     val premises = getAndCheckUserCanViewPremises(premisesId)
-    val totalBedspaceByStatus = extractEntityFromCasResult(cas3v2BedspacesService.getBedspaceTotals(premises))
+    val totalBedspaceByStatus = extractEntityFromCasResult(cas3v2PremisesService.getBedspaceTotals(premises.id))
 
     val result = Cas3PremisesBedspaceTotals(
       id = premises.id,

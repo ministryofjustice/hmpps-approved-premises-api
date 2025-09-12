@@ -9,6 +9,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,6 +31,8 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2NoteEntityFactory
@@ -61,6 +65,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Confirm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ExtensionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3NonArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceCancellationEntityFactory
@@ -81,6 +86,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Conf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3NonArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
@@ -285,6 +292,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
@@ -297,6 +305,9 @@ import java.util.UUID
 abstract class IntegrationTestBase {
   @Autowired
   private lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
+
+  @Autowired
+  private lateinit var cas3PemisesCharacteristicRepository: Cas3PremisesCharacteristicRepository
 
   @Autowired
   lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
@@ -654,6 +665,7 @@ abstract class IntegrationTestBase {
   lateinit var assessmentReferralHistoryUserNoteEntityFactory: PersistedFactory<AssessmentReferralHistoryUserNoteEntity, UUID, AssessmentReferralHistoryUserNoteEntityFactory>
   lateinit var assessmentReferralHistorySystemNoteEntityFactory: PersistedFactory<AssessmentReferralHistorySystemNoteEntity, UUID, AssessmentReferralHistorySystemNoteEntityFactory>
   lateinit var cas3BedspaceCharacteristicEntityFactory: PersistedFactory<Cas3BedspaceCharacteristicEntity, UUID, Cas3BedspaceCharacteristicEntityFactory>
+  lateinit var cas3PremisesCharacteristicEntityFactory: PersistedFactory<Cas3PremisesCharacteristicEntity, UUID, Cas3PremisesCharacteristicEntityFactory>
   lateinit var characteristicEntityFactory: PersistedFactory<CharacteristicEntity, UUID, CharacteristicEntityFactory>
   lateinit var roomEntityFactory: PersistedFactory<RoomEntity, UUID, RoomEntityFactory>
   lateinit var bedEntityFactory: PersistedFactory<BedEntity, UUID, BedEntityFactory>
@@ -773,6 +785,7 @@ abstract class IntegrationTestBase {
     assessmentReferralHistoryUserNoteEntityFactory = PersistedFactory({ AssessmentReferralHistoryUserNoteEntityFactory() }, assessmentReferralUserNoteRepository)
     assessmentReferralHistorySystemNoteEntityFactory = PersistedFactory({ AssessmentReferralHistorySystemNoteEntityFactory() }, assessmentReferralSystemNoteRepository)
     cas3BedspaceCharacteristicEntityFactory = PersistedFactory({ Cas3BedspaceCharacteristicEntityFactory() }, cas3BedspaceCharacteristicRepository)
+    cas3PremisesCharacteristicEntityFactory = PersistedFactory({ Cas3PremisesCharacteristicEntityFactory() }, cas3PemisesCharacteristicRepository)
     characteristicEntityFactory = PersistedFactory({ CharacteristicEntityFactory() }, characteristicRepository)
     roomEntityFactory = PersistedFactory({ RoomEntityFactory() }, roomRepository)
     bedEntityFactory = PersistedFactory({ BedEntityFactory() }, bedRepository)
@@ -1017,3 +1030,15 @@ fun WebTestClient.ResponseSpec.withConflictMessage(message: String): WebTestClie
   .jsonPath("title").isEqualTo("Conflict")
   .jsonPath("status").isEqualTo(409)
   .jsonPath("detail").isEqualTo(message)
+
+fun WebTestClient.ResponseSpec.failsWithValidationMessages(vararg invalidParams: InvalidParam): WebTestClient.ResponseSpec {
+  val validationError = this.bodyAsObject<ValidationError>()
+
+  assertAll({
+    assertThat(validationError.status).isEqualTo(400)
+    assertThat(validationError.title).isEqualTo("Bad Request")
+    assertThat(validationError.invalidParams).containsAll(invalidParams.toList())
+  })
+
+  return this
+}

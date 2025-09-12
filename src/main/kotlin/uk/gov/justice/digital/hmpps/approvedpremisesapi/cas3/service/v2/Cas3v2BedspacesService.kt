@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_LENGTH_BEDSPACE_REFERENCE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
@@ -24,9 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Cas3FieldValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceArchived
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceOnline
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -194,19 +190,6 @@ class Cas3v2BedspacesService(
       }.sortedBy { it.date }
 
     return CasResult.Success(archiveHistory)
-  }
-
-  fun getBedspaceTotals(premises: Cas3PremisesEntity): CasResult.Success<TemporaryAccommodationPremisesTotalBedspacesByStatus> {
-    val bedspaces = cas3BedspacesRepository.findByPremisesId(premises.id)
-
-    return CasResult.Success(
-      TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        bedspaces.count { isCas3BedspaceOnline(it.startDate, it.endDate) },
-        bedspaces.count { isCas3BedspaceUpcoming(it.startDate) },
-        bedspaces.count { isCas3BedspaceArchived(it.endDate) },
-      ),
-    )
   }
 
   fun getBedspaceStatus(bedspace: Cas3BedspacesEntity) = BedspaceStatusHelper.getBedspaceStatus(bedspace.startDate, bedspace.endDate)

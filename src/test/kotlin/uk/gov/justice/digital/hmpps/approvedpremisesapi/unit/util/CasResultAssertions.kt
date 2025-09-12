@@ -149,9 +149,12 @@ class CasResultFieldValidationErrorAssertions<T>(actual: CasResult.FieldValidati
   ) {
   fun hasMessage(field: String, expectedMessage: String): CasResultFieldValidationErrorAssertions<T> {
     val validationMessages = actual.validationMessages
-
     assertThat(validationMessages).containsEntry(field, expectedMessage)
-
+    return this
+  }
+  fun withNumberOfMessages(expectedMessageCount: Int): CasResultFieldValidationErrorAssertions<T> {
+    val validationMessages = actual.validationMessages
+    assertThat(validationMessages).hasSize(expectedMessageCount)
     return this
   }
 }
