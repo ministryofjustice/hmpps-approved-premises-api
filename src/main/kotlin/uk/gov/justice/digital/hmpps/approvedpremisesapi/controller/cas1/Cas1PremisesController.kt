@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1ReportsController.Companion.TIMESTAMP_FORMAT
@@ -33,8 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStrea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
@@ -43,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1NationalOccupancyTransformer
@@ -72,8 +68,6 @@ class Cas1PremisesController(
   private val cas1PremisesDayTransformer: Cas1PremisesDayTransformer,
   private val cas1OutOfServiceBedSummaryService: Cas1OutOfServiceBedSummaryService,
   private val cas1OutOfServiceBedSummaryTransformer: Cas1OutOfServiceBedSummaryTransformer,
-  private val staffMemberService: StaffMemberService,
-  private val staffMemberTransformer: StaffMemberTransformer,
   private val clock: Clock,
   private val spaceBookingService: Cas1SpaceBookingService,
   private val cas1PremisesSearchService: Cas1PremisesSearchService,
@@ -286,29 +280,6 @@ class Cas1PremisesController(
           user = userService.getUserForRequest(),
         ),
       ),
-    )
-  }
-
-  @Operation(summary = "Returns the staff that work at an approved premises")
-  @GetMapping("/premises/{premisesId}/staff")
-  fun getStaff(
-    @PathVariable premisesId: UUID,
-  ): ResponseEntity<List<StaffMember>> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
-
-    val premises = cas1PremisesService.findPremisesById(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val staffMembersResult = staffMemberService.getStaffMembersForQCode(premises.qCode)
-
-    if (staffMembersResult is CasResult.NotFound) {
-      return ResponseEntity.ok(emptyList())
-    }
-
-    return ResponseEntity.ok(
-      extractEntityFromCasResult(staffMembersResult)
-        .content
-        .map(staffMemberTransformer::transformDomainToApi),
     )
   }
 
