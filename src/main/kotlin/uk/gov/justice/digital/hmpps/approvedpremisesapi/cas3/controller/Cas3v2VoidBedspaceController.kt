@@ -83,6 +83,7 @@ class Cas3v2VoidBedspaceController(
       referenceNumber = body.referenceNumber,
       notes = body.notes,
       bedspace = bedspace,
+      costCentre = body.costCentre,
     )
 
     val result = extractEntityFromCasResult(voidBedspace)

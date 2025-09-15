@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageType
@@ -642,6 +643,7 @@ class BedUsageReportGeneratorTest {
       .withEndDate(LocalDate.parse("2023-04-07"))
       .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
+      .withCostCentre(Cas3CostCentre.SUPPLIER)
       .produce()
 
     every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns emptyList()
@@ -671,6 +673,7 @@ class BedUsageReportGeneratorTest {
     assertThat(result[0][BedUsageReportRow::bookingStatus]).isEqualTo(null)
     assertThat(result[0][BedUsageReportRow::voidCategory]).isEqualTo(temporaryAccommodationLostBed.reason.name)
     assertThat(result[0][BedUsageReportRow::voidNotes]).isEqualTo(temporaryAccommodationLostBed.notes)
+    assertThat(result[0][BedUsageReportRow::costCentre]).isEqualTo(Cas3CostCentre.SUPPLIER)
     assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremises.id.toShortBase58())
     assertThat(result[0][BedUsageReportRow::uniqueBedspaceRef]).isEqualTo(temporaryAccommodationRoom.id.toShortBase58())
   }

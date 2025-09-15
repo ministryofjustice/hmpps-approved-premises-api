@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import java.time.LocalDate
 
 data class BedUsageReportRow(
@@ -20,6 +21,7 @@ data class BedUsageReportRow(
   val bookingStatus: BookingStatus?,
   val voidCategory: String?,
   val voidNotes: String?,
+  val costCentre: Cas3CostCentre?,
   val uniquePropertyRef: String,
   val uniqueBedspaceRef: String,
 )

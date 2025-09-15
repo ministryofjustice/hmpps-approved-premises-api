@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceStatus
@@ -178,6 +179,7 @@ class Cas3VoidBedspacesTransformerTest {
       premises = null,
       cancellation = null,
       bed = null,
+      costCentre = Cas3CostCentre.HMPPS,
     )
 
     @Test
