@@ -553,7 +553,7 @@ class Cas3DomainEventBuilderTest {
       .withRoom(room)
       .produce()
 
-    val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate, user)
+    val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, premises.id, currentStartDate, currentEndDate, user)
 
     assertAll({
       assertThat(event.applicationId).isNull()
@@ -637,7 +637,7 @@ class Cas3DomainEventBuilderTest {
       .withRoom(room)
       .produce()
 
-    val event = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, null, user)
+    val event = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premises.id, null, user)
 
     assertAll(
       {
@@ -670,7 +670,7 @@ class Cas3DomainEventBuilderTest {
       .produce()
 
     val error = assertThrows<IllegalStateException> {
-      cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, null, user)
+      cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premises.id, null, user)
     }
 
     assertThat(error.message).isEqualTo("Bedspace end date is null for bedspace id: ${bedspace.id}")

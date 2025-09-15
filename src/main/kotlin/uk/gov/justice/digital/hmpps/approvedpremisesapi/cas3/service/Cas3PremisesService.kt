@@ -727,7 +727,7 @@ class Cas3PremisesService(
     if (activeBedspaces.any()) {
       // archive all online bedspaces
       activeBedspaces.forEach { bedspace ->
-        archiveBedspaceAndSaveDomainEvent(bedspace, archivePremisesEndDate)
+        archiveBedspaceAndSaveDomainEvent(bedspace, premises.id, archivePremisesEndDate)
       }
     }
 
@@ -817,7 +817,7 @@ class Cas3PremisesService(
 
     canArchiveBedspace(bedspaceId, endDate)?.let { return it }
 
-    val updatedBedspace = archiveBedspaceAndSaveDomainEvent(bedspace, endDate)
+    val updatedBedspace = archiveBedspaceAndSaveDomainEvent(bedspace, premises.id, endDate)
 
     archivePremisesIfAllBedspacesArchived(premises)
 
@@ -856,7 +856,7 @@ class Cas3PremisesService(
     val uniqueBedspaces = bedspaces.groupBy { b -> b.room.name }
     uniqueBedspaces.forEach { bedspaces ->
       val lastBedspace = bedspaces.value.sortedByDescending { it.createdAt }.first()
-      unarchiveBedspaceAndSaveDomainEvent(lastBedspace, restartDate)
+      unarchiveBedspaceAndSaveDomainEvent(lastBedspace, premises.id, restartDate)
     }
 
     success(unarchivePremises)
@@ -892,7 +892,7 @@ class Cas3PremisesService(
       return@validatedCasResult errors()
     }
 
-    val unarchivedBedspace = unarchiveBedspaceAndSaveDomainEvent(bedspace, restartDate)
+    val unarchivedBedspace = unarchiveBedspaceAndSaveDomainEvent(bedspace, premises.id, restartDate)
 
     if (premises.status == PropertyStatus.archived) {
       unarchivePremisesAndSaveDomainEvent(premises, restartDate)
@@ -1525,11 +1525,11 @@ class Cas3PremisesService(
     return updatedPremises
   }
 
-  private fun archiveBedspaceAndSaveDomainEvent(bedspace: BedEntity, endDate: LocalDate): BedEntity {
+  private fun archiveBedspaceAndSaveDomainEvent(bedspace: BedEntity, premisesId: UUID, endDate: LocalDate): BedEntity {
     val originalEndDate = bedspace.endDate
     bedspace.endDate = endDate
     val updatedBedspace = bedspaceRepository.save(bedspace)
-    cas3DomainEventService.saveBedspaceArchiveEvent(updatedBedspace, originalEndDate)
+    cas3DomainEventService.saveBedspaceArchiveEvent(updatedBedspace, premisesId, originalEndDate)
     return updatedBedspace
   }
 
@@ -1544,7 +1544,7 @@ class Cas3PremisesService(
     return updatedPremises
   }
 
-  private fun unarchiveBedspaceAndSaveDomainEvent(bedspace: BedEntity, restartDate: LocalDate): BedEntity {
+  private fun unarchiveBedspaceAndSaveDomainEvent(bedspace: BedEntity, premisesId: UUID, restartDate: LocalDate): BedEntity {
     val originalStartDate = bedspace.startDate!!
     val originalEndDate = bedspace.endDate!!
 
@@ -1555,7 +1555,7 @@ class Cas3PremisesService(
       ),
     )
 
-    cas3DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, originalStartDate, originalEndDate)
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, premisesId, originalStartDate, originalEndDate)
     return updatedBedspace
   }
 
