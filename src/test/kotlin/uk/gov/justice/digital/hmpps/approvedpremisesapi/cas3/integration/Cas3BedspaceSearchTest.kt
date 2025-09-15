@@ -88,7 +88,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         .uri("/cas3/bedspaces/search")
         .bodyValue(
           Cas3BedspaceSearchParameters(
-            startDate = LocalDate.parse("2023-03-23"),
+            startDate = LocalDate.now().plusDays(7),
             durationDays = 7,
             probationDeliveryUnits = listOf(UUID.randomUUID()),
           ),
@@ -112,7 +112,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas3BedspaceSearchParameters(
-                startDate = LocalDate.parse("2023-03-23"),
+                startDate = LocalDate.now().minusDays(10),
                 durationDays = 7,
                 probationDeliveryUnits = listOf(searchPdu.id),
               ),
@@ -194,6 +194,46 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
                     overlaps = listOf(),
                   ),
                 ),
+              ),
+            ),
+          )
+      }
+    }
+
+    @Test
+    fun `Searching for a bedspace will not return an upcoming bedspace with a start date after the search range start date`() {
+      givenATemporaryAccommodationPremisesComplete(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().minusDays(90),
+        premisesEndDate = null,
+        premisesStatus = PropertyStatus.active,
+        bedspaceCount = 1,
+        bedStartDates = listOf(
+          LocalDate.now().plusDays(3),
+        ),
+      ) { user, jwt, premises, rooms, bedspaces ->
+        val searchPdu = premises.probationDeliveryUnit!!
+        webTestClient.post()
+          .uri("cas3/bedspaces/search")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            Cas3BedspaceSearchParameters(
+              startDate = LocalDate.now().plusDays(1),
+              durationDays = 7,
+              probationDeliveryUnits = listOf(searchPdu.id),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              Cas3BedspaceSearchResults(
+                resultsRoomCount = 0,
+                resultsPremisesCount = 0,
+                resultsBedCount = 0,
+                results = listOf(),
               ),
             ),
           )
@@ -389,8 +429,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withApplication(fullPersonApplication)
             withPremises(premises)
             withBed(bedTwo)
-            withArrivalDate(LocalDate.parse("2023-07-15"))
-            withDepartureDate(LocalDate.parse("2023-08-15"))
+            withArrivalDate(LocalDate.now().minusDays(17))
+            withDepartureDate(LocalDate.now().plusDays(14))
             withCrn(fullPersonCaseSummary.crn)
             withId(UUID.randomUUID())
           }
@@ -409,8 +449,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withApplication(currentRestrictionApplication)
             withPremises(premises)
             withBed(bedThree)
-            withArrivalDate(LocalDate.parse("2023-08-27"))
-            withDepartureDate(LocalDate.parse("2023-09-13"))
+            withArrivalDate(LocalDate.now().plusDays(26))
+            withDepartureDate(LocalDate.now().plusDays(43))
             withCrn(currentRestrictionCaseSummary.crn)
             withId(UUID.randomUUID())
           }
@@ -429,8 +469,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withApplication(userExcludedApplication)
             withPremises(premises)
             withBed(bedFour)
-            withArrivalDate(LocalDate.parse("2023-08-25"))
-            withDepartureDate(LocalDate.parse("2023-09-25"))
+            withArrivalDate(LocalDate.now().plusDays(24))
+            withDepartureDate(LocalDate.now().plusDays(55))
             withCrn(userExcludedCaseSummary.crn)
             withId(UUID.randomUUID())
           }
@@ -456,7 +496,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas3BedspaceSearchParameters(
-                startDate = LocalDate.parse("2023-08-01"),
+                startDate = LocalDate.now(),
                 durationDays = 31,
                 probationDeliveryUnits = listOf(searchPdu.id),
               ),
@@ -593,8 +633,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withApplication(application)
             withPremises(premisesOne)
             withBed(overlappingBedInPremisesOne)
-            withArrivalDate(LocalDate.parse("2023-07-15"))
-            withDepartureDate(LocalDate.parse("2023-08-15"))
+            withArrivalDate(LocalDate.now().minusDays(19))
+            withDepartureDate(LocalDate.now().plusDays(16))
             withCrn(offenderDetails.otherIds.crn)
             withId(UUID.randomUUID())
           }
@@ -604,8 +644,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withApplication(application)
             withPremises(premisesTwo)
             withBed(overlappingBedInPremisesTwo)
-            withArrivalDate(LocalDate.parse("2023-08-25"))
-            withDepartureDate(LocalDate.parse("2023-09-25"))
+            withArrivalDate(LocalDate.now().plusDays(26))
+            withDepartureDate(LocalDate.now().plusDays(57))
             withCrn(offenderDetails.otherIds.crn)
             withId(UUID.randomUUID())
           }
@@ -615,8 +655,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withApplication(application)
             withPremises(premisesTwo)
             withBed(overlappingBedInPremisesTwo)
-            withArrivalDate(LocalDate.parse("2023-07-25"))
-            withDepartureDate(LocalDate.parse("2023-08-05"))
+            withArrivalDate(LocalDate.now().minusDays(9))
+            withDepartureDate(LocalDate.now().plusDays(7))
             withCrn(offenderDetails.otherIds.crn)
             withId(UUID.randomUUID())
           }
@@ -640,7 +680,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas3BedspaceSearchParameters(
-                startDate = LocalDate.parse("2023-08-01"),
+                startDate = LocalDate.now().plusDays(2),
                 durationDays = 31,
                 probationDeliveryUnits = listOf(searchPdu.id),
               ),
@@ -748,8 +788,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBed(bedTwo)
-          withArrivalDate(LocalDate.parse("2024-01-01"))
-          withDepartureDate(LocalDate.parse("2024-01-31"))
+          withArrivalDate(LocalDate.now().plusDays(60))
+          withDepartureDate(LocalDate.now().plusDays(90))
           withCrn(randomStringMultiCaseWithNumbers(16))
           withId(UUID.randomUUID())
         }
@@ -759,7 +799,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             Cas3BedspaceSearchParameters(
-              startDate = LocalDate.parse("2023-08-01"),
+              startDate = LocalDate.now().plusDays(7),
               durationDays = 31,
               probationDeliveryUnits = listOf(searchPdu.id),
             ),
@@ -819,7 +859,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withProbationRegion(probationRegion)
           }
 
-          val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn)
+          val (application, _) = createAssessment(user, offenderDetails.otherIds.crn)
 
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withProbationRegion(probationRegion)
@@ -848,8 +888,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withApplication(application)
             withPremises(premises)
             withBed(bedTwo)
-            withArrivalDate(LocalDate.parse("2023-07-15"))
-            withDepartureDate(LocalDate.parse("2023-08-15"))
+            withArrivalDate(LocalDate.now().minusDays(48))
+            withDepartureDate(LocalDate.now().minusDays(18))
             withCrn(offenderDetails.otherIds.crn)
             withId(UUID.randomUUID())
           }
@@ -875,7 +915,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas3BedspaceSearchParameters(
-                startDate = LocalDate.parse("2023-09-01"),
+                startDate = LocalDate.now(),
                 durationDays = 31,
                 probationDeliveryUnits = listOf(searchPdu.id),
               ),
@@ -952,7 +992,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             Cas3BedspaceSearchParameters(
-              startDate = LocalDate.parse("2024-08-27"),
+              startDate = LocalDate.now().plusDays(10),
               durationDays = 84,
               probationDeliveryUnits = listOf(searchPdu.id),
               premisesFilters = PremisesFilters(
@@ -1067,7 +1107,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val result = getResponseForRequest(
           jwt,
           Cas3BedspaceSearchParameters(
-            startDate = LocalDate.parse("2024-08-27"),
+            startDate = LocalDate.now().plusDays(21),
             durationDays = 84,
             probationDeliveryUnits = listOf(searchPdu.id),
             premisesFilters = PremisesFilters(
@@ -1121,7 +1161,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val result = getResponseForRequest(
           jwt,
           Cas3BedspaceSearchParameters(
-            startDate = LocalDate.parse("2024-08-27"),
+            startDate = LocalDate.now().plusDays(17),
             durationDays = 84,
             probationDeliveryUnits = listOf(searchPdu.id),
             premisesFilters = PremisesFilters(
@@ -1166,7 +1206,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val result = getResponseForRequest(
           jwt,
           Cas3BedspaceSearchParameters(
-            startDate = LocalDate.parse("2024-08-27"),
+            startDate = LocalDate.now(),
             durationDays = 84,
             probationDeliveryUnits = listOf(searchPdu.id),
             bedspaceFilters = BedspaceFilters(
@@ -1211,7 +1251,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val result = getResponseForRequest(
           jwt,
           Cas3BedspaceSearchParameters(
-            startDate = LocalDate.parse("2024-08-27"),
+            startDate = LocalDate.now().minusDays(3),
             durationDays = 84,
             probationDeliveryUnits = listOf(searchPdu.id),
             bedspaceFilters = BedspaceFilters(
@@ -1291,7 +1331,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         val result = getResponseForRequest(
           jwt,
           Cas3BedspaceSearchParameters(
-            startDate = LocalDate.parse("2024-08-27"),
+            startDate = LocalDate.now().plusDays(10),
             durationDays = 84,
             probationDeliveryUnits = listOf(searchPdu.id),
             bedspaceFilters = BedspaceFilters(
@@ -1351,7 +1391,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             Cas3BedspaceSearchParameters(
-              startDate = LocalDate.parse("2024-08-27"),
+              startDate = LocalDate.now().plusDays(2),
               durationDays = 84,
               probationDeliveryUnits = listOf(searchPdu.id),
               premisesFilters = PremisesFilters(
@@ -1453,7 +1493,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             Cas3BedspaceSearchParameters(
-              startDate = LocalDate.parse("2024-08-27"),
+              startDate = LocalDate.now().plusDays(14),
               durationDays = 84,
               probationDeliveryUnits = listOf(searchPdu.id),
               bedspaceFilters = BedspaceFilters(
@@ -1543,8 +1583,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesPubNearBy)
             withBed(premisesPubNearByRoomOne.beds.first())
-            withArrivalDate(LocalDate.parse("2025-03-07"))
-            withDepartureDate(LocalDate.parse("2025-06-10"))
+            withArrivalDate(LocalDate.now().minusDays(20))
+            withDepartureDate(LocalDate.now().plusDays(71))
             withCrn(offenderDetailsOne.otherIds.crn)
           }
 
@@ -1560,8 +1600,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesSharedPropertyRoomTwo.premises)
             withBed(premisesSharedPropertyRoomTwo.beds.first())
-            withArrivalDate(LocalDate.parse("2025-03-25"))
-            withDepartureDate(LocalDate.parse("2025-04-15"))
+            withArrivalDate(LocalDate.now().minusDays(6))
+            withDepartureDate(LocalDate.now().plusDays(23))
             withCrn(offenderDetailsTwo.otherIds.crn)
           }
 
@@ -1577,8 +1617,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesSingleOccupancyWheelchairAccessible)
             withBed(premisesSingleOccupancyWheelchairAccessibleRoomOne.beds.first())
-            withArrivalDate(LocalDate.parse("2025-03-03"))
-            withDepartureDate(LocalDate.parse("2025-04-27"))
+            withArrivalDate(LocalDate.now().minusDays(28))
+            withDepartureDate(LocalDate.now().plusDays(34))
             withCrn(offenderDetailsThree.otherIds.crn)
           }
 
@@ -1589,7 +1629,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas3BedspaceSearchParameters(
-                startDate = LocalDate.parse("2025-03-27"),
+                startDate = LocalDate.now().plusDays(4),
                 durationDays = 84,
                 probationDeliveryUnits = listOf(searchPdu.id),
                 premisesFilters = PremisesFilters(
@@ -1731,8 +1771,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesSingleOccupancy)
             withBed(premisesSingleOccupancyRoomOne.beds.first())
-            withArrivalDate(LocalDate.parse("2025-05-07"))
-            withDepartureDate(LocalDate.parse("2025-06-19"))
+            withArrivalDate(LocalDate.now().minusDays(10))
+            withDepartureDate(LocalDate.now().plusDays(33))
             withCrn(offenderDetailsOne.otherIds.crn)
           }
 
@@ -1748,8 +1788,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesSharedProperty)
             withBed(premisesSharedPropertyRoomTwo.beds.first())
-            withArrivalDate(LocalDate.parse("2025-05-15"))
-            withDepartureDate(LocalDate.parse("2025-07-21"))
+            withArrivalDate(LocalDate.now().minusDays(2))
+            withDepartureDate(LocalDate.now().plusDays(65))
             withCrn(offenderDetailsTwo.otherIds.crn)
           }
 
@@ -1765,8 +1805,8 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesPubNearby)
             withBed(premisesPubNearbyRoomOne.beds.first())
-            withArrivalDate(LocalDate.parse("2025-05-03"))
-            withDepartureDate(LocalDate.parse("2025-08-27"))
+            withArrivalDate(LocalDate.now().minusDays(3))
+            withDepartureDate(LocalDate.now().plusDays(102))
             withCrn(offenderDetailsThree.otherIds.crn)
           }
 
@@ -1777,7 +1817,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas3BedspaceSearchParameters(
-                startDate = LocalDate.parse("2025-05-17"),
+                startDate = LocalDate.now(),
                 durationDays = 84,
                 probationDeliveryUnits = listOf(searchPdu.id),
                 premisesFilters = PremisesFilters(
@@ -1934,7 +1974,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
-        val searchStartDate = LocalDate.parse("2023-03-23")
+        val searchStartDate = LocalDate.now().plusDays(3)
         val durationDays = 7L
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -2014,7 +2054,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val durationDays = 7L
-        val searchStartDate = LocalDate.parse("2023-03-23")
+        val searchStartDate = LocalDate.now().plusDays(3)
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -2101,7 +2141,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
-        val searchStartDate = LocalDate.parse("2024-03-12")
+        val searchStartDate = LocalDate.now().plusDays(3)
         val durationDays = 7L
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -2234,7 +2274,6 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
       givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
-        val searchStartDate = LocalDate.parse("2024-08-12")
         val durationDays = 7L
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -2259,7 +2298,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           withStatus(PropertyStatus.active)
         }
 
-        val (roomOnePremisesTwo, bedOnePremisesTwo) = createBedspace(premisesTwo, "Room One", listOf())
+        createBedspace(premisesTwo, "Room One", listOf())
 
         val premisesThree = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withName("Premises Three")
@@ -2277,7 +2316,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             Cas3BedspaceSearchParameters(
-              startDate = searchStartDate,
+              startDate = LocalDate.now().plusDays(5),
               durationDays = durationDays,
               probationDeliveryUnits = listOf(pduOne.id, pduThree.id),
             ),
