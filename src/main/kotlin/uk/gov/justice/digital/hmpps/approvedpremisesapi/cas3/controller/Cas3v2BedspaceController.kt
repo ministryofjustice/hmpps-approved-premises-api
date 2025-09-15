@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesBedspaceTotals
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UpdateBedspace
@@ -65,6 +67,23 @@ class Cas3v2BedspaceController(
       totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
       totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
     )
+    return ResponseEntity.ok(result)
+  }
+
+  @GetMapping("/premises/{premisesId}/bedspace-totals")
+  fun getBedspaceTotals(@PathVariable premisesId: UUID): ResponseEntity<Cas3PremisesBedspaceTotals> {
+    val premises = getAndCheckUserCanViewPremises(premisesId)
+    val totalBedspaceByStatus = extractEntityFromCasResult(cas3v2BedspacesService.getBedspaceTotals(premises))
+
+    val result = Cas3PremisesBedspaceTotals(
+      id = premises.id,
+      status = if (premises.isPremisesArchived()) Cas3PremisesStatus.archived else Cas3PremisesStatus.online,
+      premisesEndDate = premises.endDate,
+      totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
+      totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
+      totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
+    )
+
     return ResponseEntity.ok(result)
   }
 
