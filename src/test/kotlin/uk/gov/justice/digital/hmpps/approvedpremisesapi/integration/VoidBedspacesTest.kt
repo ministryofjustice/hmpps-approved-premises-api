@@ -359,6 +359,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       }
 
       val bed = bedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.parse("2022-03-17"))
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
             withYieldedPremises {
@@ -543,6 +544,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       }
 
       val bed = bedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.parse("2022-02-15"))
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }
@@ -551,8 +553,8 @@ class VoidBedspacesTest : IntegrationTestBase() {
       }
 
       val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
-        withStartDate(LocalDate.now().plusDays(2))
-        withEndDate(LocalDate.now().plusDays(4))
+        withStartDate(LocalDate.parse("2022-08-15"))
+        withEndDate(LocalDate.parse("2022-08-19"))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
@@ -856,6 +858,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
 
         val bed = bedEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.parse("2022-01-01"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
@@ -921,6 +924,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
 
         val bed = bedEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.parse("2022-01-01"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
@@ -972,6 +976,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
 
         val bed = bedEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.parse("2022-01-01"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
@@ -1036,6 +1041,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       }
 
       val bed = bedEntityFactory.produceAndPersist {
+        withStartDate(LocalDate.parse("2022-01-01"))
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }
@@ -1096,6 +1102,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
 
         val bed = bedEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.parse("2022-05-09"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }
@@ -1226,6 +1233,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
 
         val bed = bedEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.parse("2022-01-19"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withYieldedPremises { premises }

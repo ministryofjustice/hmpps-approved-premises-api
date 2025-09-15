@@ -3109,7 +3109,6 @@ class Cas3PremisesServiceTest {
       val room = RoomEntityFactory().withYieldedPremises { premises }.produce()
       val scheduledToUnarchiveBedspace = BedEntityFactory()
         .withYieldedRoom { room }
-        .withStartDate(null)
         .withEndDate(null)
         .produce()
 
@@ -3486,6 +3485,7 @@ class Cas3PremisesServiceTest {
         .produce()
 
       val bed = BedEntityFactory()
+        .withStartDate(LocalDate.parse("2022-01-15"))
         .withYieldedRoom { room }
         .produce()
 
@@ -3701,6 +3701,7 @@ class Cas3PremisesServiceTest {
         }
         .withBed(
           BedEntityFactory().apply {
+            withStartDate(LocalDate.parse("2022-02-15"))
             withYieldedRoom {
               RoomEntityFactory().apply {
                 withPremises(premisesEntity)
