@@ -194,48 +194,6 @@ class Cas3PremisesService(
     premisesId,
   )
 
-  fun <T> CasResultValidatedScope<T>.validatePremises(
-    probationRegion: ProbationRegionEntity?,
-    localAuthorityAreaId: UUID?,
-    localAuthorityArea: LocalAuthorityAreaEntity?,
-    probationDeliveryUnit: ProbationDeliveryUnitEntity?,
-    reference: String,
-    addressLine1: String,
-    postcode: String,
-    turnaroundWorkingDays: Int?,
-    isUniqueName: () -> Boolean,
-  ) {
-    if (localAuthorityAreaId != null && localAuthorityArea == null) {
-      "$.localAuthorityAreaId" hasValidationError "doesNotExist"
-    }
-
-    if (probationRegion == null) {
-      "$.probationRegionId" hasValidationError "doesNotExist"
-    }
-
-    if (probationDeliveryUnit == null) {
-      "$.probationDeliveryUnitId" hasValidationError "doesNotExist"
-    }
-
-    if (reference.isEmpty()) {
-      "$.reference" hasValidationError "empty"
-    } else if (!isUniqueName()) {
-      "$.reference" hasValidationError "notUnique"
-    }
-
-    if (addressLine1.isEmpty()) {
-      "$.address" hasValidationError "empty"
-    }
-
-    if (postcode.isEmpty()) {
-      "$.postcode" hasValidationError "empty"
-    }
-
-    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
-      "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
-    }
-  }
-
   fun updatePremises(
     premises: TemporaryAccommodationPremisesEntity,
     reference: String,
@@ -1401,5 +1359,48 @@ class Cas3PremisesService(
   private fun Cas3PremisesStatus.transformStatus() = when (this) {
     Cas3PremisesStatus.archived -> PropertyStatus.archived.toString()
     Cas3PremisesStatus.online -> PropertyStatus.active.toString()
+  }
+}
+
+@Suppress("LongParameterList")
+fun <T> CasResultValidatedScope<T>.validatePremises(
+  probationRegion: ProbationRegionEntity?,
+  localAuthorityAreaId: UUID?,
+  localAuthorityArea: LocalAuthorityAreaEntity?,
+  probationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  reference: String,
+  addressLine1: String,
+  postcode: String,
+  turnaroundWorkingDays: Int?,
+  isUniqueName: () -> Boolean,
+) {
+  if (localAuthorityAreaId != null && localAuthorityArea == null) {
+    "$.localAuthorityAreaId" hasValidationError "doesNotExist"
+  }
+
+  if (probationRegion == null) {
+    "$.probationRegionId" hasValidationError "doesNotExist"
+  }
+
+  if (probationDeliveryUnit == null) {
+    "$.probationDeliveryUnitId" hasValidationError "doesNotExist"
+  }
+
+  if (reference.isEmpty()) {
+    "$.reference" hasValidationError "empty"
+  } else if (!isUniqueName()) {
+    "$.reference" hasValidationError "notUnique"
+  }
+
+  if (addressLine1.isEmpty()) {
+    "$.address" hasValidationError "empty"
+  }
+
+  if (postcode.isEmpty()) {
+    "$.postcode" hasValidationError "empty"
+  }
+
+  if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
+    "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
   }
 }

@@ -9,12 +9,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.util.UUID
@@ -24,6 +26,9 @@ class Cas3UserAccessServiceTest {
 
   @MockK
   lateinit var userService: UserService
+
+  @MockK
+  lateinit var requestContextService: RequestContextService
 
   @InjectMockKs
   lateinit var cas3UserAccessService: Cas3UserAccessService
@@ -36,6 +41,7 @@ class Cas3UserAccessServiceTest {
       .produce()
 
     every { userService.getUserForRequest() } returns user
+    every { requestContextService.getServiceForRequest() } returns ServiceName.temporaryAccommodation
   }
 
   private val probationRegionId = UUID.randomUUID()
@@ -89,6 +95,26 @@ class Cas3UserAccessServiceTest {
     @Test
     fun `User cannot access reqion when they do not have CAS3_REPORTER or in different region`() {
       assertThat(cas3UserAccessService.userCanAccessRegion(user, UUID.randomUUID())).isFalse
+    }
+  }
+
+  @Nested
+  inner class UserCanViewPremises {
+
+    @Test
+    fun `currentUserCanViewPremises returns false if the user does not have the CAS3_ASSESSOR role`() {
+      assertThat(cas3UserAccessService.currentUserCanViewPremises(user.probationRegion.id)).isFalse
+    }
+
+    @Test
+    fun `currentUserCanViewPremises returns true if the given premises is a Cas3Premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
+      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+      assertThat(cas3UserAccessService.currentUserCanViewPremises(user.probationRegion.id)).isTrue
+    }
+
+    @Test
+    fun `cas3UserAccessService returns false if the user is not in the correct probation region`() {
+      assertThat(cas3UserAccessService.currentUserCanViewPremises(UUID.randomUUID())).isFalse
     }
   }
 }

@@ -16,4 +16,10 @@ class Cas3UserAccessService(
   }
 
   fun userCanAccessRegion(user: UserEntity, probationRegionId: UUID) = (user.probationRegion.id == probationRegionId || user.hasRole(UserRole.CAS3_REPORTER))
+  fun currentUserCanAccessRegion(probationRegionId: UUID) = userCanAccessRegion(userService.getUserForRequest(), probationRegionId)
+
+  fun currentUserCanViewPremises(probationRegionId: UUID): Boolean {
+    val user = userService.getUserForRequest()
+    return userCanAccessRegion(user, probationRegionId) && user.hasRole(UserRole.CAS3_ASSESSOR)
+  }
 }

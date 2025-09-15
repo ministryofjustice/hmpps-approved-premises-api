@@ -15,12 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UpdateBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BedspaceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
@@ -29,7 +29,7 @@ import java.util.UUID
 class Cas3v2BedspaceController(
   private val cas3v2PremisesService: Cas3v2PremisesService,
   private val cas3v2BedspacesService: Cas3v2BedspacesService,
-  private val userAccessService: UserAccessService,
+  private val cas3UserAccessService: Cas3UserAccessService,
   private val cas3BedspaceTransformer: Cas3BedspaceTransformer,
 ) {
 
@@ -103,7 +103,7 @@ class Cas3v2BedspaceController(
 
   private fun getAndCheckUserCanViewPremises(premisesId: UUID): Cas3PremisesEntity {
     val premises = cas3v2PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
+    if (!cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id)) {
       throw ForbiddenProblem()
     }
     return premises
