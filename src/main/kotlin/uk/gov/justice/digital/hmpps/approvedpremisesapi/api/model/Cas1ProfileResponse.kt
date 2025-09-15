@@ -17,7 +17,7 @@ data class Cas1ProfileResponse(
         The potential error encountered while loading the profile,Null if no error occurred.
     """,
   )
-  val loadError: LoadError? = null,
+  val loadError: Cas1LoadError? = null,
 
   @Schema(
     example = "null",
@@ -27,7 +27,7 @@ data class Cas1ProfileResponse(
 ) {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-  enum class LoadError(@get:JsonValue val value: String) {
+  enum class Cas1LoadError(@get:JsonValue val value: String) {
 
     @Schema(description = "The user's staff record was not found.")
     staffRecordNotFound("staff_record_not_found"),
