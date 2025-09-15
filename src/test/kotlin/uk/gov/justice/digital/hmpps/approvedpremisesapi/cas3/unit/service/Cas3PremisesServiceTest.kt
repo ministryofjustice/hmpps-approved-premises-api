@@ -2820,7 +2820,7 @@ class Cas3PremisesServiceTest {
     @Test
     fun `cancelScheduledUnarchivePremises returns Success when premises is successfully restored to previous state`() {
       val previousStartDate = LocalDate.now().minusDays(30)
-      val currentEndDate = LocalDate.now().minusDays(2)
+      val currentEndDate = LocalDate.now().plusDays(21)
       val currentStartDate = LocalDate.now().plusDays(5)
 
       val premisesAndBedspace = createPremisesAndBedspace()
@@ -2912,33 +2912,37 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
-    fun `cancelScheduledUnarchivePremises returns FieldValidationError when premises is already online`() {
-      val premises = createPremisesEntity(startDate = LocalDate.now().minusDays(1), status = PropertyStatus.active)
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when premises have end date today`() {
+      val premises = createPremisesEntity(endDate = LocalDate.now())
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
 
       val result = premisesService.cancelScheduledUnarchivePremises(premises.id)
 
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesAlreadyOnline")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesAlreadyArchived")
     }
 
     @Test
-    fun `cancelScheduledUnarchivePremises returns FieldValidationError when premises start date is today`() {
-      val premises = createPremisesEntity(startDate = LocalDate.now(), status = PropertyStatus.archived)
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when premises status is archived`() {
+      val premises = createPremisesEntity(
+        startDate = LocalDate.now().minusDays(30),
+        endDate = LocalDate.now(),
+        status = PropertyStatus.archived,
+      )
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
 
       val result = premisesService.cancelScheduledUnarchivePremises(premises.id)
 
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesAlreadyOnline")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesAlreadyArchived")
     }
 
     @Test
     fun `cancelScheduledUnarchivePremises returns FieldValidationError when no unarchive event found`() {
       val premises = createPremisesEntity(
         startDate = LocalDate.now().minusDays(30),
-        endDate = LocalDate.now().minusDays(5),
-        status = PropertyStatus.archived,
+        endDate = null,
+        status = PropertyStatus.active,
       )
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
@@ -2952,9 +2956,8 @@ class Cas3PremisesServiceTest {
     @Test
     fun `cancelScheduledUnarchivePremises returns FieldValidationError when unarchive event in the past`() {
       val premises = createPremisesEntity(
-        startDate = LocalDate.now().minusDays(30),
-        endDate = LocalDate.now().minusDays(5),
-        status = PropertyStatus.archived,
+        startDate = LocalDate.now().plusDays(10),
+        status = PropertyStatus.active,
       )
 
       val premisesDomainEvent = DomainEventEntityFactory()

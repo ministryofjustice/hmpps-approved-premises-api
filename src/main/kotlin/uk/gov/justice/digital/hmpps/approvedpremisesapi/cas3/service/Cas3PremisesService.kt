@@ -645,17 +645,17 @@ class Cas3PremisesService(
   @Transactional
   fun archivePremises(
     premises: TemporaryAccommodationPremisesEntity,
-    archiveEndDate: LocalDate,
+    archivePremisesEndDate: LocalDate,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
-    if (archiveEndDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_PREMISES_IN_PAST))) {
+    if (archivePremisesEndDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_PREMISES_IN_PAST))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInThePast"
     }
 
-    if (archiveEndDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE))) {
+    if (archivePremisesEndDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE))) {
       return "$.endDate" hasSingleValidationError "invalidEndDateInTheFuture"
     }
 
-    if (archiveEndDate.isBefore(premises.startDate)) {
+    if (archivePremisesEndDate.isBefore(premises.startDate)) {
       return Cas3FieldValidationError(
         mapOf(
           "$.endDate" to Cas3ValidationMessage(
@@ -671,7 +671,7 @@ class Cas3PremisesService(
       .sortedByDescending { it.createdAt }
       .asSequence()
       .map { objectMapper.readValue(it.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate }
-      .firstOrNull { it >= archiveEndDate }
+      .firstOrNull { it >= archivePremisesEndDate }
       ?.let { archiveDate ->
         return Cas3FieldValidationError(
           mapOf(
@@ -698,13 +698,13 @@ class Cas3PremisesService(
           ) ||
             isCas3BedspaceUpcoming(it.startDate)
           ) &&
-          isCas3BedspaceActive(it.endDate, archiveEndDate)
+          isCas3BedspaceActive(it.endDate, archivePremisesEndDate)
       }
 
     if (activeBedspaces.any()) {
       val lastUpcomingBedspace = activeBedspaces.maxByOrNull { it.startDate!! }
 
-      if (lastUpcomingBedspace != null && lastUpcomingBedspace.startDate!! > archiveEndDate) {
+      if (lastUpcomingBedspace != null && lastUpcomingBedspace.startDate!! > archivePremisesEndDate) {
         return Cas3FieldValidationError(
           mapOf(
             "$.endDate" to Cas3ValidationMessage(
@@ -716,18 +716,18 @@ class Cas3PremisesService(
         )
       }
 
-      canArchivePremisesBedspaces(premises.id, archiveEndDate)?.let {
+      canArchivePremisesBedspaces(premises.id, archivePremisesEndDate)?.let {
         return Cas3FieldValidationError(it.validationMessages.entries.associate { entry -> entry.key to entry.value })
       }
     }
 
     // archive premises
-    val archivedPremises = archivePremisesAndSaveDomainEvent(premises, archiveEndDate)
+    val archivedPremises = archivePremisesAndSaveDomainEvent(premises, archivePremisesEndDate)
 
     if (activeBedspaces.any()) {
       // archive all online bedspaces
       activeBedspaces.forEach { bedspace ->
-        archiveBedspaceAndSaveDomainEvent(bedspace, archiveEndDate)
+        archiveBedspaceAndSaveDomainEvent(bedspace, archivePremisesEndDate)
       }
     }
 
@@ -1025,8 +1025,8 @@ class Cas3PremisesService(
     val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
       ?: return CasResult.NotFound("Premises", premisesId.toString())
 
-    if (!premises.isPremisesArchived() && premises.startDate <= LocalDate.now(clock)) {
-      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesAlreadyOnline"
+    if (premises.status == PropertyStatus.archived || (premises.endDate != null && premises.endDate!! <= LocalDate.now(clock))) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesAlreadyArchived"
     }
 
     val latestUnarchivePremisesDomainEvent = domainEventRepository.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(

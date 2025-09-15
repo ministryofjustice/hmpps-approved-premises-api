@@ -3841,11 +3841,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         val bedspace = createBedspaceInPremises(premises, previousStartDate, previousEndDate)
 
+        // previous unarchive domain events
         createPremisesUnarchiveDomainEvent(
           premises,
           userEntity,
-          LocalDate.now(clock).minusDays(180),
-          previousEndDate.minusDays(15),
+          previousEndDate.minusDays(180),
+          previousEndDate.plusDays(15),
           previousStartDate.minusDays(30),
         )
 
