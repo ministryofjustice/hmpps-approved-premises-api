@@ -1,19 +1,33 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveActions
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_CREATE_BEDSPACE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_LENGTH_BEDSPACE_REFERENCE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Cas3FieldValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceArchived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceOnline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -23,6 +37,8 @@ class Cas3v2BedspacesService(
   private val characteristicService: CharacteristicService,
   private val cas3BedspacesRepository: Cas3BedspacesRepository,
   private val cas3PremisesService: Cas3v2PremisesService,
+  private val cas3v2DomainEventService: Cas3v2DomainEventService,
+  private val objectMapper: ObjectMapper,
 ) {
   @SuppressWarnings("MagicNumber")
   fun createBedspace(
@@ -111,4 +127,74 @@ class Cas3v2BedspacesService(
     }
     return !validationErrors.any()
   }
+
+  fun getPremisesBedspaces(premisesId: UUID): List<Cas3BedspacesEntity> = cas3BedspacesRepository.findByPremisesId(premisesId)
+
+  fun getBedspacesArchiveHistory(bedspaceIds: List<UUID>): List<Cas3BedspaceArchiveActions> {
+    val domainEvents = cas3v2DomainEventService.getBedspacesActiveDomainEvents(
+      bedspaceIds,
+      listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
+    )
+    return bedspaceIds.map { bedspaceId ->
+      val bedspaceDomainEvents = domainEvents.filter { it.cas3BedspaceId == bedspaceId }
+      val actions = extractEntityFromCasResult(getBedspaceArchiveActions(bedspaceDomainEvents))
+      Cas3BedspaceArchiveActions(bedspaceId, actions)
+    }
+  }
+
+  private fun getBedspaceArchiveActions(domainEvents: List<DomainEventEntity>): CasResult<List<Cas3BedspaceArchiveAction>> {
+    val today = LocalDate.now()
+
+    val archiveHistory = domainEvents
+      .mapNotNull { domainEventEntity ->
+        when (domainEventEntity.type) {
+          DomainEventType.CAS3_BEDSPACE_UNARCHIVED -> {
+            val eventDetails =
+              objectMapper.readValue(domainEventEntity.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails
+            val restartDate = eventDetails.newStartDate
+            if (restartDate <= today) {
+              Cas3BedspaceArchiveAction(
+                status = Cas3BedspaceStatus.online,
+                date = restartDate,
+              )
+            } else {
+              null
+            }
+          }
+
+          DomainEventType.CAS3_BEDSPACE_ARCHIVED -> {
+            val eventDetails =
+              objectMapper.readValue(domainEventEntity.data, CAS3BedspaceArchiveEvent::class.java).eventDetails
+            val endDate = eventDetails.endDate
+            if (endDate <= today) {
+              Cas3BedspaceArchiveAction(
+                status = Cas3BedspaceStatus.archived,
+                date = endDate,
+              )
+            } else {
+              null
+            }
+          }
+
+          else -> return CasResult.GeneralValidationError("Incorrect domain event type for archive history: ${domainEventEntity.type}, ${domainEventEntity.id}")
+        }
+      }.sortedBy { it.date }
+
+    return CasResult.Success(archiveHistory)
+  }
+
+  fun getBedspaceTotals(premises: Cas3PremisesEntity): CasResult.Success<TemporaryAccommodationPremisesTotalBedspacesByStatus> {
+    val bedspaces = cas3BedspacesRepository.findByPremisesId(premises.id)
+
+    return CasResult.Success(
+      TemporaryAccommodationPremisesTotalBedspacesByStatus(
+        premisesId = premises.id,
+        bedspaces.count { isCas3BedspaceOnline(it.startDate, it.endDate) },
+        bedspaces.count { isCas3BedspaceUpcoming(it.startDate) },
+        bedspaces.count { isCas3BedspaceArchived(it.endDate) },
+      ),
+    )
+  }
+
+  fun getBedspaceStatus(bedspace: Cas3BedspacesEntity) = BedspaceStatusHelper.getBedspaceStatus(bedspace.startDate, bedspace.endDate)
 }

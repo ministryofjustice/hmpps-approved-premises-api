@@ -3,16 +3,25 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.v2
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
@@ -217,6 +226,268 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
           .expectStatus()
           .isForbidden
       }
+    }
+  }
+
+  @Nested
+  inner class GetBedspaces {
+    @Test
+    fun `Given a premises with bedspaces when get premises bedspaces then returns OK with correct bedspaces sorted`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(
+          user.probationRegion,
+          status = Cas3PremisesStatus.online,
+        )
+        val expectedBedspaces = listOf(
+          // online bedspaces
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().minusMonths(6))
+            withEndDate(null)
+            withCreatedAt(OffsetDateTime.now().minusMonths(7))
+          }.let {
+            createCas3Bedspace(it, Cas3BedspaceStatus.online)
+          },
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().minusMonths(5))
+            withEndDate(LocalDate.now().plusDays(5))
+            withCreatedAt(OffsetDateTime.now().minusMonths(5))
+          }.let {
+            createCas3Bedspace(it, Cas3BedspaceStatus.online)
+          },
+          // upcoming bedspaces
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().plusDays(5))
+            withEndDate(null)
+          }.let {
+            createCas3Bedspace(it, Cas3BedspaceStatus.upcoming, scheduleUnarchiveDate = it.startDate)
+          },
+          // archived bedspaces
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().minusMonths(4))
+            withEndDate(LocalDate.now().minusDays(1))
+          }.let {
+            createCas3Bedspace(it, Cas3BedspaceStatus.archived)
+          },
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().minusMonths(9))
+            withEndDate(LocalDate.now().minusWeeks(1))
+          }.let {
+            createCas3Bedspace(it, Cas3BedspaceStatus.archived)
+          },
+        )
+
+        val expectedCas3Bedspaces = Cas3Bedspaces(
+          bedspaces = expectedBedspaces,
+          totalOnlineBedspaces = 2,
+          totalUpcomingBedspaces = 1,
+          totalArchivedBedspaces = 2,
+        )
+
+        assertUrlReturnsBedspaces(
+          jwt,
+          "/cas3/v2/premises/${premises.id}/bedspaces",
+          expectedCas3Bedspaces,
+        )
+      }
+    }
+
+    @Test
+    fun `Given a premises with bedspaces when get premises bedspaces then returns OK with correct bedspaces and archive history events in chronological order`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(
+          user.probationRegion,
+          status = Cas3PremisesStatus.online,
+        )
+
+        val expectedBedspaces = listOf(
+          // online bedspaces
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().minusWeeks(1))
+            withEndDate(null)
+          }.let {
+            getExpectedBedspaceWithArchiveHistory(
+              bedspace = it,
+              premises.id,
+              user.id,
+              Cas3BedspaceStatus.online,
+              history = listOf(
+                Cas3BedspaceStatus.archived to LocalDate.now().minusMonths(1),
+                Cas3BedspaceStatus.online to LocalDate.now().minusWeeks(1),
+              ),
+            )
+          },
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().minusDays(5))
+            withEndDate(LocalDate.now().plusDays(5))
+          }.let {
+            val archiveBedspaceInFiveDays = LocalDate.now().plusDays(5)
+            createBedspaceArchiveDomainEvent(bedspaceId = it.id, premises.id, user.id, currentEndDate = null, endDate = archiveBedspaceInFiveDays)
+            getExpectedBedspaceWithArchiveHistory(
+              bedspace = it,
+              premises.id,
+              user.id,
+              Cas3BedspaceStatus.online,
+              history = listOf(
+                Cas3BedspaceStatus.archived to LocalDate.now().minusMonths(2),
+                Cas3BedspaceStatus.online to LocalDate.now().minusMonths(1),
+              ),
+            )
+          },
+          // upcoming bedspaces
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().randomDateAfter(30))
+            withEndDate(null)
+          }.let {
+            createCas3Bedspace(bedspace = it, Cas3BedspaceStatus.upcoming, scheduleUnarchiveDate = it.startDate)
+          },
+          // archived bedspaces
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().minusMonths(4))
+            withEndDate(LocalDate.now().minusDays(1))
+          }.let {
+            getExpectedBedspaceWithArchiveHistory(
+              bedspace = it,
+              premises.id,
+              user.id,
+              Cas3BedspaceStatus.archived,
+              history = listOf(
+                Cas3BedspaceStatus.online to LocalDate.now().minusWeeks(2),
+                Cas3BedspaceStatus.archived to LocalDate.now().minusDays(1),
+              ),
+            )
+          },
+          cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStartDate(LocalDate.now().minusMonths(9))
+            withEndDate(LocalDate.now())
+          }.let {
+            getExpectedBedspaceWithArchiveHistory(
+              bedspace = it,
+              premises.id,
+              user.id,
+              Cas3BedspaceStatus.archived,
+              listOf(
+                Cas3BedspaceStatus.archived to LocalDate.now(),
+              ),
+            )
+          },
+        )
+
+        val expectedCas3Bedspaces = Cas3Bedspaces(
+          bedspaces = expectedBedspaces,
+          totalOnlineBedspaces = 2,
+          totalUpcomingBedspaces = 1,
+          totalArchivedBedspaces = 2,
+        )
+
+        assertUrlReturnsBedspaces(
+          jwt,
+          "/cas3/v2/premises/${premises.id}/bedspaces",
+          expectedCas3Bedspaces,
+        )
+      }
+    }
+
+    @Test
+    fun `Get Bedspaces by ID returns Not Found with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+
+        val premisesId = UUID.randomUUID().toString()
+
+        webTestClient.get()
+          .uri("/cas3/v2/premises/$premisesId/bedspaces")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectHeader().contentType("application/problem+json")
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("title").isEqualTo("Not Found")
+          .jsonPath("status").isEqualTo(404)
+          .jsonPath("detail").isEqualTo("No Premises with an ID of $premisesId could be found")
+      }
+    }
+
+    @Test
+    fun `Trying to get bedspaces the user is not authorized to view should return 403`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { user2, _ ->
+          val premises = givenACas3Premises(
+            user2.probationRegion,
+            status = Cas3PremisesStatus.online,
+          )
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectHeader().contentType("application/problem+json")
+            .expectStatus()
+            .isForbidden
+            .expectBody()
+            .jsonPath("title").isEqualTo("Forbidden")
+            .jsonPath("status").isEqualTo(403)
+            .jsonPath("detail").isEqualTo("You are not authorized to access this endpoint")
+        }
+      }
+    }
+
+    private fun assertUrlReturnsBedspaces(
+      jwt: String,
+      url: String,
+      expectedBedspaces: Cas3Bedspaces,
+    ): WebTestClient.ResponseSpec {
+      val response = webTestClient.get()
+        .uri(url)
+        .headers(buildTemporaryAccommodationHeaders(jwt))
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val responseBody = response
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedBedspaces))
+
+      return response
+    }
+
+    private fun getExpectedBedspaceWithArchiveHistory(
+      bedspace: Cas3BedspacesEntity,
+      premisesId: UUID,
+      userId: UUID,
+      status: Cas3BedspaceStatus,
+      history: List<Pair<Cas3BedspaceStatus, LocalDate>>,
+    ): Cas3Bedspace {
+      history.forEach { (eventStatus, date) ->
+        when (eventStatus) {
+          Cas3BedspaceStatus.archived -> createBedspaceArchiveDomainEvent(bedspace.id, premisesId, userId, null, date)
+          Cas3BedspaceStatus.online -> createBedspaceUnarchiveDomainEvent(
+            bedspace.copy(endDate = date),
+            premisesId,
+            userId,
+            date,
+          )
+          Cas3BedspaceStatus.upcoming -> null
+        }
+      }
+
+      return createCas3Bedspace(
+        bedspace,
+        status,
+        archiveHistory = history.map { Cas3BedspaceArchiveAction(it.first, it.second) },
+      )
     }
   }
 }
