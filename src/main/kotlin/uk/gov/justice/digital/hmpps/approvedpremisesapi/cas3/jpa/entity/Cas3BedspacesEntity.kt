@@ -28,8 +28,8 @@ data class Cas3BedspacesEntity(
   @JoinColumn(name = "premises_id")
   val premises: Cas3PremisesEntity,
 
-  val reference: String,
-  val notes: String?,
+  var reference: String,
+  var notes: String?,
   val startDate: LocalDate?,
   val endDate: LocalDate?,
   val createdAt: OffsetDateTime,

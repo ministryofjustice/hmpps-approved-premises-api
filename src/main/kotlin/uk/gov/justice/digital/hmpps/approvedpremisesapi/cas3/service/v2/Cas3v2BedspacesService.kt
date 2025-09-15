@@ -197,4 +197,32 @@ class Cas3v2BedspacesService(
   }
 
   fun getBedspaceStatus(bedspace: Cas3BedspacesEntity) = BedspaceStatusHelper.getBedspaceStatus(bedspace.startDate, bedspace.endDate)
+
+  fun updateBedspace(
+    premises: Cas3PremisesEntity,
+    bedspaceId: UUID,
+    bedspaceReference: String,
+    notes: String?,
+    characteristicIds: List<UUID>,
+  ): CasResult<Cas3BedspacesEntity> = validatedCasResult {
+    val bedspace = cas3BedspacesRepository.findCas3Bedspace(premises.id, bedspaceId) ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
+    val trimmedReference = bedspaceReference.trim()
+    if (isValidBedspaceReference(trimmedReference) &&
+      premises.bedspaces.any { bedspace -> bedspace.reference.equals(bedspaceReference, ignoreCase = true) }
+    ) {
+      "$.reference" hasValidationError "bedspaceReferenceExists"
+    }
+
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, validationErrors)
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+    bedspace.characteristics = characteristicEntities.filterNotNull().toMutableList()
+    bedspace.reference = trimmedReference
+    bedspace.notes = notes
+
+    val updatedBedspace = cas3BedspacesRepository.save(bedspace)
+
+    return success(updatedBedspace)
+  }
 }
