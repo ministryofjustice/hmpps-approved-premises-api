@@ -189,7 +189,7 @@ class Cas1ProfileTest : IntegrationTestBase() {
         .responseBody!!
 
       assertThat(response.deliusUsername).isEqualTo(deliusUsername)
-      assertThat(response.loadError).isEqualTo(Cas1ProfileResponse.LoadError.staffRecordNotFound)
+      assertThat(response.loadError).isEqualTo(Cas1ProfileResponse.Cas1LoadError.staffRecordNotFound)
     }
 
     @Test
@@ -357,7 +357,7 @@ class Cas1ProfileTest : IntegrationTestBase() {
           objectMapper.writeValueAsString(
             Cas1ProfileResponse(
               deliusUsername = "nonStaffUser",
-              loadError = Cas1ProfileResponse.LoadError.staffRecordNotFound,
+              loadError = Cas1ProfileResponse.Cas1LoadError.staffRecordNotFound,
               null,
             ),
           ),
@@ -395,7 +395,7 @@ class Cas1ProfileTest : IntegrationTestBase() {
         .returnResult()
         .responseBody!!
 
-      assertThat(response.loadError).isEqualTo(Cas1ProfileResponse.LoadError.unsupportedProbationRegion)
+      assertThat(response.loadError).isEqualTo(Cas1ProfileResponse.Cas1LoadError.unsupportedProbationRegion)
     }
   }
 

@@ -43,7 +43,7 @@ class Cas1ProfileController(
         }
       }
 
-      is UserService.GetUserResponse.StaffProbationRegionNotSupported -> Cas1ProfileResponse.LoadError.unsupportedProbationRegion
+      is UserService.GetUserResponse.StaffProbationRegionNotSupported -> Cas1ProfileResponse.Cas1LoadError.unsupportedProbationRegion
     }
 
     val responseToReturn =
@@ -61,8 +61,8 @@ class Cas1ProfileController(
   }
 
   private fun transformCas1ProfileResponseToApi(userName: String, userResponse: UserService.GetUserResponse): Cas1ProfileResponse = when (userResponse) {
-    UserService.GetUserResponse.StaffRecordNotFound -> Cas1ProfileResponse(userName, Cas1ProfileResponse.LoadError.staffRecordNotFound)
-    is UserService.GetUserResponse.StaffProbationRegionNotSupported -> Cas1ProfileResponse(userName, Cas1ProfileResponse.LoadError.unsupportedProbationRegion)
+    UserService.GetUserResponse.StaffRecordNotFound -> Cas1ProfileResponse(userName, Cas1ProfileResponse.Cas1LoadError.staffRecordNotFound)
+    is UserService.GetUserResponse.StaffProbationRegionNotSupported -> Cas1ProfileResponse(userName, Cas1ProfileResponse.Cas1LoadError.unsupportedProbationRegion)
     is UserService.GetUserResponse.Success -> Cas1ProfileResponse(userName, user = userTransformer.transformCas1JpaToApi(userResponse.user))
   }
 }
