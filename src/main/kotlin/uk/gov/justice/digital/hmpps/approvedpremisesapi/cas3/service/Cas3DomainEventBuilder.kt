@@ -205,6 +205,7 @@ class Cas3DomainEventBuilder(
 
   fun getBedspaceArchiveEvent(
     bedspace: BedEntity,
+    premisesId: UUID,
     currentEndDate: LocalDate?,
     user: UserEntity,
   ): DomainEvent<CAS3BedspaceArchiveEvent> {
@@ -223,7 +224,7 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bedspaceArchived,
-        eventDetails = buildCAS3BedspaceArchiveEventDetails(bedspace, currentEndDate, user),
+        eventDetails = buildCAS3BedspaceArchiveEventDetails(bedspace, premisesId, currentEndDate, user),
       ),
     )
   }
@@ -278,6 +279,7 @@ class Cas3DomainEventBuilder(
 
   fun getBedspaceUnarchiveEvent(
     bedspace: BedEntity,
+    premisesId: UUID,
     currentStartDate: LocalDate,
     currentEndDate: LocalDate,
     user: UserEntity,
@@ -295,7 +297,7 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bedspaceUnarchived,
-        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(bedspace, currentStartDate, currentEndDate, user),
+        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(bedspace, premisesId, currentStartDate, currentEndDate, user),
       ),
     )
   }
@@ -500,6 +502,7 @@ class Cas3DomainEventBuilder(
 
   private fun buildCAS3BedspaceArchiveEventDetails(
     bedspace: BedEntity,
+    premisesId: UUID,
     currentEndDate: LocalDate?,
     user: UserEntity,
   ) = CAS3BedspaceArchiveEventDetails(
@@ -507,11 +510,12 @@ class Cas3DomainEventBuilder(
     userId = user.id,
     currentEndDate = currentEndDate,
     endDate = bedspace.endDate!!,
-    premisesId = bedspace.room.premises.id,
+    premisesId = premisesId,
   )
 
   private fun buildCAS3BedspaceUnarchiveEventDetails(
     bedspace: BedEntity,
+    premisesId: UUID,
     currentStartDate: LocalDate,
     currentEndDate: LocalDate,
     user: UserEntity,
@@ -521,7 +525,7 @@ class Cas3DomainEventBuilder(
     currentStartDate = currentStartDate,
     currentEndDate = currentEndDate,
     newStartDate = bedspace.startDate!!,
-    premisesId = bedspace.room.premises.id,
+    premisesId = premisesId,
   )
 
   private fun buildCAS3BookingCancelledEventDetails(

@@ -253,9 +253,9 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun saveBedspaceArchiveEvent(bedspace: BedEntity, currentEndDate: LocalDate?) {
+  fun saveBedspaceArchiveEvent(bedspace: BedEntity, premisesId: UUID, currentEndDate: LocalDate?) {
     val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, currentEndDate, user)
+    val domainEvent = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premisesId, currentEndDate, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -267,9 +267,9 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun saveBedspaceUnarchiveEvent(bedspace: BedEntity, currentStartDate: LocalDate, currentEndDate: LocalDate) {
+  fun saveBedspaceUnarchiveEvent(bedspace: BedEntity, premisesId: UUID, currentStartDate: LocalDate, currentEndDate: LocalDate) {
     val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, currentStartDate, currentEndDate, user)
+    val domainEvent = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, premisesId, currentStartDate, currentEndDate, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
