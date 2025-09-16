@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.v2
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.CoreMatchers.nullValue
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -588,6 +589,129 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Bad Request")
           .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+      }
+    }
+  }
+
+  @Nested
+  inner class GetBedspaceTotals {
+    @Test
+    fun `Get premises bedspace totals returns 200 with correct totals`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(
+          user.probationRegion,
+          status = Cas3PremisesStatus.online,
+        )
+        // Online
+        cas3BedspaceEntityFactory.produceAndPersistMultiple(3) {
+          withPremises(premises)
+          withStartDate(LocalDate.now().minusDays(10))
+          withEndDate(null)
+        }
+        // Upcoming
+        cas3BedspaceEntityFactory.produceAndPersistMultiple(4) {
+          withPremises(premises)
+          withStartDate(LocalDate.now().plusDays(5))
+          withEndDate(null)
+        }
+        // Archived
+        cas3BedspaceEntityFactory.produceAndPersistMultiple(3) {
+          withPremises(premises)
+          withStartDate(LocalDate.now().minusDays(30))
+          withEndDate(LocalDate.now().minusDays(5))
+        }
+
+        webTestClient.get()
+          .uri("/cas3/v2/premises/${premises.id}/bedspace-totals")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.id").isEqualTo(premises.id.toString())
+          .jsonPath("$.status").isEqualTo("online")
+          .jsonPath("$.premisesEndDate").value(nullValue())
+          .jsonPath("$.totalOnlineBedspaces").isEqualTo(3)
+          .jsonPath("$.totalUpcomingBedspaces").isEqualTo(4)
+          .jsonPath("$.totalArchivedBedspaces").isEqualTo(3)
+      }
+    }
+
+    @Test
+    fun `Get premises bedspace totals returns 200 with zero totals when premises has no bedspaces`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(
+          user.probationRegion,
+          status = Cas3PremisesStatus.online,
+        )
+
+        webTestClient.get()
+          .uri("/cas3/v2/premises/${premises.id}/bedspace-totals")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.id").isEqualTo(premises.id.toString())
+          .jsonPath("$.status").isEqualTo("online")
+          .jsonPath("$.premisesEndDate").value(nullValue())
+          .jsonPath("$.totalOnlineBedspaces").isEqualTo(0)
+          .jsonPath("$.totalUpcomingBedspaces").isEqualTo(0)
+          .jsonPath("$.totalArchivedBedspaces").isEqualTo(0)
+      }
+    }
+
+    @Test
+    fun `Get premises bedspace totals returns 404 when premises does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val nonExistentPremisesId = UUID.randomUUID()
+
+        webTestClient.get()
+          .uri("/cas3/v2/premises/$nonExistentPremisesId/bedspace-totals")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Get premises bedspace totals returns 403 when user does not have permission to view premises in that region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(
+          status = Cas3PremisesStatus.online,
+        )
+        webTestClient.get()
+          .uri("/cas3/v2/premises/${premises.id}/bedspace-totals")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get premises bedspace totals returns 200 with archived status for archived premises`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(
+          user.probationRegion,
+          status = Cas3PremisesStatus.archived,
+          endDate = LocalDate.now().minusDays(1),
+        )
+
+        webTestClient.get()
+          .uri("/cas3/v2/premises/${premises.id}/bedspace-totals")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.id").isEqualTo(premises.id.toString())
+          .jsonPath("$.status").isEqualTo("archived")
+          .jsonPath("$.premisesEndDate").isEqualTo(premises.endDate.toString())
+          .jsonPath("$.totalOnlineBedspaces").isEqualTo(0)
+          .jsonPath("$.totalUpcomingBedspaces").isEqualTo(0)
+          .jsonPath("$.totalArchivedBedspaces").isEqualTo(0)
       }
     }
   }

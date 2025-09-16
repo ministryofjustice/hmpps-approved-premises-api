@@ -70,6 +70,7 @@ data class Cas3PremisesEntity(
 
 ) {
   fun isPremisesScheduledToArchive(): Boolean = status == Cas3PremisesStatus.archived && endDate != null && endDate!! > LocalDate.now()
+  fun isPremisesArchived(): Boolean = (endDate != null && endDate!! <= LocalDate.now()) || startDate.isAfter(LocalDate.now())
 }
 
 @Repository
