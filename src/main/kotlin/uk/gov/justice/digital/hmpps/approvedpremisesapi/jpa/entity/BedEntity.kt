@@ -80,11 +80,11 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
       FROM beds b
       INNER JOIN rooms r ON b.room_id = r.id
       INNER JOIN premises p ON r.premises_id = p.id
-      WHERE p.service = :service
+      WHERE p.service = :service and b.created_date IS NULL
     """,
     nativeQuery = true,
   )
-  fun <T : BedEntity> findAllCas3Bedspaces(
+  fun <T : BedEntity> findAllCas3BedspacesWithNotCreateDate(
     service: String,
     type: Class<T>,
     pageable: Pageable?,
