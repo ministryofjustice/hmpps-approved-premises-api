@@ -20,7 +20,6 @@ class Cas3UpdateBedspaceCreatedDateJob(
 
   @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught", "NestedBlockDepth")
   override fun process(pageSize: Int) {
-    var page = 1
     var hasNext = true
     var slice: Slice<BedEntity>
     var bedIds = setOf<String>()
@@ -28,7 +27,7 @@ class Cas3UpdateBedspaceCreatedDateJob(
     try {
       while (hasNext) {
         log.info("Getting next page")
-        slice = bedRepository.findAllCas3Bedspaces(temporaryAccommodation.value, BedEntity::class.java, PageRequest.of(page - 1, pageSize))
+        slice = bedRepository.findAllCas3BedspacesWithNotCreateDate(temporaryAccommodation.value, BedEntity::class.java, PageRequest.of(0, pageSize))
 
         bedIds = slice.map { it.id.toString() }.toSet()
 
@@ -40,7 +39,6 @@ class Cas3UpdateBedspaceCreatedDateJob(
 
         entityManager.clear()
         hasNext = slice.hasNext()
-        page += 1
       }
     } catch (exception: Exception) {
       log.error("Unable to update created date for beds with ids ${bedIds.joinToString()}", exception)

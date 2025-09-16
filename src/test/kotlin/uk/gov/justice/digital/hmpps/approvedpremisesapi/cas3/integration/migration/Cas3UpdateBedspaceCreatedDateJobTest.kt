@@ -18,6 +18,7 @@ class Cas3UpdateBedspaceCreatedDateJobTest : MigrationJobTestBase() {
         withYieldedPremises { premises }
       }
     }
+    withCreatedDate(null)
     withStartDate(startDate)
   }
 

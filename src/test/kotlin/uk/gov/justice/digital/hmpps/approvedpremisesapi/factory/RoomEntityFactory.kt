@@ -82,7 +82,7 @@ class BedEntityFactory : Factory<BedEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var code: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var room: Yielded<RoomEntity>? = null
-  private var createdDate: Yielded<LocalDate>? = null
+  private var createdDate: Yielded<LocalDate?>? = null
   private var startDate: Yielded<LocalDate> = { LocalDate.now().minusDays(90) }
   private var endDate: Yielded<LocalDate?>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
@@ -115,7 +115,7 @@ class BedEntityFactory : Factory<BedEntity> {
     this.room = room
   }
 
-  fun withCreatedDate(createdDate: LocalDate) = apply {
+  fun withCreatedDate(createdDate: LocalDate?) = apply {
     this.createdDate = { createdDate }
   }
 
