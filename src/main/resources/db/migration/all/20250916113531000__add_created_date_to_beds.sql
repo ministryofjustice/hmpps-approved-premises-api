@@ -1,0 +1,2 @@
+ALTER TABLE beds
+ADD COLUMN created_date DATE NULL;

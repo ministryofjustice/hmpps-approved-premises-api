@@ -53,7 +53,7 @@ class Cas3BedspaceTransformerTest {
       Cas3Bedspace(
         id = bed.id,
         reference = room.name,
-        startDate = bed.createdAt!!.toLocalDate(),
+        startDate = bed.createdDate,
         endDate = bed.endDate,
         scheduleUnarchiveDate = scheduledUnarchiveDate,
         status = status,
