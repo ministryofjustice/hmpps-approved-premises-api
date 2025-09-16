@@ -2264,6 +2264,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val allEvents = domainEventRepository.findAll()
         assertThat(allEvents).hasSize(1)
         assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
+        assertThat(allEvents[0].cas3BedspaceId).isEqualTo(bedspaceOne.id)
+        assertThat(allEvents[0].cas3PremisesId).isEqualTo(premises.id)
       }
     }
 
@@ -2290,15 +2292,18 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("id").isEqualTo(bedspaceOne.id)
           .jsonPath("endDate").isEqualTo(archiveBedspace.endDate)
 
-        val allEvents = domainEventRepository.findAll()
-        assertThat(allEvents).hasSize(2)
-        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
-        assertThat(allEvents[1].type).isEqualTo(DomainEventType.CAS3_PREMISES_ARCHIVED)
-
         val archivedPremises = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
         assertThat(archivedPremises).isNotNull()
         assertThat(archivedPremises?.endDate).isEqualTo(archiveBedspace.endDate)
         assertThat(archivedPremises?.status).isEqualTo(PropertyStatus.archived)
+
+        val allEvents = domainEventRepository.findAll()
+        assertThat(allEvents).hasSize(2)
+        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
+        assertThat(allEvents[0].cas3BedspaceId).isEqualTo(bedspaceOne.id)
+        assertThat(allEvents[0].cas3PremisesId).isEqualTo(premises.id)
+        assertThat(allEvents[1].type).isEqualTo(DomainEventType.CAS3_PREMISES_ARCHIVED)
+        assertThat(allEvents[1].cas3PremisesId).isEqualTo(premises.id)
       }
     }
 
@@ -2326,15 +2331,18 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .jsonPath("id").isEqualTo(bedspaceOne.id)
           .jsonPath("endDate").isEqualTo(archiveBedspace.endDate)
 
-        val allEvents = domainEventRepository.findAll()
-        assertThat(allEvents).hasSize(2)
-        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
-        assertThat(allEvents[1].type).isEqualTo(DomainEventType.CAS3_PREMISES_ARCHIVED)
-
         val archivedPremises = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
         assertThat(archivedPremises).isNotNull()
         assertThat(archivedPremises?.endDate).isEqualTo(latestBedspaceArchiveDate)
         assertThat(archivedPremises?.status).isEqualTo(PropertyStatus.archived)
+
+        val allEvents = domainEventRepository.findAll()
+        assertThat(allEvents).hasSize(2)
+        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
+        assertThat(allEvents[0].cas3BedspaceId).isEqualTo(bedspaceOne.id)
+        assertThat(allEvents[0].cas3PremisesId).isEqualTo(premises.id)
+        assertThat(allEvents[1].type).isEqualTo(DomainEventType.CAS3_PREMISES_ARCHIVED)
+        assertThat(allEvents[1].cas3PremisesId).isEqualTo(premises.id)
       }
     }
 
@@ -2581,6 +2589,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val updatedBedspace = bedRepository.findById(archivedBedspace.id).get()
         assertThat(updatedBedspace.startDate).isEqualTo(restartDate)
         assertThat(updatedBedspace.endDate).isNull()
+
+        val allEvents = domainEventRepository.findAll()
+        assertThat(allEvents).hasSize(1)
+        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+        assertThat(allEvents[0].cas3BedspaceId).isEqualTo(archivedBedspace.id)
+        assertThat(allEvents[0].cas3PremisesId).isEqualTo(premises.id)
       }
     }
 
@@ -2622,7 +2636,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val allEvents = domainEventRepository.findAll()
         assertThat(allEvents).hasSize(2)
         assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+        assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+        assertThat(allEvents[0].cas3BedspaceId).isEqualTo(archivedBedspace.id)
+        assertThat(allEvents[0].cas3PremisesId).isEqualTo(premises.id)
         assertThat(allEvents[1].type).isEqualTo(DomainEventType.CAS3_PREMISES_UNARCHIVED)
+        assertThat(allEvents[1].cas3PremisesId).isEqualTo(premises.id)
       }
     }
 
@@ -2664,6 +2682,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val allEvents = domainEventRepository.findAll()
         assertThat(allEvents).hasSize(1)
         assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+        assertThat(allEvents[0].cas3BedspaceId).isEqualTo(archivedBedspace.id)
+        assertThat(allEvents[0].cas3PremisesId).isEqualTo(premises.id)
       }
     }
 

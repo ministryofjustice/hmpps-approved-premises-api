@@ -296,6 +296,8 @@ class Cas3DomainEventService(
     val cas3PremisesId = when (domainEvent.data) {
       is CAS3PremisesArchiveEvent -> domainEvent.data.eventDetails.premisesId
       is CAS3PremisesUnarchiveEvent -> domainEvent.data.eventDetails.premisesId
+      is CAS3BedspaceArchiveEvent -> domainEvent.data.eventDetails.premisesId
+      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.eventDetails.premisesId
       else -> null
     }
 

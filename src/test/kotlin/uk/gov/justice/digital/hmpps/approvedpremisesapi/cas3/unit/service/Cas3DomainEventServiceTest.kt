@@ -1604,7 +1604,7 @@ class Cas3DomainEventServiceTest {
           it.id == domainEvent.id &&
             it.type == DomainEventType.CAS3_BEDSPACE_UNARCHIVED &&
             it.crn == domainEvent.crn &&
-            it.cas3PremisesId == null &&
+            it.cas3PremisesId == premises.id &&
             it.cas3BedspaceId == bedspace.id &&
             it.applicationId == null &&
             it.cas1SpaceBookingId == null &&
@@ -1670,7 +1670,7 @@ class Cas3DomainEventServiceTest {
           it.id == domainEvent.id &&
             it.type == DomainEventType.CAS3_BEDSPACE_ARCHIVED &&
             it.crn == domainEvent.crn &&
-            it.cas3PremisesId == null &&
+            it.cas3PremisesId == premises.id &&
             it.cas3BedspaceId == bedspace.id &&
             it.applicationId == null &&
             it.cas1SpaceBookingId == null &&
