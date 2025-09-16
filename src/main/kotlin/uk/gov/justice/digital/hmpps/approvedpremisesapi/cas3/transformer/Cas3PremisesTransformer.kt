@@ -36,7 +36,7 @@ class Cas3PremisesTransformer(
     characteristics = premisesEntity.characteristics.map(characteristicTransformer::transformJpaToApi).sortedBy { it.id },
     startDate = premisesEntity.createdAt.toLocalDate(),
     endDate = premisesEntity.endDate,
-    scheduleUnarchiveDate = isPremisesScheduleToUnarchive(premisesEntity),
+    scheduleUnarchiveDate = isPremisesScheduleToUnarchive(premisesEntity.startDate),
     status = getPremisesStatus(premisesEntity),
     notes = premisesEntity.notes,
     turnaroundWorkingDays = premisesEntity.turnaroundWorkingDays,
@@ -52,5 +52,5 @@ class Cas3PremisesTransformer(
     Cas3PremisesStatus.online
   }
 
-  private fun isPremisesScheduleToUnarchive(premises: TemporaryAccommodationPremisesEntity) = premises.startDate.takeIf { it.isAfter(LocalDate.now()) }
+  private fun isPremisesScheduleToUnarchive(premisesStartDate: LocalDate) = premisesStartDate.takeIf { it.isAfter(LocalDate.now()) }
 }
