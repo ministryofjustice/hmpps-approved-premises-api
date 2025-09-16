@@ -81,11 +81,10 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
       INNER JOIN rooms r ON b.room_id = r.id
       INNER JOIN premises p ON r.premises_id = p.id
       WHERE p.service = :service
-      AND b.created_at IS NULL
     """,
     nativeQuery = true,
   )
-  fun <T : BedEntity> findBedByCreatedAtNull(
+  fun <T : BedEntity> findAllCas3Bedspaces(
     service: String,
     type: Class<T>,
     pageable: Pageable?,
@@ -216,7 +215,7 @@ data class BedEntity(
   @ManyToOne
   @JoinColumn(name = "room_id")
   val room: RoomEntity,
-  val createdDate: LocalDate?,
+  var createdDate: LocalDate?,
   val startDate: LocalDate?,
   /**
    * For CAS1 this is inclusive (i.e. bed is not available on the end date)
