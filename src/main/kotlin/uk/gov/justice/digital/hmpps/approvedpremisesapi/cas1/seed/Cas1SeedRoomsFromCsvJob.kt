@@ -149,6 +149,7 @@ class ApprovedPremisesRoomsSeedJob(
         name = "${row.roomNumber} - ${row.bedCount}",
         code = row.bedCode,
         room = room,
+        createdDate = null,
         startDate = null,
         endDate = null,
         createdAt = OffsetDateTime.now(),

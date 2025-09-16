@@ -121,6 +121,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
 
     val bedspace = bedEntityFactory.produceAndPersist {
       withRoom(room)
+      withCreatedDate(startDate)
       withStartDate(startDate)
       withEndDate(endDate)
     }.apply {
@@ -200,7 +201,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
   ) = Cas3Bedspace(
     id = bed.id,
     reference = room.name,
-    startDate = bed.createdAt.toLocalDate(),
+    startDate = bed.createdDate,
     characteristics = room.characteristics.map { characteristic ->
       Characteristic(
         id = characteristic.id,

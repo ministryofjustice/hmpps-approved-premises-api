@@ -229,6 +229,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         name = bed.bedName,
         code = bed.bedCode,
         room = room,
+        createdDate = null,
         startDate = null,
         endDate = null,
         createdAt = OffsetDateTime.now(),

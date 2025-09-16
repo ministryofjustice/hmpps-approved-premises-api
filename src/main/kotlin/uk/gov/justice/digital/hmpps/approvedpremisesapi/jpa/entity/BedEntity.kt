@@ -216,6 +216,7 @@ data class BedEntity(
   @ManyToOne
   @JoinColumn(name = "room_id")
   val room: RoomEntity,
+  val createdDate: LocalDate?,
   val startDate: LocalDate?,
   /**
    * For CAS1 this is inclusive (i.e. bed is not available on the end date)

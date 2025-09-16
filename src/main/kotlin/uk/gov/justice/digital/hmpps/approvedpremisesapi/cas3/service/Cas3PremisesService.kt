@@ -553,6 +553,7 @@ class Cas3PremisesService(
       name = "default-bed",
       code = null,
       room = room,
+      createdDate = startDate,
       startDate = startDate,
       endDate = null,
       createdAt = OffsetDateTime.now(),

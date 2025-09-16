@@ -1330,13 +1330,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         // online bedspaces
         val bedspaceOne = createBedspaceInPremises(premises, startDate = LocalDate.now().minusMonths(6), endDate = null)
-        bedspaceOne.createdAt = OffsetDateTime.now().minusMonths(7)
-        bedRepository.saveAndFlush(bedspaceOne)
         expectedBedspaces.add(createCas3Bedspace(bedspaceOne, bedspaceOne.room, Cas3BedspaceStatus.online))
 
         val bedspaceTwo = createBedspaceInPremises(premises, startDate = LocalDate.now().minusMonths(5), endDate = LocalDate.now().plusDays(5))
-        bedspaceTwo.createdAt = OffsetDateTime.now().minusMonths(5)
-        bedRepository.saveAndFlush(bedspaceTwo)
         expectedBedspaces.add(createCas3Bedspace(bedspaceTwo, bedspaceTwo.room, Cas3BedspaceStatus.online))
 
         // upcoming bedspaces
@@ -1574,9 +1570,6 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           listOf(roomCharacteristicOne, roomCharacteristicTwo),
         )
 
-        bedspace.createdAt = OffsetDateTime.now().minusDays(70)
-        bedRepository.saveAndFlush(bedspace)
-
         val archiveBedspaceYesterday = LocalDate.now().minusDays(1)
         createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, null, archiveBedspaceYesterday)
 
@@ -1619,7 +1612,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val expectedBedspace = Cas3Bedspace(
           id = bedspace.id,
           reference = bedspace.room.name,
-          startDate = LocalDate.now().minusDays(70),
+          startDate = bedspace.createdDate,
           endDate = bedspace.endDate,
           status = Cas3BedspaceStatus.online,
           archiveHistory = listOf(
@@ -1744,6 +1737,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       }
 
       val bedspace = bedEntityFactory.produceAndPersist {
+        withCreatedDate(LocalDate.now().minusDays(120))
         withStartDate(LocalDate.now().minusDays(120))
         withRoom(room)
       }
@@ -1837,7 +1831,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .isCreated
           .expectBody()
           .jsonPath("reference").isEqualTo(newBedspace.reference)
-          .jsonPath("startDate").isEqualTo(LocalDate.now())
+          .jsonPath("startDate").isEqualTo(bedspaceStartDate)
           .jsonPath("notes").isEqualTo(newBedspace.notes)
           .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
           .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
@@ -3709,10 +3703,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val originalStartDate = LocalDate.now(clock).minusDays(10)
         val originalEndDate = LocalDate.now(clock).minusDays(3)
 
-        val createdAt = OffsetDateTime.now().minusDays(120)
         val scheduledBedspaceToUnarchived = createBedspaceInPremises(premises, originalStartDate, originalEndDate)
-        scheduledBedspaceToUnarchived.createdAt = createdAt
-        bedRepository.saveAndFlush(scheduledBedspaceToUnarchived)
 
         createBedspaceUnarchiveDomainEvent(scheduledBedspaceToUnarchived, premises.id, userEntity.id, LocalDate.now(clock).minusDays(30))
         val lastBedspaceUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(scheduledBedspaceToUnarchived, premises.id, userEntity.id, LocalDate.now(clock).plusDays(10))
@@ -3725,11 +3716,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           .isOk
           .expectBody()
           .jsonPath("id").isEqualTo(scheduledBedspaceToUnarchived.id)
-          .jsonPath("startDate").isEqualTo(createdAt.toLocalDate())
+          .jsonPath("startDate").isEqualTo(scheduledBedspaceToUnarchived.createdDate)
           .jsonPath("endDate").isEqualTo(originalEndDate)
 
         // Verify the bedspace was updated
         val updatedBedspace = bedRepository.findById(scheduledBedspaceToUnarchived.id).get()
+        assertThat(updatedBedspace.createdDate).isEqualTo(scheduledBedspaceToUnarchived.createdDate)
         assertThat(updatedBedspace.startDate).isEqualTo(originalStartDate)
         assertThat(updatedBedspace.endDate).isEqualTo(originalEndDate)
 
@@ -3917,7 +3909,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         // Verify that premise was updated
         val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
         assertThat(updatedPremises.status).isEqualTo(PropertyStatus.archived)
-        assertThat(updatedPremises.startDate).isEqualTo(premises.createdAt?.toLocalDate())
+        assertThat(updatedPremises.startDate).isEqualTo(premises.createdAt.toLocalDate())
         assertThat(updatedPremises.endDate).isEqualTo(previousEndDate)
 
         val updatedPremisesUnarchiveDomainEvent = domainEventRepository.findByIdOrNull(lastPremisesUnarchiveDomainEvent.id)

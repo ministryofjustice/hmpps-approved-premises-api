@@ -18,7 +18,7 @@ class Cas3BedspaceTransformer(
   fun transformJpaToApi(bedspace: BedEntity, status: Cas3BedspaceStatus, archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList()) = Cas3Bedspace(
     id = bedspace.id,
     reference = bedspace.room.name,
-    startDate = bedspace.createdAt.toLocalDate(),
+    startDate = bedspace.createdDate,
     endDate = bedspace.endDate,
     scheduleUnarchiveDate = isBedspaceScheduledToUnarchive(bedspace),
     status = status,
