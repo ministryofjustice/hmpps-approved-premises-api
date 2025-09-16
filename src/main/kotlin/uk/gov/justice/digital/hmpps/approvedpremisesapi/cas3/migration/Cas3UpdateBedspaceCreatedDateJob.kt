@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 
 @Component
 class Cas3UpdateBedspaceCreatedDateJob(
@@ -21,6 +20,7 @@ class Cas3UpdateBedspaceCreatedDateJob(
 
   @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught", "NestedBlockDepth")
   override fun process(pageSize: Int) {
+    var page = 1
     var hasNext = true
     var slice: Slice<BedEntity>
     var bedIds = setOf<String>()
@@ -28,23 +28,22 @@ class Cas3UpdateBedspaceCreatedDateJob(
     try {
       while (hasNext) {
         log.info("Getting next page")
-        slice = bedRepository.findBedByCreatedAtNull(temporaryAccommodation.value, BedEntity::class.java, PageRequest.of(0, pageSize))
+        slice = bedRepository.findAllCas3Bedspaces(temporaryAccommodation.value, BedEntity::class.java, PageRequest.of(page - 1, pageSize))
 
         bedIds = slice.map { it.id.toString() }.toSet()
 
         slice.content.forEach {
-          if (it.createdAt == null && it.startDate != null) {
-            log.info("Updating bed created_at for bed id ${it.id}")
-            it.createdAt = it.startDate!!.toLocalDateTime()
-            bedRepository.save(it)
-          }
+          log.info("Updating bed created date for bed id ${it.id}")
+          it.createdDate = it.startDate
+          bedRepository.save(it)
         }
 
         entityManager.clear()
         hasNext = slice.hasNext()
+        page += 1
       }
     } catch (exception: Exception) {
-      log.error("Unable to update created_at for beds with ids ${bedIds.joinToString()}", exception)
+      log.error("Unable to update created date for beds with ids ${bedIds.joinToString()}", exception)
     }
   }
 }
