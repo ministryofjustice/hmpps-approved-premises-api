@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
@@ -71,10 +70,11 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
           status = Cas3PremisesStatus.archived,
           endDate = LocalDate.now().plusDays(3),
         )
+        val bedspaceStartDate = LocalDate.now().minusDays(2)
         val bedspaceCharacteristics = cas3BedspaceCharacteristicEntityFactory.produceAndPersistMultiple(5)
         val newBedspace = Cas3NewBedspace(
           reference = randomStringMultiCaseWithNumbers(10),
-          startDate = LocalDate.now().minusDays(2),
+          startDate = bedspaceStartDate,
           characteristicIds = bedspaceCharacteristics.map { it.id },
           notes = randomStringLowerCase(100),
         )
@@ -88,7 +88,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
           .isCreated
           .expectBody()
           .jsonPath("reference").isEqualTo(newBedspace.reference)
-          .jsonPath("startDate").isEqualTo(LocalDate.now())
+          .jsonPath("startDate").isEqualTo(bedspaceStartDate)
           .jsonPath("notes").isEqualTo(newBedspace.notes.toString())
           .jsonPath("bedspaceCharacteristics[*].id").isEqualTo(bedspaceCharacteristics.map { it.id.toString() })
           .jsonPath("bedspaceCharacteristics[*].name").isEqualTo(bedspaceCharacteristics.map { it.name })
@@ -248,7 +248,6 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
             withPremises(premises)
             withStartDate(LocalDate.now().minusMonths(6))
             withEndDate(null)
-            withCreatedAt(OffsetDateTime.now().minusMonths(7))
           }.let {
             createCas3Bedspace(it, Cas3BedspaceStatus.online)
           },
@@ -256,7 +255,6 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
             withPremises(premises)
             withStartDate(LocalDate.now().minusMonths(5))
             withEndDate(LocalDate.now().plusDays(5))
-            withCreatedAt(OffsetDateTime.now().minusMonths(5))
           }.let {
             createCas3Bedspace(it, Cas3BedspaceStatus.online)
           },

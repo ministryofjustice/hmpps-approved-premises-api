@@ -91,6 +91,8 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
         bedEntityFactory.produceAndPersist {
           withRoom(room)
           withEndDate(endDate)
+          withStartDate(LocalDate.now().minusDays(90))
+          withCreatedDate(LocalDate.now().minusDays(90))
         }.apply {
           premise.rooms
             .first { it.id == room.id }
@@ -226,7 +228,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
   ) = Cas3Bedspace(
     id = bedspace.id,
     reference = bedspace.reference,
-    startDate = bedspace.createdAt!!.toLocalDate(),
+    startDate = bedspace.createdDate,
     bedspaceCharacteristics = bedspace.characteristics.map { characteristic ->
       Cas3BedspaceCharacteristic(
         id = characteristic.id,

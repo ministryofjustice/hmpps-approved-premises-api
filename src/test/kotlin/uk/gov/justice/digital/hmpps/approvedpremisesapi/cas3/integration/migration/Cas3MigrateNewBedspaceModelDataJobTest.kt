@@ -133,6 +133,7 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
       assertThat(bedspace.endDate).isEqualTo(expectedBedToMatch.endDate)
       assertThat(bedspace.startDate).isEqualTo(expectedBedToMatch.startDate)
       assertThat(bedspace.createdAt).isEqualTo(expectedBedToMatch.createdAt)
+      assertThat(bedspace.createdDate).isEqualTo(expectedBedToMatch.createdDate)
       assertThatBedspaceCharacteristicsMatch(bedspace, expectedRoomToMatch)
     }
   }

@@ -54,6 +54,8 @@ class Cas3VoidBedspaceJobTest : MigrationJobTestBase() {
                 withPremises(premises)
               },
             )
+            withStartDate(LocalDate.now().minusDays(90))
+            withCreatedDate(LocalDate.now().minusDays(90))
           },
         )
         withPremises(premises)

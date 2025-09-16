@@ -30,7 +30,7 @@ class Cas3BedspaceTransformer(
   fun transformJpaToApi(jpa: Cas3BedspacesEntity, status: Cas3BedspaceStatus, archiveHistory: List<Cas3BedspaceArchiveAction> = emptyList()) = Cas3Bedspace(
     id = jpa.id,
     reference = jpa.reference,
-    startDate = jpa.createdAt.toLocalDate(),
+    startDate = jpa.createdDate,
     endDate = jpa.endDate,
     scheduleUnarchiveDate = isBedspaceScheduledToUnarchive(jpa),
     notes = jpa.notes,
