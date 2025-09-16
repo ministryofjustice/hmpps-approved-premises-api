@@ -102,6 +102,7 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       assertPremisesFilteredByPostcode(
         jwt,
         premisesSearchResults,
+        premisesStatus,
         postcodeToSearchBy,
         postcodeToSearchBy,
       )
@@ -112,6 +113,7 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       assertPremisesFilteredByPostcode(
         jwt,
         premisesSearchResults,
+        premisesStatus,
         postcodeToSearchBy,
         postcodeToSearchBy.replace(" ", ""),
       )
@@ -122,6 +124,7 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       assertPremisesFilteredByPostcode(
         jwt,
         premisesSearchResults,
+        premisesStatus,
         postcodeToSearchBy,
         postcodeToSearchBy.split(" ").first(),
       )
@@ -149,6 +152,7 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       assertPremisesFilteredByAddress(
         jwt,
         premisesSearchResults,
+        premisesStatus,
         addressLineField,
         addressToSearchBy,
         addressToSearchBy,
@@ -164,6 +168,7 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       assertPremisesFilteredByAddress(
         jwt,
         premisesSearchResults,
+        premisesStatus,
         addressLineField,
         addressToSearchBy,
         addressToSearchBy.split(" ").last(),
@@ -213,84 +218,105 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
     val premisesSearchResult = mutableListOf<Cas3PremisesSearchResult>()
     val allPremises = mutableListOf<TemporaryAccommodationPremisesEntity>()
 
-    if (premisesStatus == null || premisesStatus == Cas3PremisesStatus.online) {
-      val onlinePremisesWithBedspaceWithoutEndDate = getListPremisesByStatus(
-        probationRegion = probationRegion,
-        probationDeliveryUnit = probationDeliveryUnit,
-        localAuthorityArea = localAuthorityArea,
-        numberOfPremises = 5,
-        propertyStatus = PropertyStatus.active,
-      ).map { premises ->
-        val onlineBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.online, true)
-        val upcomingBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.upcoming, true)
-        premisesSearchResult.add(createPremisesSearchResult(premises, (onlineBedspacesSearchResult + upcomingBedspacesSearchResult)))
-        premises
+    val onlinePremisesWithBedspaceWithoutEndDate = getListPremisesByStatus(
+      probationRegion = probationRegion,
+      probationDeliveryUnit = probationDeliveryUnit,
+      localAuthorityArea = localAuthorityArea,
+      numberOfPremises = 3,
+      startDate = LocalDate.now().randomDateBefore(90),
+      endDate = null,
+      propertyStatus = PropertyStatus.active,
+    ).map { premises ->
+      val onlineBedspacesSearchResult =
+        createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.online, true)
+      val upcomingBedspacesSearchResult =
+        createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.upcoming, true)
+      if (premisesStatus == null || premisesStatus == Cas3PremisesStatus.online) {
+        premisesSearchResult.add(
+          createPremisesSearchResult(premises, (onlineBedspacesSearchResult + upcomingBedspacesSearchResult)),
+        )
       }
+      premises
+    }
 
-      allPremises.addAll(onlinePremisesWithBedspaceWithoutEndDate)
-
-      val onlinePremisesWithBedspaceWithEndDate = getListPremisesByStatus(
-        probationRegion = probationRegion,
-        probationDeliveryUnit = probationDeliveryUnit,
-        localAuthorityArea = localAuthorityArea,
-        numberOfPremises = 5,
-        propertyStatus = PropertyStatus.active,
-      ).map { premises ->
-        val onlineBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.online)
-        val upcomingBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.upcoming)
-        premisesSearchResult.add(createPremisesSearchResult(premises, (onlineBedspacesSearchResult + upcomingBedspacesSearchResult)))
-        premises
+    val onlinePremisesWithBedspaceWithEndDate = getListPremisesByStatus(
+      probationRegion = probationRegion,
+      probationDeliveryUnit = probationDeliveryUnit,
+      localAuthorityArea = localAuthorityArea,
+      numberOfPremises = 3,
+      propertyStatus = PropertyStatus.active,
+      startDate = LocalDate.now().randomDateBefore(180),
+      endDate = null,
+    ).map { premises ->
+      val onlineBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.online)
+      val upcomingBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.upcoming)
+      if (premisesStatus == null || premisesStatus == Cas3PremisesStatus.online) {
+        premisesSearchResult.add(
+          createPremisesSearchResult(
+            premises,
+            (onlineBedspacesSearchResult + upcomingBedspacesSearchResult),
+          ),
+        )
       }
+      premises
+    }
 
-      allPremises.addAll(onlinePremisesWithBedspaceWithEndDate)
-
-      val archivedPremisesWithEndDateInTheFuture = getListPremisesByStatus(
-        probationRegion = probationRegion,
-        probationDeliveryUnit = probationDeliveryUnit,
-        localAuthorityArea = localAuthorityArea,
-        numberOfPremises = 3,
-        propertyStatus = PropertyStatus.archived,
-        endDate = LocalDate.now().randomDateAfter(30),
-      ).map { premises ->
-        val archivedBedspacesInTheFutureSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.online, withEndDateInFuture = true)
+    val archivedPremisesWithEndDateInTheFuture = getListPremisesByStatus(
+      probationRegion = probationRegion,
+      probationDeliveryUnit = probationDeliveryUnit,
+      localAuthorityArea = localAuthorityArea,
+      numberOfPremises = 3,
+      propertyStatus = PropertyStatus.archived,
+      startDate = LocalDate.now().randomDateBefore(90),
+      endDate = LocalDate.now().randomDateAfter(10),
+    ).map { premises ->
+      val archivedBedspacesInTheFutureSearchResult =
+        createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.online, withEndDateInFuture = true)
+      if (premisesStatus == null || premisesStatus == Cas3PremisesStatus.online) {
         premisesSearchResult.add(createPremisesSearchResult(premises, (archivedBedspacesInTheFutureSearchResult)))
-        premises
       }
-
-      allPremises.addAll(archivedPremisesWithEndDateInTheFuture)
+      premises
     }
 
-    if (premisesStatus == null || premisesStatus == Cas3PremisesStatus.archived) {
-      val archivedPremises = getListPremisesByStatus(
-        probationRegion = probationRegion,
-        probationDeliveryUnit = probationDeliveryUnit,
-        localAuthorityArea = localAuthorityArea,
-        numberOfPremises = 3,
-        propertyStatus = PropertyStatus.archived,
-        endDate = LocalDate.now().randomDateBefore(30),
-      ).map { premises ->
-        val archivedBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.archived)
+    val archivedPremises = getListPremisesByStatus(
+      probationRegion = probationRegion,
+      probationDeliveryUnit = probationDeliveryUnit,
+      localAuthorityArea = localAuthorityArea,
+      numberOfPremises = 3,
+      propertyStatus = PropertyStatus.archived,
+      startDate = LocalDate.now().randomDateBefore(180),
+      endDate = LocalDate.now().randomDateBefore(5),
+    ).map { premises ->
+      val archivedBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.archived)
+      if (premisesStatus == null || premisesStatus == Cas3PremisesStatus.archived) {
         premisesSearchResult.add(createPremisesSearchResult(premises, archivedBedspacesSearchResult))
-        premises
       }
-
-      allPremises.addAll(archivedPremises)
-
-      val archivedPremisesWithStartDateInTheFuture = getListPremisesByStatus(
-        probationRegion = probationRegion,
-        probationDeliveryUnit = probationDeliveryUnit,
-        localAuthorityArea = localAuthorityArea,
-        numberOfPremises = 3,
-        propertyStatus = PropertyStatus.archived,
-        startDate = LocalDate.now().plusDays(3),
-      ).map { premises ->
-        val upcomingBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.upcoming)
-        premisesSearchResult.add(createPremisesSearchResult(premises, (upcomingBedspacesSearchResult)))
-        premises
-      }
-
-      allPremises.addAll(archivedPremisesWithStartDateInTheFuture)
+      premises
     }
+
+    val archivedPremisesWithStartDateInTheFuture = getListPremisesByStatus(
+      probationRegion = probationRegion,
+      probationDeliveryUnit = probationDeliveryUnit,
+      localAuthorityArea = localAuthorityArea,
+      numberOfPremises = 3,
+      propertyStatus = PropertyStatus.active,
+      startDate = LocalDate.now().randomDateAfter(15),
+      endDate = null,
+    ).map { premises ->
+      val upcomingBedspacesSearchResult = createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.upcoming)
+      if (premisesStatus == null || premisesStatus == Cas3PremisesStatus.archived) {
+        premisesSearchResult.add(createPremisesSearchResult(premises, (upcomingBedspacesSearchResult)))
+      }
+      premises
+    }
+
+    allPremises.addAll(
+      onlinePremisesWithBedspaceWithoutEndDate +
+        onlinePremisesWithBedspaceWithEndDate +
+        archivedPremises +
+        archivedPremisesWithEndDateInTheFuture +
+        archivedPremisesWithStartDateInTheFuture,
+    )
 
     val premisesSearchResults = Cas3PremisesSearchResults(
       results = premisesSearchResult.sortedBy { it.id },
@@ -368,6 +394,7 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
   private fun assertPremisesFilteredByPostcode(
     jwt: String,
     premisesSearchResults: Cas3PremisesSearchResults,
+    premisesStatus: Cas3PremisesStatus,
     premisesPostcode: String,
     postcodeToSearchBy: String,
   ) {
@@ -381,14 +408,16 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
 
     assertUrlReturnsPremises(
       jwt,
-      "$PREMISES_SEARCH_API_URL?postcodeOrAddress=$postcodeToSearchBy",
+      "$PREMISES_SEARCH_API_URL?premisesStatus=$premisesStatus&postcodeOrAddress=$postcodeToSearchBy",
       expectedPremisesSearchResults,
     )
   }
 
+  @SuppressWarnings("LongParameterList")
   private fun assertPremisesFilteredByAddress(
     jwt: String,
     premisesSearchResults: Cas3PremisesSearchResults,
+    premisesStatus: Cas3PremisesStatus,
     addressLineField: String,
     premisesAddress: String,
     addressToSearchBy: String,
@@ -408,7 +437,7 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
 
     assertUrlReturnsPremises(
       jwt,
-      "$PREMISES_SEARCH_API_URL?postcodeOrAddress=$addressToSearchBy",
+      "$PREMISES_SEARCH_API_URL?premisesStatus=$premisesStatus&postcodeOrAddress=$addressToSearchBy",
       expectedPremisesSearchResults,
     )
   }
