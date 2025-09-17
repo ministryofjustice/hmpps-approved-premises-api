@@ -14,6 +14,7 @@ import java.util.UUID
 
 @Repository
 interface Cas2AssessmentRepository : JpaRepository<Cas2AssessmentEntity, UUID> {
+
   fun findFirstByApplicationId(applicationId: UUID): Cas2AssessmentEntity?
 }
 
