@@ -19,7 +19,7 @@ services:
       - ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
 
   integration_test_redis:
-    image: "bitnami/redis:7.2.5"
+    image: "redis:latest"
     container_name: approved-premises-redis-test
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
