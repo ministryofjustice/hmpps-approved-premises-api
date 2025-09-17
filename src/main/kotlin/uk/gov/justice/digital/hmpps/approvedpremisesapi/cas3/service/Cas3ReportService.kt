@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Bookings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -51,6 +52,7 @@ class Cas3ReportService(
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val bookingTransformer: BookingTransformer,
   private val workingDayService: WorkingDayService,
+  private val featureFlagService: FeatureFlagService,
   private val bookingRepository: BookingRepository,
   private val bedUsageRepository: BedUsageRepository,
   private val bedUtilisationReportRepository: BedUtilisationReportRepository,
@@ -94,12 +96,19 @@ class Cas3ReportService(
 
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
     log.info("Beginning CAS3 Bookings Report")
-    val bookingsInScope = bookingsReportRepository.findAllByOverlappingDate(
-      properties.startDate,
-      properties.endDate,
-      ServiceName.temporaryAccommodation.value,
-      properties.probationRegionId,
-    )
+    val bookingsInScope = when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
+      true -> bookingsReportRepository.findAllByOverlappingDateV2(
+        properties.startDate,
+        properties.endDate,
+        properties.probationRegionId,
+      )
+      false -> bookingsReportRepository.findAllByOverlappingDate(
+        properties.startDate,
+        properties.endDate,
+        ServiceName.temporaryAccommodation.value,
+        properties.probationRegionId,
+      )
+    }
 
     val crns = bookingsInScope.map { it.crn }.distinct().sorted()
     log.info("Getting person info for ${crns.size} CRNs")

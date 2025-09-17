@@ -5,6 +5,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingGapReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3FutureBookingsReportRepository
@@ -22,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -40,6 +43,7 @@ class Cas3ReportServiceTest {
   private val mockLostBedsRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockBookingTransformer = mockk<BookingTransformer>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
+  private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockBedUsageRepository = mockk<BedUsageRepository>()
   private val mockBedUtilisationReportRepository = mockk<BedUtilisationReportRepository>()
@@ -54,6 +58,7 @@ class Cas3ReportServiceTest {
     mockLostBedsRepository,
     mockBookingTransformer,
     mockWorkingDayService,
+    mockFeatureFlagService,
     mockBookingRepository,
     mockBedUsageRepository,
     mockBedUtilisationReportRepository,
@@ -111,6 +116,7 @@ class Cas3ReportServiceTest {
       mockLostBedsRepository,
       mockBookingTransformer,
       mockWorkingDayService,
+      mockFeatureFlagService,
       mockBookingRepository,
       mockBedUsageRepository,
       mockBedUtilisationReportRepository,
@@ -193,8 +199,9 @@ class Cas3ReportServiceTest {
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
   }
 
-  @Test
-  fun `createBookingsReport successfully generate report with required information`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `createBookingsReport successfully generate report with required information`(reportsWithNewBedspaceModelTablesEnabled: Boolean) {
     val crn = "P131431"
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 1, 31)
@@ -202,7 +209,25 @@ class Cas3ReportServiceTest {
     val bookingsReportData = createBookingReportData(crn)
     val properties = BookingsReportProperties(ServiceName.temporaryAccommodation, probationRegionId, startDate, endDate)
 
-    every { mockBookingsReportRepository.findAllByOverlappingDate(startDate, endDate, ServiceName.temporaryAccommodation.value, probationRegionId) } returns listOf(bookingsReportData)
+    every { mockFeatureFlagService.getBooleanFlag(eq("cas3-reports-with-new-bedspace-model-tables-enabled")) } returns reportsWithNewBedspaceModelTablesEnabled
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      every {
+        mockBookingsReportRepository.findAllByOverlappingDateV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      } returns listOf(bookingsReportData)
+    } else {
+      every {
+        mockBookingsReportRepository.findAllByOverlappingDate(
+          startDate,
+          endDate,
+          ServiceName.temporaryAccommodation.value,
+          probationRegionId,
+        )
+      } returns listOf(bookingsReportData)
+    }
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
       PersonSummaryInfoResult.Success.Full(crn, CaseSummaryFactory().produce()),
@@ -210,38 +235,64 @@ class Cas3ReportServiceTest {
 
     cas3ReportService.createBookingsReport(properties, ByteArrayOutputStream())
 
-    verify {
-      mockBookingsReportRepository.findAllByOverlappingDate(
-        startDate,
-        endDate,
-        ServiceName.temporaryAccommodation.value,
-        probationRegionId,
-      )
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      verify {
+        mockBookingsReportRepository.findAllByOverlappingDateV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
+    } else {
+      verify {
+        mockBookingsReportRepository.findAllByOverlappingDate(
+          startDate,
+          endDate,
+          ServiceName.temporaryAccommodation.value,
+          probationRegionId,
+        )
+      }
     }
     verify { mockUserService.getUserForRequest() }
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
   }
 
-  @Test
-  fun `createBookingsReport successfully generate report with required information, multiple crns`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `createBookingsReport successfully generate report with required information, multiple crns`(reportsWithNewBedspaceModelTablesEnabled: Boolean) {
     val crns = listOf("P131431", "P131432", "P131433")
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 1, 31)
     val probationRegionId = UUID.randomUUID()
     val properties = BookingsReportProperties(ServiceName.temporaryAccommodation, probationRegionId, startDate, endDate)
 
-    every {
-      mockBookingsReportRepository.findAllByOverlappingDate(
-        startDate,
-        endDate,
-        ServiceName.temporaryAccommodation.value,
-        probationRegionId,
+    every { mockFeatureFlagService.getBooleanFlag(eq("cas3-reports-with-new-bedspace-model-tables-enabled")) } returns reportsWithNewBedspaceModelTablesEnabled
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      every {
+        mockBookingsReportRepository.findAllByOverlappingDateV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      } returns listOf(
+        createBookingReportData(crns[0]),
+        createBookingReportData(crns[1]),
+        createBookingReportData(crns[2]),
       )
-    } returns listOf(
-      createBookingReportData(crns[0]),
-      createBookingReportData(crns[1]),
-      createBookingReportData(crns[2]),
-    )
+    } else {
+      every {
+        mockBookingsReportRepository.findAllByOverlappingDate(
+          startDate,
+          endDate,
+          ServiceName.temporaryAccommodation.value,
+          probationRegionId,
+        )
+      } returns listOf(
+        createBookingReportData(crns[0]),
+        createBookingReportData(crns[1]),
+        createBookingReportData(crns[2]),
+      )
+    }
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
       PersonSummaryInfoResult.Success.Full(crns[0], CaseSummaryFactory().produce()),
@@ -251,13 +302,23 @@ class Cas3ReportServiceTest {
 
     cas3ReportService.createBookingsReport(properties, ByteArrayOutputStream())
 
-    verify {
-      mockBookingsReportRepository.findAllByOverlappingDate(
-        startDate,
-        endDate,
-        ServiceName.temporaryAccommodation.value,
-        probationRegionId,
-      )
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      verify {
+        mockBookingsReportRepository.findAllByOverlappingDateV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
+    } else {
+      verify {
+        mockBookingsReportRepository.findAllByOverlappingDate(
+          startDate,
+          endDate,
+          ServiceName.temporaryAccommodation.value,
+          probationRegionId,
+        )
+      }
     }
     verify { mockUserService.getUserForRequest() }
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
