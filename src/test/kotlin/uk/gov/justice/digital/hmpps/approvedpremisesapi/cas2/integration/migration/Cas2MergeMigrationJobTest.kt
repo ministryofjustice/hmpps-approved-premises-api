@@ -7,11 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -35,6 +37,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
   lateinit var cas2v2Users: List<Cas2v2UserEntity>
   lateinit var cas2v2Applications: List<Cas2v2ApplicationEntity>
   lateinit var cas2Applications: List<Cas2ApplicationEntity>
+  lateinit var cas2v2Assessments: List<Cas2v2AssessmentEntity>
 
   @BeforeEach
   fun setupData() {
@@ -54,6 +57,14 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
         withCreatedByUser(cas2v2Users.random())
       }
     }.take(NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE).toList()
+    cas2v2Assessments = cas2v2Applications.map {
+      val assessment = cas2v2AssessmentEntityFactory.produceAndPersist {
+        withApplication(it)
+      }
+      it.assessment = assessment
+      cas2v2ApplicationRepository.save(it)
+      assessment
+    }
     cas2Applications = generateSequence {
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(nomisUsers.random())
@@ -72,6 +83,9 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
     val allCas2Applications = assertExpectedNumberOfCas2v2ApplicationsWereMigrated()
     assertThatAllApplicationsDataWasMigratedOrUpdatedSuccessfully(allCas2Applications)
+
+    val allCas2Assessments = assertExpectedNumberOfCas2v2AssessmentsWereMigrated()
+    assertThatCas2v2AssessmentsDataWasMigratedSuccessfully(allCas2Assessments)
   }
 
   @Test
@@ -85,6 +99,9 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     val allCas2Applications = assertExpectedNumberOfCas2v2ApplicationsWereMigrated()
     assertThatAllApplicationsDataWasMigratedOrUpdatedSuccessfully(allCas2Applications)
 
+    val allCas2Assessments = assertExpectedNumberOfCas2v2AssessmentsWereMigrated()
+    assertThatCas2v2AssessmentsDataWasMigratedSuccessfully(allCas2Assessments)
+
     migrationJobService.runMigrationJob(MigrationJobType.migrateDataToCas2Tables, 1)
     val migratedCas2Users2 = assertExpectedNumberOfCas2UsersWereMigrated()
     assertExpectedNumberOfNomisUsersWereMigrated()
@@ -93,12 +110,21 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
     val allCas2Applications2 = assertExpectedNumberOfCas2v2ApplicationsWereMigrated()
     assertThatAllApplicationsDataWasMigratedOrUpdatedSuccessfully(allCas2Applications2)
+
+    val allCas2Assessments2 = assertExpectedNumberOfCas2v2AssessmentsWereMigrated()
+    assertThatCas2v2AssessmentsDataWasMigratedSuccessfully(allCas2Assessments2)
   }
 
   private fun assertExpectedNumberOfCas2v2ApplicationsWereMigrated(): List<Cas2ApplicationEntity> {
     val allApplications = cas2ApplicationRepository.findAll()
     assertThat(allApplications.size).isEqualTo(TOTAL_NO_OF_APPLICATIONS)
     return allApplications
+  }
+
+  private fun assertExpectedNumberOfCas2v2AssessmentsWereMigrated(): List<Cas2AssessmentEntity> {
+    val allAssessments = cas2AssessmentRepository.findAll()
+    assertThat(allAssessments.size).isEqualTo(NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE)
+    return allAssessments
   }
 
   private fun assertExpectedNumberOfCas2UsersWereMigrated(): List<Cas2UserEntity> {
@@ -160,6 +186,16 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     }
   }
 
+  private fun assertThatCas2v2AssessmentsDataWasMigratedSuccessfully(allAssessments: List<Cas2AssessmentEntity>) {
+    allAssessments.forEach { cas2Assessment ->
+      val cas2v2Assessment = cas2v2Assessments.firstOrNull { it.id == cas2Assessment.id }!!
+      assertThatCas2v2AssessmentsMatch(
+        cas2AssessmentEntity = cas2Assessment,
+        cas2v2AssessmentEntity = cas2v2Assessment,
+      )
+    }
+  }
+
   private fun assertThatNomisUsersMatch(cas2UserEntity: Cas2UserEntity, nomisUserEntity: NomisUserEntity) {
     assertThat(cas2UserEntity.id).isEqualTo(nomisUserEntity.id)
     assertThat(cas2UserEntity.name).isEqualTo(nomisUserEntity.name)
@@ -204,8 +240,16 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2UserEntity.deliusTeamCodes).isEqualTo(cas2v2UserEntity.deliusTeamCodes)
     assertThat(cas2UserEntity.isEnabled).isEqualTo(cas2v2UserEntity.isEnabled)
     assertThat(cas2UserEntity.isActive).isEqualTo(cas2v2UserEntity.isActive)
-    assertThat(cas2UserEntity.externalType).isNull()
-    assertThat(cas2UserEntity.nomisAccountType).isNull()
+    if (cas2UserEntity.userType == Cas2UserType.NOMIS) {
+      assertThat(cas2UserEntity.nomisAccountType).isEqualTo("GENERAL")
+    } else {
+      assertThat(cas2UserEntity.nomisAccountType).isNull()
+    }
+    if (cas2UserEntity.userType == Cas2UserType.EXTERNAL) {
+      assertThat(cas2UserEntity.externalType).isEqualTo("NACRO")
+    } else {
+      assertThat(cas2UserEntity.externalType).isNull()
+    }
   }
 
   private fun assertThatCas2v2ApplicationsMatch(cas2ApplicationEntity: Cas2ApplicationEntity, cas2v2ApplicationEntity: Cas2v2ApplicationEntity) {
@@ -228,7 +272,15 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2ApplicationEntity.createdByCas2User!!.id).isEqualTo(cas2v2ApplicationEntity.createdByUser.id)
   }
 
-  fun getUserType(user: Cas2v2UserEntity) = when (user.userType) {
+  private fun assertThatCas2v2AssessmentsMatch(cas2AssessmentEntity: Cas2AssessmentEntity, cas2v2AssessmentEntity: Cas2v2AssessmentEntity) {
+    assertThat(cas2AssessmentEntity.id).isEqualTo(cas2v2AssessmentEntity.id)
+    assertThat(cas2AssessmentEntity.application.id).isEqualTo(cas2v2AssessmentEntity.application.id)
+    assertThat(cas2AssessmentEntity.nacroReferralId).isEqualTo(cas2v2AssessmentEntity.nacroReferralId)
+    assertThat(cas2AssessmentEntity.assessorName).isEqualTo(cas2v2AssessmentEntity.assessorName)
+    assertThat(cas2AssessmentEntity.createdAt).isEqualTo(cas2v2AssessmentEntity.createdAt)
+  }
+
+  private fun getUserType(user: Cas2v2UserEntity) = when (user.userType) {
     Cas2v2UserType.NOMIS -> Cas2UserType.NOMIS
     Cas2v2UserType.DELIUS -> Cas2UserType.DELIUS
     Cas2v2UserType.EXTERNAL -> Cas2UserType.EXTERNAL
