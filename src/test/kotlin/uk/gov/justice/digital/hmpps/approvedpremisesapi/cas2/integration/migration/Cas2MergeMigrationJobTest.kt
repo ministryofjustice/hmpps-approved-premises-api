@@ -4,17 +4,23 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
+const val NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE = 102
+const val NO_OF_CAS_2_APPLICATIONS_TO_UPDATE = 103
+const val TOTAL_NO_OF_APPLICATIONS = NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE + NO_OF_CAS_2_APPLICATIONS_TO_UPDATE
 const val NO_OF_NOMIS_USERS_TO_MIGRATE = 110
 const val NO_OF_EXTERNAL_USERS_TO_MIGRATE = 120
 const val NO_OF_CAS2V2_USERS_TO_MIGRATE = 130
@@ -27,6 +33,8 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
   lateinit var nomisUsers: List<NomisUserEntity>
   lateinit var externalUsers: List<ExternalUserEntity>
   lateinit var cas2v2Users: List<Cas2v2UserEntity>
+  lateinit var cas2v2Applications: List<Cas2v2ApplicationEntity>
+  lateinit var cas2Applications: List<Cas2ApplicationEntity>
 
   @BeforeEach
   fun setupData() {
@@ -41,30 +49,74 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     cas2v2Users = generateSequence {
       cas2v2UserEntityFactory.produceAndPersist()
     }.take(NO_OF_CAS2V2_USERS_TO_MIGRATE).toList()
+    cas2v2Applications = generateSequence {
+      cas2v2ApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(cas2v2Users.random())
+      }
+    }.take(NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE).toList()
+    cas2Applications = generateSequence {
+      cas2ApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(nomisUsers.random())
+        withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
+      }
+    }.take(NO_OF_CAS_2_APPLICATIONS_TO_UPDATE).toList()
   }
 
   @Test
   fun `should migrate all data required to cas2`() {
     migrationJobService.runMigrationJob(MigrationJobType.migrateDataToCas2Tables, 1)
-    val migratedUsers = assertExpectedNumberOfUsersWereMigrated()
-    assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers)
+    val migratedCas2Users = assertExpectedNumberOfCas2UsersWereMigrated()
+    assertExpectedNumberOfNomisUsersWereMigrated()
+    assertExpectedNumberOfExternalUsersWereMigrated()
+    assertThatAllUsersDataWasMigratedSuccessfully(migratedCas2Users)
+
+    val allCas2Applications = assertExpectedNumberOfCas2v2ApplicationsWereMigrated()
+    assertThatAllApplicationsDataWasMigratedOrUpdatedSuccessfully(allCas2Applications)
   }
 
   @Test
   fun `running the migration job twice does not create duplicate rows`() {
     migrationJobService.runMigrationJob(MigrationJobType.migrateDataToCas2Tables, 1)
-    var migratedUsers = assertExpectedNumberOfUsersWereMigrated()
-    assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers)
+    val migratedCas2Users = assertExpectedNumberOfCas2UsersWereMigrated()
+    assertExpectedNumberOfNomisUsersWereMigrated()
+    assertExpectedNumberOfExternalUsersWereMigrated()
+    assertThatAllUsersDataWasMigratedSuccessfully(migratedCas2Users)
+
+    val allCas2Applications = assertExpectedNumberOfCas2v2ApplicationsWereMigrated()
+    assertThatAllApplicationsDataWasMigratedOrUpdatedSuccessfully(allCas2Applications)
 
     migrationJobService.runMigrationJob(MigrationJobType.migrateDataToCas2Tables, 1)
-    migratedUsers = assertExpectedNumberOfUsersWereMigrated()
-    assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers)
+    val migratedCas2Users2 = assertExpectedNumberOfCas2UsersWereMigrated()
+    assertExpectedNumberOfNomisUsersWereMigrated()
+    assertExpectedNumberOfExternalUsersWereMigrated()
+    assertThatAllUsersDataWasMigratedSuccessfully(migratedCas2Users2)
+
+    val allCas2Applications2 = assertExpectedNumberOfCas2v2ApplicationsWereMigrated()
+    assertThatAllApplicationsDataWasMigratedOrUpdatedSuccessfully(allCas2Applications2)
   }
 
-  private fun assertExpectedNumberOfUsersWereMigrated(): List<Cas2UserEntity> {
-    val migratedPremises = cas2UserRepository.findAll()
-    assertThat(migratedPremises.size).isEqualTo(TOTAL_NO_OF_USERS_TO_MIGRATE)
-    return migratedPremises
+  private fun assertExpectedNumberOfCas2v2ApplicationsWereMigrated(): List<Cas2ApplicationEntity> {
+    val allApplications = cas2ApplicationRepository.findAll()
+    assertThat(allApplications.size).isEqualTo(TOTAL_NO_OF_APPLICATIONS)
+    return allApplications
+  }
+
+  private fun assertExpectedNumberOfCas2UsersWereMigrated(): List<Cas2UserEntity> {
+    val migratedUsers = cas2UserRepository.findAll()
+    assertThat(migratedUsers.size).isEqualTo(TOTAL_NO_OF_USERS_TO_MIGRATE)
+    return migratedUsers
+  }
+
+  private fun assertExpectedNumberOfNomisUsersWereMigrated(): List<NomisUserEntity> {
+    val migratedUsers = nomisUserRepository.findAll()
+    assertThat(migratedUsers.size).isEqualTo(NO_OF_NOMIS_USERS_TO_MIGRATE + NO_OF_CAS2V2_USERS_TO_MIGRATE)
+    return migratedUsers
+  }
+
+  private fun assertExpectedNumberOfExternalUsersWereMigrated(): List<ExternalUserEntity> {
+    val migratedUsers = externalUserRepository.findAll()
+    assertThat(migratedUsers.size).isEqualTo(NO_OF_EXTERNAL_USERS_TO_MIGRATE + NO_OF_CAS2V2_USERS_TO_MIGRATE)
+    return migratedUsers
   }
 
   private fun assertThatAllUsersDataWasMigratedSuccessfully(migratedUsers: List<Cas2UserEntity>) {
@@ -89,6 +141,21 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
             cas2v2UserEntity = cas2v2User,
           )
         }
+      }
+    }
+  }
+
+  private fun assertThatAllApplicationsDataWasMigratedOrUpdatedSuccessfully(allApplications: List<Cas2ApplicationEntity>) {
+    allApplications.forEach { cas2Application ->
+      val cas2v2Application = cas2v2Applications.firstOrNull { it.id == cas2Application.id }
+      if (cas2v2Application != null) {
+        assertThatCas2v2ApplicationsMatch(
+          cas2ApplicationEntity = cas2Application,
+          cas2v2ApplicationEntity = cas2v2Application,
+        )
+      } else {
+        assertThat(cas2Application.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+        assertThat(cas2Application.createdByCas2User).isNotNull
       }
     }
   }
@@ -139,6 +206,26 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2UserEntity.isActive).isEqualTo(cas2v2UserEntity.isActive)
     assertThat(cas2UserEntity.externalType).isNull()
     assertThat(cas2UserEntity.nomisAccountType).isNull()
+  }
+
+  private fun assertThatCas2v2ApplicationsMatch(cas2ApplicationEntity: Cas2ApplicationEntity, cas2v2ApplicationEntity: Cas2v2ApplicationEntity) {
+    assertThat(cas2ApplicationEntity.id).isEqualTo(cas2v2ApplicationEntity.id)
+    assertThat(cas2ApplicationEntity.createdByUser.id).isEqualTo(cas2v2ApplicationEntity.createdByUser.id)
+    assertThat(cas2ApplicationEntity.crn).isEqualTo(cas2v2ApplicationEntity.crn)
+    assertThat(cas2ApplicationEntity.data).isEqualTo(cas2v2ApplicationEntity.data)
+    assertThat(cas2ApplicationEntity.createdAt).isEqualTo(cas2v2ApplicationEntity.createdAt)
+    assertThat(cas2ApplicationEntity.submittedAt).isEqualTo(cas2v2ApplicationEntity.submittedAt)
+    assertThat(cas2ApplicationEntity.document).isEqualTo(cas2v2ApplicationEntity.document)
+    assertThat(cas2ApplicationEntity.nomsNumber).isEqualTo(cas2v2ApplicationEntity.nomsNumber)
+    assertThat(cas2ApplicationEntity.referringPrisonCode).isEqualTo(cas2v2ApplicationEntity.referringPrisonCode)
+    assertThat(cas2ApplicationEntity.preferredAreas).isEqualTo(cas2v2ApplicationEntity.preferredAreas)
+    assertThat(cas2ApplicationEntity.hdcEligibilityDate).isEqualTo(cas2v2ApplicationEntity.hdcEligibilityDate)
+    assertThat(cas2ApplicationEntity.conditionalReleaseDate).isEqualTo(cas2v2ApplicationEntity.conditionalReleaseDate)
+    assertThat(cas2ApplicationEntity.telephoneNumber).isEqualTo(cas2v2ApplicationEntity.telephoneNumber)
+    assertThat(cas2ApplicationEntity.abandonedAt).isEqualTo(cas2v2ApplicationEntity.abandonedAt)
+    assertThat(cas2ApplicationEntity.applicationOrigin).isEqualTo(cas2v2ApplicationEntity.applicationOrigin)
+    assertThat(cas2ApplicationEntity.bailHearingDate).isEqualTo(cas2v2ApplicationEntity.bailHearingDate)
+    assertThat(cas2ApplicationEntity.createdByCas2User!!.id).isEqualTo(cas2v2ApplicationEntity.createdByUser.id)
   }
 
   fun getUserType(user: Cas2v2UserEntity) = when (user.userType) {
