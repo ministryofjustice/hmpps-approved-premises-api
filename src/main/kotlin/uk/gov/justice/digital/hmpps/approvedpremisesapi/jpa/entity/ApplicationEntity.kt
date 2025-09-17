@@ -504,7 +504,7 @@ class TemporaryAccommodationApplicationEntity(
   val riskRatings: PersonRisks?,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
-  val probationRegion: ProbationRegionEntity,
+  var probationRegion: ProbationRegionEntity,
   var arrivalDate: OffsetDateTime?,
   var isRegisteredSexOffender: Boolean?,
   var isHistoryOfSexualOffence: Boolean?,
@@ -526,11 +526,11 @@ class TemporaryAccommodationApplicationEntity(
   @JoinColumn(name = "probation_delivery_unit_id")
   var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "out_of_region_probation_region_id")
-  var outOfRegionProbationRegion: ProbationRegionEntity?,
+  @JoinColumn(name = "previous_referral_probation_region_id")
+  var previousReferralProbationRegion: ProbationRegionEntity?,
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "out_of_region_probation_delivery_unit_id")
-  var outOfRegionProbationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  @JoinColumn(name = "previous_referral_probation_delivery_unit_id")
+  var previousReferralProbationDeliveryUnit: ProbationDeliveryUnitEntity?,
 ) : ApplicationEntity(
   id,
   crn,
