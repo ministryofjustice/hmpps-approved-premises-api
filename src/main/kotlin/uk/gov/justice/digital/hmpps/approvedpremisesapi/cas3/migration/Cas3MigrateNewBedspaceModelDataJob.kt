@@ -108,9 +108,10 @@ class Cas3MigrateNewBedspaceModelDataJob(
           premises = cas3Premises,
           reference = room.name,
           notes = room.notes,
-          startDate = bed.startDate,
+          startDate = bed.startDate!!,
           endDate = bed.endDate,
           createdAt = bed.createdAt,
+          createdDate = bed.createdDate!!,
           characteristics = emptyList<Cas3BedspaceCharacteristicEntity>().toMutableList(),
         )
       }

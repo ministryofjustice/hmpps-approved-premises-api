@@ -85,7 +85,7 @@ class Cas3BedspaceTransformerTest {
       Cas3Bedspace(
         id = bedspace.id,
         reference = bedspace.reference,
-        startDate = bedspace.createdAt.toLocalDate(),
+        startDate = bedspace.createdDate,
         endDate = bedspace.endDate,
         notes = bedspace.notes,
         scheduleUnarchiveDate = scheduledUnarchiveDate,

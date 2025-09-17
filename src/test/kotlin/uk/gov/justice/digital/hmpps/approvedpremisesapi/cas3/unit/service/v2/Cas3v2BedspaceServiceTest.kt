@@ -74,6 +74,7 @@ class Cas3v2BedspaceServiceTest {
         assertThat(it.notes).isEqualTo(bedspace.notes)
         assertThat(it.startDate).isEqualTo(bedspace.startDate)
         assertThat(it.endDate).isEqualTo(bedspace.endDate)
+        assertThat(it.createdDate).isEqualTo(bedspace.createdDate)
       }
     }
 
@@ -439,6 +440,7 @@ class Cas3v2BedspaceServiceTest {
         notes = updateBedspaceNotes,
         premises = premises,
         characteristics = updateBedspaceCharacteristic.toMutableList(),
+        createdDate = bedspace.createdDate,
       )
 
       every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
@@ -586,6 +588,7 @@ class Cas3v2BedspaceServiceTest {
     val bedspace = Cas3BedspaceEntityFactory()
       .withPremises(premises)
       .withStartDate(bedspaceStartDate)
+      .withCreatedDate(bedspaceStartDate)
       .withEndDate(bedspaceEndDate)
       .produce()
     return Pair(premises, bedspace)

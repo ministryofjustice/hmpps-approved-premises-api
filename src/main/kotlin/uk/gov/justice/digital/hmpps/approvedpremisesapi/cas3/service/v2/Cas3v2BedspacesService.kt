@@ -57,6 +57,7 @@ class Cas3v2BedspacesService(
       characteristics = mutableListOf(),
       startDate = startDate,
       endDate = null,
+      createdDate = startDate,
       createdAt = OffsetDateTime.now(),
     )
 

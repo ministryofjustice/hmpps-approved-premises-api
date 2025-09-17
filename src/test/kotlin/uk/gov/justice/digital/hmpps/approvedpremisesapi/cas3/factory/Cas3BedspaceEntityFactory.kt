@@ -19,9 +19,10 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
   private var characteristics: Yielded<MutableList<Cas3BedspaceCharacteristicEntity>> = { mutableListOf() }
   private var reference: Yielded<String> = { randomStringUpperCase(6) }
   private var notes: Yielded<String?> = { null }
-  private var startDate: Yielded<LocalDate?> = { LocalDate.now().randomDateBefore(6) }
+  private var startDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(6) }
   private var endDate: Yielded<LocalDate?> = { LocalDate.now().randomDateAfter(6) }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
+  private var createdDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -43,7 +44,7 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
     this.notes = { notes }
   }
 
-  fun withStartDate(startDate: LocalDate?) = apply {
+  fun withStartDate(startDate: LocalDate) = apply {
     this.startDate = { startDate }
   }
 
@@ -53,6 +54,10 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
     this.createdAt = { createdAt }
+  }
+
+  fun withCreatedDate(createdDate: LocalDate) = apply {
+    this.createdDate = { createdDate }
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -65,5 +70,6 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
     startDate = this.startDate(),
     endDate = this.endDate(),
     createdAt = this.createdAt(),
+    createdDate = this.createdDate(),
   )
 }

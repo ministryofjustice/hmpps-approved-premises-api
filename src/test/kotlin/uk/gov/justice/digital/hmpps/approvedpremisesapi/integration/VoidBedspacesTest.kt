@@ -86,6 +86,8 @@ class VoidBedspacesTest : IntegrationTestBase() {
                 withYieldedPremises { premises }
               }
             }
+            withStartDate(LocalDate.now().minusDays(90))
+            withCreatedDate(LocalDate.now().minusDays(90))
           },
         )
         withPremises(premises)
@@ -278,8 +280,6 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspaces))
-
       webTestClient.get()
         .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
         .header("Authorization", "Bearer $jwt")
@@ -462,14 +462,6 @@ class VoidBedspacesTest : IntegrationTestBase() {
         },
       )
       withPremises(premises)
-    }
-
-    val bed = bedEntityFactory.produceAndPersist {
-      withYieldedRoom {
-        roomEntityFactory.produceAndPersist {
-          withYieldedPremises { premises }
-        }
-      }
     }
 
     webTestClient.put()
@@ -734,8 +726,6 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
-
       webTestClient.post()
         .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}/cancellations")
         .header("Authorization", "Bearer $jwt")
@@ -749,7 +739,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .jsonPath("$.notes").isEqualTo("Some cancellation notes")
-        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+        .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
     }
   }
 
@@ -776,8 +766,6 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withYieldedBed { bed }
         withPremises(premises)
       }
-
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}/cancellations")
