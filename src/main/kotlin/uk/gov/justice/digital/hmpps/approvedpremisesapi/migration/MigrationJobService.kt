@@ -17,9 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1Updat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateRoomCodesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2AssessmentMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2MergeMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2NoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2StatusUpdateMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2MergeMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3MigrateNewBedspaceModelDataJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateApplicationOffenderNameJob

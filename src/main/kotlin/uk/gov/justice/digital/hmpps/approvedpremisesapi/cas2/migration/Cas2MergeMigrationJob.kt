@@ -2,11 +2,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration
 
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
@@ -21,6 +26,8 @@ class Cas2MergeMigrationJob(
   private val cas2v2UserRepository: Cas2v2UserRepository,
   private val nomisUserRepository: NomisUserRepository,
   private val externalUserRepository: ExternalUserRepository,
+  private val cas2ApplicationRepository: Cas2ApplicationRepository,
+  private val cas2v2ApplicationRepository: Cas2v2ApplicationRepository,
   private val migrationLogger: MigrationLogger,
   transactionTemplate: TransactionTemplate,
 ) : MigrationInBatchesJob(migrationLogger, transactionTemplate) {
@@ -29,7 +36,27 @@ class Cas2MergeMigrationJob(
   override fun process(pageSize: Int) {
     migrationLogger.info("Starting cas2 merge migration process...")
     migrateAllUsersToCas2UsersTable()
+    updateCas2ApplicationsInCas2ApplicationsTable()
+    migrateCas2v2ApplicationsToCas2ApplicationsTable()
     migrationLogger.info("Completed cas2 merge migration process...")
+  }
+
+  private fun migrateCas2v2ApplicationsToCas2ApplicationsTable() {
+    migrationLogger.info("Starting cas2v2 applications migration process...")
+    val applicationIds = cas2v2ApplicationRepository.findApplicationIds()
+    super.processInBatches(applicationIds, batchSize = 100) { batchIds ->
+      migrateCas2v2ApplicationsDataToCas2ApplicationsTable(batchIds)
+    }
+    migrationLogger.info("Completed cas2v2 applications migration process...")
+  }
+
+  private fun updateCas2ApplicationsInCas2ApplicationsTable() {
+    migrationLogger.info("Starting applications update process...")
+    val applicationIds = cas2ApplicationRepository.findApplicationIds()
+    super.processInBatches(applicationIds, batchSize = 100) { batchIds ->
+      updateCas2ApplicationsTable(batchIds)
+    }
+    migrationLogger.info("Completed users migration process...")
   }
 
   private fun migrateAllUsersToCas2UsersTable() {
@@ -47,9 +74,25 @@ class Cas2MergeMigrationJob(
     val cas2v2Ids = cas2v2UserRepository.findCas2v2UserIds()
     super.processInBatches(cas2v2Ids, batchSize = 100) { batchIds ->
       migrateCas2v2UserDataToCas2UsersTable(batchIds)
+      migrateCas2v2UserIdsToNomisUsersTable(batchIds)
+      migrateCas2v2UserIdsToExternalUsersTable(batchIds)
     }
     migrationLogger.info("Completed cas2v2 migration process...")
     migrationLogger.info("Completed users migration process...")
+  }
+
+  private fun migrateCas2v2ApplicationsDataToCas2ApplicationsTable(applicationIds: List<UUID>) {
+    migrationLogger.info("Starting Cas2v2 application migration with batch size of ${applicationIds.size}...")
+    val applicationData = generateCas2v2Application(applicationIds)
+    cas2ApplicationRepository.saveAllAndFlush(applicationData)
+    migrationLogger.info("Migrated batch size of ${applicationIds.size} to cas_2_applications table - data migrated from the cas_2_v2_applications tables.")
+  }
+
+  private fun updateCas2ApplicationsTable(applicationIds: List<UUID>) {
+    migrationLogger.info("Starting application update with batch size of ${applicationIds.size}...")
+    val applicationData = generateCas2Application(applicationIds)
+    cas2ApplicationRepository.saveAllAndFlush(applicationData)
+    migrationLogger.info("Updated batch size of ${applicationIds.size} in cas_2_applications table.")
   }
 
   private fun migrateNomisUserDataToCas2UsersTable(nomisIds: List<UUID>) {
@@ -71,6 +114,77 @@ class Cas2MergeMigrationJob(
     val externalUserData = generateCas2v2User(cas2v2Ids)
     cas2UserRepository.saveAllAndFlush(externalUserData)
     migrationLogger.info("Migrated batch size of ${cas2v2Ids.size} to new cas_2_users table - data migrated from the cas_2_v2_users tables.")
+  }
+
+  private fun migrateCas2v2UserIdsToNomisUsersTable(cas2v2Ids: List<UUID>) {
+    migrationLogger.info("Starting Cas2v2 user migration with batch size of ${cas2v2Ids.size}...")
+    val dummyNomisUserData = generateDummyCas2v2NomisUser(cas2v2Ids)
+    nomisUserRepository.saveAllAndFlush(dummyNomisUserData)
+    migrationLogger.info("Migrated batch size of dummy ${cas2v2Ids.size} to nomis_users table - data migrated from the cas_2_v2_users tables.")
+  }
+
+  private fun migrateCas2v2UserIdsToExternalUsersTable(cas2v2Ids: List<UUID>) {
+    migrationLogger.info("Starting Cas2v2 user migration with batch size of ${cas2v2Ids.size}...")
+    val dummyExternalUserData = generateDummyCas2v2ExternalUser(cas2v2Ids)
+    externalUserRepository.saveAllAndFlush(dummyExternalUserData)
+    migrationLogger.info("Migrated batch size of dummy ${cas2v2Ids.size} to external_users table - data migrated from the cas_2_v2_users tables.")
+  }
+
+  private fun generateCas2Application(applicationIds: List<UUID>) = cas2ApplicationRepository.findAllById(applicationIds).map {
+    Cas2ApplicationEntity(
+      id = it.id,
+      crn = it.crn,
+      createdByUser = it.createdByUser,
+      // TODO besscerule - the important part of populating the column!
+      createdByCas2User = cas2UserRepository.findById(it.createdByUser.id).get(),
+      data = it.data,
+      document = it.document,
+      createdAt = it.createdAt,
+      submittedAt = it.submittedAt,
+      abandonedAt = it.abandonedAt,
+      statusUpdates = it.statusUpdates,
+      nomsNumber = it.nomsNumber,
+      telephoneNumber = it.telephoneNumber,
+      notes = it.notes,
+      assessment = it.assessment,
+      applicationAssignments = it.applicationAssignments,
+      referringPrisonCode = it.referringPrisonCode,
+      hdcEligibilityDate = it.hdcEligibilityDate,
+      conditionalReleaseDate = it.conditionalReleaseDate,
+      preferredAreas = it.preferredAreas,
+      applicationOrigin = it.applicationOrigin,
+      bailHearingDate = it.bailHearingDate,
+    )
+  }
+
+  private fun generateCas2v2Application(applicationIds: List<UUID>) = cas2v2ApplicationRepository.findAllById(applicationIds).map {
+    Cas2ApplicationEntity(
+      id = it.id,
+      crn = it.crn,
+      createdByUser = nomisUserRepository.findById(it.createdByUser.id).get(),
+      createdByCas2User = cas2UserRepository.findById(it.createdByUser.id).get(),
+      data = it.data,
+      document = it.document,
+      createdAt = it.createdAt,
+      submittedAt = it.submittedAt,
+      abandonedAt = it.abandonedAt,
+      // TODO besscerule - empty until we can add the 2v2 table
+      statusUpdates = mutableListOf(),
+      nomsNumber = it.nomsNumber,
+      telephoneNumber = it.telephoneNumber,
+      // TODO besscerule - empty until we can add the 2v2 table
+      notes = mutableListOf(),
+      // TODO besscerule - empty until we can add the 2v2 table
+      assessment = null,
+      // TODO besscerule - empty until we can populate the assignments table
+      applicationAssignments = mutableListOf(),
+      referringPrisonCode = it.referringPrisonCode,
+      hdcEligibilityDate = it.hdcEligibilityDate,
+      conditionalReleaseDate = it.conditionalReleaseDate,
+      preferredAreas = it.preferredAreas,
+      applicationOrigin = it.applicationOrigin,
+      bailHearingDate = it.bailHearingDate,
+    )
   }
 
   private fun generateNomisUser(nomisIds: List<UUID>) = nomisUserRepository.findAllById(nomisIds).map {
@@ -132,6 +246,33 @@ class Cas2MergeMigrationJob(
       externalType = null,
       userType = getUserType(it),
       username = it.username,
+    )
+  }
+
+  private fun generateDummyCas2v2NomisUser(cas2v2Ids: List<UUID>) = cas2v2Ids.map {
+    NomisUserEntity(
+      id = it,
+      name = "DUMMY_USER",
+      email = "DUMMY_USER",
+      createdAt = OffsetDateTime.now(),
+      isActive = true,
+      isEnabled = true,
+      nomisStaffId = 0,
+      accountType = "GENERAL",
+      activeCaseloadId = null,
+      nomisUsername = "DUMMY_USER_$it",
+    )
+  }
+
+  private fun generateDummyCas2v2ExternalUser(cas2v2Ids: List<UUID>) = cas2v2Ids.map {
+    ExternalUserEntity(
+      id = it,
+      name = "DUMMY_USER",
+      email = "DUMMY_USER",
+      createdAt = OffsetDateTime.now(),
+      isEnabled = true,
+      username = "DUMMY_USER_$it",
+      origin = "NACRO",
     )
   }
 
