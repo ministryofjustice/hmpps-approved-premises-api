@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.OffsetDateTime
 
 const val NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE = 102
 const val NO_OF_CAS_2_APPLICATIONS_TO_UPDATE = 103
@@ -51,19 +53,28 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     }.take(NO_OF_CAS2V2_USERS_TO_MIGRATE).toList()
     cas2v2Applications = generateSequence {
       cas2v2ApplicationEntityFactory.produceAndPersist {
+        withSubmittedAt(OffsetDateTime.now())
         withCreatedByUser(cas2v2Users.random())
       }
     }.take(NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE).toList()
     cas2Applications = generateSequence {
+      val nomisUser = nomisUsers.random()
+      val prisonCode = randomStringUpperCase(3)
       cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(nomisUsers.random())
+        withCreatedByUser(nomisUser)
+        withReferringPrisonCode(prisonCode)
         withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
       }
     }.take(NO_OF_CAS_2_APPLICATIONS_TO_UPDATE).toList()
+    cas2Applications.map {
+      it.createApplicationAssignment(it.referringPrisonCode!!, it.createdByUser)
+      cas2ApplicationRepository.save(it)
+    }
   }
 
   @Test
   fun `should migrate all data required to cas2`() {
+    println("Starting test")
     migrationJobService.runMigrationJob(MigrationJobType.migrateDataToCas2Tables, 1)
     val migratedCas2Users = assertExpectedNumberOfCas2UsersWereMigrated()
     assertExpectedNumberOfNomisUsersWereMigrated()
@@ -72,6 +83,9 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
     val allCas2Applications = assertExpectedNumberOfCas2v2ApplicationsWereMigrated()
     assertThatAllApplicationsDataWasMigratedOrUpdatedSuccessfully(allCas2Applications)
+
+    val allCas2ApplicationAssignments = assertExpectedNumberOfCas2ApplicationAssignmentsWereCreatedOrUpdated()
+    assertThatAllApplicationAssignmentsDataWasMigratedOrUpdatedSuccessfully(allCas2ApplicationAssignments)
   }
 
   @Test
@@ -99,6 +113,12 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     val allApplications = cas2ApplicationRepository.findAll()
     assertThat(allApplications.size).isEqualTo(TOTAL_NO_OF_APPLICATIONS)
     return allApplications
+  }
+
+  private fun assertExpectedNumberOfCas2ApplicationAssignmentsWereCreatedOrUpdated(): List<Cas2ApplicationAssignmentEntity> {
+    val allApplicationAssignments = cas2ApplicationAssignmentRepository.findAll()
+    assertThat(allApplicationAssignments.size).isEqualTo(TOTAL_NO_OF_APPLICATIONS)
+    return allApplicationAssignments
   }
 
   private fun assertExpectedNumberOfCas2UsersWereMigrated(): List<Cas2UserEntity> {
@@ -155,7 +175,21 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
         )
       } else {
         assertThat(cas2Application.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
-        assertThat(cas2Application.createdByCas2User).isNotNull
+        assertThat(cas2Application.createdByCas2User!!.id).isEqualTo(cas2Application.createdByUser.id)
+      }
+    }
+  }
+
+  private fun assertThatAllApplicationAssignmentsDataWasMigratedOrUpdatedSuccessfully(allApplicationAssignments: List<Cas2ApplicationAssignmentEntity>) {
+    allApplicationAssignments.forEach { cas2ApplicationAssignment ->
+      val cas2v2Application = cas2v2Applications.firstOrNull { it.id == cas2ApplicationAssignment.application.id }
+      if (cas2v2Application != null) {
+        assertThat(cas2ApplicationAssignment.application.id).isEqualTo(cas2v2Application.id)
+        assertThat(cas2ApplicationAssignment.prisonCode).isEqualTo(cas2v2Application.referringPrisonCode)
+        assertThat(cas2ApplicationAssignment.allocatedPomUser).isEqualTo(cas2v2Application.createdByUser.id)
+        assertThat(cas2ApplicationAssignment.allocatedPomCas2User).isEqualTo(cas2v2Application.createdByUser.id)
+      } else {
+        assertThat(cas2ApplicationAssignment.allocatedPomCas2User?.id).isEqualTo(cas2ApplicationAssignment.allocatedPomUser?.id)
       }
     }
   }

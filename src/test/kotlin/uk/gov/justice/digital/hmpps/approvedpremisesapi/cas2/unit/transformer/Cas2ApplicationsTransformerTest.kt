@@ -238,7 +238,7 @@ class Cas2ApplicationsTransformerTest {
           application,
           newPrison.prisonCode,
           null,
-          OffsetDateTime.now(),
+          createdAt = OffsetDateTime.now(),
         ),
       )
 
