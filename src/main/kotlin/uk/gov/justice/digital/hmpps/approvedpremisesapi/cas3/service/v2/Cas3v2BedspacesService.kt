@@ -131,6 +131,17 @@ class Cas3v2BedspacesService(
 
   fun getPremisesBedspaces(premisesId: UUID): List<Cas3BedspacesEntity> = cas3BedspacesRepository.findByPremisesId(premisesId)
 
+  fun getBedspaceArchiveHistory(bedspaceId: UUID): CasResult<List<Cas3BedspaceArchiveAction>> = validatedCasResult {
+    val domainEvents = cas3v2DomainEventService.getBedspaceActiveDomainEvents(
+      bedspaceId,
+      listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
+    )
+    return when {
+      domainEvents.any() -> getBedspaceArchiveActions(domainEvents)
+      else -> success(emptyList())
+    }
+  }
+
   fun getBedspacesArchiveHistory(bedspaceIds: List<UUID>): List<Cas3BedspaceArchiveActions> {
     val domainEvents = cas3v2DomainEventService.getBedspacesActiveDomainEvents(
       bedspaceIds,
