@@ -113,7 +113,7 @@ class PremisesController(
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     val serviceName = when (premises) {
-      is TemporaryAccommodationPremisesEntity -> ServiceName.temporaryAccommodation
+      is TemporaryAccommodationPremisesEntity -> throw ForbiddenProblem("This Api endpoint does not support creating premises of type Temporary Accommodation use /cas3/premises/{premisesId} Api endpoint.")
       else -> ServiceName.approvedPremises
     }
 
@@ -121,53 +121,25 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val updatePremisesResult = when (serviceName) {
-      ServiceName.temporaryAccommodation ->
-        cas3PremisesService
-          .updatePremises(
-            premisesId,
-            body.addressLine1,
-            body.addressLine2,
-            body.town,
-            body.postcode,
-            body.localAuthorityAreaId,
-            body.probationRegionId,
-            body.characteristicIds,
-            body.notes,
-            body.status,
-            Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-            body.turnaroundWorkingDayCount,
-          )
-
-      else ->
-        premisesService
-          .updatePremises(
-            premisesId,
-            body.addressLine1,
-            body.addressLine2,
-            body.town,
-            body.postcode,
-            body.localAuthorityAreaId,
-            body.probationRegionId,
-            body.characteristicIds,
-            body.notes,
-            body.status,
-          )
-    }
+    val updatePremisesResult =
+      premisesService
+        .updatePremises(
+          premisesId,
+          body.addressLine1,
+          body.addressLine2,
+          body.town,
+          body.postcode,
+          body.localAuthorityAreaId,
+          body.probationRegionId,
+          body.characteristicIds,
+          body.notes,
+          body.status,
+        )
 
     var validationResult = when (updatePremisesResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> updatePremisesResult.entity
-    }
-
-    val bodyName = body.name
-    if (bodyName != null && serviceName == ServiceName.temporaryAccommodation) {
-      validationResult = when (val renamePremisesResult = cas3PremisesService.renamePremises(premisesId, bodyName)) {
-        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
-        is AuthorisableActionResult.Success -> renamePremisesResult.entity
-        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      }
     }
 
     val updatedPremises = when (validationResult) {
@@ -181,10 +153,7 @@ class PremisesController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    val totalBeds = when (serviceName) {
-      ServiceName.temporaryAccommodation -> cas3PremisesService.getBedspaceCount(updatedPremises)
-      else -> premisesService.getBedCount(updatedPremises)
-    }
+    val totalBeds = premisesService.getBedCount(updatedPremises)
 
     return ResponseEntity.ok(
       premisesTransformer.transformJpaToApi(
