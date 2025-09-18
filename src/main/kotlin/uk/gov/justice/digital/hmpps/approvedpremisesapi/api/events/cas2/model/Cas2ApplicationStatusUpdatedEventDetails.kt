@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 
 /**
  *
@@ -28,7 +29,7 @@ data class Cas2ApplicationStatusUpdatedEventDetails(
   @get:JsonProperty("newStatus", required = true) val newStatus: Cas2Status,
 
   @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("updatedBy", required = true) val updatedBy: ExternalUser,
+  @get:JsonProperty("updatedBy", required = true) val updatedBy: Cas2User,
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("updatedAt", required = true) val updatedAt: java.time.Instant,

@@ -15,18 +15,19 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2UserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -46,15 +48,16 @@ class StatusUpdateServiceTest {
   private val mockStatusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val mockStatusUpdateDetailRepository = mockk<Cas2StatusUpdateDetailRepository>()
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
-  private val assessor = ExternalUserEntityFactory()
+  private val assessor = Cas2UserEntityFactory()
     .withUsername("JOHN_SMITH_NACRO")
     .withName("John Smith")
     .withEmail("john@nacro.example.com")
-    .withOrigin("NACRO")
+    .withExternalOrigin("NACRO")
     .produce()
 
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockStatusTransformer = mockk<ApplicationStatusTransformer>()
+  private val mockCas2UserTransformer = mockk<Cas2UserTransformer>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val cas2EmailService = mockk<Cas2EmailService>()
 
@@ -78,6 +81,7 @@ class StatusUpdateServiceTest {
     mockEmailNotificationService,
     mockStatusFinder,
     mockStatusTransformer,
+    mockCas2UserTransformer,
     cas2EmailService,
     applicationUrlTemplate,
     applicationOverviewUrlTemplate,
@@ -180,9 +184,30 @@ class StatusUpdateServiceTest {
         } just Runs
       }
 
+      // (username=JOHN_SMITH_NACRO, name=John Smith, email=john@nacro.example.com, id=f5a5fa20-321d-4624-8835-473c62670ac7, userType=NOMIS, nomisStaffId=863089, activeNomisCaseloadId=null, deliusTeamCodes=null, deliusStaffCode=null, isEnabled=true, isActive=true, nomisAccountType=null, externalOrigin=NACRO, applications=[]
+
       @Test
       fun `saves and asks the domain event service to create a status-updated event`() {
+        every { mockCas2UserTransformer.transformJpaToApi(any()) }.returns(
+          Cas2UserFactory()
+            .withId(assessor.id)
+            .withUsername(assessor.username)
+            .withExternalOrigin(assessor.externalOrigin)
+            .withName(assessor.name)
+            .withEmail(assessor.email)
+            .withDeliusStaffCode(assessor.deliusStaffCode)
+            .withDeliusTeamCodes(assessor.deliusTeamCodes)
+            .withNomisAccountType(assessor.nomisAccountType)
+            .withNomisStaffIdentifier(assessor.nomisStaffId)
+            .withIsEnabled(assessor.isEnabled)
+            .withIsActive(assessor.isActive)
+            .withUserType(assessor.userType)
+            .withActiveNomisCaseloadId(assessor.activeNomisCaseloadId)
+            .withApplications(assessor.applications)
+            .produce(),
+        )
         every { cas2EmailService.getReferrerEmail(any()) }.returns(application.getCreatedByUserEmail())
+
         statusUpdateService.createForAssessment(
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
@@ -197,11 +222,21 @@ class StatusUpdateServiceTest {
                 it.data.eventType == EventType.applicationStatusUpdated &&
                 it.data.eventDetails.applicationId == applicationId &&
                 it.data.eventDetails.applicationUrl == "http://example.com/application-status-updated/#eventId" &&
-                it.data.eventDetails.updatedBy == ExternalUser(
+                it.data.eventDetails.updatedBy == Cas2User(
                   username = "JOHN_SMITH_NACRO",
                   name = "John Smith",
                   email = "john@nacro.example.com",
-                  origin = "NACRO",
+                  externalOrigin = "NACRO",
+                  id = assessor.id,
+                  userType = assessor.userType,
+                  deliusTeamCodes = assessor.deliusTeamCodes,
+                  deliusStaffCode = assessor.deliusStaffCode,
+                  isEnabled = assessor.isEnabled,
+                  isActive = assessor.isActive,
+                  nomisAccountType = assessor.nomisAccountType,
+                  nomisStaffId = assessor.nomisStaffId,
+                  activeNomisCaseloadId = assessor.activeNomisCaseloadId,
+                  applications = assessor.applications,
                 ) &&
                 it.data.eventDetails.personReference == PersonReference(
                   crn = "CRN123",
@@ -310,6 +345,24 @@ class StatusUpdateServiceTest {
 
         @Test
         fun `saves a status update entity with detail and emits a domain event`() {
+          every { mockCas2UserTransformer.transformJpaToApi(any()) }.returns(
+            Cas2UserFactory()
+              .withId(assessor.id)
+              .withUsername(assessor.username)
+              .withExternalOrigin(assessor.externalOrigin)
+              .withName(assessor.name)
+              .withEmail(assessor.email)
+              .withDeliusStaffCode(assessor.deliusStaffCode)
+              .withDeliusTeamCodes(assessor.deliusTeamCodes)
+              .withNomisAccountType(assessor.nomisAccountType)
+              .withNomisStaffIdentifier(assessor.nomisStaffId)
+              .withIsEnabled(assessor.isEnabled)
+              .withIsActive(assessor.isActive)
+              .withUserType(assessor.userType)
+              .withActiveNomisCaseloadId(assessor.activeNomisCaseloadId)
+              .withApplications(assessor.applications)
+              .produce(),
+          )
           every { mockStatusTransformer.transformStatusDetailListToDetailItemList(listOf(statusDetail)) } returns listOf(
             Cas2StatusDetail("exampleStatusDetail", ""),
           )
@@ -346,11 +399,21 @@ class StatusUpdateServiceTest {
                   it.data.eventType == EventType.applicationStatusUpdated &&
                   it.data.eventDetails.applicationId == applicationId &&
                   it.data.eventDetails.applicationUrl == "http://example.com/application-status-updated/#eventId" &&
-                  it.data.eventDetails.updatedBy == ExternalUser(
+                  it.data.eventDetails.updatedBy == Cas2User(
                     username = "JOHN_SMITH_NACRO",
                     name = "John Smith",
                     email = "john@nacro.example.com",
-                    origin = "NACRO",
+                    externalOrigin = "NACRO",
+                    id = assessor.id,
+                    userType = assessor.userType,
+                    deliusTeamCodes = assessor.deliusTeamCodes,
+                    deliusStaffCode = assessor.deliusStaffCode,
+                    isEnabled = assessor.isEnabled,
+                    isActive = assessor.isActive,
+                    nomisAccountType = assessor.nomisAccountType,
+                    nomisStaffId = assessor.nomisStaffId,
+                    activeNomisCaseloadId = assessor.activeNomisCaseloadId,
+                    applications = assessor.applications,
                   ) &&
                   it.data.eventDetails.personReference == PersonReference(
                     crn = "CRN123",
@@ -380,7 +443,24 @@ class StatusUpdateServiceTest {
 
           val assessmentWithNoEmail = Cas2AssessmentEntityFactory()
             .withApplication(submittedApplicationWithNoReferrerEmail).produce()
-
+          every { mockCas2UserTransformer.transformJpaToApi(any()) }.returns(
+            Cas2UserFactory()
+              .withId(assessor.id)
+              .withUsername(assessor.username)
+              .withExternalOrigin(assessor.externalOrigin)
+              .withName(assessor.name)
+              .withEmail(assessor.email)
+              .withDeliusStaffCode(assessor.deliusStaffCode)
+              .withDeliusTeamCodes(assessor.deliusTeamCodes)
+              .withNomisAccountType(assessor.nomisAccountType)
+              .withNomisStaffIdentifier(assessor.nomisStaffId)
+              .withIsEnabled(assessor.isEnabled)
+              .withIsActive(assessor.isActive)
+              .withUserType(assessor.userType)
+              .withActiveNomisCaseloadId(assessor.activeNomisCaseloadId)
+              .withApplications(assessor.applications)
+              .produce(),
+          )
           every { mockAssessmentRepository.findByIdOrNull(assessmentWithNoEmail.id) } answers
             {
               assessmentWithNoEmail
