@@ -428,6 +428,10 @@ class Cas3ApplicationServiceTest {
         .withYieldedApArea { ApAreaEntityFactory().produce() }
         .produce()
 
+      val mainPdu = mockk<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity>()
+      every { mainPdu.id } returns UUID.randomUUID()
+      every { mainPdu.name } returns "Main PDU"
+
       val outOfRegionPdu = mockk<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity>()
       every { outOfRegionPdu.id } returns UUID.randomUUID()
       every { outOfRegionPdu.name } returns "Out Of Region PDU"
@@ -435,6 +439,7 @@ class Cas3ApplicationServiceTest {
       val application = TemporaryAccommodationApplicationEntityFactory()
         .withCreatedByUser(user)
         .withProbationRegion(user.probationRegion)
+        .withProbationDeliveryUnit(mainPdu)
         .withOutOfRegionProbationRegion(outOfRegionProbationRegion)
         .withoutOfRegionProbationDeliveryUnit(outOfRegionPdu)
         .produce()
@@ -443,11 +448,11 @@ class Cas3ApplicationServiceTest {
 
       val savedApplication = mockApplicationRepository.save(application)
 
-      assertThat(savedApplication.outOfRegionProbationRegion).isNotNull
-      assertThat(savedApplication.outOfRegionProbationRegion!!.id).isEqualTo(outOfRegionProbationRegion.id)
-      assertThat(savedApplication.outOfRegionProbationDeliveryUnit).isNotNull
-      assertThat(savedApplication.outOfRegionProbationDeliveryUnit!!.id).isEqualTo(outOfRegionPdu.id)
-      assertThat(savedApplication.outOfRegionProbationDeliveryUnit!!.name).isEqualTo("Out Of Region PDU")
+      assertThat(savedApplication.previousReferralProbationRegion).isNotNull
+      assertThat(savedApplication.previousReferralProbationRegion!!.id).isEqualTo(outOfRegionProbationRegion.id)
+      assertThat(savedApplication.previousReferralProbationDeliveryUnit).isNotNull
+      assertThat(savedApplication.previousReferralProbationDeliveryUnit!!.id).isEqualTo(outOfRegionPdu.id)
+      assertThat(savedApplication.previousReferralProbationDeliveryUnit!!.name).isEqualTo("Out Of Region PDU")
 
       verify { mockApplicationRepository.save(application) }
     }
@@ -465,8 +470,8 @@ class Cas3ApplicationServiceTest {
 
       val savedApplication = mockApplicationRepository.save(application)
 
-      assertThat(savedApplication.outOfRegionProbationRegion).isNull()
-      assertThat(savedApplication.outOfRegionProbationDeliveryUnit).isNull()
+      assertThat(savedApplication.previousReferralProbationRegion).isNull()
+      assertThat(savedApplication.previousReferralProbationDeliveryUnit).isNull()
 
       assertThat(savedApplication.probationRegion).isNotNull
       assertThat(savedApplication.probationRegion.id).isEqualTo(user.probationRegion.id)

@@ -91,15 +91,16 @@ class Cas3ApplicationService(
       dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName
       personReleaseDate = submitApplication.personReleaseDate
       prisonReleaseTypes = submitApplication.prisonReleaseTypes?.joinToString(",")
-      probationDeliveryUnit = submitApplication.probationDeliveryUnitId?.let {
-        probationDeliveryUnitRepository.findByIdOrNull(it)
+      probationRegion = when (submitApplication.outOfRegionProbationRegionId) {
+        null -> user.probationRegion
+        else -> probationRegionRepository.findByIdOrNull(submitApplication.outOfRegionProbationRegionId)!!
       }
-      outOfRegionProbationRegion = submitApplication.outOfRegionProbationRegionId?.let {
-        probationRegionRepository.findByIdOrNull(it)
+      probationDeliveryUnit = when (submitApplication.outOfRegionPduId) {
+        null -> probationDeliveryUnitRepository.findByIdOrNull(submitApplication.probationDeliveryUnitId)
+        else -> probationDeliveryUnitRepository.findByIdOrNull(submitApplication.outOfRegionPduId)
       }
-      outOfRegionProbationDeliveryUnit = submitApplication.outOfRegionPduId?.let {
-        probationDeliveryUnitRepository.findByIdOrNull(it)
-      }
+      previousReferralProbationRegion = submitApplication.outOfRegionProbationRegionId?.let { user.probationRegion }
+      previousReferralProbationDeliveryUnit = submitApplication.outOfRegionPduId?.let { probationDeliveryUnitRepository.findByIdOrNull(submitApplication.probationDeliveryUnitId)!! }
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData!!)

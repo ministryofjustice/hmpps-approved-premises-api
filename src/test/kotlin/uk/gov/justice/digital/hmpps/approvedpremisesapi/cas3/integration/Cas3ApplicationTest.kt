@@ -1263,17 +1263,15 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Out of region test!\"}")
           assertThat(persistedApplication.name).isEqualTo(offenderName)
 
-          assertThat(persistedApplication.probationRegion.id).isEqualTo(submittingUser.probationRegion.id)
-          assertThat(persistedApplication.probationDeliveryUnit!!.id).isEqualTo(mainProbationDeliveryUnit.id)
+          assertThat(persistedApplication.probationRegion.id).isEqualTo(outOfRegionProbationRegion.id)
+          assertThat(persistedApplication.probationDeliveryUnit!!.id).isEqualTo(outOfRegionProbationDeliveryUnit.id)
 
-          assertThat(persistedApplication.outOfRegionProbationRegion).isNotNull
-          assertThat(persistedApplication.outOfRegionProbationRegion!!.id).isEqualTo(outOfRegionProbationRegion.id)
-          assertThat(persistedApplication.outOfRegionProbationRegion!!.name).isEqualTo("Out Of Region Probation Region")
+          assertThat(persistedApplication.previousReferralProbationRegion).isNotNull
+          assertThat(persistedApplication.previousReferralProbationRegion!!.id).isEqualTo(submittingUser.probationRegion.id)
 
-          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit).isNotNull
-          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit!!.id).isEqualTo(outOfRegionProbationDeliveryUnit.id)
-          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit!!.name).isEqualTo("Out Of Region PDU")
-          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit!!.probationRegion.id).isEqualTo(outOfRegionProbationRegion.id)
+          assertThat(persistedApplication.previousReferralProbationDeliveryUnit).isNotNull
+          assertThat(persistedApplication.previousReferralProbationDeliveryUnit!!.id).isEqualTo(mainProbationDeliveryUnit.id)
+          assertThat(persistedApplication.previousReferralProbationDeliveryUnit!!.probationRegion.id).isEqualTo(submittingUser.probationRegion.id)
         }
       }
     }
@@ -1326,8 +1324,8 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           assertThat(persistedApplication.probationRegion.id).isEqualTo(submittingUser.probationRegion.id)
           assertThat(persistedApplication.probationDeliveryUnit!!.id).isEqualTo(probationDeliveryUnit.id)
 
-          assertThat(persistedApplication.outOfRegionProbationRegion).isNull()
-          assertThat(persistedApplication.outOfRegionProbationDeliveryUnit).isNull()
+          assertThat(persistedApplication.previousReferralProbationRegion).isNull()
+          assertThat(persistedApplication.previousReferralProbationDeliveryUnit).isNull()
         }
       }
     }

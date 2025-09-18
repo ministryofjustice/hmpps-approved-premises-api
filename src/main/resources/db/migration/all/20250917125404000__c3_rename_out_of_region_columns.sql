@@ -1,0 +1,5 @@
+ALTER TABLE temporary_accommodation_applications
+    RENAME COLUMN out_of_region_probation_region_id TO previous_referral_probation_region_id;
+
+ALTER TABLE temporary_accommodation_applications
+    RENAME COLUMN out_of_region_probation_delivery_unit_id TO previous_referral_probation_delivery_unit_id;
