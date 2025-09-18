@@ -317,6 +317,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2AssessmentEntity.nacroReferralId).isEqualTo(cas2v2AssessmentEntity.nacroReferralId)
     assertThat(cas2AssessmentEntity.assessorName).isEqualTo(cas2v2AssessmentEntity.assessorName)
     assertThat(cas2AssessmentEntity.createdAt).isEqualTo(cas2v2AssessmentEntity.createdAt)
+    assertThat(cas2AssessmentEntity.applicationOrigin).isEqualTo(cas2v2AssessmentEntity.application.applicationOrigin)
   }
 
   private fun assertThatCas2v2ApplicationNotesMatch(cas2ApplicationNoteEntity: Cas2ApplicationNoteEntity, cas2v2ApplicationNoteEntity: Cas2v2ApplicationNoteEntity) {
