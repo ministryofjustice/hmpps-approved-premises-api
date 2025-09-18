@@ -149,12 +149,14 @@ class Cas2MergeMigrationJob(
   }
 
   private fun generateCas2v2Assessment(assessmentIds: List<UUID>) = cas2v2AssessmentRepository.findAllById(assessmentIds).map {
+    val application = cas2ApplicationRepository.findById(it.application.id).get()
     Cas2AssessmentEntity(
       id = it.id,
       createdAt = it.createdAt,
       application = cas2ApplicationRepository.findById(it.application.id).get(),
       nacroReferralId = it.nacroReferralId,
       assessorName = it.assessorName,
+      applicationOrigin = application.applicationOrigin,
     )
   }
 

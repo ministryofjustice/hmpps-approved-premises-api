@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
@@ -51,5 +52,6 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
     nacroReferralId = this.nacroReferralId,
     assessorName = this.assessorName,
     statusUpdates = this.statusUpdates,
+    applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
   )
 }
