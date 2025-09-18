@@ -31,6 +31,6 @@ data class ExternalUserEntity(
 
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,
-) : Cas2User {
+) : UnifiedUser {
   override fun toString() = "External user $id"
 }
