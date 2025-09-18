@@ -40,6 +40,6 @@ data class NomisUserEntity(
 
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
-) : Cas2User {
+) : UnifiedUser {
   override fun toString() = "Nomis user $id"
 }
