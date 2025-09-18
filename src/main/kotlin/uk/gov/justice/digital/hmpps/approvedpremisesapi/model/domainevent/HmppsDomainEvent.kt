@@ -14,6 +14,7 @@ data class HmppsDomainEvent(
 
 data class PersonReference(val identifiers: List<PersonIdentifier> = listOf()) {
   fun findNomsNumber() = get("NOMS")
+  fun findCrn() = get("CRN")
   operator fun get(key: String) = identifiers.find { it.type == key }?.value
 }
 
