@@ -155,7 +155,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         premisesEndDate = null,
         premisesStatus = PropertyStatus.archived,
         bedspaceCount = 1,
-        bedStartDates = listOf(
+        bedspaceStartDates = listOf(
           LocalDate.now().plusDays(3),
         ),
       ) { user, jwt, premises, rooms, bedspaces ->
@@ -208,7 +208,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
         premisesEndDate = null,
         premisesStatus = PropertyStatus.active,
         bedspaceCount = 1,
-        bedStartDates = listOf(
+        bedspaceStartDates = listOf(
           LocalDate.now().plusDays(3),
         ),
       ) { user, jwt, premises, rooms, bedspaces ->

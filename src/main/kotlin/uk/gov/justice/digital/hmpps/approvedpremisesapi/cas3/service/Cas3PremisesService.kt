@@ -986,7 +986,7 @@ class Cas3PremisesService(
       DomainEventType.CAS3_BEDSPACE_ARCHIVED,
     ) ?: return@validatedCasResult "$.premisesId" hasSingleValidationError "bedspaceNotScheduledToArchive"
 
-    if (premises.endDate != null && premises.endDate!!.isAfter(LocalDate.now())) {
+    if (premises.endDate != null && premises.endDate!!.isAfter(LocalDate.now(clock))) {
       domainEventRepository.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(
         premises.id,
         CAS3_PREMISES_ARCHIVED,

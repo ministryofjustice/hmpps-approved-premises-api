@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
@@ -15,7 +18,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -27,6 +33,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.Instant
@@ -135,6 +144,51 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     return bedspace
   }
 
+  protected fun createBedspaces(premises: TemporaryAccommodationPremisesEntity, status: Cas3BedspaceStatus, withoutEndDate: Boolean = false): List<BedEntity> {
+    var startDate: LocalDate?
+    var endDate: LocalDate?
+    val bedspaces = mutableListOf<BedEntity>()
+
+    repeat(randomInt(1, 5)) {
+      when (status) {
+        Cas3BedspaceStatus.online -> {
+          startDate = LocalDate.now().randomDateBefore(360)
+          endDate = when {
+            withoutEndDate -> null
+            else -> LocalDate.now().plusDays(1).randomDateAfter(90)
+          }
+        }
+        Cas3BedspaceStatus.upcoming -> {
+          startDate = LocalDate.now().plusDays(1).randomDateAfter(30)
+          endDate = when {
+            withoutEndDate -> null
+            else -> startDate.plusDays(1).randomDateAfter(90)
+          }
+        }
+        Cas3BedspaceStatus.archived -> {
+          endDate = LocalDate.now().minusDays(1).randomDateBefore(360)
+          startDate = endDate!!.randomDateBefore(360)
+        }
+      }
+
+      bedspaces.add(createBedspaceInPremises(premises, startDate, endDate))
+    }
+
+    return bedspaces
+  }
+
+  protected fun createPremisesSummary(premises: TemporaryAccommodationPremisesEntity, bedspaceCount: Int) = Cas3PremisesSummary(
+    id = premises.id,
+    name = premises.name,
+    addressLine1 = premises.addressLine1,
+    addressLine2 = premises.addressLine2,
+    postcode = premises.postcode,
+    pdu = premises.probationDeliveryUnit?.name!!,
+    status = premises.status,
+    bedspaceCount = bedspaceCount,
+    localAuthorityAreaName = premises.localAuthorityArea?.name!!,
+  )
+
   @SuppressWarnings("LongParameterList")
   fun createPremisesUnarchiveDomainEvent(
     premises: TemporaryAccommodationPremisesEntity,
@@ -194,6 +248,52 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     )
   }
 
+  @SuppressWarnings("LongParameterList")
+  protected fun createCas3Premises(
+    premises: TemporaryAccommodationPremisesEntity,
+    probationRegion: ProbationRegionEntity,
+    probationDeliveryUnit: ProbationDeliveryUnitEntity,
+    localAuthorityArea: LocalAuthorityAreaEntity,
+    status: Cas3PremisesStatus,
+    scheduleUnarchiveDate: LocalDate? = null,
+    totalOnlineBedspaces: Int,
+    totalUpcomingBedspaces: Int,
+    totalArchivedBedspaces: Int,
+  ) = Cas3Premises(
+    id = premises.id,
+    reference = premises.name,
+    addressLine1 = premises.addressLine1,
+    addressLine2 = premises.addressLine2,
+    postcode = premises.postcode,
+    town = premises.town,
+    probationRegion = ProbationRegion(probationRegion.id, probationRegion.name),
+    probationDeliveryUnit = ProbationDeliveryUnit(probationDeliveryUnit.id, probationDeliveryUnit.name),
+    localAuthorityArea = LocalAuthorityArea(
+      localAuthorityArea.id,
+      localAuthorityArea.identifier,
+      localAuthorityArea.name,
+    ),
+    startDate = premises.createdAt.toLocalDate(),
+    endDate = premises.endDate,
+    scheduleUnarchiveDate = scheduleUnarchiveDate,
+    status = status,
+    characteristics = premises.characteristics.sortedBy { it.id }.map { characteristic ->
+      Characteristic(
+        id = characteristic.id,
+        name = characteristic.name,
+        propertyName = characteristic.propertyName,
+        serviceScope = Characteristic.ServiceScope.temporaryMinusAccommodation,
+        modelScope = Characteristic.ModelScope.forValue(characteristic.modelScope),
+      )
+    },
+    notes = premises.notes,
+    turnaroundWorkingDays = premises.turnaroundWorkingDays,
+    totalOnlineBedspaces = totalOnlineBedspaces,
+    totalUpcomingBedspaces = totalUpcomingBedspaces,
+    totalArchivedBedspaces = totalArchivedBedspaces,
+    archiveHistory = emptyList(),
+  )
+
   protected fun createCas3Bedspace(
     bed: BedEntity,
     room: RoomEntity,
@@ -248,11 +348,6 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     characteristics.remove(randomCharacteristic)
     return randomCharacteristic
   }
-
-  protected fun getPremisesCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
-    modelScope = "premises",
-    serviceScope = ServiceName.temporaryAccommodation.value,
-  )
 
   @SuppressWarnings("LongParameterList")
   protected fun createBedspaceArchiveDomainEvent(
@@ -347,7 +442,12 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     )
   }
 
-  private fun getRoomCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
+  protected fun getPremisesCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
+    modelScope = "premises",
+    serviceScope = ServiceName.temporaryAccommodation.value,
+  )
+
+  protected fun getRoomCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
     modelScope = "room",
     serviceScope = ServiceName.temporaryAccommodation.value,
   )
