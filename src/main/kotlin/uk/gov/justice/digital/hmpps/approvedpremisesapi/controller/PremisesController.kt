@@ -45,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3Tur
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspaceCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -113,7 +112,7 @@ class PremisesController(
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     val serviceName = when (premises) {
-      is TemporaryAccommodationPremisesEntity -> ServiceName.temporaryAccommodation
+      is TemporaryAccommodationPremisesEntity -> throw BadRequestProblem(errorDetail = "This Api endpoint does not support updating premises of type Temporary Accommodation use /cas3/premises/{premisesId} Api endpoint.")
       else -> ServiceName.approvedPremises
     }
 
@@ -121,53 +120,25 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val updatePremisesResult = when (serviceName) {
-      ServiceName.temporaryAccommodation ->
-        cas3PremisesService
-          .updatePremises(
-            premisesId,
-            body.addressLine1,
-            body.addressLine2,
-            body.town,
-            body.postcode,
-            body.localAuthorityAreaId,
-            body.probationRegionId,
-            body.characteristicIds,
-            body.notes,
-            body.status,
-            Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-            body.turnaroundWorkingDayCount,
-          )
-
-      else ->
-        premisesService
-          .updatePremises(
-            premisesId,
-            body.addressLine1,
-            body.addressLine2,
-            body.town,
-            body.postcode,
-            body.localAuthorityAreaId,
-            body.probationRegionId,
-            body.characteristicIds,
-            body.notes,
-            body.status,
-          )
-    }
+    val updatePremisesResult =
+      premisesService
+        .updatePremises(
+          premisesId,
+          body.addressLine1,
+          body.addressLine2,
+          body.town,
+          body.postcode,
+          body.localAuthorityAreaId,
+          body.probationRegionId,
+          body.characteristicIds,
+          body.notes,
+          body.status,
+        )
 
     var validationResult = when (updatePremisesResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> updatePremisesResult.entity
-    }
-
-    val bodyName = body.name
-    if (bodyName != null && serviceName == ServiceName.temporaryAccommodation) {
-      validationResult = when (val renamePremisesResult = cas3PremisesService.renamePremises(premisesId, bodyName)) {
-        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
-        is AuthorisableActionResult.Success -> renamePremisesResult.entity
-        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      }
     }
 
     val updatedPremises = when (validationResult) {
@@ -181,10 +152,7 @@ class PremisesController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    val totalBeds = when (serviceName) {
-      ServiceName.temporaryAccommodation -> cas3PremisesService.getBedspaceCount(updatedPremises)
-      else -> premisesService.getBedCount(updatedPremises)
-    }
+    val totalBeds = premisesService.getBedCount(updatedPremises)
 
     return ResponseEntity.ok(
       premisesTransformer.transformJpaToApi(
@@ -196,63 +164,37 @@ class PremisesController(
   }
 
   override fun premisesPost(body: NewPremises, xServiceName: ServiceName?): ResponseEntity<Premises> {
-    val serviceName = when (xServiceName == null) {
-      true -> ServiceName.approvedPremises
-      false -> xServiceName
+    val serviceName = if (xServiceName == ServiceName.temporaryAccommodation) {
+      throw BadRequestProblem(errorDetail = "This Api endpoint does not support creating premises of type Temporary Accommodation use /cas3/premises/{premisesId} Api endpoint.")
+    } else {
+      xServiceName ?: ServiceName.approvedPremises
     }
 
     if (!userAccessService.currentUserCanAccessRegion(serviceName, body.probationRegionId)) {
       throw ForbiddenProblem()
     }
 
-    val premises: PremisesEntity
-    val totalBeds: Int
+    val premises = extractResultEntityOrThrow(
+      premisesService.createNewPremises(
+        addressLine1 = body.addressLine1,
+        addressLine2 = body.addressLine2,
+        town = body.town,
+        postcode = body.postcode,
+        latitude = null,
+        longitude = null,
+        service = serviceName.value,
+        localAuthorityAreaId = body.localAuthorityAreaId,
+        probationRegionId = body.probationRegionId,
+        name = body.name,
+        notes = body.notes,
+        characteristicIds = body.characteristicIds,
+        status = body.status,
+        probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
+        turnaroundWorkingDays = body.turnaroundWorkingDayCount,
+      ),
+    )
 
-    when (xServiceName) {
-      ServiceName.temporaryAccommodation -> {
-        premises = extractEntityFromCasResult(
-          cas3PremisesService.createNewPremises(
-            addressLine1 = body.addressLine1,
-            addressLine2 = body.addressLine2,
-            town = body.town,
-            postcode = body.postcode,
-            localAuthorityAreaId = body.localAuthorityAreaId,
-            probationRegionId = body.probationRegionId,
-            name = body.name,
-            notes = body.notes,
-            characteristicIds = body.characteristicIds,
-            status = body.status,
-            probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-            turnaroundWorkingDays = body.turnaroundWorkingDayCount,
-          ),
-        )
-
-        totalBeds = cas3PremisesService.getBedspaceCount(premises)
-      }
-      else -> {
-        premises = extractResultEntityOrThrow(
-          premisesService.createNewPremises(
-            addressLine1 = body.addressLine1,
-            addressLine2 = body.addressLine2,
-            town = body.town,
-            postcode = body.postcode,
-            latitude = null,
-            longitude = null,
-            service = serviceName.value,
-            localAuthorityAreaId = body.localAuthorityAreaId,
-            probationRegionId = body.probationRegionId,
-            name = body.name,
-            notes = body.notes,
-            characteristicIds = body.characteristicIds,
-            status = body.status,
-            probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-            turnaroundWorkingDays = body.turnaroundWorkingDayCount,
-          ),
-        )
-
-        totalBeds = premisesService.getBedCount(premises)
-      }
-    }
+    val totalBeds = premisesService.getBedCount(premises)
 
     return ResponseEntity(
       premisesTransformer.transformJpaToApi(
