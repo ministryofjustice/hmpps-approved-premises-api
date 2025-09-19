@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.FIXED_CRE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
@@ -49,6 +51,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
   lateinit var cas2v2ApplicationNotes: List<Cas2v2ApplicationNoteEntity>
   lateinit var cas2v2StatusUpdates: List<Cas2v2StatusUpdateEntity>
   lateinit var cas2StatusUpdates: List<Cas2StatusUpdateEntity>
+  lateinit var cas2v2StatusUpdateDetails: List<Cas2v2StatusUpdateDetailEntity>
 
   @BeforeEach
   fun setupData() {
@@ -99,6 +102,15 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
       cas2v2ApplicationRepository.save(it)
       statusUpdate
     }
+    cas2v2StatusUpdateDetails = cas2v2StatusUpdates.map {
+      val statusUpdateDetail = cas2v2StatusUpdateDetailEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.parse("2022-09-19T13:00:13.530161Z"))
+        withStatusUpdate(it)
+        withLabel(randomStringUpperCase(4))
+      }
+      cas2v2StatusUpdateRepository.save(it)
+      statusUpdateDetail
+    }
     cas2Applications = generateSequence {
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(nomisUsers.random())
@@ -142,6 +154,9 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
     val allCas2StatusUpdates = assertExpectedNumberOfCas2v2StatusUpdatesWereMigrated()
     assertThatAllStatusUpdatesDataWasMigratedOrUpdatedSuccessfully(allCas2StatusUpdates)
+
+    val allCas2StatusUpdateDetails = assertExpectedNumberOfCas2v2StatusUpdateDetailsWereMigrated()
+    assertThatCas2v2StatusUpdateDetailsDataWasMigratedSuccessfully(allCas2StatusUpdateDetails)
   }
 
   private fun assertExpectedNumberOfCas2v2ApplicationsWereMigrated(): List<Cas2ApplicationEntity> {
@@ -166,6 +181,12 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     val allAssessments = cas2AssessmentRepository.findAll()
     assertThat(allAssessments.size).isEqualTo(NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE)
     return allAssessments
+  }
+
+  private fun assertExpectedNumberOfCas2v2StatusUpdateDetailsWereMigrated(): List<Cas2StatusUpdateDetailEntity> {
+    val allStatusUpdateDetails = cas2StatusUpdateDetailRepository.findAll()
+    assertThat(allStatusUpdateDetails.size).isEqualTo(NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE)
+    return allStatusUpdateDetails
   }
 
   private fun assertExpectedNumberOfCas2UsersWereMigrated(): List<Cas2UserEntity> {
@@ -247,6 +268,16 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
       assertThatCas2v2AssessmentsMatch(
         cas2AssessmentEntity = cas2Assessment,
         cas2v2AssessmentEntity = cas2v2Assessment,
+      )
+    }
+  }
+
+  private fun assertThatCas2v2StatusUpdateDetailsDataWasMigratedSuccessfully(allStatusUpdateDetails: List<Cas2StatusUpdateDetailEntity>) {
+    allStatusUpdateDetails.forEach { cas2StatusUpdateDetail ->
+      val cas2v2StatusUpdateDetail = cas2v2StatusUpdateDetails.firstOrNull { it.id == cas2StatusUpdateDetail.id }!!
+      assertThatCas2v2StatusUpdateDetailsMatch(
+        cas2StatusUpdateDetailEntity = cas2StatusUpdateDetail,
+        cas2v2StatusUpdateDetailEntity = cas2v2StatusUpdateDetail,
       )
     }
   }
@@ -356,6 +387,14 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2AssessmentEntity.assessorName).isEqualTo(cas2v2AssessmentEntity.assessorName)
     assertThat(cas2AssessmentEntity.createdAt).isEqualTo(cas2v2AssessmentEntity.createdAt)
     assertThat(cas2AssessmentEntity.applicationOrigin).isEqualTo(cas2v2AssessmentEntity.application.applicationOrigin)
+  }
+
+  private fun assertThatCas2v2StatusUpdateDetailsMatch(cas2StatusUpdateDetailEntity: Cas2StatusUpdateDetailEntity, cas2v2StatusUpdateDetailEntity: Cas2v2StatusUpdateDetailEntity) {
+    assertThat(cas2StatusUpdateDetailEntity.id).isEqualTo(cas2v2StatusUpdateDetailEntity.id)
+    assertThat(cas2StatusUpdateDetailEntity.createdAt).isEqualTo(cas2v2StatusUpdateDetailEntity.createdAt)
+    assertThat(cas2StatusUpdateDetailEntity.statusDetailId).isEqualTo(cas2v2StatusUpdateDetailEntity.statusDetailId)
+    assertThat(cas2StatusUpdateDetailEntity.statusUpdate.id).isEqualTo(cas2v2StatusUpdateDetailEntity.statusUpdate.id)
+    assertThat(cas2StatusUpdateDetailEntity.label).isEqualTo(cas2v2StatusUpdateDetailEntity.label)
   }
 
   private fun assertThatCas2v2ApplicationNotesMatch(cas2ApplicationNoteEntity: Cas2ApplicationNoteEntity, cas2v2ApplicationNoteEntity: Cas2v2ApplicationNoteEntity) {
