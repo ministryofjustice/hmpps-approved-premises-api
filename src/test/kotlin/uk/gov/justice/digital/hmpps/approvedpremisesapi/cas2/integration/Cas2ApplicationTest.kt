@@ -1046,6 +1046,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       withLabel("More information requested")
       withApplication(cas2ApplicationRepository.findById(applicationId).get())
       withAssessor(assessor)
+      withCreatedAt(OffsetDateTime.now().minusDays(2))
     }
     // this is the one that should be returned as latestStatusUpdate
     cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -1053,6 +1054,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       withLabel("Awaiting decision")
       withApplication(cas2ApplicationRepository.findById(applicationId).get())
       withAssessor(assessor)
+      withCreatedAt(OffsetDateTime.now().minusDays(1))
     }
   }
 
