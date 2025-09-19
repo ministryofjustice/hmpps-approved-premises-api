@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
@@ -18,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
@@ -40,6 +43,8 @@ class Cas2MergeMigrationJob(
   private val cas2v2ApplicationNoteRepository: Cas2v2ApplicationNoteRepository,
   private val cas2AssessmentRepository: Cas2AssessmentRepository,
   private val cas2v2AssessmentRepository: Cas2v2AssessmentRepository,
+  private val cas2StatusUpdateRepository: Cas2StatusUpdateRepository,
+  private val cas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository,
   private val migrationLogger: MigrationLogger,
   transactionTemplate: TransactionTemplate,
 ) : MigrationInBatchesJob(migrationLogger, transactionTemplate) {
@@ -51,6 +56,8 @@ class Cas2MergeMigrationJob(
     migrateAndUpdateCas2Applications()
     migrateCas2Assessments()
     migrateCas2ApplicationNotes()
+    migrateCas2StatusUpdates()
+
     migrationLogger.info("Finished cas2 merge migration process...")
   }
 
@@ -110,6 +117,23 @@ class Cas2MergeMigrationJob(
     migrationLogger.info("Finished cas2 application note migration process...")
   }
 
+  private fun migrateCas2StatusUpdates() {
+    migrationLogger.info("Starting cas2 status update migration process...")
+    val cas2EntityIds = cas2StatusUpdateRepository.findStatusUpdateIds()
+    migrationLogger.info("Cas2 status update to update: ${cas2EntityIds.size}.")
+    super.processInBatches(cas2EntityIds, batchSize = BATCH_SIZE) { batchIds ->
+      migrationLogger.info("Update with batch size of ${batchIds.size} in process")
+      cas2StatusUpdateRepository.saveAllAndFlush(generateCas2StatusUpdate(batchIds))
+    }
+    val cas2v2EntityIds = cas2v2StatusUpdateRepository.findStatusUpdateIds()
+    migrationLogger.info("Cas2v2 status update to migrate: ${cas2v2EntityIds.size}.")
+    super.processInBatches(cas2v2EntityIds, batchSize = BATCH_SIZE) { batchIds ->
+      migrationLogger.info("Migrate with batch size of ${batchIds.size} in process")
+      cas2StatusUpdateRepository.saveAllAndFlush(generateCas2v2StatusUpdate(batchIds))
+    }
+    migrationLogger.info("Finished cas2 statusUpdate note migration process...")
+  }
+
   private fun migrateCas2Assessments() {
     migrationLogger.info("Starting cas2 assessment migration process...")
     val entityIds = cas2v2AssessmentRepository.findAssessmentIds()
@@ -119,6 +143,35 @@ class Cas2MergeMigrationJob(
       cas2AssessmentRepository.saveAllAndFlush(generateCas2v2Assessment(batchIds))
     }
     migrationLogger.info("Finished cas2 assessment migration process...")
+  }
+
+  private fun generateCas2StatusUpdate(statusUpdateIds: List<UUID>) = cas2StatusUpdateRepository.findAllById(statusUpdateIds).map {
+    Cas2StatusUpdateEntity(
+      id = it.id,
+      statusId = it.statusId,
+      application = it.application,
+      assessor = it.assessor,
+      description = it.description,
+      label = it.label,
+      createdAt = it.createdAt,
+      assessment = it.assessment,
+      cas2UserAssessor = cas2UserRepository.findById(it.assessor.id).get(),
+    )
+  }
+
+  private fun generateCas2v2StatusUpdate(statusUpdateIds: List<UUID>) = cas2v2StatusUpdateRepository.findAllById(statusUpdateIds).map {
+    val application = cas2ApplicationRepository.findById(it.application.id).get()
+    Cas2StatusUpdateEntity(
+      id = it.id,
+      statusId = it.statusId,
+      application = application,
+      assessor = externalUserRepository.findById(it.assessor.id).get(),
+      description = it.description,
+      label = it.label,
+      createdAt = it.createdAt,
+      assessment = application.assessment,
+      cas2UserAssessor = cas2UserRepository.findById(it.assessor.id).get(),
+    )
   }
 
   private fun generateCas2Application(applicationIds: List<UUID>) = cas2ApplicationRepository.findAllById(applicationIds).map {
