@@ -657,65 +657,6 @@ class Cas3PremisesServiceTest {
   }
 
   @Nested
-  inner class RenamePremises {
-    @Test
-    fun `renamePremises returns NotFound if the premises does not exist`() {
-      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(any()) } returns null
-
-      val result = premisesService.renamePremises(UUID.randomUUID(), "unknown-premises")
-
-      assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
-    }
-
-    @Test
-    fun `renamePremises returns FieldValidationError if the new name is not unique for the service`() {
-      val premises = createPremisesEntity()
-
-      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(any()) } returns premises
-      every { premisesRepositoryMock.nameIsUniqueForType<TemporaryAccommodationPremisesEntity>(any(), any()) } returns false
-
-      val result = premisesService.renamePremises(premises.id, "non-unique-name-premises")
-
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
-      assertThat(resultEntity.validationMessages).contains(
-        entry("$.name", "notUnique"),
-      )
-    }
-
-    @Test
-    fun `renamePremises returns Success containing updated premises otherwise`() {
-      val premises = createPremisesEntity()
-
-      every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(any()) } returns premises
-      every { premisesRepositoryMock.nameIsUniqueForType<TemporaryAccommodationPremisesEntity>(any(), any()) } returns true
-      every { premisesRepositoryMock.save(any()) } returnsArgument 0
-
-      val result = premisesService.renamePremises(premises.id, "renamed-premises")
-
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
-      val resultEntity = result.entity as ValidatableActionResult.Success
-      assertThat(resultEntity.entity).matches {
-        it.id == premises.id &&
-          it.name == "renamed-premises"
-      }
-
-      verify(exactly = 1) {
-        premisesRepositoryMock.save(
-          match {
-            it.id == premises.id &&
-              it.name == "renamed-premises"
-          },
-        )
-      }
-    }
-  }
-
-  @Nested
   inner class CreateBedspace {
     @Test
     fun `When create a new bedspace returns Success with correct result when validation passed`() {

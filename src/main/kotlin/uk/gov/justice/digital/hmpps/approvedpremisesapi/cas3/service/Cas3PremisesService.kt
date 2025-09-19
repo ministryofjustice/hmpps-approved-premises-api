@@ -282,29 +282,6 @@ class Cas3PremisesService(
     return success(savedPremises)
   }
 
-  fun renamePremises(
-    premisesId: UUID,
-    name: String,
-  ): AuthorisableActionResult<ValidatableActionResult<TemporaryAccommodationPremisesEntity>> {
-    val premises = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId) ?: return AuthorisableActionResult.NotFound()
-
-    return AuthorisableActionResult.Success(
-      validated {
-        if (!premisesRepository.nameIsUniqueForType(name, premises::class.java)) {
-          "$.name" hasValidationError "notUnique"
-        }
-
-        if (validationErrors.any()) {
-          return@validated fieldValidationError
-        }
-
-        premises.name = name
-
-        return@validated success(premisesRepository.save(premises))
-      },
-    )
-  }
-
   @SuppressWarnings("MagicNumber")
   fun createBedspace(
     premises: TemporaryAccommodationPremisesEntity,
