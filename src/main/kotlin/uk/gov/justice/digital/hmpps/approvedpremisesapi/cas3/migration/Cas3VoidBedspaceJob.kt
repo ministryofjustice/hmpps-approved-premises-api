@@ -30,6 +30,7 @@ class Cas3VoidBedspaceJob(
         voidBedspace.bedspace = bedspaceMap[voidBedspace.bed!!.id]
         voidBedspace.cancellationDate = voidBedspace.cancellation?.createdAt
         voidBedspace.cancellationNotes = voidBedspace.cancellation?.notes
+        voidBedspace.premises = null
       }
       cas3VoidBedspaceRepository.saveAllAndFlush(voidBedspaces)
     }

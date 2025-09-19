@@ -12,9 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.CsvObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingGapReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3FutureBookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BookingsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.Cas3BedspaceUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsCsvReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.TransitionalAccommodationReferralReportGenerator
@@ -33,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
@@ -51,9 +54,11 @@ class Cas3ReportService(
   private val bookingsReportRepository: BookingsReportRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val bookingTransformer: BookingTransformer,
+  private val cas3BookingTransformer: Cas3BookingTransformer,
   private val workingDayService: WorkingDayService,
   private val featureFlagService: FeatureFlagService,
   private val bookingRepository: BookingRepository,
+  private val cas3v2BookingRepository: Cas3v2BookingRepository,
   private val bedUsageRepository: BedUsageRepository,
   private val bedUtilisationReportRepository: BedUtilisationReportRepository,
   private val cas3FutureBookingsReportRepository: Cas3FutureBookingsReportRepository,
@@ -138,17 +143,31 @@ class Cas3ReportService(
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
     log.info("Beginning CAS3 Bed Usage Report")
-    val bedspacesInScope = bedUsageRepository.findAllBedspaces(
-      probationRegionId = properties.probationRegionId,
-    )
-
-    log.info("Creating report")
-    BedUsageReportGenerator(bookingTransformer, bookingRepository, cas3VoidBedspacesRepository, workingDayService)
-      .createReport(bedspacesInScope, properties)
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
+    when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
+      true -> {
+        val bedspacesInScope = bedUsageRepository.findAllBedspacesV2(
+          probationRegionId = properties.probationRegionId,
+        )
+        Cas3BedspaceUsageReportGenerator(cas3BookingTransformer, cas3v2BookingRepository, cas3VoidBedspacesRepository, workingDayService)
+          .createReport(bedspacesInScope, properties)
+          .writeExcel(
+            outputStream = outputStream,
+            factory = WorkbookFactory.create(true),
+          )
+      }
+      false -> {
+        val bedspacesInScope = bedUsageRepository.findAllBedspaces(
+          probationRegionId = properties.probationRegionId,
+        )
+        log.info("Creating report")
+        BedUsageReportGenerator(bookingTransformer, bookingRepository, cas3VoidBedspacesRepository, workingDayService)
+          .createReport(bedspacesInScope, properties)
+          .writeExcel(
+            outputStream = outputStream,
+            factory = WorkbookFactory.create(true),
+          )
+      }
+    }
   }
 
   fun createBedUtilisationReport(properties: BedUtilisationReportProperties, outputStream: OutputStream) {

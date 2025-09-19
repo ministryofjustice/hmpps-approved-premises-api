@@ -54,7 +54,7 @@ class Cas3BookingTransformer(
     )
   }
 
-  private fun determineStatus(jpa: Cas3BookingEntity): Cas3BookingStatus {
+  fun determineStatus(jpa: Cas3BookingEntity): Cas3BookingStatus {
     val (hasNonZeroDayTurnaround, hasZeroDayTurnaround, turnaroundPeriodEnded) = isTurnaroundPeriodEnded(jpa)
     return when {
       jpa.cancellation != null -> Cas3BookingStatus.cancelled
