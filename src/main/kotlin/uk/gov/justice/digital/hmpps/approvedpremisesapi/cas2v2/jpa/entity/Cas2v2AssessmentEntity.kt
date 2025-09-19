@@ -16,7 +16,6 @@ import java.util.UUID
 interface Cas2v2AssessmentRepository : JpaRepository<Cas2v2AssessmentEntity, UUID> {
   @Query("SELECT n.id FROM Cas2v2AssessmentEntity n")
   fun findAssessmentIds(): List<UUID>
-  fun findFirstByApplicationId(applicationId: UUID): Cas2v2AssessmentEntity?
 }
 
 @Entity
