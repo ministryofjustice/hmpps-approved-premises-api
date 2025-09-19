@@ -36,6 +36,7 @@ const val BATCH_SIZE = 100
 const val FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER = "93c4a5f0-ce8f-4576-b920-c8e0f938b896"
 const val FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER = "bce27384-95b3-4ff7-9478-3e0a9e8f7c3f"
 
+@SuppressWarnings("TooManyFunctions")
 @Component
 class Cas2MergeMigrationJob(
   private val cas2UserRepository: Cas2UserRepository,
