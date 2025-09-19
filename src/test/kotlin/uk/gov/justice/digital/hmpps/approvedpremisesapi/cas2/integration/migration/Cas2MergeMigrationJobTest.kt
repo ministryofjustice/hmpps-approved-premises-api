@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
@@ -22,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.OffsetDateTime
+import java.util.UUID
 
 const val NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE = 102
 const val NO_OF_CAS_2_APPLICATIONS_TO_UPDATE = 103
@@ -158,19 +161,27 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
   private fun assertExpectedNumberOfCas2UsersWereMigrated(): List<Cas2UserEntity> {
     val migratedUsers = cas2UserRepository.findAll()
+      .filterNot {
+        it.id == UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER) ||
+          it.id == UUID.fromString(FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER)
+      }
     assertThat(migratedUsers.size).isEqualTo(TOTAL_NO_OF_USERS_TO_MIGRATE)
     return migratedUsers
   }
 
   private fun assertExpectedNumberOfNomisUsersWereMigrated(): List<NomisUserEntity> {
-    val migratedUsers = nomisUserRepository.findAll()
-    assertThat(migratedUsers.size).isEqualTo(NO_OF_NOMIS_USERS_TO_MIGRATE + NO_OF_CAS2V2_USERS_TO_MIGRATE)
+    val migratedUsers = nomisUserRepository.findAll().filterNot {
+      it.id == UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER)
+    }
+    assertThat(migratedUsers.size).isEqualTo(NO_OF_NOMIS_USERS_TO_MIGRATE)
     return migratedUsers
   }
 
   private fun assertExpectedNumberOfExternalUsersWereMigrated(): List<ExternalUserEntity> {
-    val migratedUsers = externalUserRepository.findAll()
-    assertThat(migratedUsers.size).isEqualTo(NO_OF_EXTERNAL_USERS_TO_MIGRATE + NO_OF_CAS2V2_USERS_TO_MIGRATE)
+    val migratedUsers = externalUserRepository.findAll().filterNot {
+      it.id == UUID.fromString(FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER)
+    }
+    assertThat(migratedUsers.size).isEqualTo(NO_OF_EXTERNAL_USERS_TO_MIGRATE)
     return migratedUsers
   }
 
@@ -293,7 +304,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
   private fun assertThatCas2v2ApplicationsMatch(cas2ApplicationEntity: Cas2ApplicationEntity, cas2v2ApplicationEntity: Cas2v2ApplicationEntity) {
     assertThat(cas2ApplicationEntity.id).isEqualTo(cas2v2ApplicationEntity.id)
-    assertThat(cas2ApplicationEntity.createdByUser.id).isEqualTo(cas2v2ApplicationEntity.createdByUser.id)
+    assertThat(cas2ApplicationEntity.createdByUser.id).isEqualTo(UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER))
     assertThat(cas2ApplicationEntity.crn).isEqualTo(cas2v2ApplicationEntity.crn)
     assertThat(cas2ApplicationEntity.data).isEqualTo(cas2v2ApplicationEntity.data)
     assertThat(cas2ApplicationEntity.createdAt).isEqualTo(cas2v2ApplicationEntity.createdAt)

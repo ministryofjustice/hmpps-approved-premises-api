@@ -27,6 +27,8 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 const val BATCH_SIZE = 100
+const val FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER = "93c4a5f0-ce8f-4576-b920-c8e0f938b896"
+const val FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER = "bce27384-95b3-4ff7-9478-3e0a9e8f7c3f"
 
 @Component
 class Cas2MergeMigrationJob(
@@ -46,6 +48,10 @@ class Cas2MergeMigrationJob(
   override val shouldRunInTransaction: Boolean = java.lang.Boolean.FALSE
 
   override fun process(pageSize: Int) {
+    migrationLogger.info("Add dummy data to nomis_users and external_users tables")
+    nomisUserRepository.save(generateDummyCas2v2NomisUser())
+    externalUserRepository.save(generateDummyCas2v2ExternalUser())
+
     migrationLogger.info("Starting cas2 merge migration process...")
     migrateCas2Users()
     migrateAndUpdateCas2Applications()
@@ -74,10 +80,6 @@ class Cas2MergeMigrationJob(
       migrationLogger.info("Migrate with batch size of ${batchIds.size} in process")
       migrationLogger.info("Migrating to cas2 Users table")
       cas2UserRepository.saveAllAndFlush(generateCas2v2User(batchIds))
-      migrationLogger.info("Migrating dummy data to nomis Users table")
-      nomisUserRepository.saveAllAndFlush(generateDummyCas2v2NomisUser(batchIds))
-      migrationLogger.info("Migrating dummy data to external Users table")
-      externalUserRepository.saveAllAndFlush(generateDummyCas2v2ExternalUser(batchIds))
     }
     migrationLogger.info("Finished cas2 user migration process...")
   }
@@ -164,7 +166,7 @@ class Cas2MergeMigrationJob(
     Cas2ApplicationEntity(
       id = it.id,
       crn = it.crn,
-      createdByUser = nomisUserRepository.findById(it.createdByUser.id).get(),
+      createdByUser = nomisUserRepository.findById(UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER)).get(),
       createdByCas2User = cas2UserRepository.findById(it.createdByUser.id).get(),
       data = it.data,
       document = it.document,
@@ -183,7 +185,7 @@ class Cas2MergeMigrationJob(
   }
 
   private fun generateCas2v2ApplicationNote(applicationNoteIds: List<UUID>) = cas2v2ApplicationNoteRepository.findAllById(applicationNoteIds).map {
-    val nomisUser = nomisUserRepository.findById(it.createdByUser.id).get()
+    val nomisUser = nomisUserRepository.findById(UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER)).get()
 
     val note = Cas2ApplicationNoteEntity(
       id = it.id,
@@ -265,9 +267,9 @@ class Cas2MergeMigrationJob(
     )
   }
 
-  private fun generateDummyCas2v2NomisUser(cas2v2Ids: List<UUID>) = cas2v2Ids.map {
+  private fun generateDummyCas2v2NomisUser() =
     NomisUserEntity(
-      id = it,
+      id = UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER),
       name = "DUMMY_USER",
       email = "DUMMY_USER",
       createdAt = OffsetDateTime.now(),
@@ -276,21 +278,19 @@ class Cas2MergeMigrationJob(
       nomisStaffId = 0,
       accountType = "GENERAL",
       activeCaseloadId = null,
-      nomisUsername = "DUMMY_USER_$it",
+      nomisUsername = "DUMMY_USER_$FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER",
     )
-  }
 
-  private fun generateDummyCas2v2ExternalUser(cas2v2Ids: List<UUID>) = cas2v2Ids.map {
+  private fun generateDummyCas2v2ExternalUser() =
     ExternalUserEntity(
-      id = it,
+      id = UUID.fromString(FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER),
       name = "DUMMY_USER",
       email = "DUMMY_USER",
       createdAt = OffsetDateTime.now(),
       isEnabled = true,
-      username = "DUMMY_USER_$it",
+      username = "DUMMY_USER_$FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER",
       origin = "NACRO",
     )
-  }
 
   private fun getUserType(user: Cas2v2UserEntity) = when (user.userType) {
     Cas2v2UserType.NOMIS -> Cas2UserType.NOMIS
