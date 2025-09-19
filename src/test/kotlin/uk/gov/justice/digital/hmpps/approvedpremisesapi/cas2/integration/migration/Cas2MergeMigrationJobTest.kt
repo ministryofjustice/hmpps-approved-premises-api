@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
@@ -174,13 +176,13 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
   private fun assertExpectedNumberOfNomisUsersWereMigrated(): List<NomisUserEntity> {
     val migratedUsers = nomisUserRepository.findAll()
-    assertThat(migratedUsers.size).isEqualTo(NO_OF_NOMIS_USERS_TO_MIGRATE + NO_OF_CAS2V2_USERS_TO_MIGRATE)
+    assertThat(migratedUsers.size).isEqualTo(NO_OF_NOMIS_USERS_TO_MIGRATE + 1)
     return migratedUsers
   }
 
   private fun assertExpectedNumberOfExternalUsersWereMigrated(): List<ExternalUserEntity> {
     val migratedUsers = externalUserRepository.findAll()
-    assertThat(migratedUsers.size).isEqualTo(NO_OF_EXTERNAL_USERS_TO_MIGRATE + NO_OF_CAS2V2_USERS_TO_MIGRATE)
+    assertThat(migratedUsers.size).isEqualTo(NO_OF_EXTERNAL_USERS_TO_MIGRATE + 1)
     return migratedUsers
   }
 
@@ -317,7 +319,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
   private fun assertThatCas2v2ApplicationsMatch(cas2ApplicationEntity: Cas2ApplicationEntity, cas2v2ApplicationEntity: Cas2v2ApplicationEntity) {
     assertThat(cas2ApplicationEntity.id).isEqualTo(cas2v2ApplicationEntity.id)
-    assertThat(cas2ApplicationEntity.createdByUser.id).isEqualTo(cas2v2ApplicationEntity.createdByUser.id)
+    assertThat(cas2ApplicationEntity.createdByUser.id.toString()).isEqualTo(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER)
     assertThat(cas2ApplicationEntity.crn).isEqualTo(cas2v2ApplicationEntity.crn)
     assertThat(cas2ApplicationEntity.data).isEqualTo(cas2v2ApplicationEntity.data)
     assertThat(cas2ApplicationEntity.createdAt).isEqualTo(cas2v2ApplicationEntity.createdAt)
@@ -340,6 +342,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2StatusUpdateEntity.statusId).isEqualTo(cas2v2StatusUpdateEntity.statusId)
     assertThat(cas2StatusUpdateEntity.application.id).isEqualTo(cas2v2StatusUpdateEntity.application.id)
     assertThat(cas2StatusUpdateEntity.cas2UserAssessor?.id).isEqualTo(cas2v2StatusUpdateEntity.assessor.id)
+    assertThat(cas2StatusUpdateEntity.assessor.id.toString()).isEqualTo(FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER)
     assertThat(cas2StatusUpdateEntity.description).isEqualTo(cas2v2StatusUpdateEntity.description)
     assertThat(cas2StatusUpdateEntity.label).isEqualTo(cas2v2StatusUpdateEntity.label)
     assertThat(cas2StatusUpdateEntity.createdAt).isEqualTo(cas2v2StatusUpdateEntity.createdAt)
@@ -359,6 +362,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2ApplicationNoteEntity.id).isEqualTo(cas2v2ApplicationNoteEntity.id)
     assertThat(cas2ApplicationNoteEntity.application.id).isEqualTo(cas2v2ApplicationNoteEntity.application.id)
     assertThat(cas2ApplicationNoteEntity.createdByCas2User?.id).isEqualTo(cas2v2ApplicationNoteEntity.createdByUser.id)
+//    assertThat(cas2ApplicationNoteEntity.createdByUser.name).isEqualTo("DUMMY_USER")
     assertThat(cas2ApplicationNoteEntity.body).isEqualTo(cas2v2ApplicationNoteEntity.body)
     assertThat(cas2ApplicationNoteEntity.createdAt).isEqualTo(cas2v2ApplicationNoteEntity.createdAt)
     assertThat(cas2ApplicationNoteEntity.assessment?.id).isEqualTo(cas2v2ApplicationNoteEntity.assessment?.id)
