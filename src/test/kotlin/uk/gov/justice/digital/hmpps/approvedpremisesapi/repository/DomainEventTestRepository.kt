@@ -13,4 +13,5 @@ interface DomainEventTestRepository : JpaRepository<DomainEventEntity, UUID> {
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>
   fun findByApplicationIdAndType(applicationId: UUID, type: DomainEventType): List<DomainEventEntity>
   fun findByCas3PremisesIdAndType(cas3PremisesId: UUID, type: DomainEventType): List<DomainEventEntity>
+  fun findByCas3BedspaceId(cas3BedspaceId: UUID): List<DomainEventEntity>
 }
