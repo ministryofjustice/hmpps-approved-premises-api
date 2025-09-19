@@ -40,4 +40,6 @@ data class TransitionalAccommodationReferralReportRow(
   val accommodationRequiredDate: LocalDate?,
   val updatedAccommodationRequiredFromDate: LocalDate?,
   val bookingOffered: String?,
+  val destinationRegion: String?,
+  val destinationPdu: String?,
 )
