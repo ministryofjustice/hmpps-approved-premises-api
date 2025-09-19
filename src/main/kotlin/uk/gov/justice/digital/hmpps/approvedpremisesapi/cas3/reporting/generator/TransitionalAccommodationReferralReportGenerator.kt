@@ -63,6 +63,14 @@ class TransitionalAccommodationReferralReportGenerator :
           accommodationRequiredDate = referralData.accommodationRequiredDate?.toLocalDate(),
           updatedAccommodationRequiredFromDate = referralData.updatedAccommodationRequiredFromDate,
           bookingOffered = (referralData.bookingId != null).toYesNo(),
+          destinationRegion = when (referralData.previousReferralProbationRegionName) {
+            null -> referralData.probationRegionName
+            else -> referralData.previousReferralProbationRegionName
+          },
+          destinationPdu = when (referralData.previousReferralPduName) {
+            null -> referralData.pduName
+            else -> referralData.previousReferralPduName
+          },
         ),
       )
     }
