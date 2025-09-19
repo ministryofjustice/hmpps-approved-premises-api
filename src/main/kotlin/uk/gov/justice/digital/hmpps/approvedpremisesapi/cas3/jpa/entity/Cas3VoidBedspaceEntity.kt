@@ -21,21 +21,21 @@ import java.util.UUID
 
 @Repository
 interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspaceEntity, UUID> {
-  @Query("SELECT lb FROM Cas3VoidBedspaceEntity lb WHERE lb.premises.id = :premisesId AND lb.startDate <= :endDate AND lb.endDate >= :startDate")
+  @Query("SELECT vb FROM Cas3VoidBedspaceEntity vb WHERE vb.premises.id = :premisesId AND vb.startDate <= :endDate AND vb.endDate >= :startDate")
   fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): List<Cas3VoidBedspaceEntity>
 
-  @Query("SELECT lb FROM Cas3VoidBedspaceEntity lb WHERE lb.bed.id IN :voidBedspaceIds")
+  @Query("SELECT vb FROM Cas3VoidBedspaceEntity vb WHERE vb.bed.id IN :voidBedspaceIds")
   fun findByBedIds(voidBedspaceIds: List<UUID>): List<Cas3VoidBedspaceEntity>
 
   @Query(
     """
-    SELECT lb 
-    FROM Cas3VoidBedspaceEntity lb 
-    LEFT JOIN lb.cancellation c 
-    WHERE lb.bed.id = :bedId AND 
-          lb.startDate <= :endDate AND 
-          lb.endDate >= :startDate AND 
-          (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR lb.id != :thisEntityId) AND 
+    SELECT vb 
+    FROM Cas3VoidBedspaceEntity vb 
+    LEFT JOIN vb.cancellation c 
+    WHERE vb.bed.id = :bedId AND 
+          vb.startDate <= :endDate AND 
+          vb.endDate >= :startDate AND 
+          (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR vb.id != :thisEntityId) AND 
           c is NULL
   """,
   )
@@ -43,25 +43,25 @@ interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspaceEntity, UU
 
   @Query(
     """
-    SELECT lb 
-    FROM Cas3VoidBedspaceEntity lb 
-    WHERE lb.bedspace.id = :bedspaceId AND 
-          lb.startDate <= :endDate AND 
-          lb.endDate >= :startDate AND 
-          (CAST(:bookingId as org.hibernate.type.UUIDCharType) IS NULL OR lb.id != :bookingId) AND 
-          lb.cancellationDate is NULL
+    SELECT vb 
+    FROM Cas3VoidBedspaceEntity vb 
+    WHERE vb.bedspace.id = :bedspaceId AND 
+          vb.startDate <= :endDate AND 
+          vb.endDate >= :startDate AND 
+          (CAST(:bookingId as org.hibernate.type.UUIDCharType) IS NULL OR vb.id != :bookingId) AND 
+          vb.cancellationDate is NULL
   """,
   )
   fun findByBedspaceIdAndOverlappingDateV2(bedspaceId: UUID, startDate: LocalDate, endDate: LocalDate, bookingId: UUID?): List<Cas3VoidBedspaceEntity>
 
   @Query(
     """
-    SELECT lb 
-    FROM Cas3VoidBedspaceEntity lb
-    WHERE lb.bedspace.id = :bedspaceId 
-    AND lb.startDate <= :endDate
-    AND lb.endDate >= :startDate 
-    AND lb.cancellationDate is NULL
+    SELECT vb 
+    FROM Cas3VoidBedspaceEntity vb
+    WHERE vb.bedspace.id = :bedspaceId 
+    AND vb.startDate <= :endDate
+    AND vb.endDate >= :startDate 
+    AND vb.cancellationDate is NULL
   """,
   )
   fun findByBedspaceIdAndOverlappingDate(bedspaceId: UUID, startDate: LocalDate, endDate: LocalDate): List<Cas3VoidBedspaceEntity>
@@ -89,10 +89,13 @@ interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspaceEntity, UU
   )
   fun findOverlappingBedspaceEndDateByPremisesId(premisesId: UUID, endDate: LocalDate): List<Cas3VoidBedspaceEntity>
 
-  @Query("SELECT lb FROM Cas3VoidBedspaceEntity lb LEFT JOIN lb.cancellation c WHERE lb.startDate <= :endDate AND lb.endDate >= :startDate AND lb.bed = :bed AND c is NULL")
+  @Query("SELECT vb FROM Cas3VoidBedspaceEntity vb LEFT JOIN vb.cancellation c WHERE vb.startDate <= :endDate AND vb.endDate >= :startDate AND vb.bed = :bed AND c is NULL")
   fun findAllByOverlappingDateForBedspace(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<Cas3VoidBedspaceEntity>
 
-  @Query("SELECT lb FROM Cas3VoidBedspaceEntity lb LEFT JOIN lb.cancellation c WHERE lb.premises.id = :premisesId AND c is NULL")
+  @Query("SELECT vb FROM Cas3VoidBedspaceEntity vb WHERE vb.startDate <= :endDate AND vb.endDate >= :startDate AND vb.bedspace = :bedspace AND vb.cancellationDate is NULL")
+  fun findAllByOverlappingDateForBedspace(startDate: LocalDate, endDate: LocalDate, bedspace: Cas3BedspacesEntity): List<Cas3VoidBedspaceEntity>
+
+  @Query("SELECT vb FROM Cas3VoidBedspaceEntity vb LEFT JOIN vb.cancellation c WHERE vb.premises.id = :premisesId AND c is NULL")
   fun findAllActiveForPremisesId(premisesId: UUID): List<Cas3VoidBedspaceEntity>
 
   @Query(

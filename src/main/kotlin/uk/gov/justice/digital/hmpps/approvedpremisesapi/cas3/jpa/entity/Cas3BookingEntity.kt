@@ -185,6 +185,9 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
     crnOrName: String?,
     pageable: Pageable?,
   ): Page<Cas3v2BookingSearchResult>
+
+  @Query("SELECT b FROM Cas3BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bedspace = :bedspace")
+  fun findAllByOverlappingDateForBedspace(startDate: LocalDate, endDate: LocalDate, bedspace: Cas3BedspacesEntity): List<Cas3BookingEntity>
 }
 
 @Suppress("TooManyFunctions")

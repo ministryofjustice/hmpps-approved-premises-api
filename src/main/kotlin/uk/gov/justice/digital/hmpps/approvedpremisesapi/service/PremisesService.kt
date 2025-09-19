@@ -54,7 +54,7 @@ class PremisesService(
 
     return startDate.getDaysUntilExclusiveEnd(endDate).map { date ->
       val bookingsOnDay = bookings.filter { booking -> booking.getArrivalDate() <= date && booking.getDepartureDate() > date }
-      val lostBedsOnDay = lostBeds.filter { lostBed -> lostBed.startDate <= date && lostBed.endDate > date && lostBed.cancellation == null }
+      val lostBedsOnDay = lostBeds.filter { voidBedspace -> voidBedspace.startDate <= date && voidBedspace.endDate > date && voidBedspace.cancellation == null }
 
       Availability(
         date = date,
@@ -273,8 +273,8 @@ class PremisesService(
       return premises.id hasConflictError "A premises cannot be hard-deleted if it has any bookings associated with it"
     }
 
-    premises.voidBedspaces.forEach { lostBed ->
-      cas3VoidBedspacesRepository.delete(lostBed)
+    premises.voidBedspaces.forEach { voidBedspace ->
+      cas3VoidBedspacesRepository.delete(voidBedspace)
     }
 
     premises.rooms.forEach { room ->
