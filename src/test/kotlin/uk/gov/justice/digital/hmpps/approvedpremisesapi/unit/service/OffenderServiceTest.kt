@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -45,6 +46,7 @@ class OffenderServiceTest {
   private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
   private val adjudicationsConfigBindingModel = PrisonAdjudicationsConfigBindingModel().apply {
     prisonApiPageSize = 2
@@ -56,6 +58,7 @@ class OffenderServiceTest {
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
     adjudicationsConfigBindingModel,
+    mockFeatureFlagService,
   )
 
   @Test
@@ -436,6 +439,8 @@ class OffenderServiceTest {
       )
     } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.NOT_FOUND, null)
 
+    every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns false
+
     assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
   }
 
@@ -450,6 +455,8 @@ class OffenderServiceTest {
         offset = 0,
       )
     } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.FORBIDDEN, null)
+
+    every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns false
 
     assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -507,6 +514,8 @@ class OffenderServiceTest {
       HttpStatus.OK,
       adjudicationsPageTwo,
     )
+
+    every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns false
 
     val result = offenderService.getAdjudicationsByNomsNumber(nomsNumber)
 
