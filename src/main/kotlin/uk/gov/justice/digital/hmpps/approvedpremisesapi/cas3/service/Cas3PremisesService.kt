@@ -143,7 +143,7 @@ class Cas3PremisesService(
       addressLine1,
       postcode,
       turnaroundWorkingDays,
-      premisesId = null,
+      isUniqueName = isUniqueName(reference = reference, premisesId = null),
     )
 
     if (validationErrors.any()) {
@@ -186,7 +186,13 @@ class Cas3PremisesService(
     return success(premises)
   }
 
-  fun CasResultValidatedScope<TemporaryAccommodationPremisesEntity>.validatePremises(
+  private fun isUniqueName(reference: String, premisesId: UUID?): Boolean = premisesRepository.nameIsUniqueForType(
+    reference,
+    TemporaryAccommodationPremisesEntity::class.java,
+    premisesId,
+  )
+
+  fun <T> CasResultValidatedScope<T>.validatePremises(
     probationRegion: ProbationRegionEntity?,
     localAuthorityAreaId: UUID?,
     localAuthorityArea: LocalAuthorityAreaEntity?,
@@ -195,7 +201,7 @@ class Cas3PremisesService(
     addressLine1: String,
     postcode: String,
     turnaroundWorkingDays: Int?,
-    premisesId: UUID?,
+    isUniqueName: Boolean,
   ) {
     if (localAuthorityAreaId != null && localAuthorityArea == null) {
       "$.localAuthorityAreaId" hasValidationError "doesNotExist"
@@ -211,12 +217,7 @@ class Cas3PremisesService(
 
     if (reference.isEmpty()) {
       "$.reference" hasValidationError "empty"
-    } else if (!premisesRepository.nameIsUniqueForType(
-        reference,
-        TemporaryAccommodationPremisesEntity::class.java,
-        premisesId,
-      )
-    ) {
+    } else if (!isUniqueName) {
       "$.reference" hasValidationError "notUnique"
     }
 
@@ -260,7 +261,7 @@ class Cas3PremisesService(
       addressLine1,
       postcode,
       turnaroundWorkingDays,
-      premisesId = premises.id,
+      isUniqueName(reference, premises.id),
     )
 
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
