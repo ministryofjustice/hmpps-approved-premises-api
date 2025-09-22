@@ -1245,7 +1245,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           withProbationRegion(user.probationRegion)
         }
 
-        val characteristics = getPremisesCharacteristics().take(5).sortedBy { it.id }
+        val characteristics = createCharacteristics(5, "premises").sortedBy { it.id }
 
         val characteristicIds = characteristics.map { it.id }
 
@@ -1531,7 +1531,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `Create new bedspace for Premises returns 201 Created with correct body`() {
       givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt, premises ->
-        val characteristics = createRoomCharacteristics(5)
+        val characteristics = createCharacteristics(5, "room")
         val characteristicIds = characteristics.map { it.id }
 
         val newBedspace = Cas3NewBedspace(
@@ -1567,7 +1567,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         premisesEndDate = LocalDate.now().plusDays(3),
       ) { user, jwt, premises ->
         val bedspaceStartDate = LocalDate.now().minusDays(2)
-        val characteristics = createRoomCharacteristics(5)
+        val characteristics = createCharacteristics(5, "room")
         val characteristicIds = characteristics.map { it.id }
 
         val newBedspace = Cas3NewBedspace(
@@ -1699,7 +1699,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @Test
     fun `When create a new bedspace with a characteristic of the wrong service scope returns 400`() {
       givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt, premises ->
-        val characteristicId = createRoomCharacteristics(1, ServiceName.approvedPremises.value).first().id
+        val characteristicId = createCharacteristics(1, "room", ServiceName.approvedPremises.value).first().id
 
         val newBedspace = Cas3NewBedspace(
           reference = randomStringMultiCaseWithNumbers(7),
@@ -1779,7 +1779,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspacesEndDates = listOf(null),
         ) { premises, _, bedspaces ->
           val bedspace = bedspaces.first()
-          val characteristics = createRoomCharacteristics(5)
+          val characteristics = createCharacteristics(5, "room")
           val characteristicIds = characteristics.map { it.id }
 
           val updateBedspace = Cas3UpdateBedspace(
@@ -1910,7 +1910,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           bedspacesEndDates = listOf(null),
         ) { premises, _, bedspaces ->
           val bedspace = bedspaces.first()
-          val characteristicId = createRoomCharacteristics(1, ServiceName.approvedPremises.value).first().id
+          val characteristicId = createCharacteristics(1, "room", ServiceName.approvedPremises.value).first().id
 
           webTestClient.put()
             .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}")
@@ -4810,8 +4810,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
   }
 
-  private fun createRoomCharacteristics(count: Int, serviceName: String = ServiceName.temporaryAccommodation.value) = characteristicEntityFactory.produceAndPersistMultiple(count) {
-    withModelScope("room")
+  private fun createCharacteristics(count: Int, modelScope: String, serviceName: String = ServiceName.temporaryAccommodation.value) = characteristicEntityFactory.produceAndPersistMultiple(count) {
+    withModelScope(modelScope)
     withServiceScope(serviceName)
     withName(randomStringMultiCaseWithNumbers(10))
   }

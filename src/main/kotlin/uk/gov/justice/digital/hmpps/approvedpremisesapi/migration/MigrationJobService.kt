@@ -22,12 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2Statu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3MigrateNewBedspaceModelDataJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateApplicationOffenderNameJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateArchivedPremisesEndDateJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBedspaceCreatedDateJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBookingOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdatePremisesCreatedDateJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdatePremisesStartDateJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3VoidBedspaceJob
 import kotlin.reflect.KClass
 
@@ -57,10 +53,6 @@ class MigrationJobService(
         MigrationJobType.updateCas1BackfillUserApArea -> getBean(Cas1BackfillUserApArea::class)
         MigrationJobType.updateCas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
         MigrationJobType.updateCas3BookingOffenderName -> getBean(Cas3UpdateBookingOffenderNameJob::class)
-        MigrationJobType.updateCas3PremisesStartDate -> getBean(Cas3UpdatePremisesStartDateJob::class)
-        MigrationJobType.updateCas3ArchivedPremisesEndDate -> getBean(Cas3UpdateArchivedPremisesEndDateJob::class)
-        MigrationJobType.updateCas3PremisesCreatedAt -> getBean(Cas3UpdatePremisesCreatedDateJob::class)
-        MigrationJobType.updateCas3BedspaceCreatedAt -> getBean(Cas3UpdateBedspaceCreatedDateJob::class)
         MigrationJobType.updateCas3DomainEventTypeForPersonDepartedUpdated -> getBean(Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob::class)
         MigrationJobType.updateCas1ApprovedPremisesAssessmentReportProperties -> getBean(Cas1UpdateAssessmentReportPropertiesJob::class)
         MigrationJobType.cas1UpdateRoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
