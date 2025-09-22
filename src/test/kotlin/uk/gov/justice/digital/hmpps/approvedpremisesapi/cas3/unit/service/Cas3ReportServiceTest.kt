@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingGapReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3FutureBookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.TransitionalAccommodationReferralReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.TransitionalAccommodationReferralReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsageRepository
@@ -160,6 +162,106 @@ class Cas3ReportServiceTest {
     }
     verify(exactly = 1) { mockUserService.getUserForRequest() }
     verify(exactly = 0) { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) }
+  }
+
+  @Test
+  fun `createCas3ApplicationReferralsReport includes previousReferralProbationRegionName and previousReferralPduName when present`() {
+    val startDate = LocalDate.of(2024, 1, 1)
+    val endDate = LocalDate.of(2024, 1, 31)
+    val probationRegionId = UUID.randomUUID()
+    val testTransitionalAccommodationReferralReportData = createDBReferralReportDataWithPreviousReferralInfo(
+      "crn-with-previous",
+      "Previous Region Name",
+      "Previous PDU Name",
+    )
+    val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
+
+    every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns listOf(testTransitionalAccommodationReferralReportData)
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
+    every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
+      PersonSummaryInfoResult.Success.Full("crn-with-previous", CaseSummaryFactory().produce()),
+    )
+
+    val outputStream = ByteArrayOutputStream()
+    cas3ReportService.createCas3ApplicationReferralsReport(properties, outputStream)
+
+    val reportDataAndPersonInfo = TransitionalAccommodationReferralReportDataAndPersonInfo(
+      testTransitionalAccommodationReferralReportData,
+      PersonSummaryInfoResult.Success.Full("crn-with-previous", CaseSummaryFactory().produce()),
+    )
+    val reportGenerator = TransitionalAccommodationReferralReportGenerator()
+    val dataFrame = reportGenerator.createReport(listOf(reportDataAndPersonInfo), properties)
+
+    val columnNames = dataFrame.columnNames()
+    Assertions.assertThat(columnNames).contains("destinationRegion")
+    Assertions.assertThat(columnNames).contains("destinationPdu")
+
+    Assertions.assertThat(dataFrame.rowsCount()).isEqualTo(1)
+    val row = dataFrame[0]
+    Assertions.assertThat(row["probationRegion"]).isEqualTo("Previous Region Name")
+    Assertions.assertThat(row["pdu"]).isEqualTo("Previous PDU Name")
+    Assertions.assertThat(row["destinationRegion"]).isEqualTo("region")
+    Assertions.assertThat(row["destinationPdu"]).isEqualTo("pduName")
+
+    verify {
+      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+        startDate,
+        endDate,
+        probationRegionId,
+      )
+    }
+    verify { mockUserService.getUserForRequest() }
+    verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
+  }
+
+  @Test
+  fun `createCas3ApplicationReferralsReport handles null previousReferralProbationRegionName and previousReferralPduName`() {
+    val startDate = LocalDate.of(2024, 1, 1)
+    val endDate = LocalDate.of(2024, 1, 31)
+    val probationRegionId = UUID.randomUUID()
+    val testTransitionalAccommodationReferralReportData = createDBReferralReportDataWithPreviousReferralInfo(
+      "crn-without-previous",
+      null,
+      null,
+    )
+    val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
+
+    every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns listOf(testTransitionalAccommodationReferralReportData)
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
+    every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
+      PersonSummaryInfoResult.Success.Full("crn-without-previous", CaseSummaryFactory().produce()),
+    )
+
+    val outputStream = ByteArrayOutputStream()
+    cas3ReportService.createCas3ApplicationReferralsReport(properties, outputStream)
+
+    val reportDataAndPersonInfo = TransitionalAccommodationReferralReportDataAndPersonInfo(
+      testTransitionalAccommodationReferralReportData,
+      PersonSummaryInfoResult.Success.Full("crn-without-previous", CaseSummaryFactory().produce()),
+    )
+    val reportGenerator = TransitionalAccommodationReferralReportGenerator()
+    val dataFrame = reportGenerator.createReport(listOf(reportDataAndPersonInfo), properties)
+
+    val columnNames = dataFrame.columnNames()
+    Assertions.assertThat(columnNames).contains("destinationRegion")
+    Assertions.assertThat(columnNames).contains("destinationPdu")
+
+    Assertions.assertThat(dataFrame.rowsCount()).isEqualTo(1)
+    val row = dataFrame[0]
+    Assertions.assertThat(row["probationRegion"]).isEqualTo("region")
+    Assertions.assertThat(row["pdu"]).isEqualTo("pduName")
+    Assertions.assertThat(row["destinationRegion"]).isNull()
+    Assertions.assertThat(row["destinationPdu"]).isNull()
+
+    verify {
+      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+        startDate,
+        endDate,
+        probationRegionId,
+      )
+    }
+    verify { mockUserService.getUserForRequest() }
+    verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
   }
 
   @Test
@@ -354,6 +456,45 @@ class Cas3ReportServiceTest {
     prisonReleaseTypes = null,
     updatedReleaseDate = null,
     updatedAccommodationRequiredFromDate = null,
+    previousReferralProbationRegionName = null,
+    previousReferralPduName = null,
+  )
+
+  private fun createDBReferralReportDataWithPreviousReferralInfo(
+    crn: String,
+    previousReferralProbationRegionName: String?,
+    previousReferralPduName: String?,
+  ) = TestTransitionalAccommodationReferralReportData(
+    UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+    Instant.now(), crn, Instant.now(), "riskOfSeriousHarm",
+    registeredSexOffender = false,
+    historyOfSexualOffence = false,
+    concerningSexualBehaviour = true,
+    needForAccessibleProperty = true,
+    historyOfArsonOffence = false,
+    concerningArsonBehaviour = true,
+    dutyToReferMade = true,
+    dateDutyToReferMade = LocalDate.now(),
+    probationRegionName = "region",
+    dutyToReferLocalAuthorityAreaName = "name",
+    dutyToReferOutcome = "outcome",
+    assessmentDecision = null,
+    referralRejectionReason = null,
+    referralRejectionReasonDetail = null,
+    assessmentSubmittedDate = Instant.now(),
+    referralEligibleForCas3 = true,
+    referralEligibilityReason = "reason",
+    accommodationRequiredDate = Instant.now(),
+    prisonNameOnCreation = null,
+    personReleaseDate = null,
+    town = null,
+    postCode = null,
+    pduName = "pduName",
+    prisonReleaseTypes = null,
+    updatedReleaseDate = null,
+    updatedAccommodationRequiredFromDate = null,
+    previousReferralProbationRegionName = previousReferralProbationRegionName,
+    previousReferralPduName = previousReferralPduName,
   )
 
   private fun createBookingReportData(crn: String) = TestBookingsReportData(
@@ -422,6 +563,8 @@ class Cas3ReportServiceTest {
     override val prisonReleaseTypes: String?,
     override val updatedReleaseDate: LocalDate?,
     override val updatedAccommodationRequiredFromDate: LocalDate?,
+    override val previousReferralProbationRegionName: String?,
+    override val previousReferralPduName: String?,
   ) : TransitionalAccommodationReferralReportData
 
   @Suppress("LongParameterList")

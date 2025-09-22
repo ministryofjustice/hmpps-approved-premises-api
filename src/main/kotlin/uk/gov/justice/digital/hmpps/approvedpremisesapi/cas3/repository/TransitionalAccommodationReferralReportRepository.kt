@@ -43,14 +43,18 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       pdu.name as pduName,
       taa.prison_release_types as prisonReleaseTypes,
       tass.release_date as updatedReleaseDate,
-      tass.accommodation_required_from_date as updatedAccommodationRequiredFromDate
+      tass.accommodation_required_from_date as updatedAccommodationRequiredFromDate,
+      previous_probation_region.name as previousReferralProbationRegionName,
+      previous_pdu.name as previousReferralPduName
     FROM temporary_accommodation_assessments aa
     JOIN assessments a on aa.assessment_id = a.id AND a.service='temporary-accommodation' AND a.reallocated_at IS NULL
     JOIN temporary_accommodation_assessments tass on tass.assessment_id = a.id
     JOIN applications ap on a.application_id = ap.id AND ap.service='temporary-accommodation'
     LEFT JOIN temporary_accommodation_applications taa on ap.id = taa.id
     LEFT JOIN probation_regions probation_region ON probation_region.id = taa.probation_region_id
-    LEFT JOIN probation_delivery_units pdu ON taa.probation_delivery_unit_id = pdu.id 
+    LEFT JOIN probation_delivery_units pdu ON taa.probation_delivery_unit_id = pdu.id
+    LEFT JOIN probation_regions previous_probation_region ON previous_probation_region.id = taa.previous_referral_probation_region_id
+    LEFT JOIN probation_delivery_units previous_pdu ON previous_pdu.id = taa.previous_referral_probation_delivery_unit_id
     LEFT JOIN bookings b on b.application_id = ap.id AND b.service='temporary-accommodation'
     LEFT JOIN premises premises ON premises.id = b.premises_id and premises.service='temporary-accommodation'
     LEFT JOIN referral_rejection_reasons rrr ON aa.referral_rejection_reason_id = rrr.id
@@ -103,4 +107,6 @@ interface TransitionalAccommodationReferralReportData {
   val prisonReleaseTypes: String?
   val updatedReleaseDate: LocalDate?
   val updatedAccommodationRequiredFromDate: LocalDate?
+  val previousReferralProbationRegionName: String?
+  val previousReferralPduName: String?
 }

@@ -48,8 +48,16 @@ class TransitionalAccommodationReferralReportGenerator :
           dutyToReferOutcome = referralData.dutyToReferOutcome,
           town = referralData.town,
           postCode = referralData.postCode,
-          probationRegion = referralData.probationRegionName,
-          pdu = referralData.pduName,
+          probationRegion = when (referralData.previousReferralProbationRegionName) {
+            null -> referralData.probationRegionName
+            else -> referralData.previousReferralProbationRegionName!!
+          },
+          pdu = when (referralData.previousReferralPduName) {
+            null -> referralData.pduName
+            else -> referralData.previousReferralPduName
+          },
+          destinationRegion = referralData.previousReferralProbationRegionName?.let { referralData.probationRegionName },
+          destinationPdu = referralData.previousReferralPduName?.let { referralData.pduName },
           referralSubmittedDate = referralData.referralSubmittedDate?.toLocalDate(),
           referralRejected = (referralData.referralRejectionReason != null).toYesNo(),
           rejectionReason = referralData.referralRejectionReason,
