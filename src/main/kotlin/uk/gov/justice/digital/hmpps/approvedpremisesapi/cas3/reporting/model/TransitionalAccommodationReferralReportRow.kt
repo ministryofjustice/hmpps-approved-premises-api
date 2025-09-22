@@ -27,6 +27,8 @@ data class TransitionalAccommodationReferralReportRow(
   val postCode: String?,
   val probationRegion: String,
   val pdu: String?,
+  val destinationRegion: String?,
+  val destinationPdu: String?,
   val referralSubmittedDate: LocalDate?,
   val referralRejected: String?,
   val rejectionReason: String?,
@@ -40,6 +42,4 @@ data class TransitionalAccommodationReferralReportRow(
   val accommodationRequiredDate: LocalDate?,
   val updatedAccommodationRequiredFromDate: LocalDate?,
   val bookingOffered: String?,
-  val destinationRegion: String?,
-  val destinationPdu: String?,
 )
