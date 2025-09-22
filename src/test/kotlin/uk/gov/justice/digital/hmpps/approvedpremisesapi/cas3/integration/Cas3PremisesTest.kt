@@ -1570,6 +1570,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val characteristics = createCharacteristics(5, "room")
         val characteristicIds = characteristics.map { it.id }
 
+        val premisesArchiveDate = LocalDate.now().plusDays(10)
+        createPremisesArchiveDomainEvent(premises, user, premisesArchiveDate)
+
         val newBedspace = Cas3NewBedspace(
           reference = randomStringMultiCaseWithNumbers(10),
           startDate = bedspaceStartDate,
@@ -1596,12 +1599,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         // verify premises is unarchived
         val updatedPremises = temporaryAccommodationPremisesRepository.findById(premises.id).get()
         assertThat(updatedPremises.status).isEqualTo(PropertyStatus.active)
-        assertThat(updatedPremises.startDate).isEqualTo(bedspaceStartDate)
         assertThat(updatedPremises.endDate).isNull()
-
-        val premisesUnarchiveDomainEvents = domainEventRepository.findByCas3PremisesIdAndType(premises.id, DomainEventType.CAS3_PREMISES_UNARCHIVED)
-        assertThat(premisesUnarchiveDomainEvents).isNotNull()
-        assertThat(premisesUnarchiveDomainEvents.size).isEqualTo(1)
       }
     }
 

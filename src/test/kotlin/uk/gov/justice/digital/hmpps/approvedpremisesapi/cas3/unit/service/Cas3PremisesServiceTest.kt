@@ -741,17 +741,23 @@ class Cas3PremisesServiceTest {
     fun `When create a new bedspace in a scheduled to archive premises returns Success and unarchive the premises`() {
       val bedspaceStartDate = LocalDate.now().plusDays(5)
       val premises = createPremisesEntity(endDate = LocalDate.now().plusDays(2), status = PropertyStatus.archived)
-      val originalPremisesStartDate = premises.startDate
-      val originalPremisesEndDate = premises.endDate
       val bedspace = createBedspace(premises, bedspaceStartDate)
       val room = bedspace.room
 
       val updatedPremises = createPremisesEntity(id = premises.id, startDate = bedspaceStartDate, status = PropertyStatus.active)
 
+      val dataPremisesDomainEvent = createPremisesArchiveEvent(premisesId = premises.id, userId = UUID.randomUUID(), endDate = LocalDate.now().plusDays(3))
+      val premisesDomainEvent = createPremisesArchiveDomainEvent(dataPremisesDomainEvent)
+
+      val updatedPremisesDomainEvent = premisesDomainEvent.copy(
+        cas3CancelledAt = OffsetDateTime.now(),
+      )
+
       every { roomRepositoryMock.save(any()) } returns room
       every { bedRepositoryMock.save(any()) } returns bedspace
       every { premisesRepositoryMock.save(match { it.id == premises.id }) } returns updatedPremises
-      every { cas3DomainEventServiceMock.savePremisesUnarchiveEvent(match { it.id == premises.id }, premises.startDate, bedspaceStartDate, premises.endDate!!) } returns Unit
+      every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premises.id, CAS3_PREMISES_ARCHIVED) } returns premisesDomainEvent
+      every { domainEventRepositoryMock.save(match { it.cas3PremisesId == premises.id }) } returns updatedPremisesDomainEvent
 
       val result = premisesService.createBedspace(premises, room.name, bedspace.startDate!!, null, emptyList())
 
@@ -767,11 +773,8 @@ class Cas3PremisesServiceTest {
           match<TemporaryAccommodationPremisesEntity> { it.id == premises.id },
         )
 
-        cas3DomainEventServiceMock.savePremisesUnarchiveEvent(
-          match<TemporaryAccommodationPremisesEntity> { it.id == premises.id },
-          originalPremisesStartDate,
-          bedspaceStartDate,
-          originalPremisesEndDate,
+        domainEventRepositoryMock.save(
+          match { it.cas3PremisesId == premises.id },
         )
       }
     }

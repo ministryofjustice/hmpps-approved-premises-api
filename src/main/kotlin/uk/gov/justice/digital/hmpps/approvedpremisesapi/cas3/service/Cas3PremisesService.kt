@@ -561,7 +561,27 @@ class Cas3PremisesService(
     bedspaceRepository.save(bedspace)
 
     if (premises.isPremisesScheduledToArchive()) {
-      unarchivePremisesAndSaveDomainEvent(premises, startDate)
+      val latestPremisesArchiveDomainEvent = domainEventRepository.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(
+        premises.id,
+        CAS3_PREMISES_ARCHIVED,
+      ) ?: return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotScheduledToArchive"
+
+      val premisesArchiveDomainEventData = objectMapper.readValue(latestPremisesArchiveDomainEvent.data, CAS3PremisesArchiveEvent::class.java)
+
+      if (premisesArchiveDomainEventData.eventDetails.endDate <= LocalDate.now(clock)) {
+        return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesArchiveDateInThePast"
+      }
+
+      domainEventRepository.save(
+        latestPremisesArchiveDomainEvent.copy(
+          cas3CancelledAt = OffsetDateTime.now(clock),
+        ),
+      )
+
+      premises.endDate = null
+      premises.status = PropertyStatus.active
+
+      premisesRepository.save(premises)
     }
 
     return success(bedspace)
