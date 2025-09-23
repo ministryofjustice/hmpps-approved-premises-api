@@ -20,8 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -186,6 +186,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     pdu = premises.probationDeliveryUnit?.name!!,
     status = premises.status,
     bedspaceCount = bedspaceCount,
+    town = premises.town,
     localAuthorityAreaName = premises.localAuthorityArea?.name!!,
   )
 

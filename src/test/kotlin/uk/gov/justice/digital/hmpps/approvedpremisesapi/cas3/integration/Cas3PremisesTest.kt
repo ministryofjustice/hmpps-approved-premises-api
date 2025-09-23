@@ -28,11 +28,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSortBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UnarchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UnarchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UpdateBedspace
@@ -568,6 +568,51 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `Get all premises filters correctly when a town is passed in the query parameter`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+        val townPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+          withTown("Manchesterone")
+          withStatus(PropertyStatus.active)
+          withLocalAuthorityArea(localAuthorityArea)
+          withProbationDeliveryUnit(
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            },
+          )
+        }
+
+        val anotherTownPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(user.probationRegion)
+          withTown("Manchestertwo")
+          withStatus(PropertyStatus.active)
+          withLocalAuthorityArea(localAuthorityArea)
+          withProbationDeliveryUnit(
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(user.probationRegion)
+            },
+          )
+        }
+
+        val townBedspaces = createBedspaces(townPremises, Cas3BedspaceStatus.online, true)
+        val anotherTownBedspaces = createBedspaces(anotherTownPremises, Cas3BedspaceStatus.online, true)
+
+        val expectedPremises = listOf(
+          createPremisesSummary(anotherTownPremises, anotherTownBedspaces.size),
+          createPremisesSummary(townPremises, townBedspaces.size),
+        ).sortedBy { it.id }
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=Manchester",
+          expectedPremises,
+        )
+      }
+    }
+
+    @Test
     fun `Get all premises returns successfully with no premises when a postcode or address is passed in the query parameter and doesn't match any premises`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         assertUrlReturnsPremises(
@@ -617,7 +662,10 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         .responseBody
         .blockFirst()
 
-      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedPremisesSummaries))
+      val actualPremises = objectMapper.readValue(responseBody, Array<Cas3PremisesSummary>::class.java).toList().sortedBy { it.id }
+      val sortedExpectedPremises = expectedPremisesSummaries.sortedBy { it.id }
+
+      assertThat(objectMapper.writeValueAsString(actualPremises)).isEqualTo(objectMapper.writeValueAsString(sortedExpectedPremises))
 
       return response
     }
