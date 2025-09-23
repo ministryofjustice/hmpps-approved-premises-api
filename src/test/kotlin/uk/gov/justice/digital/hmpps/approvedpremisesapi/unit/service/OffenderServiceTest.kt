@@ -439,7 +439,7 @@ class OffenderServiceTest {
       )
     } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.NOT_FOUND, null)
 
-    every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns false
+    every { mockFeatureFlagService.getBooleanFlag("cas1-manage-adjudications-api-enabled") } returns false
 
     assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
   }
@@ -456,7 +456,7 @@ class OffenderServiceTest {
       )
     } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.FORBIDDEN, null)
 
-    every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns false
+    every { mockFeatureFlagService.getBooleanFlag("cas1-manage-adjudications-api-enabled") } returns false
 
     assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -515,7 +515,7 @@ class OffenderServiceTest {
       adjudicationsPageTwo,
     )
 
-    every { mockFeatureFlagService.getBooleanFlag("CAS1-MANAGE-ADJUDICATIONS-API-ENABLED") } returns false
+    every { mockFeatureFlagService.getBooleanFlag("cas1-manage-adjudications-api-enabled") } returns false
 
     val result = offenderService.getAdjudicationsByNomsNumber(nomsNumber)
 
