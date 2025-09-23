@@ -143,8 +143,9 @@ class Cas3PremisesService(
       addressLine1,
       postcode,
       turnaroundWorkingDays,
-      isUniqueName = isUniqueName(reference = reference, premisesId = null),
-    )
+    ) {
+      isUniqueName(reference = reference, premisesId = null)
+    }
 
     if (validationErrors.any()) {
       return fieldValidationError
@@ -201,7 +202,7 @@ class Cas3PremisesService(
     addressLine1: String,
     postcode: String,
     turnaroundWorkingDays: Int?,
-    isUniqueName: Boolean,
+    isUniqueName: () -> Boolean,
   ) {
     if (localAuthorityAreaId != null && localAuthorityArea == null) {
       "$.localAuthorityAreaId" hasValidationError "doesNotExist"
@@ -217,7 +218,7 @@ class Cas3PremisesService(
 
     if (reference.isEmpty()) {
       "$.reference" hasValidationError "empty"
-    } else if (!isUniqueName) {
+    } else if (!isUniqueName()) {
       "$.reference" hasValidationError "notUnique"
     }
 
@@ -261,8 +262,9 @@ class Cas3PremisesService(
       addressLine1,
       postcode,
       turnaroundWorkingDays,
-      isUniqueName(reference, premises.id),
-    )
+    ) {
+      isUniqueName(reference, premises.id)
+    }
 
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
 
