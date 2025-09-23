@@ -57,6 +57,7 @@ class Cas1ApplicationTimelineTransformerTest {
     override val triggerSource: TriggerSourceType?,
     override val triggeredByUser: UserEntity?,
     override val schemaVersion: Int?,
+    override val premisesName: String?,
   ) : DomainEventSummary
 
   @ParameterizedTest
@@ -77,6 +78,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = userJpa,
       schemaVersion = 1,
+      premisesName = null,
     )
 
     val userApi = mockk<ApprovedPremisesUser>()
@@ -113,6 +115,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = userJpa,
       schemaVersion = null,
+      premisesName = null,
     )
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
@@ -138,6 +141,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = null,
       schemaVersion = null,
+      premisesName = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -173,6 +177,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = null,
       schemaVersion = null,
+      premisesName = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -200,6 +205,7 @@ class Cas1ApplicationTimelineTransformerTest {
   fun `transformDomainEventSummaryToTimelineEvent adds cas1SpaceBookingUrl if cas1 space booking id defined`() {
     val spaceBookingId = UUID.randomUUID()
     val premisesId = UUID.randomUUID()
+    val premisesName = "Some premises"
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
@@ -213,6 +219,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = null,
       schemaVersion = null,
+      premisesName = premisesName,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -246,6 +253,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = null,
       schemaVersion = null,
+      premisesName = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -281,6 +289,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = null,
       schemaVersion = null,
+      premisesName = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -316,6 +325,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = null,
       schemaVersion = null,
+      premisesName = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -345,6 +355,7 @@ class Cas1ApplicationTimelineTransformerTest {
     val spaceBookingId = UUID.randomUUID()
     val premisesId = UUID.randomUUID()
     val appealId = UUID.randomUUID()
+    val premisesName = "Some premises"
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
@@ -358,6 +369,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = null,
       schemaVersion = null,
+      premisesName = premisesName,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -394,6 +406,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = triggerSource,
       triggeredByUser = null,
       schemaVersion = null,
+      premisesName = null,
     )
 
     every { mockCas1DomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
@@ -408,6 +421,7 @@ class Cas1ApplicationTimelineTransformerTest {
   fun `transformDomainEventSummaryToTimelineEvent transforms domain event with booking changed payload`() {
     val userJpa = UserEntityFactory().withDefaultProbationRegion().produce()
     val premisesId = UUID.randomUUID()
+    val premisesName = "Some premises"
     val domainEventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED
 
     val domainEvent = DomainEventSummaryImpl(
@@ -423,6 +437,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = userJpa,
       schemaVersion = null,
+      premisesName = premisesName,
     )
 
     val payload = Cas1BookingChangedContentPayload(

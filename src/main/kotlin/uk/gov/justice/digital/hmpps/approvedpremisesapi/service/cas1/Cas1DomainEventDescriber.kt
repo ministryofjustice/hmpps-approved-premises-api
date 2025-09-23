@@ -133,7 +133,7 @@ class Cas1DomainEventDescriber(
   private fun buildPersonArrivedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getPersonArrivedEvent(domainEventSummary.id())
     return EventDescriptionAndPayload(
-      event.describe { "The person moved into the premises on ${LocalDateTime.ofInstant(it.eventDetails.arrivedAt, ZoneId.systemDefault()).toUiDateTimeFormat()}" },
+      event.describe { "The person moved into ${domainEventSummary.premisesName} on ${LocalDateTime.ofInstant(it.eventDetails.arrivedAt, ZoneId.systemDefault()).toUiDateTimeFormat()}" },
       null,
     )
   }
@@ -141,14 +141,15 @@ class Cas1DomainEventDescriber(
   private fun buildPersonNotArrivedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getPersonNotArrivedEvent(domainEventSummary.id())
     return EventDescriptionAndPayload(
-      event.describe { "The person was due to move into the premises on ${it.eventDetails.expectedArrivalOn.toUiFormat()} but did not arrive" },
+      event.describe { "The person was due to move into ${domainEventSummary.premisesName} on ${it.eventDetails.expectedArrivalOn.toUiFormat()} but did not arrive" },
       null,
     )
   }
 
+  @SuppressWarnings("MaxLineLength")
   private fun buildPersonDepartedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {
     val event = domainEventService.getPersonDepartedEvent(domainEventSummary.id())
-    return EventDescriptionAndPayload(event.describe { "The person moved out of the premises on ${LocalDateTime.ofInstant(it.eventDetails.departedAt, ZoneId.systemDefault()).toUiDateTimeFormat()}" }, null)
+    return EventDescriptionAndPayload(event.describe { "The person moved out of ${domainEventSummary.premisesName} on ${LocalDateTime.ofInstant(it.eventDetails.departedAt, ZoneId.systemDefault()).toUiDateTimeFormat()}" }, null)
   }
 
   private fun buildBookingNotMadeDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload<*> {

@@ -14,6 +14,7 @@ interface DomainEventSummary {
   val assessmentId: UUID?
   val bookingId: UUID?
   val premisesId: UUID?
+  val premisesName: String?
   val appealId: UUID?
   val cas1SpaceBookingId: UUID?
   val triggerSource: TriggerSourceType?

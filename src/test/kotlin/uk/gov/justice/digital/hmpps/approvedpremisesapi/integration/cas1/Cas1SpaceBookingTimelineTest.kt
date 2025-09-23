@@ -154,6 +154,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
               it.cas1SpaceBookingId,
               it.triggerSource,
               user,
+              premisesName = premises.name,
             ),
           )
         },

@@ -140,6 +140,7 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
                 it.triggerSource,
                 null,
                 it.schemaVersion,
+                null,
               ),
             )
           },

@@ -1043,6 +1043,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
                 null,
                 it.triggerSource,
                 user,
+                premisesName = null,
               ),
             )
           },
