@@ -64,7 +64,6 @@ data class Cas2StatusUpdateEntity(
 
   @OneToMany(mappedBy = "statusUpdate")
   val statusUpdateDetails: List<Cas2StatusUpdateDetailEntity>? = null,
-// TODO besscerule removed timestamp as it was stopping data being able to be added with old createdAt dates
   var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
   override fun toString() = "Cas2StatusEntity: $id"

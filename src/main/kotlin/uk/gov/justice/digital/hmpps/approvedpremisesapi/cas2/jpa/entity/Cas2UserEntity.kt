@@ -81,6 +81,4 @@ data class Cas2UserEntity(
     Cas2UserType.DELIUS -> deliusStaffCode ?: error("Couldn't resolve delius ID for user $id")
     Cas2UserType.EXTERNAL -> "" // BAIL-WIP - this currently needs to be not null - refactor them when we add the user type to cas2 user type
   }
-
-  fun isExternal() = userType == Cas2UserType.EXTERNAL
 }

@@ -30,7 +30,7 @@ data class ExternalUserEntity(
   override var email: String,
 
   @CreationTimestamp
-  private val createdAt: OffsetDateTime? = null,
+  val createdAt: OffsetDateTime? = null,
 ) : UnifiedUser {
   override fun toString() = "External user $id"
 }

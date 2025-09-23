@@ -64,7 +64,7 @@ data class Cas2v2UserEntity(
   var isActive: Boolean,
 
   @CreationTimestamp
-  private val createdAt: OffsetDateTime? = null,
+  val createdAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2v2ApplicationEntity> = mutableListOf(),

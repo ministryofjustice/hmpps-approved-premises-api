@@ -196,7 +196,6 @@ class Cas2MergeMigrationJob(
       id = it.id,
       crn = it.crn,
       createdByUser = it.createdByUser,
-      // TODO besscerule - the important part of populating the column!
       createdByCas2User = cas2UserRepository.findById(it.createdByUser.id).get(),
       data = it.data,
       document = it.document,
@@ -268,7 +267,6 @@ class Cas2MergeMigrationJob(
     val note = Cas2ApplicationNoteEntity(
       id = it.id,
       application = cas2ApplicationRepository.findById(it.application.id).get(),
-      // TODO besscerule unsure of the best thing to do here would it be better to change the has_user table constraint to accept Cas2Users?
       createdByUser = nomisUser,
       createdByCas2User = cas2UserRepository.findById(it.createdByUser.id).get(),
       body = it.body,
@@ -287,7 +285,7 @@ class Cas2MergeMigrationJob(
       id = it.id,
       name = it.name,
       email = it.email,
-      createdAt = OffsetDateTime.now(),
+      createdAt = it.createdAt,
       updatedAt = OffsetDateTime.now(),
       isActive = it.isActive,
       isEnabled = it.isEnabled,
@@ -307,7 +305,7 @@ class Cas2MergeMigrationJob(
       id = it.id,
       name = it.name,
       email = it.email,
-      createdAt = OffsetDateTime.now(),
+      createdAt = it.createdAt,
       updatedAt = OffsetDateTime.now(),
       isActive = true,
       isEnabled = it.isEnabled,
@@ -328,17 +326,15 @@ class Cas2MergeMigrationJob(
       id = it.id,
       name = it.name,
       email = it.email,
-      createdAt = OffsetDateTime.now(),
+      createdAt = it.createdAt,
       updatedAt = OffsetDateTime.now(),
       isActive = it.isActive,
       isEnabled = it.isEnabled,
       nomisStaffId = it.nomisStaffId,
-      // TODO besscerule - this matches the nomis table accountType column (it's usually GENERAL), what should we put here
       nomisAccountType = if (userType == Cas2UserType.NOMIS) "GENERAL" else null,
       activeNomisCaseloadId = it.activeNomisCaseloadId,
       deliusStaffCode = it.deliusStaffCode,
       deliusTeamCodes = it.deliusTeamCodes,
-      // TODO besscerule - this matches the external table origin column (it's usually NACRO), what should we put here
       externalType = if (userType == Cas2UserType.EXTERNAL) "NACRO" else null,
       userType = getUserType(it),
       username = it.username,
