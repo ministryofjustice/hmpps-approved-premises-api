@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveActions
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
@@ -1025,6 +1026,7 @@ class Cas3PremisesService(
     referenceNumber: String?,
     notes: String?,
     bedId: UUID,
+    costCentre: Cas3CostCentre?,
   ): ValidatableActionResult<Cas3VoidBedspaceEntity> = validated {
     if (endDate.isBefore(startDate)) {
       "$.endDate" hasValidationError "beforeStartDate"
@@ -1060,7 +1062,7 @@ class Cas3PremisesService(
         cancellationDate = null,
         cancellationNotes = null,
         bedspace = null,
-        costCentre = null,
+        costCentre = costCentre,
       ),
     )
 
@@ -1074,6 +1076,7 @@ class Cas3PremisesService(
     reasonId: UUID,
     referenceNumber: String?,
     notes: String?,
+    costCentre: Cas3CostCentre?,
   ): AuthorisableActionResult<ValidatableActionResult<Cas3VoidBedspaceEntity>> {
     val voidBedspace = cas3VoidBedspacesRepository.findByIdOrNull(voidBedspaceId)
       ?: return AuthorisableActionResult.NotFound()
@@ -1108,6 +1111,7 @@ class Cas3PremisesService(
             this.reason = reason!!
             this.referenceNumber = referenceNumber
             this.notes = notes
+            this.costCentre = costCentre
           },
         )
 

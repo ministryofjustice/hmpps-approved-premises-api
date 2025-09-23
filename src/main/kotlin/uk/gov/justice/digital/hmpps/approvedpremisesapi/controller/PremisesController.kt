@@ -540,6 +540,7 @@ class PremisesController(
       referenceNumber = body.referenceNumber,
       notes = body.notes,
       bedId = body.bedId,
+      costCentre = body.costCentre,
     )
 
     val voidBedspaces = extractResultEntityOrThrow(result)
@@ -603,6 +604,7 @@ class PremisesController(
         body.reason,
         body.referenceNumber,
         body.notes,
+        body.costCentre,
       )
 
     val validationResult = when (updateVoidBedspaceResult) {
