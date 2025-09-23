@@ -130,6 +130,7 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJobTest : IntegrationTestBase() 
                 it.triggerSource,
                 null,
                 it.schemaVersion,
+                null,
               ),
             )
           },

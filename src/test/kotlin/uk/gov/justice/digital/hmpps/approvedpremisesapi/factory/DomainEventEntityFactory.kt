@@ -139,7 +139,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     createdAt = this.createdAt(),
     data = this.data(),
     service = this.service(),
-    triggerSource = null,
+    triggerSource = this.triggerSource(),
     triggeredByUserId = this.triggeredByUserId(),
     nomsNumber = this.nomsNumber(),
     metadata = this.metadata(),

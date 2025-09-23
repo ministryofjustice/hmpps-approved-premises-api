@@ -112,7 +112,7 @@ class Cas1DomainEventDescriberTest {
 
     val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.description).isEqualTo("The person moved into the premises on ${arrivalDate.toUiDateTimeFormat()}")
+    assertThat(result.description).isEqualTo("The person moved into Test premises on ${arrivalDate.toUiDateTimeFormat()}")
   }
 
   @ParameterizedTest
@@ -133,7 +133,7 @@ class Cas1DomainEventDescriberTest {
 
     val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.description).isEqualTo("The person was due to move into the premises on ${expectedArrivalDate.toUiFormat()} but did not arrive")
+    assertThat(result.description).isEqualTo("The person was due to move into Test premises on ${expectedArrivalDate.toUiFormat()} but did not arrive")
   }
 
   @ParameterizedTest
@@ -154,7 +154,7 @@ class Cas1DomainEventDescriberTest {
 
     val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.description).isEqualTo("The person moved out of the premises on ${departureDate.toUiDateTimeFormat()}")
+    assertThat(result.description).isEqualTo("The person moved out of Test premises on ${departureDate.toUiDateTimeFormat()}")
   }
 
   @ParameterizedTest
@@ -674,6 +674,7 @@ data class DomainEventSummaryImpl(
   override val triggerSource: TriggerSourceType?,
   override val triggeredByUser: UserEntity?,
   override val schemaVersion: Int? = null,
+  override val premisesName: String?,
 ) : DomainEventSummary {
   companion object {
     fun ofType(type: DomainEventType) = DomainEventSummaryImpl(
@@ -688,6 +689,7 @@ data class DomainEventSummaryImpl(
       cas1SpaceBookingId = null,
       triggerSource = null,
       triggeredByUser = null,
+      premisesName = "Test premises",
     )
   }
 }
