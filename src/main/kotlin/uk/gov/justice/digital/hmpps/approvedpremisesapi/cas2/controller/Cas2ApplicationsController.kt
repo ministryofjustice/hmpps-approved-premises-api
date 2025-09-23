@@ -45,7 +45,7 @@ class Cas2ApplicationsController(
   ): ResponseEntity<List<Cas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    if (user.activeCaseloadId == null) throw ForbiddenProblem()
+    if (user.activeNomisCaseloadId == null) throw ForbiddenProblem()
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
