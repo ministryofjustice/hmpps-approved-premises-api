@@ -32,10 +32,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_UNARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
@@ -114,7 +117,6 @@ class Cas3PremisesService(
   fun getPremisesBedspaces(premisesId: UUID): List<BedEntity> = bedspaceRepository.findByRoomPremisesId(premisesId)
 
   @Transactional
-  @SuppressWarnings("CyclomaticComplexMethod")
   fun createNewPremises(
     reference: String,
     addressLine1: String,
@@ -129,43 +131,20 @@ class Cas3PremisesService(
     turnaroundWorkingDays: Int?,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
-    if (probationRegion == null) {
-      "$.probationRegionId" hasValidationError "doesNotExist"
-    }
-
-    val localAuthorityArea = when (localAuthorityAreaId) {
-      null -> null
-      else -> {
-        val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
-        if (localAuthorityArea == null) {
-          "$.localAuthorityAreaId" hasValidationError "doesNotExist"
-        }
-        localAuthorityArea
-      }
-    }
-
+    val localAuthorityArea = localAuthorityAreaId?.let { localAuthorityAreaRepository.findByIdOrNull(it) }
     val probationDeliveryUnit = probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
 
-    if (probationDeliveryUnit == null) {
-      "$.probationDeliveryUnitId" hasValidationError "doesNotExist"
-    }
-
-    if (reference.isEmpty()) {
-      "$.reference" hasValidationError "empty"
-    } else if (!premisesRepository.nameIsUniqueForType(reference, TemporaryAccommodationPremisesEntity::class.java)) {
-      "$.reference" hasValidationError "notUnique"
-    }
-
-    if (addressLine1.isEmpty()) {
-      "$.address" hasValidationError "empty"
-    }
-
-    if (postcode.isEmpty()) {
-      "$.postcode" hasValidationError "empty"
-    }
-
-    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
-      "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
+    validatePremises(
+      probationRegion,
+      localAuthorityAreaId,
+      localAuthorityArea,
+      probationDeliveryUnit,
+      reference,
+      addressLine1,
+      postcode,
+      turnaroundWorkingDays,
+    ) {
+      isUniqueName(reference = reference, premisesId = null)
     }
 
     if (validationErrors.any()) {
@@ -186,7 +165,7 @@ class Cas3PremisesService(
       startDate = LocalDate.now(),
       bookings = mutableListOf(),
       lostBeds = mutableListOf(),
-      notes = if (notes.isNullOrEmpty()) "" else notes,
+      notes = notes.orEmpty(),
       emailAddress = null,
       rooms = mutableListOf(),
       characteristics = mutableListOf(),
@@ -208,7 +187,54 @@ class Cas3PremisesService(
     return success(premises)
   }
 
-  @SuppressWarnings("CyclomaticComplexMethod")
+  private fun isUniqueName(reference: String, premisesId: UUID?): Boolean = premisesRepository.nameIsUniqueForType(
+    reference,
+    TemporaryAccommodationPremisesEntity::class.java,
+    premisesId,
+  )
+
+  fun <T> CasResultValidatedScope<T>.validatePremises(
+    probationRegion: ProbationRegionEntity?,
+    localAuthorityAreaId: UUID?,
+    localAuthorityArea: LocalAuthorityAreaEntity?,
+    probationDeliveryUnit: ProbationDeliveryUnitEntity?,
+    reference: String,
+    addressLine1: String,
+    postcode: String,
+    turnaroundWorkingDays: Int?,
+    isUniqueName: () -> Boolean,
+  ) {
+    if (localAuthorityAreaId != null && localAuthorityArea == null) {
+      "$.localAuthorityAreaId" hasValidationError "doesNotExist"
+    }
+
+    if (probationRegion == null) {
+      "$.probationRegionId" hasValidationError "doesNotExist"
+    }
+
+    if (probationDeliveryUnit == null) {
+      "$.probationDeliveryUnitId" hasValidationError "doesNotExist"
+    }
+
+    if (reference.isEmpty()) {
+      "$.reference" hasValidationError "empty"
+    } else if (!isUniqueName()) {
+      "$.reference" hasValidationError "notUnique"
+    }
+
+    if (addressLine1.isEmpty()) {
+      "$.address" hasValidationError "empty"
+    }
+
+    if (postcode.isEmpty()) {
+      "$.postcode" hasValidationError "empty"
+    }
+
+    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
+      "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
+    }
+  }
+
   fun updatePremises(
     premises: TemporaryAccommodationPremisesEntity,
     reference: String,
@@ -223,40 +249,24 @@ class Cas3PremisesService(
     probationDeliveryUnitId: UUID,
     turnaroundWorkingDays: Int,
   ): CasResult<TemporaryAccommodationPremisesEntity> = validatedCasResult {
-    val localAuthorityArea = localAuthorityAreaId?.let { id ->
-      localAuthorityAreaRepository.findByIdOrNull(id).also { result ->
-        if (result == null) {
-          "$.localAuthorityAreaId" hasValidationError "doesNotExist"
-        }
-      }
-    }
     val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
-    if (probationRegion == null) {
-      "$.probationRegionId" hasValidationError "doesNotExist"
-    }
+    val localAuthorityArea = localAuthorityAreaId?.let { localAuthorityAreaRepository.findByIdOrNull(it) }
     val probationDeliveryUnit = probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
-    if (probationDeliveryUnit == null) {
-      "$.probationDeliveryUnitId" hasValidationError "doesNotExist"
-    }
 
-    if (reference.isEmpty()) {
-      "$.reference" hasValidationError "empty"
-    } else if (!premisesRepository.nameIsUniqueForType(reference, TemporaryAccommodationPremisesEntity::class.java, premises.id)) {
-      "$.reference" hasValidationError "notUnique"
-    }
-
-    if (addressLine1.isEmpty()) {
-      "$.address" hasValidationError "empty"
-    }
-
-    if (postcode.isEmpty()) {
-      "$.postcode" hasValidationError "empty"
+    validatePremises(
+      probationRegion,
+      localAuthorityAreaId,
+      localAuthorityArea,
+      probationDeliveryUnit,
+      reference,
+      addressLine1,
+      postcode,
+      turnaroundWorkingDays,
+    ) {
+      isUniqueName(reference, premises.id)
     }
 
     val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
-    if (turnaroundWorkingDays < 0) {
-      "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
-    }
 
     if (validationErrors.any()) {
       return fieldValidationError
@@ -272,7 +282,7 @@ class Cas3PremisesService(
         premises.localAuthorityArea = localAuthorityArea
         premises.probationRegion = probationRegion!!
         premises.characteristics = characteristicEntities.map { it!! }.toMutableList()
-        premises.notes = if (notes.isNullOrEmpty()) "" else notes
+        premises.notes = notes.orEmpty()
         premises.probationDeliveryUnit = probationDeliveryUnit!!
         premises.turnaroundWorkingDays = turnaroundWorkingDays
       }
@@ -1201,7 +1211,6 @@ class Cas3PremisesService(
         validationErrors["$.characteristics[$index]"] = "incorrectCharacteristicServiceScope"
       }
     }
-
     entity
   }
 
