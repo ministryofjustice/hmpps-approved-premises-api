@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
@@ -41,7 +43,7 @@ const val MINUTES_PER_DAY = 60 * 24
 class Cas2StartupScript(
   private val seedLogger: SeedLogger,
   private val seedConfig: SeedConfig,
-  private val nomisUserRepository: NomisUserRepository,
+  private val cas2UserRepository: Cas2UserRepository,
   private val applicationRepository: Cas2ApplicationRepository,
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
@@ -57,15 +59,15 @@ class Cas2StartupScript(
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting CAS2 applications")
-    nomisUserRepository.findAll().forEach { user ->
+    cas2UserRepository.findAll().forEach { user ->
       listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
         createApplicationFor(applicant = user, state = state)
       }
     }
   }
 
-  private fun createApplicationFor(applicant: NomisUserEntity, state: String) {
-    seedLogger.info("Auto-scripting application for ${applicant.nomisUsername}, in state $state")
+  private fun createApplicationFor(applicant: Cas2UserEntity, state: String) {
+    seedLogger.info("Auto-scripting application for ${applicant.username}, in state $state")
     val createdAt = randomDateTime()
     val submittedAt = if (state == "IN_PROGRESS") null else createdAt.plusDays(randomInt(EARLIEST_SUBMISSION, LATEST_SUBMISSION).toLong())
     val application =
@@ -78,15 +80,15 @@ class Cas2StartupScript(
         data = dataFor(state = state, nomsNumber = "A1234AI"),
         document = documentFor(state = state, nomsNumber = "A1234AI"),
         submittedAt = submittedAt,
-        referringPrisonCode = if (submittedAt != null) applicant.activeCaseloadId else null,
+        referringPrisonCode = if (submittedAt != null) applicant.activeNomisCaseloadId else null,
         applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
         serviceOrigin = Cas2ServiceOrigin.HDC,
 
       )
 
     // create application assignments for submitted applications
-    if (submittedAt != null && applicant.activeCaseloadId != null) {
-      application.createApplicationAssignment(prisonCode = applicant.activeCaseloadId!!, allocatedPomUser = applicant)
+    if (submittedAt != null && applicant.activeNomisCaseloadId != null) {
+      application.createApplicationAssignment(prisonCode = applicant.activeNomisCaseloadId!!, allocatedPomUser = applicant)
     }
     applicationRepository.save(application)
 

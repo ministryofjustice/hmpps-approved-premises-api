@@ -17,10 +17,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationSummaryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
@@ -65,11 +66,11 @@ class Cas2ApplicationsTransformerTest {
     offenderManagementUnitRepository,
   )
 
-  private val nomisUserEntity = NomisUserEntityFactory().produce()
+  private val nomisUserEntity = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
   private val nomisUser = NomisUser(
     id = this.nomisUserEntity.id,
     name = this.nomisUserEntity.name,
-    nomisUsername = this.nomisUserEntity.nomisUsername,
+    nomisUsername = this.nomisUserEntity.username,
     isActive = this.nomisUserEntity.isActive,
   )
 
@@ -351,14 +352,14 @@ class Cas2ApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId.toString()).isEqualTo(application.getCreatedById())
+      assertThat(result.createdByUserId.toString()).isEqualTo(application.userId)
       assertThat(result.risks).isNull()
       assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
-      assertThat(result.createdByUserName).isEqualTo(application.getCreatedByUsername())
+      assertThat(result.createdByUserName).isEqualTo(application.userName)
       assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
       assertThat(result.bailHearingDate).isNull()
     }
@@ -380,8 +381,8 @@ class Cas2ApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId).isEqualTo(UUID.fromString(application.getCreatedById()))
-      assertThat(result.createdByUserName).isEqualTo(application.getCreatedByUsername())
+      assertThat(result.createdByUserId).isEqualTo(UUID.fromString(application.userId))
+      assertThat(result.createdByUserName).isEqualTo(application.userName)
       assertThat(result.allocatedPomUserId).isEqualTo(application.allocatedPomUserId)
       assertThat(result.allocatedPomName).isEqualTo(application.allocatedPomName)
       assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)

@@ -13,8 +13,9 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2LocationChangedService
@@ -52,7 +53,7 @@ class Cas2LocationChangedServiceTest {
   private val nomsNumber = "NOMSABC"
   private val detailUrl = "some/url"
 
-  private val user = NomisUserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
 
   private val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
 
