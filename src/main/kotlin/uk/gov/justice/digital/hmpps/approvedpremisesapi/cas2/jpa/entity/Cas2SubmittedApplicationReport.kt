@@ -34,9 +34,9 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
              JOIN cas_2_applications applications
                   ON events.application_id = applications.id
              LEFT JOIN cas_2_application_assignments as pom_assignments
-                       ON events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_user_id is NOT NULL
+                       ON events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_cas_2_user_id is NOT NULL
              LEFT JOIN cas_2_application_assignments as location_assignments
-                       ON events.application_id = location_assignments.application_id and location_assignments.allocated_pom_user_id is NULL
+                       ON events.application_id = location_assignments.application_id and location_assignments.allocated_pom_cas_2_user_id is NULL
     WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
       AND events.occurred_at  > CURRENT_DATE - 365
     GROUP BY events.id, events.application_id, events.data, events.occurred_at, applications.created_at, applications.application_origin, applications.bail_hearing_date
