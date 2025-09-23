@@ -1,7 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
@@ -107,7 +108,7 @@ fun IntegrationTestBase.givenACas2PomUser(
   mockCallToGetMe: Boolean = true,
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
-  block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
+  block: (cas2UserEntity: Cas2UserEntity, jwt: String) -> Unit,
 ) {
   val nomisUserDetailsFactory = NomisUserDetailFactory()
 
@@ -117,12 +118,13 @@ fun IntegrationTestBase.givenACas2PomUser(
 
   val nomisUserDetails = nomisUserDetailsFactory.produce()
 
-  val user = nomisUserEntityFactory.produceAndPersist {
+  val user = cas2UserEntityFactory.produceAndPersist {
     withId(id)
-    withNomisUsername(nomisUserDetails.username)
+    withUsername(nomisUserDetails.username)
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
-    withActiveCaseloadId(nomisUserDetails.activeCaseloadId!!)
+    withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
+    withUserType(Cas2UserType.NOMIS)
   }
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
@@ -259,7 +261,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2LicenceCaseAdminUser(
 fun IntegrationTestBase.givenACas2LicenceCaseAdminUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
-  block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
+  block: (cas2UserEntity: Cas2UserEntity, jwt: String) -> Unit,
 ) {
   val nomisUserDetailsFactory = NomisUserDetailFactory()
 
@@ -269,12 +271,13 @@ fun IntegrationTestBase.givenACas2LicenceCaseAdminUser(
 
   val nomisUserDetails = nomisUserDetailsFactory.produce()
 
-  val user = nomisUserEntityFactory.produceAndPersist {
+  val user = cas2UserEntityFactory.produceAndPersist {
     withId(id)
-    withNomisUsername(nomisUserDetails.username)
+    withUsername(nomisUserDetails.username)
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
-    withActiveCaseloadId(nomisUserDetails.activeCaseloadId!!)
+    withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
+    withUserType(Cas2UserType.NOMIS)
   }
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username, listOf("ROLE_LICENCE_CA"))
@@ -316,7 +319,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2Assessor(
 fun IntegrationTestBase.givenACas2Admin(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
-  block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
+  block: (nomisUserEntity: Cas2UserEntity, jwt: String) -> Unit,
 ) {
   val nomisUserDetailsFactory = NomisUserDetailFactory()
 
@@ -326,11 +329,12 @@ fun IntegrationTestBase.givenACas2Admin(
 
   val nomisUserDetails = nomisUserDetailsFactory.produce()
 
-  val user = nomisUserEntityFactory.produceAndPersist {
+  val user = cas2UserEntityFactory.produceAndPersist {
     withId(id)
-    withNomisUsername(nomisUserDetails.username)
+    withUsername(nomisUserDetails.username)
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
+    withUserType(Cas2UserType.NOMIS)
   }
 
   val jwt = jwtAuthHelper.createValidAdminAuthorisationCodeJwt(nomisUserDetails.username)

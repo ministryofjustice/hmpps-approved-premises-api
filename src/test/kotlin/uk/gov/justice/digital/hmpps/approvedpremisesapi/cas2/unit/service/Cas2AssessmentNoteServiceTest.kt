@@ -14,12 +14,13 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
@@ -70,8 +71,7 @@ class Cas2AssessmentNoteServiceTest {
     private val assessorName = "Anne Prison Assessor"
     private val assessorEmail = "assessors@example.com"
     private val myPrisonCode = "my-prison"
-    private val nomisReferrer = NomisUserEntityFactory().withActiveCaseloadId(myPrisonCode).produce()
-    private val cas2UserReferrer = NomisUserEntityFactory().withActiveCaseloadId(myPrisonCode).produce()
+    private val cas2UserReferrer = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withActiveNomisCaseloadId(myPrisonCode).produce()
 
     @Nested
     inner class WhenAssessmentIsNotFound {
@@ -96,7 +96,7 @@ class Cas2AssessmentNoteServiceTest {
         every { mockHttpAuthService.getCas2AuthenticatedPrincipalOrThrow() } returns mockPrincipal
         every { mockPrincipal.isExternalUser() } returns false
         every { mockNotifyConfig.emailAddresses.cas2Assessors } returns assessorEmail
-        every { mockUserService.getUserForRequest() } returns nomisReferrer
+        every { mockUserService.getUserForRequest() } returns cas2UserReferrer
       }
 
       @Nested
@@ -107,12 +107,12 @@ class Cas2AssessmentNoteServiceTest {
             .withAssessorName(assessorName)
             .withNacroReferralId("OH123").produce()
           val submittedApplication = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(nomisReferrer)
+            .withCreatedByUser(cas2UserReferrer)
             .withCrn("CRN123")
             .withNomsNumber("NOMSABC")
             .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
             .withAssessment(baseAssessment)
-            .withApplicationAssignments(myPrisonCode, nomisReferrer)
+            .withApplicationAssignments(myPrisonCode, cas2UserReferrer)
             .produce()
           val assessment = Cas2AssessmentEntityFactory()
             .withId(baseAssessment.id)
@@ -122,7 +122,7 @@ class Cas2AssessmentNoteServiceTest {
           val applicationId = submittedApplication.id
           val noteEntity = Cas2ApplicationNoteEntity(
             id = UUID.randomUUID(),
-            createdByUser = nomisReferrer,
+            createdByUser = cas2UserReferrer,
             application = submittedApplication,
             body = "new note",
             createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
@@ -175,16 +175,16 @@ class Cas2AssessmentNoteServiceTest {
         fun `When There Are No Assessor Details passes placeholder copy to email template`() {
           val baseAssessment = Cas2AssessmentEntityFactory().produce()
           val submittedApplicationWithoutAssessorDetails = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(nomisReferrer)
+            .withCreatedByUser(cas2UserReferrer)
             .withAssessment(baseAssessment)
-            .withApplicationAssignments(myPrisonCode, nomisReferrer)
+            .withApplicationAssignments(myPrisonCode, cas2UserReferrer)
             .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
             .produce()
           val assessment = Cas2AssessmentEntityFactory()
             .withId(baseAssessment.id).withApplication(submittedApplicationWithoutAssessorDetails).produce()
           val noteEntity = Cas2ApplicationNoteEntity(
             id = UUID.randomUUID(),
-            createdByUser = nomisReferrer,
+            createdByUser = cas2UserReferrer,
             application = submittedApplicationWithoutAssessorDetails,
             body = "new note",
             createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
@@ -229,8 +229,8 @@ class Cas2AssessmentNoteServiceTest {
         @Test
         fun `returns Success result with entity from db`() {
           val oldPrisonCode = "old-prison"
-          val oldPom = NomisUserEntityFactory()
-            .withActiveCaseloadId(oldPrisonCode)
+          val oldPom = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+            .withActiveNomisCaseloadId(oldPrisonCode)
             .produce()
           val application = Cas2ApplicationEntityFactory()
             .withCreatedByUser(oldPom)
@@ -254,7 +254,7 @@ class Cas2AssessmentNoteServiceTest {
             id = UUID.randomUUID(),
             createdAt = OffsetDateTime.now().minusDays(20),
             prisonCode = myPrisonCode,
-            allocatedPomUser = nomisReferrer,
+            allocatedPomUser = cas2UserReferrer,
             application = application,
           )
 
@@ -282,7 +282,7 @@ class Cas2AssessmentNoteServiceTest {
             .withNacroReferralId(baseAssessment.nacroReferralId!!).produce()
           val noteEntity = Cas2ApplicationNoteEntity(
             id = UUID.randomUUID(),
-            createdByUser = nomisReferrer,
+            createdByUser = cas2UserReferrer,
             application = applicationCreatedByOtherUser,
             body = "new note",
             createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
@@ -334,7 +334,7 @@ class Cas2AssessmentNoteServiceTest {
 
       @Nested
       inner class WhenApplicationCreatedByOtherUser {
-        val otherUser = NomisUserEntityFactory().produce()
+        val otherUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
         val prisonCode = "other-prison"
 
         private val baseApplication = Cas2ApplicationEntityFactory()
@@ -351,7 +351,7 @@ class Cas2AssessmentNoteServiceTest {
         private val baseAssessment = Cas2AssessmentEntityFactory()
           .withAssessorName(assessorName).withNacroReferralId("OH456").produce()
         private val applicationCreatedByOtherUser = Cas2ApplicationEntityFactory()
-          .withCreatedByUser(NomisUserEntityFactory().produce())
+          .withCreatedByUser(Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce())
           .withCrn("CRN123")
           .withNomsNumber("NOMSABC")
           .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
@@ -389,7 +389,7 @@ class Cas2AssessmentNoteServiceTest {
         fun `When Same Prison returns Success result with entity from db`() {
           val noteEntity = Cas2ApplicationNoteEntity(
             id = UUID.randomUUID(),
-            createdByUser = nomisReferrer,
+            createdByUser = cas2UserReferrer,
             application = applicationCreatedByOtherUser,
             body = "new note",
             createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
@@ -458,7 +458,7 @@ class Cas2AssessmentNoteServiceTest {
         val assessment = Cas2AssessmentEntityFactory().produce()
         val submittedApplication = Cas2ApplicationEntityFactory()
           .withId(assessment.application.id)
-          .withCreatedByUser(nomisReferrer)
+          .withCreatedByUser(cas2UserReferrer)
           .withCrn("CRN123")
           .withNomsNumber("NOMSABC")
           .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
@@ -516,7 +516,7 @@ class Cas2AssessmentNoteServiceTest {
       fun `alerts Sentry when the Referrer does not have an email`() {
         val baseAssessment = Cas2AssessmentEntityFactory().produce()
         val submittedApplicationWithNoReferrerEmail = Cas2ApplicationEntityFactory()
-          .withCreatedByUser(NomisUserEntityFactory().withEmail(null).produce())
+          .withCreatedByUser(Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withEmail(null).produce())
           .withCrn("CRN123")
           .withNomsNumber("NOMSABC")
           .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))

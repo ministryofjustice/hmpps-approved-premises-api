@@ -12,10 +12,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -31,8 +31,8 @@ class StartupScriptConfigTest {
   private val mockSeedLogger = mockk<SeedLogger>()
   private val logEntries = mutableListOf<LogEntry>()
 
-  private val mockNomisUserRepository = mockk<NomisUserRepository>()
-  private val mockNomisUserEntity = mockk<NomisUserEntity>()
+  private val mockCas2UserRepository = mockk<Cas2UserRepository>()
+  private val mockCas2UserEntity = mockk<Cas2UserEntity>()
 
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockApplicationEntity = mockk<Cas2ApplicationEntity>(relaxed = true)
@@ -55,7 +55,7 @@ class StartupScriptConfigTest {
   private val autoScript = Cas2StartupScript(
     mockSeedLogger,
     seedConfig,
-    mockNomisUserRepository,
+    mockCas2UserRepository,
     mockApplicationRepository,
     mockExternalUserRepository,
     mockStatusUpdateRepository,
@@ -74,8 +74,8 @@ class StartupScriptConfigTest {
     seedConfig.onStartup.script.noms = "NOMS123"
     seedConfig.onStartup.script.prisonCode = "PRI"
 
-    every { mockNomisUserRepository.findAll() } answers { listOf(mockNomisUserEntity) }
-    every { mockNomisUserEntity.nomisUsername } answers { "SMITHJ_GEN" }
+    every { mockCas2UserRepository.findAll() } answers { listOf(mockCas2UserEntity) }
+    every { mockCas2UserEntity.username } answers { "SMITHJ_GEN" }
 
     every { mockExternalUserRepository.findAll() } answers { listOf(mockExternalUserEntity) }
 
@@ -93,7 +93,7 @@ class StartupScriptConfigTest {
 
     every { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) } answers { }
     every { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) } answers { }
-    every { mockNomisUserEntity.activeCaseloadId } returns "ABC"
+    every { mockCas2UserEntity.activeNomisCaseloadId } returns "ABC"
     mockkStatic(::insertHdcDates)
   }
 
