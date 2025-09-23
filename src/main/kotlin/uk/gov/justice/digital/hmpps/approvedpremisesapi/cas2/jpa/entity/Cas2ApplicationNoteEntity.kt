@@ -54,11 +54,11 @@ data class Cas2ApplicationNoteEntity(
   @ManyToOne
   @JoinColumn(name = "assessment_id")
   var assessment: Cas2AssessmentEntity?,
+) {
 
   @ManyToOne
   @JoinColumn(name = "created_by_cas2_user_id")
-  var createdByCas2User: Cas2UserEntity? = null,
-) {
+  var createdByCas2User: Cas2UserEntity? = null
 
   /*
   BAIL-WIP createdByNomisUser and createdByExternalUser can both be replaced by cas2user entity when the move happens
@@ -75,13 +75,19 @@ data class Cas2ApplicationNoteEntity(
 
   init {
     when (this.createdByUser) {
+      is Cas2UserEntity -> this.createdByCas2User = this.createdByUser
       is NomisUserEntity -> this.createdByNomisUser = this.createdByUser
       is ExternalUserEntity -> this.createdByExternalUser = this.createdByUser
     }
   }
 
-  fun getUser(): UnifiedUser = this.createdByNomisUser ?: this.createdByExternalUser ?: error("No user found!")
   fun getUserId(): UUID = this.createdByNomisUser?.id ?: this.createdByExternalUser?.id ?: error("No user id found!")
+  fun getUser(): UnifiedUser = when {
+    createdByNomisUser != null -> this.createdByNomisUser!!
+    createdByExternalUser != null -> this.createdByExternalUser!!
+    createdByCas2User != null -> this.createdByCas2User!!
+    else -> error("No user found!")
+  }
 
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
 }

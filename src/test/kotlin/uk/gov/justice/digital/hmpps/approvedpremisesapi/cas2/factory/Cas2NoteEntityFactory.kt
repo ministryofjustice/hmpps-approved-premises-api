@@ -5,6 +5,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.UnifiedUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -27,7 +28,7 @@ class Cas2NoteEntityFactory : Factory<Cas2ApplicationNoteEntity> {
     this.assessment = { assessment }
   }
 
-  fun withCreatedByUser(createdByUser: NomisUserEntity) = apply {
+  fun withCreatedByUser(createdByUser: Cas2UserEntity) = apply {
     this.createdByUser = { createdByUser }
   }
 

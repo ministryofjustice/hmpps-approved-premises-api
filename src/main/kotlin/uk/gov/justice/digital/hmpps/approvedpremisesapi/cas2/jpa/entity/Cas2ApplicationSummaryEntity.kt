@@ -38,8 +38,6 @@ interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEnt
 
   fun findAllByIdIn(ids: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
-  fun findByPrisonCode(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
-
   fun findBySubmittedAtIsNotNull(pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
 }
 
@@ -61,11 +59,7 @@ data class Cas2ApplicationSummaryEntity(
   val userId: String,
   @Column(name = "name")
   val userName: String,
-  @Column(name = "created_by_cas2_user_id")
-  val createdByCas2UserId: String? = null,
-  @Column(name = "created_by_cas2_user_name")
-  val createdByCas2UserName: String? = null,
-  @Column(name = "allocated_pom_user_id")
+  @Column(name = "allocated_pom_cas_2_user_id")
   val allocatedPomUserId: UUID?,
   @Column(name = "allocated_pom_name")
   val allocatedPomName: String?,
@@ -91,8 +85,4 @@ data class Cas2ApplicationSummaryEntity(
   var bailHearingDate: LocalDate? = null,
   @Column(name = "application_origin")
   var applicationOrigin: String? = null,
-
-) {
-  fun getCreatedById(): String = createdByCas2UserId ?: userId
-  fun getCreatedByUsername(): String = createdByCas2UserName ?: userName
-}
+)

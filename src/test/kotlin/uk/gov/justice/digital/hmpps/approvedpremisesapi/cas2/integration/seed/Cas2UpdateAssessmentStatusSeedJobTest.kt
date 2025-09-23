@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2AssessmentUpdateStatusSeedRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -18,8 +19,9 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          nomisUserEntityFactory.produceAndPersist {
-            withNomisUsername("nomis_username")
+          cas2UserEntityFactory.produceAndPersist {
+            withUserType(Cas2UserType.NOMIS)
+            withUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -102,8 +104,9 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          nomisUserEntityFactory.produceAndPersist {
-            withNomisUsername("nomis_username")
+          cas2UserEntityFactory.produceAndPersist {
+            withUserType(Cas2UserType.NOMIS)
+            withUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -147,8 +150,9 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          nomisUserEntityFactory.produceAndPersist {
-            withNomisUsername("nomis_username")
+          cas2UserEntityFactory.produceAndPersist {
+            withUserType(Cas2UserType.NOMIS)
+            withUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -198,8 +202,9 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          nomisUserEntityFactory.produceAndPersist {
-            withNomisUsername("nomis_username")
+          cas2UserEntityFactory.produceAndPersist {
+            withUserType(Cas2UserType.NOMIS)
+            withUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -238,9 +243,10 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
   @Test
   fun `should make no change if application ID does not match assessment application`() {
     // Given
-    var user =
-      nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("nomis_username")
+    val user =
+      cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.NOMIS)
+        withUsername("nomis_username")
         withNomisStaffCode(100L)
         withNomisStaffIdentifier(101L)
         withIsActive(true)
@@ -300,8 +306,9 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          nomisUserEntityFactory.produceAndPersist {
-            withNomisUsername("nomis_username")
+          cas2UserEntityFactory.produceAndPersist {
+            withUserType(Cas2UserType.NOMIS)
+            withUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -350,8 +357,9 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          nomisUserEntityFactory.produceAndPersist {
-            withNomisUsername("nomis_username")
+          cas2UserEntityFactory.produceAndPersist {
+            withUserType(Cas2UserType.NOMIS)
+            withUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -401,8 +409,9 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          nomisUserEntityFactory.produceAndPersist {
-            withNomisUsername("nomis_username")
+          cas2UserEntityFactory.produceAndPersist {
+            withUserType(Cas2UserType.NOMIS)
+            withUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
