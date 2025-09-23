@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
@@ -85,5 +86,6 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     isEnabled = this.isEnabled(),
     isActive = this.isActive(),
     applications = this.applications(),
+    createdAt = OffsetDateTime.now(),
   )
 }
