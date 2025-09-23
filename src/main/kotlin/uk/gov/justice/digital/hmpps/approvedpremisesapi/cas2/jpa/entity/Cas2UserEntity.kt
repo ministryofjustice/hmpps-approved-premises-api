@@ -27,8 +27,9 @@ enum class Cas2UserType(val authSource: String) {
 
 @Repository
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
-  fun findByUsername(username: String): Cas2UserEntity?
-  fun findByUsernameAndUserType(username: String, type: Cas2UserType): Cas2UserEntity?
+  fun findByIdAndUserType(id: UUID, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
+  fun findByUsernameAndUserType(username: String, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
+  fun findByNomisStaffIdAndUserType(nomisStaffId: Long, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
 }
 
 @Entity
@@ -39,8 +40,8 @@ data class Cas2UserEntity(
   val username: String,
 
   // Cas2v2User interface implementation
-  var email: String?,
-  var name: String,
+  override var email: String?,
+  override var name: String,
 
   @Enumerated(EnumType.STRING)
   var userType: Cas2UserType,
@@ -58,8 +59,8 @@ data class Cas2UserEntity(
   // Delius specific fields that are only expected to have values if the
   // accountType is Cas2UserType.DELIUS
   @Convert(converter = StringListConverter::class)
-  var deliusTeamCodes: List<String>?,
-  var deliusStaffCode: String?,
+  var deliusTeamCodes: List<String>? = null,
+  var deliusStaffCode: String? = null,
 
   var isEnabled: Boolean,
   var isActive: Boolean,
@@ -69,9 +70,9 @@ data class Cas2UserEntity(
 
   val createdAt: OffsetDateTime = OffsetDateTime.now(),
 
-  @OneToMany(mappedBy = "createdByCas2User")
+  @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
-) {
+) : UnifiedUser {
   override fun toString() = "CAS2 user $id"
 
   fun staffIdentifier() = when (userType) {

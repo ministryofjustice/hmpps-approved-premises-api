@@ -55,7 +55,7 @@ class Cas2AssessmentNoteService(
       )
     } else {
       val user = userService.getUserForRequest()
-      if (userAccessService.offenderIsFromSamePrisonAsUser(assessment.application.currentPrisonCode, user.activeCaseloadId)) {
+      if (userAccessService.offenderIsFromSamePrisonAsUser(assessment.application.currentPrisonCode, user.activeNomisCaseloadId)) {
         val savedNote = saveNote(assessment, note.note, user)
         sendEmailToAssessors(savedNote)
 
@@ -85,7 +85,7 @@ class Cas2AssessmentNoteService(
         ),
       )
     } else {
-      val msg = "Email not found for User ${savedNote.application.getCreatedById()}. Unable to send email for Note ${savedNote.id} on Application ${savedNote.application.id}"
+      val msg = "Email not found for User ${savedNote.application.createdByUser!!.id}. Unable to send email for Note ${savedNote.id} on Application ${savedNote.application.id}"
       log.error(msg)
       Sentry.captureMessage(msg)
     }
