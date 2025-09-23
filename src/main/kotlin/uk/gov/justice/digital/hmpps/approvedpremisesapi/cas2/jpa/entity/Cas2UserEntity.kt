@@ -26,6 +26,7 @@ enum class Cas2UserType(val authSource: String) {
   }
 }
 
+// TODO besscerule rewrite all functions that don't also use usertype to filter to keep them separate
 @Repository
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
   fun findByUsername(username: String): Cas2UserEntity?
