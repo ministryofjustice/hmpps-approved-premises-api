@@ -35,12 +35,12 @@ data class Cas2ApplicationAssignmentEntity(
    * exist when the bail system was branched and it will only ever be a nomis user that is assigned a transfer.
    */
   @ManyToOne
-  @JoinColumn(name = "allocated_pom_user_id")
-  val allocatedPomUser: NomisUserEntity? = null,
+  @JoinColumn(name = "allocated_pom_cas_2_user_id")
+  val allocatedPomUser: Cas2UserEntity? = null,
 
   val createdAt: OffsetDateTime,
 
   @ManyToOne
-  @JoinColumn(name = "allocated_pom_cas_2_user_id")
-  val allocatedPomCas2User: Cas2UserEntity? = null,
+  @JoinColumn(name = "allocated_pom_user_id")
+  val allocatedPomNomisUser: NomisUserEntity? = null,
 )
