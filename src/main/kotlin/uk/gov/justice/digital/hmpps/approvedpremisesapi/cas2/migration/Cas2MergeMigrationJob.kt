@@ -205,8 +205,8 @@ class Cas2MergeMigrationJob(
       prisonCode = it.prisonCode,
       createdAt = it.createdAt,
       allocatedPomUser = it.allocatedPomUser,
-      allocatedPomCas2User = if (it.allocatedPomUser != null) {
-        cas2UserRepository.findById(it.allocatedPomUser!!.id).get()
+      allocatedPomNomisUser = if (it.allocatedPomUser != null) {
+        nomisUserRepository.findById(it.allocatedPomUser!!.id).get()
       } else {
         null
       },
@@ -232,8 +232,8 @@ class Cas2MergeMigrationJob(
     Cas2ApplicationEntity(
       id = it.id,
       crn = it.crn,
-      createdByUser = it.createdByUser,
-      createdByCas2User = cas2UserRepository.findById(it.createdByUser.id).get(),
+      createdByUser = cas2UserRepository.findById(it.createdByNomisUser!!.id).get(),
+      createdByNomisUser = it.createdByNomisUser,
       data = it.data,
       document = it.document,
       createdAt = it.createdAt,
@@ -280,8 +280,8 @@ class Cas2MergeMigrationJob(
     Cas2ApplicationEntity(
       id = it.id,
       crn = it.crn,
-      createdByUser = nomisUserRepository.findById(UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER)).get(),
-      createdByCas2User = cas2UserRepository.findById(it.createdByUser.id).get(),
+      createdByNomisUser = nomisUserRepository.findById(UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER)).get(),
+      createdByUser = cas2UserRepository.findById(it.createdByUser.id).get(),
       data = it.data,
       document = it.document,
       createdAt = it.createdAt,
@@ -300,13 +300,10 @@ class Cas2MergeMigrationJob(
   }
 
   private fun generateCas2v2ApplicationNote(applicationNoteIds: List<UUID>) = cas2v2ApplicationNoteRepository.findAllById(applicationNoteIds).map {
-    val nomisUser = nomisUserRepository.findById(UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER)).get()
-
-    val note = Cas2ApplicationNoteEntity(
+    Cas2ApplicationNoteEntity(
       id = it.id,
       application = cas2ApplicationRepository.findById(it.application.id).get(),
-      createdByUser = nomisUser,
-      createdByCas2User = cas2UserRepository.findById(it.createdByUser.id).get(),
+      createdByUser = cas2UserRepository.findById(it.createdByUser.id).get(),
       body = it.body,
       createdAt = it.createdAt,
       assessment = if (it.assessment != null) {
@@ -315,7 +312,6 @@ class Cas2MergeMigrationJob(
         null
       },
     )
-    note
   }
 
   private fun generateCas2ApplicationNote(applicationNoteIds: List<UUID>) = cas2ApplicationNoteRepository.findAllById(applicationNoteIds).map {
@@ -335,7 +331,8 @@ class Cas2MergeMigrationJob(
       id = it.id,
       name = it.name,
       email = it.email,
-      createdAt = it.createdAt,
+      createdAt = it.createdAt!!,
+      updatedAt = OffsetDateTime.now(),
       isActive = it.isActive,
       isEnabled = it.isEnabled,
       nomisStaffId = it.nomisStaffId,
@@ -355,7 +352,8 @@ class Cas2MergeMigrationJob(
       id = it.id,
       name = it.name,
       email = it.email,
-      createdAt = it.createdAt,
+      createdAt = it.createdAt!!,
+      updatedAt = OffsetDateTime.now(),
       isActive = true,
       isEnabled = it.isEnabled,
       nomisStaffId = null,
@@ -377,6 +375,7 @@ class Cas2MergeMigrationJob(
       name = it.name,
       email = it.email,
       createdAt = it.createdAt!!,
+      updatedAt = OffsetDateTime.now(),
       isActive = it.isActive,
       isEnabled = it.isEnabled,
       nomisStaffId = it.nomisStaffId,

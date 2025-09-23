@@ -13,7 +13,6 @@ import java.util.UUID
 @Repository
 interface NomisUserRepository : JpaRepository<NomisUserEntity, UUID> {
   fun findByNomisUsername(nomisUserName: String): NomisUserEntity?
-  fun findByNomisStaffId(nomisStaffId: Long): NomisUserEntity?
 
   @Query("SELECT n.id FROM NomisUserEntity n")
   fun findNomisUserIds(): List<UUID>
@@ -35,7 +34,7 @@ data class NomisUserEntity(
 
   val createdAt: OffsetDateTime = OffsetDateTime.now(),
 
-  @OneToMany(mappedBy = "createdByUser")
+  @OneToMany(mappedBy = "createdByNomisUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
 ) : UnifiedUser {
   override fun toString() = "Nomis user $id"

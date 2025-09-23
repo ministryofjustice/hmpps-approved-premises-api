@@ -60,8 +60,8 @@ class Cas2ApplicationsTransformer(
     personName: String,
   ): Cas2ApplicationSummary = Cas2ApplicationSummary(
     id = jpaSummary.id,
-    createdByUserId = UUID.fromString(jpaSummary.getCreatedById()),
-    createdByUserName = jpaSummary.getCreatedByUsername(),
+    createdByUserId = UUID.fromString(jpaSummary.userId),
+    createdByUserName = jpaSummary.userName,
     // BAIL-WIP The two allocated POM fields are left unchanged as it will currently ALWAYS be a nomis user.
     allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.userId),
     allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.userName,
