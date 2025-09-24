@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.SubmittedApplicationReportRow
@@ -114,16 +115,19 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val tooOldSubmitted = OffsetDateTime.now().minusDays(366)
       val tooOldCreated = tooOldSubmitted.minusSeconds(daysInSeconds(7))
 
-      val user1 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_1")
+      val user1 = cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.NOMIS)
+        withUsername("NOMIS_USER_1")
       }
 
-      val user2 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_2")
+      val user2 = cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.NOMIS)
+        withUsername("NOMIS_USER_2")
       }
 
-      val user3 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_3")
+      val user3 = cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.NOMIS)
+        withUsername("NOMIS_USER_3")
       }
 
       val applicationId1 = UUID.randomUUID()
@@ -399,8 +403,9 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withData(objectMapper.writeValueAsString(event3ToSave))
       }
 
-      val user1 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_1")
+      val user1 = cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.NOMIS)
+        withUsername("NOMIS_USER_1")
       }
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
@@ -412,8 +417,9 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withReferringPrisonCode("NEW")
       }
 
-      val user3 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_3")
+      val user3 = cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.NOMIS)
+        withUsername("NOMIS_USER_3")
       }
 
       val application1Assignment1 = Cas2ApplicationAssignmentEntity(
@@ -509,12 +515,14 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val newer = Instant.now().minusSeconds(daysInSeconds(100))
       val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
-      val user1 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_1")
+      val user1 = cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.NOMIS)
+        withUsername("NOMIS_USER_1")
       }
 
-      val user2 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_2")
+      val user2 = cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.NOMIS)
+        withUsername("NOMIS_USER_2")
       }
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
@@ -559,7 +567,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = application2.crn,
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
-          startedBy = application2.createdByUser.nomisUsername,
+          startedBy = application2.createdByUser!!.username,
           applicationOrigin = application2.applicationOrigin,
         ),
         UnsubmittedApplicationsReportRow(
@@ -567,7 +575,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = application1.crn,
           personNoms = application1.nomsNumber.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
-          startedBy = application1.createdByUser.nomisUsername,
+          startedBy = application1.createdByUser!!.username,
           applicationOrigin = application1.applicationOrigin,
         ),
       )
