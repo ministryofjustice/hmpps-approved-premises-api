@@ -356,7 +356,7 @@ class Cas2MergeMigrationJob(
       id = it.id,
       name = it.name,
       email = it.email,
-      createdAt = it.createdAt,
+      createdAt = it.createdAt!!,
       updatedAt = OffsetDateTime.now(),
       isActive = it.isActive,
       isEnabled = it.isEnabled,
