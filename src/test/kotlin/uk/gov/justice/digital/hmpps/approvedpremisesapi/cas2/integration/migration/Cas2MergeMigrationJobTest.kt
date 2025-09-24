@@ -64,11 +64,17 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
       }
     }.take(NO_OF_NOMIS_USERS_TO_MIGRATE).toList()
     externalUsers = generateSequence {
-      externalUserEntityFactory.produceAndPersist()
+      externalUserEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.parse("2021-03-04T10:15:30+01:00"))
+      }
     }.take(NO_OF_EXTERNAL_USERS_TO_MIGRATE).toList()
     cas2v2Users = generateSequence {
       cas2v2UserEntityFactory.produceAndPersist {
         withUserType(Cas2v2UserType.entries.random())
+        withCreatedAt(OffsetDateTime.parse("2021-03-04T10:15:30+01:00"))
+        withActiveNomisCaseloadId(randomStringUpperCase(3))
+        withDeliusStaffCode(randomStringUpperCase(3))
+        withDeliusTeamCodes(listOf(randomStringUpperCase(3)))
       }
     }.take(NO_OF_CAS2V2_USERS_TO_MIGRATE).toList()
     cas2v2Applications = generateSequence {

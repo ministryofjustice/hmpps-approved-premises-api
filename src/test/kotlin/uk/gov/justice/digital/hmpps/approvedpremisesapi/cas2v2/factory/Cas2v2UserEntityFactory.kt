@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2UserEntityFactory : Factory<Cas2v2UserEntity> {
@@ -23,9 +24,14 @@ class Cas2v2UserEntityFactory : Factory<Cas2v2UserEntity> {
   private var isEnabled: Yielded<Boolean> = { true }
   private var isActive: Yielded<Boolean> = { true }
   private var applications: Yielded<MutableList<Cas2v2ApplicationEntity>> = { mutableListOf() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
+  }
+
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
   }
 
   fun withActiveNomisCaseloadId(activeCaseloadId: String) = apply {
@@ -46,6 +52,10 @@ class Cas2v2UserEntityFactory : Factory<Cas2v2UserEntity> {
 
   fun withDeliusStaffCode(deliusStaffCode: String) = apply {
     this.deliusStaffCode = { deliusStaffCode }
+  }
+
+  fun withDeliusTeamCodes(deliusTeamCodes: List<String>) = apply {
+    this.deliusTeamCodes = { deliusTeamCodes }
   }
 
   fun withNomisStaffIdentifier(nomisStaffId: Long) = apply {
@@ -77,5 +87,6 @@ class Cas2v2UserEntityFactory : Factory<Cas2v2UserEntity> {
     isEnabled = this.isEnabled(),
     isActive = this.isActive(),
     applications = this.applications(),
+    createdAt = this.createdAt(),
   )
 }
