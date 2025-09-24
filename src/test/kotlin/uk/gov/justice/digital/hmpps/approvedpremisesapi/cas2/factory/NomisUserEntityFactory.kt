@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class NomisUserEntityFactory : Factory<NomisUserEntity> {
@@ -20,6 +21,7 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
   private var isActive: Yielded<Boolean> = { true }
   private var activeCaseloadId: Yielded<String?> = { null }
   private var applications: Yielded<MutableList<Cas2ApplicationEntity>> = { mutableListOf() }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -31,6 +33,10 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
 
   fun withName(name: String) = apply {
     this.name = { name }
+  }
+
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
   }
 
   fun withNomisUsername(nomisUsername: String) = apply {
@@ -68,5 +74,6 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
     email = this.email(),
     applications = this.applications(),
     activeCaseloadId = this.activeCaseloadId(),
+    createdAt = this.createdAt(),
   )
 }

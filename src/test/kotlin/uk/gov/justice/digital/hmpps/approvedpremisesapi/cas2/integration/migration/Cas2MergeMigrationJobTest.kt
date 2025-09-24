@@ -60,6 +60,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     nomisUsers = generateSequence {
       nomisUserEntityFactory.produceAndPersist {
         withActiveCaseloadId(randomStringUpperCase(3))
+        withCreatedAt(OffsetDateTime.parse("2021-03-04T10:15:30+01:00"))
       }
     }.take(NO_OF_NOMIS_USERS_TO_MIGRATE).toList()
     externalUsers = generateSequence {
@@ -329,6 +330,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2UserEntity.isActive).isEqualTo(nomisUserEntity.isActive)
     assertThat(cas2UserEntity.externalType).isNull()
     assertThat(cas2UserEntity.nomisAccountType).isEqualTo(nomisUserEntity.accountType)
+    assertThat(cas2UserEntity.createdAt).isEqualTo(nomisUserEntity.createdAt)
   }
 
   private fun assertThatExternalUsersMatch(cas2UserEntity: Cas2UserEntity, externalUserEntity: ExternalUserEntity) {
@@ -345,6 +347,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2UserEntity.isActive).isEqualTo(true)
     assertThat(cas2UserEntity.externalType).isEqualTo(externalUserEntity.origin)
     assertThat(cas2UserEntity.nomisAccountType).isNull()
+    assertThat(cas2UserEntity.createdAt).isEqualTo(externalUserEntity.createdAt)
   }
 
   private fun assertThatCas2v2UsersMatch(cas2UserEntity: Cas2UserEntity, cas2v2UserEntity: Cas2v2UserEntity) {
@@ -359,6 +362,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     assertThat(cas2UserEntity.deliusTeamCodes).isEqualTo(cas2v2UserEntity.deliusTeamCodes)
     assertThat(cas2UserEntity.isEnabled).isEqualTo(cas2v2UserEntity.isEnabled)
     assertThat(cas2UserEntity.isActive).isEqualTo(cas2v2UserEntity.isActive)
+    assertThat(cas2UserEntity.createdAt).isEqualTo(cas2v2UserEntity.createdAt)
     if (cas2UserEntity.userType == Cas2UserType.NOMIS) {
       assertThat(cas2UserEntity.nomisAccountType).isEqualTo("GENERAL")
     } else {

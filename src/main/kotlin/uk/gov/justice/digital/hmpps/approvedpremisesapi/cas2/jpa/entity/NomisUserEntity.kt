@@ -4,7 +4,6 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -34,8 +33,7 @@ data class NomisUserEntity(
   override var email: String?,
   var activeCaseloadId: String? = null,
 
-  @CreationTimestamp
-  val createdAt: OffsetDateTime? = null,
+  val createdAt: OffsetDateTime = OffsetDateTime.now(),
 
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
