@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
@@ -47,6 +48,7 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
   lateinit var cas2v2Users: List<Cas2v2UserEntity>
   lateinit var cas2v2Applications: List<Cas2v2ApplicationEntity>
   lateinit var cas2Applications: List<Cas2ApplicationEntity>
+  lateinit var cas2ApplicationAssignments: List<Cas2ApplicationAssignmentEntity>
   lateinit var cas2v2Assessments: List<Cas2v2AssessmentEntity>
   lateinit var cas2v2ApplicationNotes: List<Cas2v2ApplicationNoteEntity>
   lateinit var cas2v2StatusUpdates: List<Cas2v2StatusUpdateEntity>
@@ -114,8 +116,14 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     cas2Applications = generateSequence {
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(nomisUsers.random())
+        withReferringPrisonCode(randomStringUpperCase(3))
         withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
       }
+    }.take(NO_OF_CAS_2_APPLICATIONS_TO_UPDATE).toList()
+    cas2ApplicationAssignments = cas2Applications.map {
+      it.createApplicationAssignment(it.referringPrisonCode!!, it.createdByUser)
+      cas2ApplicationRepository.save(it)
+      it.applicationAssignments.first()
     }.take(NO_OF_CAS_2_APPLICATIONS_TO_UPDATE).toList()
     cas2StatusUpdates = generateSequence {
       cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -157,6 +165,9 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
 
     val allCas2StatusUpdateDetails = assertExpectedNumberOfCas2v2StatusUpdateDetailsWereMigrated()
     assertThatCas2v2StatusUpdateDetailsDataWasMigratedSuccessfully(allCas2StatusUpdateDetails)
+
+    val allCas2ApplicationAssignments = assertExpectedNumberOfCas2ApplicationAssignmentsWereUpdated()
+    assertThatAllApplicationAssignmentsDataWasMigratedOrUpdatedSuccessfully(allCas2ApplicationAssignments)
   }
 
   private fun assertExpectedNumberOfCas2v2ApplicationsWereMigrated(): List<Cas2ApplicationEntity> {
@@ -169,6 +180,12 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
     val allStatusUpdates = cas2StatusUpdateRepository.findAll()
     assertThat(allStatusUpdates.size).isEqualTo(NO_OF_CAS_2_STATUS_UPDATES_TO_UPDATE + NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE)
     return allStatusUpdates
+  }
+
+  private fun assertExpectedNumberOfCas2ApplicationAssignmentsWereUpdated(): List<Cas2ApplicationAssignmentEntity> {
+    val allApplicationAssignments = cas2ApplicationAssignmentRepository.findAll()
+    assertThat(allApplicationAssignments.size).isEqualTo(NO_OF_CAS_2_APPLICATIONS_TO_UPDATE)
+    return allApplicationAssignments
   }
 
   private fun assertExpectedNumberOfCas2v2ApplicationNotesWereMigrated(): List<Cas2ApplicationNoteEntity> {
@@ -259,6 +276,12 @@ class Cas2MergeMigrationJobTest : IntegrationTestBase() {
       } else {
         assertThat(cas2StatusUpdate.cas2UserAssessor).isNotNull
       }
+    }
+  }
+
+  private fun assertThatAllApplicationAssignmentsDataWasMigratedOrUpdatedSuccessfully(allApplicationAssignments: List<Cas2ApplicationAssignmentEntity>) {
+    allApplicationAssignments.forEach { cas2ApplicationAssignment ->
+      assertThat(cas2ApplicationAssignment.allocatedPomCas2User?.id).isEqualTo(cas2ApplicationAssignment.allocatedPomUser?.id)
     }
   }
 

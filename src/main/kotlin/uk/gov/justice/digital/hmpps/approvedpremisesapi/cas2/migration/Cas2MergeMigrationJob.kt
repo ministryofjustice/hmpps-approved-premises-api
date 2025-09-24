@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration
 
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
@@ -52,6 +54,7 @@ class Cas2MergeMigrationJob(
   private val cas2StatusUpdateRepository: Cas2StatusUpdateRepository,
   private val cas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository,
   private val cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
+  private val cas2ApplicationAssignmentRepository: Cas2ApplicationAssignmentRepository,
   private val cas2v2StatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository,
   private val migrationLogger: MigrationLogger,
   transactionTemplate: TransactionTemplate,
@@ -67,8 +70,9 @@ class Cas2MergeMigrationJob(
     migrateAndUpdateCas2Applications()
     migrateCas2Assessments()
     migrateCas2ApplicationNotes()
-    migrateCas2StatusUpdates()
+    migrateAndUpdateCas2StatusUpdates()
     migrateCas2StatusUpdateDetails()
+    updateCas2ApplicationAssignments()
     migrationLogger.info("Finished cas2 merge migration process...")
   }
 
@@ -123,7 +127,7 @@ class Cas2MergeMigrationJob(
     migrationLogger.info("Finished cas2 application note migration process...")
   }
 
-  private fun migrateCas2StatusUpdates() {
+  private fun migrateAndUpdateCas2StatusUpdates() {
     migrationLogger.info("Starting cas2 status update migration process...")
     val cas2EntityIds = cas2StatusUpdateRepository.findStatusUpdateIds()
     migrationLogger.info("Cas2 status update to update: ${cas2EntityIds.size}.")
@@ -138,6 +142,17 @@ class Cas2MergeMigrationJob(
       cas2StatusUpdateRepository.saveAllAndFlush(generateCas2v2StatusUpdate(batchIds))
     }
     migrationLogger.info("Finished cas2 statusUpdate note migration process...")
+  }
+
+  private fun updateCas2ApplicationAssignments() {
+    migrationLogger.info("Starting cas2 application assignment migration process...")
+    val cas2EntityIds = cas2ApplicationAssignmentRepository.findApplicationAssignmentIds()
+    migrationLogger.info("Cas2 application assignment to update: ${cas2EntityIds.size}.")
+    super.processInBatches(cas2EntityIds, batchSize = BATCH_SIZE) { batchIds ->
+      migrationLogger.info("Update with batch size of ${batchIds.size} in process")
+      cas2ApplicationAssignmentRepository.saveAllAndFlush(generateCas2ApplicationAssignment(batchIds))
+    }
+    migrationLogger.info("Finished cas2 applicationAssignment note migration process...")
   }
 
   private fun migrateCas2Assessments() {
@@ -173,6 +188,21 @@ class Cas2MergeMigrationJob(
       createdAt = it.createdAt,
       assessment = it.assessment,
       cas2UserAssessor = cas2UserRepository.findById(it.assessor.id).get(),
+    )
+  }
+
+  private fun generateCas2ApplicationAssignment(applicationAssignmentIds: List<UUID>) = cas2ApplicationAssignmentRepository.findAllById(applicationAssignmentIds).map {
+    Cas2ApplicationAssignmentEntity(
+      id = it.id,
+      application = it.application,
+      prisonCode = it.prisonCode,
+      createdAt = it.createdAt,
+      allocatedPomUser = it.allocatedPomUser,
+      allocatedPomCas2User = if (it.allocatedPomUser != null) {
+        cas2UserRepository.findById(it.allocatedPomUser!!.id).get()
+      } else {
+        null
+      },
     )
   }
 
