@@ -815,8 +815,6 @@ class Cas3PremisesService(
         if (result is CasResult.FieldValidationError) {
           return Cas3FieldValidationError(result.validationMessages as Map<String, Cas3ValidationMessage>)
         }
-
-        return success(bedspace)
       }
     }
 
