@@ -30,4 +30,10 @@ enum class BedUsageType {
   Booking,
   Turnaround,
   Void,
+  ;
+
+  companion object {
+    fun from(value: String): BedUsageType = entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
+      ?: throw IllegalArgumentException("Unknown BedUsageType: $value")
+  }
 }
