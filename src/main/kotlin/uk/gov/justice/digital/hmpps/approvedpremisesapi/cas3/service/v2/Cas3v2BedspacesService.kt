@@ -237,4 +237,6 @@ class Cas3v2BedspacesService(
 
     return success(updatedBedspace)
   }
+
+  fun findBedspace(premisesId: UUID, bedspaceId: UUID): Cas3BedspacesEntity? = cas3BedspacesRepository.findCas3Bedspace(premisesId = premisesId, bedspaceId = bedspaceId)
 }

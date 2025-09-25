@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
@@ -19,12 +18,10 @@ import java.time.LocalDate
 
 class Cas3v2PremisesServiceTest {
   private val mockPremisesRepository = mockk<Cas3PremisesRepository>()
-  private val mockCas3BedspacesRepository = mockk<Cas3BedspacesRepository>()
   private val mockCas3DomainEventService = mockk<Cas3v2DomainEventService>()
 
   private val cas3v2PremisesService = Cas3v2PremisesService(
     mockPremisesRepository,
-    mockCas3BedspacesRepository,
     mockCas3DomainEventService,
   )
 
