@@ -14,6 +14,7 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.SQLOrder
 import org.hibernate.annotations.Type
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
@@ -26,14 +27,20 @@ import java.util.UUID
 @Suppress("TooManyFunctions")
 @Repository
 interface Cas2v2ApplicationRepository : JpaRepository<Cas2v2ApplicationEntity, UUID> {
-  @Query("SELECT n.id FROM Cas2v2ApplicationEntity n")
-  fun findApplicationIds(): List<UUID>
-
   @Query(
     "SELECT a FROM Cas2v2ApplicationEntity a WHERE a.id = :id AND " +
       "a.submittedAt IS NOT NULL",
   )
   fun findSubmittedApplicationById(id: UUID): Cas2v2ApplicationEntity?
+
+  @Query("SELECT a FROM Cas2v2ApplicationEntity a WHERE a.createdByUser.id = :id")
+  fun findAllByCreatedByUserId(id: UUID): List<Cas2v2ApplicationEntity>
+
+  @Query(
+    "SELECT a FROM Cas2v2ApplicationEntity a WHERE a.submittedAt IS NOT NULL " +
+      "AND a NOT IN (SELECT application FROM Cas2v2AssessmentEntity)",
+  )
+  fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2v2ApplicationEntity>
 }
 
 @Repository

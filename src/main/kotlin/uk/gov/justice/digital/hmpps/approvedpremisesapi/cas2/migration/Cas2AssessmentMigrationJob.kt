@@ -4,7 +4,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
@@ -38,7 +37,6 @@ class Cas2AssessmentMigrationJob(
               id = UUID.randomUUID(),
               application = application,
               createdAt = OffsetDateTime.now(),
-              applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
             ),
           )
         }

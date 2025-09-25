@@ -7,6 +7,8 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -17,10 +19,12 @@ import java.util.UUID
 
 @Repository
 interface Cas2v2StatusUpdateRepository : JpaRepository<Cas2v2StatusUpdateEntity, UUID> {
-  @Query("SELECT n.id FROM Cas2v2StatusUpdateEntity n")
-  fun findStatusUpdateIds(): List<UUID>
-
   fun findFirstByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas2v2StatusUpdateEntity?
+
+  @Query(
+    "SELECT su FROM Cas2v2StatusUpdateEntity su WHERE su.assessment IS NULL",
+  )
+  fun findAllStatusUpdatesWithoutAssessment(pageable: Pageable?): Slice<Cas2v2StatusUpdateEntity>
 }
 
 @Entity
