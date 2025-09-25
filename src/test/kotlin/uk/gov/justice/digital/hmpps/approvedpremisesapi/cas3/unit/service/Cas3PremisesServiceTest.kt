@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
@@ -3150,6 +3151,7 @@ class Cas3PremisesServiceTest {
         referenceNumber = "12345",
         notes = "notes",
         bedId = UUID.randomUUID(),
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -3191,6 +3193,7 @@ class Cas3PremisesServiceTest {
         referenceNumber = "12345",
         notes = "notes",
         bedId = bed.id,
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -3201,6 +3204,7 @@ class Cas3PremisesServiceTest {
       assertThat(result.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
       assertThat(result.entity.referenceNumber).isEqualTo("12345")
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.costCentre).isEqualTo(Cas3CostCentre.HMPPS)
     }
 
     @Test
@@ -3236,6 +3240,7 @@ class Cas3PremisesServiceTest {
         referenceNumber = "12345",
         notes = "notes",
         bedId = bed.id,
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -3277,6 +3282,7 @@ class Cas3PremisesServiceTest {
         referenceNumber = "12345",
         notes = "notes",
         bedId = bed.id,
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -3318,6 +3324,7 @@ class Cas3PremisesServiceTest {
         referenceNumber = "12345",
         notes = "notes",
         bedId = bed.id,
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -3362,6 +3369,7 @@ class Cas3PremisesServiceTest {
         reasonId = reasonId,
         referenceNumber = "12345",
         notes = "notes",
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
@@ -3411,6 +3419,7 @@ class Cas3PremisesServiceTest {
         reasonId = voidBedspaceReason.id,
         referenceNumber = "12345",
         notes = "notes",
+        costCentre = Cas3CostCentre.HMPPS,
       )
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       val resultEntity = (result as AuthorisableActionResult.Success).entity
@@ -3422,6 +3431,7 @@ class Cas3PremisesServiceTest {
       assertThat(resultEntity.entity.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
       assertThat(resultEntity.entity.referenceNumber).isEqualTo("12345")
       assertThat(resultEntity.entity.notes).isEqualTo("notes")
+      assertThat(resultEntity.entity.costCentre).isEqualTo(Cas3CostCentre.HMPPS)
     }
 
     @Test
@@ -3454,6 +3464,7 @@ class Cas3PremisesServiceTest {
         reasonId = voidBedspaceReason.id,
         referenceNumber = "12345",
         notes = "notes",
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
@@ -3494,6 +3505,7 @@ class Cas3PremisesServiceTest {
         reasonId = voidBedspaceReason.id,
         referenceNumber = "12345",
         notes = "notes",
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
@@ -3534,6 +3546,7 @@ class Cas3PremisesServiceTest {
         reasonId = voidBedspaceReason.id,
         referenceNumber = "12345",
         notes = "notes",
+        costCentre = Cas3CostCentre.HMPPS,
       )
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
