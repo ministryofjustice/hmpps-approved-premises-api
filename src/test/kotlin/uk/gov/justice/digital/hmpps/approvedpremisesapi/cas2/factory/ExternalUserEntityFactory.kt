@@ -4,7 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class ExternalUserEntityFactory : Factory<ExternalUserEntity> {
@@ -14,14 +13,9 @@ class ExternalUserEntityFactory : Factory<ExternalUserEntity> {
   private var origin: Yielded<String> = { "NACRO" }
   private var name: Yielded<String> = { "John Smith" }
   private var email: Yielded<String> = { "john@external.example.com" }
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
-  }
-
-  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
-    this.createdAt = { createdAt }
   }
 
   fun withUsername(username: String) = apply {
@@ -47,6 +41,5 @@ class ExternalUserEntityFactory : Factory<ExternalUserEntity> {
     origin = this.origin(),
     name = this.name(),
     email = this.email(),
-    createdAt = this.createdAt(),
   )
 }

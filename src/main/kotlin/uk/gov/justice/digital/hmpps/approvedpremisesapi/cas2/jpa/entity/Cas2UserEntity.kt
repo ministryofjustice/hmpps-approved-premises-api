@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
@@ -67,7 +68,8 @@ data class Cas2UserEntity(
   @UpdateTimestamp
   private val updatedAt: OffsetDateTime? = null,
 
-  val createdAt: OffsetDateTime = OffsetDateTime.now(),
+  @CreationTimestamp
+  private val createdAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "createdByCas2User")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
