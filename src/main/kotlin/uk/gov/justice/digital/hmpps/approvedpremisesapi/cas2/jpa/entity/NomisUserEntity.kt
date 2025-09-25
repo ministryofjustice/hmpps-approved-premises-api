@@ -4,8 +4,8 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -14,6 +14,9 @@ import java.util.UUID
 interface NomisUserRepository : JpaRepository<NomisUserEntity, UUID> {
   fun findByNomisUsername(nomisUserName: String): NomisUserEntity?
   fun findByNomisStaffId(nomisStaffId: Long): NomisUserEntity?
+
+  @Query("SELECT n.id FROM NomisUserEntity n")
+  fun findNomisUserIds(): List<UUID>
 }
 
 @Entity
@@ -30,8 +33,7 @@ data class NomisUserEntity(
   override var email: String?,
   var activeCaseloadId: String? = null,
 
-  @CreationTimestamp
-  private val createdAt: OffsetDateTime? = null,
+  val createdAt: OffsetDateTime = OffsetDateTime.now(),
 
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),

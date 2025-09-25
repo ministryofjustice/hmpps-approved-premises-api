@@ -51,6 +51,10 @@ data class Cas2ApplicationNoteEntity(
   @ManyToOne
   @JoinColumn(name = "assessment_id")
   var assessment: Cas2AssessmentEntity?,
+
+  @ManyToOne
+  @JoinColumn(name = "created_by_cas2_user_id")
+  var createdByCas2User: Cas2UserEntity? = null,
 ) {
 
   /*
@@ -66,23 +70,14 @@ data class Cas2ApplicationNoteEntity(
   @JoinColumn(name = "created_by_external_user_id")
   var createdByExternalUser: ExternalUserEntity? = null
 
-  @ManyToOne
-  @JoinColumn(name = "created_by_cas2_user_id")
-  var createdByCas2User: Cas2UserEntity? = null
-
   init {
     when (this.createdByUser) {
       is NomisUserEntity -> this.createdByNomisUser = this.createdByUser
       is ExternalUserEntity -> this.createdByExternalUser = this.createdByUser
-      is Cas2UserEntity -> this.createdByCas2User = this.createdByUser
     }
   }
 
-  fun getUser(): Cas2User = when {
-    createdByNomisUser != null -> this.createdByNomisUser!!
-    createdByExternalUser != null -> this.createdByExternalUser!!
-    else -> this.createdByCas2User!! as Cas2User
-  }
+  fun getUser(): Cas2User = this.createdByNomisUser ?: this.createdByExternalUser ?: error("No user found!")
 
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
 }
