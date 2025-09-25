@@ -5,6 +5,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -13,8 +15,10 @@ import java.util.UUID
 
 @Repository
 interface Cas2v2ApplicationNoteRepository : JpaRepository<Cas2v2ApplicationNoteEntity, UUID> {
-  @Query("SELECT n.id FROM Cas2v2ApplicationNoteEntity n")
-  fun findApplicationNoteIds(): List<UUID>
+  @Query(
+    "SELECT n FROM Cas2v2ApplicationNoteEntity n WHERE n.assessment IS NULL",
+  )
+  fun findAllNotesWithoutAssessment(of: PageRequest): Slice<Cas2v2ApplicationNoteEntity>
 }
 
 @Entity

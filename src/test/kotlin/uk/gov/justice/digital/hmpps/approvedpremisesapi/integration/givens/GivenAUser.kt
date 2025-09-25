@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
@@ -134,7 +135,7 @@ fun IntegrationTestBase.givenACas2PomUser(
 }
 
 @SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.givenACas2v2DeliusUser(
+fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
   id: UUID = UUID.randomUUID(),
   staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
   roles: List<UserRole> = emptyList(),
@@ -168,7 +169,7 @@ fun IntegrationTestBase.givenACas2v2DeliusUser(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2v2PomUser(
+fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
@@ -197,7 +198,7 @@ fun IntegrationTestBase.givenACas2v2PomUser(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2v2NomisUser(
+fun Cas2v2IntegrationTestBase.givenACas2v2NomisUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
@@ -226,7 +227,7 @@ fun IntegrationTestBase.givenACas2v2NomisUser(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2v2LicenceCaseAdminUser(
+fun Cas2v2IntegrationTestBase.givenACas2v2LicenceCaseAdminUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
@@ -297,7 +298,7 @@ fun IntegrationTestBase.givenACas2Assessor(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2v2Assessor(
+fun Cas2v2IntegrationTestBase.givenACas2v2Assessor(
   id: UUID = UUID.randomUUID(),
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
 ) {
