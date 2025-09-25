@@ -56,6 +56,10 @@ class TransitionalAccommodationReferralReportGenerator :
             null -> referralData.pduName
             else -> referralData.previousReferralPduName
           },
+          outOfRegion = when (referralData.previousReferralProbationRegionName) {
+            null -> "No"
+            else -> "Yes"
+          },
           destinationRegion = referralData.previousReferralProbationRegionName?.let { referralData.probationRegionName },
           destinationPdu = referralData.previousReferralPduName?.let { referralData.pduName },
           referralSubmittedDate = referralData.referralSubmittedDate?.toLocalDate(),
