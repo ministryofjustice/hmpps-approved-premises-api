@@ -1,0 +1,1 @@
+ALTER TABLE cas_2_application_assignments DROP constraint IF EXISTS cas_2_application_assignments_allocated_pom_user_id_cas_2_fkey;
