@@ -6,7 +6,6 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
@@ -19,6 +18,9 @@ import java.util.UUID
 
 @Repository
 interface Cas2StatusUpdateRepository : JpaRepository<Cas2StatusUpdateEntity, UUID> {
+  @Query("SELECT n.id FROM Cas2StatusUpdateEntity n")
+  fun findStatusUpdateIds(): List<UUID>
+
   fun findFirstByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas2StatusUpdateEntity?
 
   @Query(
@@ -49,6 +51,10 @@ data class Cas2StatusUpdateEntity(
   val assessor: ExternalUserEntity,
 
   @ManyToOne
+  @JoinColumn(name = "cas2_user_assessor_id")
+  val cas2UserAssessor: Cas2UserEntity? = null,
+
+  @ManyToOne
   @JoinColumn(name = "application_id")
   val application: Cas2ApplicationEntity,
 
@@ -58,9 +64,7 @@ data class Cas2StatusUpdateEntity(
 
   @OneToMany(mappedBy = "statusUpdate")
   val statusUpdateDetails: List<Cas2StatusUpdateDetailEntity>? = null,
-
-  @CreationTimestamp
-  var createdAt: OffsetDateTime,
+  var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
   override fun toString() = "Cas2StatusEntity: $id"
 
