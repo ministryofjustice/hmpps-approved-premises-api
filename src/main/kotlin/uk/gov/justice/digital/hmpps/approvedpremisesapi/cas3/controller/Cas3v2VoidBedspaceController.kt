@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedsp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -26,6 +27,7 @@ class Cas3v2VoidBedspaceController(
   private val cas3PremisesService: Cas3v2PremisesService,
   private val cas3UserAccessService: Cas3UserAccessService,
   private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
+  private val cas3BedspaceService: Cas3v2BedspacesService,
 ) {
 
   private fun validateUserAccess(premises: Cas3PremisesEntity) {
@@ -67,7 +69,7 @@ class Cas3v2VoidBedspaceController(
     @PathVariable bedspaceId: UUID,
     @RequestBody body: Cas3VoidBedspaceRequest,
   ): ResponseEntity<Cas3VoidBedspace> {
-    val bedspace = cas3PremisesService.findBedspace(premisesId, bedspaceId) ?: throw NotFoundProblem(
+    val bedspace = cas3BedspaceService.findBedspace(premisesId, bedspaceId) ?: throw NotFoundProblem(
       bedspaceId,
       "Cas3Bedspace",
     )
