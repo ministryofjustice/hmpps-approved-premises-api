@@ -31,6 +31,8 @@ import java.util.UUID
 @Suppress("TooManyFunctions")
 @Repository
 interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
+  @Query("SELECT n.id FROM Cas2ApplicationEntity n")
+  fun findApplicationIds(): List<UUID>
 
   fun findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber: String): Cas2ApplicationEntity?
 
@@ -39,10 +41,6 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
       "a.submittedAt IS NOT NULL",
   )
   fun findSubmittedApplicationById(id: UUID): Cas2ApplicationEntity?
-
-  // BAIL-WIP - this will need updating when we switch over to cas2users
-  @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
-  fun findAllByCreatedByUserId(id: UUID): List<Cas2ApplicationEntity>
 
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.submittedAt IS NOT NULL " +

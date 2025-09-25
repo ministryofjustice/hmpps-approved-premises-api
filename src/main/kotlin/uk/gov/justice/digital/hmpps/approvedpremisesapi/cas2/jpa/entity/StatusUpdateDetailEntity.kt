@@ -5,7 +5,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusDetail
@@ -31,8 +30,7 @@ data class Cas2StatusUpdateDetailEntity(
   @JoinColumn(name = "status_update_id")
   val statusUpdate: Cas2StatusUpdateEntity,
 
-  @CreationTimestamp
-  var createdAt: OffsetDateTime? = null,
+  var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
   override fun toString() = "Cas2StatusDetailEntity: $id"
 

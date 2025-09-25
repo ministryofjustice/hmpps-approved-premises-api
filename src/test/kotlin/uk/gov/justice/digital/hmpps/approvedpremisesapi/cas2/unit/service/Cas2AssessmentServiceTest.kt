@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
@@ -39,6 +40,7 @@ class Cas2AssessmentServiceTest {
         id = UUID.randomUUID(),
         application = application,
         createdAt = OffsetDateTime.now(),
+        applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
       )
 
       every { mockAssessmentRepository.save(any()) } answers
@@ -74,6 +76,7 @@ class Cas2AssessmentServiceTest {
         id = assessmentId,
         application = application,
         createdAt = OffsetDateTime.now(),
+        applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
       )
 
       val newAssessmentData = UpdateCas2Assessment(
