@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ApplicationSummary
@@ -37,7 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.net.URI
 import java.util.UUID
 
-@Cas3Controller
+@RestController
+@RequestMapping(headers = ["X-Service-Name=temporary-accommodation"])
 class Cas3ApplicationsController(
   private val cas3ApplicationService: Cas3ApplicationService,
   private val applicationService: ApplicationService,
@@ -47,7 +50,7 @@ class Cas3ApplicationsController(
   private val objectMapper: ObjectMapper,
 ) {
 
-  @GetMapping("/applications")
+  @GetMapping(value = ["/applications", "/cas3/applications"])
   fun getApplicationsForUser(): ResponseEntity<List<Cas3ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
@@ -61,7 +64,7 @@ class Cas3ApplicationsController(
     )
   }
 
-  @GetMapping("/applications/{applicationId}")
+  @GetMapping(value = ["/applications/{applicationId}", "/cas3/applications/{applicationId}"])
   fun getApplicationById(@PathVariable applicationId: UUID): ResponseEntity<Cas3Application> {
     val user = userService.getUserForRequest()
 
@@ -79,7 +82,7 @@ class Cas3ApplicationsController(
 
   @Transactional
   @PostMapping(
-    "/applications",
+    value = ["/applications", "/cas3/applications"],
     consumes = [MediaType.APPLICATION_JSON_VALUE],
   )
   fun postApplication(
@@ -115,7 +118,7 @@ class Cas3ApplicationsController(
 
   @Transactional
   @PutMapping(
-    "/applications/{applicationId}",
+    value = ["/applications/{applicationId}", "/cas3/applications/{applicationId}"],
     consumes = [MediaType.APPLICATION_JSON_VALUE],
   )
   fun putApplication(
@@ -137,7 +140,7 @@ class Cas3ApplicationsController(
   }
 
   @PostMapping(
-    "/applications/{applicationId}/submission",
+    value = ["/applications/{applicationId}/submission", "/cas3/applications/{applicationId}/submission"],
     consumes = [MediaType.APPLICATION_JSON_VALUE],
   )
   fun postApplicationSubmission(
@@ -149,7 +152,7 @@ class Cas3ApplicationsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  @DeleteMapping("/applications/{applicationId}")
+  @DeleteMapping(value = ["/applications/{applicationId}", "/cas3/applications/{applicationId}"])
   fun deleteApplication(@PathVariable applicationId: UUID): ResponseEntity<Unit> = ResponseEntity.ok(
     extractEntityFromCasResult(cas3ApplicationService.markApplicationAsDeleted(applicationId)),
   )
