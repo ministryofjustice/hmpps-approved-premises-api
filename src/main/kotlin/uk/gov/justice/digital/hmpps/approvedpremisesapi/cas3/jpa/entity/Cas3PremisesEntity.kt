@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
@@ -67,6 +68,9 @@ data class Cas3PremisesEntity(
     inverseJoinColumns = [JoinColumn(name = "premises_characteristics_id")],
   )
   var characteristics: MutableList<Cas3PremisesCharacteristicEntity>,
+
+  var createdAt: OffsetDateTime,
+  var lastUpdatedAt: OffsetDateTime? = null,
 
 ) {
   fun isPremisesScheduledToArchive(): Boolean = status == Cas3PremisesStatus.archived && endDate != null && endDate!! > LocalDate.now()
