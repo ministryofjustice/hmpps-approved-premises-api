@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
@@ -35,6 +36,8 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
   private var turnaroundWorkingDays: Yielded<Int> = { 3 }
   private var startDate: Yielded<LocalDate> = { LocalDate.now().minusDays(180) }
   private var endDate: Yielded<LocalDate?> = { null }
+  private var createdAt: OffsetDateTime = OffsetDateTime.now()
+  private var lastUpdatedAt: OffsetDateTime? = null
 
   fun withDefaults() = apply {
     withDefaultProbationDeliveryUnit()
@@ -97,6 +100,14 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     this.endDate = { endDate }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = createdAt
+  }
+
+  fun withLastUpdatedAt(lastUpdatedAt: OffsetDateTime?) = apply {
+    this.lastUpdatedAt = lastUpdatedAt
+  }
+
   fun withCharacteristics(characteristics: MutableList<Cas3PremisesCharacteristicEntity>) = apply {
     this.characteristics = { characteristics }
   }
@@ -122,5 +133,7 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     turnaroundWorkingDays = this.turnaroundWorkingDays(),
     startDate = this.startDate(),
     endDate = this.endDate(),
+    createdAt = this.createdAt,
+    lastUpdatedAt = this.lastUpdatedAt,
   )
 }
