@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import java.time.LocalDate
+import java.util.UUID
 
 class Cas3v2PremisesServiceTest {
   private val mockPremisesRepository = mockk<Cas3PremisesRepository>()
@@ -47,9 +48,9 @@ class Cas3v2PremisesServiceTest {
       )
 
       every { mockPremisesRepository.save(match { it.id == premises.id }) } returns updatedPremises
-      every { mockCas3DomainEventService.savePremisesUnarchiveEvent(eq(updatedPremises), premises.startDate, restartDate, premises.endDate!!) } returns Unit
+      every { mockCas3DomainEventService.savePremisesUnarchiveEvent(eq(updatedPremises), premises.startDate, restartDate, premises.endDate!!, any()) } returns Unit
 
-      cas3v2PremisesService.unarchivePremisesAndSaveDomainEvent(premises, restartDate)
+      cas3v2PremisesService.unarchivePremisesAndSaveDomainEvent(premises, restartDate, UUID.randomUUID())
 
       val slot = slot<Cas3PremisesEntity>()
       verify(exactly = 1) {
@@ -66,7 +67,7 @@ class Cas3v2PremisesServiceTest {
       )
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.savePremisesUnarchiveEvent(eq(premises), eq(startDate), eq(restartDate), eq(endDate))
+        mockCas3DomainEventService.savePremisesUnarchiveEvent(eq(premises), eq(startDate), eq(restartDate), eq(endDate), any())
       }
     }
   }

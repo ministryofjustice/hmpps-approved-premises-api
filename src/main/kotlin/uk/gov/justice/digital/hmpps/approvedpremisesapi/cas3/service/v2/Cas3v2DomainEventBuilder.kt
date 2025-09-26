@@ -119,6 +119,7 @@ class Cas3v2DomainEventBuilder(
     newStartDate: LocalDate,
     currentEndDate: LocalDate?,
     user: UserEntity,
+    transactionId: UUID,
   ): DomainEvent<CAS3PremisesUnarchiveEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -133,7 +134,9 @@ class Cas3v2DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.premisesUnarchived,
-        eventDetails = buildCAS3PremisesUnarchiveEventDetails(premises, currentStartDate, newStartDate, currentEndDate, user),
+        premisesId = premises.id,
+        transactionId = transactionId,
+        eventDetails = buildCAS3PremisesUnarchiveEventDetails(currentStartDate, newStartDate, currentEndDate, user),
       ),
     )
   }
@@ -336,13 +339,11 @@ class Cas3v2DomainEventBuilder(
   )
 
   private fun buildCAS3PremisesUnarchiveEventDetails(
-    premises: Cas3PremisesEntity,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
     currentEndDate: LocalDate?,
     user: UserEntity,
   ) = CAS3PremisesUnarchiveEventDetails(
-    premisesId = premises.id,
     userId = user.id,
     currentStartDate = currentStartDate,
     newStartDate = newStartDate,

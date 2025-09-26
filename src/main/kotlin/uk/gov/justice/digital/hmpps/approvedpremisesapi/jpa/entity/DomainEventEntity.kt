@@ -103,9 +103,27 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   fun findByType(type: DomainEventType): List<DomainEventEntity>
 
-  fun findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(cas3BedspaceId: UUID, type: DomainEventType): DomainEventEntity?
+  @Query(
+    """
+    SELECT d
+    FROM DomainEventEntity d
+    WHERE d.cas3BedspaceId in :cas3BedspaceId and d.type = :type and d.cas3CancelledAt is null
+    ORDER BY d.createdAt desc
+    Limit 1
+    """,
+  )
+  fun findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(cas3BedspaceId: UUID, type: DomainEventType): DomainEventEntity?
 
-  fun findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(cas3PremisesId: UUID, type: DomainEventType): DomainEventEntity?
+  @Query(
+    """
+    SELECT d
+    FROM DomainEventEntity d
+    WHERE d.cas3PremisesId in :cas3PremisesId and d.type = :type and d.cas3CancelledAt is null
+    ORDER BY d.createdAt desc
+    Limit 1
+    """,
+  )
+  fun findLastCas3PremisesActiveDomainEventByPremisesIdAndType(cas3PremisesId: UUID, type: DomainEventType): DomainEventEntity?
 
   @Query(
     """
@@ -114,7 +132,9 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     WHERE d.cas3BedspaceId in :cas3BedspaceIds and d.type in :bedspaceDomainEventTypes and d.cas3CancelledAt is null
     """,
   )
-  fun findBedspacesActiveDomainEventsByType(cas3BedspaceIds: List<UUID>, bedspaceDomainEventTypes: List<String>): List<DomainEventEntity>
+  fun findCas3BedspacesActiveDomainEventsByType(cas3BedspaceIds: List<UUID>, bedspaceDomainEventTypes: List<String>): List<DomainEventEntity>
+
+  fun findByCas3TransactionIdAndType(cas3TransactionId: UUID, type: DomainEventType): List<DomainEventEntity>
 
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>
 
@@ -164,6 +184,8 @@ data class DomainEventEntity(
   val createdAt: OffsetDateTime,
   @Column(name = "cas3_cancelled_at")
   val cas3CancelledAt: OffsetDateTime?,
+  @Column(name = "cas3_transaction_id")
+  val cas3TransactionId: UUID?,
   @Type(JsonType::class)
   val data: String,
   val service: String,

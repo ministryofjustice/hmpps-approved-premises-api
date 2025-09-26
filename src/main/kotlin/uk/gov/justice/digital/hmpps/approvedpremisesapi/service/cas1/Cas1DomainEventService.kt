@@ -327,6 +327,7 @@ class Cas1DomainEventService(
         nomsNumber = domainEvent.nomsNumber,
         metadata = domainEvent.metadata,
         schemaVersion = domainEvent.schemaVersion,
+        cas3TransactionId = null,
       ),
     )
 
