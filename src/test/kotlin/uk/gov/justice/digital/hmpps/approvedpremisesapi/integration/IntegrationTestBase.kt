@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2NoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentRepository
@@ -46,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.Cas2StatusUpdateTestRepository
@@ -677,7 +679,7 @@ abstract class IntegrationTestBase {
   lateinit var cas1ChangeRequestReasonEntityFactory: PersistedFactory<Cas1ChangeRequestReasonEntity, UUID, Cas1ChangeRequestReasonEntityFactory>
   lateinit var cas1ChangeRequestRejectionReasonEntityFactory: PersistedFactory<Cas1ChangeRequestRejectionReasonEntity, UUID, Cas1ChangeRequestRejectionReasonEntityFactory>
   lateinit var cas1ChangeRequestEntityFactory: PersistedFactory<Cas1ChangeRequestEntity, UUID, Cas1ChangeRequestEntityFactory>
-
+  lateinit var cas2UserEntityFactory: PersistedFactory<Cas2UserEntity, UUID, Cas2UserEntityFactory>
   lateinit var cas1PremisesLocalRestrictionEntityFactory: PersistedFactory<Cas1PremisesLocalRestrictionEntity, UUID, Cas1PremisesLocalRestrictionEntityFactory>
   private var clientCredentialsCallMocked = false
 
