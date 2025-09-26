@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
+
 data class LostBed(
 
   val id: java.util.UUID,
@@ -24,5 +26,5 @@ data class LostBed(
 
   val cancellation: LostBedCancellation? = null,
 
-  val costCentre: String? = null,
+  val costCentre: Cas3CostCentre? = null,
 )
