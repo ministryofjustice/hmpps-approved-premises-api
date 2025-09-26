@@ -26,5 +26,6 @@ class ApplicationTimelineNoteTransformer(
     content = jpa.body,
     associatedUrls = emptyList(),
     triggerSource = null,
+    createdBySummary = jpa.createdBy?.let { userTransformer.transformJpaToSummaryApi(it) },
   )
 }
