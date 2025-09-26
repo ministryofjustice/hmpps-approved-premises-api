@@ -77,23 +77,61 @@ class BookingTransformer(
     else -> throw RuntimeException("Could not determine status for Booking ${jpa.id}")
   }
 
-  private fun determineTemporaryAccommodationStatus(jpa: BookingEntity): BookingStatus {
-    val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
-    val hasZeroDayTurnaround = jpa.turnaround == null || jpa.turnaround!!.workingDayCount == 0
-    val turnaroundPeriodEnded = if (!hasNonZeroDayTurnaround) {
-      false
-    } else {
-      workingDayService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount).isBefore(LocalDate.now())
-    }
+  private fun determineTemporaryAccommodationStatus(jpa: BookingEntity): BookingStatus = determineTemporaryAccommodationStatus(
+    hasTurnaround = jpa.turnaround != null,
+    turnaroundWorkingDayCount = jpa.turnaround?.workingDayCount,
+    departureDate = jpa.departureDate,
+    hasCancellation = jpa.cancellation != null,
+    hasDeparture = jpa.departure != null,
+    hasArrival = jpa.arrival != null,
+    hasNonArrival = jpa.nonArrival != null,
+    hasConfirmation = jpa.confirmation != null,
+  )
 
+  fun determineTemporaryAccommodationStatus(
+    hasTurnaround: Boolean,
+    turnaroundWorkingDayCount: Int?,
+    departureDate: LocalDate,
+    hasCancellation: Boolean,
+    hasDeparture: Boolean,
+    hasArrival: Boolean,
+    hasNonArrival: Boolean,
+    hasConfirmation: Boolean,
+  ): BookingStatus {
+    val (hasNonZeroDayTurnaround, turnaroundPeriodEnded) = getTurnaroundData(hasTurnaround, turnaroundWorkingDayCount, departureDate)
+    val hasZeroDayTurnaround = !hasTurnaround || turnaroundWorkingDayCount == 0
     return when {
-      jpa.cancellation != null -> BookingStatus.cancelled
-      jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.departed
-      jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
-      jpa.arrival != null -> BookingStatus.arrived
-      jpa.nonArrival != null -> BookingStatus.notMinusArrived
-      jpa.confirmation != null -> BookingStatus.confirmed
+      hasCancellation -> BookingStatus.cancelled
+      hasDeparture && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.departed
+      hasDeparture && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
+      hasArrival -> BookingStatus.arrived
+      hasNonArrival -> BookingStatus.notMinusArrived
+      hasConfirmation -> BookingStatus.confirmed
       else -> BookingStatus.provisional
     }
+  }
+
+  private fun getTurnaroundData(
+    hasTurnaround: Boolean,
+    turnaroundWorkingDayCount: Int?,
+    departureDate: LocalDate,
+  ): Pair<Boolean, Boolean> {
+    val hasNonZeroDayTurnaround = hasTurnaround && turnaroundWorkingDayCount != null && turnaroundWorkingDayCount != 0
+    val turnaroundPeriodEnded = getTurnaroundPeriodEnded(
+      hasNonZeroDayTurnaround,
+      departureDate,
+      turnaroundWorkingDayCount,
+    )
+    return hasNonZeroDayTurnaround to turnaroundPeriodEnded
+  }
+
+  private fun getTurnaroundPeriodEnded(
+    hasNonZeroDayTurnaround: Boolean,
+    departureDate: LocalDate,
+    turnaroundWorkingDayCount: Int?,
+  ) = if (!hasNonZeroDayTurnaround) {
+    false
+  } else {
+    workingDayService.addWorkingDays(departureDate, turnaroundWorkingDayCount!!).isBefore(LocalDate.now())
   }
 }

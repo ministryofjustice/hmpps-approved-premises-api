@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BookingsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.Cas3BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsCsvReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.TransitionalAccommodationReferralReportGenerator
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.propertie
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsageReportDataDTO
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsageRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BookingsReportRepository
@@ -145,6 +147,55 @@ class Cas3ReportService(
     log.info("Creating report")
     BedUsageReportGenerator(bookingTransformer, bookingRepository, cas3VoidBedspacesRepository, workingDayService)
       .createReport(bedspacesInScope, properties)
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
+  }
+
+  fun createBedUsageReportV2(properties: BedUsageReportProperties, outputStream: OutputStream) {
+    log.info("Beginning CAS3 Bed Usage Report V2")
+    val reportData = bedUsageRepository.findBedUsageReportData(
+      probationRegionId = properties.probationRegionId,
+      startDate = properties.startDate,
+      endDate = properties.endDate,
+    )
+    Cas3BedUsageReportGenerator(bookingTransformer, workingDayService)
+      .createReport(
+        data = reportData.map {
+          BedUsageReportDataDTO(
+            it.bedId,
+            it.bookingId,
+            it.probationRegionId,
+            it.probationRegionName,
+            it.pdu,
+            it.localAuthorityArea,
+            it.propertyRef,
+            it.addressLine1,
+            it.town,
+            it.postCode,
+            it.bedspaceRef,
+            it.crn,
+            it.type,
+            it.bookingDepartureDate,
+            it.startDate,
+            it.endDate,
+            it.turnaroundId,
+            it.turnaroundWorkingDayCount,
+            it.cancellationCount,
+            it.departureCount,
+            it.arrivalCount,
+            it.nonArrivalCount,
+            it.confirmationCount,
+            it.voidCategory,
+            it.voidNotes,
+            it.costCentre,
+            it.uniquePropertyRef,
+            it.uniqueBedspaceRef,
+          )
+        },
+        properties,
+      )
       .writeExcel(
         outputStream = outputStream,
         factory = WorkbookFactory.create(true),

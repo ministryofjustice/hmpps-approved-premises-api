@@ -45,4 +45,9 @@ enum class Cas3VoidBedspaceStatus(@JsonValue val value: String) {
 enum class Cas3CostCentre(@JsonValue val value: String) {
   HMPPS("HMPPS"),
   SUPPLIER("SUPPLIER"),
+  ;
+
+  companion object {
+    fun from(value: String): Cas3CostCentre? = Cas3CostCentre.entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
+  }
 }
