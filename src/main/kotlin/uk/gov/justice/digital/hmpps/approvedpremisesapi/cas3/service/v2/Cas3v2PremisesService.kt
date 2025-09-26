@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelpe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceOnline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -100,6 +101,8 @@ class Cas3v2PremisesService(
       bedspaces = mutableListOf(),
       startDate = LocalDate.now(),
       endDate = null,
+      createdAt = OffsetDateTime.now(),
+      lastUpdatedAt = null,
     )
 
     cas3PremisesRepository.save(premises)

@@ -67,7 +67,7 @@ data class Cas3PremisesEntity(
     joinColumns = [JoinColumn(name = "premises_id")],
     inverseJoinColumns = [JoinColumn(name = "premises_characteristics_id")],
   )
-  var characteristics: MutableList<Cas3PremisesCharacteristicEntity>,
+  var characteristics: MutableList<Cas3PremisesCharacteristicEntity> = mutableListOf(),
 
   var createdAt: OffsetDateTime,
   var lastUpdatedAt: OffsetDateTime? = null,

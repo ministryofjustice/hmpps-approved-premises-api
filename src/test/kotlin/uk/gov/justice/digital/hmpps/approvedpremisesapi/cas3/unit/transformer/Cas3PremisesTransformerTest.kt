@@ -3,13 +3,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesCharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
@@ -46,7 +50,133 @@ class Cas3PremisesTransformerTest {
   )
 
   @Nested
-  inner class V2
+  inner class V2 {
+    val probationRegionEntity = ProbationRegionEntityFactory()
+      .withDefaults()
+      .produce()
+    val localAuthorityAreaEntity = LocalAuthorityAreaEntityFactory().produce()
+    val probationDeliveryUnitEntity = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegionEntity)
+      .produce()
+
+    val characteristics = mutableListOf(Cas3PremisesCharacteristicEntityFactory().produce())
+
+    val startDate = LocalDate.now().minusDays(1)
+    val endDate = LocalDate.now().plusMonths(3)
+    val lastUpdatedAt = OffsetDateTime.now()
+
+    val premises = Cas3PremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityAreaEntity)
+      .withProbationDeliveryUnit(probationDeliveryUnitEntity)
+      .withCharacteristics(characteristics)
+      .withStatus(Cas3PremisesStatus.online)
+      .withStartDate(startDate)
+      .withEndDate(endDate)
+      .withLastUpdatedAt(lastUpdatedAt)
+      .produce()
+
+    val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
+      premisesId = premises.id,
+      onlineBedspaces = 3,
+      upcomingBedspaces = 2,
+      archivedBedspaces = 1,
+    )
+
+    val archiveHistory = listOf(
+      Cas3PremisesArchiveAction(
+        status = Cas3PremisesStatus.online,
+        date = premises.startDate,
+      ),
+      Cas3PremisesArchiveAction(
+        status = Cas3PremisesStatus.archived,
+        date = endDate,
+      ),
+    )
+
+    val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+    val localAuthorityArea = LocalAuthorityArea(UUID.randomUUID(), "identifier", "name")
+    val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
+
+    @BeforeEach
+    fun setup() {
+      every { probationRegionTransformer.transformJpaToApi(probationRegionEntity) } returns probationRegion
+      every { localAuthorityAreaTransformer.transformJpaToApi(localAuthorityAreaEntity) } returns localAuthorityArea
+      every { probationDeliveryUnitTransformer.transformJpaToApi(probationDeliveryUnitEntity) } returns probationDeliveryUnit
+    }
+
+    @Test
+    fun `transformDomainToApi transforms Cas3PremisesEntity to Cas3Premises correctly`() {
+      val result = cas3PremisesTransformer.toCas3Premises(
+        premises = premises,
+        bedspaceTotals = totalBedspacesByStatus,
+        archiveHistory = archiveHistory,
+      )
+
+      assertAll({
+        assertThat(result.id).isEqualTo(premises.id)
+        assertThat(result.reference).isEqualTo(premises.name)
+        assertThat(result.addressLine1).isEqualTo(premises.addressLine1)
+        assertThat(result.addressLine2).isEqualTo(premises.addressLine2)
+        assertThat(result.town).isEqualTo(premises.town)
+        assertThat(result.postcode).isEqualTo(premises.postcode)
+        assertThat(result.localAuthorityArea).isEqualTo(localAuthorityArea)
+        assertThat(result.probationRegion).isEqualTo(probationRegion)
+        assertThat(result.probationDeliveryUnit).isEqualTo(probationDeliveryUnit)
+        assertThat(result.characteristics).isNull()
+        assertThat(result.premisesCharacteristics)
+          .containsAll(characteristics.map { it.toCas3PremisesCharacteristic() })
+        assertThat(result.startDate).isEqualTo(startDate)
+        assertThat(result.endDate).isEqualTo(endDate)
+        assertThat(result.status).isEqualTo(Cas3PremisesStatus.online)
+        assertThat(result.notes).isEqualTo(premises.notes)
+        assertThat(result.turnaroundWorkingDays).isEqualTo(premises.turnaroundWorkingDays)
+        assertThat(result.totalOnlineBedspaces).isEqualTo(3)
+        assertThat(result.totalUpcomingBedspaces).isEqualTo(2)
+        assertThat(result.totalArchivedBedspaces).isEqualTo(1)
+        assertThat(result.archiveHistory).isEqualTo(archiveHistory)
+        assertThat(result.scheduleUnarchiveDate).isNull() // will not be populated if premises start date is < today
+      })
+    }
+
+    @Test
+    fun `scheduleUnarchiveDate if populated with start date if start date is after today`() {
+      val startDate = LocalDate.now().plusDays(1)
+      val result = cas3PremisesTransformer.toCas3Premises(
+        premises = premises.copy(startDate = startDate, status = Cas3PremisesStatus.archived),
+        bedspaceTotals = totalBedspacesByStatus,
+        archiveHistory = archiveHistory,
+      )
+
+      assertThat(result.status).isEqualTo(Cas3PremisesStatus.archived)
+      assertThat(result.scheduleUnarchiveDate).isEqualTo(startDate)
+    }
+
+    @Test
+    fun `transformDomainToApi transforms TemporaryAccommodationPremisesEntity to Cas3Premises correctly without optional elements`() {
+      val result = cas3PremisesTransformer.toCas3Premises(
+        premises = premises.copy(
+          addressLine2 = null,
+          town = null,
+          localAuthorityArea = null,
+          characteristics = mutableListOf(),
+          endDate = null,
+
+        ),
+        bedspaceTotals = totalBedspacesByStatus,
+        archiveHistory = archiveHistory,
+      )
+
+      assertAll({
+        assertThat(result.addressLine2).isNull()
+        assertThat(result.town).isNull()
+        assertThat(result.localAuthorityArea).isNull()
+        assertThat(result.characteristics).isNull()
+        assertThat(result.premisesCharacteristics).isEmpty()
+        assertThat(result.endDate).isNull()
+        assertThat(result.scheduleUnarchiveDate).isNull() // will not be populated if premises start date is < today
+      })
+    }
+  }
 
   @Nested
   inner class V1 {
