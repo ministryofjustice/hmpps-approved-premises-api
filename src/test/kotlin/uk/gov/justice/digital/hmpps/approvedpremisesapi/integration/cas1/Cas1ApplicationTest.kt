@@ -993,7 +993,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           return@map createDomainEvent(it, application, assessment, user)
         }
 
-      notes = createTimelineNotes(application, 5, isDeleted = false)
+      notes = createTimelineNotes(application, 5, isDeleted = false, createdBy = user)
       createTimelineNotes(application, 2, isDeleted = true)
       createTimelineNotes(otherApplication, 3, isDeleted = false)
     }
@@ -1087,9 +1087,11 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       applicationEntity: ApprovedPremisesApplicationEntity,
       count: Int,
       isDeleted: Boolean,
+      createdBy: UserEntity? = null,
     ) = applicationTimelineNoteEntityFactory.produceAndPersistMultiple(count) {
       withApplicationId(applicationEntity.id)
       if (isDeleted) withDeletedAt(OffsetDateTime.now())
+      withCreatedBy(createdBy)
     }.toMutableList()
   }
 
