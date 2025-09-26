@@ -9,6 +9,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
 import java.time.OffsetDateTime
@@ -29,6 +30,9 @@ enum class Cas2v2UserType(val authSource: String) {
 interface Cas2v2UserRepository : JpaRepository<Cas2v2UserEntity, UUID> {
   fun findByUsername(username: String): Cas2v2UserEntity?
   fun findByUsernameAndUserType(username: String, type: Cas2v2UserType): Cas2v2UserEntity?
+
+  @Query("SELECT n.id FROM Cas2v2UserEntity n")
+  fun findCas2v2UserIds(): List<UUID>
 }
 
 @Entity
@@ -60,7 +64,7 @@ data class Cas2v2UserEntity(
   var isActive: Boolean,
 
   @CreationTimestamp
-  private val createdAt: OffsetDateTime? = null,
+  val createdAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2v2ApplicationEntity> = mutableListOf(),
