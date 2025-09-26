@@ -552,8 +552,9 @@ class Cas3DomainEventBuilderTest {
       .withStartDate(newStartDate)
       .withRoom(room)
       .produce()
+    val transactionId = UUID.randomUUID()
 
-    val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, premises.id, currentStartDate, currentEndDate, user)
+    val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, premises.id, currentStartDate, currentEndDate, user, transactionId)
 
     assertAll({
       assertThat(event.applicationId).isNull()
@@ -561,11 +562,12 @@ class Cas3DomainEventBuilderTest {
       assertThat(event.crn).isNull()
       assertThat(event.nomsNumber).isNull()
       assertThat(event.data.eventType).isEqualTo(EventType.bedspaceUnarchived)
-      assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
+      assertThat(event.data.bedspaceId).isEqualTo(bedspaceId)
       assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
       assertThat(event.data.eventDetails.currentEndDate).isEqualTo(currentEndDate)
       assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
       assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
+      assertThat(event.data.transactionId).isEqualTo(transactionId)
     })
   }
 
@@ -575,8 +577,9 @@ class Cas3DomainEventBuilderTest {
     val probationRegion = probationRegionEntity()
     val premises = createCas3PremisesEntity(probationRegion)
     val user = userEntity(probationRegion)
+    val transactionId = UUID.randomUUID()
 
-    val event = cas3DomainEventBuilder.getPremisesArchiveEvent(premises, endDate, user)
+    val event = cas3DomainEventBuilder.getPremisesArchiveEvent(premises, endDate, user, transactionId)
 
     assertAll({
       assertThat(event.applicationId).isNull()
@@ -584,12 +587,13 @@ class Cas3DomainEventBuilderTest {
       assertThat(event.crn).isNull()
       assertThat(event.nomsNumber).isNull()
       assertThat(event.data.eventType).isEqualTo(EventType.premisesArchived)
-      assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.premisesId).isEqualTo(premises.id)
       assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
       assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
       assertThat(event.occurredAt).isWithinTheLastMinute()
       assertThat(event.data.timestamp).isWithinTheLastMinute()
       assertThat(event.id).isEqualTo(event.data.id)
+      assertThat(event.data.transactionId).isEqualTo(transactionId)
     })
   }
 
@@ -602,8 +606,9 @@ class Cas3DomainEventBuilderTest {
     val premises = createCas3PremisesEntity(probationRegion)
     premises.endDate = currentEndDate
     val user = userEntity(probationRegion)
+    val transactionId = UUID.randomUUID()
 
-    val event = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user)
+    val event = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user, transactionId)
 
     assertAll({
       assertThat(event.applicationId).isNull()
@@ -611,13 +616,14 @@ class Cas3DomainEventBuilderTest {
       assertThat(event.crn).isNull()
       assertThat(event.nomsNumber).isNull()
       assertThat(event.data.eventType).isEqualTo(EventType.premisesUnarchived)
-      assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.premisesId).isEqualTo(premises.id)
       assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
       assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
       assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
       assertThat(event.occurredAt).isWithinTheLastMinute()
       assertThat(event.data.timestamp).isWithinTheLastMinute()
       assertThat(event.id).isEqualTo(event.data.id)
+      assertThat(event.data.transactionId).isEqualTo(transactionId)
     })
   }
 
@@ -636,8 +642,9 @@ class Cas3DomainEventBuilderTest {
       .withEndDate(endDate)
       .withRoom(room)
       .produce()
+    val transactionId = UUID.randomUUID()
 
-    val event = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premises.id, null, user)
+    val event = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premises.id, null, user, transactionId)
 
     assertAll(
       {
@@ -646,10 +653,11 @@ class Cas3DomainEventBuilderTest {
         assertThat(event.crn).isNull()
         assertThat(event.nomsNumber).isNull()
         assertThat(event.data.eventType).isEqualTo(EventType.bedspaceArchived)
-        assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
-        assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+        assertThat(event.data.bedspaceId).isEqualTo(bedspaceId)
+        assertThat(event.data.premisesId).isEqualTo(premises.id)
         assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
         assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
+        assertThat(event.data.transactionId).isEqualTo(transactionId)
       },
     )
   }
@@ -668,9 +676,10 @@ class Cas3DomainEventBuilderTest {
       .withRoom(room)
       .withEndDate(null)
       .produce()
+    val transactionId = UUID.randomUUID()
 
     val error = assertThrows<IllegalStateException> {
-      cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premises.id, null, user)
+      cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premises.id, null, user, transactionId)
     }
 
     assertThat(error.message).isEqualTo("Bedspace end date is null for bedspace id: ${bedspace.id}")

@@ -3909,17 +3909,18 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           LocalDate.now(clock).plusDays(10),
         ),
       ) { user, jwt, premises, rooms, bedspaces ->
+        val domainEventTransactionId = UUID.randomUUID()
 
         val premisesArchiveDate = premises.endDate!!
-        val premisesArchiveDomainEvent = createPremisesArchiveDomainEvent(premises, user, premisesArchiveDate)
+        val premisesArchiveDomainEvent = createPremisesArchiveDomainEvent(premises, user, premisesArchiveDate, transactionId = domainEventTransactionId)
 
         val bedspaceOne = bedspaces.first()
-        val bedspaceOneArchiveDomainEvent = createBedspaceArchiveDomainEvent(bedspaceOne.id, premises.id, user.id, null, premisesArchiveDate)
+        val bedspaceOneArchiveDomainEvent = createBedspaceArchiveDomainEvent(bedspaceOne.id, premises.id, user.id, null, premisesArchiveDate, transactionId = domainEventTransactionId)
         val bedspaceTwo = bedspaces.drop(1).first()
         val bedspaceTwoCurrentEndDate = bedspaceTwo.endDate ?: premisesArchiveDate.plusDays(12)
-        val bedspaceTwoArchiveDomainEvent = createBedspaceArchiveDomainEvent(bedspaceTwo.id, premises.id, user.id, bedspaceTwoCurrentEndDate, premisesArchiveDate)
+        val bedspaceTwoArchiveDomainEvent = createBedspaceArchiveDomainEvent(bedspaceTwo.id, premises.id, user.id, bedspaceTwoCurrentEndDate, premisesArchiveDate, transactionId = domainEventTransactionId)
         val bedspaceThree = bedspaces.drop(2).first()
-        val bedspaceThreeArchiveDomainEvent = createBedspaceArchiveDomainEvent(bedspaceThree.id, premises.id, user.id, null, premisesArchiveDate)
+        val bedspaceThreeArchiveDomainEvent = createBedspaceArchiveDomainEvent(bedspaceThree.id, premises.id, user.id, null, premisesArchiveDate, transactionId = domainEventTransactionId)
 
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/cancel-archive")
@@ -4084,8 +4085,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
         givenATemporaryAccommodationPremisesWithRoomsAndBeds(
           region = user.probationRegion,
-          bedspaceCount = 1,
-          bedspacesStartDates = listOf(LocalDate.now().minusDays(30)),
+          bedspaceCount = 2,
+          bedspacesStartDates = listOf(LocalDate.now().minusDays(30), LocalDate.now().minusDays(60)),
           bedspacesEndDates = listOf(scheduledArchiveBedspaceDate),
         ) { premises, rooms, bedspaces ->
           val bedspace = bedspaces.first()
@@ -4129,7 +4130,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         ),
         bedspaceEndDates = listOf(
           archivedPremisesDate,
-          archivedPremisesDate,
+          LocalDate.now().minusDays(13),
           archivedPremisesDate,
         ),
       ) { user, jwt, premises, rooms, bedspaces ->
@@ -4138,11 +4139,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         val bedspaceThree = bedspaces.drop(2).first()
 
         val previousBedspaceOneEndDate = LocalDate.now().minusDays(10)
+        val domainEventTransactionId = UUID.randomUUID()
 
-        val archivePremisesDomainEvent = createPremisesArchiveDomainEvent(premises, user, archivedPremisesDate)
-        createBedspaceArchiveDomainEvent(bedspaceOne.id, premises.id, user.id, previousBedspaceOneEndDate, archivedPremisesDate)
-        val archiveBedspaceTwoDomainEvent = createBedspaceArchiveDomainEvent(bedspaceTwo.id, premises.id, user.id, null, archivedPremisesDate)
-        val archiveBedspaceThreeDomainEvent = createBedspaceArchiveDomainEvent(bedspaceThree.id, premises.id, user.id, null, archivedPremisesDate)
+        val archivePremisesDomainEvent = createPremisesArchiveDomainEvent(premises, user, archivedPremisesDate, transactionId = domainEventTransactionId)
+        val archiveBedspaceOneDomainEvent = createBedspaceArchiveDomainEvent(bedspaceOne.id, premises.id, user.id, previousBedspaceOneEndDate, archivedPremisesDate, transactionId = domainEventTransactionId)
+        val archiveBedspaceTwoDomainEvent = createBedspaceArchiveDomainEvent(bedspaceTwo.id, premises.id, user.id, null, bedspaceTwo.endDate!!, transactionId = UUID.randomUUID())
+        val archiveBedspaceThreeDomainEvent = createBedspaceArchiveDomainEvent(bedspaceThree.id, premises.id, user.id, null, archivedPremisesDate, transactionId = domainEventTransactionId)
 
         webTestClient.put()
           .uri("/cas3/premises/${premises.id}/bedspaces/${bedspaceOne.id}/cancel-archive")
@@ -4165,8 +4167,17 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         assertThat(updatedArchivePremisesDomainEvent?.cas3CancelledAt).isEqualTo(OffsetDateTime.now(clock))
 
         // check that bedspaces were updated correctly
-        assertThatBedspaceArchiveCancelled(bedspaceTwo.id, archiveBedspaceTwoDomainEvent.id, null)
+        assertThatBedspaceArchiveCancelled(bedspaceOne.id, archiveBedspaceOneDomainEvent.id, previousBedspaceOneEndDate)
         assertThatBedspaceArchiveCancelled(bedspaceThree.id, archiveBedspaceThreeDomainEvent.id, null)
+
+        // check that bedspace not part of a scheduled archive not updated
+        val notUpdatedBedspace = bedRepository.findById(bedspaceTwo.id).get()
+        assertThat(notUpdatedBedspace.endDate).isEqualTo(bedspaceTwo.endDate)
+
+        val notUpdatedBedspaceArchiveDomainEvent =
+          domainEventRepository.findByIdOrNull(archiveBedspaceTwoDomainEvent.id)
+        assertThat(notUpdatedBedspaceArchiveDomainEvent).isNotNull()
+        assertThat(notUpdatedBedspaceArchiveDomainEvent?.cas3CancelledAt).isNull()
       }
     }
 

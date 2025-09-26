@@ -698,7 +698,7 @@ class Cas3PremisesServiceTest {
       every { roomRepositoryMock.save(any()) } returns room
       every { bedRepositoryMock.save(any()) } returns bedspace
       every { premisesRepositoryMock.save(match { it.id == premises.id }) } returns updatedPremises
-      every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premises.id, CAS3_PREMISES_ARCHIVED) } returns premisesDomainEvent
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_ARCHIVED) } returns premisesDomainEvent
       every { domainEventRepositoryMock.save(match { it.cas3PremisesId == premises.id }) } returns updatedPremisesDomainEvent
 
       val result = premisesService.createBedspace(premises, room.name, bedspace.startDate!!, null, emptyList())
@@ -1012,8 +1012,15 @@ class Cas3PremisesServiceTest {
       every { bedRepositoryMock.save(match { it.id == bedspaceOne.id }) } returns bedspaceOne
       every { bedRepositoryMock.save(match { it.id == bedspaceTwo.id }) } returns bedspaceTwo
       every { premisesRepositoryMock.save(match { it.id == premises.id }) } returns premises
-      every { cas3DomainEventServiceMock.savePremisesArchiveEvent(premises, archiveDate) } returns Unit
-      every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(match { it.id == bedspaceOne.id || it.id == bedspaceTwo.id }, premises.id, null) } returns Unit
+      every { cas3DomainEventServiceMock.savePremisesArchiveEvent(premises, archiveDate, any()) } returns Unit
+      every {
+        cas3DomainEventServiceMock.saveBedspaceArchiveEvent(
+          match { it.id == bedspaceOne.id || it.id == bedspaceTwo.id },
+          premises.id,
+          null,
+          any(),
+        )
+      } returns Unit
 
       val result = premisesService.archivePremises(premises, archiveDate)
 
@@ -1038,6 +1045,7 @@ class Cas3PremisesServiceTest {
         cas3DomainEventServiceMock.savePremisesArchiveEvent(
           match<TemporaryAccommodationPremisesEntity> { it.id == premises.id },
           archiveDate,
+          any(),
         )
       }
 
@@ -1046,6 +1054,7 @@ class Cas3PremisesServiceTest {
           match { it.id == bedspaceOne.id || it.id == bedspaceTwo.id },
           premises.id,
           null,
+          any(),
         )
       }
     }
@@ -1064,8 +1073,15 @@ class Cas3PremisesServiceTest {
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateByPremisesId(premises.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspaceOne
       every { premisesRepositoryMock.save(match { it.id == premises.id }) } returns premises
-      every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(match { it.id == bedspaceOne.id || it.id == bedspaceTwo.id }, premises.id, null) } returns Unit
-      every { cas3DomainEventServiceMock.savePremisesArchiveEvent(premises, archiveDate) } returns Unit
+      every {
+        cas3DomainEventServiceMock.saveBedspaceArchiveEvent(
+          match { it.id == bedspaceOne.id || it.id == bedspaceTwo.id },
+          premises.id,
+          null,
+          any(),
+        )
+      } returns Unit
+      every { cas3DomainEventServiceMock.savePremisesArchiveEvent(premises, archiveDate, any()) } returns Unit
 
       val result = premisesService.archivePremises(premises, archiveDate)
 
@@ -1500,7 +1516,7 @@ class Cas3PremisesServiceTest {
       every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceOne.id, LocalDate.now()) } returns emptyList()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceOne.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(any()) } returns bedspaceOne
-      every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(bedspaceOne, premises.id, null) } returns Unit
+      every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(bedspaceOne, premises.id, null, any()) } returns Unit
       every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(archivedBedspaceOne, bedspaceTwo)
 
       val result = premisesService.archiveBedspace(bedspaceOne.id, premises, archiveDate)
@@ -1531,10 +1547,10 @@ class Cas3PremisesServiceTest {
       every { bookingRepositoryMock.findActiveOverlappingBookingByBed(bedspaceOne.id, LocalDate.now()) } returns emptyList()
       every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceOne.id, archiveDate) } returns emptyList()
       every { bedRepositoryMock.save(match { it.id == bedspaceOne.id }) } returns bedspaceOne
-      every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(bedspaceOne, premises.id, null) } returns Unit
+      every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(bedspaceOne, premises.id, null, any()) } returns Unit
       every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(archivedBedspaceOne, bedspaceTwo, bedspaceThree)
       every { premisesRepositoryMock.save(match { it.id == premises.id && it.status == PropertyStatus.archived }) } returns premises
-      every { cas3DomainEventServiceMock.savePremisesArchiveEvent(match { it.id == premises.id }, latestBedspaceArchiveDate) } returns Unit
+      every { cas3DomainEventServiceMock.savePremisesArchiveEvent(match { it.id == premises.id }, latestBedspaceArchiveDate, any()) } returns Unit
 
       val result = premisesService.archiveBedspace(bedspaceOne.id, premises, archiveDate)
 
@@ -1558,6 +1574,7 @@ class Cas3PremisesServiceTest {
         cas3DomainEventServiceMock.savePremisesArchiveEvent(
           match { it.id == premises.id },
           latestBedspaceArchiveDate,
+          any(),
         )
       }
     }
@@ -1737,8 +1754,24 @@ class Cas3PremisesServiceTest {
       every { premisesRepositoryMock.save(match { it.id == archivedPremises.id }) } returns updatedPremises
       every { bedRepositoryMock.findCas3Bedspace(archivedPremises.id, archivedBedspace.id) } returns archivedBedspace
       every { bedRepositoryMock.save(match { it.id == archivedBedspace.id }) } returns updatedBedspace
-      every { cas3DomainEventServiceMock.saveBedspaceUnarchiveEvent(match { it.id == archivedBedspace.id }, archivedPremises.id, archivedBedspace.startDate!!, archivedBedspace.endDate!!) } returns Unit
-      every { cas3DomainEventServiceMock.savePremisesUnarchiveEvent(match { it.id == archivedPremises.id }, currentPremisesStartDate, restartDate, currentPremisesEndDate) } returns Unit
+      every {
+        cas3DomainEventServiceMock.saveBedspaceUnarchiveEvent(
+          match { it.id == archivedBedspace.id },
+          archivedPremises.id,
+          archivedBedspace.startDate!!,
+          archivedBedspace.endDate!!,
+          any(),
+        )
+      } returns Unit
+      every {
+        cas3DomainEventServiceMock.savePremisesUnarchiveEvent(
+          match { it.id == archivedPremises.id },
+          currentPremisesStartDate,
+          restartDate,
+          currentPremisesEndDate,
+          any(),
+        )
+      } returns Unit
       every { bedRepositoryMock.findByRoomPremisesId(archivedPremises.id) } returns listOf(archivedBedspace)
 
       val result = premisesService.unarchivePremises(archivedPremises, restartDate)
@@ -1774,6 +1807,7 @@ class Cas3PremisesServiceTest {
           currentPremisesStartDate,
           restartDate,
           currentPremisesEndDate,
+          any(),
         )
 
         cas3DomainEventServiceMock.saveBedspaceUnarchiveEvent(
@@ -1781,6 +1815,7 @@ class Cas3PremisesServiceTest {
           match { it == archivedPremises.id },
           archivedBedspace.startDate!!,
           archivedBedspace.endDate!!,
+          any(),
         )
       }
     }
@@ -1813,9 +1848,18 @@ class Cas3PremisesServiceTest {
           match { it == archivedPremises.id },
           lastDuplicatedBedspace.startDate!!,
           lastDuplicatedBedspace.endDate!!,
+          any(),
         )
       } returns Unit
-      every { cas3DomainEventServiceMock.savePremisesUnarchiveEvent(match { it.id == archivedPremises.id }, currentPremisesStartDate, restartDate, currentPremisesEndDate) } returns Unit
+      every {
+        cas3DomainEventServiceMock.savePremisesUnarchiveEvent(
+          match { it.id == archivedPremises.id },
+          currentPremisesStartDate,
+          restartDate,
+          currentPremisesEndDate,
+          any(),
+        )
+      } returns Unit
       every { bedRepositoryMock.findByRoomPremisesId(archivedPremises.id) } returns listOf(originalBedspace, lastDuplicatedBedspace)
 
       val result = premisesService.unarchivePremises(archivedPremises, restartDate)
@@ -1851,6 +1895,7 @@ class Cas3PremisesServiceTest {
           currentPremisesStartDate,
           restartDate,
           currentPremisesEndDate,
+          any(),
         )
 
         cas3DomainEventServiceMock.saveBedspaceUnarchiveEvent(
@@ -1858,6 +1903,7 @@ class Cas3PremisesServiceTest {
           match { it == archivedPremises.id },
           lastDuplicatedBedspace.startDate!!,
           lastDuplicatedBedspace.endDate!!,
+          any(),
         )
       }
 
@@ -1873,6 +1919,7 @@ class Cas3PremisesServiceTest {
           match { it == archivedPremises.id },
           originalBedspace.startDate!!,
           originalBedspace.endDate!!,
+          any(),
         )
       }
     }
@@ -1961,7 +2008,15 @@ class Cas3PremisesServiceTest {
 
       every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
       every { premisesRepositoryMock.save(match { it.id == archivedPremises.id }) } returns updatedPremises
-      every { cas3DomainEventServiceMock.savePremisesUnarchiveEvent(any(), currentPremisesStartDate, restartDate, currentPremisesEndDate) } returns Unit
+      every {
+        cas3DomainEventServiceMock.savePremisesUnarchiveEvent(
+          any(),
+          currentPremisesStartDate,
+          restartDate,
+          currentPremisesEndDate,
+          any(),
+        )
+      } returns Unit
       every { bedRepositoryMock.findByRoomPremisesId(archivedPremises.id) } returns listOf()
 
       val result = premisesService.unarchivePremises(archivedPremises, restartDate)
@@ -1976,6 +2031,7 @@ class Cas3PremisesServiceTest {
           currentPremisesStartDate,
           restartDate,
           currentPremisesEndDate,
+          any(),
         )
       }
 
@@ -2004,7 +2060,7 @@ class Cas3PremisesServiceTest {
 
       every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
       every { premisesRepositoryMock.save(match { it.id == archivedPremises.id }) } returns updatedPremises
-      every { cas3DomainEventServiceMock.savePremisesUnarchiveEvent(any(), currentPremisesStartDate, restartDate, currentPremisesEndDate) } returns Unit
+      every { cas3DomainEventServiceMock.savePremisesUnarchiveEvent(any(), currentPremisesStartDate, restartDate, currentPremisesEndDate, any()) } returns Unit
       every { bedRepositoryMock.findByRoomPremisesId(archivedPremises.id) } returns listOf()
 
       val result = premisesService.unarchivePremises(archivedPremises, restartDate)
@@ -2019,6 +2075,7 @@ class Cas3PremisesServiceTest {
           currentPremisesStartDate,
           restartDate,
           currentPremisesEndDate,
+          any(),
         )
       }
 
@@ -2042,7 +2099,15 @@ class Cas3PremisesServiceTest {
 
       every { bedRepositoryMock.findCas3Bedspace(premises.id, archivedBedspace.id) } returns archivedBedspace
       every { bedRepositoryMock.save(match { it.id == archivedBedspace.id }) } returns updatedBedspace
-      every { cas3DomainEventServiceMock.saveBedspaceUnarchiveEvent(match { it.id == updatedBedspace.id }, premises.id, currentStartDate, currentEndDate) } returns Unit
+      every {
+        cas3DomainEventServiceMock.saveBedspaceUnarchiveEvent(
+          match { it.id == updatedBedspace.id },
+          premises.id,
+          currentStartDate,
+          currentEndDate,
+          any(),
+        )
+      } returns Unit
 
       val result = premisesService.unarchiveBedspace(premises, archivedBedspace.id, restartDate)
 
@@ -2069,6 +2134,7 @@ class Cas3PremisesServiceTest {
           premises.id,
           currentStartDate,
           currentEndDate,
+          any(),
         )
       }
     }
@@ -2096,10 +2162,19 @@ class Cas3PremisesServiceTest {
           match { it == premises.id },
           currentBedspaceStartDate,
           currentBedspaceEndDate,
+          any(),
         )
       } returns Unit
       every { premisesRepositoryMock.save(match { it.id == premises.id }) } returns premises
-      every { cas3DomainEventServiceMock.savePremisesUnarchiveEvent(match { it.id == premises.id }, premises.startDate, restartDate, premises.endDate!!) } returns Unit
+      every {
+        cas3DomainEventServiceMock.savePremisesUnarchiveEvent(
+          match { it.id == premises.id },
+          premises.startDate,
+          restartDate,
+          premises.endDate!!,
+          any(),
+        )
+      } returns Unit
 
       val result = premisesService.unarchiveBedspace(premises, archivedBedspace.id, restartDate)
 
@@ -2124,6 +2199,7 @@ class Cas3PremisesServiceTest {
           match { it == premises.id },
           currentBedspaceStartDate,
           currentBedspaceEndDate,
+          any(),
         )
       }
 
@@ -2141,6 +2217,7 @@ class Cas3PremisesServiceTest {
           currentPremisesStartDate,
           restartDate,
           currentPremisesEndDate,
+          any(),
         )
       }
     }
@@ -2229,6 +2306,7 @@ class Cas3PremisesServiceTest {
           match { it == premises.id },
           currentStartDate,
           currentEndDate,
+          any(),
         )
       } returns Unit
 
@@ -2255,6 +2333,7 @@ class Cas3PremisesServiceTest {
           match { it == premises.id },
           currentStartDate,
           currentEndDate,
+          any(),
         )
       }
     }
@@ -2276,6 +2355,7 @@ class Cas3PremisesServiceTest {
           match { it == premises.id },
           currentStartDate,
           currentEndDate,
+          any(),
         )
       } returns Unit
       every { bedRepositoryMock.save(updatedBedspace) } returns updatedBedspace
@@ -2303,6 +2383,7 @@ class Cas3PremisesServiceTest {
           match { it == premises.id },
           currentStartDate,
           currentEndDate,
+          any(),
         )
       }
     }
@@ -2318,36 +2399,43 @@ class Cas3PremisesServiceTest {
       val bedspaceOne = createBedspace(premises, endDate = archivedPremisesDate)
       val bedspaceTwoCurrentEndDate = LocalDate.now().plusWeeks(3)
       val bedspaceTwo = createBedspace(premises, endDate = archivedPremisesDate)
-      val bedspaceThreeCurrentEndDate = LocalDate.now().minusDays(10)
       val bedspaceThree = createBedspace(premises, endDate = archivedPremisesDate)
+      val domainEventTransactionId = UUID.randomUUID()
 
-      val dataPremisesDomainEvent = createPremisesArchiveEvent(premisesId = premises.id, userId = userId, endDate = archivedPremisesDate)
+      val dataPremisesDomainEvent = createPremisesArchiveEvent(premisesId = premises.id, userId = userId, endDate = archivedPremisesDate, transactionId = domainEventTransactionId)
       val premisesDomainEvent = createPremisesArchiveDomainEvent(dataPremisesDomainEvent)
 
       val dataBedspaceOne = createBedspaceArchiveEvent(premisesId = premises.id, bedspaceId = bedspaceOne.id, userId = userId, currentEndDate = null, endDate = archivedPremisesDate)
       val bedspaceOneDomainEvent = createBedspaceArchiveDomainEvent(dataBedspaceOne)
 
-      val dataBedspaceTwo = createBedspaceArchiveEvent(premisesId = premises.id, bedspaceId = bedspaceTwo.id, userId = userId, currentEndDate = bedspaceTwoCurrentEndDate, endDate = archivedPremisesDate)
+      val dataBedspaceTwo = createBedspaceArchiveEvent(
+        premisesId = premises.id,
+        bedspaceId = bedspaceTwo.id,
+        userId = userId,
+        currentEndDate = bedspaceTwoCurrentEndDate,
+        endDate = archivedPremisesDate,
+        transactionId = domainEventTransactionId,
+      )
       val bedspaceTwoDomainEvent = createBedspaceArchiveDomainEvent(dataBedspaceTwo)
 
-      val dataBedspaceThree = createBedspaceArchiveEvent(premisesId = premises.id, bedspaceId = bedspaceThree.id, userId = userId, currentEndDate = bedspaceThreeCurrentEndDate, endDate = archivedPremisesDate)
-      val bedspaceThreeDomainEvent = DomainEventEntityFactory()
-        .withCas3PremisesId(premises.id)
-        .withCas3BedspaceId(bedspaceThree.id)
-        .withType(CAS3_BEDSPACE_ARCHIVED)
-        .withData(dataBedspaceThree)
-        .withCreatedAt(OffsetDateTime.now().minusWeeks(3))
-        .produce()
+      val dataBedspaceThree = createBedspaceArchiveEvent(
+        premisesId = premises.id,
+        bedspaceId = bedspaceThree.id,
+        userId = userId,
+        currentEndDate = LocalDate.now().minusDays(10),
+        endDate = LocalDate.now().minusDays(25),
+        transactionId = UUID.randomUUID(),
+      )
+      val bedspaceThreeDomainEvent = createBedspaceArchiveDomainEvent(dataBedspaceThree)
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
-      every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premises.id, CAS3_PREMISES_ARCHIVED) } returns premisesDomainEvent
-      every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(bedspaceOne, bedspaceTwo, bedspaceThree)
-      every { premisesRepositoryMock.save(match { it.id == premises.id }) } returns premises
-      every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(bedspaceOne.id, CAS3_BEDSPACE_ARCHIVED) } returns bedspaceOneDomainEvent
-      every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(bedspaceTwo.id, CAS3_BEDSPACE_ARCHIVED) } returns bedspaceTwoDomainEvent
-      every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(bedspaceThree.id, CAS3_BEDSPACE_ARCHIVED) } returns bedspaceThreeDomainEvent
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_ARCHIVED) } returns premisesDomainEvent
+      every { domainEventRepositoryMock.findByCas3TransactionIdAndType(domainEventTransactionId, CAS3_BEDSPACE_ARCHIVED) } returns listOf(bedspaceOneDomainEvent, bedspaceTwoDomainEvent)
+      every { bedRepositoryMock.findByIdOrNull(bedspaceOne.id) } returns bedspaceOne
+      every { bedRepositoryMock.findByIdOrNull(bedspaceTwo.id) } returns bedspaceTwo
       every { bedRepositoryMock.save(match { it.id == bedspaceOne.id }) } returns bedspaceOne
       every { bedRepositoryMock.save(match { it.id == bedspaceTwo.id }) } returns bedspaceTwo
+      every { premisesRepositoryMock.save(match { it.id == premises.id }) } returns premises
 
       val updatedPremisesDomainEvent = premisesDomainEvent.copy(
         cas3CancelledAt = OffsetDateTime.now(),
@@ -2429,7 +2517,7 @@ class Cas3PremisesServiceTest {
       val premises = createPremisesEntity(endDate = LocalDate.now().plusWeeks(1), status = PropertyStatus.archived)
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
-      every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premises.id, CAS3_PREMISES_ARCHIVED) } returns null
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_ARCHIVED) } returns null
 
       val result = premisesService.cancelScheduledArchivePremises(premises.id)
 
@@ -2447,7 +2535,7 @@ class Cas3PremisesServiceTest {
       val premisesDomainEvent = createPremisesArchiveDomainEvent(dataPremisesDomainEvent)
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
-      every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premises.id, CAS3_PREMISES_ARCHIVED) } returns premisesDomainEvent
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_ARCHIVED) } returns premisesDomainEvent
 
       val result = premisesService.cancelScheduledArchivePremises(premises.id)
 
@@ -2472,7 +2560,7 @@ class Cas3PremisesServiceTest {
       val bedspaceDomainEventData = createBedspaceArchiveEvent(premisesId = premises.id, bedspaceId = archivedBedspace.id, userId = UUID.randomUUID(), currentEndDate = null, endDate = bedspaceArchiveDate)
       val bedspaceDomainEvent = createBedspaceArchiveDomainEvent(bedspaceDomainEventData)
 
-      every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(archivedBedspace.id, CAS3_BEDSPACE_ARCHIVED) } returns bedspaceDomainEvent
+      every { domainEventRepositoryMock.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(archivedBedspace.id, CAS3_BEDSPACE_ARCHIVED) } returns bedspaceDomainEvent
       every { bedRepositoryMock.save(match { it.id == archivedBedspace.id }) } returns updatedBedspace
 
       val updatedBedspaceDomainEvent = bedspaceDomainEvent.copy(
@@ -2578,9 +2666,9 @@ class Cas3PremisesServiceTest {
         .produce()
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
-      every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premises.id, CAS3_PREMISES_UNARCHIVED) } returns premisesDomainEvent
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_UNARCHIVED) } returns premisesDomainEvent
       every { bedRepositoryMock.findByRoomPremisesId(premises.id) } returns listOf(bedspace)
-      every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(bedspace.id, CAS3_BEDSPACE_UNARCHIVED) } returns bedspaceDomainEvent
+      every { domainEventRepositoryMock.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(bedspace.id, CAS3_BEDSPACE_UNARCHIVED) } returns bedspaceDomainEvent
       every { premisesRepositoryMock.save(match { it.id == premises.id }) } returns premises
       every { bedRepositoryMock.save(match { it.id == bedspace.id }) } returns bedspace
 
@@ -2668,7 +2756,7 @@ class Cas3PremisesServiceTest {
       )
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
-      every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premises.id, CAS3_PREMISES_UNARCHIVED) } returns null
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_UNARCHIVED) } returns null
 
       val result = premisesService.cancelScheduledUnarchivePremises(premises.id)
 
@@ -2692,7 +2780,7 @@ class Cas3PremisesServiceTest {
       val premisesDomainEvent = createPremisesUnarchiveDomainEvent(dataPremisesDomainEvent)
 
       every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
-      every { domainEventRepositoryMock.findFirstByCas3PremisesIdAndTypeOrderByCreatedAtDesc(premises.id, CAS3_PREMISES_UNARCHIVED) } returns premisesDomainEvent
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_UNARCHIVED) } returns premisesDomainEvent
 
       val result = premisesService.cancelScheduledUnarchivePremises(premises.id)
 
@@ -2735,7 +2823,7 @@ class Cas3PremisesServiceTest {
 
       every { bedRepositoryMock.findById(scheduledToUnarchiveBedspace.id) } returns Optional.of(scheduledToUnarchiveBedspace)
       every { bedRepositoryMock.save(match { it.id == scheduledToUnarchiveBedspace.id }) } returns updatedBedspace
-      every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(scheduledToUnarchiveBedspace.id, CAS3_BEDSPACE_UNARCHIVED) } returns bedspaceDomainEvent
+      every { domainEventRepositoryMock.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(scheduledToUnarchiveBedspace.id, CAS3_BEDSPACE_UNARCHIVED) } returns bedspaceDomainEvent
 
       val updatedBedspaceDomainEvent = bedspaceDomainEvent.copy(
         cas3CancelledAt = OffsetDateTime.now(),
@@ -2770,7 +2858,7 @@ class Cas3PremisesServiceTest {
       val premises = createPremisesEntity()
       val scheduledToUnarchiveBedspace = createBedspace(premises, startDate = LocalDate.now().plusDays(10))
 
-      every { domainEventRepositoryMock.findFirstByCas3BedspaceIdAndTypeOrderByCreatedAtDesc(scheduledToUnarchiveBedspace.id, CAS3_BEDSPACE_UNARCHIVED) } returns null
+      every { domainEventRepositoryMock.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(scheduledToUnarchiveBedspace.id, CAS3_BEDSPACE_UNARCHIVED) } returns null
       every { bedRepositoryMock.findById(scheduledToUnarchiveBedspace.id) } returns Optional.of(scheduledToUnarchiveBedspace)
 
       val result = premisesService.cancelScheduledUnarchiveBedspace(scheduledToUnarchiveBedspace.id)
@@ -3893,24 +3981,26 @@ class Cas3PremisesServiceTest {
     .produce()
 
   @SuppressWarnings("LongParameterList")
-  private fun createDomainEvent(id: UUID, premisesId: UUID, bedspaceId: UUID? = null, occurredAt: OffsetDateTime, data: String, type: DomainEventType) = DomainEventEntityFactory()
+  private fun createDomainEvent(id: UUID, premisesId: UUID, bedspaceId: UUID? = null, occurredAt: OffsetDateTime, data: String, type: DomainEventType, transactionId: UUID) = DomainEventEntityFactory()
     .withId(id)
     .withCas3PremisesId(premisesId)
     .withCas3BedspaceId(bedspaceId)
+    .withCas3TransactionId(transactionId)
     .withType(type)
     .withData(data)
     .withOccurredAt(occurredAt)
     .produce()
 
-  private fun createPremisesArchiveEvent(premisesId: UUID, userId: UUID, endDate: LocalDate): CAS3PremisesArchiveEvent {
+  private fun createPremisesArchiveEvent(premisesId: UUID, userId: UUID, endDate: LocalDate, transactionId: UUID = UUID.randomUUID()): CAS3PremisesArchiveEvent {
     val eventId = UUID.randomUUID()
     val occurredAt = OffsetDateTime.now()
     return CAS3PremisesArchiveEvent(
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.premisesArchived,
+      premisesId = premisesId,
+      transactionId = transactionId,
       eventDetails = CAS3PremisesArchiveEventDetails(
-        premisesId = premisesId,
         userId = userId,
         endDate = endDate,
       ),
@@ -3919,21 +4009,31 @@ class Cas3PremisesServiceTest {
 
   private fun createPremisesArchiveDomainEvent(data: CAS3PremisesArchiveEvent) = createDomainEvent(
     id = data.id,
-    premisesId = data.eventDetails.premisesId,
     occurredAt = data.timestamp.atOffset(ZoneOffset.UTC),
     data = objectMapper.writeValueAsString(data),
     type = CAS3_PREMISES_ARCHIVED,
+    premisesId = data.premisesId,
+    transactionId = data.transactionId,
   )
 
-  private fun createPremisesUnarchiveEvent(premisesId: UUID, userId: UUID, newStartDate: LocalDate, currentEndDate: LocalDate, currentStartDate: LocalDate = LocalDate.now()): CAS3PremisesUnarchiveEvent {
+  @SuppressWarnings("LongParameterList")
+  private fun createPremisesUnarchiveEvent(
+    premisesId: UUID,
+    userId: UUID,
+    newStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    currentStartDate: LocalDate = LocalDate.now(),
+    transactionId: UUID = UUID.randomUUID(),
+  ): CAS3PremisesUnarchiveEvent {
     val eventId = UUID.randomUUID()
     val occurredAt = OffsetDateTime.now()
     return CAS3PremisesUnarchiveEvent(
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.premisesUnarchived,
+      premisesId = premisesId,
+      transactionId = transactionId,
       eventDetails = CAS3PremisesUnarchiveEventDetails(
-        premisesId = premisesId,
         userId = userId,
         currentStartDate = currentStartDate,
         newStartDate = newStartDate,
@@ -3944,23 +4044,33 @@ class Cas3PremisesServiceTest {
 
   private fun createPremisesUnarchiveDomainEvent(data: CAS3PremisesUnarchiveEvent) = createDomainEvent(
     id = data.id,
-    premisesId = data.eventDetails.premisesId,
     occurredAt = data.timestamp.atOffset(ZoneOffset.UTC),
     data = objectMapper.writeValueAsString(data),
     type = CAS3_PREMISES_UNARCHIVED,
+    premisesId = data.premisesId,
+    transactionId = data.transactionId,
   )
 
-  private fun createBedspaceArchiveEvent(premisesId: UUID, bedspaceId: UUID, userId: UUID, currentEndDate: LocalDate?, endDate: LocalDate): CAS3BedspaceArchiveEvent {
+  @SuppressWarnings("LongParameterList")
+  private fun createBedspaceArchiveEvent(
+    premisesId: UUID,
+    bedspaceId: UUID,
+    userId: UUID,
+    currentEndDate: LocalDate?,
+    endDate: LocalDate,
+    transactionId: UUID = UUID.randomUUID(),
+  ): CAS3BedspaceArchiveEvent {
     val eventId = UUID.randomUUID()
     val occurredAt = OffsetDateTime.now()
     return CAS3BedspaceArchiveEvent(
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.bedspaceArchived,
+      bedspaceId = bedspaceId,
+      premisesId = premisesId,
+      transactionId = transactionId,
       eventDetails = CAS3BedspaceArchiveEventDetails(
-        bedspaceId = bedspaceId,
         userId = userId,
-        premisesId = premisesId,
         currentEndDate = currentEndDate,
         endDate = endDate,
       ),
@@ -3969,24 +4079,34 @@ class Cas3PremisesServiceTest {
 
   private fun createBedspaceArchiveDomainEvent(data: CAS3BedspaceArchiveEvent) = createDomainEvent(
     data.id,
-    data.eventDetails.premisesId,
-    data.eventDetails.bedspaceId,
+    data.premisesId,
+    data.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_ARCHIVED,
+    data.transactionId,
   )
 
   @SuppressWarnings("LongParameterList")
-  private fun createBedspaceUnarchiveEvent(premisesId: UUID, bedspaceId: UUID, userId: UUID, newStartDate: LocalDate, currentStartDate: LocalDate, currentEndDate: LocalDate): CAS3BedspaceUnarchiveEvent {
+  private fun createBedspaceUnarchiveEvent(
+    premisesId: UUID,
+    bedspaceId: UUID,
+    userId: UUID,
+    newStartDate: LocalDate,
+    currentStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    transactionId: UUID = UUID.randomUUID(),
+  ): CAS3BedspaceUnarchiveEvent {
     val eventId = UUID.randomUUID()
     val occurredAt = OffsetDateTime.now()
     return CAS3BedspaceUnarchiveEvent(
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.bedspaceUnarchived,
+      bedspaceId = bedspaceId,
+      premisesId = premisesId,
+      transactionId = transactionId,
       eventDetails = CAS3BedspaceUnarchiveEventDetails(
-        bedspaceId = bedspaceId,
-        premisesId = premisesId,
         userId = userId,
         currentStartDate = currentStartDate,
         currentEndDate = currentEndDate,
@@ -3997,11 +4117,12 @@ class Cas3PremisesServiceTest {
 
   private fun createBedspaceUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
     data.id,
-    data.eventDetails.premisesId,
-    data.eventDetails.bedspaceId,
+    data.premisesId,
+    data.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_UNARCHIVED,
+    data.transactionId,
   )
 
   companion object {

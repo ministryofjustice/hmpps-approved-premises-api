@@ -95,12 +95,12 @@ class Cas3DomainEventService(
 
   fun getAssessmentUpdatedEvents(assessmentId: UUID) = domainEventRepository.findByAssessmentIdAndType(assessmentId, DomainEventType.CAS3_ASSESSMENT_UPDATED)
 
-  fun getBedspaceActiveDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesActiveDomainEventsByType(
+  fun getBedspaceActiveDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findCas3BedspacesActiveDomainEventsByType(
     listOf(id),
     bedspaceDomainEventTypes.map { it.toString() },
   )
 
-  fun getBedspacesActiveDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findBedspacesActiveDomainEventsByType(
+  fun getBedspacesActiveDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findCas3BedspacesActiveDomainEventsByType(
     ids,
     bedspaceDomainEventTypes.map { it.toString() },
   )
@@ -225,9 +225,9 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun savePremisesArchiveEvent(premises: TemporaryAccommodationPremisesEntity, endDate: LocalDate) {
+  fun savePremisesArchiveEvent(premises: TemporaryAccommodationPremisesEntity, endDate: LocalDate, transactionId: UUID) {
     val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getPremisesArchiveEvent(premises, endDate, user)
+    val domainEvent = cas3DomainEventBuilder.getPremisesArchiveEvent(premises, endDate, user, transactionId)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -239,9 +239,9 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun savePremisesUnarchiveEvent(premises: TemporaryAccommodationPremisesEntity, currentStartDate: LocalDate, newStartDate: LocalDate, currentEndDate: LocalDate?) {
+  fun savePremisesUnarchiveEvent(premises: TemporaryAccommodationPremisesEntity, currentStartDate: LocalDate, newStartDate: LocalDate, currentEndDate: LocalDate?, transactionId: UUID) {
     val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user)
+    val domainEvent = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user, transactionId)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -253,9 +253,9 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun saveBedspaceArchiveEvent(bedspace: BedEntity, premisesId: UUID, currentEndDate: LocalDate?) {
+  fun saveBedspaceArchiveEvent(bedspace: BedEntity, premisesId: UUID, currentEndDate: LocalDate?, transactionId: UUID) {
     val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premisesId, currentEndDate, user)
+    val domainEvent = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premisesId, currentEndDate, user, transactionId)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -267,9 +267,9 @@ class Cas3DomainEventService(
   }
 
   @Transactional
-  fun saveBedspaceUnarchiveEvent(bedspace: BedEntity, premisesId: UUID, currentStartDate: LocalDate, currentEndDate: LocalDate) {
+  fun saveBedspaceUnarchiveEvent(bedspace: BedEntity, premisesId: UUID, currentStartDate: LocalDate, currentEndDate: LocalDate, transactionId: UUID) {
     val user = userService.getUserForRequest()
-    val domainEvent = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, premisesId, currentStartDate, currentEndDate, user)
+    val domainEvent = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, premisesId, currentStartDate, currentEndDate, user, transactionId)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -280,6 +280,7 @@ class Cas3DomainEventService(
     )
   }
 
+  @Suppress("CyclomaticComplexMethod")
   private fun <T : CAS3Event> saveAndEmit(
     domainEvent: DomainEvent<T>,
     crn: String?,
@@ -294,16 +295,24 @@ class Cas3DomainEventService(
     val user = userService.getUserForRequestOrNull()
 
     val cas3PremisesId = when (domainEvent.data) {
-      is CAS3PremisesArchiveEvent -> domainEvent.data.eventDetails.premisesId
-      is CAS3PremisesUnarchiveEvent -> domainEvent.data.eventDetails.premisesId
-      is CAS3BedspaceArchiveEvent -> domainEvent.data.eventDetails.premisesId
-      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.eventDetails.premisesId
+      is CAS3PremisesArchiveEvent -> domainEvent.data.premisesId
+      is CAS3PremisesUnarchiveEvent -> domainEvent.data.premisesId
+      is CAS3BedspaceArchiveEvent -> domainEvent.data.premisesId
+      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.premisesId
       else -> null
     }
 
     val cas3BedspaceId = when (domainEvent.data) {
-      is CAS3BedspaceArchiveEvent -> domainEvent.data.eventDetails.bedspaceId
-      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.eventDetails.bedspaceId
+      is CAS3BedspaceArchiveEvent -> domainEvent.data.bedspaceId
+      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.bedspaceId
+      else -> null
+    }
+
+    val cas3TransactionId = when (domainEvent.data) {
+      is CAS3PremisesArchiveEvent -> domainEvent.data.transactionId
+      is CAS3PremisesUnarchiveEvent -> domainEvent.data.transactionId
+      is CAS3BedspaceArchiveEvent -> domainEvent.data.transactionId
+      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.transactionId
       else -> null
     }
 
@@ -327,6 +336,7 @@ class Cas3DomainEventService(
         cas1SpaceBookingId = null,
         cas3PremisesId = cas3PremisesId,
         cas3BedspaceId = cas3BedspaceId,
+        cas3TransactionId = cas3TransactionId,
       ),
     )
 

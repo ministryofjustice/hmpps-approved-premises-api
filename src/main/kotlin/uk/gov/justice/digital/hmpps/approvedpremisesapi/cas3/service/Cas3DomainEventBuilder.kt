@@ -39,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -208,6 +207,7 @@ class Cas3DomainEventBuilder(
     premisesId: UUID,
     currentEndDate: LocalDate?,
     user: UserEntity,
+    transactionId: UUID,
   ): DomainEvent<CAS3BedspaceArchiveEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -224,7 +224,10 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bedspaceArchived,
-        eventDetails = buildCAS3BedspaceArchiveEventDetails(bedspace, premisesId, currentEndDate, user),
+        bedspaceId = bedspace.id,
+        premisesId = premisesId,
+        transactionId = transactionId,
+        eventDetails = buildCAS3BedspaceArchiveEventDetails(bedspace, currentEndDate, user),
       ),
     )
   }
@@ -233,6 +236,7 @@ class Cas3DomainEventBuilder(
     premises: TemporaryAccommodationPremisesEntity,
     endDate: LocalDate,
     user: UserEntity,
+    transactionId: UUID,
   ): DomainEvent<CAS3PremisesArchiveEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -247,7 +251,9 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.premisesArchived,
-        eventDetails = buildCAS3PremisesArchiveEventDetails(premises, endDate, user),
+        premisesId = premises.id,
+        transactionId = transactionId,
+        eventDetails = buildCAS3PremisesArchiveEventDetails(endDate, user),
       ),
     )
   }
@@ -258,6 +264,7 @@ class Cas3DomainEventBuilder(
     newStartDate: LocalDate,
     currentEndDate: LocalDate?,
     user: UserEntity,
+    transactionId: UUID,
   ): DomainEvent<CAS3PremisesUnarchiveEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -272,7 +279,9 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.premisesUnarchived,
-        eventDetails = buildCAS3PremisesUnarchiveEventDetails(premises, currentStartDate, newStartDate, currentEndDate, user),
+        premisesId = premises.id,
+        transactionId = transactionId,
+        eventDetails = buildCAS3PremisesUnarchiveEventDetails(currentStartDate, newStartDate, currentEndDate, user),
       ),
     )
   }
@@ -283,6 +292,7 @@ class Cas3DomainEventBuilder(
     currentStartDate: LocalDate,
     currentEndDate: LocalDate,
     user: UserEntity,
+    transactionId: UUID,
   ): DomainEvent<CAS3BedspaceUnarchiveEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -297,7 +307,10 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bedspaceUnarchived,
-        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(bedspace, premisesId, currentStartDate, currentEndDate, user),
+        bedspaceId = bedspace.id,
+        premisesId = premisesId,
+        transactionId = transactionId,
+        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(bedspace, currentStartDate, currentEndDate, user),
       ),
     )
   }
@@ -477,23 +490,19 @@ class Cas3DomainEventBuilder(
   )
 
   private fun buildCAS3PremisesArchiveEventDetails(
-    premises: PremisesEntity,
     endDate: LocalDate,
     user: UserEntity,
   ) = CAS3PremisesArchiveEventDetails(
-    premisesId = premises.id,
     userId = user.id,
     endDate = endDate,
   )
 
   private fun buildCAS3PremisesUnarchiveEventDetails(
-    premises: PremisesEntity,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
     currentEndDate: LocalDate?,
     user: UserEntity,
   ) = CAS3PremisesUnarchiveEventDetails(
-    premisesId = premises.id,
     userId = user.id,
     currentStartDate = currentStartDate,
     newStartDate = newStartDate,
@@ -502,30 +511,24 @@ class Cas3DomainEventBuilder(
 
   private fun buildCAS3BedspaceArchiveEventDetails(
     bedspace: BedEntity,
-    premisesId: UUID,
     currentEndDate: LocalDate?,
     user: UserEntity,
   ) = CAS3BedspaceArchiveEventDetails(
-    bedspaceId = bedspace.id,
     userId = user.id,
     currentEndDate = currentEndDate,
     endDate = bedspace.endDate!!,
-    premisesId = premisesId,
   )
 
   private fun buildCAS3BedspaceUnarchiveEventDetails(
     bedspace: BedEntity,
-    premisesId: UUID,
     currentStartDate: LocalDate,
     currentEndDate: LocalDate,
     user: UserEntity,
   ) = CAS3BedspaceUnarchiveEventDetails(
-    bedspaceId = bedspace.id,
     userId = user.id,
     currentStartDate = currentStartDate,
     currentEndDate = currentEndDate,
     newStartDate = bedspace.startDate!!,
-    premisesId = premisesId,
   )
 
   private fun buildCAS3BookingCancelledEventDetails(

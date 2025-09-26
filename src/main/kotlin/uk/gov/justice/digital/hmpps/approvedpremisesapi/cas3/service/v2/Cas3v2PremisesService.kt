@@ -15,7 +15,7 @@ class Cas3v2PremisesService(
 ) {
   fun getPremises(premisesId: UUID): Cas3PremisesEntity? = cas3PremisesRepository.findByIdOrNull(premisesId)
 
-  fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate) {
+  fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate, transactionId: UUID) {
     val currentStartDate = premises.startDate
     val currentEndDate = premises.endDate
     premises.startDate = restartDate
@@ -27,6 +27,7 @@ class Cas3v2PremisesService(
       currentStartDate,
       newStartDate = restartDate,
       currentEndDate,
+      transactionId,
     )
   }
 }

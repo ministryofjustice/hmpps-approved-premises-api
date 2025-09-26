@@ -127,8 +127,9 @@ class Cas3v2DomainEventBuilderTest {
     val premises = cas3PremisesEntity(probationRegion)
     premises.endDate = currentEndDate
     val user = userEntity(probationRegion)
+    val domainEventTransactionId = UUID.randomUUID()
 
-    val event = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user)
+    val event = cas3DomainEventBuilder.getPremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, user, domainEventTransactionId)
 
     assertAll({
       assertThat(event.applicationId).isNull()
@@ -136,7 +137,8 @@ class Cas3v2DomainEventBuilderTest {
       assertThat(event.crn).isNull()
       assertThat(event.nomsNumber).isNull()
       assertThat(event.data.eventType).isEqualTo(EventType.premisesUnarchived)
-      assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.transactionId).isEqualTo(domainEventTransactionId)
       assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
       assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
       assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)

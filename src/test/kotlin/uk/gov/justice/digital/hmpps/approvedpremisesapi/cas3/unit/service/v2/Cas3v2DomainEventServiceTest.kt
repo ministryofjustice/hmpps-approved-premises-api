@@ -1554,9 +1554,9 @@ class Cas3v2DomainEventServiceTest {
     val user = UserEntityFactory()
       .withProbationRegion(premises.probationDeliveryUnit.probationRegion)
       .produce()
+    val domainEventTransactionId = UUID.randomUUID()
 
     val eventDetails = CAS3PremisesUnarchiveEventDetails(
-      premisesId = premises.id,
       userId = user.id,
       currentStartDate = currentStartDate,
       newStartDate = newStartDate,
@@ -1567,6 +1567,8 @@ class Cas3v2DomainEventServiceTest {
       id = UUID.randomUUID(),
       timestamp = occurredAt,
       eventType = EventType.premisesUnarchived,
+      premisesId = premises.id,
+      transactionId = domainEventTransactionId,
     )
     val domainEventId = UUID.randomUUID()
 
@@ -1580,12 +1582,21 @@ class Cas3v2DomainEventServiceTest {
       data = data,
     )
 
-    every { cas3DomainEventBuilderMock.getPremisesUnarchiveEvent(eq(premises), eq(currentStartDate), eq(newStartDate), eq(currentEndDate), eq(user)) } returns domainEvent
+    every {
+      cas3DomainEventBuilderMock.getPremisesUnarchiveEvent(
+        eq(premises),
+        eq(currentStartDate),
+        eq(newStartDate),
+        eq(currentEndDate),
+        eq(user),
+        any(),
+      )
+    } returns domainEvent
     every { domainEventRepositoryMock.save(any()) } returns null
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
-    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate)
+    cas3DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, newStartDate, currentEndDate, UUID.randomUUID())
 
     val slot = slot<DomainEventEntity>()
 
@@ -1600,6 +1611,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEvent.crn) },
       { assertThat(savedEvent.cas3PremisesId).isEqualTo(premises.id) },
       { assertThat(savedEvent.cas3BedspaceId).isNull() },
+      { assertThat(savedEvent.cas3TransactionId).isEqualTo(domainEventTransactionId) },
       { assertThat(savedEvent.applicationId).isNull() },
       { assertThat(savedEvent.cas1SpaceBookingId).isNull() },
       { assertThat(savedEvent.assessmentId).isNull() },

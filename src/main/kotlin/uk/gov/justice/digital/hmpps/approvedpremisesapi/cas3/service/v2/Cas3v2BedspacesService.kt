@@ -95,7 +95,8 @@ class Cas3v2BedspacesService(
     bedspace = cas3BedspacesRepository.save(bedspace)
 
     if (premises.isPremisesScheduledToArchive()) {
-      cas3PremisesService.unarchivePremisesAndSaveDomainEvent(premises, startDate)
+      val domainEventTransactionId = UUID.randomUUID()
+      cas3PremisesService.unarchivePremisesAndSaveDomainEvent(premises, startDate, domainEventTransactionId)
     }
 
     return success(bedspace)

@@ -198,10 +198,12 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     newStartDate: LocalDate,
     currentEndDate: LocalDate,
     cancelledAt: OffsetDateTime? = null,
+    transactionId: UUID = UUID.randomUUID(),
   ) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3PremisesId(premises.id)
     withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
+    withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
       objectMapper.writeValueAsString(
@@ -209,9 +211,10 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
           id = UUID.randomUUID(),
           timestamp = Instant.now(),
           eventType = EventType.premisesUnarchived,
+          premisesId = premises.id,
+          transactionId = transactionId,
           eventDetails =
           CAS3PremisesUnarchiveEventDetails(
-            premisesId = premises.id,
             userId = userEntity.id,
             currentStartDate = currentStartDate,
             newStartDate = newStartDate,
@@ -227,10 +230,12 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     userEntity: UserEntity,
     date: LocalDate,
     cancelledAt: OffsetDateTime? = null,
+    transactionId: UUID = UUID.randomUUID(),
   ) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3PremisesId(premises.id)
     withType(DomainEventType.CAS3_PREMISES_ARCHIVED)
+    withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
       objectMapper.writeValueAsString(
@@ -238,9 +243,10 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
           id = UUID.randomUUID(),
           timestamp = Instant.now(),
           eventType = EventType.premisesArchived,
+          premisesId = premises.id,
+          transactionId = transactionId,
           eventDetails =
           CAS3PremisesArchiveEventDetails(
-            premisesId = premises.id,
             userId = userEntity.id,
             endDate = date,
           ),
@@ -358,10 +364,13 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     currentEndDate: LocalDate?,
     endDate: LocalDate,
     cancelledAt: OffsetDateTime? = null,
+    transactionId: UUID = UUID.randomUUID(),
   ) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3BedspaceId(bedspaceId)
+    withCas3PremisesId(premisesId)
     withType(DomainEventType.CAS3_BEDSPACE_ARCHIVED)
+    withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
       objectMapper.writeValueAsString(
@@ -369,10 +378,11 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
           id = UUID.randomUUID(),
           timestamp = OffsetDateTime.now().toInstant(),
           eventType = EventType.bedspaceArchived,
+          bedspaceId = bedspaceId,
+          premisesId = premisesId,
+          transactionId = transactionId,
           eventDetails = CAS3BedspaceArchiveEventDetails(
-            bedspaceId = bedspaceId,
             userId = userId,
-            premisesId = premisesId,
             currentEndDate = currentEndDate,
             endDate = endDate,
           ),
@@ -388,10 +398,13 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     userId: UUID,
     newStartDate: LocalDate,
     cancelledAt: OffsetDateTime? = null,
+    transactionId: UUID = UUID.randomUUID(),
   ) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3BedspaceId(bedspace.id)
+    withCas3PremisesId(premisesId)
     withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+    withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
       objectMapper.writeValueAsString(
@@ -399,9 +412,10 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
           id = UUID.randomUUID(),
           timestamp = OffsetDateTime.now().toInstant(),
           eventType = EventType.bedspaceUnarchived,
+          bedspaceId = bedspace.id,
+          premisesId = premisesId,
+          transactionId = transactionId,
           eventDetails = CAS3BedspaceUnarchiveEventDetails(
-            bedspaceId = bedspace.id,
-            premisesId = premisesId,
             userId = userId,
             currentStartDate = bedspace.startDate!!,
             currentEndDate = bedspace.endDate!!,
@@ -419,10 +433,13 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     userId: UUID,
     newStartDate: LocalDate,
     cancelledAt: OffsetDateTime? = null,
+    transactionId: UUID = UUID.randomUUID(),
   ) = domainEventFactory.produceAndPersist {
     withService(ServiceName.temporaryAccommodation)
     withCas3BedspaceId(bedspace.id)
+    withCas3PremisesId(premisesId)
     withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+    withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
       objectMapper.writeValueAsString(
@@ -430,9 +447,10 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
           id = UUID.randomUUID(),
           timestamp = OffsetDateTime.now().toInstant(),
           eventType = EventType.bedspaceUnarchived,
+          bedspaceId = bedspace.id,
+          premisesId = premisesId,
+          transactionId = transactionId,
           eventDetails = CAS3BedspaceUnarchiveEventDetails(
-            bedspaceId = bedspace.id,
-            premisesId = premisesId,
             userId = userId,
             currentStartDate = bedspace.startDate!!,
             currentEndDate = bedspace.endDate!!,
