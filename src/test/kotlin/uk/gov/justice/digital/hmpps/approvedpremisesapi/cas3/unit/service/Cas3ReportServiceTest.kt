@@ -195,6 +195,7 @@ class Cas3ReportServiceTest {
     val columnNames = dataFrame.columnNames()
     Assertions.assertThat(columnNames).contains("destinationRegion")
     Assertions.assertThat(columnNames).contains("destinationPdu")
+    Assertions.assertThat(columnNames).contains("outOfRegion")
 
     Assertions.assertThat(dataFrame.rowsCount()).isEqualTo(1)
     val row = dataFrame[0]
@@ -202,6 +203,7 @@ class Cas3ReportServiceTest {
     Assertions.assertThat(row["pdu"]).isEqualTo("Previous PDU Name")
     Assertions.assertThat(row["destinationRegion"]).isEqualTo("region")
     Assertions.assertThat(row["destinationPdu"]).isEqualTo("pduName")
+    Assertions.assertThat(row["outOfRegion"]).isEqualTo("Yes")
 
     verify {
       mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
@@ -245,6 +247,7 @@ class Cas3ReportServiceTest {
     val columnNames = dataFrame.columnNames()
     Assertions.assertThat(columnNames).contains("destinationRegion")
     Assertions.assertThat(columnNames).contains("destinationPdu")
+    Assertions.assertThat(columnNames).contains("outOfRegion")
 
     Assertions.assertThat(dataFrame.rowsCount()).isEqualTo(1)
     val row = dataFrame[0]
@@ -252,6 +255,7 @@ class Cas3ReportServiceTest {
     Assertions.assertThat(row["pdu"]).isEqualTo("pduName")
     Assertions.assertThat(row["destinationRegion"]).isNull()
     Assertions.assertThat(row["destinationPdu"]).isNull()
+    Assertions.assertThat(row["outOfRegion"]).isEqualTo("No")
 
     verify {
       mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
