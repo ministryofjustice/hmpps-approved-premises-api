@@ -149,6 +149,8 @@ class Cas3PremisesService(
       isUniqueName(reference = reference, premisesId = null)
     }
 
+    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, TemporaryAccommodationPremisesEntity::class, validationErrors)
+
     if (validationErrors.any()) {
       return fieldValidationError
     }
@@ -176,12 +178,6 @@ class Cas3PremisesService(
       turnaroundWorkingDays = turnaroundWorkingDays ?: 2,
       endDate = null,
     )
-
-    val characteristicEntities = getAndValidateCharacteristics(characteristicIds, premises, validationErrors)
-
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
 
     premises.characteristics.addAll(characteristicEntities.map { it!! })
     premisesRepository.save(premises)
