@@ -65,6 +65,7 @@ SELECT
           LEFT JOIN beds ON rooms.id = beds.room_id
       WHERE pr.id = :regionId
         AND (:postcodeOrAddress is null
+          OR lower(p.town) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(p.postcode) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(p.address_line1) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(p.address_line2) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
