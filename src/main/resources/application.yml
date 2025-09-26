@@ -104,6 +104,11 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
+          manage-adjudications-api:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
           prisoner-alerts-api:
             provider: hmpps-auth
             client-id: approved-premises-api
@@ -181,6 +186,8 @@ services:
     base-url: http://localhost:9570
     # 3 MB
     max-response-in-memory-size-bytes: 3145728
+  manage-adjudications-api:
+    base-url: http://localhost:9004
   prisoner-alerts-api:
     base-url: http://localhost:9580
     # 2.5 MB
