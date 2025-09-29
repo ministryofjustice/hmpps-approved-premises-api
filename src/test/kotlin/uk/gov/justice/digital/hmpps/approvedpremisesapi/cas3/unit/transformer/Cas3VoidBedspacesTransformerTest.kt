@@ -81,7 +81,9 @@ class Cas3VoidBedspacesTransformerTest {
       }
       .withYieldedPremises { premises }
       .withYieldedBed { bed }
-      .produce()
+      .produce().apply {
+        costCentre = Cas3CostCentre.HMPPS
+      }
 
     @Test
     fun `Void Bedspace entity is correctly transformed`() {
@@ -105,6 +107,7 @@ class Cas3VoidBedspacesTransformerTest {
       assertThat(result.bedId).isEqualTo(bed.id)
       assertThat(result.bedName).isEqualTo(bed.name)
       assertThat(result.roomName).isEqualTo(room.name)
+      assertThat(result.costCentre).isEqualTo(voidBedspace.costCentre)
     }
 
     @Test
@@ -145,6 +148,7 @@ class Cas3VoidBedspacesTransformerTest {
       assertThat(result.bedId).isEqualTo(bed.id)
       assertThat(result.bedName).isEqualTo(bed.name)
       assertThat(result.roomName).isEqualTo(room.name)
+      assertThat(result.costCentre).isEqualTo(voidBedspace.costCentre)
     }
   }
 

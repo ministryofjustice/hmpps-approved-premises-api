@@ -24,6 +24,7 @@ class Cas3VoidBedspacesTransformer(
     bedId = jpa.bed!!.id,
     bedName = jpa.bed!!.name,
     roomName = jpa.bed!!.room.name,
+    costCentre = jpa.costCentre,
   )
 
   private fun determineStatus(jpa: Cas3VoidBedspaceEntity) = when {
