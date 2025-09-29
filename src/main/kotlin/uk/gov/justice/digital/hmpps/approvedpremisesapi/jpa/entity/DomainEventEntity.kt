@@ -147,6 +147,16 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
   )
   fun findPremisesActiveDomainEventsByType(cas3PremisesId: UUID, premisesDomainEventTypes: List<String>): List<DomainEventEntity>
 
+  @Query(
+    """
+      SELECT d
+      FROM DomainEventEntity d
+      WHERE d.type in :premisesDomainEventTypes and d.cas3TransactionId is NULL
+      ORDER BY d.cas3PremisesId,d.createdAt
+      """,
+  )
+  fun findCas3DomainEventsByTypeWithoutTransactionId(premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity>
+
   @Modifying
   @Query(
     """

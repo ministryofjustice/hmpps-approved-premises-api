@@ -12,7 +12,7 @@ class CAS3PremisesArchiveEvent(
   override val timestamp: Instant,
   override val eventType: EventType,
   val premisesId: UUID,
-  val transactionId: UUID,
+  val transactionId: UUID?,
 ) : CAS3Event
 
 data class CAS3PremisesArchiveEventDetails(

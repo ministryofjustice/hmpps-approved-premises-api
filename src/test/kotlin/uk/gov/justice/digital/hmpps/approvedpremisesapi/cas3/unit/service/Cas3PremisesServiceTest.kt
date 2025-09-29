@@ -4013,7 +4013,7 @@ class Cas3PremisesServiceTest {
     data = objectMapper.writeValueAsString(data),
     type = CAS3_PREMISES_ARCHIVED,
     premisesId = data.premisesId,
-    transactionId = data.transactionId,
+    transactionId = data.transactionId!!,
   )
 
   @SuppressWarnings("LongParameterList")
@@ -4084,7 +4084,7 @@ class Cas3PremisesServiceTest {
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_ARCHIVED,
-    data.transactionId,
+    data.transactionId!!,
   )
 
   @SuppressWarnings("LongParameterList")

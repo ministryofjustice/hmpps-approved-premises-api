@@ -10,7 +10,7 @@ data class CAS3BedspaceArchiveEvent(
   override val eventType: EventType,
   val bedspaceId: java.util.UUID,
   val premisesId: java.util.UUID,
-  val transactionId: java.util.UUID,
+  val transactionId: java.util.UUID?,
 ) : CAS3Event
 
 data class CAS3BedspaceArchiveEventDetails(
