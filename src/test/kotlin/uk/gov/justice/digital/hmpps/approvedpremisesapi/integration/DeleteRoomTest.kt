@@ -23,7 +23,7 @@ class DeleteRoomTest : IntegrationTestBase() {
       withRoom(room)
     }
 
-    val lostBed = createVoidBedspace(room.premises, beds.first())
+    val voidBedspace = createVoidBedspace(room.premises, beds.first())
 
     webTestClient.delete()
       .uri("/internal/room/${room.id}")
@@ -33,7 +33,7 @@ class DeleteRoomTest : IntegrationTestBase() {
 
     val roomFromDatabase = roomRepository.findByIdOrNull(room.id)
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
-    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(lostBed.id)
+    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(voidBedspace.id)
 
     assertThat(roomFromDatabase).isNull()
     bedsFromDatabase.forEach { assertThat(it).isNull() }
@@ -48,7 +48,7 @@ class DeleteRoomTest : IntegrationTestBase() {
       withRoom(room)
     }
 
-    val lostBed = createVoidBedspace(room.premises, beds.first())
+    val voidBedspace = createVoidBedspace(room.premises, beds.first())
 
     every { realBedRepository.delete(match { it.id == beds.last().id }) } throws RuntimeException("Database Exception")
 
@@ -60,7 +60,7 @@ class DeleteRoomTest : IntegrationTestBase() {
 
     val roomFromDatabase = roomRepository.findByIdOrNull(room.id)
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
-    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(lostBed.id)
+    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(voidBedspace.id)
 
     assertThat(roomFromDatabase).isNotNull
     bedsFromDatabase.forEach { assertThat(it).isNotNull }
@@ -75,7 +75,7 @@ class DeleteRoomTest : IntegrationTestBase() {
       withRoom(room)
     }
 
-    val lostBed = createVoidBedspace(room.premises, beds.first())
+    val voidBedspace = createVoidBedspace(room.premises, beds.first())
 
     val booking = bookingEntityFactory.produceAndPersist {
       withPremises(room.premises)
@@ -91,7 +91,7 @@ class DeleteRoomTest : IntegrationTestBase() {
     val roomFromDatabase = roomRepository.findByIdOrNull(room.id)
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
     val bookingFromDatabase = bookingRepository.findByIdOrNull(booking.id)
-    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(lostBed.id)
+    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(voidBedspace.id)
 
     assertThat(roomFromDatabase).isNotNull
     bedsFromDatabase.forEach { assertThat(it).isNotNull }

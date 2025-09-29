@@ -5,6 +5,7 @@ import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns.Remove
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.sortBy
+import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -13,15 +14,21 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BookingsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.toBookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -31,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_ASSESSOR
@@ -227,7 +235,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
                 user,
                 startDate,
-              ),
+              ).third,
             )
           }
 
@@ -310,7 +318,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
                 user,
                 startDate,
-              ),
+              ).third,
             )
           }
 
@@ -413,7 +421,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
                 user,
                 startDate,
-              ),
+              ).third,
             )
           }
 
@@ -496,7 +504,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
                 user,
                 startDate,
-              ),
+              ).third,
             )
           }
 
@@ -713,7 +721,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
                 user,
                 startDate,
-              ),
+              ).third,
             )
           }
 
@@ -888,7 +896,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
                 user,
                 startDate,
-              ),
+              ).third,
             )
           }
 
@@ -967,28 +975,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
       }
     }
 
-    private fun setupPremisesWIthABedspaceAndABooking(crn: String, user: UserEntity, startDate: LocalDate): Cas3BookingEntity {
-      val premises = givenACas3Premises(
-        user.probationRegion,
-        status = Cas3PremisesStatus.online,
-      )
-      val bedspaceStartDate = startDate.minusDays(100)
-      val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withStartDate(bedspaceStartDate)
-        withCreatedDate(bedspaceStartDate)
-        withEndDate(null)
-      }
-      return cas3BookingEntityFactory.produceAndPersist {
-        withServiceName(ServiceName.temporaryAccommodation)
-        withPremises(premises)
-        withBedspace(bedspace)
-        withCrn(crn)
-        withArrivalDate(LocalDate.of(2023, 4, 5))
-        withDepartureDate(LocalDate.of(2023, 4, 7))
-      }
-    }
-
     private fun createTemporaryAccommodationApplication(
       offenderDetails: OffenderDetailSummary,
       user: UserEntity,
@@ -999,5 +985,97 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
       withDutyToReferLocalAuthorityAreaName("London")
       withSubmittedAt(OffsetDateTime.now())
     }
+  }
+
+  @Nested
+  inner class GetBedUsageReport {
+
+    @Test
+    fun `Get bed usage report returns OK with correct body`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val arrivalDate = LocalDate.parse("2023-04-05")
+          val (premises, bedspace, _) = setupPremisesWIthABedspaceAndABooking(
+            crn = offenderDetails.otherIds.crn,
+            user,
+            startDate = arrivalDate.minusDays(10),
+            arrivalDate,
+            departureDate = LocalDate.parse("2023-04-15"),
+          )
+
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          val expectedReportRows = listOf(
+            BedUsageReportRow(
+              probationRegion = user.probationRegion.name,
+              pdu = premises.probationDeliveryUnit.name,
+              localAuthority = premises.localAuthorityArea?.name,
+              propertyRef = premises.name,
+              addressLine1 = premises.addressLine1,
+              town = premises.town,
+              postCode = premises.postcode,
+              bedspaceRef = bedspace.reference,
+              crn = offenderDetails.otherIds.crn,
+              type = BedUsageType.Booking,
+              startDate = LocalDate.parse("2023-04-05"),
+              endDate = LocalDate.parse("2023-04-15"),
+              durationOfBookingDays = 10,
+              bookingStatus = BookingStatus.provisional,
+              voidCategory = null,
+              voidNotes = null,
+              costCentre = null,
+              uniquePropertyRef = premises.id.toShortBase58(),
+              uniqueBedspaceRef = bedspace.id.toShortBase58(),
+            ),
+          )
+
+          val expectedDataFrame = expectedReportRows.toDataFrame()
+
+          webTestClient.get()
+            .uri("/cas3/reports/bedUsage?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<BedUsageReportRow>(Remove)
+              assertThat(actual).isEqualTo(expectedDataFrame)
+            }
+        }
+      }
+    }
+  }
+
+  private fun setupPremisesWIthABedspaceAndABooking(
+    crn: String,
+    user: UserEntity,
+    startDate: LocalDate,
+    arrivalDate: LocalDate = LocalDate.of(2023, 4, 5),
+    departureDate: LocalDate = LocalDate.of(2023, 4, 7),
+  ): Triple<Cas3PremisesEntity, Cas3BedspacesEntity, Cas3BookingEntity> {
+    val premises = givenACas3Premises(
+      user.probationRegion,
+      status = Cas3PremisesStatus.online,
+    )
+    val bedspaceStartDate = startDate.minusDays(100)
+    val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withStartDate(bedspaceStartDate)
+      withCreatedDate(bedspaceStartDate)
+      withEndDate(null)
+    }
+    val booking = cas3BookingEntityFactory.produceAndPersist {
+      withServiceName(ServiceName.temporaryAccommodation)
+      withPremises(premises)
+      withBedspace(bedspace)
+      withCrn(crn)
+      withArrivalDate(arrivalDate)
+      withDepartureDate(departureDate)
+    }
+    return Triple(premises, bedspace, booking)
   }
 }
