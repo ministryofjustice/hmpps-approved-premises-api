@@ -38,7 +38,7 @@ data class Cas2ApplicationNoteEntity(
   val id: UUID,
 
   @Transient
-  final val createdByUser: Cas2User,
+  final val createdByUser: UnifiedUser,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
@@ -51,11 +51,15 @@ data class Cas2ApplicationNoteEntity(
   @ManyToOne
   @JoinColumn(name = "assessment_id")
   var assessment: Cas2AssessmentEntity?,
+
+  @ManyToOne
+  @JoinColumn(name = "created_by_cas2_user_id")
+  var createdByCas2User: Cas2UserEntity? = null,
 ) {
 
   /*
-  BAIL-WIP createdByNomisUser and createdByExternalUser can both be replaced by cas2user entity when the move happens
-  the cas2user was an early attempt to unify the different user types but didn't seem to get propagated across the whole
+  BAIL-WIP createdByNomisUser and createdByExternalUser can both be replaced by cas2userentity when the move happens
+  the unifiedUser was an early attempt to unify the different user types but didn't seem to get propagated across the whole
   code base.
    */
   @ManyToOne
@@ -66,22 +70,17 @@ data class Cas2ApplicationNoteEntity(
   @JoinColumn(name = "created_by_external_user_id")
   var createdByExternalUser: ExternalUserEntity? = null
 
-  @ManyToOne
-  @JoinColumn(name = "created_by_cas2_user_id")
-  var createdByCas2User: Cas2UserEntity? = null
-
   init {
     when (this.createdByUser) {
       is NomisUserEntity -> this.createdByNomisUser = this.createdByUser
       is ExternalUserEntity -> this.createdByExternalUser = this.createdByUser
-      is Cas2UserEntity -> this.createdByCas2User = this.createdByUser
     }
   }
 
-  fun getUser(): Cas2User = when {
+  fun getUser(): UnifiedUser = when {
     createdByNomisUser != null -> this.createdByNomisUser!!
     createdByExternalUser != null -> this.createdByExternalUser!!
-    else -> this.createdByCas2User!! as Cas2User
+    else -> error("No user found!")
   }
 
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
