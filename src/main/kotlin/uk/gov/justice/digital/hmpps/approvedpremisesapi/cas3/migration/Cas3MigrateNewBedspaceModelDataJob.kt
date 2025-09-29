@@ -5,6 +5,7 @@ import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
+import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -92,6 +93,7 @@ class Cas3MigrateNewBedspaceModelDataJob(
       bookings = emptyList<Cas3BookingEntity>().toMutableList(),
       startDate = premise.startDate,
       endDate = premise.endDate,
+      createdAt = premise.createdAt,
     )
   }
 
@@ -171,7 +173,7 @@ interface Cas3PremisesCharacteristicMappingRepository : JpaRepository<Cas3Premis
 
 @Entity
 @Table(name = "cas3_bedspace_characteristic_assignments")
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 data class Cas3BedspaceCharacteristicAssignmentEntity(
   @EmbeddedId
   val id: Cas3BedspaceCharacteristicAssignmentId,
@@ -179,7 +181,7 @@ data class Cas3BedspaceCharacteristicAssignmentEntity(
 
 @Entity
 @Table(name = "cas3_premises_characteristic_assignments")
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 data class Cas3PremisesCharacteristicAssignmentEntity(
   @EmbeddedId
   val id: Cas3PremisesCharacteristicAssignmentId,
