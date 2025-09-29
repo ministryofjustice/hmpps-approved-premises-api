@@ -1,7 +1,7 @@
 
 plugins {
   // this adds the appinsights agent (see AppInsightsConfigManager.kt)
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.6"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.7"
   kotlin("plugin.spring") version "2.1.21"
   kotlin("plugin.jpa") version "2.1.21"
   id("io.gitlab.arturbosch.detekt") version "1.23.8"
