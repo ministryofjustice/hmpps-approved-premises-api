@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
@@ -21,7 +22,10 @@ data class Cas3Premises(
   val totalOnlineBedspaces: Int,
   val totalUpcomingBedspaces: Int,
   val totalArchivedBedspaces: Int,
+  @Deprecated("Will be replaced with Cas3PremisesCharacteristics for v2")
   val characteristics: List<Characteristic>? = null,
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  val premisesCharacteristics: List<Cas3PremisesCharacteristic>? = null,
   val startDate: LocalDate,
   val endDate: LocalDate? = null,
   val scheduleUnarchiveDate: LocalDate? = null,
