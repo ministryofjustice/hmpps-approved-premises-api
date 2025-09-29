@@ -85,7 +85,7 @@ class Cas3ReportsController(
 
       bedUsage ->
         generateXlsxStreamingResponse { outputStream ->
-          cas3ReportService.createBedUsageReport(
+          cas3ReportService.createBedUsageReportV2(
             BedUsageReportProperties(
               ServiceName.temporaryAccommodation,
               startDate = startDate,
