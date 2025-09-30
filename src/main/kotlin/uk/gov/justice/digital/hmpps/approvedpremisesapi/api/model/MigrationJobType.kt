@@ -25,5 +25,6 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   cas1BackfillAutomaticPlacementApplications("cas1_backfill_automatic_placement_applications"),
   cas1BackfillKeyWorkerUserAssignments("cas1_backfill_key_worker_user_assignments"),
   cas1CapacityPerformanceTest("cas1_capacity_performance_test"),
+  migrateDataToCas2Tables("migrate_data_to_cas2_tables"),
   updateCas3DomainEventArchiveUnarchiveTransaction("update_cas3_domain_event_archive_unarchive_transaction"),
 }
