@@ -1107,6 +1107,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withData("""{"thingId":123}""")
+            withReleaseType("reReleasedFollowingFixedTermRecall")
           }
 
           val rawResponseBody = webTestClient.get()
@@ -1126,6 +1127,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(responseBody.createdAt).isEqualTo(applicationEntity.createdAt.toInstant())
           assertThat(responseBody.createdByUserId).isEqualTo(applicationEntity.createdByUser.id)
           assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
+          assertThat(responseBody.releaseType).isEqualTo(ReleaseTypeOption.valueOf(applicationEntity.releaseType!!))
           assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))
         }
       }
@@ -1772,7 +1774,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             translatedDocument = {},
             isWomensApplication = false,
             targetLocation = "SW1A 1AA",
-            releaseType = ReleaseTypeOption.licence,
+            releaseType = ReleaseTypeOption.reReleasedFollowingFixedTermRecall,
             sentenceType = SentenceTypeOption.nonStatutory,
             type = "CAS1",
             applicantUserDetails = Cas1ApplicationUserDetails(
@@ -1806,6 +1808,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
       assertThat(persistedApplication.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 12, 1))
+      assertThat(persistedApplication.releaseType).isEqualTo(ReleaseTypeOption.reReleasedFollowingFixedTermRecall.toString())
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }

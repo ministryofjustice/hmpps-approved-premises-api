@@ -19,6 +19,7 @@ enum class ReleaseTypeOption(@get:JsonValue val value: kotlin.String) {
   extendedDeterminateLicence("extendedDeterminateLicence"),
   paroleDirectedLicence("paroleDirectedLicence"),
   reReleasedPostRecall("reReleasedPostRecall"),
+  reReleasedFollowingFixedTermRecall("reReleasedFollowingFixedTermRecall"),
   ;
 
   companion object {
