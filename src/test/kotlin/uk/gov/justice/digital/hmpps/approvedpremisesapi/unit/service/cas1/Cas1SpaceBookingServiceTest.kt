@@ -151,41 +151,6 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Returns conflict error if a space booking already exists for the same premises and placement request`() {
-      val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
-        .withPremises(premises)
-        .withPlacementRequest(placementRequest)
-        .produce()
-
-      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
-        LockablePlacementRequestEntity(placementRequest.id)
-
-      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
-      every { cas1SpaceBookingCreateService.validate(any()) } returns CasResult.Success(validatedCreateBooking)
-      every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns listOf(existingSpaceBooking)
-
-      val result = service.createNewBooking(
-        placementRequestId = placementRequest.id,
-
-        newSpaceBooking = Cas1NewSpaceBooking(
-          arrivalDate = LocalDate.now(),
-          departureDate = LocalDate.now().plusDays(1),
-          premisesId = premises.id,
-          characteristics = emptyList(),
-          reason = null,
-        ),
-        createdBy = user,
-        characteristics = emptyList(),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
-      result as CasResult.ConflictError
-
-      assertThat(result.conflictingEntityId).isEqualTo(placementRequest.id)
-      assertThat(result.message).contains("A Space Booking already exists")
-    }
-
-    @Test
     fun `Creates new booking if all data is valid`() {
       val premises = ApprovedPremisesEntityFactory()
         .withDefaults()

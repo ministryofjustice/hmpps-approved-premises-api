@@ -254,6 +254,8 @@ class Cas1SpaceBookingTest {
               .produce(),
           )
 
+          givenACas1SpaceBooking(placementRequest = placementRequest)
+
           val response = webTestClient.post()
             .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
             .header("Authorization", "Bearer $jwt")
@@ -306,6 +308,8 @@ class Cas1SpaceBookingTest {
 
           assertThat(approvedPremisesApplicationRepository.findByIdOrNull(placementRequest.application.id)!!.status)
             .isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+
+          assertThat(cas1SpaceBookingRepository.findAllByApplication(application)).hasSize(2)
         }
       }
     }
