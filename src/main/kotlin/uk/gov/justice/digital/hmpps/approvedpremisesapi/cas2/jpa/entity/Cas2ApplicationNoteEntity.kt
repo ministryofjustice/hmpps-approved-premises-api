@@ -77,7 +77,7 @@ data class Cas2ApplicationNoteEntity(
     }
   }
 
-  fun getUser(): Cas2User = this.createdByNomisUser ?: this.createdByExternalUser ?: error("No user found!")
+  fun getUser(): UnifiedUser = this.createdByNomisUser ?: this.createdByExternalUser ?: error("No user found!")
 
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
 }
