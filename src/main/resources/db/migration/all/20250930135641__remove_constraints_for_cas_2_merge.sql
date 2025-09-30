@@ -1,0 +1,1 @@
+ALTER TABLE cas_2_application_notes DROP CONSTRAINT IF EXISTS has_user;
