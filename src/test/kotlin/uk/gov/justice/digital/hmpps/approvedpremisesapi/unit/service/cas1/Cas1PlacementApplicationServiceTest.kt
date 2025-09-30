@@ -322,6 +322,7 @@ class Cas1PlacementApplicationServiceTest {
       "notApplicable, ADDITIONAL_PLACEMENT",
       "extendedDeterminateLicence, ADDITIONAL_PLACEMENT",
       "reReleasedPostRecall, ADDITIONAL_PLACEMENT",
+      "reReleasedFollowingFixedTermRecall, ADDITIONAL_PLACEMENT",
     )
     fun `Submitting an application and inferring placement type from release type`(releaseType: String, jpaPlacementType: String) {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
