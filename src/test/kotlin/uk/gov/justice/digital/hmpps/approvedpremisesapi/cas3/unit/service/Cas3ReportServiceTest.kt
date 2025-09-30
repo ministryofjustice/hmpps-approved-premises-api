@@ -4,7 +4,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -75,15 +74,34 @@ class Cas3ReportServiceTest {
     2,
   )
 
-  @Test
-  fun `createCas3ApplicationReferralsReport successfully generate report with required information`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `createCas3ApplicationReferralsReport successfully generate report with required information`(reportsWithNewBedspaceModelTablesEnabled: Boolean) {
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 1, 31)
     val probationRegionId = UUID.randomUUID()
     val testTransitionalAccommodationReferralReportData = createDBReferralReportData()
     val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
 
-    every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns listOf(testTransitionalAccommodationReferralReportData)
+    every { mockFeatureFlagService.getBooleanFlag(eq("cas3-reports-with-new-bedspace-model-tables-enabled")) } returns reportsWithNewBedspaceModelTablesEnabled
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(testTransitionalAccommodationReferralReportData)
+    } else {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(testTransitionalAccommodationReferralReportData)
+    }
+
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
@@ -91,26 +109,55 @@ class Cas3ReportServiceTest {
 
     cas3ReportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
 
-    verify {
-      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
-        startDate,
-        endDate,
-        probationRegionId,
-      )
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
+    } else {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
     }
     verify { mockUserService.getUserForRequest() }
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
   }
 
-  @Test
-  fun `createCas3ApplicationReferralsReport successfully generate report for 3 months`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `createCas3ApplicationReferralsReport successfully generate report for 3 months`(reportsWithNewBedspaceModelTablesEnabled: Boolean) {
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 4, 1)
     val probationRegionId = UUID.randomUUID()
     val testTransitionalAccommodationReferralReportData = createDBReferralReportData()
     val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
 
-    every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns listOf(testTransitionalAccommodationReferralReportData)
+    every { mockFeatureFlagService.getBooleanFlag(eq("cas3-reports-with-new-bedspace-model-tables-enabled")) } returns reportsWithNewBedspaceModelTablesEnabled
+
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(testTransitionalAccommodationReferralReportData)
+    } else {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(testTransitionalAccommodationReferralReportData)
+    }
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 3) } returns listOf(
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
@@ -137,43 +184,83 @@ class Cas3ReportServiceTest {
 
     cas3ReportServiceWithThreeMonths.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
 
-    verify {
-      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
-        startDate,
-        endDate,
-        probationRegionId,
-      )
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
+    } else {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
     }
     verify { mockUserService.getUserForRequest() }
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 3) }
   }
 
-  @Test
-  fun `createCas3ApplicationReferralsReport successfully generate empty report`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `createCas3ApplicationReferralsReport successfully generate empty report`(reportsWithNewBedspaceModelTablesEnabled: Boolean) {
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 1, 31)
     val probationRegionId = UUID.randomUUID()
     val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
 
-    every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns emptyList()
+    every { mockFeatureFlagService.getBooleanFlag(eq("cas3-reports-with-new-bedspace-model-tables-enabled")) } returns reportsWithNewBedspaceModelTablesEnabled
+
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          any(),
+          any(),
+          any(),
+        )
+      } returns emptyList()
+    } else {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          any(),
+          any(),
+          any(),
+        )
+      } returns emptyList()
+    }
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns emptyList()
 
     cas3ReportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
 
-    verify {
-      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
-        startDate,
-        endDate,
-        probationRegionId,
-      )
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
+    } else {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
     }
     verify(exactly = 1) { mockUserService.getUserForRequest() }
     verify(exactly = 0) { mockOffenderService.getPersonSummaryInfoResults(any<Set<String>>(), any()) }
   }
 
-  @Test
-  fun `createCas3ApplicationReferralsReport includes previousReferralProbationRegionName and previousReferralPduName when present`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `createCas3ApplicationReferralsReport includes previousReferralProbationRegionName and previousReferralPduName when present`(reportsWithNewBedspaceModelTablesEnabled: Boolean) {
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 1, 31)
     val probationRegionId = UUID.randomUUID()
@@ -184,7 +271,24 @@ class Cas3ReportServiceTest {
     )
     val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
 
-    every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns listOf(testTransitionalAccommodationReferralReportData)
+    every { mockFeatureFlagService.getBooleanFlag(eq("cas3-reports-with-new-bedspace-model-tables-enabled")) } returns reportsWithNewBedspaceModelTablesEnabled
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(testTransitionalAccommodationReferralReportData)
+    } else {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(testTransitionalAccommodationReferralReportData)
+    }
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
       PersonSummaryInfoResult.Success.Full("crn-with-previous", CaseSummaryFactory().produce()),
@@ -213,19 +317,30 @@ class Cas3ReportServiceTest {
     Assertions.assertThat(row["destinationPdu"]).isEqualTo("pduName")
     Assertions.assertThat(row["outOfRegion"]).isEqualTo("Yes")
 
-    verify {
-      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
-        startDate,
-        endDate,
-        probationRegionId,
-      )
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
+    } else {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
     }
     verify { mockUserService.getUserForRequest() }
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
   }
 
-  @Test
-  fun `createCas3ApplicationReferralsReport handles null previousReferralProbationRegionName and previousReferralPduName`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `createCas3ApplicationReferralsReport handles null previousReferralProbationRegionName and previousReferralPduName`(reportsWithNewBedspaceModelTablesEnabled: Boolean) {
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 1, 31)
     val probationRegionId = UUID.randomUUID()
@@ -236,7 +351,24 @@ class Cas3ReportServiceTest {
     )
     val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
 
-    every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns listOf(testTransitionalAccommodationReferralReportData)
+    every { mockFeatureFlagService.getBooleanFlag(eq("cas3-reports-with-new-bedspace-model-tables-enabled")) } returns reportsWithNewBedspaceModelTablesEnabled
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(testTransitionalAccommodationReferralReportData)
+    } else {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(testTransitionalAccommodationReferralReportData)
+    }
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
       PersonSummaryInfoResult.Success.Full("crn-without-previous", CaseSummaryFactory().produce()),
@@ -265,7 +397,15 @@ class Cas3ReportServiceTest {
     Assertions.assertThat(row["destinationPdu"]).isNull()
     Assertions.assertThat(row["outOfRegion"]).isEqualTo("No")
 
-    verify {
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
+    } else {
       mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
         startDate,
         endDate,
@@ -276,24 +416,40 @@ class Cas3ReportServiceTest {
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
   }
 
-  @Test
-  fun `createCas3ApplicationReferralsReport successfully generate report fail when offender service call fails`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `createCas3ApplicationReferralsReport successfully generate report fail when offender service call fails`(reportsWithNewBedspaceModelTablesEnabled: Boolean) {
     val startDate = LocalDate.of(2024, 1, 1)
     val endDate = LocalDate.of(2024, 1, 31)
     val probationRegionId = UUID.randomUUID()
     val properties = TransitionalAccommodationReferralReportProperties(probationRegionId, startDate, endDate)
 
-    every {
-      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
-        any(),
-        any(),
-        any(),
+    every { mockFeatureFlagService.getBooleanFlag(eq("cas3-reports-with-new-bedspace-model-tables-enabled")) } returns reportsWithNewBedspaceModelTablesEnabled
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(
+        createDBReferralReportData("crn1"),
+        createDBReferralReportData("crn2"),
+        createDBReferralReportData("crn3"),
       )
-    } returns listOf(
-      createDBReferralReportData("crn1"),
-      createDBReferralReportData("crn2"),
-      createDBReferralReportData("crn3"),
-    )
+    } else {
+      every {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          any(),
+          any(),
+          any(),
+        )
+      } returns listOf(
+        createDBReferralReportData("crn1"),
+        createDBReferralReportData("crn2"),
+        createDBReferralReportData("crn3"),
+      )
+    }
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(setOf("crn1", "crn2", "crn3"), any(), batchSize = 2) } throws RuntimeException("some exception")
 
@@ -302,12 +458,22 @@ class Cas3ReportServiceTest {
         cas3ReportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
       }
 
-    verify {
-      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
-        startDate,
-        endDate,
-        probationRegionId,
-      )
+    if (reportsWithNewBedspaceModelTablesEnabled) {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
+    } else {
+      verify {
+        mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+          startDate,
+          endDate,
+          probationRegionId,
+        )
+      }
     }
     verify { mockUserService.getUserForRequest() }
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
