@@ -38,7 +38,7 @@ data class Cas2ApplicationNoteEntity(
   val id: UUID,
 
   @Transient
-  final val createdByUser: Cas2User,
+  final val createdByUser: UnifiedUser,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
@@ -59,7 +59,7 @@ data class Cas2ApplicationNoteEntity(
 
   /*
   BAIL-WIP createdByNomisUser and createdByExternalUser can both be replaced by cas2user entity when the move happens
-  the cas2user was an early attempt to unify the different user types but didn't seem to get propagated across the whole
+  the unifieduser was an early attempt to unify the different user types but didn't seem to get propagated across the whole
   code base.
    */
   @ManyToOne
@@ -77,7 +77,7 @@ data class Cas2ApplicationNoteEntity(
     }
   }
 
-  fun getUser(): Cas2User = this.createdByNomisUser ?: this.createdByExternalUser ?: error("No user found!")
+  fun getUser(): UnifiedUser = this.createdByNomisUser ?: this.createdByExternalUser ?: error("No user found!")
 
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
 }

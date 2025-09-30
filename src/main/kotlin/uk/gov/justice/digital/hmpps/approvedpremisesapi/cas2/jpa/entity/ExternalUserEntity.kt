@@ -29,6 +29,6 @@ data class ExternalUserEntity(
   override var email: String,
 
   val createdAt: OffsetDateTime = OffsetDateTime.now(),
-) : Cas2User {
+) : UnifiedUser {
   override fun toString() = "External user $id"
 }
