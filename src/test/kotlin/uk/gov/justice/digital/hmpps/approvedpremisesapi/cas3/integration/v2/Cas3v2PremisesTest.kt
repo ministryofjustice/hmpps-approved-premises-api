@@ -4,28 +4,164 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.failsWithValidationMessages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withForbiddenMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withNotFoundMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.util.UUID
 
 class Cas3v2PremisesTest : IntegrationTestBase() {
+
+  @Autowired
+  private lateinit var cas3PremisesTransformer: Cas3PremisesTransformer
 
   fun createCharacteristics(count: Int = 1): List<Cas3PremisesCharacteristicEntity> = cas3PremisesCharacteristicEntityFactory.produceAndPersistMultiple(count).sortedBy { it.name }
 
   fun createPdu(probationRegionEntity: ProbationRegionEntity) = probationDeliveryUnitFactory.produceAndPersist {
     withProbationRegion(probationRegionEntity)
+  }
+
+  @Nested
+  inner class UpdatePremises {
+
+    private fun doPutRequest(
+      jwt: String,
+      premisesId: UUID,
+      cas3Premises: Cas3UpdatePremises,
+    ) = webTestClient.put()
+      .uri("/cas3/v2/premises/$premisesId")
+      .headers(buildTemporaryAccommodationHeaders(jwt))
+      .bodyValue(cas3Premises)
+      .exchange()
+
+    private fun buildUpdatedPremises(
+      pdu: ProbationDeliveryUnitEntity,
+      characteristicIds: List<UUID> = emptyList(),
+      reference: String = randomStringMultiCaseWithNumbers(10),
+    ) = Cas3UpdatePremises(
+      reference = reference,
+      addressLine1 = randomStringMultiCaseWithNumbers(25),
+      addressLine2 = randomStringMultiCaseWithNumbers(10),
+      postcode = randomPostCode(),
+      town = randomNumberChars(10),
+      notes = randomStringMultiCaseWithNumbers(100),
+      probationRegionId = pdu.probationRegion.id,
+      probationDeliveryUnitId = pdu.id,
+      localAuthorityAreaId = null,
+      characteristicIds = characteristicIds,
+      turnaroundWorkingDayCount = 59,
+    )
+
+    @Test
+    fun `Update premises returns 200 OK with correct body`() {
+      givenAUser { user, jwt ->
+        val premises = givenACas3Premises(user.probationRegion)
+        val newCharacteristic = cas3PremisesCharacteristicEntityFactory.produceAndPersist()
+        val updatedPremises = buildUpdatedPremises(premises.probationDeliveryUnit, listOf(newCharacteristic.id))
+
+        val result = doPutRequest(jwt, premises.id, updatedPremises)
+          .expectStatus()
+          .isOk()
+          .bodyAsObject<Cas3Premises>()
+
+        assertAll({
+          assertThat(result.id).isEqualTo(premises.id)
+          assertThat(result.reference).isEqualTo(updatedPremises.reference)
+          assertThat(result.addressLine1).isEqualTo(updatedPremises.addressLine1)
+          assertThat(result.addressLine2).isEqualTo(updatedPremises.addressLine2)
+          assertThat(result.town).isEqualTo(updatedPremises.town)
+          assertThat(result.postcode).isEqualTo(updatedPremises.postcode)
+          assertThat(result.localAuthorityArea).isNull()
+          assertThat(result.probationRegion.id).isEqualTo(premises.probationDeliveryUnit.probationRegion.id)
+          assertThat(result.probationDeliveryUnit.id).isEqualTo(premises.probationDeliveryUnit.id)
+          assertThat(result.status).isEqualTo(Cas3PremisesStatus.online)
+          assertThat(result.totalOnlineBedspaces).isEqualTo(0)
+          assertThat(result.totalUpcomingBedspaces).isEqualTo(0)
+          assertThat(result.totalArchivedBedspaces).isEqualTo(0)
+          assertThat(result.characteristics).isNull()
+          assertThat(result.premisesCharacteristics).hasSize(1)
+          assertThat(result.premisesCharacteristics!!.first().id).isEqualTo(newCharacteristic.id)
+          assertThat(result.startDate).isEqualTo(premises.startDate)
+          assertThat(result.endDate).isNull()
+          assertThat(result.scheduleUnarchiveDate).isNull()
+          assertThat(result.notes).isEqualTo(updatedPremises.notes)
+          assertThat(result.turnaroundWorkingDays).isEqualTo(59)
+          assertThat(result.archiveHistory).isEmpty()
+        })
+        val entity = cas3PremisesRepository.findById(premises.id).get()
+        assertThat(result).isEqualTo(
+          cas3PremisesTransformer.toCas3Premises(
+            entity,
+            TemporaryAccommodationPremisesTotalBedspacesByStatus(premises.id, 0, 0, 0),
+          ),
+        )
+      }
+    }
+
+    @Test
+    fun `Update premises returns 403 Forbidden when user access is not allowed as they are out of region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (_, anotherJwt) = givenAUser(
+          roles = listOf(UserRole.CAS3_ASSESSOR),
+        )
+        val premises = givenACas3Premises(user.probationRegion)
+        val updatedPremises = buildUpdatedPremises(premises.probationDeliveryUnit)
+
+        doPutRequest(anotherJwt, premises.id, updatedPremises)
+          .expectStatus()
+          .isForbidden
+          .withForbiddenMessage()
+      }
+    }
+
+    @Test
+    fun `Update premises returns 404 when premises to update is not found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(user.probationRegion)
+        val updatedPremises = buildUpdatedPremises(premises.probationDeliveryUnit)
+
+        val id = UUID.randomUUID()
+
+        doPutRequest(jwt, id, updatedPremises)
+          .expectStatus()
+          .isNotFound
+          .withNotFoundMessage("No Cas3Premises with an ID of $id could be found")
+      }
+    }
+
+    @Test
+    fun `Update premises returns 400 error when premises name already used in probation region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(probationDeliveryUnit = user.probationDeliveryUnit!!)
+        val anotherPremises = givenACas3Premises(probationDeliveryUnit = user.probationDeliveryUnit!!)
+        val updatedPremises = buildUpdatedPremises(premises.probationDeliveryUnit, reference = anotherPremises.name)
+
+        doPutRequest(jwt, premises.id, updatedPremises)
+          .expectStatus()
+          .is4xxClientError
+          .failsWithValidationMessages(InvalidParam(propertyName = "$.reference", errorType = "notUnique"))
+      }
+    }
   }
 
   @Nested

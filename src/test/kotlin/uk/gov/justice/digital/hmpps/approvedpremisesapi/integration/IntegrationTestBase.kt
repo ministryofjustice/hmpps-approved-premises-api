@@ -1018,6 +1018,12 @@ abstract class InitialiseDatabasePerClassTestBase : IntegrationTestBase() {
   }
 }
 
+fun WebTestClient.ResponseSpec.withForbiddenMessage(message: String = "You are not authorized to access this endpoint"): WebTestClient.BodyContentSpec = this.expectStatus()
+  .isForbidden.expectBody()
+  .jsonPath("title").isEqualTo("Forbidden")
+  .jsonPath("status").isEqualTo(403)
+  .jsonPath("detail").isEqualTo(message)
+
 fun WebTestClient.ResponseSpec.withNotFoundMessage(message: String): WebTestClient.BodyContentSpec = this.expectStatus()
   .isNotFound.expectBody()
   .jsonPath("title").isEqualTo("Not Found")
