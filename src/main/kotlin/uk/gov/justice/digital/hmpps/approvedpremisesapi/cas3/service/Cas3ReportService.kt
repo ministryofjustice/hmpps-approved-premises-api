@@ -73,11 +73,18 @@ class Cas3ReportService(
     outputStream: OutputStream,
   ) {
     log.info("Beginning CAS3 Application Referrals Report")
-    val referralsInScope = transitionalAccommodationReferralReportRowRepository.findAllReferrals(
-      startDate = properties.startDate,
-      endDate = properties.endDate,
-      probationRegionId = properties.probationRegionId,
-    )
+    val referralsInScope = when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
+      true -> transitionalAccommodationReferralReportRowRepository.findAllReferralsV2(
+        startDate = properties.startDate,
+        endDate = properties.endDate,
+        probationRegionId = properties.probationRegionId,
+      )
+      false -> transitionalAccommodationReferralReportRowRepository.findAllReferrals(
+        startDate = properties.startDate,
+        endDate = properties.endDate,
+        probationRegionId = properties.probationRegionId,
+      )
+    }
 
     log.info("${referralsInScope.size} referrals found.")
 
