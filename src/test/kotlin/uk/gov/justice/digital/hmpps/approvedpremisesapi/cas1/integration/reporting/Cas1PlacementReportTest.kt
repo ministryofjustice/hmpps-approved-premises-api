@@ -210,12 +210,13 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
             .convertTo<PlacementReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(4)
+          assertThat(actual.size).isEqualTo(5)
 
           bookingWithCanonicalDepartureDateWithinRange.assertRow(actual[0])
           bookingWithNonArrivalConfirmedDateWithinRange.assertRow(actual[1])
           bookingWithCanonicalArrivalDateWithinRange.assertRow(actual[2])
-          bookingWithCancellationDateWithinRange.assertRow(actual[3])
+          bookingWithCanonicalArrivalDateWithinRange.assertRow(actual[3])
+          bookingWithCancellationDateWithinRange.assertRow(actual[4])
         }
     }
   }
@@ -254,19 +255,20 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
             .convertTo<PlacementReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(4)
+          assertThat(actual.size).isEqualTo(5)
 
           bookingWithCanonicalDepartureDateWithinRange.assertRow(actual[0])
           bookingWithNonArrivalConfirmedDateWithinRange.assertRow(actual[1])
           bookingWithCanonicalArrivalDateWithinRange.assertRow(actual[2])
-          bookingWithCancellationDateWithinRange.assertRow(actual[3])
+          bookingWithCanonicalArrivalDateWithinRange.assertRow(actual[3])
+          bookingWithCancellationDateWithinRange.assertRow(actual[4])
         }
     }
   }
 
   inner class BookingWithCanonicalArrivalDateWithinRange {
     lateinit var application: ApprovedPremisesApplicationEntity
-    lateinit var booking: Cas1SpaceBookingEntity
+    lateinit var bookings: List<Cas1SpaceBookingEntity>
 
     fun createBooking() {
       application = createSubmitAndAssessedApplication(
@@ -285,7 +287,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         ),
       )
 
-      booking = cas1SpaceBookingEntityFactory.produceAndPersist {
+      bookings = cas1SpaceBookingEntityFactory.produceAndPersistMultiple(2) {
         withCrn("CRN")
         withPremises(premises)
         withPlacementRequest(application.placementRequests[0])
@@ -309,7 +311,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
     }
 
     fun assertRow(row: PlacementReportRow) {
-      assertThat(row.placement_id).isEqualTo(booking.id.toString())
+      assertThat(row.placement_id).isIn(bookings.map { it.id.toString() })
       assertThat(row.expected_arrival_date).isEqualTo("2024-02-07")
       assertThat(row.expected_departure_date).isEqualTo("2024-05-10")
       assertThat(row.actual_arrival_date).isEqualTo("2024-02-07")
