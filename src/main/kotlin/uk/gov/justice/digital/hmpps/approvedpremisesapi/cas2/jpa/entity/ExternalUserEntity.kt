@@ -25,10 +25,10 @@ data class ExternalUserEntity(
   val username: String,
   var isEnabled: Boolean,
   var origin: String,
-  override var name: String,
-  override var email: String,
+  var name: String,
+  var email: String,
 
   val createdAt: OffsetDateTime = OffsetDateTime.now(),
-) : UnifiedUser {
+) {
   override fun toString() = "External user $id"
 }
