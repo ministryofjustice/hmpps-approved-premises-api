@@ -115,7 +115,9 @@ class SeedCas2ApplicationTest : SeedTestBase() {
       withUsername("ROGER_SMITH_FAKE")
     }
 
-    externalUserEntityFactory.produceAndPersist()
+    cas2UserEntityFactory.produceAndPersist {
+      withUserType(Cas2UserType.EXTERNAL)
+    }
 
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
@@ -164,7 +166,8 @@ class SeedCas2ApplicationTest : SeedTestBase() {
       withUsername("ROGER_SMITH_FAKE")
     }
 
-    externalUserEntityFactory.produceAndPersist {
+    cas2UserEntityFactory.produceAndPersist {
+      withUserType(Cas2UserType.EXTERNAL)
       withUsername("CAS2_ASSESSOR")
     }
 
@@ -202,7 +205,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(persistedApplication.statusUpdates).isNotEmpty()
     assertThat(persistedApplication.statusUpdates!!.size).isEqualTo(2)
     persistedApplication.statusUpdates!!.forEach { statusUpdate ->
-      assertThat(statusUpdate.assessor.username).isEqualTo("CAS2_ASSESSOR")
+      assertThat(statusUpdate.assessor?.username).isEqualTo("CAS2_ASSESSOR")
     }
   }
 

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
@@ -28,7 +27,7 @@ class ApplicationNoteTransformerTest {
   inner class WithExternalUser {
     @Test
     fun `transforms JPA Cas2ApplicationNote db entity to API representation`() {
-      val externalUser = ExternalUserEntityFactory().produce()
+      val externalUser = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
       val createdAt = OffsetDateTime.now().randomDateTimeBefore(1)
       val jpaEntity = Cas2ApplicationNoteEntity(
         id = UUID.randomUUID(),
@@ -42,8 +41,8 @@ class ApplicationNoteTransformerTest {
       val expectedRepresentation = Cas2ApplicationNote(
         id = jpaEntity.id,
         createdAt = createdAt.toInstant(),
-        email = jpaEntity.getUser().email!!,
-        name = jpaEntity.getUser().name,
+        email = jpaEntity.createdByUser.email!!,
+        name = jpaEntity.createdByUser.name,
         body = jpaEntity.body,
       )
 
@@ -71,8 +70,8 @@ class ApplicationNoteTransformerTest {
       val expectedRepresentation = Cas2ApplicationNote(
         id = jpaEntity.id,
         createdAt = createdAt.toInstant(),
-        email = jpaEntity.getUser().email!!,
-        name = jpaEntity.getUser().name,
+        email = jpaEntity.createdByUser.email!!,
+        name = jpaEntity.createdByUser.name,
         body = jpaEntity.body,
       )
 
