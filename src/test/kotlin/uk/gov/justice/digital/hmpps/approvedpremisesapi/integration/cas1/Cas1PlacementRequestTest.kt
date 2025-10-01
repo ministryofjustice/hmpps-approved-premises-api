@@ -1299,6 +1299,8 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               assertThat(response.isWithdrawn).isEqualTo(cas1PlacementRequestDetail.isWithdrawn)
               assertThat(response.spaceBookings).isEqualTo(cas1PlacementRequestDetail.spaceBookings)
               assertThat(response.spaceBookings).size().isEqualTo(2)
+              assertThat(response.spaceBookings[0].createdAt).isNotNull()
+              assertThat(response.spaceBookings[1].createdAt).isNotNull()
               assertThat(response.openChangeRequests).isEqualTo(cas1PlacementRequestDetail.openChangeRequests)
               assertThat(response.notes).isEqualTo(cas1PlacementRequestDetail.notes)
               assertThat(response.booking).isEqualTo(cas1PlacementRequestDetail.booking)
