@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -45,7 +45,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Applications`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2UserEntity()
+    val user = cas2NomisUserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
 
@@ -75,7 +75,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Application with assessment`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2UserEntity()
+    val user = cas2NomisUserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
@@ -106,7 +106,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Application with Note`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2UserEntity()
+    val user = cas2NomisUserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
@@ -140,13 +140,13 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Application with Note and Status update`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2UserEntity()
-    val externalAssessor = externalUserEntity()
+    val user = cas2NomisUserEntity()
+    val assessor = cas2ExternalUserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, externalAssessor)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
 
     val result = sarService.getCAS2Result(
@@ -176,13 +176,13 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Domain Events`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2UserEntity()
-    val externalAssessor = externalUserEntity()
+    val user = cas2NomisUserEntity()
+    val assessor = cas2ExternalUserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, externalAssessor)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
     val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, ServiceName.cas2)
 
@@ -229,8 +229,8 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       	"noms_number": "${statusUpdate.application.nomsNumber}", 
       	"application_id": "${statusUpdate.application.id}",
       	"assessment_id": "${statusUpdate.assessment!!.id}",
-      	"assessor_name": "${statusUpdate.assessor.name}",
-        "assessor_origin": "${statusUpdate.assessor.origin}",
+      	"assessor_name": "${statusUpdate.assessor?.name}",
+        "assessor_origin": "${statusUpdate.assessor?.externalType}",
       	"created_at": "${statusUpdate.createdAt.toStandardisedFormat()}",
         "description": "${statusUpdate.description}",
         "label": "${statusUpdate.label}"
@@ -244,7 +244,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "noms_number": "${applicationNotes.application.nomsNumber}",
       "application_id": "${applicationNotes.application.id}",
       "assessment_id": "${applicationNotes.assessment!!.id}",
-      "created_by_user": "${applicationNotes.getUser().name}",
+      "created_by_user": "${applicationNotes.createdByUser.name}",
       "created_by_user_type": "NOMIS",
       "body": "${applicationNotes.body}"
   }
@@ -298,12 +298,12 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   private fun cas2StatusUpdateEntity(
     application: Cas2ApplicationEntity,
     assessment: Cas2AssessmentEntity,
-    externalAssessor: ExternalUserEntity,
+    assessor: Cas2UserEntity,
   ): Cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
     withStatusId(UUID.randomUUID())
-    withAssessor(externalAssessor)
+    withAssessor(assessor)
     withLabel("Some Label")
     withDescription("Some Description")
   }
@@ -314,10 +314,10 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withStatusDetailId(UUID.randomUUID())
   }
 
-  private fun externalUserEntity() = externalUserEntityFactory.produceAndPersist {
+  private fun externalUserEntity() = cas2UserEntityFactory.produceAndPersist {
+    withUserType(Cas2UserType.EXTERNAL)
     withName(randomStringMultiCaseWithNumbers(12))
     withEmail(randomEmailAddress())
-    withOrigin("NACRO")
     withUsername(randomStringMultiCaseWithNumbers(10))
   }
 
@@ -347,12 +347,21 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withPreferredAreas("some areas")
   }
 
-  private fun cas2UserEntity() = cas2UserEntityFactory.produceAndPersist {
+  private fun cas2NomisUserEntity() = cas2UserEntityFactory.produceAndPersist {
     withName(randomStringMultiCaseWithNumbers(12))
     withEmail(randomEmailAddress())
     withUsername(randomStringMultiCaseWithNumbers(7))
     withActiveNomisCaseloadId(randomStringMultiCaseWithNumbers(3))
     withNomisStaffCode(9L)
     withNomisStaffIdentifier(90L)
+    withUserType(Cas2UserType.NOMIS)
+  }
+
+  private fun cas2ExternalUserEntity() = cas2UserEntityFactory.produceAndPersist {
+    withName(randomStringMultiCaseWithNumbers(12))
+    withEmail(randomEmailAddress())
+    withUsername(randomStringMultiCaseWithNumbers(7))
+    withUserType(Cas2UserType.EXTERNAL)
+    withExternalType("NACRO")
   }
 }

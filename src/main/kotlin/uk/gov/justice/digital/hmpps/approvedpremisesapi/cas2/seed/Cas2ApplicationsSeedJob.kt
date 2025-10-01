@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
@@ -28,8 +27,7 @@ import java.util.UUID
 @SuppressWarnings("LongParameterList")
 class Cas2ApplicationsSeedJob(
   private val repository: Cas2ApplicationRepository,
-  private val userRepository: Cas2UserRepository,
-  private val externalUserRepository: ExternalUserRepository,
+  private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
@@ -58,7 +56,7 @@ class Cas2ApplicationsSeedJob(
     }
 
     @SuppressWarnings("TooGenericExceptionThrown")
-    val applicant = userRepository.findByUsernameAndUserType(row.createdBy, Cas2UserType.NOMIS) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
+    val applicant = cas2UserRepository.findByUsernameAndUserType(row.createdBy, Cas2UserType.NOMIS) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
 
     try {
       createApplication(row, applicant)
@@ -104,7 +102,7 @@ class Cas2ApplicationsSeedJob(
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     log.info("Seeding status update $idx for application ${application.id}")
-    val assessor = externalUserRepository.findAll().random()
+    val assessor = cas2UserRepository.findByUserType(Cas2UserType.EXTERNAL).random()
     val status = findStatusAtPosition(idx)
     statusUpdateRepository.save(
       Cas2StatusUpdateEntity(

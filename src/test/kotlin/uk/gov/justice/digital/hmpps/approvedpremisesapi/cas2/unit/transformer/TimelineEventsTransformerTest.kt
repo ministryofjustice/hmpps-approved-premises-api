@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
@@ -48,7 +47,7 @@ class TimelineEventsTransformerTest {
         .withLabel("status update")
         .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
-          ExternalUserEntityFactory().withName("Anne Assessor")
+          Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).withName("Anne Assessor")
             .produce(),
         ).produce()
 
@@ -74,7 +73,7 @@ class TimelineEventsTransformerTest {
         .withLabel("status update with details")
         .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
-          ExternalUserEntityFactory().withName("Anne Other Assessor")
+          Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).withName("Anne Other Assessor")
             .produce(),
         )
         .produce()
@@ -154,21 +153,21 @@ class TimelineEventsTransformerTest {
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusWithDetailCreatedAt.toInstant(),
             label = statusUpdateWithDetailsEntity.label,
-            createdByName = statusUpdateWithDetailsEntity.assessor.name,
+            createdByName = statusUpdateWithDetailsEntity.assessor?.name,
             body = "first detail, second detail",
           ),
           Cas2TimelineEvent(
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusCreatedAt.toInstant(),
             label = statusUpdateEntity.label,
-            createdByName = statusUpdateEntity.assessor.name,
+            createdByName = statusUpdateEntity.assessor?.name,
             body = null,
           ),
           Cas2TimelineEvent(
             type = TimelineEventType.cas2Note,
             occurredAt = noteCreatedAt.toInstant(),
             label = "Note",
-            createdByName = note.getUser().name,
+            createdByName = note.createdByUser.name,
             body = "a comment",
           ),
           Cas2TimelineEvent(

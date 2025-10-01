@@ -39,7 +39,7 @@ class StatusUpdateTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockExternalUserTransformer.transformJpaToApi(any()) } returns mockExternalUserApi
+    every { mockExternalUserTransformer.transformJpaToApi(ofType()) } returns mockExternalUserApi
   }
 
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by NomisUser`() {

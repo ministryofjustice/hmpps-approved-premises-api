@@ -182,12 +182,12 @@ class Cas2MergeMigrationJob(
       id = it.id,
       statusId = it.statusId,
       application = it.application,
-      assessor = it.assessor,
+      assessor = cas2UserRepository.findByIdAndUserType(it.externalAssessor!!.id, Cas2UserType.EXTERNAL),
       description = it.description,
       label = it.label,
       createdAt = it.createdAt,
       assessment = it.assessment,
-      cas2UserAssessor = cas2UserRepository.findById(it.assessor.id).get(),
+      externalAssessor = it.externalAssessor,
     )
   }
 
@@ -212,12 +212,12 @@ class Cas2MergeMigrationJob(
       id = it.id,
       statusId = it.statusId,
       application = application,
-      assessor = externalUserRepository.findById(UUID.fromString(FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER)).get(),
+      externalAssessor = externalUserRepository.findById(UUID.fromString(FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER)).get(),
       description = it.description,
       label = it.label,
       createdAt = it.createdAt,
       assessment = application.assessment,
-      cas2UserAssessor = cas2UserRepository.findById(it.assessor.id).get(),
+      assessor = cas2UserRepository.findByIdAndUserType(it.assessor.id, Cas2UserType.EXTERNAL),
     )
   }
 
@@ -225,7 +225,7 @@ class Cas2MergeMigrationJob(
     Cas2ApplicationEntity(
       id = it.id,
       crn = it.crn,
-      createdByUser = cas2UserRepository.findById(it.createdByNomisUser!!.id).get(),
+      createdByUser = cas2UserRepository.findByIdAndUserType(it.createdByNomisUser!!.id),
       createdByNomisUser = it.createdByNomisUser,
       data = it.data,
       document = it.document,
@@ -274,7 +274,7 @@ class Cas2MergeMigrationJob(
       id = it.id,
       crn = it.crn,
       createdByNomisUser = nomisUserRepository.findById(UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER)).get(),
-      createdByUser = cas2UserRepository.findById(it.createdByUser.id).get(),
+      createdByUser = cas2UserRepository.findByIdAndUserType(it.createdByUser.id, Cas2UserType.NOMIS),
       data = it.data,
       document = it.document,
       createdAt = it.createdAt,
@@ -311,7 +311,7 @@ class Cas2MergeMigrationJob(
       id = it.id,
       name = it.name,
       email = it.email,
-      createdAt = it.createdAt!!,
+      createdAt = it.createdAt,
       updatedAt = OffsetDateTime.now(),
       isActive = it.isActive,
       isEnabled = it.isEnabled,
@@ -331,7 +331,7 @@ class Cas2MergeMigrationJob(
       id = it.id,
       name = it.name,
       email = it.email,
-      createdAt = it.createdAt!!,
+      createdAt = it.createdAt,
       updatedAt = OffsetDateTime.now(),
       isActive = true,
       isEnabled = it.isEnabled,

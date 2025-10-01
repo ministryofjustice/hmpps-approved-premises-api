@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import java.util.UUID
-import kotlin.jvm.optionals.getOrElse
 
 @Service
 class Cas2EmailService(
@@ -53,12 +52,6 @@ class Cas2EmailService(
         "receivingPrisonName" to newOmu.prisonName,
       ),
     )
-
-    println("hello")
-    println(application.id)
-    println(application.createdByUser!!.id)
-    println(application.createdByUser!!.name)
-    println(application.createdByUser!!.createdAt)
 
     emailNotificationService.sendCas2Email(
       newOmu.email,

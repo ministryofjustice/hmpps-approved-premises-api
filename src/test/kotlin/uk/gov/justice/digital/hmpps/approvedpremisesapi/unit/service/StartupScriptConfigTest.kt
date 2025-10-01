@@ -14,8 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -37,9 +35,6 @@ class StartupScriptConfigTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockApplicationEntity = mockk<Cas2ApplicationEntity>(relaxed = true)
 
-  private val mockExternalUserRepository = mockk<ExternalUserRepository>()
-  private val mockExternalUserEntity = mockk<ExternalUserEntity>()
-
   private val mockStatusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val mockStatusUpdateEntity = mockk<Cas2StatusUpdateEntity>()
 
@@ -57,7 +52,6 @@ class StartupScriptConfigTest {
     seedConfig,
     mockCas2UserRepository,
     mockApplicationRepository,
-    mockExternalUserRepository,
     mockStatusUpdateRepository,
     mockAssessmentRepository,
     mockApplicationService,
@@ -76,8 +70,6 @@ class StartupScriptConfigTest {
 
     every { mockCas2UserRepository.findAll() } answers { listOf(mockCas2UserEntity) }
     every { mockCas2UserEntity.username } answers { "SMITHJ_GEN" }
-
-    every { mockExternalUserRepository.findAll() } answers { listOf(mockExternalUserEntity) }
 
     every { mockApplicationRepository.save(any()) } answers { mockApplicationEntity }
     every { mockApplicationRepository.saveAndFlush(any()) } answers { mockApplicationEntity }
