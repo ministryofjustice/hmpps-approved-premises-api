@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
-import java.util.Optional
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)

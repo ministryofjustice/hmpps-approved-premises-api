@@ -98,12 +98,10 @@ class Cas2SubjectAccessRequestRepository(
           	can.application_id,
           	can.assessment_id, 
           	case 
-          		when created_by_external_user_id is not null then eu."name"
           		when can.created_by_cas2_user_id is not null then cu."name"
           		else 'unknown'
           	end as created_by_user,
           	case 
-          		when created_by_external_user_id is not null then 'external'
           		when can.created_by_cas2_user_id is not null then cu.user_type
           		else 'unknown'
           	end as created_by_user_type,
@@ -111,8 +109,6 @@ class Cas2SubjectAccessRequestRepository(
           from cas_2_application_notes can 
           inner join cas_2_applications ca on
           	ca.id  = can.application_id 
-          left join external_users eu on 
-          	eu.id = can.created_by_external_user_id
           left join cas_2_users cu on cu.id = can.created_by_cas2_user_id and cu.user_type = 'NOMIS'
           where 
           	(ca.crn = :crn
@@ -137,16 +133,16 @@ class Cas2SubjectAccessRequestRepository(
               ca.noms_number, 
               csu.application_id,
               csu.assessment_id,
-              eu."name" as assessor_name,
-              eu.origin as assessor_origin,
+              u."name" as assessor_name,
+              u.external_type as assessor_origin,
               to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
               csu.description ,
               csu."label"
           from cas_2_status_updates csu 
           inner join cas_2_applications ca
               on ca.id =csu.application_id
-          inner join external_users eu 
-              on eu.id = csu.assessor_id
+          inner join cas_2_users u 
+              on u.id = csu.cas2_user_assessor_id  and u.user_type = 'EXTERNAL'
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )
@@ -179,8 +175,8 @@ class Cas2SubjectAccessRequestRepository(
         	on csu.id  = csud.status_update_id 
         inner join cas_2_applications ca
         	on ca.id =csu.application_id
-        inner join external_users eu 
-        	on eu.id = csu.assessor_id 
+        inner join cas_2_users u 
+        	on u.id = csu.cas2_user_assessor_id and u.user_type = 'EXTERNAL'
         where 
         	(ca.crn = :crn
         		or ca.noms_number = :noms_number )

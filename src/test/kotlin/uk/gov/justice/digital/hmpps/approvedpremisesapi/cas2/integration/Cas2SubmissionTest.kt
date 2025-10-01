@@ -173,7 +173,7 @@ class Cas2SubmissionTest(
   inner class GetToIndex {
     @Test
     fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API `() {
-      externalUserRepository.deleteAll()
+      cas2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -195,7 +195,7 @@ class Cas2SubmissionTest(
         .isOk
 
       assertThat(
-        externalUserRepository.findByUsername(username),
+        cas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.EXTERNAL),
       ).isNotNull
     }
 
@@ -330,8 +330,8 @@ class Cas2SubmissionTest(
     }
 
     @Test
-    fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API`() {
-      externalUserRepository.deleteAll()
+    fun `Previously unknown Assessor has an Cas2User record created from details retrieved from Manage-Users API`() {
+      cas2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -353,7 +353,7 @@ class Cas2SubmissionTest(
         .isNotFound
 
       assertThat(
-        externalUserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+        cas2UserRepository.findByUsernameAndUserType("PREVIOUSLY_UNKNOWN_ASSESSOR", Cas2UserType.EXTERNAL),
       ).isNotNull
     }
 

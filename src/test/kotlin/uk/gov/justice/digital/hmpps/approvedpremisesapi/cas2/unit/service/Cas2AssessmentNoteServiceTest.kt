@@ -15,7 +15,6 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
@@ -26,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -44,7 +42,6 @@ class Cas2AssessmentNoteServiceTest {
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
   private val mockApplicationNoteRepository = mockk<Cas2ApplicationNoteRepository>()
   private val mockUserService = mockk<Cas2UserService>()
-  private val mockExternalUserService = mockk<ExternalUserService>()
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockUserAccessService = mockk<Cas2UserAccessService>()
@@ -55,7 +52,6 @@ class Cas2AssessmentNoteServiceTest {
     mockAssessmentRepository,
     mockApplicationNoteRepository,
     mockUserService,
-    mockExternalUserService,
     mockHttpAuthService,
     mockEmailNotificationService,
     mockUserAccessService,
@@ -443,7 +439,7 @@ class Cas2AssessmentNoteServiceTest {
 
     @Nested
     inner class AsExternalUser {
-      private val externalUser = ExternalUserEntityFactory().produce()
+      private val externalUser = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
 
       @BeforeEach
       fun setup() {
@@ -474,7 +470,7 @@ class Cas2AssessmentNoteServiceTest {
           assessment = assessment,
         )
         every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
-        every { mockExternalUserService.getUserForRequest() } returns externalUser
+        every { mockUserService.getUserForRequest() } returns externalUser
         every { cas2EmailService.getReferrerEmail(any()) } returns "email"
         every { mockApplicationNoteRepository.save(any()) } answers
           {
@@ -535,7 +531,7 @@ class Cas2AssessmentNoteServiceTest {
         )
 
         every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
-        every { mockExternalUserService.getUserForRequest() } returns externalUser
+        every { mockUserService.getUserForRequest() } returns externalUser
         every { cas2EmailService.getReferrerEmail(any()) } answers { callOriginal() }
         every { mockApplicationNoteRepository.save(any()) } answers
           {

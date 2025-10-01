@@ -81,7 +81,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     }.take(NO_OF_CAS2V2_USERS_TO_MIGRATE).toList()
     cas2v2Applications = generateSequence {
       cas2v2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(cas2v2Users.random())
+        withCreatedByUser(cas2v2Users.filter { it.userType == Cas2v2UserType.NOMIS }.random())
       }
     }.take(NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE).toList()
     cas2v2Assessments = cas2v2Applications.map {
@@ -102,12 +102,12 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
       cas2v2ApplicationRepository.save(it)
       applicationNote
     }
-    cas2v2StatusUpdates = cas2v2Applications.map {
+    cas2v2StatusUpdates = cas2v2Applications.map { it ->
       val statusUpdate = cas2v2StatusUpdateEntityFactory.produceAndPersist {
         withApplication(it)
         withAssessment(it.assessment!!)
         withCreatedAt(OffsetDateTime.parse("2021-09-19T13:00:13.530161Z"))
-        withAssessor(cas2v2Users.filter { it.userType == Cas2v2UserType.EXTERNAL }.random())
+        withAssessor(cas2v2Users.filter { user -> user.userType == Cas2v2UserType.EXTERNAL }.random())
         withDescription(randomStringUpperCase(8))
       }
       cas2v2ApplicationRepository.save(it)
@@ -137,7 +137,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     cas2StatusUpdates = generateSequence {
       cas2StatusUpdateEntityFactory.produceAndPersist {
         withApplication(cas2Applications.random())
-        withAssessor(externalUsers.random())
+        withExternalAssessor(externalUsers.random())
       }
     }.take(NO_OF_CAS_2_STATUS_UPDATES_TO_UPDATE).toList()
     cas2ApplicationNotes = cas2Applications.map {
@@ -293,7 +293,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
           cas2v2StatusUpdateEntity = cas2v2StatusUpdate,
         )
       } else {
-        assertThat(cas2StatusUpdate.cas2UserAssessor!!.id).isEqualTo(cas2StatusUpdate.cas2UserAssessor!!.id)
+        assertThat(cas2StatusUpdate.assessor!!.id).isEqualTo(cas2StatusUpdate.cas2UserAssessor!!.id)
       }
     }
   }
@@ -426,8 +426,8 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     assertThat(cas2StatusUpdateEntity.id).isEqualTo(cas2v2StatusUpdateEntity.id)
     assertThat(cas2StatusUpdateEntity.statusId).isEqualTo(cas2v2StatusUpdateEntity.statusId)
     assertThat(cas2StatusUpdateEntity.application.id).isEqualTo(cas2v2StatusUpdateEntity.application.id)
-    assertThat(cas2StatusUpdateEntity.cas2UserAssessor?.id).isEqualTo(cas2v2StatusUpdateEntity.assessor.id)
-    assertThat(cas2StatusUpdateEntity.assessor.id.toString()).isEqualTo(FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER)
+    assertThat(cas2StatusUpdateEntity.assessor?.id).isEqualTo(cas2v2StatusUpdateEntity.assessor.id)
+    assertThat(cas2StatusUpdateEntity.externalAssessor?.id.toString()).isEqualTo(FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER)
     assertThat(cas2StatusUpdateEntity.description).isEqualTo(cas2v2StatusUpdateEntity.description)
     assertThat(cas2StatusUpdateEntity.label).isEqualTo(cas2v2StatusUpdateEntity.label)
     assertThat(cas2StatusUpdateEntity.createdAt).isEqualTo(cas2v2StatusUpdateEntity.createdAt)
@@ -454,7 +454,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
   private fun assertThatCas2v2ApplicationNotesMatch(cas2ApplicationNoteEntity: Cas2ApplicationNoteEntity, cas2v2ApplicationNoteEntity: Cas2v2ApplicationNoteEntity) {
     assertThat(cas2ApplicationNoteEntity.id).isEqualTo(cas2v2ApplicationNoteEntity.id)
     assertThat(cas2ApplicationNoteEntity.application.id).isEqualTo(cas2v2ApplicationNoteEntity.application.id)
-    assertThat(cas2ApplicationNoteEntity.createdByCas2User?.id).isEqualTo(cas2v2ApplicationNoteEntity.createdByUser.id)
+    assertThat(cas2ApplicationNoteEntity.createdByUser.id).isEqualTo(cas2v2ApplicationNoteEntity.createdByUser.id)
     assertThat(cas2ApplicationNoteEntity.body).isEqualTo(cas2v2ApplicationNoteEntity.body)
     assertThat(cas2ApplicationNoteEntity.createdAt).isEqualTo(cas2v2ApplicationNoteEntity.createdAt)
     assertThat(cas2ApplicationNoteEntity.assessment?.id).isEqualTo(cas2v2ApplicationNoteEntity.assessment?.id)
