@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusDetail
@@ -65,7 +65,7 @@ class StatusUpdateService(
   fun createForAssessment(
     assessmentId: UUID,
     statusUpdate: Cas2AssessmentStatusUpdate,
-    assessor: ExternalUserEntity,
+    assessor: Cas2UserEntity,
   ): AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return AuthorisableActionResult.NotFound()
@@ -162,10 +162,10 @@ class StatusUpdateService(
               statusDetails = statusTransformer.transformStatusDetailListToDetailItemList(statusDetails),
             ),
             updatedBy = ExternalUser(
-              username = assessor.username,
+              username = assessor!!.username,
               name = assessor.name,
-              email = assessor.email,
-              origin = assessor.origin,
+              email = assessor.email!!,
+              origin = assessor.externalType,
             ),
             updatedAt = eventOccurredAt.toInstant(),
           ),
