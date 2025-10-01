@@ -27,6 +27,7 @@ enum class Cas2UserType(val authSource: String) {
 
 @Repository
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
+  fun findByUserType(type: Cas2UserType = Cas2UserType.NOMIS): List<Cas2UserEntity>
   fun findByIdAndUserType(id: UUID, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
   fun findByUsernameAndUserType(username: String, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
   fun findByNomisStaffIdAndUserType(nomisStaffId: Long, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
@@ -39,10 +40,8 @@ data class Cas2UserEntity(
   @Id
   val id: UUID,
   val username: String,
-
-  // Cas2v2User interface implementation
-  override var email: String?,
-  override var name: String,
+  var email: String?,
+  var name: String,
 
   @Enumerated(EnumType.STRING)
   var userType: Cas2UserType,
@@ -73,7 +72,7 @@ data class Cas2UserEntity(
 
   @Enumerated(EnumType.STRING)
   var serviceOrigin: Cas2ServiceOrigin,
-) : UnifiedUser {
+  ) {
   override fun toString() = "CAS2 user $id"
 
   fun staffIdentifier() = when (userType) {
