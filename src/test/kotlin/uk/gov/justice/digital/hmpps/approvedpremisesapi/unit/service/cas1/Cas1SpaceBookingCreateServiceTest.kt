@@ -81,6 +81,7 @@ class Cas1SpaceBookingCreateServiceTest {
           createdBy = user,
           characteristics = emptyList(),
           transferredFrom = null,
+          reason = null,
         ),
       )
 
@@ -112,6 +113,7 @@ class Cas1SpaceBookingCreateServiceTest {
           createdBy = user,
           characteristics = emptyList(),
           transferredFrom = null,
+          reason = null,
         ),
       )
 
@@ -138,6 +140,7 @@ class Cas1SpaceBookingCreateServiceTest {
           createdBy = user,
           characteristics = emptyList(),
           transferredFrom = null,
+          reason = null,
         ),
       )
 
@@ -164,6 +167,7 @@ class Cas1SpaceBookingCreateServiceTest {
           createdBy = user,
           characteristics = emptyList(),
           transferredFrom = null,
+          reason = null,
         ),
       )
 
@@ -222,6 +226,7 @@ class Cas1SpaceBookingCreateServiceTest {
             CharacteristicEntityFactory().withName("c2").produce(),
           ),
           transferredFrom = transferInfo,
+          reason = "Some reason",
         ),
       )
 
@@ -250,6 +255,7 @@ class Cas1SpaceBookingCreateServiceTest {
         assertThat(bookingToCreate.nonArrivalReason).isNull()
         assertThat(bookingToCreate.deliusEventNumber).isEqualTo("42")
         assertThat(bookingToCreate.transferType).isEqualTo(TransferType.PLANNED)
+        assertThat(bookingToCreate.reason).isEqualTo("Some reason")
       }
     }
   }

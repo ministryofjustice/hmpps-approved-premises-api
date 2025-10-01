@@ -88,6 +88,7 @@ class Cas1SpaceBookingTransformer(
       characteristics = jpa.criteria.toCas1SpaceCharacteristics(),
       allowedActions = cas1SpaceBookingActionsService.determineActions(jpa).available().map { it.apiType },
       openChangeRequests = openChangeRequests,
+      reason = jpa.reason,
     )
   }
 

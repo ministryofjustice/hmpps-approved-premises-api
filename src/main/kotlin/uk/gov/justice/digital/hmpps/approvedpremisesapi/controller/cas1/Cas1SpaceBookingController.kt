@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL
@@ -110,29 +111,18 @@ class Cas1SpaceBookingController(
   @PostMapping("/placement-requests/{placementRequestId}/space-bookings")
   fun createSpaceBooking(
     @PathVariable placementRequestId: UUID,
-    @RequestBody body: Cas1NewSpaceBooking,
+    @RequestBody newSpaceBooking: Cas1NewSpaceBooking,
   ): ResponseEntity<Cas1SpaceBooking> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_CREATE)
 
     val user = userService.getUserForRequest()
 
-    val requestedCharacteristics =
-      (
-        (body.requirements?.essentialCharacteristics ?: emptyList()) +
-          ((body.characteristics) ?: emptyList())
-        ).toSet()
-
-    val characteristics = characteristicService.getCharacteristicsByPropertyNames(
-      requestedCharacteristics.map { it.value },
-      ServiceName.approvedPremises,
-    )
+    val characteristics = getRequestedCharacteristics(newSpaceBooking)
 
     val booking = extractEntityFromCasResult(
       spaceBookingService.createNewBooking(
-        body.premisesId,
         placementRequestId,
-        body.arrivalDate,
-        body.departureDate,
+        newSpaceBooking,
         user,
         characteristics,
       ),
@@ -511,5 +501,13 @@ class Cas1SpaceBookingController(
       throw BadRequestProblem(invalidParams = mapOf("arrivalTime" to ParamDetails("must be in the past")))
     }
     return Pair(arrivalDate, LocalTime.parse(arrivalTime))
+  }
+
+  private fun getRequestedCharacteristics(newSpaceBooking: Cas1NewSpaceBooking): List<CharacteristicEntity> {
+    val requestedCharacteristics = newSpaceBooking.characteristics ?: emptyList()
+    return characteristicService.getCharacteristicsByPropertyNames(
+      requestedCharacteristics.map { it.value },
+      ServiceName.approvedPremises,
+    )
   }
 }

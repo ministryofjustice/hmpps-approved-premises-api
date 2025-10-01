@@ -30,5 +30,6 @@ class PlacementRequestBookingSummaryTransformer {
     createdAt = jpa.createdAt.toInstant(),
     type = PlacementRequestBookingSummary.Type.space,
     characteristics = jpa.criteria.toCas1SpaceCharacteristics(),
+    reason = jpa.reason,
   )
 }

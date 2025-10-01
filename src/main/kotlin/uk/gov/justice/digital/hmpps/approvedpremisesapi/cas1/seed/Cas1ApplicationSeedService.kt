@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -319,10 +320,12 @@ class Cas1ApplicationSeedService(
 
     ensureEntityFromCasResultIsSuccess(
       spaceBookingService.createNewBooking(
-        premisesId = premises.id,
         placementRequestId = placementRequestRepository.findByApplication(application).first().id,
-        arrivalDate = arrivalDate,
-        departureDate = departureDate,
+        newSpaceBooking = Cas1NewSpaceBooking(
+          premisesId = premises.id,
+          arrivalDate = arrivalDate,
+          departureDate = departureDate,
+        ),
         createdBy = application.createdByUser,
         characteristics = characteristicsRepository.findAllWherePropertyNameIn(characteristics, "approved-premises"),
       ),
@@ -391,6 +394,7 @@ class Cas1ApplicationSeedService(
         deliusEventNumber = "2",
         migratedManagementInfoFrom = null,
         deliusId = null,
+        reason = null,
       ),
     )
   }
