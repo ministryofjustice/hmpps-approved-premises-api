@@ -73,3 +73,4 @@ WHERE (a.conditional_release_date IS NULL OR a.conditional_release_date >= CURRE
        (ARRAY ['004e2419-9614-4c1e-a207-a8418009f23d'::text, 'f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9'::text, '89458555-3219-44a2-9584-c4f715d6b565'::text]));
 
 ALTER TABLE cas_2_application_notes DROP CONSTRAINT IF EXISTS has_user;
+ALTER TABLE cas_2_status_updates ALTER COLUMN assessor_id DROP NOT NULL;
