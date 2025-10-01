@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.External
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -45,7 +46,6 @@ class Cas2StartupScript(
   private val seedConfig: SeedConfig,
   private val cas2UserRepository: Cas2UserRepository,
   private val applicationRepository: Cas2ApplicationRepository,
-  private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationService: Cas2ApplicationService,
@@ -59,7 +59,7 @@ class Cas2StartupScript(
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting CAS2 applications")
-    cas2UserRepository.findAll().forEach { user ->
+    cas2UserRepository.findByUserType().forEach { user ->
       listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
         createApplicationFor(applicant = user, state = state)
       }
@@ -117,7 +117,7 @@ class Cas2StartupScript(
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     seedLogger.info("Auto-scripting status update $idx for application ${application.id}")
-    val assessor = externalUserRepository.findAll().random()
+    val assessor = cas2UserRepository.findByUserType(Cas2UserType.EXTERNAL).random()
     val status = findStatusAtPosition(idx)
     val update = statusUpdateRepository.save(
       Cas2StatusUpdateEntity(

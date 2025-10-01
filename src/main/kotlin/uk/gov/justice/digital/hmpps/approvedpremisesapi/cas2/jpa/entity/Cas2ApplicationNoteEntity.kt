@@ -40,8 +40,9 @@ data class Cas2ApplicationNoteEntity(
   @Id
   val id: UUID,
 
-  @Transient
-  final val createdByUser: UnifiedUser,
+  @ManyToOne
+  @JoinColumn(name = "created_by_cas2_user_id")
+  var createdByUser: Cas2UserEntity,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
@@ -81,7 +82,6 @@ data class Cas2ApplicationNoteEntity(
     }
   }
 
-  fun getUserId(): UUID = this.createdByNomisUser?.id ?: this.createdByExternalUser?.id ?: error("No user id found!")
   fun getUser(): UnifiedUser = when {
     createdByNomisUser != null -> this.createdByNomisUser!!
     createdByExternalUser != null -> this.createdByExternalUser!!

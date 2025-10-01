@@ -41,7 +41,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      externalUserEntityFactory.produceAndPersist {
+      cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.EXTERNAL)
         withUsername("billy.bunter")
         withName("Billy Bunter")
         withEmail("billy.bunter@example.com")
@@ -68,7 +69,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         ?: fail("No status update found for assessment ${assessment.id}")
     assertThat(statusUpdate.application.id).isEqualTo(application.id)
     assertThat(statusUpdate.assessment!!.id).isEqualTo(assessment.id)
-    assertThat(statusUpdate.assessor.id).isEqualTo(assessor.id)
+    assertThat(statusUpdate.assessor?.id).isEqualTo(assessor.id)
     assertThat(statusUpdate.statusId).isNotNull()
     assertThat(statusUpdate.description)
       .isEqualTo(
@@ -120,7 +121,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      externalUserEntityFactory.produceAndPersist {
+      cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.EXTERNAL)
         withUsername("john.smith")
         withName("John Smith")
         withEmail("john.smith@example.com")
@@ -172,7 +174,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      externalUserEntityFactory.produceAndPersist {
+      cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.EXTERNAL)
         withUsername("bob.wilson")
         withName("Bob Wilson")
         withEmail("bob.wilson@example.com")
@@ -277,7 +280,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      externalUserEntityFactory.produceAndPersist {
+      cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.EXTERNAL)
         withUsername("charlie.davis")
         withName("Charlie Davis")
         withEmail("charlie.davis@example.com")
@@ -328,7 +332,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      externalUserEntityFactory.produceAndPersist {
+      cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.EXTERNAL)
         withUsername("david.evans")
         withName("David Wilson") // But user has different name
         withEmail("david.evans@example.com")
@@ -379,7 +384,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      externalUserEntityFactory.produceAndPersist {
+      cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.EXTERNAL)
         withUsername("emma.foster")
         withName("Emma Foster")
         withEmail("emma.foster@example.com")
@@ -431,7 +437,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      externalUserEntityFactory.produceAndPersist {
+      cas2UserEntityFactory.produceAndPersist {
+        withUserType(Cas2UserType.EXTERNAL)
         withUsername("frank.green")
         withName("Frank Green")
         withEmail("frank.green@example.com")
