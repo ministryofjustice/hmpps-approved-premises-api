@@ -684,18 +684,6 @@ class PremisesController(
     return ResponseEntity(roomTransformer.transformJpaToApi(room), HttpStatus.CREATED)
   }
 
-  override fun premisesPremisesIdRoomsRoomIdGet(premisesId: UUID, roomId: UUID): ResponseEntity<Room> {
-    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val room = premises.rooms.find { it.id == roomId } ?: throw NotFoundProblem(roomId, "Room")
-
-    return ResponseEntity.ok(roomTransformer.transformJpaToApi(room))
-  }
-
   @Transactional
   override fun premisesPremisesIdRoomsRoomIdPut(
     premisesId: UUID,
