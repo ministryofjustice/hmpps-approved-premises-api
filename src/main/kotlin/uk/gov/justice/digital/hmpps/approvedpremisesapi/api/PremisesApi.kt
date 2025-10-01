@@ -423,23 +423,6 @@ interface PremisesApi {
 
   @Operation(
     tags = ["default"],
-    summary = "Returns a specific room for a premises",
-    operationId = "premisesPremisesIdRoomsRoomIdGet",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Room::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or room ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/premises/{premisesId}/rooms/{roomId}"],
-    produces = ["application/json"],
-  )
-  fun premisesPremisesIdRoomsRoomIdGet(@Parameter(description = "ID of the premises the room is in", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the room to get", required = true) @PathVariable("roomId") roomId: java.util.UUID): ResponseEntity<Room> = getDelegate().premisesPremisesIdRoomsRoomIdGet(premisesId, roomId)
-
-  @Operation(
-    tags = ["default"],
     summary = "Updates a room",
     operationId = "premisesPremisesIdRoomsRoomIdPut",
     description = """""",
