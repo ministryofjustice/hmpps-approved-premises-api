@@ -3998,11 +3998,11 @@ class Cas3PremisesServiceTest {
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.premisesArchived,
-      premisesId = premisesId,
-      transactionId = transactionId,
       eventDetails = CAS3PremisesArchiveEventDetails(
-        userId = userId,
+        premisesId = premisesId,
         endDate = endDate,
+        userId = userId,
+        transactionId = transactionId,
       ),
     )
   }
@@ -4012,8 +4012,8 @@ class Cas3PremisesServiceTest {
     occurredAt = data.timestamp.atOffset(ZoneOffset.UTC),
     data = objectMapper.writeValueAsString(data),
     type = CAS3_PREMISES_ARCHIVED,
-    premisesId = data.premisesId,
-    transactionId = data.transactionId!!,
+    premisesId = data.eventDetails.premisesId,
+    transactionId = data.eventDetails.transactionId!!,
   )
 
   @SuppressWarnings("LongParameterList")
@@ -4031,13 +4031,13 @@ class Cas3PremisesServiceTest {
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.premisesUnarchived,
-      premisesId = premisesId,
-      transactionId = transactionId,
       eventDetails = CAS3PremisesUnarchiveEventDetails(
-        userId = userId,
+        premisesId = premisesId,
         currentStartDate = currentStartDate,
         newStartDate = newStartDate,
         currentEndDate = currentEndDate,
+        userId = userId,
+        transactionId = transactionId,
       ),
     )
   }
@@ -4047,8 +4047,8 @@ class Cas3PremisesServiceTest {
     occurredAt = data.timestamp.atOffset(ZoneOffset.UTC),
     data = objectMapper.writeValueAsString(data),
     type = CAS3_PREMISES_UNARCHIVED,
-    premisesId = data.premisesId,
-    transactionId = data.transactionId,
+    premisesId = data.eventDetails.premisesId,
+    transactionId = data.eventDetails.transactionId!!,
   )
 
   @SuppressWarnings("LongParameterList")
@@ -4066,25 +4066,25 @@ class Cas3PremisesServiceTest {
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.bedspaceArchived,
-      bedspaceId = bedspaceId,
-      premisesId = premisesId,
-      transactionId = transactionId,
       eventDetails = CAS3BedspaceArchiveEventDetails(
-        userId = userId,
+        bedspaceId = bedspaceId,
+        premisesId = premisesId,
         currentEndDate = currentEndDate,
         endDate = endDate,
+        userId = userId,
+        transactionId = transactionId,
       ),
     )
   }
 
   private fun createBedspaceArchiveDomainEvent(data: CAS3BedspaceArchiveEvent) = createDomainEvent(
     data.id,
-    data.premisesId,
-    data.bedspaceId,
+    data.eventDetails.premisesId,
+    data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_ARCHIVED,
-    data.transactionId!!,
+    data.eventDetails.transactionId!!,
   )
 
   @SuppressWarnings("LongParameterList")
@@ -4103,26 +4103,26 @@ class Cas3PremisesServiceTest {
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.bedspaceUnarchived,
-      bedspaceId = bedspaceId,
-      premisesId = premisesId,
-      transactionId = transactionId,
       eventDetails = CAS3BedspaceUnarchiveEventDetails(
-        userId = userId,
+        bedspaceId = bedspaceId,
+        premisesId = premisesId,
         currentStartDate = currentStartDate,
         currentEndDate = currentEndDate,
         newStartDate = newStartDate,
+        userId = userId,
+        transactionId = transactionId,
       ),
     )
   }
 
   private fun createBedspaceUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
     data.id,
-    data.premisesId,
-    data.bedspaceId,
+    data.eventDetails.premisesId,
+    data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_UNARCHIVED,
-    data.transactionId,
+    data.eventDetails.transactionId!!,
   )
 
   companion object {

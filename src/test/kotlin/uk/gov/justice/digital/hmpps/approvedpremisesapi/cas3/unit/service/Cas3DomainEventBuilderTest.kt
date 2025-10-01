@@ -562,12 +562,12 @@ class Cas3DomainEventBuilderTest {
       assertThat(event.crn).isNull()
       assertThat(event.nomsNumber).isNull()
       assertThat(event.data.eventType).isEqualTo(EventType.bedspaceUnarchived)
-      assertThat(event.data.bedspaceId).isEqualTo(bedspaceId)
+      assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
       assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
       assertThat(event.data.eventDetails.currentEndDate).isEqualTo(currentEndDate)
       assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
       assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
-      assertThat(event.data.transactionId).isEqualTo(transactionId)
+      assertThat(event.data.eventDetails.transactionId).isEqualTo(transactionId)
     })
   }
 
@@ -587,13 +587,13 @@ class Cas3DomainEventBuilderTest {
       assertThat(event.crn).isNull()
       assertThat(event.nomsNumber).isNull()
       assertThat(event.data.eventType).isEqualTo(EventType.premisesArchived)
-      assertThat(event.data.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
       assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
       assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
       assertThat(event.occurredAt).isWithinTheLastMinute()
       assertThat(event.data.timestamp).isWithinTheLastMinute()
       assertThat(event.id).isEqualTo(event.data.id)
-      assertThat(event.data.transactionId).isEqualTo(transactionId)
+      assertThat(event.data.eventDetails.transactionId).isEqualTo(transactionId)
     })
   }
 
@@ -616,14 +616,14 @@ class Cas3DomainEventBuilderTest {
       assertThat(event.crn).isNull()
       assertThat(event.nomsNumber).isNull()
       assertThat(event.data.eventType).isEqualTo(EventType.premisesUnarchived)
-      assertThat(event.data.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
       assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
       assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
       assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
       assertThat(event.occurredAt).isWithinTheLastMinute()
       assertThat(event.data.timestamp).isWithinTheLastMinute()
       assertThat(event.id).isEqualTo(event.data.id)
-      assertThat(event.data.transactionId).isEqualTo(transactionId)
+      assertThat(event.data.eventDetails.transactionId).isEqualTo(transactionId)
     })
   }
 
@@ -653,11 +653,11 @@ class Cas3DomainEventBuilderTest {
         assertThat(event.crn).isNull()
         assertThat(event.nomsNumber).isNull()
         assertThat(event.data.eventType).isEqualTo(EventType.bedspaceArchived)
-        assertThat(event.data.bedspaceId).isEqualTo(bedspaceId)
-        assertThat(event.data.premisesId).isEqualTo(premises.id)
+        assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
+        assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
         assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
         assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
-        assertThat(event.data.transactionId).isEqualTo(transactionId)
+        assertThat(event.data.eventDetails.transactionId).isEqualTo(transactionId)
       },
     )
   }

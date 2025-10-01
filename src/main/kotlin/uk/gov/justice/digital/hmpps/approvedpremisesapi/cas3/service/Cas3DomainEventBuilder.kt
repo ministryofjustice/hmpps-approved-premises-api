@@ -224,10 +224,7 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bedspaceArchived,
-        bedspaceId = bedspace.id,
-        premisesId = premisesId,
-        transactionId = transactionId,
-        eventDetails = buildCAS3BedspaceArchiveEventDetails(bedspace, currentEndDate, user),
+        eventDetails = buildCAS3BedspaceArchiveEventDetails(bedspace, premisesId, currentEndDate, user, transactionId),
       ),
     )
   }
@@ -251,9 +248,7 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.premisesArchived,
-        premisesId = premises.id,
-        transactionId = transactionId,
-        eventDetails = buildCAS3PremisesArchiveEventDetails(endDate, user),
+        eventDetails = buildCAS3PremisesArchiveEventDetails(premises.id, endDate, user, transactionId),
       ),
     )
   }
@@ -279,9 +274,14 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.premisesUnarchived,
-        premisesId = premises.id,
-        transactionId = transactionId,
-        eventDetails = buildCAS3PremisesUnarchiveEventDetails(currentStartDate, newStartDate, currentEndDate, user),
+        eventDetails = buildCAS3PremisesUnarchiveEventDetails(
+          premises.id,
+          currentStartDate,
+          newStartDate,
+          currentEndDate,
+          user,
+          transactionId,
+        ),
       ),
     )
   }
@@ -307,10 +307,14 @@ class Cas3DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bedspaceUnarchived,
-        bedspaceId = bedspace.id,
-        premisesId = premisesId,
-        transactionId = transactionId,
-        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(bedspace, currentStartDate, currentEndDate, user),
+        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(
+          bedspace,
+          premisesId,
+          currentStartDate,
+          currentEndDate,
+          user,
+          transactionId,
+        ),
       ),
     )
   }
@@ -490,45 +494,63 @@ class Cas3DomainEventBuilder(
   )
 
   private fun buildCAS3PremisesArchiveEventDetails(
+    premisesId: UUID,
     endDate: LocalDate,
     user: UserEntity,
+    transactionId: UUID,
   ) = CAS3PremisesArchiveEventDetails(
-    userId = user.id,
+    premisesId = premisesId,
     endDate = endDate,
+    userId = user.id,
+    transactionId = transactionId,
   )
 
   private fun buildCAS3PremisesUnarchiveEventDetails(
+    premisesId: UUID,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
     currentEndDate: LocalDate?,
     user: UserEntity,
+    transactionId: UUID,
   ) = CAS3PremisesUnarchiveEventDetails(
-    userId = user.id,
+    premisesId = premisesId,
     currentStartDate = currentStartDate,
     newStartDate = newStartDate,
     currentEndDate = currentEndDate,
+    userId = user.id,
+    transactionId = transactionId,
   )
 
   private fun buildCAS3BedspaceArchiveEventDetails(
     bedspace: BedEntity,
+    premisesId: UUID,
     currentEndDate: LocalDate?,
     user: UserEntity,
+    transactionId: UUID,
   ) = CAS3BedspaceArchiveEventDetails(
-    userId = user.id,
+    bedspaceId = bedspace.id,
+    premisesId = premisesId,
     currentEndDate = currentEndDate,
     endDate = bedspace.endDate!!,
+    userId = user.id,
+    transactionId = transactionId,
   )
 
   private fun buildCAS3BedspaceUnarchiveEventDetails(
     bedspace: BedEntity,
+    premisesId: UUID,
     currentStartDate: LocalDate,
     currentEndDate: LocalDate,
     user: UserEntity,
+    transactionId: UUID,
   ) = CAS3BedspaceUnarchiveEventDetails(
-    userId = user.id,
+    bedspaceId = bedspace.id,
+    premisesId = premisesId,
     currentStartDate = currentStartDate,
     currentEndDate = currentEndDate,
     newStartDate = bedspace.startDate!!,
+    userId = user.id,
+    transactionId = transactionId,
   )
 
   private fun buildCAS3BookingCancelledEventDetails(
