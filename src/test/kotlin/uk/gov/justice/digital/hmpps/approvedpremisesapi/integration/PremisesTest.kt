@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.util.UUID
@@ -188,107 +187,6 @@ class PremisesTest {
           .isOk
           .expectBody()
           .jsonPath("$.bedCount").isEqualTo(10)
-      }
-    }
-  }
-
-  @Nested
-  inner class GetRoomsForPremises : IntegrationTestBase() {
-    @Autowired
-    lateinit var roomTransformer: RoomTransformer
-
-    @Test
-    fun `Get all Rooms for Premises returns OK with correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { user.probationRegion }
-        }
-        val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedPremises { premises }
-        }
-
-        val expectedJson = objectMapper.writeValueAsString(
-          rooms.map {
-            roomTransformer.transformJpaToApi(it)
-          },
-        )
-
-        webTestClient.get()
-          .uri("/premises/${premises.id}/rooms")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(expectedJson)
-      }
-    }
-
-    @Test
-    fun `Get all Rooms for a Temporary Accommodation Premises that's not in the user's region returns 403 Forbidden`() {
-      givenAUser { user, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { user.probationRegion }
-        }
-        val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedPremises { premises }
-        }
-
-        val expectedJson = objectMapper.writeValueAsString(
-          rooms.map {
-            roomTransformer.transformJpaToApi(it)
-          },
-        )
-
-        webTestClient.get()
-          .uri("/premises/${premises.id}/rooms")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-
-    @Test
-    fun `Get all Rooms for Premises returns OK with correct body with end-date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { user.probationRegion }
-        }
-        val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedPremises { premises }
-        }
-
-        val bedEntityWithEndDate = bedEntityFactory.produceAndPersist {
-          withRoom(rooms[0])
-          withEndDate { LocalDate.now() }
-        }
-
-        val bedEntityWithoutEndDate = bedEntityFactory.produceAndPersist {
-          withRoom(rooms[1])
-        }
-
-        rooms[0].beds += bedEntityWithEndDate
-        rooms[1].beds += bedEntityWithoutEndDate
-
-        val expectedJson = objectMapper.writeValueAsString(
-          rooms.map {
-            roomTransformer.transformJpaToApi(it)
-          },
-        )
-
-        webTestClient.get()
-          .uri("/premises/${premises.id}/rooms")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(expectedJson)
       }
     }
   }
