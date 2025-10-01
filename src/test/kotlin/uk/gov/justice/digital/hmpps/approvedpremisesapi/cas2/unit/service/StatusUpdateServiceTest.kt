@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
@@ -47,11 +46,11 @@ class StatusUpdateServiceTest {
   private val mockStatusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val mockStatusUpdateDetailRepository = mockk<Cas2StatusUpdateDetailRepository>()
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
-  private val assessor = ExternalUserEntityFactory()
+  private val assessor = Cas2UserEntityFactory()
     .withUsername("JOHN_SMITH_NACRO")
     .withName("John Smith")
     .withEmail("john@nacro.example.com")
-    .withOrigin("NACRO")
+    .withExternalType("NACRO")
     .produce()
 
   private val mockDomainEventService = mockk<Cas2DomainEventService>()

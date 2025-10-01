@@ -34,7 +34,7 @@ class TimelineEventsTransformer(
         type = TimelineEventType.cas2Note,
         occurredAt = it.createdAt.toInstant(),
         label = "Note",
-        createdByName = it.getUser().name,
+        createdByName = it.createdByUser.name,
         body = it.body,
       )
     }
@@ -46,7 +46,7 @@ class TimelineEventsTransformer(
         type = TimelineEventType.cas2StatusUpdate,
         occurredAt = it.createdAt.toInstant(),
         label = it.label,
-        createdByName = it.assessor.name,
+        createdByName = it.assessor!!.name,
         body = it.statusUpdateDetails?.joinToString { detail -> detail.label },
       )
     }
