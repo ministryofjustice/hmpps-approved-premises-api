@@ -8,7 +8,7 @@ data class Cas3NewPremises(
   val postcode: String,
   val probationRegionId: UUID,
   val probationDeliveryUnitId: UUID,
-  val characteristicIds: List<UUID>,
+  val characteristicIds: List<UUID> = emptyList(),
   val addressLine2: String? = null,
   val town: String? = null,
   val localAuthorityAreaId: UUID? = null,

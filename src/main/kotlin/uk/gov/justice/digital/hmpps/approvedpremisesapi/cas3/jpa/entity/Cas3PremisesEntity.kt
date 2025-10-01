@@ -73,9 +73,15 @@ data class Cas3PremisesEntity(
   var lastUpdatedAt: OffsetDateTime? = null,
 
 ) {
+
   fun isPremisesScheduledToArchive(): Boolean = status == Cas3PremisesStatus.archived && endDate != null && endDate!! > LocalDate.now()
   fun isPremisesArchived(): Boolean = (endDate != null && endDate!! <= LocalDate.now()) || startDate.isAfter(LocalDate.now())
 }
 
 @Repository
-interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID>
+interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID> {
+  fun existsByNameIgnoreCaseAndProbationDeliveryUnitId(
+    name: String,
+    probationDeliveryUnitId: UUID,
+  ): Boolean
+}
