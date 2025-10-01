@@ -250,11 +250,18 @@ class Cas3ReportService(
     CsvJdbcResultSetConsumer(
       outputStream = outputStream,
     ).use { consumer ->
-      cas3BookingGapReportRepository.generateBookingGapReport(
-        properties.startDate,
-        properties.endDate,
-        consumer,
-      )
+      when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
+        true -> cas3BookingGapReportRepository.generateBookingGapReportV2(
+          properties.startDate,
+          properties.endDate,
+          consumer,
+        )
+        false -> cas3BookingGapReportRepository.generateBookingGapReport(
+          properties.startDate,
+          properties.endDate,
+          consumer,
+        )
+      }
     }
   }
 
