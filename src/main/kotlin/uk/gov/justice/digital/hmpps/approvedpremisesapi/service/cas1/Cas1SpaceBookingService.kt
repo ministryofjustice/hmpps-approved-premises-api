@@ -102,10 +102,6 @@ class Cas1SpaceBookingService(
       is Success -> result.value
     }
 
-    if (cas1SpaceBookingRepository.findByPlacementRequestId(placementRequestId).any { it.isActive() }) {
-      return placementRequestId hasConflictError "A Space Booking already exists for this placement request"
-    }
-
     success(cas1SpaceBookingCreateService.create(validatedCreateBooking))
   }
 

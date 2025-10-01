@@ -10,6 +10,7 @@ import jakarta.persistence.LockModeType
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
+import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.Immutable
@@ -237,6 +238,7 @@ data class PlacementRequestEntity(
   val notes: String?,
 
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
+  @OrderBy("canonicalArrivalDate DESC")
   var spaceBookings: MutableList<Cas1SpaceBookingEntity>,
 
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)

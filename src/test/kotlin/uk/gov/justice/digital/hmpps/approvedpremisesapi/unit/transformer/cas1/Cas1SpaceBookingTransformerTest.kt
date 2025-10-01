@@ -391,6 +391,8 @@ class Cas1SpaceBookingTransformerTest {
 
       val premises = ApprovedPremisesEntityFactory().withDefaults().withName("The booking's premise").produce()
 
+      val createdAt = OffsetDateTime.now()
+
       val result = transformer.transformToSummary(
         Cas1SpaceBookingEntityFactory()
           .withId(id)
@@ -433,6 +435,7 @@ class Cas1SpaceBookingTransformerTest {
               null
             },
           )
+          .withCreatedAt(createdAt)
           .produce(),
         personSummaryInfo,
       )
@@ -459,6 +462,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.plannedTransferRequested).isFalse()
       assertThat(result.appealRequested).isFalse()
       assertThat(result.openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLACEMENT_APPEAL)
+      assertThat(result.createdAt).isEqualTo(createdAt.toInstant())
     }
   }
 

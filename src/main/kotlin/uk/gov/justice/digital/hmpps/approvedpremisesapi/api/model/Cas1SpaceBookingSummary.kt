@@ -60,4 +60,7 @@ data class Cas1SpaceBookingSummary(
   @Schema(example = "null", description = "Use 'openChangeRequestTypes'")
   @Deprecated(message = "")
   @get:JsonProperty("appealRequested") val appealRequested: kotlin.Boolean? = null,
+
+  @Schema(example = "null", description = "Booking creation datetime")
+  @get:JsonProperty("createdAt") val createdAt: java.time.Instant? = null,
 )

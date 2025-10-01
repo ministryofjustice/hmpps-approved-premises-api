@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
@@ -1246,6 +1247,15 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 premises = premises,
               )
 
+              givenACas1SpaceBooking(
+                crn = application.crn,
+                application = application,
+                placementRequest = placementRequest,
+                canonicalArrivalDate = LocalDate.of(2024, 6, 8),
+                canonicalDepartureDate = LocalDate.of(2024, 6, 15),
+                premises = givenAnApprovedPremises(),
+              )
+
               val changeRequest = givenACas1ChangeRequest(
                 type = ChangeRequestType.PLACEMENT_APPEAL,
                 spaceBooking = spaceBooking,
@@ -1253,22 +1263,56 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
               )
 
-              webTestClient.get()
+              val cas1PlacementRequestDetail = placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
+                spaceBooking.placementRequest!!,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                listOf(changeRequest),
+              )
+
+              val response = webTestClient.get()
                 .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
                 .isOk
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
-                      spaceBooking.placementRequest!!,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                      listOf(changeRequest),
-                    ),
-                  ),
-                )
+                .returnResult(Cas1PlacementRequestDetail::class.java)
+                .responseBody
+                .blockFirst()!!
+
+              assertThat(response.id).isEqualTo(cas1PlacementRequestDetail.id)
+              assertThat(response.application.id).isEqualTo(cas1PlacementRequestDetail.application.id)
+              assertThat(response.releaseType).isEqualTo(cas1PlacementRequestDetail.releaseType)
+              assertThat(response.isParole).isEqualTo(cas1PlacementRequestDetail.isParole)
+              assertThat(response.status).isEqualTo(cas1PlacementRequestDetail.status)
+              assertThat(response.type).isEqualTo(cas1PlacementRequestDetail.type)
+              assertThat(response.location).isEqualTo(cas1PlacementRequestDetail.location)
+              assertThat(response.radius).isEqualTo(cas1PlacementRequestDetail.radius)
+              assertThat(response.essentialCriteria).isEqualTo(cas1PlacementRequestDetail.essentialCriteria)
+              assertThat(response.person).isEqualTo(cas1PlacementRequestDetail.person)
+              assertThat(response.risks).isEqualTo(cas1PlacementRequestDetail.risks)
+              assertThat(response.applicationId).isEqualTo(cas1PlacementRequestDetail.applicationId)
+              assertThat(response.assessmentId).isEqualTo(cas1PlacementRequestDetail.assessmentId)
+              assertThat(response.assessmentDecision).isEqualTo(cas1PlacementRequestDetail.assessmentDecision)
+              assertThat(response.assessmentDate).isEqualTo(cas1PlacementRequestDetail.assessmentDate)
+              assertThat(response.applicationDate).isEqualTo(cas1PlacementRequestDetail.applicationDate)
+              assertThat(response.assessor).isEqualTo(cas1PlacementRequestDetail.assessor)
+              assertThat(response.isWithdrawn).isEqualTo(cas1PlacementRequestDetail.isWithdrawn)
+              assertThat(response.spaceBookings).isEqualTo(cas1PlacementRequestDetail.spaceBookings)
+              assertThat(response.spaceBookings).size().isEqualTo(2)
+              assertThat(response.spaceBookings[0].createdAt).isNotNull()
+              assertThat(response.spaceBookings[0].canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 8))
+              assertThat(response.spaceBookings[1].createdAt).isNotNull()
+              assertThat(response.spaceBookings[1].canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
+              assertThat(response.openChangeRequests).isEqualTo(cas1PlacementRequestDetail.openChangeRequests)
+              assertThat(response.notes).isEqualTo(cas1PlacementRequestDetail.notes)
+              assertThat(response.booking).isEqualTo(cas1PlacementRequestDetail.booking)
+              assertThat(response.requestType).isEqualTo(cas1PlacementRequestDetail.requestType)
+              assertThat(response.withdrawalReason).isEqualTo(cas1PlacementRequestDetail.withdrawalReason)
+              assertThat(response.legacyBooking).isEqualTo(cas1PlacementRequestDetail.legacyBooking)
+              assertThat(response.requestedPlacementPeriod).isEqualTo(cas1PlacementRequestDetail.requestedPlacementPeriod)
+              assertThat(response.authorisedPlacementPeriod).isEqualTo(cas1PlacementRequestDetail.authorisedPlacementPeriod)
+              assertThat(response.expectedArrival).isEqualTo(cas1PlacementRequestDetail.expectedArrival)
+              assertThat(response.duration).isEqualTo(cas1PlacementRequestDetail.duration)
             }
           }
         }
