@@ -260,11 +260,18 @@ class Cas3ReportService(
 
   fun createFutureBookingReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
     log.info("Beginning CAS3 Future Booking Report")
-    val bookingsInScope = cas3FutureBookingsReportRepository.findAllFutureBookings(
-      properties.startDate,
-      properties.endDate,
-      properties.probationRegionId,
-    )
+    val bookingsInScope = when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
+      true -> cas3FutureBookingsReportRepository.findAllFutureBookingsV2(
+        properties.startDate,
+        properties.endDate,
+        properties.probationRegionId,
+      )
+      false -> cas3FutureBookingsReportRepository.findAllFutureBookings(
+        properties.startDate,
+        properties.endDate,
+        properties.probationRegionId,
+      )
+    }
 
     val crns = bookingsInScope.map { it.crn }.distinct().toSet()
     val personInfos = splitAndRetrievePersonInfo(crns)
@@ -285,11 +292,19 @@ class Cas3ReportService(
 
   fun createFutureBookingCsvReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
     log.info("Beginning CAS3 Future Booking CSV Report")
-    val bookingsInScope = cas3FutureBookingsReportRepository.findAllFutureBookings(
-      properties.startDate,
-      properties.endDate,
-      properties.probationRegionId,
-    )
+    val bookingsInScope = when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
+      true -> cas3FutureBookingsReportRepository.findAllFutureBookingsV2(
+        properties.startDate,
+        properties.endDate,
+        properties.probationRegionId,
+      )
+
+      false -> cas3FutureBookingsReportRepository.findAllFutureBookings(
+        properties.startDate,
+        properties.endDate,
+        properties.probationRegionId,
+      )
+    }
 
     val crns = bookingsInScope.map { it.crn }.distinct().toSet()
     val personInfos = splitAndRetrievePersonInfo(crns)
