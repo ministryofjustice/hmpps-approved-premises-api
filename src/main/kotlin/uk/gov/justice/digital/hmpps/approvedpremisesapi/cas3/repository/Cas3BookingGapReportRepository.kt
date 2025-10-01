@@ -1,10 +1,15 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository
 
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.JdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.ReportJdbcTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceVoid
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingRecord
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUUID
 import java.time.LocalDate
+import java.util.UUID
 
 val GAP_RANGES_QUERY = """
 with bedspaces as (select
@@ -275,14 +280,14 @@ class Cas3BookingGapReportRepository(
   fun generateBookingGapReport(
     startDate: LocalDate,
     endDate: LocalDate,
-    jbdcResultSetConsumer: JdbcResultSetConsumer,
+    jdbcResultSetConsumer: JdbcResultSetConsumer,
   ) = reportJdbcTemplate.query(
     GAP_RANGES_QUERY.trimIndent(),
     mapOf<String, Any>(
       "startDate" to startDate,
       "endDate" to endDate,
     ),
-    jbdcResultSetConsumer,
+    jdbcResultSetConsumer,
   )
 
   fun generateBookingGapReportV2(
@@ -297,4 +302,136 @@ class Cas3BookingGapReportRepository(
     ),
     jbdcResultSetConsumer,
   )
+
+  fun getBedspaces(startDate: LocalDate, endDate: LocalDate): List<BedspaceInfo> {
+    val query = """
+        SELECT beds.id,
+               premises.name AS premises_name,
+               rooms.name AS room_name,
+               probation_regions.name AS probation_region,
+               probation_delivery_units.name AS pdu_name,
+               beds.start_date,
+               beds.end_date
+        FROM beds
+        INNER JOIN rooms ON beds.room_id = rooms.id
+        INNER JOIN premises ON rooms.premises_id = premises.id
+        INNER JOIN probation_regions ON probation_regions.id = premises.probation_region_id
+        INNER JOIN temporary_accommodation_premises ON temporary_accommodation_premises.premises_id = premises.id
+        INNER JOIN probation_delivery_units ON probation_delivery_units.id = temporary_accommodation_premises.probation_delivery_unit_id
+        WHERE (beds.end_date IS NULL OR beds.end_date >= :startDate) AND beds.start_date <= :endDate
+    """.trimIndent()
+
+    return jdbcTemplate.query(query, mapOf("startDate" to startDate, "endDate" to endDate)) { rs, _ ->
+      BedspaceInfo(
+        id = rs.getUUID("id"),
+        premisesName = rs.getString("premises_name"),
+        roomName = rs.getString("room_name"),
+        probationRegion = rs.getString("probation_region"),
+        pduName = rs.getString("pdu_name"),
+        startDate = rs.getDate("start_date").toLocalDate(),
+        endDate = rs.getDate("end_date")?.toLocalDate(),
+      )
+    }
+  }
+
+  fun getBedspacesV2(startDate: LocalDate, endDate: LocalDate): List<BedspaceInfo> {
+    val query = """
+        SELECT bedspace.id,
+               premises.name AS premises_name,
+               bedspace.reference AS room_name,
+               probation_regions.name AS probation_region,
+               pdu.name AS pdu_name,
+               bedspace.start_date,
+               bedspace.end_date
+        FROM cas3_bedspaces bedspace
+        INNER JOIN cas3_premises premises ON bedspace.premises_id = premises.id
+        INNER JOIN probation_delivery_units pdu ON pdu.id = premises.probation_delivery_unit_id
+        INNER JOIN probation_regions ON probation_regions.id = pdu.probation_region_id
+        WHERE (bedspace.end_date IS NULL OR bedspace.end_date >= :startDate) AND bedspace.start_date <= :endDate
+    """.trimIndent()
+
+    return jdbcTemplate.query(query, mapOf("startDate" to startDate, "endDate" to endDate)) { rs, _ ->
+      BedspaceInfo(
+        id = rs.getUUID("id"),
+        premisesName = rs.getString("premises_name"),
+        roomName = rs.getString("room_name"),
+        probationRegion = rs.getString("probation_region"),
+        pduName = rs.getString("pdu_name"),
+        startDate = rs.getDate("start_date").toLocalDate(),
+        endDate = rs.getDate("end_date")?.toLocalDate(),
+      )
+    }
+  }
+
+  fun getBookings(startDate: LocalDate, endDate: LocalDate): List<BookingRecord> {
+    val query = """
+        SELECT bed_id,
+               arrival_date,
+               departure_date,
+               (SELECT working_day_count
+                FROM cas3_turnarounds
+                WHERE cas3_turnarounds.id = (
+                    SELECT id
+                    FROM cas3_turnarounds
+                    WHERE cas3_turnarounds.booking_id = bookings.id
+                    ORDER BY cas3_turnarounds.created_at DESC
+                    LIMIT 1)) turnaround_days
+        FROM bookings
+        LEFT JOIN cancellations ON cancellations.booking_id = bookings.id
+        WHERE bookings.service = 'temporary-accommodation' 
+          AND cancellations.id IS NULL 
+          AND arrival_date <= :endDate 
+          AND departure_date >= :startDate 
+          AND arrival_date != departure_date
+    """.trimIndent()
+
+    return jdbcTemplate.query(query, mapOf("startDate" to startDate, "endDate" to endDate)) { rs, _ ->
+      BookingRecord(
+        bedId = rs.getUUID("bed_id"),
+        arrivalDate = rs.getDate("arrival_date").toLocalDate(),
+        departureDate = rs.getDate("departure_date").toLocalDate(),
+        turnaroundDays = rs.getObject("turnaround_days") as? Int,
+      )
+    }
+  }
+
+  fun getBedspaceVoids(startDate: LocalDate, endDate: LocalDate, bedIds: List<UUID>): List<BedspaceVoid> {
+    val query = """
+        SELECT voids.bed_id,
+               voids.start_date,
+               voids.end_date
+        FROM cas3_void_bedspaces voids
+        WHERE voids.bed_id IN (:bedIds) AND
+              voids.cancellation_date IS NULL AND
+              (voids.start_date <= :endDate AND voids.end_date >= :startDate)
+    """.trimIndent()
+
+    return jdbcTemplate.query(query, mapOf("startDate" to startDate, "endDate" to endDate, "bedIds" to bedIds)) { rs, _ ->
+      BedspaceVoid(
+        bedId = rs.getUUID("bed_id"),
+        startDate = rs.getDate("start_date").toLocalDate(),
+        endDate = rs.getDate("end_date").toLocalDate(),
+      )
+    }
+  }
+
+  fun getBedspaceVoidsV2(startDate: LocalDate, endDate: LocalDate, bedspaceIds: List<UUID>): List<BedspaceVoid> {
+    val query = """
+        SELECT voids.bedspace_id AS bed_id,
+               voids.start_date,
+               voids.end_date
+        FROM cas3_void_bedspaces voids
+        WHERE voids.bedspace_id IN (:bedspaceIds) AND 
+              voids.cancellation_date IS NULL AND
+              (voids.start_date <= :endDate AND voids.end_date >= :startDate)
+    """.trimIndent()
+
+    return jdbcTemplate.query(query, mapOf("startDate" to startDate, "endDate" to endDate, "bedspaceIds" to bedspaceIds)) { rs, _ ->
+      BedspaceVoid(
+        bedId = rs.getUUID("bed_id"),
+        startDate = rs.getDate("start_date").toLocalDate(),
+        endDate = rs.getDate("end_date").toLocalDate(),
+      )
+    }
+  }
 }
