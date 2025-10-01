@@ -11,13 +11,13 @@ data class CAS3PremisesUnarchiveEvent(
   override val id: UUID,
   override val timestamp: Instant,
   override val eventType: EventType,
-  val premisesId: UUID,
-  val transactionId: UUID,
 ) : CAS3Event
 
 data class CAS3PremisesUnarchiveEventDetails(
-  val userId: UUID,
+  val premisesId: UUID,
   val currentStartDate: LocalDate,
   val newStartDate: LocalDate,
   val currentEndDate: LocalDate?,
+  val userId: UUID,
+  val transactionId: UUID?,
 )

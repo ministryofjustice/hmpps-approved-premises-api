@@ -1566,19 +1566,19 @@ class Cas3DomainEventServiceTest {
       .produce()
 
     val eventDetails = CAS3BedspaceUnarchiveEventDetails(
-      userId = user.id,
+      bedspaceId = bedspace.id,
+      premisesId = premises.id,
       newStartDate = newStartDate,
       currentStartDate = currentStartDate,
       currentEndDate = currentEndDate,
+      userId = user.id,
+      transactionId = UUID.randomUUID(),
     )
     val data = CAS3BedspaceUnarchiveEvent(
       eventDetails = eventDetails,
       id = UUID.randomUUID(),
       timestamp = occuredAt,
       eventType = EventType.bedspaceUnarchived,
-      bedspaceId = bedspace.id,
-      premisesId = premises.id,
-      transactionId = UUID.randomUUID(),
     )
     val domainEventId = UUID.randomUUID()
     val domainEventTransactionId = UUID.randomUUID()
@@ -1636,18 +1636,18 @@ class Cas3DomainEventServiceTest {
     val domainEventTransactionId = UUID.randomUUID()
 
     val eventDetails = CAS3BedspaceArchiveEventDetails(
-      userId = user.id,
+      bedspaceId = bedspace.id,
+      premisesId = premises.id,
       currentEndDate = bedspace.endDate,
       endDate = endDate,
+      userId = user.id,
+      transactionId = domainEventTransactionId,
     )
     val data = CAS3BedspaceArchiveEvent(
       eventDetails = eventDetails,
       id = UUID.randomUUID(),
       timestamp = occuredAt,
       eventType = EventType.bedspaceArchived,
-      bedspaceId = bedspace.id,
-      premisesId = premises.id,
-      transactionId = domainEventTransactionId,
     )
     val domainEventId = UUID.randomUUID()
 
@@ -1704,8 +1704,10 @@ class Cas3DomainEventServiceTest {
     val domainEventTransactionId = UUID.randomUUID()
 
     val eventDetails = CAS3PremisesArchiveEventDetails(
-      userId = user.id,
+      premisesId = premises.id,
       endDate = premisesEndDate,
+      userId = user.id,
+      transactionId = domainEventTransactionId,
     )
 
     val data = CAS3PremisesArchiveEvent(
@@ -1713,8 +1715,6 @@ class Cas3DomainEventServiceTest {
       id = UUID.randomUUID(),
       timestamp = occurredAt,
       eventType = EventType.premisesArchived,
-      premisesId = premises.id,
-      transactionId = domainEventTransactionId,
     )
     val domainEventId = UUID.randomUUID()
 
@@ -1772,18 +1772,18 @@ class Cas3DomainEventServiceTest {
     val domainEventTransactionId = UUID.randomUUID()
 
     val eventDetails = CAS3PremisesUnarchiveEventDetails(
-      userId = user.id,
+      premisesId = premises.id,
       currentStartDate = currentStartDate,
       newStartDate = newStartDate,
       currentEndDate = currentEndDate,
+      userId = user.id,
+      transactionId = domainEventTransactionId,
     )
     val data = CAS3PremisesUnarchiveEvent(
       eventDetails = eventDetails,
       id = UUID.randomUUID(),
       timestamp = occurredAt,
       eventType = EventType.premisesUnarchived,
-      premisesId = premises.id,
-      transactionId = domainEventTransactionId,
     )
     val domainEventId = UUID.randomUUID()
 
@@ -2765,7 +2765,7 @@ class Cas3DomainEventServiceTest {
 
   private fun createArchiveDomainEvent(data: CAS3BedspaceArchiveEvent) = createDomainEvent(
     data.id,
-    data.bedspaceId,
+    data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     DomainEventType.CAS3_BEDSPACE_ARCHIVED,
@@ -2779,20 +2779,20 @@ class Cas3DomainEventServiceTest {
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.bedspaceArchived,
-      bedspaceId = bedspaceId,
-      premisesId = premisesId,
-      transactionId = transactionId,
       eventDetails = CAS3BedspaceArchiveEventDetails(
-        userId = userId,
+        bedspaceId = bedspaceId,
+        premisesId = premisesId,
         currentEndDate = currentEndDate,
         endDate = endDate,
+        userId = userId,
+        transactionId = transactionId,
       ),
     )
   }
 
   private fun createUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
     data.id,
-    data.bedspaceId,
+    data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     DomainEventType.CAS3_BEDSPACE_UNARCHIVED,
@@ -2805,14 +2805,14 @@ class Cas3DomainEventServiceTest {
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.bedspaceUnarchived,
-      bedspaceId = bedspaceId,
-      premisesId = premisesId,
-      transactionId = transactionId,
       eventDetails = CAS3BedspaceUnarchiveEventDetails(
-        userId = userId,
+        bedspaceId = bedspaceId,
+        premisesId = premisesId,
         currentStartDate = LocalDate.now(),
         currentEndDate = LocalDate.now(),
         newStartDate = newStartDate,
+        userId = userId,
+        transactionId = transactionId,
       ),
     )
   }

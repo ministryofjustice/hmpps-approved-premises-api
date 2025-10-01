@@ -134,9 +134,14 @@ class Cas3v2DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.premisesUnarchived,
-        premisesId = premises.id,
-        transactionId = transactionId,
-        eventDetails = buildCAS3PremisesUnarchiveEventDetails(currentStartDate, newStartDate, currentEndDate, user),
+        eventDetails = buildCAS3PremisesUnarchiveEventDetails(
+          premises.id,
+          currentStartDate,
+          newStartDate,
+          currentEndDate,
+          user,
+          transactionId,
+        ),
       ),
     )
   }
@@ -339,15 +344,19 @@ class Cas3v2DomainEventBuilder(
   )
 
   private fun buildCAS3PremisesUnarchiveEventDetails(
+    premisesId: UUID,
     currentStartDate: LocalDate,
     newStartDate: LocalDate,
     currentEndDate: LocalDate?,
     user: UserEntity,
+    transactionId: UUID,
   ) = CAS3PremisesUnarchiveEventDetails(
-    userId = user.id,
+    premisesId = premisesId,
     currentStartDate = currentStartDate,
     newStartDate = newStartDate,
     currentEndDate = currentEndDate,
+    userId = user.id,
+    transactionId = transactionId,
   )
 
   private fun populateStaffMember(it: UserEntity) = StaffMember(

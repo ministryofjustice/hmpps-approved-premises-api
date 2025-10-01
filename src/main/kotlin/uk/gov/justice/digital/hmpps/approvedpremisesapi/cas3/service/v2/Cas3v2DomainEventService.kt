@@ -174,22 +174,22 @@ class Cas3v2DomainEventService(
     val user = userService.getUserForRequestOrNull()
 
     val cas3PremisesId = when (domainEvent.data) {
-      is CAS3PremisesArchiveEvent -> domainEvent.data.premisesId
-      is CAS3PremisesUnarchiveEvent -> domainEvent.data.premisesId
+      is CAS3PremisesArchiveEvent -> domainEvent.data.eventDetails.premisesId
+      is CAS3PremisesUnarchiveEvent -> domainEvent.data.eventDetails.premisesId
       else -> null
     }
 
     val cas3BedspaceId = when (domainEvent.data) {
-      is CAS3BedspaceArchiveEvent -> domainEvent.data.bedspaceId
-      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.bedspaceId
+      is CAS3BedspaceArchiveEvent -> domainEvent.data.eventDetails.bedspaceId
+      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.eventDetails.bedspaceId
       else -> null
     }
 
     val cas3TransactionId = when (domainEvent.data) {
-      is CAS3PremisesArchiveEvent -> domainEvent.data.transactionId
-      is CAS3PremisesUnarchiveEvent -> domainEvent.data.transactionId
-      is CAS3BedspaceArchiveEvent -> domainEvent.data.transactionId
-      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.transactionId
+      is CAS3PremisesArchiveEvent -> domainEvent.data.eventDetails.transactionId
+      is CAS3PremisesUnarchiveEvent -> domainEvent.data.eventDetails.transactionId
+      is CAS3BedspaceArchiveEvent -> domainEvent.data.eventDetails.transactionId
+      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.eventDetails.transactionId
       else -> null
     }
 

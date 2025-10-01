@@ -2,19 +2,22 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
+import java.time.Instant
+import java.time.LocalDate
+import java.util.UUID
 
 data class CAS3BedspaceArchiveEvent(
   val eventDetails: CAS3BedspaceArchiveEventDetails,
-  override val id: java.util.UUID,
-  override val timestamp: java.time.Instant,
+  override val id: UUID,
+  override val timestamp: Instant,
   override val eventType: EventType,
-  val bedspaceId: java.util.UUID,
-  val premisesId: java.util.UUID,
-  val transactionId: java.util.UUID?,
 ) : CAS3Event
 
 data class CAS3BedspaceArchiveEventDetails(
-  val endDate: java.time.LocalDate,
-  val currentEndDate: java.time.LocalDate?,
-  val userId: java.util.UUID,
+  val bedspaceId: UUID,
+  val premisesId: UUID,
+  val endDate: LocalDate,
+  val currentEndDate: LocalDate?,
+  val userId: UUID,
+  val transactionId: UUID?,
 )

@@ -1557,18 +1557,18 @@ class Cas3v2DomainEventServiceTest {
     val domainEventTransactionId = UUID.randomUUID()
 
     val eventDetails = CAS3PremisesUnarchiveEventDetails(
-      userId = user.id,
+      premisesId = premises.id,
       currentStartDate = currentStartDate,
       newStartDate = newStartDate,
       currentEndDate = currentEndDate,
+      userId = user.id,
+      transactionId = domainEventTransactionId,
     )
     val data = CAS3PremisesUnarchiveEvent(
       eventDetails = eventDetails,
       id = UUID.randomUUID(),
       timestamp = occurredAt,
       eventType = EventType.premisesUnarchived,
-      premisesId = premises.id,
-      transactionId = domainEventTransactionId,
     )
     val domainEventId = UUID.randomUUID()
 

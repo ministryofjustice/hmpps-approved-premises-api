@@ -771,8 +771,8 @@ class Cas3v2BedspaceServiceTest {
 
   private fun createUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
     data.id,
-    data.premisesId,
-    data.bedspaceId,
+    data.eventDetails.premisesId,
+    data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_UNARCHIVED,
@@ -794,22 +794,22 @@ class Cas3v2BedspaceServiceTest {
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.bedspaceUnarchived,
-      bedspaceId = bedspaceId,
-      premisesId = premisesId,
-      transactionId = transactionId,
       eventDetails = CAS3BedspaceUnarchiveEventDetails(
-        userId = userId,
+        bedspaceId = bedspaceId,
+        premisesId = premisesId,
         currentStartDate = currentStartDate,
         currentEndDate = currentEndDate,
         newStartDate = newStartDate,
+        userId = userId,
+        transactionId = transactionId,
       ),
     )
   }
 
   private fun createBedspaceUnarchiveDomainEvent(data: CAS3BedspaceUnarchiveEvent) = createDomainEvent(
     data.id,
-    data.premisesId,
-    data.bedspaceId,
+    data.eventDetails.premisesId,
+    data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_UNARCHIVED,
@@ -823,21 +823,21 @@ class Cas3v2BedspaceServiceTest {
       id = eventId,
       timestamp = occurredAt.toInstant(),
       eventType = EventType.bedspaceArchived,
-      bedspaceId = bedspaceId,
-      premisesId = premisesId,
-      transactionId = transactionId,
       eventDetails = CAS3BedspaceArchiveEventDetails(
-        userId = userId,
+        bedspaceId = bedspaceId,
+        premisesId = premisesId,
         currentEndDate = currentEndDate,
         endDate = endDate,
+        userId = userId,
+        transactionId = transactionId,
       ),
     )
   }
 
   private fun createBedspaceArchiveDomainEvent(data: CAS3BedspaceArchiveEvent) = createDomainEvent(
     data.id,
-    data.premisesId,
-    data.bedspaceId,
+    data.eventDetails.premisesId,
+    data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
     objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_ARCHIVED,
