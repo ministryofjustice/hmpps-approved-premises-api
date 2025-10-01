@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2Statu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3MigrateNewBedspaceModelDataJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateApplicationOffenderNameJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateArchiveUnarchiveDomainEventDetailsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateArchiveUnarchiveDomainEventTransactionJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBookingOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
@@ -67,6 +68,7 @@ class MigrationJobService(
         MigrationJobType.cas1CapacityPerformanceTest -> getBean(Cas1CapacityPerformanceTestJob::class)
         MigrationJobType.migrateDataToCas2Tables -> getBean(Cas2MergeMigrationJob::class)
         MigrationJobType.updateCas3DomainEventArchiveUnarchiveTransaction -> getBean(Cas3UpdateArchiveUnarchiveDomainEventTransactionJob::class)
+        MigrationJobType.updateCas3ArchiveUnarchiveDomainEventDetails -> getBean(Cas3UpdateArchiveUnarchiveDomainEventDetailsJob::class)
       }
 
       if (job.shouldRunInTransaction) {
