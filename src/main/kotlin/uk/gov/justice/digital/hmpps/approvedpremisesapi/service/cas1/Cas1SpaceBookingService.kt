@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewEmergencyTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewPlannedTransfer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
@@ -76,10 +77,8 @@ class Cas1SpaceBookingService(
 ) {
   @Transactional
   fun createNewBooking(
-    premisesId: UUID,
     placementRequestId: UUID,
-    arrivalDate: LocalDate,
-    departureDate: LocalDate,
+    newSpaceBooking: Cas1NewSpaceBooking,
     createdBy: UserEntity,
     characteristics: List<CharacteristicEntity>,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
@@ -88,13 +87,14 @@ class Cas1SpaceBookingService(
     val validatedCreateBooking = when (
       val result = cas1SpaceBookingCreateService.validate(
         CreateBookingDetails(
-          premisesId = premisesId,
+          premisesId = newSpaceBooking.premisesId,
           placementRequestId = placementRequestId,
-          expectedArrivalDate = arrivalDate,
-          expectedDepartureDate = departureDate,
+          expectedArrivalDate = newSpaceBooking.arrivalDate,
+          expectedDepartureDate = newSpaceBooking.departureDate,
           createdBy = createdBy,
           characteristics = characteristics,
           transferredFrom = null,
+          reason = newSpaceBooking.reason,
         ),
       )
     ) {
@@ -299,7 +299,9 @@ class Cas1SpaceBookingService(
             booking = existingCas1SpaceBooking,
             changeRequestId = null,
           ),
+          reason = null,
         ),
+
       )
     ) {
       is CasResult.Error -> return result.reviseType()
@@ -376,6 +378,7 @@ class Cas1SpaceBookingService(
             booking = existingCas1SpaceBooking,
             changeRequestId = changeRequest.id,
           ),
+          reason = null,
         ),
       )
     ) {

@@ -572,6 +572,7 @@ data class Cas1SpaceBookingEntity(
    */
   @Enumerated(EnumType.STRING)
   var transferType: TransferType? = null,
+  val reason: String?,
   @Version
   var version: Long = 1,
 ) {

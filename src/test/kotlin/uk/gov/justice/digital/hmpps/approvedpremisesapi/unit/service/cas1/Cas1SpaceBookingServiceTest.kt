@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewEmergencyTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewPlannedTransfer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -136,10 +137,12 @@ class Cas1SpaceBookingServiceTest {
       every { cas1SpaceBookingCreateService.validate(any()) } returns commonValidationError
 
       val result = service.createNewBooking(
-        premisesId = premises.id,
         placementRequestId = placementRequest.id,
-        arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now().plusDays(1),
+        newSpaceBooking = Cas1NewSpaceBooking(
+          premisesId = premises.id,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusDays(1),
+        ),
         createdBy = user,
         characteristics = emptyList(),
       )
@@ -162,10 +165,15 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns listOf(existingSpaceBooking)
 
       val result = service.createNewBooking(
-        premisesId = premises.id,
         placementRequestId = placementRequest.id,
-        arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now().plusDays(1),
+
+        newSpaceBooking = Cas1NewSpaceBooking(
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusDays(1),
+          premisesId = premises.id,
+          characteristics = emptyList(),
+          reason = null,
+        ),
         createdBy = user,
         characteristics = emptyList(),
       )
@@ -213,6 +221,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = characteristics,
         transferredFrom = null,
+        reason = "Transfer to another AP",
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
@@ -221,10 +230,13 @@ class Cas1SpaceBookingServiceTest {
       every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
 
       val result = service.createNewBooking(
-        premisesId = premises.id,
         placementRequestId = placementRequest.id,
-        arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now().plusDays(1),
+        newSpaceBooking = Cas1NewSpaceBooking(
+          premisesId = premises.id,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusDays(1),
+          reason = "Transfer to another AP",
+        ),
         createdBy = user,
         characteristics = characteristics,
       )
@@ -275,6 +287,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = characteristics,
         transferredFrom = null,
+        reason = null,
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
@@ -283,10 +296,12 @@ class Cas1SpaceBookingServiceTest {
       every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
 
       val result = service.createNewBooking(
-        premisesId = premises.id,
         placementRequestId = placementRequest.id,
-        arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now().plusDays(1),
+        newSpaceBooking = Cas1NewSpaceBooking(
+          premisesId = premises.id,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusDays(1),
+        ),
         createdBy = user,
         characteristics = characteristics,
       )
@@ -1060,6 +1075,7 @@ class Cas1SpaceBookingServiceTest {
           booking = existingSpaceBooking,
           changeRequestId = null,
         ),
+        reason = null,
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("oh no create validation failed")
@@ -1162,6 +1178,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = existingSpaceBooking.criteria,
         transferredFrom = transferredFrom,
+        reason = null,
       )
 
       val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
@@ -1387,6 +1404,7 @@ class Cas1SpaceBookingServiceTest {
           booking = existingSpaceBooking,
           changeRequestId = existingChangeRequest.id,
         ),
+        reason = null,
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("common create validation failed")
@@ -1430,6 +1448,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = emptyList(),
         transferredFrom = transferInfo,
+        reason = null,
       )
 
       val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
@@ -1493,6 +1512,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = emptyList(),
         transferredFrom = transferInfo,
+        reason = null,
       )
 
       val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()

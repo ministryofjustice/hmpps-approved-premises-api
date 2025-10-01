@@ -263,6 +263,7 @@ class Cas1SpaceBookingTest {
                 departureDate = LocalDate.now().plusDays(8),
                 premisesId = premises.id,
                 characteristics = characteristics,
+                reason = "Transfer to another Hodge House",
               ),
             )
             .exchange()
@@ -285,6 +286,7 @@ class Cas1SpaceBookingTest {
           assertThat(result.bookedBy!!.deliusUsername).isEqualTo(applicant.deliusUsername)
           assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
           assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(8))
+          assertThat(result.reason).isEqualTo("Transfer to another Hodge House")
           assertThat(result.createdAt).satisfies(
             { it.isAfter(Instant.now().minusSeconds(10)) },
           )
