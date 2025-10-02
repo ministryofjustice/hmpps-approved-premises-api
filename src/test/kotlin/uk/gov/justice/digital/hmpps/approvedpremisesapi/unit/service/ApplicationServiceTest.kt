@@ -29,6 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -59,6 +61,7 @@ class ApplicationServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
+  private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -68,6 +71,7 @@ class ApplicationServiceTest {
     mockUserService,
     mockOfflineApplicationRepository,
     mockUserAccessService,
+    mockLockableApplicationRepository,
   )
 
   @Test
@@ -681,6 +685,7 @@ class ApplicationServiceTest {
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
+    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
     assertThat(
       applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
@@ -707,6 +712,7 @@ class ApplicationServiceTest {
       .withProbationRegion(probationRegion)
       .produce()
 
+    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withDeliusUsername(username)
       .withYieldedProbationRegion {
@@ -746,6 +752,7 @@ class ApplicationServiceTest {
       .withProbationRegion(user.probationRegion)
       .produce()
 
+    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
     every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
 
@@ -781,6 +788,7 @@ class ApplicationServiceTest {
       .withProbationRegion(user.probationRegion)
       .produce()
 
+    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
     every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
 
@@ -821,6 +829,7 @@ class ApplicationServiceTest {
       .withProbationRegion(user.probationRegion)
       .produce()
 
+    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
     every { mockUserService.getUserForRequest() } returns user
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }

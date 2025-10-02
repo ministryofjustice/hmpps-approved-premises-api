@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Inmate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -43,6 +44,7 @@ class ApplicationService(
   private val userService: UserService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val userAccessService: UserAccessService,
+  private val lockableApplicationRepository: LockableApplicationRepository,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -220,6 +222,7 @@ class ApplicationService(
     applicationId: UUID,
     data: String,
   ): CasResult<ApplicationEntity> {
+    lockableApplicationRepository.acquirePessimisticLock(applicationId)
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
