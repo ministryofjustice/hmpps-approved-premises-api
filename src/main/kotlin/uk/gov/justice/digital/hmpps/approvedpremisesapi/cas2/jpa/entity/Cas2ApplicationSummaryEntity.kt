@@ -18,30 +18,30 @@ import java.util.UUID
 interface Cas2ApplicationSummaryRepository :
   JpaRepository<Cas2ApplicationSummaryEntity, String>,
   JpaSpecificationExecutor<Cas2ApplicationSummaryEntity> {
-  @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId")
-  fun findInProgressApplications(userId: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId and ase.serviceOrigin = :serviceOrigin")
+  fun findInProgressApplications(userId: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
-      "and ase.allocatedPomUserId = :userId",
+      "and ase.allocatedPomUserId = :userId and ase.serviceOrigin = :serviceOrigin",
   )
-  fun findApplicationsAssignedToUser(userId: UUID, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findApplicationsAssignedToUser(userId: UUID, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
-      "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is not null",
+      "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is not null and ase.serviceOrigin = :serviceOrigin",
   )
-  fun findAllocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findAllocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
-      "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is null",
+      "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is null and ase.serviceOrigin = :serviceOrigin",
   )
-  fun findUnallocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findUnallocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable, serviceOrigin: String): Page<Cas2ApplicationSummaryEntity>
 
-  fun findAllByIdIn(ids: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findAllByServiceOriginAndIdIn(serviceOrigin: String, id: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
-  fun findBySubmittedAtIsNotNull(pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
+  fun findByServiceOriginAndSubmittedAtIsNotNull(serviceOrigin: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 }
 
 @Entity
@@ -58,13 +58,13 @@ data class Cas2ApplicationSummaryEntity(
    * user entity. I’m not how best to bridge the view into the cas2 user entity way of working
    * see https://dsdmoj.atlassian.net/browse/CBA-693
    */
-  @Column(name = "created_by_user_id")
+  @Column(name = "created_by_cas2_user_id")
   val userId: String,
-  @Column(name = "name")
+  @Column(name = "created_by_cas2_user_name")
   val userName: String,
   @Column(name = "allocated_pom_cas_2_user_id")
   val allocatedPomUserId: UUID?,
-  @Column(name = "allocated_pom_name")
+  @Column(name = "allocated_pom_cas_2_name")
   val allocatedPomName: String?,
   @Column(name = "created_at")
   val createdAt: OffsetDateTime,
@@ -88,4 +88,6 @@ data class Cas2ApplicationSummaryEntity(
   var bailHearingDate: LocalDate? = null,
   @Column(name = "application_origin")
   var applicationOrigin: String? = null,
+  @Column(name = "service_origin")
+  var serviceOrigin: String? = null,
 )

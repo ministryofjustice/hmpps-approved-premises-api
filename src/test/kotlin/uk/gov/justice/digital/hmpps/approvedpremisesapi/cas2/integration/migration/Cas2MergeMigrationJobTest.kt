@@ -81,7 +81,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     }.take(NO_OF_CAS2V2_USERS_TO_MIGRATE).toList()
     cas2v2Applications = generateSequence {
       cas2v2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(cas2v2Users.filter { it.userType == Cas2v2UserType.NOMIS }.random())
+        withCreatedByUser(cas2v2Users.filter { it.userType != Cas2v2UserType.EXTERNAL }.random())
       }
     }.take(NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE).toList()
     cas2v2Assessments = cas2v2Applications.map {
@@ -102,7 +102,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
       cas2v2ApplicationRepository.save(it)
       applicationNote
     }
-    cas2v2StatusUpdates = cas2v2Applications.map { it ->
+    cas2v2StatusUpdates = cas2v2Applications.map {
       val statusUpdate = cas2v2StatusUpdateEntityFactory.produceAndPersist {
         withApplication(it)
         withAssessment(it.assessment!!)
@@ -126,7 +126,6 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByNomisUser(nomisUsers.random())
         withReferringPrisonCode(randomStringUpperCase(3))
-        withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
       }
     }.take(NO_OF_CAS_2_APPLICATIONS_TO_UPDATE).toList()
     cas2ApplicationAssignments = cas2Applications.map {
@@ -278,7 +277,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
         )
       } else {
         assertThat(cas2Application.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
-        assertThat(cas2Application.createdByUser!!.id).isEqualTo(cas2Application.createdByUser.id)
+        assertThat(cas2Application.createdByUser!!.id).isEqualTo(cas2Application.createdByNomisUser!!.id)
         assertThat(cas2Application.serviceOrigin).isEqualTo(Cas2ServiceOrigin.HDC)
       }
     }
@@ -293,7 +292,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
           cas2v2StatusUpdateEntity = cas2v2StatusUpdate,
         )
       } else {
-        assertThat(cas2StatusUpdate.assessor!!.id).isEqualTo(cas2StatusUpdate.cas2UserAssessor!!.id)
+        assertThat(cas2StatusUpdate.assessor!!.id).isEqualTo(cas2StatusUpdate.externalAssessor!!.id)
       }
     }
   }

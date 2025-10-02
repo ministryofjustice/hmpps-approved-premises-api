@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -113,7 +112,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
 
   fun withApplicationAssignments(
     prisonCode: String = "PRI",
-    user: Cas2UserEntity = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce(),
+    user: Cas2UserEntity = Cas2UserEntityFactory().produce(),
   ) = apply {
     this.applicationAssignments = {
       mutableListOf(

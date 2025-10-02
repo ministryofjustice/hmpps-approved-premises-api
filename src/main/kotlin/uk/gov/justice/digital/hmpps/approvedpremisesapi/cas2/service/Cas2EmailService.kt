@@ -34,7 +34,7 @@ class Cas2EmailService(
 
     // only send an email to previous POM if the offender actually has one
     transferringFromPomId?.let {
-      val transferringFromPom = cas2UserRepository.findByIdAndUserType(it) ?: error("No Cas2 User found for id $it.")
+      val transferringFromPom = cas2UserRepository.findByIdAndServiceOrigin(it, application.serviceOrigin) ?: error("No Cas2 User found for id $it.")
       emailNotificationService.sendCas2Email(
         transferringFromPom.email!!,
         Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
