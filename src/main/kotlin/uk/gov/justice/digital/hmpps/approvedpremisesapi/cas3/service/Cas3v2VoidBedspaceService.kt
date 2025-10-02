@@ -127,7 +127,7 @@ class Cas3v2VoidBedspaceService(
     cas3BookingService.throwIfVoidBedspaceDatesConflict(voidBedspaceStartDate, voidBedspaceEndDate, null, bedspace.id)
 
     if (voidBedspaceEndDate.isBefore(voidBedspaceStartDate)) {
-      "$.endDate" hasValidationError "beforeStartDate"
+      "$.endDate" hasValidationError "voidEndDateBeforeVoidStartDate"
     }
     if (bedspace.endDate != null && voidBedspaceStartDate.isAfter(bedspace.endDate)) {
       "$.startDate" hasValidationError "voidStartDateAfterBedspaceEndDate"

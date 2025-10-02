@@ -3244,7 +3244,7 @@ class Cas3PremisesServiceTest {
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
       assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-        entry("$.endDate", "beforeStartDate"),
+        entry("$.endDate", "voidEndDateBeforeVoidStartDate"),
         entry("$.reason", "doesNotExist"),
       )
     }
@@ -3464,7 +3464,7 @@ class Cas3PremisesServiceTest {
       val resultEntity = (result as AuthorisableActionResult.Success).entity
       assertThat(resultEntity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
       assertThat((resultEntity as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-        entry("$.endDate", "beforeStartDate"),
+        entry("$.endDate", "voidEndDateBeforeVoidStartDate"),
         entry("$.reason", "doesNotExist"),
       )
     }
