@@ -69,6 +69,8 @@ class StartupScriptConfigTest {
     seedConfig.onStartup.script.prisonCode = "PRI"
 
     every { mockCas2UserRepository.findAll() } answers { listOf(mockCas2UserEntity) }
+    every { mockCas2UserRepository.findByUserTypeAndServiceOrigin(any(), any()) } answers { listOf(mockCas2UserEntity) }
+
     every { mockCas2UserEntity.username } answers { "SMITHJ_GEN" }
 
     every { mockApplicationRepository.save(any()) } answers { mockApplicationEntity }

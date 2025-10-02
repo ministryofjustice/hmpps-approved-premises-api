@@ -16,8 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -83,7 +81,6 @@ class Cas2UserServiceTest {
         val username = "SOMEPERSON"
 
         val existingCas2User = Cas2UserEntityFactory()
-          .withUserType(Cas2UserType.NOMIS)
           .withName("This Should Not Be Updated")
           .withEmail("same@example.com")
           .withActiveNomisCaseloadId("123")
@@ -123,7 +120,6 @@ class Cas2UserServiceTest {
         val username = "SOMEPERSON"
 
         val existingCas2User = Cas2UserEntityFactory()
-          .withUserType(Cas2UserType.NOMIS)
           .withName("This Should Not Be Updated")
           .withEmail("same@example.com")
           .withActiveNomisCaseloadId("123")
@@ -254,10 +250,10 @@ class Cas2UserServiceTest {
           .withActiveNomisCaseloadId("123")
           .produce()
 
-        every { mockCas2UserRepository.findByNomisStaffIdAndUserType(user.nomisStaffId!!, Cas2UserType.NOMIS) } returns user
+        every { mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(user.nomisStaffId!!, Cas2ServiceOrigin.HDC) } returns user
         verify(exactly = 0) { mockCas2UserRepository.save(any()) }
 
-        assertThat(cas2UserService.getUserByStaffId(user.nomisStaffId!!)).isEqualTo(user)
+        assertThat(cas2UserService.getUserByStaffId(user.nomisStaffId!!, Cas2ServiceOrigin.HDC)).isEqualTo(user)
       }
     }
 
@@ -265,12 +261,12 @@ class Cas2UserServiceTest {
     inner class WhenNewUser {
       @Test
       fun `saves and returns new User with details from Nomis-User-Roles API`() {
-        every { mockCas2UserRepository.findByNomisStaffIdAndUserType(eq(newUserData.staffId), eq(Cas2UserType.NOMIS)) } returns null
+        every { mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(eq(newUserData.staffId), eq(Cas2ServiceOrigin.HDC)) } returns null
 
         every { mockCas2UserRepository.save(any()) } answers { it.invocation.args[0] as Cas2UserEntity }
-        every { mockCas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.NOMIS) } returns null
+        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC) } returns null
 
-        assertThat(cas2UserService.getUserByStaffId(newUserData.staffId)).matches {
+        assertThat(cas2UserService.getUserByStaffId(newUserData.staffId, Cas2ServiceOrigin.HDC)).matches {
           it.username == username &&
             it.name == "Jim Jimmerson" &&
             it.nomisAccountType == "CLOSED" &&
@@ -284,12 +280,12 @@ class Cas2UserServiceTest {
 
       @Test
       fun `does not save when existing`() {
-        every { mockCas2UserRepository.findByNomisStaffIdAndUserType(eq(newUserData.staffId), eq(Cas2UserType.NOMIS)) } returns null
+        every { mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(newUserData.staffId, Cas2ServiceOrigin.HDC) } returns null
 
         val userEntity = Cas2UserEntityFactory().produce()
-        every { mockCas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.NOMIS) } returns userEntity
+        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, userEntity.userType, userEntity.serviceOrigin) } returns userEntity
 
-        val result = cas2UserService.getUserByStaffId(newUserData.staffId)
+        val result = cas2UserService.getUserByStaffId(newUserData.staffId, Cas2ServiceOrigin.HDC)
         verify(exactly = 0) { mockCas2UserRepository.save(any()) }
         assertThat(result).isEqualTo(userEntity)
       }
@@ -298,25 +294,25 @@ class Cas2UserServiceTest {
     @Test
     fun `returns gracefully if the username is existing`() {
       val userEntity = Cas2UserEntityFactory().produce()
-      every { mockCas2UserRepository.findByNomisStaffIdAndUserType(newUserData.staffId, Cas2UserType.NOMIS) } returns null
+      every { mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(newUserData.staffId, Cas2ServiceOrigin.HDC) } returns null
       every { mockCas2UserRepository.save(any()) } throws DataIntegrityViolationException("DataIntegrityViolationException")
-      every { mockCas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.NOMIS) } returns null andThen userEntity
+      every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC) } returns null andThen userEntity
 
-      val result = cas2UserService.getUserByStaffId(newUserData.staffId)
+      val result = cas2UserService.getUserByStaffId(newUserData.staffId, Cas2ServiceOrigin.HDC)
       verify(exactly = 1) { mockCas2UserRepository.save(any()) }
-      verify(exactly = 2) { mockCas2UserRepository.findByUsernameAndUserType(newUserData.username, Cas2UserType.NOMIS) }
+      verify(exactly = 2) { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(newUserData.username, Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC) }
       assertThat(result).isEqualTo(userEntity)
     }
 
     @Test
     fun `still throws exception when username is not existing`() {
-      every { mockCas2UserRepository.findByUsernameAndUserType(any(), eq(Cas2UserType.NOMIS)) } returns null
+      every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(any(), eq(Cas2UserType.NOMIS), eq(Cas2ServiceOrigin.HDC)) } returns null
       every { mockCas2UserRepository.save(any()) } throws DataIntegrityViolationException("DataIntegrityViolationException")
-      every { mockCas2UserRepository.findByNomisStaffIdAndUserType(newUserData.staffId, Cas2UserType.NOMIS) } returns null
+      every { mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(newUserData.staffId, Cas2ServiceOrigin.HDC) } returns null
 
-      assertThrows<IllegalStateException> { cas2UserService.getUserByStaffId(newUserData.staffId) }
+      assertThrows<IllegalStateException> { cas2UserService.getUserByStaffId(newUserData.staffId, Cas2ServiceOrigin.HDC) }
       verify(exactly = 1) { mockCas2UserRepository.save(any()) }
-      verify(exactly = 2) { mockCas2UserRepository.findByUsernameAndUserType(newUserData.username, Cas2UserType.NOMIS) }
+      verify(exactly = 2) { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(newUserData.username, Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC) }
     }
   }
 }

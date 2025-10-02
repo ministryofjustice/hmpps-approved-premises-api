@@ -16,12 +16,13 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
         applications.noms_number AS personNoms,
         to_char(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
         users.username AS startedBy,
-        applications.application_origin AS applicationOrigin
-
+        applications.application_origin AS applicationOrigin,
+        applications.service_origin AS serviceOrigin
       FROM cas_2_applications applications
-      JOIN cas_2_users users ON users.id = applications.created_by_cas2_user_id and users.user_type = 'NOMIS'
+      JOIN cas_2_users users ON users.id = applications.created_by_cas2_user_id and users.user_type = 'NOMIS' and users.service_origin = 'HDC'
       WHERE applications.submitted_at IS NULL
         AND applications.created_at  > CURRENT_DATE - 365
+        AND applications.service_origin = 'HDC'
       ORDER BY startedAt DESC;
     """,
     nativeQuery = true,
