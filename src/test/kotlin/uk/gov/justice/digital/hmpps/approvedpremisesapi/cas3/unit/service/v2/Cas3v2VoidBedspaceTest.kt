@@ -121,7 +121,7 @@ class Cas3v2VoidBedspaceTest {
       assertThatCasResult(result)
         .isFieldValidationError()
         .hasMessage("$.reason", "doesNotExist")
-        .hasMessage("$.endDate", "beforeStartDate")
+        .hasMessage("$.endDate", "voidEndDateBeforeVoidStartDate")
     }
 
     @Test
@@ -245,7 +245,7 @@ class Cas3v2VoidBedspaceTest {
       )
 
       assertThatCasResult(result).isFieldValidationError()
-        .hasMessage("$.endDate", "beforeStartDate")
+        .hasMessage("$.endDate", "voidEndDateBeforeVoidStartDate")
         .hasMessage("$.reason", "doesNotExist")
     }
 

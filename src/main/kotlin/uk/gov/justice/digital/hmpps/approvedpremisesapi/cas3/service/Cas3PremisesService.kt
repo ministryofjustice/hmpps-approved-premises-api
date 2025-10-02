@@ -995,7 +995,7 @@ class Cas3PremisesService(
     costCentre: Cas3CostCentre?,
   ): ValidatableActionResult<Cas3VoidBedspaceEntity> = validated {
     if (endDate.isBefore(startDate)) {
-      "$.endDate" hasValidationError "beforeStartDate"
+      "$.endDate" hasValidationError "voidEndDateBeforeVoidStartDate"
     }
 
     val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
@@ -1050,7 +1050,7 @@ class Cas3PremisesService(
     return AuthorisableActionResult.Success(
       validated {
         if (endDate.isBefore(startDate)) {
-          "$.endDate" hasValidationError "beforeStartDate"
+          "$.endDate" hasValidationError "voidEndDateBeforeVoidStartDate"
         }
 
         val bed = voidBedspace.bed
