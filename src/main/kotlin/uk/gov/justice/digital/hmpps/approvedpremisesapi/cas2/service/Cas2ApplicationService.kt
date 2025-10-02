@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
@@ -19,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
@@ -64,17 +62,20 @@ class Cas2ApplicationService(
       AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsInSamePrisonAsUser(
         user.activeNomisCaseloadId!!,
         getPageableOrAllPages(pageCriteria),
+        Cas2ServiceOrigin.HDC.toString(),
       )
 
       AssignmentType.IN_PROGRESS -> applicationSummaryRepository.findInProgressApplications(
         user.id.toString(),
         getPageableOrAllPages(pageCriteria),
+        Cas2ServiceOrigin.HDC.toString(),
       )
 
       AssignmentType.PRISON -> {
         applicationSummaryRepository.findAllocatedApplicationsInSamePrisonAsUser(
           user.activeNomisCaseloadId!!,
           getPageableOrAllPages(pageCriteria),
+          Cas2ServiceOrigin.HDC.toString(),
         )
       }
 
@@ -82,13 +83,15 @@ class Cas2ApplicationService(
         applicationSummaryRepository.findApplicationsAssignedToUser(
           user.id,
           getPageableOrAllPages(pageCriteria),
+          Cas2ServiceOrigin.HDC.toString(),
         )
       }
 
       AssignmentType.DEALLOCATED -> {
         val deallocatedApplicationIds =
-          applicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(user.id, user.activeNomisCaseloadId!!)
-        applicationSummaryRepository.findAllByIdIn(
+          applicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(user.id, user.activeNomisCaseloadId!!, Cas2ServiceOrigin.HDC.toString())
+        applicationSummaryRepository.findAllByServiceOriginAndIdIn(
+          Cas2ServiceOrigin.HDC.toString(),
           deallocatedApplicationIds,
           getPageableOrAllPages(pageCriteria),
         )
@@ -99,14 +102,14 @@ class Cas2ApplicationService(
     return Pair(response.content, metadata)
   }
 
-  fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber)
+  fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndServiceOriginAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber, Cas2ServiceOrigin.HDC)
 
   fun findApplicationToAssign(nomsNumber: String): Cas2ApplicationEntity? = findMostRecentApplication(nomsNumber)?.takeIf { !it.isMostRecentStatusUpdateANonAssignableStatus() }
 
   fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 
-    val response = applicationSummaryRepository.findBySubmittedAtIsNotNull(pageable)
+    val response = applicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(Cas2ServiceOrigin.HDC.toString(), pageable)
 
     val metadata = getMetadata(response, pageCriteria)
 
@@ -114,14 +117,14 @@ class Cas2ApplicationService(
   }
 
   fun getSubmittedApplicationForAssessor(applicationId: UUID): CasResult<Cas2ApplicationEntity> {
-    val applicationEntity = applicationRepository.findSubmittedApplicationById(applicationId)
+    val applicationEntity = applicationRepository.findByIdAndServiceOriginAndSubmittedAtIsNotNull(applicationId, Cas2ServiceOrigin.HDC)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     return CasResult.Success(applicationEntity)
   }
 
   fun getApplicationForUser(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
+    val applicationEntity = applicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
 
     if (applicationEntity == null || applicationEntity.abandonedAt != null) {
       return CasResult.NotFound("Application", applicationId.toString())
@@ -163,7 +166,7 @@ class Cas2ApplicationService(
 
   @SuppressWarnings("ReturnCount")
   fun updateApplication(applicationId: UUID, data: String?, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val application = applicationRepository.findByIdOrNull(applicationId)
+    val application = applicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (!application.isCreatedBy(user)) {
@@ -189,7 +192,7 @@ class Cas2ApplicationService(
 
   @SuppressWarnings("ReturnCount")
   fun abandonApplication(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val application = applicationRepository.findByIdOrNull(applicationId)
+    val application = applicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (!application.isCreatedBy(user)) {
@@ -224,7 +227,7 @@ class Cas2ApplicationService(
 
     lockableApplicationRepository.acquirePessimisticLock(applicationId)
 
-    var application = applicationRepository.findByIdOrNull(applicationId)
+    var application = applicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)

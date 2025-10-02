@@ -14,9 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
@@ -61,7 +58,12 @@ class Cas2ApplicationsSeedJob(
     }
 
     @SuppressWarnings("TooGenericExceptionThrown")
-    val applicant = cas2UserRepository.findByUsernameAndUserType(row.createdBy, Cas2UserType.NOMIS) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
+    val applicant =
+      cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(
+        row.createdBy,
+        Cas2UserType.NOMIS,
+        Cas2ServiceOrigin.HDC,
+      ) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
 
     try {
       createApplication(row, applicant)
@@ -109,7 +111,7 @@ class Cas2ApplicationsSeedJob(
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     log.info("Seeding status update $idx for application ${application.id}")
-    val assessor = cas2UserRepository.findByUserType(Cas2UserType.EXTERNAL).random()
+    val assessor = cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.EXTERNAL, application.serviceOrigin).random()
     val status = findStatusAtPosition(idx)
     statusUpdateRepository.save(
       Cas2StatusUpdateEntity(
@@ -133,7 +135,7 @@ class Cas2ApplicationsSeedJob(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
-        serviceOrigin = Cas2ServiceOrigin.HDC,
+        serviceOrigin = application.serviceOrigin,
       ),
     )
     application.assessment = assessment
