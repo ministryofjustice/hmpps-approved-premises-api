@@ -28,6 +28,7 @@ enum class Cas2UserType(val authSource: String) {
 
 @Repository
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
+  fun findByUsername(username: String): Cas2UserEntity?
   fun findByUserType(type: Cas2UserType = Cas2UserType.NOMIS): List<Cas2UserEntity>
   fun findByIdAndUserType(id: UUID, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
   fun findByUsernameAndUserType(username: String, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
@@ -84,4 +85,6 @@ data class Cas2UserEntity(
     Cas2UserType.DELIUS -> deliusStaffCode ?: error("Couldn't resolve delius ID for user $id")
     Cas2UserType.EXTERNAL -> "" // BAIL-WIP - this currently needs to be not null - refactor them when we add the user type to cas2 user type
   }
+
+  fun isExternal() = userType == Cas2UserType.EXTERNAL
 }
