@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.Cas3BedspaceUsageReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.Cas3BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.Cas3BedUsageType
@@ -38,7 +38,7 @@ class Cas3BedspaceUsageReportGeneratorTest {
   private val mockLostBedsRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
-  private val bedUsageReportGenerator = Cas3BedspaceUsageReportGenerator(
+  private val bedUsageReportGenerator = BedspaceUsageReportGenerator(
     mockBookingTransformer,
     mockBookingRepository,
     mockLostBedsRepository,
@@ -117,7 +117,7 @@ class Cas3BedspaceUsageReportGeneratorTest {
       )
     } returns listOf(voidBedspace)
 
-    val bedUsageReportGeneratorWithThreeMonth = Cas3BedspaceUsageReportGenerator(
+    val bedUsageReportGeneratorWithThreeMonth = BedspaceUsageReportGenerator(
       mockBookingTransformer,
       mockBookingRepository,
       mockLostBedsRepository,

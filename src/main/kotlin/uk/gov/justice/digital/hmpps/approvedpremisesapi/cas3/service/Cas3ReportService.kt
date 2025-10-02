@@ -15,24 +15,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedUtilisationReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceOccupancyReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BookingsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.Cas3BedspaceUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsCsvReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.TransitionalAccommodationReferralReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUtilisationReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceOccupancyReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.FutureBookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BedUtilisationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BedspaceOccupancyReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingGapReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.FutureBookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.TransitionalAccommodationReferralReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsageRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedspaceOccupancyReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer
@@ -61,6 +65,7 @@ class Cas3ReportService(
   private val cas3v2BookingRepository: Cas3v2BookingRepository,
   private val bedUsageRepository: BedUsageRepository,
   private val bedUtilisationReportRepository: BedUtilisationReportRepository,
+  private val bedspaceOccupancyReportRepository: BedspaceOccupancyReportRepository,
   private val cas3FutureBookingsReportRepository: Cas3FutureBookingsReportRepository,
   private val cas3BookingGapReportRepository: Cas3BookingGapReportRepository,
   @Value("\${cas3-report.crn-search-limit:500}") private val numberOfCrn: Int,
@@ -155,7 +160,7 @@ class Cas3ReportService(
         val bedspacesInScope = bedUsageRepository.findAllBedspacesV2(
           probationRegionId = properties.probationRegionId,
         )
-        Cas3BedspaceUsageReportGenerator(cas3BookingTransformer, cas3v2BookingRepository, cas3VoidBedspacesRepository, workingDayService)
+        BedspaceUsageReportGenerator(cas3BookingTransformer, cas3v2BookingRepository, cas3VoidBedspacesRepository, workingDayService)
           .createReport(bedspacesInScope, properties)
           .writeExcel(
             outputStream = outputStream,
@@ -237,6 +242,73 @@ class Cas3ReportService(
     log.info("Creating report")
 
     BedUtilisationReportGenerator(workingDayService)
+      .createReport(reportData, properties)
+      .writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
+  }
+
+  fun createBedspaceOccupancyReport(properties: BedspaceOccupancyReportProperties, outputStream: OutputStream) {
+    log.info("Beginning CAS3 Bedspace Occupancy Report")
+    val bedspacesInScope = bedspaceOccupancyReportRepository.findAllBedspaces(
+      probationRegionId = properties.probationRegionId,
+      startDate = properties.startDate,
+      endDate = properties.endDate,
+    )
+    log.info("${bedspacesInScope.size} bedspaces found.")
+
+    val bedspaceBookingsInScope = bedspaceOccupancyReportRepository.findAllBookingsByOverlappingDate(
+      probationRegionId = properties.probationRegionId,
+      properties.startDate,
+      properties.endDate,
+    )
+    log.info("${bedspaceBookingsInScope.size} bedspace bookings found.")
+
+    val bedspaceBookingsCancellationInScope =
+      bedspaceOccupancyReportRepository.findAllBookingCancellationsByOverlappingDate(
+        probationRegionId = properties.probationRegionId,
+        properties.startDate,
+        properties.endDate,
+      )
+
+    log.info("${bedspaceBookingsCancellationInScope.size} bedspace booking cancellation found.")
+
+    val bedspaceBookingsTurnaroundInScope = bedspaceOccupancyReportRepository.findAllBookingTurnaroundByOverlappingDate(
+      probationRegionId = properties.probationRegionId,
+      properties.startDate,
+      properties.endDate,
+    )
+
+    log.info("${bedspaceBookingsTurnaroundInScope.size} bedspace booking in turnaround found.")
+
+    val voidBedspaceInScope = bedspaceOccupancyReportRepository.findAllVoidBedspaceByOverlappingDate(
+      probationRegionId = properties.probationRegionId,
+      properties.startDate,
+      properties.endDate,
+    )
+
+    log.info("${voidBedspaceInScope.size} void bedspace found.")
+
+    val reportData = bedspacesInScope.map { bedspace ->
+      val bedspaceId = bedspace.bedspaceId
+      val bedspaceBookings = bedspaceBookingsInScope.filter { it.bedspaceId == bedspaceId }
+      val bedspaceBookingsCancellation = bedspaceBookingsCancellationInScope.filter { it.bedspaceId == bedspaceId }
+      val bedspaceBookingsTurnaround = bedspaceBookingsTurnaroundInScope.filter { it.bedspaceId == bedspaceId }
+      val voidBedspace = voidBedspaceInScope.filter { it.bedspaceId == bedspaceId }
+
+      BedspaceOccupancyReportData(
+        bedspace,
+        bedspaceBookings,
+        bedspaceBookingsCancellation,
+        bedspaceBookingsTurnaround,
+        voidBedspace,
+      )
+    }
+
+    log.info("Creating bedspace occupancy report")
+
+    BedspaceOccupancyReportGenerator(workingDayService)
       .createReport(reportData, properties)
       .writeExcel(
         outputStream = outputStream,
