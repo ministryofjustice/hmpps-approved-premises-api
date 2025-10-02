@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
@@ -223,6 +224,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         withCrn(offenderDetails.otherIds.crn)
         withCreatedAt(OffsetDateTime.now().minusDays(28))
         withConditionalReleaseDate(LocalDate.now().plusDays(1))
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       fun createStatusUpdate(
@@ -232,7 +234,12 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         withLabel(status.first)
         withStatusId(status.second)
         withApplication(application)
-        withAssessor(cas2UserEntityFactory.produceAndPersist { withUserType(Cas2UserType.EXTERNAL) })
+        withAssessor(
+          cas2UserEntityFactory.produceAndPersist {
+            withUserType(Cas2UserType.EXTERNAL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          },
+        )
       }
 
       fun unexpiredDateTime() = OffsetDateTime.now().randomDateTimeBefore(32)
@@ -336,6 +343,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
           withAbandonedAt(OffsetDateTime.now())
+          withServiceOrigin(Cas2ServiceOrigin.BAIL)
         }
 
         // unsubmitted application
@@ -345,6 +353,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
           withHdcEligibilityDate(LocalDate.now().plusMonths(3))
+          withServiceOrigin(Cas2ServiceOrigin.BAIL)
         }
 
         // submitted application, CRD >= today so should be returned
@@ -355,6 +364,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
           withSubmittedAt(OffsetDateTime.now())
           withConditionalReleaseDate(LocalDate.now())
+          withServiceOrigin(Cas2ServiceOrigin.BAIL)
         }
 
         // submitted application, CRD = yesterday, so should not be returned
@@ -365,18 +375,25 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
           withSubmittedAt(OffsetDateTime.now())
           withConditionalReleaseDate(LocalDate.now().minusDays(1))
+          withServiceOrigin(Cas2ServiceOrigin.BAIL)
         }
 
         val statusUpdate = cas2StatusUpdateEntityFactory.produceAndPersist {
           withLabel("More information requested")
           withApplication(secondApplicationEntity)
-          withAssessor(cas2UserEntityFactory.produceAndPersist { withUserType(Cas2UserType.EXTERNAL) })
+          withAssessor(
+            cas2UserEntityFactory.produceAndPersist {
+              withUserType(Cas2UserType.EXTERNAL)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            },
+          )
         }
 
         val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(otherUser)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
+          withServiceOrigin(Cas2ServiceOrigin.BAIL)
         }
 
         val rawResponseBody = webTestClient.get()
@@ -441,6 +458,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
               withApplicationOrigin(ApplicationOrigin.courtBail)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
             }
 
             val prisonBailApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
@@ -449,15 +467,16 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
               withApplicationOrigin(ApplicationOrigin.prisonBail)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
             }
 
-            val hdcApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            // this application will not be selected as it is not a BAIL app
+            cas2ApplicationEntityFactory.produceAndPersist {
               withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
               withSubmittedAt(OffsetDateTime.now())
-              withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
             }
 
             val rawResponseBody = webTestClient.get()
@@ -474,13 +493,9 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             val responseBody =
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
-            Assertions.assertThat(responseBody.count()).isEqualTo(3)
+            Assertions.assertThat(responseBody.count()).isEqualTo(2)
             Assertions.assertThat(responseBody).anyMatch {
               courtBailApplicationEntity.applicationOrigin == it.applicationOrigin
-            }
-
-            Assertions.assertThat(responseBody).anyMatch {
-              hdcApplicationEntity.applicationOrigin == it.applicationOrigin
             }
 
             Assertions.assertThat(responseBody).anyMatch {
@@ -514,6 +529,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withData("{}")
             withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
         }
 
@@ -647,10 +663,13 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
   }
 
   private fun addStatusUpdates(applicationId: UUID, assessor: Cas2UserEntity) {
-    val otherCas2Assessor = cas2UserEntityFactory.produceAndPersist { withUserType(Cas2UserType.EXTERNAL) }
+    val otherCas2Assessor = cas2UserEntityFactory.produceAndPersist {
+      withUserType(Cas2UserType.EXTERNAL)
+      withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    }
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withLabel("More information requested")
-      withApplication(cas2ApplicationRepository.findById(applicationId).get())
+      withApplication(cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)!!)
       withAssessor(otherCas2Assessor)
       withCreatedAt(OffsetDateTime.now().minusDays(2))
     }
@@ -658,7 +677,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
       withLabel("Awaiting decision")
-      withApplication(cas2ApplicationRepository.findById(applicationId).get())
+      withApplication(cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)!!)
       withAssessor(assessor)
       withCreatedAt(OffsetDateTime.now().minusDays(1))
     }
@@ -690,6 +709,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                     withData("{}")
                     withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
+                    withApplicationOrigin(ApplicationOrigin.courtBail)
+                    withServiceOrigin(Cas2ServiceOrigin.BAIL)
                   }.id,
                 )
               }
@@ -705,6 +726,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                     withData("{}")
                     withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
                     withConditionalReleaseDate(LocalDate.now())
+                    withApplicationOrigin(ApplicationOrigin.courtBail)
+                    withServiceOrigin(Cas2ServiceOrigin.BAIL)
                   }.id,
                 )
               }
@@ -717,6 +740,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
                 withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
+                withApplicationOrigin(ApplicationOrigin.courtBail)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }.id
 
               addStatusUpdates(submittedIds.first(), assessor)
@@ -728,6 +753,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                     withCreatedByUser(userEntity)
                     withCrn(offenderDetails.otherIds.crn)
                     withData("{}")
+                    withApplicationOrigin(ApplicationOrigin.courtBail)
+                    withServiceOrigin(Cas2ServiceOrigin.BAIL)
                   }.id,
                 )
               }
@@ -738,6 +765,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
                 withSubmittedAt(OffsetDateTime.now())
+                withApplicationOrigin(ApplicationOrigin.courtBail)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               // create an unsubmitted application by another user which should not be in results
@@ -745,6 +774,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
+                withApplicationOrigin(ApplicationOrigin.courtBail)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               jwtForUser = jwt
@@ -1056,6 +1087,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     ) = cas2ApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(cas2UserEntity)
       withApplicationOrigin(applicationOrigin)
+      withServiceOrigin(Cas2ServiceOrigin.BAIL)
     }
   }
 
@@ -1088,9 +1120,11 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(userEntity)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
               withData(
                 data,
               )
+              withApplicationOrigin(ApplicationOrigin.courtBail)
             }
 
             val rawResponseBody = webTestClient.get()
@@ -1141,10 +1175,13 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(userEntity)
               withSubmittedAt(OffsetDateTime.now().minusDays(1))
+              withApplicationOrigin(ApplicationOrigin.courtBail)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
             }
 
             cas2AssessmentEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
             }
 
             val rawResponseBody = webTestClient.get()
@@ -1183,6 +1220,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val otherUser = cas2UserEntityFactory.produceAndPersist {
                 withActiveNomisCaseloadId("other_caseload")
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
@@ -1192,6 +1230,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 withData(
                   data,
                 )
+                withApplicationOrigin(ApplicationOrigin.courtBail)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               webTestClient.get()
@@ -1229,6 +1269,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val otherUser = cas2UserEntityFactory.produceAndPersist {
                 withActiveNomisCaseloadId(userEntity.activeNomisCaseloadId!!)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
@@ -1236,10 +1277,13 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 withCreatedByUser(otherUser)
                 withSubmittedAt(OffsetDateTime.now().minusDays(1))
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
+                withApplicationOrigin(ApplicationOrigin.courtBail)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               cas2AssessmentEntityFactory.produceAndPersist {
                 withApplication(applicationEntity)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               val rawResponseBody = webTestClient.get()
@@ -1272,12 +1316,15 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val otherUser = cas2UserEntityFactory.produceAndPersist {
                 withActiveNomisCaseloadId(userEntity.activeNomisCaseloadId!!)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(otherUser)
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
+                withApplicationOrigin(ApplicationOrigin.courtBail)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               webTestClient.get()
@@ -1300,6 +1347,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val otherUser = cas2UserEntityFactory.produceAndPersist {
                 withActiveNomisCaseloadId(userEntity.activeNomisCaseloadId!!)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
@@ -1308,6 +1356,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 withSubmittedAt(OffsetDateTime.now().minusDays(1))
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
                 withApplicationOrigin(ApplicationOrigin.prisonBail)
+                withServiceOrigin(uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin.BAIL)
               }
 
               webTestClient.get()
@@ -1325,12 +1374,15 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           givenACas2v2DeliusUser { _, jwt ->
             givenAnOffender { offenderDetails, _ ->
 
-              val otherUser = cas2UserEntityFactory.produceAndPersist()
+              val otherUser = cas2UserEntityFactory.produceAndPersist {
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
+              }
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(otherUser)
                 withApplicationOrigin(ApplicationOrigin.prisonBail)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               webTestClient.get()
@@ -1350,6 +1402,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
               val otherUser = cas2UserEntityFactory.produceAndPersist {
                 withActiveNomisCaseloadId(userEntity.activeNomisCaseloadId!!)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
@@ -1357,6 +1410,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 withCreatedByUser(otherUser)
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
                 withApplicationOrigin(ApplicationOrigin.courtBail)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               webTestClient.get()
@@ -1502,6 +1556,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
           withId(applicationId)
           withCreatedByUser(submittingUser)
+          withApplicationOrigin(ApplicationOrigin.courtBail)
+          withServiceOrigin(Cas2ServiceOrigin.BAIL)
         }
 
         val resultBody = webTestClient.put()
@@ -1556,6 +1612,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                       withData("{}")
                       withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
                       withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
+                      withServiceOrigin(Cas2ServiceOrigin.BAIL)
                     },
                   )
                 }
@@ -1570,6 +1627,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                     withApplicationOrigin(ApplicationOrigin.prisonBail)
                     withData("{}")
                     withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
+                    withServiceOrigin(Cas2ServiceOrigin.BAIL)
                   },
                 )
                 cas2ApplicationEntityFactory.produceAndPersist {
@@ -1580,6 +1638,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                   withData("{}")
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
                   withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
+                  withServiceOrigin(Cas2ServiceOrigin.BAIL)
                 }
               }
 
@@ -1694,6 +1753,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       withData(
         data,
       )
+      withServiceOrigin(Cas2ServiceOrigin.BAIL)
     }
 
     return application

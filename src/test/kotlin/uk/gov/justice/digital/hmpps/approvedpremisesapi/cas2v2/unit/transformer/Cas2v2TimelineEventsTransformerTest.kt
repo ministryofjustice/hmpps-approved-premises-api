@@ -11,18 +11,24 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2TimelineEventsTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2TimelineEventsTransformerTest {
-  private val user = Cas2UserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .produce()
 
-  private val cas2v2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
-
-  private val submittedCas2v2ApplicationFactory = Cas2ApplicationEntityFactory()
+  private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
     .withCreatedByUser(user)
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+
+  private val submittedCas2ApplicationFactory = Cas2ApplicationEntityFactory()
+    .withCreatedByUser(user)
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
     .withSubmittedAt(OffsetDateTime.now())
 
   private val timelineEventTransformer = Cas2v2TimelineEventsTransformer()
@@ -35,9 +41,11 @@ class Cas2v2TimelineEventsTransformerTest {
       val statusUpdateEntity = Cas2StatusUpdateEntityFactory()
         .withCreatedAt(statusCreatedAt)
         .withLabel("status update")
-        .withApplication(submittedCas2v2ApplicationFactory.produce())
+        .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
-          Cas2UserEntityFactory().withName("Anne Assessor")
+          Cas2UserEntityFactory()
+            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            .withName("Anne Assessor")
             .produce(),
         ).produce()
 
@@ -49,41 +57,48 @@ class Cas2v2TimelineEventsTransformerTest {
               id = UUID.randomUUID(),
               statusDetailId = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),
               label = "first detail",
-              statusUpdate = Cas2StatusUpdateEntityFactory().withApplication(submittedCas2v2ApplicationFactory.produce()).produce(),
+              statusUpdate = Cas2StatusUpdateEntityFactory().withApplication(submittedCas2ApplicationFactory.produce()).produce(),
             ),
             Cas2StatusUpdateDetailEntity(
               id = UUID.randomUUID(),
               statusDetailId = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),
               label = "second detail",
-              statusUpdate = Cas2StatusUpdateEntityFactory().withApplication(submittedCas2v2ApplicationFactory.produce()).produce(),
+              statusUpdate = Cas2StatusUpdateEntityFactory().withApplication(submittedCas2ApplicationFactory.produce()).produce(),
             ),
           ),
         )
         .withCreatedAt(statusWithDetailCreatedAt)
         .withLabel("status update with details")
-        .withApplication(submittedCas2v2ApplicationFactory.produce())
+        .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
-          Cas2UserEntityFactory().withName("Anne Other Assessor")
+          Cas2UserEntityFactory()
+            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            .withName("Anne Other Assessor")
             .withUserType(Cas2UserType.EXTERNAL)
             .produce(),
         )
         .produce()
 
-      val nomisUser = Cas2UserEntityFactory().withName("Some Nomis User").withUserType(Cas2UserType.NOMIS).produce()
+      val nomisUser = Cas2UserEntityFactory()
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .withName("Some Nomis User")
+        .produce()
 
       val noteCreatedAt = OffsetDateTime.now().minusDays(3)
       val note = Cas2ApplicationNoteEntity(
         id = UUID.randomUUID(),
         createdAt = noteCreatedAt,
         createdByUser = nomisUser,
-        application = submittedCas2v2ApplicationFactory.produce(),
+        application = submittedCas2ApplicationFactory.produce(),
         body = "a comment",
-        assessment = Cas2AssessmentEntityFactory().produce(),
+        assessment = Cas2AssessmentEntityFactory()
+          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          .produce(),
       )
 
       val submittedAt = OffsetDateTime.now().minusDays(4)
 
-      val jpaEntity = submittedCas2v2ApplicationFactory
+      val jpaEntity = submittedCas2ApplicationFactory
         .withSubmittedAt(submittedAt)
         .withCreatedByUser(nomisUser)
         .withStatusUpdates(mutableListOf(statusUpdateEntity, statusUpdateWithDetailsEntity))
@@ -130,7 +145,7 @@ class Cas2v2TimelineEventsTransformerTest {
   inner class WhenThereAreNoTimelineEvents {
     @Test
     fun `returns an empty list on an in progress application`() {
-      val jpaEntity = cas2v2ApplicationFactory
+      val jpaEntity = cas2ApplicationFactory
         .produce()
 
       val transformation = timelineEventTransformer.transformApplicationToTimelineEvents(jpaEntity)

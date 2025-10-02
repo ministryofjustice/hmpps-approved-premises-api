@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
@@ -102,7 +103,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            Assertions.assertNotNull(realApplicationRepository.findById(application.id).get().abandonedAt)
+            Assertions.assertNotNull(realApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)?.abandonedAt)
           }
         }
       }
@@ -123,7 +124,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            Assertions.assertNotNull(realApplicationRepository.findById(application.id).get().abandonedAt)
+            Assertions.assertNotNull(realApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)!!.abandonedAt)
           }
         }
       }

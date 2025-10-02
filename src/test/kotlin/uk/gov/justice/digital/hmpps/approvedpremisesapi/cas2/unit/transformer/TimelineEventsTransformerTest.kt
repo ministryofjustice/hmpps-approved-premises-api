@@ -25,7 +25,7 @@ import java.util.UUID
 
 class TimelineEventsTransformerTest {
 
-  private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+  private val user = Cas2UserEntityFactory().produce()
 
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
 
@@ -78,7 +78,7 @@ class TimelineEventsTransformerTest {
         )
         .produce()
 
-      val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withName("Some Nomis User").produce()
+      val nomisUser = Cas2UserEntityFactory().withName("Some Nomis User").produce()
 
       val noteCreatedAt = OffsetDateTime.now().minusDays(3)
       val note = Cas2ApplicationNoteEntity(
@@ -90,7 +90,7 @@ class TimelineEventsTransformerTest {
         assessment = Cas2AssessmentEntityFactory().produce(),
       )
 
-      val pomUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withName("Pom User").produce()
+      val pomUser = Cas2UserEntityFactory().withName("Pom User").produce()
       val application = submittedCas2ApplicationFactory.produce()
 
       val firstApplicationAssignment = Cas2ApplicationAssignmentEntity(

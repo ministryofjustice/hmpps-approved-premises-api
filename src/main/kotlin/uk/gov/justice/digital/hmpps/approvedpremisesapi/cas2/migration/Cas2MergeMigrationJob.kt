@@ -189,7 +189,7 @@ class Cas2MergeMigrationJob(
       id = it.id,
       statusId = it.statusId,
       application = it.application,
-      assessor = cas2UserRepository.findByIdAndUserType(it.externalAssessor!!.id, Cas2UserType.EXTERNAL),
+      assessor = cas2UserRepository.findById(it.externalAssessor!!.id).get(),
       description = it.description,
       label = it.label,
       createdAt = it.createdAt,
@@ -224,7 +224,7 @@ class Cas2MergeMigrationJob(
       label = it.label,
       createdAt = it.createdAt,
       assessment = application.assessment,
-      assessor = cas2UserRepository.findByIdAndUserType(it.assessor.id, Cas2UserType.EXTERNAL),
+      assessor = cas2UserRepository.findById(it.assessor.id).get(),
     )
   }
 
@@ -232,7 +232,7 @@ class Cas2MergeMigrationJob(
     Cas2ApplicationEntity(
       id = it.id,
       crn = it.crn,
-      createdByUser = cas2UserRepository.findByIdAndUserType(it.createdByNomisUser!!.id),
+      createdByUser = cas2UserRepository.findById(it.createdByNomisUser!!.id).get(),
       createdByNomisUser = it.createdByNomisUser,
       data = it.data,
       document = it.document,
@@ -281,7 +281,7 @@ class Cas2MergeMigrationJob(
       id = it.id,
       crn = it.crn,
       createdByNomisUser = nomisUserRepository.findById(UUID.fromString(FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER)).get(),
-      createdByUser = cas2UserRepository.findByIdAndUserType(it.createdByUser.id, Cas2UserType.NOMIS),
+      createdByUser = cas2UserRepository.findById(it.createdByUser.id).get(),
       data = it.data,
       document = it.document,
       createdAt = it.createdAt,

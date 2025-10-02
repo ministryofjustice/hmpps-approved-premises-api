@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
@@ -32,7 +33,7 @@ class Cas2SubmissionsController(
 
   @GetMapping("/submissions")
   fun submissionsGet(@RequestParam page: Int?): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
-    cas2UserService.getUserForRequest()
+    cas2UserService.getUserForRequest(Cas2ServiceOrigin.HDC)
 
     val sortDirection = SortDirection.asc
     val sortBy = "submittedAt"
@@ -46,7 +47,7 @@ class Cas2SubmissionsController(
 
   @GetMapping("/submissions/{applicationId}")
   fun submissionsApplicationIdGet(@PathVariable applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
-    cas2UserService.getUserForRequest()
+    cas2UserService.getUserForRequest(Cas2ServiceOrigin.HDC)
 
     val application = extractEntityFromCasResult(applicationService.getSubmittedApplicationForAssessor(applicationId))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
@@ -55,7 +56,7 @@ class Cas2SubmissionsController(
   @PostMapping("/submissions")
   @Transactional
   fun submissionsPost(@RequestBody submitCas2Application: SubmitCas2Application): ResponseEntity<Unit> {
-    val user = cas2UserService.getUserForRequest()
+    val user = cas2UserService.getUserForRequest(Cas2ServiceOrigin.HDC)
     val submitResult = applicationService.submitApplication(submitCas2Application, user)
 
     extractEntityFromCasResult(submitResult)
