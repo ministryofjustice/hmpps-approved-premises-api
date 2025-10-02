@@ -20,13 +20,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Submitte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateDetailEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateDetailRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
@@ -50,16 +50,16 @@ class Cas2v2SubmissionTest(
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) : Cas2v2IntegrationTestBase() {
   @SpykBean
-  lateinit var cas2v2RealApplicationRepository: Cas2v2ApplicationRepository
+  lateinit var cas2RealApplicationRepository: Cas2ApplicationRepository
 
   @SpykBean
-  lateinit var cas2v2RealAssessmentRepository: Cas2v2AssessmentRepository
+  lateinit var cas2RealAssessmentRepository: Cas2AssessmentRepository
 
   @SpykBean
-  lateinit var cas2v2RealStatusUpdateRepository: Cas2v2StatusUpdateRepository
+  lateinit var cas2RealStatusUpdateRepository: Cas2StatusUpdateRepository
 
   @SpykBean
-  lateinit var cas2v2RealStatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository
+  lateinit var cas2RealStatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @Autowired
   lateinit var userTransformer: Cas2v2UserTransformer
@@ -86,10 +86,10 @@ class Cas2v2SubmissionTest(
     // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
-    clearMocks(cas2v2RealApplicationRepository)
-    clearMocks(cas2v2RealAssessmentRepository)
-    clearMocks(cas2v2RealStatusUpdateRepository)
-    clearMocks(cas2v2RealStatusUpdateDetailRepository)
+    clearMocks(cas2RealApplicationRepository)
+    clearMocks(cas2RealAssessmentRepository)
+    clearMocks(cas2RealStatusUpdateRepository)
+    clearMocks(cas2RealStatusUpdateDetailRepository)
   }
 
   @Nested
@@ -168,7 +168,7 @@ class Cas2v2SubmissionTest(
   inner class GetToIndex {
     @Test
     fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API `() {
-      cas2v2UserRepository.deleteAll()
+      cas2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -190,7 +190,7 @@ class Cas2v2SubmissionTest(
         .isOk
 
       Assertions.assertThat(
-        cas2v2UserRepository.findByUsername(username),
+        cas2UserRepository.findByUsername(username),
       ).isNotNull
     }
 
@@ -199,7 +199,7 @@ class Cas2v2SubmissionTest(
       givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
-            val submittedCas2v2ApplicationEntitySecond = cas2v2ApplicationEntityFactory
+            val submittedCas2ApplicationEntitySecond = cas2ApplicationEntityFactory
               .produceAndPersist {
                 withCreatedByUser(user)
                 withCrn(offenderDetails.otherIds.crn)
@@ -208,7 +208,7 @@ class Cas2v2SubmissionTest(
                 withData("{}")
               }
 
-            val submittedCas2v2ApplicationEntityFirst = cas2v2ApplicationEntityFactory
+            val submittedCas2ApplicationEntityFirst = cas2ApplicationEntityFactory
               .produceAndPersist {
                 withCreatedByUser(user)
                 withCrn(offenderDetails.otherIds.crn)
@@ -217,7 +217,7 @@ class Cas2v2SubmissionTest(
                 withData("{}")
               }
 
-            val submittedCas2v2ApplicationEntityThird = cas2v2ApplicationEntityFactory
+            val submittedCas2ApplicationEntityThird = cas2ApplicationEntityFactory
               .produceAndPersist {
                 withCreatedByUser(user)
                 withCrn(offenderDetails.otherIds.crn)
@@ -226,7 +226,7 @@ class Cas2v2SubmissionTest(
                 withData("{}")
               }
 
-            val inProgressCas2v2ApplicationEntity = cas2v2ApplicationEntityFactory
+            val inProgressCas2ApplicationEntity = cas2ApplicationEntityFactory
               .produceAndPersist {
                 withCreatedByUser(user)
                 withCrn(offenderDetails.otherIds.crn)
@@ -258,24 +258,24 @@ class Cas2v2SubmissionTest(
 
             assertApplicationResponseMatchesExpected(
               responseBody[0],
-              submittedCas2v2ApplicationEntityFirst,
+              submittedCas2ApplicationEntityFirst,
               offenderDetails,
             )
 
             assertApplicationResponseMatchesExpected(
               responseBody[1],
-              submittedCas2v2ApplicationEntitySecond,
+              submittedCas2ApplicationEntitySecond,
               offenderDetails,
             )
 
             assertApplicationResponseMatchesExpected(
               responseBody[2],
-              submittedCas2v2ApplicationEntityThird,
+              submittedCas2ApplicationEntityThird,
               offenderDetails,
             )
 
             Assertions.assertThat(responseBody).noneMatch {
-              inProgressCas2v2ApplicationEntity.id == it.id
+              inProgressCas2ApplicationEntity.id == it.id
             }
           }
         }
@@ -284,7 +284,7 @@ class Cas2v2SubmissionTest(
 
     private fun assertApplicationResponseMatchesExpected(
       response: Cas2v2SubmittedApplicationSummary,
-      expectedSubmittedApplication: Cas2v2ApplicationEntity,
+      expectedSubmittedApplication: Cas2ApplicationEntity,
       offenderDetails: OffenderDetailSummary,
     ) {
       Assertions.assertThat(response).matches {
@@ -292,7 +292,7 @@ class Cas2v2SubmissionTest(
           expectedSubmittedApplication.crn == it.crn &&
           expectedSubmittedApplication.nomsNumber == it.nomsNumber &&
           expectedSubmittedApplication.createdAt.toInstant() == it.createdAt &&
-          expectedSubmittedApplication.createdByUser.id == it.createdByUserId &&
+          expectedSubmittedApplication.createdByUser!!.id == it.createdByUserId &&
           expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt
       }
 
@@ -306,9 +306,9 @@ class Cas2v2SubmissionTest(
 
     private fun createInProgressApplication(
       crn: String,
-      user: Cas2v2UserEntity,
-    ): Cas2v2ApplicationEntity {
-      val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+      user: Cas2UserEntity,
+    ): Cas2ApplicationEntity {
+      val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
         withCrn(crn)
         withCreatedByUser(user)
         withSubmittedAt(null)
@@ -326,7 +326,7 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `Previously unknown Assessor has an Cas2v2User record created from details retrieved from Manage-Users API`() {
-      cas2v2UserRepository.deleteAll()
+      cas2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -348,7 +348,7 @@ class Cas2v2SubmissionTest(
         .isNotFound
 
       Assertions.assertThat(
-        cas2v2UserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+        cas2UserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
       ).isNotNull
     }
 
@@ -371,7 +371,7 @@ class Cas2v2SubmissionTest(
             },
           ) { offenderDetails, _ ->
 
-            val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+            val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
@@ -384,27 +384,27 @@ class Cas2v2SubmissionTest(
               )
             }
 
-            val assessmentEntity = cas2v2AssessmentEntityFactory.produceAndPersist {
+            val assessmentEntity = cas2AssessmentEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withNacroReferralId("OH123")
               withAssessorName("Assessor name")
             }
 
-            val update1 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+            val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
               withAssessor(assessor)
               withLabel("1st update")
             }
 
-            val update2 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+            val update2 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
               withAssessor(assessor)
               withLabel("2nd update")
             }
 
-            val update3 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+            val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
               withAssessor(assessor)
@@ -412,7 +412,7 @@ class Cas2v2SubmissionTest(
               withLabel("3rd update")
             }
 
-            val statusUpdateDetail = Cas2v2StatusUpdateDetailEntity(
+            val statusUpdateDetail = Cas2StatusUpdateDetailEntity(
               id = UUID.fromString("5f89ec4d-1a3e-4ec3-a48b-52959d6fcc6a"),
               statusUpdate = update3,
               statusDetailId = UUID.fromString("62645779-242d-4601-a8f8-d2cbf1d41dfa"),
@@ -420,16 +420,16 @@ class Cas2v2SubmissionTest(
             )
 
             update1.apply { this.createdAt = OffsetDateTime.now().minusDays(20) }
-            cas2v2RealStatusUpdateRepository.save(update1)
+            cas2RealStatusUpdateRepository.save(update1)
 
             update2.apply { this.createdAt = OffsetDateTime.now().minusDays(15) }
-            cas2v2RealStatusUpdateRepository.save(update2)
+            cas2RealStatusUpdateRepository.save(update2)
 
             update3.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
-            cas2v2RealStatusUpdateRepository.save(update3)
+            cas2RealStatusUpdateRepository.save(update3)
 
             statusUpdateDetail.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
-            cas2v2RealStatusUpdateDetailRepository.save(statusUpdateDetail)
+            cas2RealStatusUpdateDetailRepository.save(statusUpdateDetail)
 
             val rawResponseBody = webTestClient.get()
               .uri("/cas2v2/submissions/${applicationEntity.id}")
@@ -448,7 +448,7 @@ class Cas2v2SubmissionTest(
 
             val applicant = userTransformer.transformJpaToApi(
               applicationEntity
-                .createdByUser,
+                .createdByUser!!,
             )
 
             Assertions.assertThat(responseBody).matches {
@@ -502,7 +502,7 @@ class Cas2v2SubmissionTest(
             },
           ) { offenderDetails, _ ->
 
-            val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+            val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
@@ -547,7 +547,7 @@ class Cas2v2SubmissionTest(
             },
           ) { offenderDetails, _ ->
 
-            val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+            val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
@@ -560,27 +560,27 @@ class Cas2v2SubmissionTest(
               )
             }
 
-            val assessmentEntity = cas2v2AssessmentEntityFactory.produceAndPersist {
+            val assessmentEntity = cas2AssessmentEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withNacroReferralId("OH123")
               withAssessorName("Assessor name")
             }
 
-            val update1 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+            val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
               withAssessor(assessor)
               withLabel("1st update")
             }
 
-            val update2 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+            val update2 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
               withAssessor(assessor)
               withLabel("2nd update")
             }
 
-            val update3 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+            val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessment(assessmentEntity)
               withAssessor(assessor)
@@ -588,7 +588,7 @@ class Cas2v2SubmissionTest(
               withLabel("3rd update")
             }
 
-            val statusUpdateDetail = Cas2v2StatusUpdateDetailEntity(
+            val statusUpdateDetail = Cas2StatusUpdateDetailEntity(
               id = UUID.fromString("5f89ec4d-1a3e-4ec3-a48b-52959d6fcc6a"),
               statusUpdate = update3,
               statusDetailId = UUID.fromString("62645779-242d-4601-a8f8-d2cbf1d41dfa"),
@@ -596,16 +596,16 @@ class Cas2v2SubmissionTest(
             )
 
             update1.apply { this.createdAt = OffsetDateTime.now().minusDays(20) }
-            cas2v2RealStatusUpdateRepository.save(update1)
+            cas2RealStatusUpdateRepository.save(update1)
 
             update2.apply { this.createdAt = OffsetDateTime.now().minusDays(15) }
-            cas2v2RealStatusUpdateRepository.save(update2)
+            cas2RealStatusUpdateRepository.save(update2)
 
             update3.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
-            cas2v2RealStatusUpdateRepository.save(update3)
+            cas2RealStatusUpdateRepository.save(update3)
 
             statusUpdateDetail.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
-            cas2v2RealStatusUpdateDetailRepository.save(statusUpdateDetail)
+            cas2RealStatusUpdateDetailRepository.save(statusUpdateDetail)
 
             val rawResponseBody = webTestClient.get()
               .uri("/cas2v2/submissions/${applicationEntity.id}")
@@ -624,7 +624,7 @@ class Cas2v2SubmissionTest(
 
             val applicant = userTransformer.transformJpaToApi(
               applicationEntity
-                .createdByUser,
+                .createdByUser!!,
             )
 
             Assertions.assertThat(responseBody).matches {
@@ -701,7 +701,7 @@ class Cas2v2SubmissionTest(
                 },
               ) { offenderDetails, _ ->
 
-                val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+                val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                   withCrn(offenderDetails.otherIds.crn)
                   withCreatedByUser(user)
                   withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
@@ -715,27 +715,27 @@ class Cas2v2SubmissionTest(
                   )
                 }
 
-                val assessmentEntity = cas2v2AssessmentEntityFactory.produceAndPersist {
+                val assessmentEntity = cas2AssessmentEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
                   withNacroReferralId("OH123")
                   withAssessorName("Assessor name")
                 }
 
-                val update1 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+                val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
                   withAssessor(assessor)
                   withAssessment(assessmentEntity)
                   withLabel("1st update")
                 }
 
-                val update2 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+                val update2 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
                   withAssessment(assessmentEntity)
                   withAssessor(assessor)
                   withLabel("2nd update")
                 }
 
-                val update3 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+                val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
                   withAssessment(assessmentEntity)
                   withAssessor(assessor)
@@ -743,13 +743,13 @@ class Cas2v2SubmissionTest(
                 }
 
                 update1.apply { this.createdAt = OffsetDateTime.now().minusDays(20) }
-                cas2v2RealStatusUpdateRepository.save(update1)
+                cas2RealStatusUpdateRepository.save(update1)
 
                 update2.apply { this.createdAt = OffsetDateTime.now().minusDays(15) }
-                cas2v2RealStatusUpdateRepository.save(update2)
+                cas2RealStatusUpdateRepository.save(update2)
 
                 update3.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
-                cas2v2RealStatusUpdateRepository.save(update3)
+                cas2RealStatusUpdateRepository.save(update3)
 
                 val rawResponseBody = webTestClient.get()
                   .uri("/cas2v2/submissions/${applicationEntity.id}")
@@ -768,7 +768,7 @@ class Cas2v2SubmissionTest(
 
                 val applicant = userTransformer.transformJpaToApi(
                   applicationEntity
-                    .createdByUser,
+                    .createdByUser!!,
                 )
 
                 Assertions.assertThat(responseBody).matches {
@@ -836,7 +836,7 @@ class Cas2v2SubmissionTest(
           },
         ) { offenderDetails, _ ->
 
-          cas2v2ApplicationEntityFactory.produceAndPersist {
+          cas2ApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
@@ -850,7 +850,7 @@ class Cas2v2SubmissionTest(
             )
           }
 
-          Assertions.assertThat(cas2v2RealAssessmentRepository.count()).isEqualTo(0)
+          Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(0)
 
           webTestClient.post()
             .uri("/cas2v2/submissions")
@@ -882,7 +882,7 @@ class Cas2v2SubmissionTest(
         Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
           .isEqualTo(expectedFrontEndUrl)
 
-        val persistedAssessment = cas2v2RealAssessmentRepository.findAll().first()
+        val persistedAssessment = cas2RealAssessmentRepository.findAll().first()
         Assertions.assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
 
         val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
@@ -919,7 +919,7 @@ class Cas2v2SubmissionTest(
         ) { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-          cas2v2ApplicationEntityFactory.produceAndPersist {
+          cas2ApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
@@ -933,9 +933,9 @@ class Cas2v2SubmissionTest(
             )
           }
 
-          every { cas2v2RealApplicationRepository.save(any()) } answers {
+          every { cas2RealApplicationRepository.save(any()) } answers {
             Thread.sleep(1000)
-            it.invocation.args[0] as Cas2v2ApplicationEntity
+            it.invocation.args[0] as Cas2ApplicationEntity
           }
 
           val responseStatuses = mutableListOf<HttpStatus>()
@@ -979,7 +979,7 @@ class Cas2v2SubmissionTest(
         givenAnOffender(mockNotFoundErrorForPrisonApi = true) { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-          cas2v2ApplicationEntityFactory.produceAndPersist {
+          cas2ApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
             withId(applicationId)
@@ -994,7 +994,7 @@ class Cas2v2SubmissionTest(
           }
 
           Assertions.assertThat(domainEventRepository.count()).isEqualTo(0)
-          Assertions.assertThat(cas2v2RealAssessmentRepository.count()).isEqualTo(0)
+          Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(0)
 
           webTestClient.post()
             .uri("/cas2v2/submissions")
@@ -1016,8 +1016,8 @@ class Cas2v2SubmissionTest(
             .isOk
 
           Assertions.assertThat(domainEventRepository.count()).isEqualTo(1)
-          Assertions.assertThat(cas2v2RealAssessmentRepository.count()).isEqualTo(1)
-          Assertions.assertThat(cas2v2RealApplicationRepository.findById(applicationId).get().submittedAt).isNotNull()
+          Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(1)
+          Assertions.assertThat(cas2RealApplicationRepository.findById(applicationId).get().submittedAt).isNotNull()
         }
       }
     }
