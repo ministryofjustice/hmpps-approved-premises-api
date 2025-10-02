@@ -240,6 +240,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.matcher_name).isNull()
       assertThat(row.match_outcome).isNull()
 
+      assertThat(row.expected_arrival_date).isNull()
+      assertThat(row.expected_departure_date).isNull()
+
       assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.crn).matches("StandardRFPNotAllocated")
@@ -298,6 +301,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.matcher_name).isEqualTo("Jeff Jefferson")
       assertThat(row.match_outcome).isEqualTo("Placed")
 
+      assertThat(row.expected_arrival_date).isEqualTo(LocalDate.now().toString())
+      assertThat(row.expected_departure_date).isEqualTo(LocalDate.now().plusDays(1).toString())
+
       assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-02")
@@ -339,6 +345,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.matcher_cru).isEqualTo("MATCHER2CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER2")
       assertThat(row.match_outcome).isEqualTo("Not matched")
+
+      assertThat(row.expected_arrival_date).isNull()
+      assertThat(row.expected_departure_date).isNull()
 
       assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
@@ -386,6 +395,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.matcher_username).isEqualTo("MATCHER13")
       assertThat(row.matcher_name).isEqualTo("Jeff Jefferson")
       assertThat(row.match_outcome).isEqualTo("Placed")
+
+      assertThat(row.expected_arrival_date).isEqualTo(LocalDate.now().toString())
+      assertThat(row.expected_departure_date).isEqualTo(LocalDate.now().plusDays(1).toString())
 
       assertThat(row.request_for_placement_id).matches("[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
@@ -826,6 +838,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   @SuppressWarnings("ConstructorParameterNaming")
   data class PlacementMatchingOutcomeReportRow(
     val placement_request_id: String?,
+    val expected_arrival_date: String?,
+    val expected_departure_date: String?,
     val matcher_cru: String?,
     val matcher_username: String?,
     val matcher_name: String?,

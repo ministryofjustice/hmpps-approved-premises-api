@@ -13,7 +13,8 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
     const val CORE_QUERY = """
       SELECT 
         pr.id as placement_request_id,
-        
+        to_char(csb.expected_arrival_date, 'YYYY-MM-DD') AS expected_arrival_date,
+        to_char(csb.expected_departure_date, 'YYYY-MM-DD') AS expected_departure_date,       
         CASE
           WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN latest_match_attempt_event.data -> 'eventDetails' -> 'bookedBy' -> 'cru' ->> 'name'
           WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN latest_match_attempt_event.data -> 'eventDetails' -> 'attemptedBy' -> 'cru' ->> 'name'
@@ -57,7 +58,14 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
         rfp.internal_placement_request_id IS NOT NULL AND
         pr.id = rfp.internal_placement_request_id
       )
-      
+      LEFT OUTER JOIN LATERAL (
+         SELECT csb.*
+         FROM cas1_space_bookings csb
+         WHERE csb.placement_request_id = pr.id
+         ORDER BY csb.cancellation_occurred_at NULLS FIRST, csb.created_at DESC
+         LIMIT 1
+      ) csb ON TRUE
+     
       LEFT OUTER JOIN LATERAL (
          SELECT  evt.id,
                  evt.type,
