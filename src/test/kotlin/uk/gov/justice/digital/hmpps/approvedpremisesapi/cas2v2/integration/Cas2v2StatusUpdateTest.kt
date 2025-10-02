@@ -12,10 +12,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
@@ -86,11 +88,14 @@ class Cas2v2StatusUpdateTest(
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
             withId(assessmentId)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)
@@ -153,10 +158,13 @@ class Cas2v2StatusUpdateTest(
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           webTestClient.post()
@@ -188,11 +196,13 @@ class Cas2v2StatusUpdateTest(
                 withCreatedByUser(applicant)
                 withSubmittedAt(submittedAt)
                 withNomsNumber("123NOMS")
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               cas2AssessmentEntityFactory.produceAndPersist {
                 withId(assessmentId)
                 withApplication(application)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)

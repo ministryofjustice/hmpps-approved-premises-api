@@ -16,13 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.SubmittedApplicationReportRow
@@ -116,17 +114,14 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val tooOldCreated = tooOldSubmitted.minusSeconds(daysInSeconds(7))
 
       val user1 = cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_1")
       }
 
       val user2 = cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_2")
       }
 
       val user3 = cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_3")
       }
 
@@ -143,7 +138,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withData("{}")
         withSubmittedAt(oldSubmitted)
         withReferringPrisonCode("NEW")
-        withApplicationOrigin(ApplicationOrigin.prisonBail)
       }
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
@@ -154,7 +148,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedAt(newerCreated)
         withData("{}")
         withSubmittedAt(newerSubmitted)
-        withApplicationOrigin(ApplicationOrigin.courtBail)
       }
 
       val application1Assignment1 = Cas2ApplicationAssignmentEntity(
@@ -404,7 +397,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
       }
 
       val user1 = cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_1")
       }
 
@@ -418,7 +410,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
       }
 
       val user3 = cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_3")
       }
 
@@ -516,12 +507,10 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
       val user1 = cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_1")
       }
 
       val user2 = cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.NOMIS)
         withUsername("NOMIS_USER_2")
       }
 
@@ -532,7 +521,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
-        withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
       }
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
@@ -542,7 +530,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
-        withApplicationOrigin(ApplicationOrigin.prisonBail)
       }
 
       // outside time limit -- should not feature in report

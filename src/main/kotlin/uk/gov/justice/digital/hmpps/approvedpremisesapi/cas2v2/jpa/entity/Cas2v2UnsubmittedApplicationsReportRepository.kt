@@ -17,8 +17,8 @@ interface Cas2v2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Appl
         applications.noms_number AS personNoms,
         to_char(applications.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS startedAt,
         users.username AS startedBy,
-        applications.application_origin AS applicationOrigin
-
+        applications.application_origin AS applicationOrigin,
+        applications.service_origin AS serviceOrigin
       FROM cas_2_applications applications
       LEFT JOIN cas_2_users users ON users.id = applications.created_by_cas2_user_id
       WHERE applications.submitted_at IS NULL
