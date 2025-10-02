@@ -69,7 +69,7 @@ class Cas2v2TimelineEventsTransformerTest {
         )
         .produce()
 
-      val nomisUser = Cas2UserEntityFactory().withName("Some Nomis User").withUserType(Cas2UserType.NOMIS).produce()
+      val nomisUser = Cas2UserEntityFactory().withName("Some Nomis User").produce()
 
       val noteCreatedAt = OffsetDateTime.now().minusDays(3)
       val note = Cas2ApplicationNoteEntity(

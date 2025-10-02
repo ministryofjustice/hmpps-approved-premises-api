@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
@@ -60,7 +62,7 @@ class Cas2v2ApplicationsSeedJob(
       return log.info("Skipping ${row.id}: already seeded")
     }
 
-    val applicant = cas2UserRepository.findByUsername(row.createdBy) ?: throw RuntimeException("Could not find applicant with cas2v2user ${row.createdBy}")
+    val applicant = cas2UserRepository.findByUsernameAndServiceOrigin(row.createdBy, Cas2ServiceOrigin.BAIL) ?: throw RuntimeException("Could not find applicant with cas2v2user ${row.createdBy}")
 
     try {
       createApplication(row, applicant)
@@ -82,6 +84,7 @@ class Cas2v2ApplicationsSeedJob(
         data = dataFor(state = row.state, nomsNumber = row.nomsNumber),
         document = documentFor(state = row.state, nomsNumber = row.nomsNumber),
         submittedAt = row.submittedAt,
+        serviceOrigin = Cas2ServiceOrigin.BAIL,
       ),
     )
     if (row.submittedAt != null) {
@@ -108,7 +111,7 @@ class Cas2v2ApplicationsSeedJob(
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     log.info("Seeding status update $idx for application ${application.id}")
-    val assessor = cas2UserRepository.findAll().random()
+    val assessor = cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.EXTERNAL, Cas2ServiceOrigin.BAIL).random()
     val status = findStatusAtPosition(idx)
     statusUpdateRepository.save(
       Cas2StatusUpdateEntity(
@@ -132,6 +135,7 @@ class Cas2v2ApplicationsSeedJob(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
+        serviceOrigin = application.serviceOrigin,
       ),
     )
     application.assessment = assessment

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiClient
@@ -62,7 +63,7 @@ class Cas2v2UserService(
 
   fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority>? = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
 
-  private fun getExistingUser(username: String, userType: Cas2UserType): Cas2UserEntity? = cas2UserRepository.findByUsernameAndUserType(username, userType)
+  private fun getExistingUser(username: String, userType: Cas2UserType): Cas2UserEntity? = cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, userType, Cas2ServiceOrigin.BAIL)
 
   private fun getEntityForNomisUser(username: String, jwt: String): Cas2UserEntity {
     val nomisUserDetails: NomisUserDetail = when (
@@ -97,6 +98,7 @@ class Cas2v2UserService(
         isActive = nomisUserDetails.active,
         deliusTeamCodes = null,
         deliusStaffCode = null,
+        serviceOrigin = Cas2ServiceOrigin.BAIL,
       ),
     )
   }
@@ -133,6 +135,7 @@ class Cas2v2UserService(
         isActive = deliusUser.active,
         deliusTeamCodes = deliusUser.teamCodes(),
         deliusStaffCode = deliusUser.code,
+        serviceOrigin = Cas2ServiceOrigin.BAIL,
       ),
     )
   }
@@ -161,6 +164,7 @@ class Cas2v2UserService(
         email = externalUserDetails.email,
         isEnabled = externalUserDetails.enabled,
         isActive = true,
+        serviceOrigin = Cas2ServiceOrigin.BAIL,
       ),
     )
   }

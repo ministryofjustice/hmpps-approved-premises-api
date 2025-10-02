@@ -4,8 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -34,8 +36,8 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
 
         cas2ApplicationRepository.save(application)
 
-        val retrievedApplication = cas2ApplicationRepository.findById(application.id).get()
-        val assignments = retrievedApplication.applicationAssignments
+        val retrievedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)
+        val assignments = retrievedApplication!!.applicationAssignments
 
         assertThat(assignments.size).isEqualTo(4)
         // verify list is returned sorted by created at descending
@@ -83,8 +85,8 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
 
         cas2ApplicationRepository.save(application)
 
-        val retrievedApplication = cas2ApplicationRepository.findById(application.id).get()
-        val assignments = retrievedApplication.applicationAssignments
+        val retrievedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)
+        val assignments = retrievedApplication!!.applicationAssignments
 
         assertThat(assignments.size).isEqualTo(2)
         assertThat(assignment2.id).isEqualTo(assignments[0].id)
@@ -116,13 +118,13 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
           cas2ApplicationRepository.save(applicationCourt)
           cas2ApplicationRepository.save(applicationPrison)
 
-          val retrievedApplicationHDC = cas2ApplicationRepository.findById(applicationHDC.id).get()
-          val retrievedApplicationCourt = cas2ApplicationRepository.findById(applicationCourt.id).get()
-          val retrievedApplicationPrison = cas2ApplicationRepository.findById(applicationPrison.id).get()
+          val retrievedApplicationHDC = cas2ApplicationRepository.findByIdOrNull(applicationHDC.id)
+          val retrievedApplicationCourt = cas2ApplicationRepository.findByIdOrNull(applicationCourt.id)
+          val retrievedApplicationPrison = cas2ApplicationRepository.findByIdOrNull(applicationPrison.id)
 
-          assertThat(retrievedApplicationHDC.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
-          assertThat(retrievedApplicationCourt.applicationOrigin).isEqualTo(ApplicationOrigin.courtBail)
-          assertThat(retrievedApplicationPrison.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+          assertThat(retrievedApplicationHDC!!.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+          assertThat(retrievedApplicationCourt!!.applicationOrigin).isEqualTo(ApplicationOrigin.courtBail)
+          assertThat(retrievedApplicationPrison!!.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
         }
       }
     }
@@ -145,11 +147,11 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
           cas2ApplicationRepository.save(applicationNoBailHearingDate)
           cas2ApplicationRepository.save(applicationBailHearingDate)
 
-          val retrievedApplicationNoBailHearingDate = cas2ApplicationRepository.findById(applicationNoBailHearingDate.id).get()
-          val retrievedApplicationBailHearingDate = cas2ApplicationRepository.findById(applicationBailHearingDate.id).get()
+          val retrievedApplicationNoBailHearingDate = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationNoBailHearingDate.id, Cas2ServiceOrigin.HDC)
+          val retrievedApplicationBailHearingDate = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationBailHearingDate.id, Cas2ServiceOrigin.HDC)
 
-          assertThat(retrievedApplicationNoBailHearingDate.bailHearingDate).isNull()
-          assertThat(retrievedApplicationBailHearingDate.bailHearingDate).isEqualTo(now)
+          assertThat(retrievedApplicationNoBailHearingDate!!.bailHearingDate).isNull()
+          assertThat(retrievedApplicationBailHearingDate!!.bailHearingDate).isEqualTo(now)
         }
       }
     }

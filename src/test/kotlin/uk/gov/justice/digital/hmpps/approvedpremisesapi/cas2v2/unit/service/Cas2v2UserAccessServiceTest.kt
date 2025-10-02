@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
 import java.time.OffsetDateTime
@@ -145,11 +146,13 @@ class Cas2v2UserAccessServiceTest {
           .withApplicationOrigin(ApplicationOrigin.prisonBail)
           .withCreatedByUser(referrerOne)
           .withSubmittedAt(OffsetDateTime.now())
+          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
 
         private val unsubmittedPrisonApplication = Cas2ApplicationEntityFactory()
           .withApplicationOrigin(ApplicationOrigin.prisonBail)
           .withCreatedByUser(referrerOne)
+          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
 
         @Nested
