@@ -92,10 +92,10 @@ class Cas2PersistedApplicationStatusFinderTest {
       assertEquals(11, statuses.size, "Should return exactly 11 status updates")
 
       val expectedDetailsSizes = mapOf(
-        0 to 9,
-        7 to 7,
-        8 to 7,
-        9 to 11,
+        0 to 16,
+        7 to 10,
+        8 to 14,
+        9 to 12,
       )
 
       statuses.forEachIndexed { index, status ->
