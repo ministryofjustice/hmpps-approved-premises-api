@@ -10,10 +10,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
@@ -23,7 +23,7 @@ import java.util.UUID
 class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
 
   @SpykBean
-  lateinit var realAssessmentRepository: Cas2v2AssessmentRepository
+  lateinit var realAssessmentRepository: Cas2AssessmentRepository
 
   @AfterEach
   fun afterEach() {
@@ -94,7 +94,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
-          val assessment = cas2v2AssessmentEntityFactory.produceAndPersist {
+          val assessment = cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(submittedApplication)
             withNacroReferralId("someID")
             withAssessorName("some name")
@@ -129,7 +129,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2v2UserEntity): Cas2v2ApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2UserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withId(applicationId)
       withCreatedByUser(referrer)
       withSubmittedAt(OffsetDateTime.now())
@@ -197,7 +197,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
-          val assessment = cas2v2AssessmentEntityFactory.produceAndPersist {
+          val assessment = cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(submittedApplication)
             withNacroReferralId("someID")
             withAssessorName("some name")
@@ -232,7 +232,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
-          val assessment = cas2v2AssessmentEntityFactory.produceAndPersist {
+          val assessment = cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(submittedApplication)
             withNacroReferralId("someID")
             withAssessorName("some name")
@@ -258,7 +258,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2v2UserEntity): Cas2v2ApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2UserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withId(applicationId)
       withCreatedByUser(referrer)
       withSubmittedAt(OffsetDateTime.now())
