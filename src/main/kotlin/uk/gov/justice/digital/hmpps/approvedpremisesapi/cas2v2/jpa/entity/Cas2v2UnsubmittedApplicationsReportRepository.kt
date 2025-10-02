@@ -4,10 +4,11 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import java.util.UUID
 
 @Repository
-interface Cas2v2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2v2ApplicationEntity, UUID> {
+interface Cas2v2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
   @Query(
     """
       SELECT
@@ -18,8 +19,8 @@ interface Cas2v2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2v2Ap
         users.username AS startedBy,
         applications.application_origin AS applicationOrigin
 
-      FROM cas_2_v2_applications applications
-      LEFT JOIN cas_2_v2_users users ON users.id = applications.created_by_user_id
+      FROM cas_2_applications applications
+      LEFT JOIN cas_2_users users ON users.id = applications.created_by_cas2_user_id
       WHERE applications.submitted_at IS NULL
         AND applications.created_at  > CURRENT_DATE - 365
       ORDER BY startedAt DESC;
