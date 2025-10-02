@@ -22,7 +22,7 @@ class Cas2ApplicationEntityTest {
   fun `entity returns values from the newest assignment`() {
     val application = Cas2ApplicationEntityFactory().produce()
     application.createApplicationAssignment("ONE", application.createdByUser)
-    val user2 = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+    val user2 = Cas2UserEntityFactory().produce()
     application.createApplicationAssignment("TWO", user2)
     assertThat(application.currentPrisonCode).isEqualTo("TWO")
     assertThat(application.currentPomUserId).isEqualTo(user2.id)
@@ -77,7 +77,6 @@ class Cas2ApplicationEntityTest {
   fun `returns correct user type with cas2user of type nomis`() {
     val cas2User = Cas2UserEntityFactory()
       .withName("cas2user_name")
-      .withUserType(Cas2UserType.NOMIS)
       .produce()
     val application = Cas2ApplicationEntityFactory()
       .withCreatedByUser(cas2User)

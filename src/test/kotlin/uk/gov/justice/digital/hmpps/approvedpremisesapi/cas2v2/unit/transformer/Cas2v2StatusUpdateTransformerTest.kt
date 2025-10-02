@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2UserTransformer
@@ -21,8 +22,11 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2StatusUpdateTransformerTest {
-  private val user = Cas2UserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .produce()
   private val cas2v2SubmittedApplication = Cas2ApplicationEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
     .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
@@ -39,7 +43,9 @@ class Cas2v2StatusUpdateTransformerTest {
   @Test
   fun `transforms JPA Cas2v2StatusUpdate db entity to API representation`() {
     val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2).random()
-    val assessor = Cas2UserEntityFactory().produce()
+    val assessor = Cas2UserEntityFactory()
+      .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      .produce()
     val jpaEntity = Cas2StatusUpdateEntityFactory()
       .withStatusId(status.id)
       .withApplication(cas2v2SubmittedApplication)

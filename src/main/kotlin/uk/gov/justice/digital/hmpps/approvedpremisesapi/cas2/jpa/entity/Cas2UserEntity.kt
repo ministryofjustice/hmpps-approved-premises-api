@@ -27,11 +27,11 @@ enum class Cas2UserType(val authSource: String) {
 
 @Repository
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
-  fun findByUsername(username: String): Cas2UserEntity?
-  fun findByUserType(type: Cas2UserType = Cas2UserType.NOMIS): List<Cas2UserEntity>
-  fun findByIdAndUserType(id: UUID, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
-  fun findByUsernameAndUserType(username: String, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
-  fun findByNomisStaffIdAndUserType(nomisStaffId: Long, type: Cas2UserType = Cas2UserType.NOMIS): Cas2UserEntity?
+  fun findByServiceOrigin(serviceOrigin: Cas2ServiceOrigin): List<Cas2UserEntity>
+  fun findByUsernameAndServiceOrigin(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByUserTypeAndServiceOrigin(type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): List<Cas2UserEntity>
+  fun findByIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByNomisStaffIdAndServiceOrigin(nomisStaffId: Long, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
   fun findByUsernameAndUserTypeAndServiceOrigin(username: String, type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
 }
 
@@ -73,7 +73,7 @@ data class Cas2UserEntity(
 
   @Enumerated(EnumType.STRING)
   var serviceOrigin: Cas2ServiceOrigin,
-  ) {
+) {
   override fun toString() = "CAS2 user $id"
 
   fun staffIdentifier() = when (userType) {
