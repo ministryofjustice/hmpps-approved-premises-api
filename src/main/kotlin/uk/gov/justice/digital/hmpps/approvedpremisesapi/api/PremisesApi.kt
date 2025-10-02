@@ -388,22 +388,6 @@ interface PremisesApi {
 
   @Operation(
     tags = ["Rooms"],
-    summary = "Lists all rooms for the given premises",
-    operationId = "premisesPremisesIdRoomsGet",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Room::class)))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/premises/{premisesId}/rooms"],
-    produces = ["application/json"],
-  )
-  fun premisesPremisesIdRoomsGet(@Parameter(description = "ID of the premises to list the rooms for", required = true) @PathVariable("premisesId") premisesId: java.util.UUID): ResponseEntity<List<Room>> = getDelegate().premisesPremisesIdRoomsGet(premisesId)
-
-  @Operation(
-    tags = ["Rooms"],
     summary = "Adds a new room for an approved premises",
     operationId = "premisesPremisesIdRoomsPost",
     description = """""",
