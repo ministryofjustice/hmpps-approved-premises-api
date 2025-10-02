@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
@@ -85,7 +84,7 @@ class Cas2ApplicationService(
 
       AssignmentType.DEALLOCATED -> {
         val deallocatedApplicationIds =
-          applicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(user.id, user.activeNomisCaseloadId!!)
+          applicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUserHdc(user.id, user.activeNomisCaseloadId!!)
         applicationSummaryRepository.findAllByIdIn(
           deallocatedApplicationIds,
           getPageableOrAllPages(pageCriteria),
@@ -97,7 +96,7 @@ class Cas2ApplicationService(
     return Pair(response.content, metadata)
   }
 
-  fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber)
+  fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDescHdc(nomsNumber)
 
   fun findApplicationToAssign(nomsNumber: String): Cas2ApplicationEntity? = findMostRecentApplication(nomsNumber)?.takeIf { !it.isMostRecentStatusUpdateANonAssignableStatus() }
 
@@ -112,14 +111,14 @@ class Cas2ApplicationService(
   }
 
   fun getSubmittedApplicationForAssessor(applicationId: UUID): CasResult<Cas2ApplicationEntity> {
-    val applicationEntity = applicationRepository.findSubmittedApplicationById(applicationId)
+    val applicationEntity = applicationRepository.findSubmittedApplicationByIdHdc(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     return CasResult.Success(applicationEntity)
   }
 
   fun getApplicationForUser(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
+    val applicationEntity = applicationRepository.findByIdOrNullHdc(applicationId)
 
     if (applicationEntity == null || applicationEntity.abandonedAt != null) {
       return CasResult.NotFound("Application", applicationId.toString())
@@ -159,7 +158,7 @@ class Cas2ApplicationService(
 
   @SuppressWarnings("ReturnCount")
   fun updateApplication(applicationId: UUID, data: String?, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val application = applicationRepository.findByIdOrNull(applicationId)
+    val application = applicationRepository.findByIdOrNullHdc(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (!application.isCreatedBy(user)) {
@@ -185,7 +184,7 @@ class Cas2ApplicationService(
 
   @SuppressWarnings("ReturnCount")
   fun abandonApplication(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val application = applicationRepository.findByIdOrNull(applicationId)
+    val application = applicationRepository.findByIdOrNullHdc(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (!application.isCreatedBy(user)) {
@@ -220,7 +219,7 @@ class Cas2ApplicationService(
 
     lockableApplicationRepository.acquirePessimisticLock(applicationId)
 
-    var application = applicationRepository.findByIdOrNull(applicationId)
+    var application = applicationRepository.findByIdOrNullHdc(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)

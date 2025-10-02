@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.seed
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2AssessmentUpdateStatusSeedRow
@@ -61,7 +60,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     seed(SeedFileType.cas2UpdateAssessmentStatus, rowsToCsv(listOf(seedRow)))
 
     // Then
-    val persistedAssessment = cas2AssessmentRepository.findByIdOrNull(assessment.id)!!
+    val persistedAssessment = cas2AssessmentRepository.findByIdOrNullHdc(assessment.id)!!
     assertThat(persistedAssessment.statusUpdates).hasSize(1)
 
     val statusUpdate =
@@ -466,7 +465,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     seed(SeedFileType.cas2UpdateAssessmentStatus, rowsToCsv(listOf(seedRow1, seedRow2)))
 
     // Then
-    val persistedAssessment = cas2AssessmentRepository.findByIdOrNull(assessment.id)
+    val persistedAssessment = cas2AssessmentRepository.findByIdOrNullHdc(assessment.id)
     assertThat(persistedAssessment?.statusUpdates).hasSize(2)
 
     // Verify both status updates were created

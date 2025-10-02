@@ -109,7 +109,7 @@ class Cas2SubjectAccessRequestRepository(
           from cas_2_application_notes can 
           inner join cas_2_applications ca on
           	ca.id  = can.application_id 
-          left join cas_2_users cu on cu.id = can.created_by_cas2_user_id and cu.user_type = 'NOMIS'
+          left join cas_2_users cu on cu.id = can.created_by_cas2_user_id
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )

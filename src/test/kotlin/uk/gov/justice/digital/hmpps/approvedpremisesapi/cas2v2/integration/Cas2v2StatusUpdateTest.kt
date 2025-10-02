@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
@@ -86,11 +87,13 @@ class Cas2v2StatusUpdateTest(
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
+            withApplicationOrigin(ApplicationOrigin.courtBail)
           }
 
           cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
             withId(assessmentId)
+            withApplicationOrigin(ApplicationOrigin.courtBail)
           }
 
           assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)
@@ -153,10 +156,12 @@ class Cas2v2StatusUpdateTest(
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
+            withApplicationOrigin(ApplicationOrigin.courtBail)
           }
 
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
+            withApplicationOrigin(ApplicationOrigin.courtBail)
           }
 
           webTestClient.post()

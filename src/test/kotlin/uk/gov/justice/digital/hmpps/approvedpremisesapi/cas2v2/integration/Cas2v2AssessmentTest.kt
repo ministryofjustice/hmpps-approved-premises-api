@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
@@ -98,6 +99,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
             withApplication(submittedApplication)
             withNacroReferralId("someID")
             withAssessorName("some name")
+            withApplicationOrigin(ApplicationOrigin.courtBail)
           }
 
           val updatedNacroReferralId = "123N"
@@ -201,6 +203,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
             withApplication(submittedApplication)
             withNacroReferralId("someID")
             withAssessorName("some name")
+            withApplicationOrigin(ApplicationOrigin.courtBail)
           }
 
           val rawResponseBody = webTestClient.get()
@@ -236,6 +239,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
             withApplication(submittedApplication)
             withNacroReferralId("someID")
             withAssessorName("some name")
+            withApplicationOrigin(ApplicationOrigin.courtBail)
           }
 
           val rawResponseBody = webTestClient.get()
@@ -262,6 +266,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       withId(applicationId)
       withCreatedByUser(referrer)
       withSubmittedAt(OffsetDateTime.now())
+      withApplicationOrigin(ApplicationOrigin.courtBail)
     }
   }
 }

@@ -100,7 +100,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
       cas2v2ApplicationRepository.save(it)
       applicationNote
     }
-    cas2v2StatusUpdates = cas2v2Applications.map { it ->
+    cas2v2StatusUpdates = cas2v2Applications.map {
       val statusUpdate = cas2v2StatusUpdateEntityFactory.produceAndPersist {
         withApplication(it)
         withAssessment(it.assessment!!)

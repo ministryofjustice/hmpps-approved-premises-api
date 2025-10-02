@@ -231,7 +231,7 @@ class Cas2v2ApplicationServiceTest {
       val user = Cas2UserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns null
 
       assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.NotFound).isTrue
     }
@@ -241,7 +241,7 @@ class Cas2v2ApplicationServiceTest {
       val user = Cas2UserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(any()) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(any()) } returns
         Cas2ApplicationEntityFactory()
           .withCreatedByUser(
             Cas2UserEntityFactory()
@@ -259,7 +259,7 @@ class Cas2v2ApplicationServiceTest {
         .produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(any()) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(any()) } returns
         Cas2ApplicationEntityFactory()
           .withCreatedByUser(
             Cas2UserEntityFactory()
@@ -287,7 +287,7 @@ class Cas2v2ApplicationServiceTest {
         .withCreatedByUser(userEntity)
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(any()) } returns cas2ApplicationEntity
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(any()) } returns cas2ApplicationEntity
       every { mockCas2v2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns true
 
       val result = cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, userEntity)
@@ -384,7 +384,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns NotFound when cas2v2 application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns null
 
       assertThat(
         cas2v2ApplicationService.updateCas2v2Application(
@@ -408,7 +408,7 @@ class Cas2v2ApplicationServiceTest {
         }
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns
         cas2v2Application
 
       assertThat(
@@ -431,7 +431,7 @@ class Cas2v2ApplicationServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns
         cas2v2Application
 
       val result = cas2v2ApplicationService.updateCas2v2Application(
@@ -456,7 +456,7 @@ class Cas2v2ApplicationServiceTest {
         .withAbandonedAt(OffsetDateTime.now())
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns cas2v2Application
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns cas2v2Application
 
       val result = cas2v2ApplicationService.updateCas2v2Application(
         applicationId = applicationId,
@@ -486,7 +486,7 @@ class Cas2v2ApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns
         application
 
       every { mockCas2ApplicationRepository.save(any()) } answers {
@@ -533,7 +533,7 @@ class Cas2v2ApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns
         application
 
       every { mockCas2ApplicationRepository.save(any()) } answers {
@@ -567,7 +567,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns NotFound when application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns null
 
       assertThat(
         cas2v2ApplicationService.abandonCas2v2Application(
@@ -589,7 +589,7 @@ class Cas2v2ApplicationServiceTest {
         }
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns
         application
 
       assertThat(
@@ -610,7 +610,7 @@ class Cas2v2ApplicationServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns
         application
 
       val result = cas2v2ApplicationService.abandonCas2v2Application(
@@ -633,7 +633,7 @@ class Cas2v2ApplicationServiceTest {
         .withAbandonedAt(OffsetDateTime.now())
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns
         application
 
       val result = cas2v2ApplicationService.abandonCas2v2Application(
@@ -661,7 +661,7 @@ class Cas2v2ApplicationServiceTest {
         .withData(data)
         .produce()
 
-      every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockCas2ApplicationRepository.findByIdOrNullBail(applicationId) } returns
         application
 
       every { mockCas2ApplicationRepository.save(any()) } answers {
@@ -726,6 +726,7 @@ class Cas2v2ApplicationServiceTest {
       val cas2v2Application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
         .withCreatedByUser(differentUser)
+        .withApplicationOrigin(ApplicationOrigin.courtBail)
         .produce()
 
       every { mockCas2ApplicationRepository.findByIdOrNull(applicationId) } returns cas2v2Application
@@ -741,6 +742,7 @@ class Cas2v2ApplicationServiceTest {
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
+        .withApplicationOrigin(ApplicationOrigin.courtBail)
         .produce()
 
       every {
@@ -763,6 +765,7 @@ class Cas2v2ApplicationServiceTest {
         .withId(applicationId)
         .withCreatedByUser(user)
         .withAbandonedAt(OffsetDateTime.now())
+        .withApplicationOrigin(ApplicationOrigin.courtBail)
         .produce()
 
       every {
@@ -790,6 +793,7 @@ class Cas2v2ApplicationServiceTest {
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
+        .withApplicationOrigin(ApplicationOrigin.courtBail)
         .produce()
 
       every {

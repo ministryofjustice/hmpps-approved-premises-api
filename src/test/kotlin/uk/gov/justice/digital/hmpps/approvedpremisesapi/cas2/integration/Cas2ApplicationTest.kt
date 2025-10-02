@@ -1055,7 +1055,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   private fun addStatusUpdates(applicationId: UUID, assessor: Cas2UserEntity) {
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withLabel("More information requested")
-      withApplication(cas2ApplicationRepository.findById(applicationId).get())
+      withApplication(cas2ApplicationRepository.findByIdOrNullHdc(applicationId)!!)
       withAssessor(assessor)
       withCreatedAt(OffsetDateTime.now().minusDays(2))
     }
@@ -1063,7 +1063,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
       withLabel("Awaiting decision")
-      withApplication(cas2ApplicationRepository.findById(applicationId).get())
+      withApplication(cas2ApplicationRepository.findByIdOrNullHdc(applicationId)!!)
       withAssessor(assessor)
       withCreatedAt(OffsetDateTime.now().minusDays(1))
     }

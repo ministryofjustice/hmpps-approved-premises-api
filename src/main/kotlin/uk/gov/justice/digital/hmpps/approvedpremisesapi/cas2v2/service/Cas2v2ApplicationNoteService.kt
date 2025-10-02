@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
@@ -41,10 +40,10 @@ class Cas2v2ApplicationNoteService(
 
   @Suppress("ReturnCount")
   fun createAssessmentNote(assessmentId: UUID, note: NewCas2v2ApplicationNote): CasResult<Cas2ApplicationNoteEntity> {
-    val assessment = cas2AssessmentRepository.findByIdOrNull(assessmentId)
+    val assessment = cas2AssessmentRepository.findByIdOrNullBail(assessmentId)
       ?: return CasResult.NotFound("Cas2ApplicationNoteEntity", assessmentId.toString())
 
-    val application = cas2ApplicationRepository.findByIdOrNull(assessment.application.id)
+    val application = cas2ApplicationRepository.findByIdOrNullBail(assessment.application.id)
       ?: return CasResult.NotFound("Cas2ApplicationNoteEntity", assessmentId.toString())
 
     if (application.submittedAt == null) {

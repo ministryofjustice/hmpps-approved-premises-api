@@ -9,7 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.repository.findByIdOrNull
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
@@ -146,7 +145,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
           await().until { applicationAssignmentRepository.count().toInt() == 2 }
 
-          val updatedApplication = cas2ApplicationRepository.findByIdOrNull(application.id)!!
+          val updatedApplication = cas2ApplicationRepository.findByIdOrNullHdc(application.id)!!
           assertThat(updatedApplication.applicationAssignments.size).isEqualTo(2)
           assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
           assertThat(updatedApplication.currentPomUserId).isNull()
@@ -191,7 +190,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             publishMessageToTopic(eventType, event)
             await().until { applicationAssignmentRepository.count().toInt() == 3 }
 
-            val updatedApplication = cas2ApplicationRepository.findByIdOrNull(application.id)!!
+            val updatedApplication = cas2ApplicationRepository.findByIdOrNullHdc(application.id)!!
             assertThat(updatedApplication.applicationAssignments.size).isEqualTo(3)
 
             assertThat(updatedApplication.applicationAssignments.get(1).allocatedPomUser).isNull()
@@ -243,7 +242,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             // pom allocation message should create location change assignment, and pom allocation assignment
             await().until { applicationAssignmentRepository.count().toInt() == 3 }
 
-            val updatedApplication = cas2ApplicationRepository.findByIdOrNull(application.id)!!
+            val updatedApplication = cas2ApplicationRepository.findByIdOrNullHdc(application.id)!!
             assertThat(updatedApplication.applicationAssignments.size).isEqualTo(3)
 
             assertThat(updatedApplication.applicationAssignments.get(1).allocatedPomUser).isNull()
@@ -348,7 +347,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           publishMessageToTopic(eventType, event)
           await().until { applicationAssignmentRepository.count().toInt() == 3 }
 
-          val updatedApplication = cas2ApplicationRepository.findByIdOrNull(application.id)!!
+          val updatedApplication = cas2ApplicationRepository.findByIdOrNullHdc(application.id)!!
           assertThat(updatedApplication.applicationAssignments.size).isEqualTo(3)
 
           assertThat(updatedApplication.applicationAssignments.get(1).allocatedPomUser).isNull()

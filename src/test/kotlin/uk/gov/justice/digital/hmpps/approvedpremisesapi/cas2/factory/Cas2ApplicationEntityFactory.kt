@@ -42,7 +42,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var preferredAreas: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
-
   private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.homeDetentionCurfew }
   private var bailHearingDate: Yielded<LocalDate?> = { null }
 

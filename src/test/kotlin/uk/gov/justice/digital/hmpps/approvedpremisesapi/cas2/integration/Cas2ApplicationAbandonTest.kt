@@ -102,7 +102,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            Assertions.assertNotNull(realApplicationRepository.findById(application.id).get().abandonedAt)
+            Assertions.assertNotNull(realApplicationRepository.findByIdOrNullHdc(application.id)?.abandonedAt)
           }
         }
       }
@@ -123,7 +123,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            Assertions.assertNotNull(realApplicationRepository.findById(application.id).get().abandonedAt)
+            Assertions.assertNotNull(realApplicationRepository.findByIdOrNullHdc(application.id)!!.abandonedAt)
           }
         }
       }

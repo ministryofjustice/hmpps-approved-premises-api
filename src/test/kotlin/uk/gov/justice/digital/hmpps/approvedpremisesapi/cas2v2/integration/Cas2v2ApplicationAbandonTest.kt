@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
@@ -99,7 +100,7 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
               .expectStatus()
               .isOk
 
-            Assertions.assertNotNull(realApplicationRepository.findById(application.id).get().abandonedAt)
+            Assertions.assertNotNull(realApplicationRepository.findByIdOrNullBail(application.id)!!.abandonedAt)
           }
         }
       }
@@ -116,6 +117,7 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
       withData(
         data,
       )
+      withApplicationOrigin(ApplicationOrigin.courtBail)
     }
 
     return application

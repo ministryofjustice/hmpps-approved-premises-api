@@ -375,6 +375,7 @@ class Cas2v2SubmissionTest(
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.courtBail)
               withData(
                 """
             {
@@ -388,6 +389,7 @@ class Cas2v2SubmissionTest(
               withApplication(applicationEntity)
               withNacroReferralId("OH123")
               withAssessorName("Assessor name")
+              withApplicationOrigin(ApplicationOrigin.courtBail)
             }
 
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -506,6 +508,7 @@ class Cas2v2SubmissionTest(
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.courtBail)
               withData(
                 """
             {
@@ -551,6 +554,7 @@ class Cas2v2SubmissionTest(
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.courtBail)
               withData(
                 """
             {
@@ -564,6 +568,7 @@ class Cas2v2SubmissionTest(
               withApplication(applicationEntity)
               withNacroReferralId("OH123")
               withAssessorName("Assessor name")
+              withApplicationOrigin(ApplicationOrigin.courtBail)
             }
 
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -705,7 +710,7 @@ class Cas2v2SubmissionTest(
                   withCrn(offenderDetails.otherIds.crn)
                   withCreatedByUser(user)
                   withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                  withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
+                  withApplicationOrigin(ApplicationOrigin.courtBail)
                   withData(
                     """
                     {
@@ -719,6 +724,7 @@ class Cas2v2SubmissionTest(
                   withApplication(applicationEntity)
                   withNacroReferralId("OH123")
                   withAssessorName("Assessor name")
+                  withApplicationOrigin(ApplicationOrigin.courtBail)
                 }
 
                 val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -841,6 +847,7 @@ class Cas2v2SubmissionTest(
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
             withCreatedByUser(submittingUser)
+            withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
             withData(
               """
                         {
@@ -865,6 +872,7 @@ class Cas2v2SubmissionTest(
                 conditionalReleaseDate = LocalDate.parse("2023-04-29"),
                 telephoneNumber = telephoneNumber,
                 bailHearingDate = LocalDate.parse("2025-01-14"),
+                applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
               ),
             )
             .exchange()
@@ -883,7 +891,7 @@ class Cas2v2SubmissionTest(
           .isEqualTo(expectedFrontEndUrl)
 
         val persistedAssessment = cas2RealAssessmentRepository.findAll().first()
-        Assertions.assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
+        Assertions.assertThat(persistedAssessment.application.id).isEqualTo(applicationId)
 
         val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
         emailAsserter.assertEmailsRequestedCount(1)
@@ -924,6 +932,7 @@ class Cas2v2SubmissionTest(
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
             withCreatedByUser(submittingUser)
+            withApplicationOrigin(ApplicationOrigin.courtBail)
             withData(
               """
             {
@@ -951,6 +960,7 @@ class Cas2v2SubmissionTest(
                     translatedDocument = {},
                     telephoneNumber = "123 456 7891",
                     bailHearingDate = LocalDate.parse("2025-01-14"),
+                    applicationOrigin = ApplicationOrigin.courtBail,
                   ),
                 )
                 .exchange()
@@ -984,6 +994,7 @@ class Cas2v2SubmissionTest(
             withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
             withId(applicationId)
             withCreatedByUser(submittingUser)
+            withApplicationOrigin(ApplicationOrigin.courtBail)
             withData(
               """
             {
@@ -1009,6 +1020,7 @@ class Cas2v2SubmissionTest(
                 conditionalReleaseDate = LocalDate.parse("2023-04-29"),
                 telephoneNumber = "123 456 789",
                 bailHearingDate = LocalDate.parse("2025-01-14"),
+                applicationOrigin = ApplicationOrigin.courtBail,
               ),
             )
             .exchange()
@@ -1017,7 +1029,7 @@ class Cas2v2SubmissionTest(
 
           Assertions.assertThat(domainEventRepository.count()).isEqualTo(1)
           Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(1)
-          Assertions.assertThat(cas2RealApplicationRepository.findById(applicationId).get().submittedAt).isNotNull()
+          Assertions.assertThat(cas2RealApplicationRepository.findByIdOrNullBail(applicationId)!!.submittedAt).isNotNull()
         }
       }
     }

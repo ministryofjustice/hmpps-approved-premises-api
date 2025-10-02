@@ -6,7 +6,6 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
@@ -87,7 +86,7 @@ class Cas2AssessmentServiceTest {
           assessEntity
         }
 
-      every { mockAssessmentRepository.findByIdOrNull(assessmentId) } answers
+      every { mockAssessmentRepository.findByIdOrNullHdc(assessmentId) } answers
         {
           assessEntity
         }
@@ -121,7 +120,7 @@ class Cas2AssessmentServiceTest {
         assessorName = "Anne Assessor",
       )
 
-      every { mockAssessmentRepository.findByIdOrNull(assessmentId) } answers
+      every { mockAssessmentRepository.findByIdOrNullHdc(assessmentId) } answers
         {
           null
         }

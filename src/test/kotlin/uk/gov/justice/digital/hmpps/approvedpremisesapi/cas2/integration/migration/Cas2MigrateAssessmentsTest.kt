@@ -58,18 +58,18 @@ class Cas2MigrateAssessmentsTest : MigrationJobTestBase() {
   }
 
   private fun checkApplicationHasAssociationWithAssessment(submittedWithoutAssessment: Cas2ApplicationEntity) {
-    val application = realApplicationRepository.findById(submittedWithoutAssessment.id)
-    Assertions.assertThat(application.get().assessment).isNotNull()
+    val application = realApplicationRepository.findByIdOrNullHdc(submittedWithoutAssessment.id)
+    Assertions.assertThat(application!!.assessment).isNotNull()
   }
 
   private fun checkAssessmentWasCreated(submittedWithoutAssessment: Cas2ApplicationEntity) {
-    val newAssessment = realAssessmentRepository.findFirstByApplicationId(submittedWithoutAssessment.id)
+    val newAssessment = realAssessmentRepository.findFirstByApplicationIdHdc(submittedWithoutAssessment.id)
     Assertions.assertThat(newAssessment).isNotNull()
   }
 
   private fun checkUnsubmittedDoesNotHaveAssessment(unsubmittedApp: Cas2ApplicationEntity) {
-    val unsubmittedApplication = realApplicationRepository.findById(unsubmittedApp.id)
-    Assertions.assertThat(unsubmittedApplication.get().assessment).isNull()
+    val unsubmittedApplication = realApplicationRepository.findByIdOrNullHdc(unsubmittedApp.id)
+    Assertions.assertThat(unsubmittedApplication?.assessment).isNull()
   }
 
   private fun createApplicationEntity(userEntity: Cas2UserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {

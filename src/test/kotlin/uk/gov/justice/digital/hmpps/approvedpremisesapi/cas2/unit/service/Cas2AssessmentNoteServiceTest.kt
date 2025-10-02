@@ -11,7 +11,6 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
@@ -73,7 +72,7 @@ class Cas2AssessmentNoteServiceTest {
     inner class WhenAssessmentIsNotFound {
       @Test
       fun `returns Not Found`() {
-        every { mockAssessmentRepository.findByIdOrNull(any()) } returns null
+        every { mockAssessmentRepository.findByIdOrNullHdc(any()) } returns null
 
         Assertions.assertThat(
           assessmentNoteService.createAssessmentNote(
@@ -125,7 +124,7 @@ class Cas2AssessmentNoteServiceTest {
             assessment = assessment,
           )
 
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } returns assessment
           every { mockUserAccessService.offenderIsFromSamePrisonAsUser(myPrisonCode, myPrisonCode) } returns true
           every { mockApplicationNoteRepository.save(any()) } answers
             {
@@ -186,7 +185,7 @@ class Cas2AssessmentNoteServiceTest {
             createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
             assessment = assessment,
           )
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } returns assessment
           every { mockUserAccessService.offenderIsFromSamePrisonAsUser(myPrisonCode, myPrisonCode) } returns true
           every { mockApplicationNoteRepository.save(any()) } answers
             {
@@ -284,7 +283,7 @@ class Cas2AssessmentNoteServiceTest {
             createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
             assessment = assessment,
           )
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } returns assessment
           every {
             mockUserAccessService.offenderIsFromSamePrisonAsUser(myPrisonCode, myPrisonCode)
           } returns true
@@ -368,7 +367,7 @@ class Cas2AssessmentNoteServiceTest {
 
         @Test
         fun `When Different Prison returns Not Authorised`() {
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } returns assessment
           every {
             mockUserAccessService.offenderIsFromSamePrisonAsUser("other-prison", "my-prison")
           } returns false
@@ -391,7 +390,7 @@ class Cas2AssessmentNoteServiceTest {
             createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
             assessment = assessment,
           )
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } returns assessment
           every {
             mockUserAccessService.offenderIsFromSamePrisonAsUser("other-prison", "my-prison")
           } returns true
@@ -469,7 +468,7 @@ class Cas2AssessmentNoteServiceTest {
           createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
           assessment = assessment,
         )
-        every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+        every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } returns assessment
         every { mockUserService.getUserForRequest() } returns externalUser
         every { cas2EmailService.getReferrerEmail(any()) } returns "email"
         every { mockApplicationNoteRepository.save(any()) } answers
@@ -530,7 +529,7 @@ class Cas2AssessmentNoteServiceTest {
           assessment = assessment,
         )
 
-        every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+        every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } returns assessment
         every { mockUserService.getUserForRequest() } returns externalUser
         every { cas2EmailService.getReferrerEmail(any()) } answers { callOriginal() }
         every { mockApplicationNoteRepository.save(any()) } answers
@@ -598,7 +597,7 @@ class Cas2AssessmentNoteServiceTest {
             createdAt = createdAt,
             assessment = assessment,
           )
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } returns assessment
           every { mockUserAccessService.offenderIsFromSamePrisonAsUser(myPrisonCode, myPrisonCode) } returns true
           every { mockApplicationNoteRepository.save(any()) } answers
             {
@@ -663,7 +662,7 @@ class Cas2AssessmentNoteServiceTest {
             assessment = assessmentWithoutAssessor,
           )
 
-          every { mockAssessmentRepository.findByIdOrNull(assessmentWithoutAssessor.id) } returns assessmentWithoutAssessor
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessmentWithoutAssessor.id) } returns assessmentWithoutAssessor
           every { mockUserAccessService.offenderIsFromSamePrisonAsUser(myPrisonCode, myPrisonCode) } returns true
           every { mockApplicationNoteRepository.save(any()) } answers
             {

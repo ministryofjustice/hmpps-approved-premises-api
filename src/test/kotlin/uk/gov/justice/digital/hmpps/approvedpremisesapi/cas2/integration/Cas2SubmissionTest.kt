@@ -776,7 +776,7 @@ class Cas2SubmissionTest(
         assertThat(domainEventFromJson.eventDetails.applicationUrl)
           .isEqualTo(expectedFrontEndUrl)
 
-        val persistedAssessment = realAssessmentRepository.findAll().first()
+        val persistedAssessment = realAssessmentRepository.findAllHdc().first()
         assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
 
         val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
@@ -909,7 +909,7 @@ class Cas2SubmissionTest(
 
           assertThat(domainEventRepository.count()).isEqualTo(0)
           assertThat(realAssessmentRepository.count()).isEqualTo(0)
-          assertThat(realApplicationRepository.findById(applicationId).get().submittedAt).isNull()
+          assertThat(realApplicationRepository.findByIdOrNullHdc(applicationId)!!.submittedAt).isNull()
         }
       }
     }

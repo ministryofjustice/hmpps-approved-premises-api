@@ -6,7 +6,6 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
@@ -39,6 +38,7 @@ class Cas2v2AssessmentServiceTest {
         id = UUID.randomUUID(),
         application = cas2v2Application,
         createdAt = OffsetDateTime.now(),
+        applicationOrigin = cas2v2Application.applicationOrigin,
       )
 
       every { mockCas2AssessmentRepository.save(any()) } answers
@@ -74,6 +74,7 @@ class Cas2v2AssessmentServiceTest {
         id = assessmentId,
         application = cas2v2Application,
         createdAt = OffsetDateTime.now(),
+        applicationOrigin = cas2v2Application.applicationOrigin,
       )
 
       val newAssessmentData = UpdateCas2v2Assessment(
@@ -86,7 +87,7 @@ class Cas2v2AssessmentServiceTest {
           assessEntity
         }
 
-      every { mockCas2AssessmentRepository.findByIdOrNull(assessmentId) } answers
+      every { mockCas2AssessmentRepository.findByIdOrNullBail(assessmentId) } answers
         {
           assessEntity
         }
@@ -120,7 +121,7 @@ class Cas2v2AssessmentServiceTest {
         assessorName = "Anne Assessor",
       )
 
-      every { mockCas2AssessmentRepository.findByIdOrNull(assessmentId) } answers
+      every { mockCas2AssessmentRepository.findByIdOrNullBail(assessmentId) } answers
         {
           null
         }

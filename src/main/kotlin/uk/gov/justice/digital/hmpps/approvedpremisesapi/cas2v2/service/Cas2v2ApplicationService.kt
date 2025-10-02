@@ -107,7 +107,7 @@ class Cas2v2ApplicationService(
   }
 
   fun getSubmittedCas2v2ApplicationForAssessor(applicationId: UUID): CasResult<Cas2ApplicationEntity> {
-    val applicationEntity = cas2ApplicationRepository.findSubmittedApplicationById(applicationId)
+    val applicationEntity = cas2ApplicationRepository.findSubmittedApplicationByIdBail(applicationId)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
     return CasResult.Success(
@@ -116,7 +116,7 @@ class Cas2v2ApplicationService(
   }
 
   fun getCas2v2ApplicationForUser(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val applicationEntity = cas2ApplicationRepository.findByIdOrNull(applicationId)
+    val applicationEntity = cas2ApplicationRepository.findByIdOrNullBail(applicationId)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
     if (applicationEntity.abandonedAt != null) {
@@ -182,7 +182,7 @@ class Cas2v2ApplicationService(
     user: Cas2UserEntity,
     bailHearingDate: LocalDate?,
   ): CasResult<Cas2ApplicationEntity> {
-    val application = cas2ApplicationRepository.findByIdOrNull(applicationId)
+    val application = cas2ApplicationRepository.findByIdOrNullBail(applicationId)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
@@ -210,7 +210,7 @@ class Cas2v2ApplicationService(
 
   @SuppressWarnings("ReturnCount")
   fun abandonCas2v2Application(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val application = cas2ApplicationRepository.findByIdOrNull(applicationId)
+    val application = cas2ApplicationRepository.findByIdOrNullBail(applicationId)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {

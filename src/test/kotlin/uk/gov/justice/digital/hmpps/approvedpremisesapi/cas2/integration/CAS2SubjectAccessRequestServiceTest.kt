@@ -314,13 +314,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withStatusDetailId(UUID.randomUUID())
   }
 
-  private fun externalUserEntity() = cas2UserEntityFactory.produceAndPersist {
-    withUserType(Cas2UserType.EXTERNAL)
-    withName(randomStringMultiCaseWithNumbers(12))
-    withEmail(randomEmailAddress())
-    withUsername(randomStringMultiCaseWithNumbers(10))
-  }
-
   private fun cas2AssessmentEntity(application: Cas2ApplicationEntity) = cas2AssessmentEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessorName(randomStringMultiCaseWithNumbers(10))

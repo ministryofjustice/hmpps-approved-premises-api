@@ -11,7 +11,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
@@ -152,7 +151,7 @@ class StatusUpdateServiceTest {
           .withStatusId(activeStatus.id)
           .produce()
 
-        every { mockAssessmentRepository.findByIdOrNull(assessment.id) } answers
+        every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } answers
           {
             assessment
           }
@@ -232,7 +231,7 @@ class StatusUpdateServiceTest {
 
       @BeforeEach
       fun setUp() {
-        every { mockAssessmentRepository.findByIdOrNull(assessment.id) } answers
+        every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } answers
           {
             null
           }
@@ -275,7 +274,7 @@ class StatusUpdateServiceTest {
             label = statusDetail.label,
           )
 
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } answers
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } answers
             {
               assessment
             }
@@ -381,7 +380,7 @@ class StatusUpdateServiceTest {
           val assessmentWithNoEmail = Cas2AssessmentEntityFactory()
             .withApplication(submittedApplicationWithNoReferrerEmail).produce()
 
-          every { mockAssessmentRepository.findByIdOrNull(assessmentWithNoEmail.id) } answers
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessmentWithNoEmail.id) } answers
             {
               assessmentWithNoEmail
             }
@@ -409,7 +408,7 @@ class StatusUpdateServiceTest {
 
         @BeforeEach
         fun setUp() {
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } answers
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } answers
             {
               null
             }

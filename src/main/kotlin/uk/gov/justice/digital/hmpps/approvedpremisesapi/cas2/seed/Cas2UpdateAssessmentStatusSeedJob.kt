@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed
 
 import org.slf4j.LoggerFactory
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
@@ -46,12 +45,12 @@ class Cas2UpdateAssessmentStatusSeedJob(
     )
 
     val assessment =
-      assessmentRepository.findByIdOrNull(row.assessmentId)
+      assessmentRepository.findByIdOrNullHdc(row.assessmentId)
         ?: throw SeedException(
           "Assessment with id ${row.assessmentId} not found",
         )
 
-    val application = applicationRepository.findByIdOrNull(row.applicationId)
+    val application = applicationRepository.findByIdOrNullHdc(row.applicationId)
       ?: throw SeedException(
         "Application with id ${row.applicationId} not found",
       )

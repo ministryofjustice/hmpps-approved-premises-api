@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -69,6 +70,9 @@ class StartupScriptConfigTest {
     seedConfig.onStartup.script.prisonCode = "PRI"
 
     every { mockCas2UserRepository.findAll() } answers { listOf(mockCas2UserEntity) }
+    every { mockCas2UserRepository.findByUserType() } answers { listOf(mockCas2UserEntity) }
+    every { mockCas2UserRepository.findByUserType(Cas2UserType.EXTERNAL) } answers { listOf(mockCas2UserEntity) }
+
     every { mockCas2UserEntity.username } answers { "SMITHJ_GEN" }
 
     every { mockApplicationRepository.save(any()) } answers { mockApplicationEntity }

@@ -34,19 +34,41 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   @Query("SELECT n.id FROM Cas2ApplicationEntity n")
   fun findApplicationIds(): List<UUID>
 
-  fun findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber: String): Cas2ApplicationEntity?
+  @Query(
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.nomsNumber = :nomsNumber AND " +
+      "a.submittedAt IS NOT NULL and a.applicationOrigin = 'homeDetentionCurfew' ORDER BY a.submittedAt DESC LIMIT 1",
+  )
+  fun findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDescHdc(nomsNumber: String): Cas2ApplicationEntity?
 
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +
-      "a.submittedAt IS NOT NULL",
+      "a.submittedAt IS NOT NULL and a.applicationOrigin = 'homeDetentionCurfew'",
   )
-  fun findSubmittedApplicationById(id: UUID): Cas2ApplicationEntity?
+  fun findSubmittedApplicationByIdHdc(id: UUID): Cas2ApplicationEntity?
+
+  @Query(
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +
+      "a.applicationOrigin != 'homeDetentionCurfew'",
+  )
+  fun findByIdOrNullBail(id: UUID): Cas2ApplicationEntity?
+
+  @Query(
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +
+      "a.applicationOrigin = 'homeDetentionCurfew'",
+  )
+  fun findByIdOrNullHdc(id: UUID): Cas2ApplicationEntity?
+
+  @Query(
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +
+      "a.submittedAt IS NOT NULL and a.applicationOrigin != 'homeDetentionCurfew'",
+  )
+  fun findSubmittedApplicationByIdBail(id: UUID): Cas2ApplicationEntity?
 
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.submittedAt IS NOT NULL " +
-      "AND a NOT IN (SELECT application FROM Cas2AssessmentEntity)",
+      "AND a NOT IN (SELECT application FROM Cas2AssessmentEntity) and a.applicationOrigin = 'homeDetentionCurfew'",
   )
-  fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2ApplicationEntity>
+  fun findAllSubmittedApplicationsWithoutAssessmentsHdc(): Slice<Cas2ApplicationEntity>
 
   @Query(
     """
@@ -65,13 +87,14 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
                  join assignments_ordered assignment on application.id = assignment.application_id
                  join current_prisons current_prison on assignment.application_id = current_prison.application_id
         where assignment.allocated_pom_cas_2_user_id = :userId
+        and application.application_origin = 'homeDetentionCurfew'
         --find rows where the POM has been assigned previously, but is not the current POM
         and assignment.row_number > 1
         --and where the new POM is NOT in the same prison
         and current_prison.code <> :userPrisonCode;""",
     nativeQuery = true,
   )
-  fun findPreviouslyAssignedApplicationsInDifferentPrisonToUser(userId: UUID, userPrisonCode: String): List<UUID>
+  fun findPreviouslyAssignedApplicationsInDifferentPrisonToUserHdc(userId: UUID, userPrisonCode: String): List<UUID>
 }
 
 @Repository
