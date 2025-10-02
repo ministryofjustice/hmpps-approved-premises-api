@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -144,7 +142,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
   mockStaffUserDetailsCall: Boolean = true,
-  block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
+  block: (userEntity: Cas2UserEntity, jwt: String) -> Unit,
 ) {
   val (deliusUser, _) = givenAUser(
     id,
@@ -157,12 +155,12 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
   )
 //  val nomisUserDetailsFactory = NomisUserDetailFactory()
 
-  val user = cas2v2UserEntityFactory.produceAndPersist {
+  val user = cas2UserEntityFactory.produceAndPersist {
     withId(id)
     withUsername(deliusUser.deliusUsername)
     withEmail(deliusUser.email)
     withName(deliusUser.name)
-    withUserType(Cas2v2UserType.DELIUS)
+    withUserType(Cas2UserType.DELIUS)
   }
 
   val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(deliusUser.deliusUsername)
@@ -173,7 +171,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
 fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
-  block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
+  block: (userEntity: Cas2UserEntity, jwt: String) -> Unit,
 ) {
   val nomisUserDetailsFactory = NomisUserDetailFactory()
 
@@ -183,12 +181,12 @@ fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
 
   val nomisUserDetails = nomisUserDetailsFactory.produce()
 
-  val user = cas2v2UserEntityFactory.produceAndPersist {
+  val user = cas2UserEntityFactory.produceAndPersist {
     withId(id)
     withUsername(nomisUserDetails.username)
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
-    withUserType(Cas2v2UserType.NOMIS)
+    withUserType(Cas2UserType.NOMIS)
     withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
   }
 
@@ -202,7 +200,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
 fun Cas2v2IntegrationTestBase.givenACas2v2NomisUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
-  block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
+  block: (userEntity: Cas2UserEntity, jwt: String) -> Unit,
 ) {
   val nomisUserDetailsFactory = NomisUserDetailFactory()
 
@@ -212,45 +210,16 @@ fun Cas2v2IntegrationTestBase.givenACas2v2NomisUser(
 
   val nomisUserDetails = nomisUserDetailsFactory.produce()
 
-  val user = cas2v2UserEntityFactory.produceAndPersist {
+  val user = cas2UserEntityFactory.produceAndPersist {
     withId(id)
     withUsername(nomisUserDetails.username)
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
-    withUserType(Cas2v2UserType.NOMIS)
+    withUserType(Cas2UserType.NOMIS)
     withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
   }
 
   val jwt = jwtAuthHelper.createValidCas2v2NomisAuthorisationCodeJwt(nomisUserDetails.username)
-
-  nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
-
-  block(user, jwt)
-}
-
-fun Cas2v2IntegrationTestBase.givenACas2v2LicenceCaseAdminUser(
-  id: UUID = UUID.randomUUID(),
-  nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
-  block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
-) {
-  val nomisUserDetailsFactory = NomisUserDetailFactory()
-
-  if (nomisUserDetailsConfigBlock != null) {
-    nomisUserDetailsConfigBlock(nomisUserDetailsFactory)
-  }
-
-  val nomisUserDetails = nomisUserDetailsFactory.produce()
-
-  val user = cas2v2UserEntityFactory.produceAndPersist {
-    withId(id)
-    withUsername(nomisUserDetails.username)
-    withEmail(nomisUserDetails.primaryEmail)
-    withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
-    withUserType(Cas2v2UserType.NOMIS)
-    withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
-  }
-
-  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username, listOf("ROLE_LICENCE_CA"))
 
   nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
 
@@ -303,12 +272,12 @@ fun IntegrationTestBase.givenACas2Assessor(
 
 fun Cas2v2IntegrationTestBase.givenACas2v2Assessor(
   id: UUID = UUID.randomUUID(),
-  block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
+  block: (userEntity: Cas2UserEntity, jwt: String) -> Unit,
 ) {
-  val user = cas2v2UserEntityFactory.produceAndPersist {
+  val user = cas2UserEntityFactory.produceAndPersist {
     withId(id)
     withUsername("CAS2_ASSESSOR_USER")
-    withUserType(Cas2v2UserType.EXTERNAL)
+    withUserType(Cas2UserType.EXTERNAL)
   }
 
   val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt("CAS2_ASSESSOR_USER")
