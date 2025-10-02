@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.StatusU
 import java.time.OffsetDateTime
 
 class StatusUpdateTransformerTest {
-  private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+  private val user = Cas2UserEntityFactory().produce()
   private val cas2User = Cas2UserEntityFactory()
     .withUserType(Cas2UserType.DELIUS)
     .produce()

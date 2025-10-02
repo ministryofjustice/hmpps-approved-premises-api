@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
@@ -54,11 +55,15 @@ class Cas2v2ApplicationTransformerTest {
     mockCas2v2AssessmentsTransformer,
   )
 
-  private val user = Cas2UserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .produce()
 
-  private val cas2v2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
+  private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withCreatedByUser(user)
 
-  private val submittedCas2v2ApplicationFactory = cas2v2ApplicationFactory
+  private val submittedCas2ApplicationFactory = cas2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
 
   @BeforeEach
@@ -81,11 +86,11 @@ class Cas2v2ApplicationTransformerTest {
 
     @Test
     fun `transformJpaToApi transforms an in progress CAS-2v2 application correctly`() {
-      val application = cas2v2ApplicationFactory
+      val application = cas2ApplicationFactory
         .withSubmittedAt(null)
+        .withApplicationOrigin(ApplicationOrigin.prisonBail)
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .produce()
-
-      application.applicationOrigin = ApplicationOrigin.prisonBail
 
       val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
@@ -118,8 +123,12 @@ class Cas2v2ApplicationTransformerTest {
       val assessment = Cas2v2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
       every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
 
-      val application = submittedCas2v2ApplicationFactory
-        .withAssessment(Cas2AssessmentEntityFactory().produce()).produce()
+      val application = submittedCas2ApplicationFactory
+        .withAssessment(
+          Cas2AssessmentEntityFactory()
+            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            .produce(),
+        ).produce()
 
       val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
@@ -143,7 +152,11 @@ class Cas2v2ApplicationTransformerTest {
       )
       every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
 
-      val application = submittedCas2v2ApplicationFactory.withAssessment(Cas2AssessmentEntityFactory().produce()).produce()
+      val application = submittedCas2ApplicationFactory.withAssessment(
+        Cas2AssessmentEntityFactory()
+          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          .produce(),
+      ).produce()
 
       val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
 

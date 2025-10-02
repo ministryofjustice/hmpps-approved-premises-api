@@ -29,7 +29,7 @@ class Cas2ApplicationsTransformer(
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
-    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getNomisUserById(jpa.currentPomUserId!!) }
+    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getNomisUserById(jpa.currentPomUserId!!, jpa.serviceOrigin) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     return Cas2Application(
       id = jpa.id,
