@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2StatusUpdateTransformer
 
@@ -17,6 +18,7 @@ class Cas2v2AssessmentsTransformerTest {
     .withNacroReferralId("NACRO_ID")
     .withAssessorName("Firsty Lasty")
     .withStatusUpdates(mutableListOf(mockCas2StatusUpdateEntity, mockCas2StatusUpdateEntity))
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
     .produce()
   private val mockCas2v2StatusUpdateTransformer = mockk<Cas2v2StatusUpdateTransformer>()
   private val mockStatusUpdateApi = mockk<Cas2v2StatusUpdate>()

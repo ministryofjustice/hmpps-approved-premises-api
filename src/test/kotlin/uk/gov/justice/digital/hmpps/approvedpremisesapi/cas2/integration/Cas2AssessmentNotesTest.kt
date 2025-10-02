@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -228,7 +227,6 @@ class Cas2AssessmentNotesTest(
               givenACas2PomUser { _, jwt ->
 
                 val otherUser = cas2UserEntityFactory.produceAndPersist {
-                  withUserType(Cas2UserType.NOMIS)
                   withActiveNomisCaseloadId("another-prison")
                 }
 
@@ -269,7 +267,6 @@ class Cas2AssessmentNotesTest(
               givenACas2PomUser { referrer, jwt ->
 
                 val otherUser = cas2UserEntityFactory.produceAndPersist {
-                  withUserType(Cas2UserType.NOMIS)
                   withActiveNomisCaseloadId(referrer.activeNomisCaseloadId!!)
                 }
 
@@ -412,7 +409,6 @@ class Cas2AssessmentNotesTest(
               givenACas2LicenceCaseAdminUser { _, jwt ->
 
                 val otherUser = cas2UserEntityFactory.produceAndPersist {
-                  withUserType(Cas2UserType.NOMIS)
                   withActiveNomisCaseloadId("another-prison")
                 }
 
@@ -453,7 +449,6 @@ class Cas2AssessmentNotesTest(
               givenACas2PomUser { referrer, jwt ->
 
                 val otherUser = cas2UserEntityFactory.produceAndPersist {
-                  withUserType(Cas2UserType.NOMIS)
                   withActiveNomisCaseloadId(referrer.activeNomisCaseloadId!!)
                 }
 

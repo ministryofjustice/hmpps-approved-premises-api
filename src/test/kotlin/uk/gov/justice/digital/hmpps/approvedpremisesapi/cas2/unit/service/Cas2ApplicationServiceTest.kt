@@ -22,7 +22,6 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
@@ -37,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateNonAssignable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
@@ -123,7 +122,7 @@ class Cas2ApplicationServiceTest {
         statusUpdateEntityLabel = "Assignable",
       )
       every {
-        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+        mockApplicationRepository.findFirstByNomsNumberAndServiceOriginAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!, Cas2ServiceOrigin.HDC)
       } returns application
       assertThat(applicationService.findApplicationToAssign(nomsNumber)).isEqualTo(application)
     }
@@ -137,7 +136,7 @@ class Cas2ApplicationServiceTest {
         statusUpdateEntityLabel = statusUpdateNonAssignable.label,
       )
       every {
-        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+        mockApplicationRepository.findFirstByNomsNumberAndServiceOriginAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!, application.serviceOrigin)
       } returns application
       assertThat(applicationService.findApplicationToAssign(nomsNumber)).isNull()
     }
@@ -156,7 +155,7 @@ class Cas2ApplicationServiceTest {
       }
 
       every {
-        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+        mockApplicationRepository.findFirstByNomsNumberAndServiceOriginAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!, application.serviceOrigin)
       } returns application
       assertThat(applicationService.findApplicationToAssign(nomsNumber)).isEqualTo(application)
     }
@@ -199,7 +198,8 @@ class Cas2ApplicationServiceTest {
       every { page.totalElements } returns 100
 
       every {
-        mockApplicationSummaryRepository.findBySubmittedAtIsNotNull(
+        mockApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(
+          Cas2ServiceOrigin.HDC.toString(),
           PageRequest.of(
             2,
             10,
@@ -222,7 +222,7 @@ class Cas2ApplicationServiceTest {
   inner class ApplicationSummaries {
 
     private val prisonCode = "PRI"
-    private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withActiveNomisCaseloadId(prisonCode).produce()
+    private val user = Cas2UserEntityFactory().withActiveNomisCaseloadId(prisonCode).produce()
     private val pageCriteria = PageCriteria("createdAt", SortDirection.desc, 1)
 
     @BeforeEach
@@ -242,6 +242,7 @@ class Cas2ApplicationServiceTest {
         mockApplicationSummaryRepository.findApplicationsAssignedToUser(
           user.id,
           any(),
+          any(),
         )
       }
     }
@@ -257,6 +258,7 @@ class Cas2ApplicationServiceTest {
       verify {
         mockApplicationSummaryRepository.findUnallocatedApplicationsInSamePrisonAsUser(
           prisonCode,
+          any(),
           any(),
         )
       }
@@ -274,8 +276,9 @@ class Cas2ApplicationServiceTest {
         mockApplicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(
           user.id,
           prisonCode,
+          user.serviceOrigin.toString(),
         )
-        mockApplicationSummaryRepository.findAllByIdIn(any(), any())
+        mockApplicationSummaryRepository.findAllByServiceOriginAndIdIn(any(), any(), any())
       }
     }
 
@@ -291,6 +294,7 @@ class Cas2ApplicationServiceTest {
         mockApplicationSummaryRepository.findInProgressApplications(
           user.id.toString(),
           any(),
+          Cas2ServiceOrigin.HDC.toString(),
         )
       }
     }
@@ -307,7 +311,7 @@ class Cas2ApplicationServiceTest {
         mockApplicationSummaryRepository.findAllocatedApplicationsInSamePrisonAsUser(
           prisonCode,
           any(),
-
+          any(),
         )
       }
     }
@@ -317,10 +321,10 @@ class Cas2ApplicationServiceTest {
   inner class GetApplicationForUser {
     @Test
     fun `where application does not exist returns NotFound result`() {
-      val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+      val user = Cas2UserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns null
 
       assertThatCasResult(applicationService.getApplicationForUser(applicationId, user)).isNotFound(
         "Application",
@@ -330,13 +334,13 @@ class Cas2ApplicationServiceTest {
 
     @Test
     fun `where application is abandoned returns NotFound result`() {
-      val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+      val user = Cas2UserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockApplicationRepository.findByIdOrNull(any()) } returns
+      every { mockApplicationRepository.findByIdAndServiceOrigin(any(), eq(Cas2ServiceOrigin.HDC)) } returns
         Cas2ApplicationEntityFactory()
           .withCreatedByUser(
-            Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+            Cas2UserEntityFactory()
               .produce(),
           )
           .withAbandonedAt(OffsetDateTime.now())
@@ -350,15 +354,13 @@ class Cas2ApplicationServiceTest {
 
     @Test
     fun `where user cannot access the application returns Unauthorised result`() {
-      val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
-        .produce()
+      val user = Cas2UserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      every { mockApplicationRepository.findByIdOrNull(any()) } returns
+      every { mockApplicationRepository.findByIdAndServiceOrigin(any(), eq(Cas2ServiceOrigin.HDC)) } returns
         Cas2ApplicationEntityFactory()
           .withCreatedByUser(
-            Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
-              .produce(),
+            Cas2UserEntityFactory().produce(),
           )
           .produce()
 
@@ -373,7 +375,7 @@ class Cas2ApplicationServiceTest {
       val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
-      val userEntity = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+      val userEntity = Cas2UserEntityFactory()
         .withId(userId)
         .withUsername(distinguishedName)
         .produce()
@@ -382,7 +384,7 @@ class Cas2ApplicationServiceTest {
         .withCreatedByUser(userEntity)
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
+      every { mockApplicationRepository.findByIdAndServiceOrigin(any(), Cas2ServiceOrigin.HDC) } returns applicationEntity
       every { mockUserAccessService.userCanViewApplication(any(), any()) } returns true
 
       val result = applicationService.getApplicationForUser(applicationId, userEntity)
@@ -420,13 +422,13 @@ class Cas2ApplicationServiceTest {
 
   @Nested
   inner class UpdateApplication {
-    val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+    val user = Cas2UserEntityFactory().produce()
 
     @Test
     fun `returns NotFound when application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+      every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns null
 
       assertThatCasResult(
         applicationService.updateApplication(
@@ -444,12 +446,12 @@ class Cas2ApplicationServiceTest {
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
-          Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+          Cas2UserEntityFactory()
             .produce()
         }
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns
         application
 
       assertThatCasResult(
@@ -471,7 +473,7 @@ class Cas2ApplicationServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns
         application
 
       val result = applicationService.updateApplication(
@@ -493,7 +495,7 @@ class Cas2ApplicationServiceTest {
         .withAbandonedAt(OffsetDateTime.now())
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns application
 
       val result = applicationService.updateApplication(
         applicationId = applicationId,
@@ -520,7 +522,7 @@ class Cas2ApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+      every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns
         application
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
@@ -559,7 +561,7 @@ class Cas2ApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns application
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2ApplicationEntity
@@ -577,13 +579,13 @@ class Cas2ApplicationServiceTest {
 
     @Nested
     inner class AbandonApplication {
-      val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+      val user = Cas2UserEntityFactory().produce()
 
       @Test
       fun `returns NotFound when application doesn't exist`() {
         val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+        every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns null
 
         assertThatCasResult(
           applicationService.abandonApplication(
@@ -600,12 +602,12 @@ class Cas2ApplicationServiceTest {
         val application = Cas2ApplicationEntityFactory()
           .withId(applicationId)
           .withYieldedCreatedByUser {
-            Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+            Cas2UserEntityFactory()
               .produce()
           }
           .produce()
 
-        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+        every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns
           application
 
         assertThatCasResult(
@@ -626,7 +628,7 @@ class Cas2ApplicationServiceTest {
           .withSubmittedAt(OffsetDateTime.now())
           .produce()
 
-        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+        every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns
           application
 
         val result = applicationService.abandonApplication(
@@ -647,7 +649,7 @@ class Cas2ApplicationServiceTest {
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
-        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+        every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns
           application
 
         val result = applicationService.abandonApplication(
@@ -673,7 +675,7 @@ class Cas2ApplicationServiceTest {
           .withData(data)
           .produce()
 
-        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+        every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns
           application
 
         every { mockApplicationRepository.save(any()) } answers {
@@ -693,7 +695,7 @@ class Cas2ApplicationServiceTest {
     inner class SubmitApplication {
       val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
       val username = "SOMEPERSON"
-      val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+      val user = Cas2UserEntityFactory()
         .withUsername(this.username)
         .produce()
       val hdcEligibilityDate = LocalDate.parse("2023-03-30")
@@ -721,7 +723,7 @@ class Cas2ApplicationServiceTest {
       fun `returns NotFound when application doesn't exist`() {
         val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+        every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns null
 
         assertThatCasResult(
           applicationService.submitApplication(
@@ -735,7 +737,7 @@ class Cas2ApplicationServiceTest {
 
       @Test
       fun `returns Unauthorised when application doesn't belong to request user`() {
-        val differentUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+        val differentUser = Cas2UserEntityFactory()
           .produce()
 
         val application = Cas2ApplicationEntityFactory()
@@ -743,7 +745,7 @@ class Cas2ApplicationServiceTest {
           .withCreatedByUser(differentUser)
           .produce()
 
-        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+        every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns application
 
         assertThatCasResult(applicationService.submitApplication(submitCas2Application, user)).isUnauthorised()
 
@@ -759,7 +761,7 @@ class Cas2ApplicationServiceTest {
           .produce()
 
         every {
-          mockApplicationRepository.findByIdOrNull(applicationId)
+          mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
         } returns application
 
         val result = applicationService.submitApplication(submitCas2Application, user)
@@ -778,7 +780,7 @@ class Cas2ApplicationServiceTest {
           .produce()
 
         every {
-          mockApplicationRepository.findByIdOrNull(applicationId)
+          mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
         } returns application
 
         val result = applicationService.submitApplication(submitCas2Application, user)
@@ -797,7 +799,7 @@ class Cas2ApplicationServiceTest {
           .produce()
 
         every {
-          mockApplicationRepository.findByIdOrNull(any())
+          mockApplicationRepository.findByIdAndServiceOrigin(any(), Cas2ServiceOrigin.HDC)
         } returns application
 
         every { mockApplicationRepository.save(any()) } answers {
@@ -828,7 +830,7 @@ class Cas2ApplicationServiceTest {
           .produce()
 
         every {
-          mockApplicationRepository.findByIdOrNull(any())
+          mockApplicationRepository.findByIdAndServiceOrigin(any(), Cas2ServiceOrigin.HDC)
         } returns application
 
         every { mockApplicationRepository.save(any()) } answers {
@@ -872,7 +874,7 @@ class Cas2ApplicationServiceTest {
         val assessment = Cas2AssessmentEntityFactory().withApplication(application).produce()
 
         every {
-          mockApplicationRepository.findByIdOrNull(applicationId)
+          mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
         } returns application
 
         val inmateDetail = InmateDetailFactory()
@@ -952,7 +954,7 @@ class Cas2ApplicationServiceTest {
     }
   }
 
-  private fun userWithUsername(username: String) = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS)
+  private fun userWithUsername(username: String) = Cas2UserEntityFactory()
     .withUsername(username)
     .produce()
 }

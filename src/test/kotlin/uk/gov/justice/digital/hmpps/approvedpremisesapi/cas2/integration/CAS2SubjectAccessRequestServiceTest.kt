@@ -1,5 +1,4 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
-
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
@@ -279,6 +278,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "conditional_release_date": "$arrivedAtDateOnly",
       "abandoned_at": null,
       "application_origin": "${application.applicationOrigin}",
+      "service_origin": "${application.serviceOrigin}",
       "bail_hearing_date": null,
     }
   """.trimIndent()
@@ -314,13 +314,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withStatusDetailId(UUID.randomUUID())
   }
 
-  private fun externalUserEntity() = cas2UserEntityFactory.produceAndPersist {
-    withUserType(Cas2UserType.EXTERNAL)
-    withName(randomStringMultiCaseWithNumbers(12))
-    withEmail(randomEmailAddress())
-    withUsername(randomStringMultiCaseWithNumbers(10))
-  }
-
   private fun cas2AssessmentEntity(application: Cas2ApplicationEntity) = cas2AssessmentEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessorName(randomStringMultiCaseWithNumbers(10))
@@ -341,7 +334,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withReferringPrisonCode(randomStringMultiCaseWithNumbers(3))
     withTelephoneNumber(randomStringMultiCaseWithNumbers(7))
-
     withConditionalReleaseDate(LocalDate.parse(arrivedAtDateOnly))
     withHdcEligibilityDate(LocalDate.parse(arrivedAtDateOnly))
     withPreferredAreas("some areas")
@@ -354,7 +346,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withActiveNomisCaseloadId(randomStringMultiCaseWithNumbers(3))
     withNomisStaffCode(9L)
     withNomisStaffIdentifier(90L)
-    withUserType(Cas2UserType.NOMIS)
   }
 
   private fun cas2ExternalUserEntity() = cas2UserEntityFactory.produceAndPersist {
