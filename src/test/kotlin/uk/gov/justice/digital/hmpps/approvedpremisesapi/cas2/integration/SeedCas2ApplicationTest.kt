@@ -25,7 +25,6 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     cas2ApplicationRepository.deleteAll()
 
     val applicant = cas2UserEntityFactory.produceAndPersist {
-      withUserType(Cas2UserType.NOMIS)
       withUsername("ROGER_SMITH_FAKE")
     }
 
@@ -66,7 +65,6 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     cas2ApplicationRepository.deleteAll()
 
     cas2UserEntityFactory.produceAndPersist {
-      withUserType(Cas2UserType.NOMIS)
       withUsername("ROGER_SMITH_FAKE")
     }
 
@@ -111,7 +109,6 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     cas2ApplicationRepository.deleteAll()
 
     cas2UserEntityFactory.produceAndPersist {
-      withUserType(Cas2UserType.NOMIS)
       withUsername("ROGER_SMITH_FAKE")
     }
 
@@ -162,7 +159,6 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     cas2ApplicationRepository.deleteAll()
 
     cas2UserEntityFactory.produceAndPersist {
-      withUserType(Cas2UserType.NOMIS)
       withUsername("ROGER_SMITH_FAKE")
     }
 

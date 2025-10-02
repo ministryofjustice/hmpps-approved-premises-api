@@ -15,7 +15,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationNoteTransformerTest {
-  private val user = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+  private val user = Cas2UserEntityFactory().produce()
   private val submittedApplication = Cas2ApplicationEntityFactory()
     .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
@@ -56,7 +56,7 @@ class ApplicationNoteTransformerTest {
   inner class WithCas2NomisUser {
     @Test
     fun `transforms JPA Cas2ApplicationNote db entity to API representation`() {
-      val nomisUser = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
+      val nomisUser = Cas2UserEntityFactory().produce()
       val createdAt = OffsetDateTime.now().randomDateTimeBefore(1)
       val jpaEntity = Cas2ApplicationNoteEntity(
         id = UUID.randomUUID(),

@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2SubmissionsTransformer
@@ -51,11 +52,15 @@ class Cas2v2SubmissionsTransformerTest {
     mockCas2v2AssessmentsTransformer,
   )
 
-  private val user = Cas2UserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .produce()
 
-  private val cas2v2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
+  private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withCreatedByUser(user)
 
-  private val submittedCas2v2ApplicationFactory = cas2v2ApplicationFactory
+  private val submittedCas2ApplicationFactory = cas2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
   private val mockStatusUpdate = Cas2v2StatusUpdate(
     id = UUID.fromString("c426c63a-be35-421f-a1a0-fc286b60da41"),
@@ -83,12 +88,13 @@ class Cas2v2SubmissionsTransformerTest {
     @Test
     fun `transforms to API representation with NomisUser, no data, status updates and assessment`() {
       val assessmentEntity = Cas2AssessmentEntityFactory()
-        .withApplication(submittedCas2v2ApplicationFactory.produce())
+        .withApplication(submittedCas2ApplicationFactory.produce())
         .withNacroReferralId("OH123")
         .withAssessorName("Assessor name")
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .produce()
 
-      val jpaEntity = submittedCas2v2ApplicationFactory.withAssessment(assessmentEntity).produce()
+      val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
 
       every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
 

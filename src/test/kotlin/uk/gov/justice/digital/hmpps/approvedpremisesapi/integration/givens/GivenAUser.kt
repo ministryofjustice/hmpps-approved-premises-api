@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
@@ -121,7 +122,6 @@ fun IntegrationTestBase.givenACas2PomUser(
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
     withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
-    withUserType(Cas2UserType.NOMIS)
   }
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
@@ -161,6 +161,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
     withEmail(deliusUser.email)
     withName(deliusUser.name)
     withUserType(Cas2UserType.DELIUS)
+    withServiceOrigin(Cas2ServiceOrigin.BAIL)
   }
 
   val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(deliusUser.deliusUsername)
@@ -186,8 +187,8 @@ fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
     withUsername(nomisUserDetails.username)
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
-    withUserType(Cas2UserType.NOMIS)
     withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
+    withServiceOrigin(Cas2ServiceOrigin.BAIL)
   }
 
   val jwt = jwtAuthHelper.createValidCas2v2NomisAuthorisationCodeJwt(nomisUserDetails.username)
@@ -215,8 +216,8 @@ fun Cas2v2IntegrationTestBase.givenACas2v2NomisUser(
     withUsername(nomisUserDetails.username)
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
-    withUserType(Cas2UserType.NOMIS)
     withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
+    withServiceOrigin(Cas2ServiceOrigin.BAIL)
   }
 
   val jwt = jwtAuthHelper.createValidCas2v2NomisAuthorisationCodeJwt(nomisUserDetails.username)
@@ -245,7 +246,6 @@ fun IntegrationTestBase.givenACas2LicenceCaseAdminUser(
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
     withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
-    withUserType(Cas2UserType.NOMIS)
   }
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username, listOf("ROLE_LICENCE_CA"))
@@ -278,6 +278,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2Assessor(
     withId(id)
     withUsername("CAS2_ASSESSOR_USER")
     withUserType(Cas2UserType.EXTERNAL)
+    withServiceOrigin(Cas2ServiceOrigin.BAIL)
   }
 
   val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt("CAS2_ASSESSOR_USER")
@@ -303,7 +304,6 @@ fun IntegrationTestBase.givenACas2Admin(
     withUsername(nomisUserDetails.username)
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
-    withUserType(Cas2UserType.NOMIS)
   }
 
   val jwt = jwtAuthHelper.createValidAdminAuthorisationCodeJwt(nomisUserDetails.username)

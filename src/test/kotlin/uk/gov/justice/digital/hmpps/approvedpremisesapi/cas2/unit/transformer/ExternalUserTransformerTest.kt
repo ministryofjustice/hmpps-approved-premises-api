@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ExternalUserTransformer
 
 class ExternalUserTransformerTest {
@@ -11,7 +12,9 @@ class ExternalUserTransformerTest {
 
   @Test
   fun `transforms JPA Cas2User db entity to ExternalUser api representation`() {
-    val jpaEntity = Cas2UserEntityFactory().produce()
+    val jpaEntity = Cas2UserEntityFactory()
+      .withUserType(Cas2UserType.EXTERNAL)
+      .produce()
 
     val expectedRepresentation = ExternalUser(
       id = jpaEntity.id,

@@ -13,6 +13,10 @@ object Cas2v2ApplicationSummarySpecifications {
     criteriaBuilder.equal(root.get<String>("userId"), userId)
   }
 
+  fun hasServiceOrigin(serviceOrigin: String): Specification<Cas2ApplicationSummaryEntity> = Specification { root, _, criteriaBuilder ->
+    criteriaBuilder.equal(root.get<String>("serviceOrigin"), serviceOrigin)
+  }
+
   fun hasCrnOrNomsNumber(crnOrNomsNumber: String): Specification<Cas2ApplicationSummaryEntity> = Specification<Cas2ApplicationSummaryEntity> { root, _, criteriaBuilder ->
     criteriaBuilder.equal(root.get<String>("crn"), crnOrNomsNumber)
   }.or({ root, _, criteriaBuilder ->
