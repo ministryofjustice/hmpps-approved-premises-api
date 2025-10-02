@@ -68,10 +68,11 @@ class StatusUpdateTransformerTest {
   @Test
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by Cas2User of type delius`() {
     val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2).random()
-
+    val assessor = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
     val jpaEntity = Cas2StatusUpdateEntityFactory()
       .withStatusId(status.id)
       .withApplication(submittedApplicationWithCas2UserDelius)
+      .withAssessor(assessor)
       .produce()
 
     val expectedRepresentation = Cas2StatusUpdate(
