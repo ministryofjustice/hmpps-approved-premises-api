@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ReportType.referral
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BedUtilisationReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BedspaceOccupancyReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingGapReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.FutureBookingsReportProperties
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -39,6 +41,7 @@ private const val FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS = 6
 class Cas3ReportsController(
   private val userAccessService: UserAccessService,
   private val cas3ReportService: Cas3ReportService,
+  private val featureFlagService: FeatureFlagService,
 ) {
 
   @GetMapping(
@@ -97,15 +100,25 @@ class Cas3ReportsController(
         }
 
       bedOccupancy -> generateXlsxStreamingResponse { outputStream ->
-        cas3ReportService.createBedUtilisationReport(
-          BedUtilisationReportProperties(
-            ServiceName.temporaryAccommodation,
-            startDate = startDate,
-            endDate = endDate,
-            probationRegionId = probationRegionId,
-          ),
-          outputStream,
-        )
+        when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
+          true -> cas3ReportService.createBedspaceOccupancyReport(
+            BedspaceOccupancyReportProperties(
+              startDate = startDate,
+              endDate = endDate,
+              probationRegionId = probationRegionId,
+            ),
+            outputStream,
+          )
+          false -> cas3ReportService.createBedUtilisationReport(
+            BedUtilisationReportProperties(
+              ServiceName.temporaryAccommodation,
+              startDate = startDate,
+              endDate = endDate,
+              probationRegionId = probationRegionId,
+            ),
+            outputStream,
+          )
+        }
       }
 
       futureBookings -> generateXlsxStreamingResponse { outputStream ->

@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3Boo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 
-class Cas3BedspaceUsageReportGenerator(
+class BedspaceUsageReportGenerator(
   private val bookingTransformer: Cas3BookingTransformer,
   private val bookingRepository: Cas3v2BookingRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
