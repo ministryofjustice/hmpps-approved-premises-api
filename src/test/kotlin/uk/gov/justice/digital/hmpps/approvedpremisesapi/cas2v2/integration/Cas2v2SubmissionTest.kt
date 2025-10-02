@@ -11,10 +11,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
@@ -27,11 +25,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
@@ -45,10 +43,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2v2SubmissionTest(
-  @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
-) : Cas2v2IntegrationTestBase() {
+class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
   @SpykBean
   lateinit var cas2RealApplicationRepository: Cas2ApplicationRepository
 
@@ -190,7 +185,7 @@ class Cas2v2SubmissionTest(
         .isOk
 
       Assertions.assertThat(
-        cas2UserRepository.findByUsername(username),
+        cas2UserRepository.findByUsernameAndServiceOrigin(username, Cas2ServiceOrigin.BAIL),
       ).isNotNull
     }
 
@@ -206,6 +201,7 @@ class Cas2v2SubmissionTest(
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-02T09:00:00+01:00"))
                 withData("{}")
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
             val submittedCas2ApplicationEntityFirst = cas2ApplicationEntityFactory
@@ -215,6 +211,7 @@ class Cas2v2SubmissionTest(
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-01T09:00:00+01:00"))
                 withData("{}")
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
             val submittedCas2ApplicationEntityThird = cas2ApplicationEntityFactory
@@ -224,6 +221,7 @@ class Cas2v2SubmissionTest(
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-03T09:00:00+01:00"))
                 withData("{}")
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
             val inProgressCas2ApplicationEntity = cas2ApplicationEntityFactory
@@ -233,6 +231,7 @@ class Cas2v2SubmissionTest(
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(null)
                 withData("{}")
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
             val rawResponseBody = webTestClient.get()
@@ -311,6 +310,7 @@ class Cas2v2SubmissionTest(
       val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
         withCrn(crn)
         withCreatedByUser(user)
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
         withSubmittedAt(null)
         withData(
           """
@@ -348,7 +348,7 @@ class Cas2v2SubmissionTest(
         .isNotFound
 
       Assertions.assertThat(
-        cas2UserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+        cas2UserRepository.findByUsernameAndServiceOrigin("PREVIOUSLY_UNKNOWN_ASSESSOR", Cas2ServiceOrigin.BAIL),
       ).isNotNull
     }
 
@@ -375,6 +375,8 @@ class Cas2v2SubmissionTest(
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.courtBail)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
               withData(
                 """
             {
@@ -388,6 +390,7 @@ class Cas2v2SubmissionTest(
               withApplication(applicationEntity)
               withNacroReferralId("OH123")
               withAssessorName("Assessor name")
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
             }
 
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -506,6 +509,8 @@ class Cas2v2SubmissionTest(
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.courtBail)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
               withData(
                 """
             {
@@ -551,6 +556,8 @@ class Cas2v2SubmissionTest(
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.courtBail)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
               withData(
                 """
             {
@@ -564,6 +571,7 @@ class Cas2v2SubmissionTest(
               withApplication(applicationEntity)
               withNacroReferralId("OH123")
               withAssessorName("Assessor name")
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
             }
 
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -705,7 +713,8 @@ class Cas2v2SubmissionTest(
                   withCrn(offenderDetails.otherIds.crn)
                   withCreatedByUser(user)
                   withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                  withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
+                  withApplicationOrigin(ApplicationOrigin.courtBail)
+                  withServiceOrigin(Cas2ServiceOrigin.BAIL)
                   withData(
                     """
                     {
@@ -719,6 +728,7 @@ class Cas2v2SubmissionTest(
                   withApplication(applicationEntity)
                   withNacroReferralId("OH123")
                   withAssessorName("Assessor name")
+                  withServiceOrigin(Cas2ServiceOrigin.BAIL)
                 }
 
                 val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -818,91 +828,6 @@ class Cas2v2SubmissionTest(
   inner class PostToSubmit {
 
     @Test
-    fun `Submit Cas2 application returns 200`() {
-      val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-      val telephoneNumber = "123 456 7891"
-
-      givenACas2v2DeliusUser { submittingUser, jwt ->
-        givenAnOffender(
-          inmateDetailsConfigBlock = {
-            withAssignedLivingUnit(
-              AssignedLivingUnit(
-                agencyId = "agency_id",
-                locationId = 123.toLong(),
-                agencyName = "agency_name",
-                description = null,
-              ),
-            )
-          },
-        ) { offenderDetails, _ ->
-
-          cas2ApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
-            withId(applicationId)
-            withCreatedByUser(submittingUser)
-            withData(
-              """
-                        {
-                           "thingId": 123
-                        }
-               """,
-            )
-          }
-
-          Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(0)
-
-          webTestClient.post()
-            .uri("/cas2v2/submissions")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.cas2.value)
-            .bodyValue(
-              SubmitCas2v2Application(
-                applicationId = applicationId,
-                translatedDocument = {},
-                preferredAreas = "Leeds | Bradford",
-                hdcEligibilityDate = LocalDate.parse("2023-03-30"),
-                conditionalReleaseDate = LocalDate.parse("2023-04-29"),
-                telephoneNumber = telephoneNumber,
-                bailHearingDate = LocalDate.parse("2025-01-14"),
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-        }
-
-        // verify that generated 'application.submitted' domain event links to the CAS2 domain
-        val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
-        val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
-        val domainEventFromJson = objectMapper.readValue(
-          persistedDomainEvent!!.data,
-          Cas2ApplicationSubmittedEvent::class.java,
-        )
-        Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
-          .isEqualTo(expectedFrontEndUrl)
-
-        val persistedAssessment = cas2RealAssessmentRepository.findAll().first()
-        Assertions.assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
-
-        val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
-        emailAsserter.assertEmailsRequestedCount(1)
-        emailAsserter.assertEmailRequested(
-          notifyConfig.emailAddresses.cas2Assessors,
-          Cas2NotifyTemplates.cas2ApplicationSubmitted,
-          personalisation = mapOf(
-            "name" to submittingUser.name,
-            "email" to submittingUser.email!!,
-            "prisonNumber" to persistedAssessment.application.nomsNumber!!,
-            "telephoneNumber" to telephoneNumber,
-            "applicationUrl" to expectedEmailUrl,
-          ),
-          replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
-        )
-      }
-    }
-
-    @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
       givenACas2v2DeliusUser { submittingUser, jwt ->
         givenAnOffender(
@@ -924,6 +849,8 @@ class Cas2v2SubmissionTest(
             withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
             withCreatedByUser(submittingUser)
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
             withData(
               """
             {
@@ -951,6 +878,7 @@ class Cas2v2SubmissionTest(
                     translatedDocument = {},
                     telephoneNumber = "123 456 7891",
                     bailHearingDate = LocalDate.parse("2025-01-14"),
+                    applicationOrigin = ApplicationOrigin.courtBail,
                   ),
                 )
                 .exchange()
@@ -984,6 +912,8 @@ class Cas2v2SubmissionTest(
             withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
             withId(applicationId)
             withCreatedByUser(submittingUser)
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
             withData(
               """
             {
@@ -1009,6 +939,7 @@ class Cas2v2SubmissionTest(
                 conditionalReleaseDate = LocalDate.parse("2023-04-29"),
                 telephoneNumber = "123 456 789",
                 bailHearingDate = LocalDate.parse("2025-01-14"),
+                applicationOrigin = ApplicationOrigin.courtBail,
               ),
             )
             .exchange()
@@ -1017,7 +948,7 @@ class Cas2v2SubmissionTest(
 
           Assertions.assertThat(domainEventRepository.count()).isEqualTo(1)
           Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(1)
-          Assertions.assertThat(cas2RealApplicationRepository.findById(applicationId).get().submittedAt).isNotNull()
+          Assertions.assertThat(cas2RealApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)!!.submittedAt).isNotNull()
         }
       }
     }

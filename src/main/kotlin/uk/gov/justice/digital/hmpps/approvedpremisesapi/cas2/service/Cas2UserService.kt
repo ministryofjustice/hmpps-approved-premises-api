@@ -5,8 +5,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -39,17 +37,17 @@ class Cas2UserService(
     return getCas2UserForUsername(username, jwt, userType, serviceOrigin)
   }
 
-  fun getNomisUserById(id: UUID) = cas2UserRepository.findByIdAndUserType(id) ?: throw NotFoundProblem(id, "NomisUser")
+  fun getNomisUserById(id: UUID, serviceOrigin: Cas2ServiceOrigin) = cas2UserRepository.findByIdAndServiceOrigin(id, serviceOrigin) ?: throw NotFoundProblem(id, "NomisUser")
 
-  fun getUserByStaffId(staffId: Long): Cas2UserEntity {
-    val userDetails = cas2UserRepository.findByNomisStaffIdAndUserType(staffId, Cas2UserType.NOMIS)
+  fun getUserByStaffId(staffId: Long, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
+    val userDetails = cas2UserRepository.findByNomisStaffIdAndServiceOrigin(staffId, serviceOrigin)
     if (userDetails != null) {
       return userDetails
     }
     val userStaffInformation = getUserStaffInformation(staffId)
     val normalisedUsername = userStaffInformation.generalAccount.username.uppercase()
     val userDetail = getUserDetail(username = normalisedUsername)
-    return ensureUserExists(username = normalisedUsername, userDetail)
+    return ensureUserExists(username = normalisedUsername, userDetail, serviceOrigin)
   }
 
   private fun getUserDetail(username: String): NomisUserDetail = when (
@@ -69,8 +67,9 @@ class Cas2UserService(
   private fun ensureUserExists(
     username: String,
     nomisUserDetails: NomisUserDetail,
+    serviceOrigin: Cas2ServiceOrigin,
   ): Cas2UserEntity {
-    return cas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.NOMIS) ?: try {
+    return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin) ?: try {
       cas2UserRepository.save(
         Cas2UserEntity(
           id = UUID.randomUUID(),
@@ -84,10 +83,11 @@ class Cas2UserService(
           activeNomisCaseloadId = nomisUserDetails.activeCaseloadId,
           userType = Cas2UserType.NOMIS,
           createdAt = OffsetDateTime.now(),
+          serviceOrigin = serviceOrigin,
         ),
       )
     } catch (ex: DataIntegrityViolationException) {
-      return cas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.NOMIS)
+      return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin)
         ?: throw IllegalStateException("User creation failed and username $username not found", ex)
     }
   }

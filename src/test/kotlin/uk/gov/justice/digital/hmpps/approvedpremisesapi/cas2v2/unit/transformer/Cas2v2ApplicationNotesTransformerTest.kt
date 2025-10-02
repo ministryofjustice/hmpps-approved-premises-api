@@ -9,13 +9,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2ApplicationNotesTransformerTest {
-  private val user = Cas2UserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .produce()
   private val submittedApplication = Cas2ApplicationEntityFactory()
     .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
@@ -27,7 +30,9 @@ class Cas2v2ApplicationNotesTransformerTest {
   inner class WithExternalUser {
     @Test
     fun `transforms JPA Cas2v2ApplicationNote db entity to API representation`() {
-      val externalUser = Cas2UserEntityFactory().produce()
+      val externalUser = Cas2UserEntityFactory()
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .produce()
       externalUser.userType = Cas2UserType.EXTERNAL
 
       val createdAt = OffsetDateTime.now().randomDateTimeBefore(1)
@@ -37,7 +42,9 @@ class Cas2v2ApplicationNotesTransformerTest {
         application = submittedApplication,
         body = "new note",
         createdAt = createdAt,
-        assessment = Cas2AssessmentEntityFactory().produce(),
+        assessment = Cas2AssessmentEntityFactory()
+          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          .produce(),
       )
 
       val expectedRepresentation = Cas2v2ApplicationNote(
@@ -58,7 +65,9 @@ class Cas2v2ApplicationNotesTransformerTest {
   inner class WithNomisUser {
     @Test
     fun `transforms JPA Cas2v2ApplicationNote db entity to API representation`() {
-      val nomisUser = Cas2UserEntityFactory().produce()
+      val nomisUser = Cas2UserEntityFactory()
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .produce()
       val createdAt = OffsetDateTime.now().randomDateTimeBefore(1)
       val jpaEntity = Cas2ApplicationNoteEntity(
         id = UUID.randomUUID(),
@@ -66,7 +75,9 @@ class Cas2v2ApplicationNotesTransformerTest {
         application = submittedApplication,
         body = "new note",
         createdAt = createdAt,
-        assessment = Cas2AssessmentEntityFactory().produce(),
+        assessment = Cas2AssessmentEntityFactory()
+          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          .produce(),
       )
 
       val expectedRepresentation = Cas2v2ApplicationNote(
