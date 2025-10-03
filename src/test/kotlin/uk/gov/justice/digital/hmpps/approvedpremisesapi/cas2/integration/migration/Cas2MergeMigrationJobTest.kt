@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.External
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteEntity
@@ -419,7 +420,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     assertThat(cas2AssessmentEntity.nacroReferralId).isEqualTo(cas2v2AssessmentEntity.nacroReferralId)
     assertThat(cas2AssessmentEntity.assessorName).isEqualTo(cas2v2AssessmentEntity.assessorName)
     assertThat(cas2AssessmentEntity.createdAt).isEqualTo(cas2v2AssessmentEntity.createdAt)
-    assertThat(cas2AssessmentEntity.applicationOrigin).isEqualTo(cas2v2AssessmentEntity.application.applicationOrigin)
+    assertThat(cas2AssessmentEntity.serviceOrigin).isEqualTo(Cas2ServiceOrigin.BAIL)
   }
 
   private fun assertThatCas2v2StatusUpdateDetailsMatch(cas2StatusUpdateDetailEntity: Cas2StatusUpdateDetailEntity, cas2v2StatusUpdateDetailEntity: Cas2v2StatusUpdateDetailEntity) {

@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
@@ -41,8 +42,8 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var preferredAreas: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
-
   private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.homeDetentionCurfew }
+  private var serviceOrigin: Yielded<Cas2ServiceOrigin> = { Cas2ServiceOrigin.HDC }
   private var bailHearingDate: Yielded<LocalDate?> = { null }
 
   fun withId(id: UUID) = apply {
@@ -150,6 +151,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.applicationOrigin = { applicationOrigin }
   }
 
+  fun withServiceOrigin(serviceOrigin: Cas2ServiceOrigin) = apply {
+    this.serviceOrigin = { serviceOrigin }
+  }
+
   fun withBailHearingDate(bailHearingDate: LocalDate) = apply {
     this.bailHearingDate = { bailHearingDate }
   }
@@ -177,6 +182,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
       preferredAreas = this.preferredAreas(),
       applicationOrigin = this.applicationOrigin(),
       bailHearingDate = this.bailHearingDate(),
+      serviceOrigin = this.serviceOrigin(),
     )
     return application
   }
