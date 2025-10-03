@@ -31,8 +31,8 @@ data class Cas3BedspacesEntity(
   var reference: String,
   var notes: String?,
   val startDate: LocalDate,
-  val endDate: LocalDate?,
-  val createdAt: OffsetDateTime,
+  var endDate: LocalDate?,
+  var createdAt: OffsetDateTime,
   val createdDate: LocalDate,
 
   @ManyToMany

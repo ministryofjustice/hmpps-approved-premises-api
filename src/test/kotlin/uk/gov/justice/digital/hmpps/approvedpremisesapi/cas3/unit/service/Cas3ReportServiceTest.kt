@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BookingsReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BookingsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.CasBedspaceOccupancyReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ReportService
@@ -52,6 +53,7 @@ class Cas3ReportServiceTest {
   private val mockCas3v2BookingRepository = mockk<Cas3v2BookingRepository>()
   private val mockBedUsageRepository = mockk<BedUsageRepository>()
   private val mockBedUtilisationReportRepository = mockk<BedUtilisationReportRepository>()
+  private val mockCasBedspaceOccupancyReportRepository = mockk<CasBedspaceOccupancyReportRepository>()
   private val mockCas3BookingGapReportRepository = mockk<Cas3BookingGapReportRepository>()
   private val mockCas3FutureBookingsReportRepository = mockk<Cas3FutureBookingsReportRepository>()
 
@@ -69,6 +71,7 @@ class Cas3ReportServiceTest {
     mockCas3v2BookingRepository,
     mockBedUsageRepository,
     mockBedUtilisationReportRepository,
+    mockCasBedspaceOccupancyReportRepository,
     mockCas3FutureBookingsReportRepository,
     mockCas3BookingGapReportRepository,
     2,
@@ -177,6 +180,7 @@ class Cas3ReportServiceTest {
       mockCas3v2BookingRepository,
       mockBedUsageRepository,
       mockBedUtilisationReportRepository,
+      mockCasBedspaceOccupancyReportRepository,
       mockCas3FutureBookingsReportRepository,
       mockCas3BookingGapReportRepository,
       3,

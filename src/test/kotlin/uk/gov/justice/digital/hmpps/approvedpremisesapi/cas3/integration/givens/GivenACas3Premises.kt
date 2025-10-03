@@ -26,6 +26,19 @@ fun IntegrationTestBase.givenACas3Premises(
 )
 
 fun IntegrationTestBase.givenACas3Premises(
+  probationDeliveryUnit: ProbationDeliveryUnitEntity = probationDeliveryUnitFactory.produceAndPersist {
+    withProbationRegion(probationRegionEntityFactory.produceAndPersist())
+  },
+  status: Cas3PremisesStatus = randomOf(Cas3PremisesStatus.entries),
+  endDate: LocalDate? = null,
+) = givenACas3Premises(
+  name = randomStringMultiCaseWithNumbers(8),
+  probationDeliveryUnit = probationDeliveryUnit,
+  status = status,
+  endDate = endDate,
+)
+
+fun IntegrationTestBase.givenACas3Premises(
   name: String = randomStringMultiCaseWithNumbers(8),
   probationDeliveryUnit: ProbationDeliveryUnitEntity = probationDeliveryUnitFactory.produceAndPersist {
     withProbationRegion(probationRegionEntityFactory.produceAndPersist())
