@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
+import java.util.UUID
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -15,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import java.util.UUID
 
 @Cas3Controller
 @RequestMapping("/cas3/v2", headers = ["X-Service-Name=temporary-accommodation"])
@@ -31,7 +31,7 @@ class Cas3v2PremisesController(
       throw ForbiddenProblem()
     }
 
-    val (premises, bedspaceTotals) = extractEntityFromCasResult(
+    val premises = extractEntityFromCasResult(
       cas3v2PremisesService.createNewPremises(
         reference = body.reference,
         addressLine1 = body.addressLine1,
@@ -48,7 +48,7 @@ class Cas3v2PremisesController(
     )
 
     return ResponseEntity(
-      cas3PremisesTransformer.toCas3Premises(premises, bedspaceTotals),
+      cas3PremisesTransformer.toCas3Premises(premises),
       HttpStatus.CREATED,
     )
   }
@@ -62,7 +62,7 @@ class Cas3v2PremisesController(
       throw ForbiddenProblem()
     }
 
-    val result = cas3v2PremisesService.updatePremises(
+    val premises = cas3v2PremisesService.updatePremises(
       premisesId = premisesId,
       addressLine1 = body.addressLine1,
       addressLine2 = body.addressLine2,
@@ -77,8 +77,6 @@ class Cas3v2PremisesController(
       reference = body.reference,
     )
 
-    val (premises, bedspaceTotals) = extractEntityFromCasResult(result)
-
-    return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(premises, bedspaceTotals))
+    return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(extractEntityFromCasResult(premises)))
   }
 }

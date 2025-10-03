@@ -108,7 +108,6 @@ class Cas3PremisesTransformerTest {
     fun `toCas3Premises transforms Cas3PremisesEntity to Cas3Premises correctly`() {
       val result = cas3PremisesTransformer.toCas3Premises(
         premises = premises,
-        bedspaceTotals = totalBedspacesByStatus,
         archiveHistory = archiveHistory,
       )
 
@@ -143,7 +142,6 @@ class Cas3PremisesTransformerTest {
       val startDate = LocalDate.now().plusDays(1)
       val result = cas3PremisesTransformer.toCas3Premises(
         premises = premises.copy(startDate = startDate, status = Cas3PremisesStatus.archived),
-        bedspaceTotals = totalBedspacesByStatus,
         archiveHistory = archiveHistory,
       )
 
@@ -162,7 +160,6 @@ class Cas3PremisesTransformerTest {
           endDate = null,
 
         ),
-        bedspaceTotals = totalBedspacesByStatus,
         archiveHistory = archiveHistory,
       )
 

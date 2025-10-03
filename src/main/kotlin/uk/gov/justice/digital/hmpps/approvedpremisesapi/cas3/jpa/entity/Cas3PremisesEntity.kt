@@ -22,6 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceArchived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceOnline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
 
 @SuppressWarnings("LongParameterList")
 @Entity
@@ -76,6 +80,10 @@ data class Cas3PremisesEntity(
 
   fun isPremisesScheduledToArchive(): Boolean = status == Cas3PremisesStatus.archived && endDate != null && endDate!! > LocalDate.now()
   fun isPremisesArchived(): Boolean = (endDate != null && endDate!! <= LocalDate.now()) || startDate.isAfter(LocalDate.now())
+
+  fun countOnlineBedspaces() = this.bedspaces.count { isCas3BedspaceOnline(it.startDate, it.endDate) }
+  fun countUpcomingBedspaces() = this.bedspaces.count { isCas3BedspaceUpcoming(it.startDate) }
+  fun countArchivedBedspaces() = this.bedspaces.count { isCas3BedspaceArchived(it.endDate) }
 }
 
 @Repository

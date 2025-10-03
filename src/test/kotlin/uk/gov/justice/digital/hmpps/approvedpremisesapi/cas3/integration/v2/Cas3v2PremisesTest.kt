@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.v2
 
+import java.time.LocalDate
+import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -20,15 +22,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withForbidde
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withNotFoundMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import java.time.LocalDate
-import java.util.UUID
 
 class Cas3v2PremisesTest : IntegrationTestBase() {
 
@@ -110,10 +109,7 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
         })
         val entity = cas3PremisesRepository.findById(premises.id).get()
         assertThat(result).isEqualTo(
-          cas3PremisesTransformer.toCas3Premises(
-            entity,
-            TemporaryAccommodationPremisesTotalBedspacesByStatus(premises.id, 0, 0, 0),
-          ),
+          cas3PremisesTransformer.toCas3Premises(entity),
         )
       }
     }
