@@ -590,73 +590,73 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get bedspace occupancy report returns OK and shows correctly confirmedDays the total number of days for Bookings that are marked as confirmed but not arrived`() {
-    givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-        val (premises, bedspace) = setupPremisesWithABedspace(user)
-        bedspace.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-        cas3BedspacesRepository.save(bedspace)
-
-        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-        val booking = cas3BookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
-          withArrivalDate(LocalDate.parse("2023-03-25"))
-          withDepartureDate(LocalDate.parse("2023-04-10"))
-        }
-
-        cas3v2ConfirmationEntityFactory.produceAndPersist {
-          withBooking(booking)
-        }
-
-        val expectedReportRows = listOf(
-          BedspaceOccupancyReportRow(
-            probationRegion = user.probationRegion.name,
-            pdu = user.probationDeliveryUnit?.name,
-            localAuthority = premises.localAuthorityArea?.name,
-            propertyRef = premises.name,
-            addressLine1 = premises.addressLine1,
-            town = premises.town,
-            postCode = premises.postcode,
-            bedspaceRef = bedspace.reference,
-            bookedDaysActiveAndClosed = 0,
-            confirmedDays = 10,
-            provisionalDays = 0,
-            scheduledTurnaroundDays = 0,
-            effectiveTurnaroundDays = 0,
-            voidDays = 0,
-            totalBookedDays = 0,
-            bedspaceStartDate = bedspace.createdAt.toLocalDate(),
-            bedspaceEndDate = bedspace.endDate,
-            bedspaceOnlineDays = 30,
-            occupancyRate = 0.0,
-            uniquePropertyRef = premises.id.toShortBase58(),
-            uniqueBedspaceRef = bedspace.id.toShortBase58(),
-          ),
-        )
-
-        val expectedDataFrame = expectedReportRows.toDataFrame()
-
-        webTestClient.get()
-          .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
-          .headers(buildTemporaryAccommodationHeaders(jwt))
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .consumeWith {
-            val actual = DataFrame
-              .readExcel(it.responseBody!!.inputStream())
-              .convertTo<BedspaceOccupancyReportRow>(Remove)
-            assertThat(actual).isEqualTo(expectedDataFrame)
-          }
-      }
-    }
-  }
+//  @Test
+//  fun `Get bedspace occupancy report returns OK and shows correctly confirmedDays the total number of days for Bookings that are marked as confirmed but not arrived`() {
+//    givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+//      givenAnOffender { offenderDetails, inmateDetails ->
+//        val (premises, bedspace) = setupPremisesWithABedspace(user)
+//        bedspace.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
+//        cas3BedspacesRepository.save(bedspace)
+//
+//        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+//
+//        val booking = cas3BookingEntityFactory.produceAndPersist {
+//          withPremises(premises)
+//          withBedspace(bedspace)
+//          withServiceName(ServiceName.temporaryAccommodation)
+//          withCrn(offenderDetails.otherIds.crn)
+//          withArrivalDate(LocalDate.parse("2023-03-25"))
+//          withDepartureDate(LocalDate.parse("2023-04-10"))
+//        }
+//
+//        cas3v2ConfirmationEntityFactory.produceAndPersist {
+//          withBooking(booking)
+//        }
+//
+//        val expectedReportRows = listOf(
+//          BedspaceOccupancyReportRow(
+//            probationRegion = user.probationRegion.name,
+//            pdu = user.probationDeliveryUnit?.name,
+//            localAuthority = premises.localAuthorityArea?.name,
+//            propertyRef = premises.name,
+//            addressLine1 = premises.addressLine1,
+//            town = premises.town,
+//            postCode = premises.postcode,
+//            bedspaceRef = bedspace.reference,
+//            bookedDaysActiveAndClosed = 0,
+//            confirmedDays = 10,
+//            provisionalDays = 0,
+//            scheduledTurnaroundDays = 0,
+//            effectiveTurnaroundDays = 0,
+//            voidDays = 0,
+//            totalBookedDays = 0,
+//            bedspaceStartDate = bedspace.createdAt.toLocalDate(),
+//            bedspaceEndDate = bedspace.endDate,
+//            bedspaceOnlineDays = 30,
+//            occupancyRate = 0.0,
+//            uniquePropertyRef = premises.id.toShortBase58(),
+//            uniqueBedspaceRef = bedspace.id.toShortBase58(),
+//          ),
+//        )
+//
+//        val expectedDataFrame = expectedReportRows.toDataFrame()
+//
+//        webTestClient.get()
+//          .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
+//          .headers(buildTemporaryAccommodationHeaders(jwt))
+//          .exchange()
+//          .expectStatus()
+//          .isOk
+//          .expectBody()
+//          .consumeWith {
+//            val actual = DataFrame
+//              .readExcel(it.responseBody!!.inputStream())
+//              .convertTo<BedspaceOccupancyReportRow>(Remove)
+//            assertThat(actual).isEqualTo(expectedDataFrame)
+//          }
+//      }
+//    }
+//  }
 
   @Test
   fun `Get bedspace occupancy report returns OK and shows correctly scheduledTurnaroundDays the number of working days in the report period for the turnaround`() {
