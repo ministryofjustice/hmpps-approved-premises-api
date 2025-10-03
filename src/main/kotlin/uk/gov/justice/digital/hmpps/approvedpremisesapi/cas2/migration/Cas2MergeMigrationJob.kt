@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.External
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentRepository
@@ -244,6 +245,7 @@ class Cas2MergeMigrationJob(
       preferredAreas = it.preferredAreas,
       applicationOrigin = it.applicationOrigin,
       bailHearingDate = it.bailHearingDate,
+      serviceOrigin = Cas2ServiceOrigin.HDC,
     )
   }
 
@@ -258,14 +260,13 @@ class Cas2MergeMigrationJob(
   }
 
   private fun generateCas2v2Assessment(assessmentIds: List<UUID>) = cas2v2AssessmentRepository.findAllById(assessmentIds).map {
-    val application = cas2ApplicationRepository.findById(it.application.id).get()
     Cas2AssessmentEntity(
       id = it.id,
       createdAt = it.createdAt,
       application = cas2ApplicationRepository.findById(it.application.id).get(),
       nacroReferralId = it.nacroReferralId,
       assessorName = it.assessorName,
-      applicationOrigin = application.applicationOrigin,
+      serviceOrigin = Cas2ServiceOrigin.BAIL,
     )
   }
 
@@ -288,6 +289,7 @@ class Cas2MergeMigrationJob(
       preferredAreas = it.preferredAreas,
       applicationOrigin = it.applicationOrigin,
       bailHearingDate = it.bailHearingDate,
+      serviceOrigin = Cas2ServiceOrigin.BAIL,
     )
   }
 
@@ -327,6 +329,7 @@ class Cas2MergeMigrationJob(
       externalType = null,
       userType = Cas2UserType.NOMIS,
       username = it.nomisUsername,
+      serviceOrigin = Cas2ServiceOrigin.HDC,
     )
   }
 
@@ -347,6 +350,7 @@ class Cas2MergeMigrationJob(
       externalType = it.origin,
       userType = Cas2UserType.EXTERNAL,
       username = it.username,
+      serviceOrigin = Cas2ServiceOrigin.HDC,
     )
   }
 
@@ -368,6 +372,7 @@ class Cas2MergeMigrationJob(
       externalType = if (userType == Cas2UserType.EXTERNAL) "NACRO" else null,
       userType = getUserType(it),
       username = it.username,
+      serviceOrigin = Cas2ServiceOrigin.BAIL,
     )
   }
 

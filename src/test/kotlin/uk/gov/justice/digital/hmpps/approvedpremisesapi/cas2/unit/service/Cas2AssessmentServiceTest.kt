@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -39,6 +40,7 @@ class Cas2AssessmentServiceTest {
         id = UUID.randomUUID(),
         application = application,
         createdAt = OffsetDateTime.now(),
+        serviceOrigin = Cas2ServiceOrigin.HDC,
       )
 
       every { mockAssessmentRepository.save(any()) } answers
@@ -74,6 +76,7 @@ class Cas2AssessmentServiceTest {
         id = assessmentId,
         application = application,
         createdAt = OffsetDateTime.now(),
+        serviceOrigin = Cas2ServiceOrigin.HDC,
       )
 
       val newAssessmentData = UpdateCas2Assessment(

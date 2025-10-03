@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.External
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteEntity
@@ -267,7 +268,8 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
         )
       } else {
         assertThat(cas2Application.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
-        assertThat(cas2Application.createdByCas2User).isNotNull
+        assertThat(cas2Application.createdByCas2User!!.id).isEqualTo(cas2Application.createdByUser.id)
+        assertThat(cas2Application.serviceOrigin).isEqualTo(Cas2ServiceOrigin.HDC)
       }
     }
   }
@@ -281,7 +283,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
           cas2v2StatusUpdateEntity = cas2v2StatusUpdate,
         )
       } else {
-        assertThat(cas2StatusUpdate.cas2UserAssessor).isNotNull
+        assertThat(cas2StatusUpdate.cas2UserAssessor!!.id).isEqualTo(cas2StatusUpdate.cas2UserAssessor!!.id)
       }
     }
   }
@@ -337,6 +339,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     assertThat(cas2UserEntity.externalType).isNull()
     assertThat(cas2UserEntity.nomisAccountType).isEqualTo(nomisUserEntity.accountType)
     assertThat(cas2UserEntity.createdAt).isEqualTo(nomisUserEntity.createdAt)
+    assertThat(cas2UserEntity.serviceOrigin).isEqualTo(Cas2ServiceOrigin.HDC)
   }
 
   private fun assertThatExternalUsersMatch(cas2UserEntity: Cas2UserEntity, externalUserEntity: ExternalUserEntity) {
@@ -354,6 +357,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     assertThat(cas2UserEntity.externalType).isEqualTo(externalUserEntity.origin)
     assertThat(cas2UserEntity.nomisAccountType).isNull()
     assertThat(cas2UserEntity.createdAt).isEqualTo(externalUserEntity.createdAt)
+    assertThat(cas2UserEntity.serviceOrigin).isEqualTo(Cas2ServiceOrigin.HDC)
   }
 
   private fun assertThatCas2v2UsersMatch(cas2UserEntity: Cas2UserEntity, cas2v2UserEntity: Cas2v2UserEntity) {
@@ -379,6 +383,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     } else {
       assertThat(cas2UserEntity.externalType).isNull()
     }
+    assertThat(cas2UserEntity.serviceOrigin).isEqualTo(Cas2ServiceOrigin.BAIL)
   }
 
   private fun assertThatCas2v2ApplicationsMatch(cas2ApplicationEntity: Cas2ApplicationEntity, cas2v2ApplicationEntity: Cas2v2ApplicationEntity) {
@@ -399,6 +404,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     assertThat(cas2ApplicationEntity.applicationOrigin).isEqualTo(cas2v2ApplicationEntity.applicationOrigin)
     assertThat(cas2ApplicationEntity.bailHearingDate).isEqualTo(cas2v2ApplicationEntity.bailHearingDate)
     assertThat(cas2ApplicationEntity.createdByCas2User!!.id).isEqualTo(cas2v2ApplicationEntity.createdByUser.id)
+    assertThat(cas2ApplicationEntity.serviceOrigin).isEqualTo(Cas2ServiceOrigin.BAIL)
   }
 
   private fun assertThatCas2v2StatusUpdatesMatch(cas2StatusUpdateEntity: Cas2StatusUpdateEntity, cas2v2StatusUpdateEntity: Cas2v2StatusUpdateEntity) {
@@ -419,7 +425,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     assertThat(cas2AssessmentEntity.nacroReferralId).isEqualTo(cas2v2AssessmentEntity.nacroReferralId)
     assertThat(cas2AssessmentEntity.assessorName).isEqualTo(cas2v2AssessmentEntity.assessorName)
     assertThat(cas2AssessmentEntity.createdAt).isEqualTo(cas2v2AssessmentEntity.createdAt)
-    assertThat(cas2AssessmentEntity.applicationOrigin).isEqualTo(cas2v2AssessmentEntity.application.applicationOrigin)
+    assertThat(cas2AssessmentEntity.serviceOrigin).isEqualTo(Cas2ServiceOrigin.BAIL)
   }
 
   private fun assertThatCas2v2StatusUpdateDetailsMatch(cas2StatusUpdateDetailEntity: Cas2StatusUpdateDetailEntity, cas2v2StatusUpdateDetailEntity: Cas2v2StatusUpdateDetailEntity) {
