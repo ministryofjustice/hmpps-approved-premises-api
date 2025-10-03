@@ -61,7 +61,7 @@ class Cas3v2PremisesService(
     characteristicIds: List<UUID>,
     notes: String?,
     turnaroundWorkingDays: Int?,
-  ): CasResult<Cas3PremisesEntity> = validatedCasResult {
+  ): CasResult<Pair<Cas3PremisesEntity, TemporaryAccommodationPremisesTotalBedspacesByStatus>> = validatedCasResult {
     val localAuthorityArea = localAuthorityAreaId?.let { localAuthorityAreaRepository.findByIdOrNull(it) }
     val probationDeliveryUnit =
       probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
@@ -106,11 +106,74 @@ class Cas3v2PremisesService(
       lastUpdatedAt = null,
     )
 
-    cas3PremisesRepository.save(premises)
-    return success(premises)
+    val savedPremises = cas3PremisesRepository.save(premises)
+    return success(Pair(premises, getBedspaceTotals(savedPremises)))
   }
 
-  private fun CasResultValidatedScope<Cas3PremisesEntity>.getValidatedCharacteristics(premisesCharacteristicIds: List<UUID>): List<Cas3PremisesCharacteristicEntity> {
+  fun updatePremises(
+    premisesId: UUID,
+    reference: String,
+    addressLine1: String,
+    addressLine2: String?,
+    town: String?,
+    postcode: String,
+    localAuthorityAreaId: UUID?,
+    probationRegionId: UUID,
+    characteristicIds: List<UUID>,
+    notes: String?,
+    probationDeliveryUnitId: UUID,
+    turnaroundWorkingDays: Int,
+  ): CasResult<Pair<Cas3PremisesEntity, TemporaryAccommodationPremisesTotalBedspacesByStatus>> = validatedCasResult {
+    val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
+      ?: return CasResult.NotFound("Cas3Premises", premisesId.toString())
+
+    if (premises.probationDeliveryUnit.id != probationDeliveryUnitId) {
+      return "$.probationDeliveryUnitId" hasSingleValidationError "premisesNotInProbationDeliveryUnit"
+    }
+
+    val localAuthorityArea = localAuthorityAreaId?.let { localAuthorityAreaRepository.findByIdOrNull(it) }
+    val probationDeliveryUnit =
+      probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
+
+    validatePremises(
+      probationDeliveryUnit?.probationRegion,
+      localAuthorityAreaId,
+      localAuthorityArea,
+      probationDeliveryUnit,
+      reference,
+      addressLine1,
+      postcode,
+      turnaroundWorkingDays,
+    ) {
+      isUniqueName(reference = reference, probationDeliveryUnitId = probationDeliveryUnitId)
+    }
+    val validatedPremisesCharacteristics = getValidatedCharacteristics(characteristicIds)
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    premises
+      .apply {
+        premises.name = reference
+        premises.addressLine1 = addressLine1
+        premises.addressLine2 = addressLine2
+        premises.town = town
+        premises.postcode = postcode
+        premises.localAuthorityArea = localAuthorityArea
+        premises.characteristics = validatedPremisesCharacteristics.toMutableList()
+        premises.notes = notes.orEmpty()
+        premises.probationDeliveryUnit = probationDeliveryUnit!!
+        premises.turnaroundWorkingDays = turnaroundWorkingDays
+        premises.lastUpdatedAt = OffsetDateTime.now()
+      }
+
+    val savedPremises = cas3PremisesRepository.save(premises)
+
+    return success(Pair(savedPremises, getBedspaceTotals(premises)))
+  }
+
+  private fun <T> CasResultValidatedScope<T>.getValidatedCharacteristics(premisesCharacteristicIds: List<UUID>): List<Cas3PremisesCharacteristicEntity> {
     val validatedCharacteristics =
       cas3PremisesCharacteristicRepository.findActiveCharacteristicsByIdIn(premisesCharacteristicIds)
 
@@ -126,16 +189,16 @@ class Cas3v2PremisesService(
 
   private fun isUniqueName(reference: String, probationDeliveryUnitId: UUID): Boolean = !cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(reference, probationDeliveryUnitId)
 
+  private fun getBedspaceTotals(premises: Cas3PremisesEntity) = TemporaryAccommodationPremisesTotalBedspacesByStatus(
+    premisesId = premises.id,
+    premises.bedspaces.count { isCas3BedspaceOnline(it.startDate, it.endDate) },
+    premises.bedspaces.count { isCas3BedspaceUpcoming(it.startDate) },
+    premises.bedspaces.count { isCas3BedspaceArchived(it.endDate) },
+  )
   fun getBedspaceTotals(premisesId: UUID): CasResult.Success<TemporaryAccommodationPremisesTotalBedspacesByStatus> {
     val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
-
     return CasResult.Success(
-      TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises!!.id,
-        premises.bedspaces.count { isCas3BedspaceOnline(it.startDate, it.endDate) },
-        premises.bedspaces.count { isCas3BedspaceUpcoming(it.startDate) },
-        premises.bedspaces.count { isCas3BedspaceArchived(it.endDate) },
-      ),
+      getBedspaceTotals(premises!!),
     )
   }
 }

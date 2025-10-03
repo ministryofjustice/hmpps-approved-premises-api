@@ -185,6 +185,7 @@ class Cas3PremisesController(
     return ResponseEntity.ok(result)
   }
 
+  @Deprecated("This endpoint will be removed in v2. Use /cas3/v2/premises")
   @PostMapping(
     "/premises",
     consumes = [MediaType.APPLICATION_JSON_VALUE],
@@ -215,6 +216,7 @@ class Cas3PremisesController(
     return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus), HttpStatus.CREATED)
   }
 
+  @Deprecated("This endpoint will be removed in v2. Use /cas3/v2/premises/{premisesId}")
   @Transactional
   @PutMapping("/premises/{premisesId}")
   fun updatePremises(@PathVariable premisesId: UUID, @RequestBody body: Cas3UpdatePremises): ResponseEntity<Cas3Premises> {
