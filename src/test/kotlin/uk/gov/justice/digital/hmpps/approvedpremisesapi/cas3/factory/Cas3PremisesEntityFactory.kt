@@ -116,6 +116,10 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     this.status = { status }
   }
 
+  fun withBedspaces(bedspaces: MutableList<Cas3BedspacesEntity>) = apply {
+    this.bedspaces = { bedspaces }
+  }
+
   override fun produce(): Cas3PremisesEntity = Cas3PremisesEntity(
     id = this.id(),
     name = this.name(),

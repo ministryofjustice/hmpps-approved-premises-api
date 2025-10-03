@@ -120,7 +120,7 @@ class Cas3v2PremisesServiceTest {
         assertThat(capturedPremises.lastUpdatedAt).isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS))
 
         assertThatCasResult(result).isSuccess().with {
-          assertThat(it.first).isEqualTo(capturedPremises)
+          assertThat(it).isEqualTo(capturedPremises)
         }
       })
 
@@ -382,7 +382,7 @@ class Cas3v2PremisesServiceTest {
         assertThat(capturedPremises.lastUpdatedAt).isNull()
 
         assertThatCasResult(result).isSuccess().with {
-          assertThat(it.first).isEqualTo(capturedPremises)
+          assertThat(it).isEqualTo(capturedPremises)
         }
       })
 
@@ -432,8 +432,8 @@ class Cas3v2PremisesServiceTest {
       assertAll({
         val capturedPremises = premisesSlot.captured
         assertThat(capturedPremises.turnaroundWorkingDays).isEqualTo(2)
-        assertThatCasResult(result).isSuccess().with { (createdPremises, _) ->
-          assertThat(createdPremises.turnaroundWorkingDays).isEqualTo(2)
+        assertThatCasResult(result).isSuccess().with {
+          assertThat(it.turnaroundWorkingDays).isEqualTo(2)
         }
       })
     }
