@@ -11,7 +11,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
@@ -20,12 +19,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.ExternalUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusDetail
@@ -46,11 +45,11 @@ class StatusUpdateServiceTest {
   private val mockStatusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val mockStatusUpdateDetailRepository = mockk<Cas2StatusUpdateDetailRepository>()
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
-  private val assessor = ExternalUserEntityFactory()
+  private val assessor = Cas2UserEntityFactory()
     .withUsername("JOHN_SMITH_NACRO")
     .withName("John Smith")
     .withEmail("john@nacro.example.com")
-    .withOrigin("NACRO")
+    .withExternalType("NACRO")
     .produce()
 
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
@@ -58,7 +57,7 @@ class StatusUpdateServiceTest {
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val cas2EmailService = mockk<Cas2EmailService>()
 
-  private val applicant = NomisUserEntityFactory().produce()
+  private val applicant = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
   private val application = Cas2ApplicationEntityFactory()
     .withCreatedByUser(applicant)
     .withCrn("CRN123")
@@ -152,7 +151,7 @@ class StatusUpdateServiceTest {
           .withStatusId(activeStatus.id)
           .produce()
 
-        every { mockAssessmentRepository.findByIdOrNull(assessment.id) } answers
+        every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } answers
           {
             assessment
           }
@@ -182,7 +181,7 @@ class StatusUpdateServiceTest {
 
       @Test
       fun `saves and asks the domain event service to create a status-updated event`() {
-        every { cas2EmailService.getReferrerEmail(any()) }.returns(application.getCreatedByUserEmail())
+        every { cas2EmailService.getReferrerEmail(any()) }.returns(application.createdByUser!!.email)
         statusUpdateService.createForAssessment(
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
@@ -232,7 +231,7 @@ class StatusUpdateServiceTest {
 
       @BeforeEach
       fun setUp() {
-        every { mockAssessmentRepository.findByIdOrNull(assessment.id) } answers
+        every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } answers
           {
             null
           }
@@ -275,7 +274,7 @@ class StatusUpdateServiceTest {
             label = statusDetail.label,
           )
 
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } answers
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } answers
             {
               assessment
             }
@@ -313,7 +312,7 @@ class StatusUpdateServiceTest {
           every { mockStatusTransformer.transformStatusDetailListToDetailItemList(listOf(statusDetail)) } returns listOf(
             Cas2StatusDetail("exampleStatusDetail", ""),
           )
-          every { cas2EmailService.getReferrerEmail(any()) } returns assessment.application.getCreatedByUserEmail()
+          every { cas2EmailService.getReferrerEmail(any()) } returns assessment.application.createdByUser!!.email
 
           statusUpdateService.createForAssessment(
             assessmentId = assessment.id,
@@ -372,7 +371,7 @@ class StatusUpdateServiceTest {
         @Test
         fun `alerts Sentry when the Referrer does not have an email`() {
           val submittedApplicationWithNoReferrerEmail = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(NomisUserEntityFactory().withEmail(null).produce())
+            .withCreatedByUser(Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).withEmail(null).produce())
             .withCrn("CRN123")
             .withNomsNumber("NOMSABC")
             .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
@@ -381,7 +380,7 @@ class StatusUpdateServiceTest {
           val assessmentWithNoEmail = Cas2AssessmentEntityFactory()
             .withApplication(submittedApplicationWithNoReferrerEmail).produce()
 
-          every { mockAssessmentRepository.findByIdOrNull(assessmentWithNoEmail.id) } answers
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessmentWithNoEmail.id) } answers
             {
               assessmentWithNoEmail
             }
@@ -409,7 +408,7 @@ class StatusUpdateServiceTest {
 
         @BeforeEach
         fun setUp() {
-          every { mockAssessmentRepository.findByIdOrNull(assessment.id) } answers
+          every { mockAssessmentRepository.findByIdOrNullHdc(assessment.id) } answers
             {
               null
             }

@@ -7,6 +7,7 @@ import jakarta.persistence.Table
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
@@ -14,7 +15,9 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
-interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEntity, String> {
+interface Cas2ApplicationSummaryRepository :
+  JpaRepository<Cas2ApplicationSummaryEntity, String>,
+  JpaSpecificationExecutor<Cas2ApplicationSummaryEntity> {
   @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId")
   fun findInProgressApplications(userId: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
@@ -38,8 +41,6 @@ interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEnt
 
   fun findAllByIdIn(ids: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
-  fun findByPrisonCode(prisonCode: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
-
   fun findBySubmittedAtIsNotNull(pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
 }
 
@@ -61,11 +62,7 @@ data class Cas2ApplicationSummaryEntity(
   val userId: String,
   @Column(name = "name")
   val userName: String,
-  @Column(name = "created_by_cas2_user_id")
-  val createdByCas2UserId: String? = null,
-  @Column(name = "created_by_cas2_user_name")
-  val createdByCas2UserName: String? = null,
-  @Column(name = "allocated_pom_user_id")
+  @Column(name = "allocated_pom_cas_2_user_id")
   val allocatedPomUserId: UUID?,
   @Column(name = "allocated_pom_name")
   val allocatedPomName: String?,
@@ -91,8 +88,4 @@ data class Cas2ApplicationSummaryEntity(
   var bailHearingDate: LocalDate? = null,
   @Column(name = "application_origin")
   var applicationOrigin: String? = null,
-
-) {
-  fun getCreatedById(): String = createdByCas2UserId ?: userId
-  fun getCreatedByUsername(): String = createdByCas2UserName ?: userName
-}
+)

@@ -8,12 +8,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var username: Yielded<String> = { randomStringUpperCase(12) }
   private var name: Yielded<String> = { randomStringUpperCase(12) }
+  private var externalType: Yielded<String?> = { null }
   private var email: Yielded<String?> = { randomEmailAddress() }
   private var nomisStaffId: Yielded<Long?> = { randomInt(100000, 900000).toLong() }
   private var activeNomisCaseloadId: Yielded<String?> = { null }
@@ -28,8 +30,8 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.id = { id }
   }
 
-  fun withActiveNomisCaseloadId(activeCaseloadId: String) = apply {
-    this.activeNomisCaseloadId = { activeCaseloadId }
+  fun withActiveNomisCaseloadId(activeNomisCaseloadId: String) = apply {
+    this.activeNomisCaseloadId = { activeNomisCaseloadId }
   }
 
   fun withName(name: String) = apply {
@@ -60,6 +62,10 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.email = { email }
   }
 
+  fun withExternalType(externalType: String?) = apply {
+    this.externalType = { externalType }
+  }
+
   fun withUserType(t: Cas2UserType) = apply {
     this.userType = { t }
   }
@@ -85,5 +91,7 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     isEnabled = this.isEnabled(),
     isActive = this.isActive(),
     applications = this.applications(),
+    createdAt = OffsetDateTime.now(),
+    externalType = this.externalType(),
   )
 }

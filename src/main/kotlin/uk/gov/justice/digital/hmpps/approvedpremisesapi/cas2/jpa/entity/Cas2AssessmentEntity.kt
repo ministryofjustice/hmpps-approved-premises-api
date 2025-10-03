@@ -10,6 +10,7 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.SQLOrder
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import java.time.OffsetDateTime
@@ -17,7 +18,35 @@ import java.util.UUID
 
 @Repository
 interface Cas2AssessmentRepository : JpaRepository<Cas2AssessmentEntity, UUID> {
-  fun findFirstByApplicationId(applicationId: UUID): Cas2AssessmentEntity?
+  @Query(
+    "SELECT a FROM Cas2AssessmentEntity a WHERE a.application.id = :id AND " +
+      "a.applicationOrigin = 'homeDetentionCurfew'",
+  )
+  fun findFirstByApplicationIdHdc(id: UUID): Cas2AssessmentEntity?
+
+  @Query(
+    "SELECT a FROM Cas2AssessmentEntity a WHERE a.id = :id AND " +
+      "a.applicationOrigin != 'homeDetentionCurfew'",
+  )
+  fun findByIdOrNullBail(id: UUID): Cas2AssessmentEntity?
+
+  @Query(
+    "SELECT a FROM Cas2AssessmentEntity a WHERE a.id = :id AND " +
+      "a.applicationOrigin = 'homeDetentionCurfew'",
+  )
+  fun findByIdOrNullHdc(id: UUID): Cas2AssessmentEntity?
+
+  @Query(
+    "SELECT a FROM Cas2AssessmentEntity a WHERE " +
+      "a.applicationOrigin != 'homeDetentionCurfew'",
+  )
+  fun findAllBail(): List<Cas2AssessmentEntity>
+
+  @Query(
+    "SELECT a FROM Cas2AssessmentEntity a WHERE " +
+      "a.applicationOrigin = 'homeDetentionCurfew'",
+  )
+  fun findAllHdc(): List<Cas2AssessmentEntity>
 }
 
 @Entity

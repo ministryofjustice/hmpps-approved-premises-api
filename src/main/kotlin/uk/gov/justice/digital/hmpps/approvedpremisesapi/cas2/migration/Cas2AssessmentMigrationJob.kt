@@ -28,7 +28,7 @@ class Cas2AssessmentMigrationJob(
     var slice: Slice<Cas2ApplicationEntity>
 
     while (hasNext) {
-      slice = applicationRepository.findAllSubmittedApplicationsWithoutAssessments()
+      slice = applicationRepository.findAllSubmittedApplicationsWithoutAssessmentsHdc()
       slice.content.forEach { application ->
         transactionTemplate.executeWithoutResult {
           log.info("Saving assessment for ${application.id}")
