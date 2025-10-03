@@ -135,7 +135,11 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3PremisesTest#getArchivedPremisesByIdCases")
     fun `Get Premises by ID returns OK with correct body when a premises is archived with future end date`(args: Pair<LocalDate, Cas3PremisesStatus>) {
       val (endDate, status) = args
-      givenATemporaryAccommodationPremisesWithUser(roles = listOf(UserRole.CAS3_ASSESSOR), premisesStatus = PropertyStatus.archived, premisesEndDate = endDate) { user, jwt, premises ->
+      givenATemporaryAccommodationPremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStatus = PropertyStatus.archived,
+        premisesEndDate = endDate,
+      ) { user, jwt, premises ->
         premises.createdAt = OffsetDateTime.now().minusDays(120)
         premisesRepository.save(premises)
 

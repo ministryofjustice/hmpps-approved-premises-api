@@ -100,6 +100,7 @@ class Cas3v2BedspaceController(
   }
 
   private fun getAndCheckUserCanViewPremises(premisesId: UUID): Cas3PremisesEntity {
+    // TODO remove this and use the getValidatedPremises function
     val premises = cas3v2PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
     if (!cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id)) {
       throw ForbiddenProblem()

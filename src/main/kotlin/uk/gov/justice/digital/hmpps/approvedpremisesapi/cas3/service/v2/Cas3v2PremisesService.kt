@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.validatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
@@ -25,7 +26,14 @@ class Cas3v2PremisesService(
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
+  private val cas3UserAccessService: Cas3UserAccessService,
 ) {
+  fun getValidatedPremises(premisesId: UUID): CasResult<Cas3PremisesEntity> {
+    val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
+    if (premises == null) return CasResult.NotFound("Cas3Premises", premisesId.toString())
+    if (!cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id)) return CasResult.Unauthorised()
+    return CasResult.Success(premises)
+  }
   fun getPremises(premisesId: UUID): Cas3PremisesEntity? = cas3PremisesRepository.findByIdOrNull(premisesId)
 
   fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate, transactionId: UUID) {

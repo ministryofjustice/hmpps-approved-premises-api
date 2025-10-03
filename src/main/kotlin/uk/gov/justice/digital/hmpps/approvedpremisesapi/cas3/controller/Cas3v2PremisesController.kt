@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
@@ -21,9 +23,17 @@ import java.util.UUID
 @RequestMapping("/cas3/v2", headers = ["X-Service-Name=temporary-accommodation"])
 class Cas3v2PremisesController(
   private val cas3UserAccessService: Cas3UserAccessService,
+  private val cas3PremisesService: Cas3PremisesService,
   private val cas3v2PremisesService: Cas3v2PremisesService,
   private val cas3PremisesTransformer: Cas3PremisesTransformer,
 ) {
+
+  @GetMapping("/premises/{premisesId}")
+  fun getPremises(@PathVariable premisesId: UUID): ResponseEntity<Cas3Premises> {
+    val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+    val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises.id))
+    return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(premises, archiveHistory))
+  }
 
   @PostMapping("/premises")
   fun createPremises(@RequestBody body: Cas3NewPremises): ResponseEntity<Cas3Premises> {
