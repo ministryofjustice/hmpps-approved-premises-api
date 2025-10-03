@@ -23,7 +23,6 @@ class Cas3PremisesTransformer(
 
   fun toCas3Premises(
     premises: Cas3PremisesEntity,
-    bedspaceTotals: TemporaryAccommodationPremisesTotalBedspacesByStatus,
     archiveHistory: List<Cas3PremisesArchiveAction>? = emptyList(),
   ) = Cas3Premises(
     id = premises.id,
@@ -43,9 +42,9 @@ class Cas3PremisesTransformer(
     status = premises.status,
     notes = premises.notes,
     turnaroundWorkingDays = premises.turnaroundWorkingDays,
-    totalOnlineBedspaces = bedspaceTotals.onlineBedspaces,
-    totalUpcomingBedspaces = bedspaceTotals.upcomingBedspaces,
-    totalArchivedBedspaces = bedspaceTotals.archivedBedspaces,
+    totalOnlineBedspaces = premises.countOnlineBedspaces(),
+    totalUpcomingBedspaces = premises.countUpcomingBedspaces(),
+    totalArchivedBedspaces = premises.countArchivedBedspaces(),
     archiveHistory = archiveHistory,
   )
 
