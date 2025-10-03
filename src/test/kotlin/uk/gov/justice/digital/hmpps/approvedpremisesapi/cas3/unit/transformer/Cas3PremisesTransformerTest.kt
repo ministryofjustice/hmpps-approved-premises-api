@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthority
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
@@ -75,12 +76,14 @@ class Cas3PremisesTransformerTest {
       .withLastUpdatedAt(lastUpdatedAt)
       .produce()
 
-    private val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-      premisesId = premises.id,
-      onlineBedspaces = 3,
-      upcomingBedspaces = 2,
-      archivedBedspaces = 1,
-    )
+    private val onlineBedspace =
+      Cas3BedspaceEntityFactory().onlineBedspace(premises)
+
+    private val archivedBedspace =
+      Cas3BedspaceEntityFactory().archivedBedspace(premises)
+
+    private val upcomingBedspace =
+      Cas3BedspaceEntityFactory().upcomingBedspace(premises)
 
     private val archiveHistory = listOf(
       Cas3PremisesArchiveAction(
@@ -106,6 +109,14 @@ class Cas3PremisesTransformerTest {
 
     @Test
     fun `toCas3Premises transforms Cas3PremisesEntity to Cas3Premises correctly`() {
+      premises.bedspaces = mutableListOf(
+        archivedBedspace,
+        archivedBedspace,
+        archivedBedspace,
+        onlineBedspace,
+        onlineBedspace,
+        upcomingBedspace,
+      )
       val result = cas3PremisesTransformer.toCas3Premises(
         premises = premises,
         archiveHistory = archiveHistory,
@@ -129,9 +140,9 @@ class Cas3PremisesTransformerTest {
         assertThat(result.status).isEqualTo(Cas3PremisesStatus.online)
         assertThat(result.notes).isEqualTo(premises.notes)
         assertThat(result.turnaroundWorkingDays).isEqualTo(premises.turnaroundWorkingDays)
-        assertThat(result.totalOnlineBedspaces).isEqualTo(3)
-        assertThat(result.totalUpcomingBedspaces).isEqualTo(2)
-        assertThat(result.totalArchivedBedspaces).isEqualTo(1)
+        assertThat(result.totalOnlineBedspaces).isEqualTo(2)
+        assertThat(result.totalUpcomingBedspaces).isEqualTo(1)
+        assertThat(result.totalArchivedBedspaces).isEqualTo(3)
         assertThat(result.archiveHistory).isEqualTo(archiveHistory)
         assertThat(result.scheduleUnarchiveDate).isNull() // will not be populated if premises start date is < today
       })

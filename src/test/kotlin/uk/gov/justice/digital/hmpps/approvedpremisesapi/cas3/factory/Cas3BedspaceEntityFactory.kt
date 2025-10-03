@@ -72,4 +72,19 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
     createdAt = this.createdAt(),
     createdDate = this.createdDate(),
   )
+
+  fun onlineBedspace(premisesEntity: Cas3PremisesEntity) = this.withStartDate(LocalDate.now().minusDays(10))
+    .withEndDate(LocalDate.now().plusDays(10))
+    .withPremises(premisesEntity)
+    .produce()
+
+  fun archivedBedspace(premisesEntity: Cas3PremisesEntity) = this.withStartDate(LocalDate.now().minusDays(10))
+    .withEndDate(LocalDate.now().minusDays(5))
+    .withPremises(premisesEntity)
+    .produce()
+
+  fun upcomingBedspace(premisesEntity: Cas3PremisesEntity) = this.withStartDate(LocalDate.now().plusDays(10))
+    .withEndDate(LocalDate.now().plusDays(100))
+    .withPremises(premisesEntity)
+    .produce()
 }

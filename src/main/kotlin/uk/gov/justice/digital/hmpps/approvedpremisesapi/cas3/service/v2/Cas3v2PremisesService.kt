@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.util.UUID
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -18,6 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.UUID
 
 @Service
 class Cas3v2PremisesService(
