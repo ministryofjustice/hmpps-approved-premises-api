@@ -4,10 +4,15 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
@@ -18,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.failsWithVal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withForbiddenMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withNotFoundMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -34,10 +40,160 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
   @Autowired
   private lateinit var cas3PremisesTransformer: Cas3PremisesTransformer
 
-  fun createCharacteristics(count: Int = 1): List<Cas3PremisesCharacteristicEntity> = cas3PremisesCharacteristicEntityFactory.produceAndPersistMultiple(count).sortedBy { it.name }
+  private fun createCharacteristics(count: Int = 1): List<Cas3PremisesCharacteristicEntity> = cas3PremisesCharacteristicEntityFactory.produceAndPersistMultiple(count).sortedBy { it.name }
 
-  fun createPdu(probationRegionEntity: ProbationRegionEntity) = probationDeliveryUnitFactory.produceAndPersist {
+  private fun createPdu(probationRegionEntity: ProbationRegionEntity) = probationDeliveryUnitFactory.produceAndPersist {
     withProbationRegion(probationRegionEntity)
+  }
+
+  private fun Cas3PremisesEntity.addBedspacesToPremises(
+    bedspaces: List<Cas3BedspacesEntity> = listOf(
+      Cas3BedspaceEntityFactory().onlineBedspace(this),
+      Cas3BedspaceEntityFactory().archivedBedspace(this),
+      Cas3BedspaceEntityFactory().upcomingBedspace(this),
+      Cas3BedspaceEntityFactory().onlineBedspace(this),
+      Cas3BedspaceEntityFactory().onlineBedspace(this),
+      Cas3BedspaceEntityFactory().archivedBedspace(this),
+      Cas3BedspaceEntityFactory().onlineBedspace(this),
+    ),
+  ) {
+    cas3BedspaceTestRepository.saveAll(bedspaces)
+    this.bedspaces.addAll(bedspaces)
+  }
+
+  @Nested
+  inner class GetPremisesById {
+    private fun doGetRequest(
+      jwt: String,
+      premisesId: UUID,
+    ) = webTestClient.get()
+      .uri("/cas3/v2/premises/$premisesId")
+      .headers(buildTemporaryAccommodationHeaders(jwt))
+      .exchange()
+
+    @Suppress("LongParameterList")
+    private fun addPremises(
+      pdu: ProbationDeliveryUnitEntity,
+      characteristics: List<Cas3PremisesCharacteristicEntity> = emptyList(),
+      laa: LocalAuthorityAreaEntity = localAuthorityEntityFactory.produceAndPersist(),
+      startDate: LocalDate = LocalDate.now().minusDays(10),
+      endDate: LocalDate? = null,
+      status: Cas3PremisesStatus = Cas3PremisesStatus.online,
+    ): Cas3PremisesEntity = givenACas3Premises(
+      name = "NewPremises",
+      characteristics = characteristics,
+      probationDeliveryUnit = pdu,
+      localAuthorityArea = laa,
+      startDate = startDate,
+      endDate = endDate,
+      status = status,
+    )
+
+    @Test
+    fun `Get Premises by ID returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val characteristics = createCharacteristics(3)
+        val laa = localAuthorityEntityFactory.produceAndPersist()
+
+        val premises = addPremises(user.probationDeliveryUnit!!, characteristics, laa)
+        premises.addBedspacesToPremises()
+
+        val result = doGetRequest(jwt, premises.id)
+          .expectStatus()
+          .isOk
+          .bodyAsObject<Cas3Premises>()
+
+        assertAll({
+          assertThat(result.id).isNotNull
+          assertThat(result.reference).isEqualTo(premises.name)
+          assertThat(result.addressLine1).isEqualTo(premises.addressLine1)
+          assertThat(result.addressLine2).isEqualTo(premises.addressLine2)
+          assertThat(result.town).isEqualTo(premises.town)
+          assertThat(result.postcode).isEqualTo(premises.postcode)
+          assertThat(result.localAuthorityArea!!.id).isEqualTo(laa.id)
+          assertThat(result.probationRegion.id).isEqualTo(premises.probationDeliveryUnit.probationRegion.id)
+          assertThat(result.probationDeliveryUnit.id).isEqualTo(premises.probationDeliveryUnit.id)
+          assertThat(result.notes).isEqualTo(premises.notes)
+          assertThat(result.turnaroundWorkingDays).isEqualTo(premises.turnaroundWorkingDays)
+          assertThat(result.characteristics).isNull()
+          assertThat(result.premisesCharacteristics).hasSize(3)
+          assertThat(result.premisesCharacteristics!!.sortedBy { it.name }).isEqualTo(
+            characteristics.map { it.toCas3PremisesCharacteristic() }
+              .sortedBy { it.name },
+          )
+          assertThat(result.status).isEqualTo(Cas3PremisesStatus.online)
+          assertThat(result.totalOnlineBedspaces).isEqualTo(4)
+          assertThat(result.totalUpcomingBedspaces).isEqualTo(1)
+          assertThat(result.totalArchivedBedspaces).isEqualTo(2)
+          assertThat(result.startDate).isEqualTo(premises.startDate)
+          assertThat(result.endDate).isNull()
+          assertThat(result.scheduleUnarchiveDate).isNull()
+          assertThat(result.archiveHistory).isEmpty()
+        })
+      }
+    }
+
+    @ParameterizedTest
+    @CsvSource("-5, archived", "5, online")
+    fun `Get Premises by ID returns OK with correct body when a premises is archived with future end date`(
+      daysToAdjust: Long,
+      status: Cas3PremisesStatus,
+    ) {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val endDate = LocalDate.now().plusDays(daysToAdjust)
+        val premises = addPremises(user.probationDeliveryUnit!!, status = status, endDate = endDate)
+
+        val result = doGetRequest(jwt, premises.id)
+          .expectStatus()
+          .isOk
+          .bodyAsObject<Cas3Premises>()
+
+        assertThat(result.id).isEqualTo(premises.id)
+        assertThat(result.endDate).isEqualTo(endDate)
+        assertThat(result.status).isEqualTo(status)
+      }
+    }
+
+    @Test
+    fun `Get Premises by ID returns OK with correct body when a premises start date is in the future`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val startDate = LocalDate.now().plusDays(10)
+        val premises =
+          addPremises(user.probationDeliveryUnit!!, status = Cas3PremisesStatus.archived, startDate = startDate)
+
+        val result = doGetRequest(jwt, premises.id)
+          .expectStatus()
+          .isOk
+          .bodyAsObject<Cas3Premises>()
+
+        assertThat(result.id).isEqualTo(premises.id)
+        assertThat(result.startDate).isEqualTo(startDate)
+        assertThat(result.status).isEqualTo(Cas3PremisesStatus.archived)
+      }
+    }
+
+    @Test
+    fun `Get Premises by ID returns Not Found with correct body`() {
+      val idToRequest = UUID.randomUUID()
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      doGetRequest(jwt, idToRequest)
+        .expectHeader().contentType("application/problem+json")
+        .withNotFoundMessage("No Cas3Premises with an ID of $idToRequest could be found")
+    }
+
+    @Test
+    fun `Get Premises by ID for a premises not in the user's region returns 403 Forbidden`() {
+      givenAUser { user, jwt ->
+        val (_, anotherJwt) = givenAUser(
+          roles = listOf(UserRole.CAS3_ASSESSOR),
+        )
+        val premises = addPremises(user.probationDeliveryUnit!!)
+        doGetRequest(anotherJwt, premises.id)
+          .withForbiddenMessage()
+      }
+    }
   }
 
   @Nested
@@ -75,7 +231,7 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
     fun `Update premises returns 200 OK with correct body`() {
       givenAUser { user, jwt ->
         val premises = givenACas3Premises(user.probationRegion)
-        val newCharacteristic = cas3PremisesCharacteristicEntityFactory.produceAndPersist()
+        val newCharacteristic = createCharacteristics().first()
         val updatedPremises = buildUpdatedPremises(premises.probationDeliveryUnit, listOf(newCharacteristic.id))
 
         val result = doPutRequest(jwt, premises.id, updatedPremises)

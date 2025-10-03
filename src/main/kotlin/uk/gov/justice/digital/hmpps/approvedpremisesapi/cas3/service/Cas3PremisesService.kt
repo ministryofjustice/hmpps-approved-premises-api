@@ -900,9 +900,9 @@ class Cas3PremisesService(
     success(updatedBedspace)
   }
 
-  fun getPremisesArchiveHistory(premisesEntity: TemporaryAccommodationPremisesEntity): CasResult<List<Cas3PremisesArchiveAction>> = validatedCasResult {
+  fun getPremisesArchiveHistory(premisesId: UUID): CasResult<List<Cas3PremisesArchiveAction>> = validatedCasResult {
     val archiveHistory = cas3DomainEventService.getPremisesActiveDomainEvents(
-      premisesEntity.id,
+      premisesId,
       listOf(CAS3_PREMISES_ARCHIVED, CAS3_PREMISES_UNARCHIVED),
     )
       .mapNotNull { domainEventEntity ->

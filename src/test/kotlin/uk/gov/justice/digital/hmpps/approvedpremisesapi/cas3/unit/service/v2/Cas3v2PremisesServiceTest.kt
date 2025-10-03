@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
@@ -54,8 +55,47 @@ class Cas3v2PremisesServiceTest {
   @MockK
   lateinit var cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository
 
+  @MockK
+  lateinit var cas3UserAccessService: Cas3UserAccessService
+
   @InjectMockKs
   lateinit var cas3v2PremisesService: Cas3v2PremisesService
+
+  @Nested
+  inner class GetPremises {
+    @Test
+    fun `returns CasResult-NotFound when premises is not found`() {
+      every { cas3PremisesRepository.findByIdOrNull(any()) } returns null
+      val id = UUID.randomUUID()
+      val result = cas3v2PremisesService.getValidatedPremises(id)
+
+      assertThatCasResult(result).isNotFound("Cas3Premises", id)
+    }
+
+    @Test
+    fun `returns CasResult-Forbidden when user cannot access premises`() {
+      val premises = Cas3PremisesEntityFactory().withDefaults().produce()
+      every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
+      every { cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id) } returns false
+
+      val result = cas3v2PremisesService.getValidatedPremises(premises.id)
+
+      assertThatCasResult(result).isUnauthorised()
+    }
+
+    @Test
+    fun `returns CasResult-Success when user can access premises`() {
+      val premises = Cas3PremisesEntityFactory().withDefaults().produce()
+      every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
+      every { cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id) } returns true
+
+      val result = cas3v2PremisesService.getValidatedPremises(premises.id)
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(premises)
+      }
+    }
+  }
 
   @Nested
   inner class UpdatePremises {
