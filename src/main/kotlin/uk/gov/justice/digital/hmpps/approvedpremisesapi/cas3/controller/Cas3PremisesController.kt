@@ -39,6 +39,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.New
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.GetBookingForPremisesResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.countArchivedBedspaces
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.countOnlineBedspaces
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.countUpcomingBedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BedspaceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3DepartureTransformer
@@ -84,9 +87,7 @@ class Cas3PremisesController(
 
     val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises))
 
-    val totalBedspaceByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
-
-    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises, totalBedspaceByStatus, archiveHistory))
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory))
   }
 
   @GetMapping("/premises/summary")
@@ -148,9 +149,8 @@ class Cas3PremisesController(
   @GetMapping("/premises/{premisesId}/bedspaces")
   fun getPremisesBedspaces(@PathVariable premisesId: UUID): ResponseEntity<Cas3Bedspaces> {
     val premises = getAndCheckUserCanViewPremises(premisesId)
-    val bedspaces = cas3PremisesService.getPremisesBedspaces(premises.id)
+    val bedspaces = premises.rooms.map { it.beds }.flatten()
     val bedspacesArchiveHistory = cas3PremisesService.getBedspacesArchiveHistory(bedspaces.map { it.id })
-    val totalBedspaceByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
 
     val result = Cas3Bedspaces(
       bedspaces = bedspaces.map { bedspace ->
@@ -160,9 +160,9 @@ class Cas3PremisesController(
           ?.actions ?: emptyList()
         cas3BedspaceTransformer.transformJpaToApi(bedspace, bedspaceStatus, archiveHistory)
       },
-      totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
-      totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
-      totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
+      totalOnlineBedspaces = bedspaces.countOnlineBedspaces(),
+      totalUpcomingBedspaces = bedspaces.countUpcomingBedspaces(),
+      totalArchivedBedspaces = bedspaces.countArchivedBedspaces(),
     )
 
     return ResponseEntity.ok(result)
@@ -171,15 +171,15 @@ class Cas3PremisesController(
   @GetMapping("/premises/{premisesId}/bedspace-totals")
   fun getPremisesBedspaceTotals(@PathVariable premisesId: UUID): ResponseEntity<Cas3PremisesBedspaceTotals> {
     val premises = getAndCheckUserCanViewPremises(premisesId)
-    val totalBedspaceByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
+    val bedspaces = premises.rooms.map { it.beds }.flatten()
 
     val result = Cas3PremisesBedspaceTotals(
       id = premises.id,
       status = if (premises.isPremisesArchived()) Cas3PremisesStatus.archived else Cas3PremisesStatus.online,
       premisesEndDate = premises.endDate,
-      totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
-      totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
-      totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
+      totalOnlineBedspaces = bedspaces.countOnlineBedspaces(),
+      totalUpcomingBedspaces = bedspaces.countUpcomingBedspaces(),
+      totalArchivedBedspaces = bedspaces.countArchivedBedspaces(),
     )
 
     return ResponseEntity.ok(result)
@@ -211,9 +211,7 @@ class Cas3PremisesController(
       ),
     )
 
-    val totalBedspacesByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
-
-    return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus), HttpStatus.CREATED)
+    return ResponseEntity(cas3PremisesTransformer.transformDomainToApi(premises, emptyList()), HttpStatus.CREATED)
   }
 
   @Deprecated("This endpoint will be removed in v2. Use /cas3/v2/premises/{premisesId}")
@@ -238,8 +236,7 @@ class Cas3PremisesController(
     )
       .let { extractEntityFromCasResult(it) }
       .let {
-        val totalBedspacesByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
-        cas3PremisesTransformer.transformDomainToApi(it, totalBedspacesByStatus)
+        cas3PremisesTransformer.transformDomainToApi(it)
       }
       .let { ResponseEntity.ok(it) }
   }
@@ -298,9 +295,7 @@ class Cas3PremisesController(
       cas3PremisesService.archivePremises(premises, body.endDate),
     )
 
-    val totalBedspacesByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
-
-    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(archivedPremises, totalBedspacesByStatus))
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(archivedPremises))
   }
 
   @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/can-archive")
@@ -347,9 +342,7 @@ class Cas3PremisesController(
       cas3PremisesService.unarchivePremises(premises, body.restartDate),
     )
 
-    val totalBedspacesByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
-
-    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(unarchivedPremises, totalBedspacesByStatus))
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(unarchivedPremises))
   }
 
   @Transactional
@@ -380,9 +373,7 @@ class Cas3PremisesController(
       cas3PremisesService.cancelScheduledArchivePremises(premisesId),
     )
 
-    val totalBedspacesByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
-
-    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(updatedPremises, totalBedspacesByStatus))
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(updatedPremises))
   }
 
   @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-archive")
@@ -411,9 +402,7 @@ class Cas3PremisesController(
       cas3PremisesService.cancelScheduledUnarchivePremises(premisesId),
     )
 
-    val totalBedspacesByStatus = extractEntityFromCasResult(cas3PremisesService.getBedspaceTotals(premises))
-
-    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(updatedPremises, totalBedspacesByStatus))
+    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(updatedPremises))
   }
 
   @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-unarchive")

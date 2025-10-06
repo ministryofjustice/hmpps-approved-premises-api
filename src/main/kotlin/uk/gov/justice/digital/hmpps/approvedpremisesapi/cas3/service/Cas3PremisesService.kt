@@ -46,7 +46,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidatedScope
@@ -115,8 +114,6 @@ class Cas3PremisesService(
 
     return success(bedspace)
   }
-
-  fun getPremisesBedspaces(premisesId: UUID): List<BedEntity> = bedspaceRepository.findByRoomPremisesId(premisesId)
 
   @Transactional
   fun createNewPremises(
@@ -966,19 +963,6 @@ class Cas3PremisesService(
     }
   }
 
-  fun getBedspaceTotals(premises: TemporaryAccommodationPremisesEntity): CasResult.Success<TemporaryAccommodationPremisesTotalBedspacesByStatus> {
-    val bedspaces = bedspaceRepository.findByRoomPremisesId(premises.id)
-
-    return CasResult.Success(
-      TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        bedspaces.count { isCas3BedspaceOnline(it.startDate, it.endDate) },
-        bedspaces.count { isCas3BedspaceUpcoming(it.startDate) },
-        bedspaces.count { isCas3BedspaceArchived(it.endDate) },
-      ),
-    )
-  }
-
   fun getBedspaceCount(premises: PremisesEntity): Int = premisesRepository.getBedCount(premises)
 
   fun getBedspaceStatus(bedspace: BedEntity) = BedspaceStatusHelper.getBedspaceStatus(bedspace.startDate, bedspace.endDate)
@@ -1412,3 +1396,9 @@ fun <T> CasResultValidatedScope<T>.validatePremises(
     "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
   }
 }
+
+fun List<BedEntity>.countOnlineBedspaces() = count { isCas3BedspaceOnline(it.startDate, it.endDate) }
+
+fun List<BedEntity>.countUpcomingBedspaces() = count { isCas3BedspaceUpcoming(it.startDate) }
+
+fun List<BedEntity>.countArchivedBedspaces() = count { isCas3BedspaceArchived(it.endDate) }

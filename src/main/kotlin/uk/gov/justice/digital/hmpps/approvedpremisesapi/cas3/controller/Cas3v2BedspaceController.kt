@@ -52,9 +52,8 @@ class Cas3v2BedspaceController(
   @GetMapping("/premises/{premisesId}/bedspaces")
   fun getBedspaces(@PathVariable premisesId: UUID): ResponseEntity<Cas3Bedspaces> {
     val premises = getAndCheckUserCanViewPremises(premisesId)
-    val bedspaces = cas3v2BedspacesService.getPremisesBedspaces(premises.id)
+    val bedspaces = premises.bedspaces
     val bedspacesArchiveHistory = cas3v2BedspacesService.getBedspacesArchiveHistory(bedspaces.map { it.id })
-    val totalBedspaceByStatus = extractEntityFromCasResult(cas3v2PremisesService.getBedspaceTotals(premises.id))
     val result = Cas3Bedspaces(
       bedspaces = bedspaces.map { bedspace ->
         val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(bedspace)
@@ -63,9 +62,9 @@ class Cas3v2BedspaceController(
           ?.actions ?: emptyList()
         cas3BedspaceTransformer.transformJpaToApi(bedspace, bedspaceStatus, archiveHistory)
       },
-      totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
-      totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
-      totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
+      totalOnlineBedspaces = premises.countOnlineBedspaces(),
+      totalUpcomingBedspaces = premises.countUpcomingBedspaces(),
+      totalArchivedBedspaces = premises.countArchivedBedspaces(),
     )
     return ResponseEntity.ok(result)
   }
@@ -73,15 +72,14 @@ class Cas3v2BedspaceController(
   @GetMapping("/premises/{premisesId}/bedspace-totals")
   fun getBedspaceTotals(@PathVariable premisesId: UUID): ResponseEntity<Cas3PremisesBedspaceTotals> {
     val premises = getAndCheckUserCanViewPremises(premisesId)
-    val totalBedspaceByStatus = extractEntityFromCasResult(cas3v2PremisesService.getBedspaceTotals(premises.id))
 
     val result = Cas3PremisesBedspaceTotals(
       id = premises.id,
       status = if (premises.isPremisesArchived()) Cas3PremisesStatus.archived else Cas3PremisesStatus.online,
       premisesEndDate = premises.endDate,
-      totalOnlineBedspaces = totalBedspaceByStatus.onlineBedspaces,
-      totalUpcomingBedspaces = totalBedspaceByStatus.upcomingBedspaces,
-      totalArchivedBedspaces = totalBedspaceByStatus.archivedBedspaces,
+      totalOnlineBedspaces = premises.countOnlineBedspaces(),
+      totalUpcomingBedspaces = premises.countUpcomingBedspaces(),
+      totalArchivedBedspaces = premises.countArchivedBedspaces(),
     )
 
     return ResponseEntity.ok(result)

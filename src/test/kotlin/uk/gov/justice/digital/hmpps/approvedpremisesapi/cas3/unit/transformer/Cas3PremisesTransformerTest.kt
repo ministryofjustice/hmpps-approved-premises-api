@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
@@ -76,15 +75,6 @@ class Cas3PremisesTransformerTest {
       .withLastUpdatedAt(lastUpdatedAt)
       .produce()
 
-    private val onlineBedspace =
-      Cas3BedspaceEntityFactory().onlineBedspace(premises)
-
-    private val archivedBedspace =
-      Cas3BedspaceEntityFactory().archivedBedspace(premises)
-
-    private val upcomingBedspace =
-      Cas3BedspaceEntityFactory().upcomingBedspace(premises)
-
     private val archiveHistory = listOf(
       Cas3PremisesArchiveAction(
         status = Cas3PremisesStatus.online,
@@ -110,13 +100,14 @@ class Cas3PremisesTransformerTest {
     @Test
     fun `toCas3Premises transforms Cas3PremisesEntity to Cas3Premises correctly`() {
       premises.bedspaces = mutableListOf(
-        archivedBedspace,
-        archivedBedspace,
-        archivedBedspace,
-        onlineBedspace,
-        onlineBedspace,
-        upcomingBedspace,
+        Cas3BedspaceEntityFactory().archivedBedspace(premises),
+        Cas3BedspaceEntityFactory().onlineBedspace(premises),
+        Cas3BedspaceEntityFactory().onlineBedspace(premises),
+        Cas3BedspaceEntityFactory().onlineBedspace(premises),
+        Cas3BedspaceEntityFactory().upcomingBedspace(premises),
+        Cas3BedspaceEntityFactory().upcomingBedspace(premises),
       )
+
       val result = cas3PremisesTransformer.toCas3Premises(
         premises = premises,
         archiveHistory = archiveHistory,
@@ -140,9 +131,9 @@ class Cas3PremisesTransformerTest {
         assertThat(result.status).isEqualTo(Cas3PremisesStatus.online)
         assertThat(result.notes).isEqualTo(premises.notes)
         assertThat(result.turnaroundWorkingDays).isEqualTo(premises.turnaroundWorkingDays)
-        assertThat(result.totalOnlineBedspaces).isEqualTo(2)
-        assertThat(result.totalUpcomingBedspaces).isEqualTo(1)
-        assertThat(result.totalArchivedBedspaces).isEqualTo(3)
+        assertThat(result.totalOnlineBedspaces).isEqualTo(3)
+        assertThat(result.totalUpcomingBedspaces).isEqualTo(2)
+        assertThat(result.totalArchivedBedspaces).isEqualTo(1)
         assertThat(result.archiveHistory).isEqualTo(archiveHistory)
         assertThat(result.scheduleUnarchiveDate).isNull() // will not be populated if premises start date is < today
       })
@@ -244,14 +235,7 @@ class Cas3PremisesTransformerTest {
         ),
       )
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 2,
-        upcomingBedspaces = 2,
-        archivedBedspaces = 1,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, archiveHistory)
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
       assertThat(result).isEqualTo(
         Cas3Premises(
@@ -319,14 +303,7 @@ class Cas3PremisesTransformerTest {
         ),
       )
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 2,
-        upcomingBedspaces = 1,
-        archivedBedspaces = 0,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, archiveHistory)
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
       assertThat(result).isEqualTo(
         Cas3Premises(
@@ -388,14 +365,7 @@ class Cas3PremisesTransformerTest {
         ),
       )
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 1,
-        upcomingBedspaces = 0,
-        archivedBedspaces = 1,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, archiveHistory)
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
       assertThat(result.archiveHistory).isEqualTo(
         listOf(
@@ -447,14 +417,7 @@ class Cas3PremisesTransformerTest {
         ),
       )
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 1,
-        upcomingBedspaces = 0,
-        archivedBedspaces = 1,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, archiveHistory)
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
       assertThat(result.archiveHistory).isEqualTo(
         listOf(
@@ -495,14 +458,7 @@ class Cas3PremisesTransformerTest {
       val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
       every { probationDeliveryUnitTransformer.transformJpaToApi(probationDeliveryUnitEntity) } returns probationDeliveryUnit
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 1,
-        upcomingBedspaces = 0,
-        archivedBedspaces = 1,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, emptyList())
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, emptyList())
 
       assertThat(result.status).isEqualTo(Cas3PremisesStatus.online)
       assertThat(result.scheduleUnarchiveDate).isNull()

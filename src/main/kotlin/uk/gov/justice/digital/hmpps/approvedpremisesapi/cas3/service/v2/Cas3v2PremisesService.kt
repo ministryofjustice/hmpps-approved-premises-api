@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.validatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -182,15 +181,4 @@ class Cas3v2PremisesService(
   }
 
   private fun isUniqueName(reference: String, probationDeliveryUnitId: UUID): Boolean = !cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(reference, probationDeliveryUnitId)
-
-  fun getBedspaceTotals(premisesId: UUID): CasResult.Success<TemporaryAccommodationPremisesTotalBedspacesByStatus> {
-    val premises = cas3PremisesRepository.findByIdOrNull(premisesId)!!
-    val result = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-      premisesId = premisesId,
-      onlineBedspaces = premises.countOnlineBedspaces(),
-      upcomingBedspaces = premises.countUpcomingBedspaces(),
-      archivedBedspaces = premises.countArchivedBedspaces(),
-    )
-    return CasResult.Success(result)
-  }
 }
