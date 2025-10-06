@@ -1795,7 +1795,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetBedUsageReport {
+  inner class GetBedspaceUsageReport {
 
     @Test
     fun `Get bed usage report returns OK with correct body`() {
@@ -2702,8 +2702,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
 
           webTestClient.get()
             .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .headers(buildTemporaryAccommodationHeaders(jwt))
             .exchange()
             .expectStatus()
             .isOk

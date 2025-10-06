@@ -4,9 +4,7 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3VoidBedspaceMigrationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -21,9 +19,6 @@ class Cas3VoidBedspaceJobTest : MigrationJobTestBase() {
 
   @SpykBean
   private lateinit var cas3VoidBedspacesRepository: Cas3VoidBedspaceMigrationRepository
-
-  @Autowired
-  private lateinit var cas3BedspacesRepository: Cas3BedspacesRepository
 
   private fun createPremises(user: UserEntity): TemporaryAccommodationPremisesEntity {
     val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
