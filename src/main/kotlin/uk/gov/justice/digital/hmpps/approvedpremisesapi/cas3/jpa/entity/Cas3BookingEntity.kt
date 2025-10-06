@@ -188,6 +188,67 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
 
   @Query("SELECT b FROM Cas3BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bedspace = :bedspace")
   fun findAllByOverlappingDateForBedspace(startDate: LocalDate, endDate: LocalDate, bedspace: Cas3BedspacesEntity): List<Cas3BookingEntity>
+
+  /*
+  This query is to find the closest booking to the start date for the current bedspace search
+  The ClosestBooking is to get the closest booking to the bedspace search start date that is not cancelled
+   */
+  @Query(
+    """
+      WITH ClosestBooking AS
+         (SELECT b.bed_id, MAX(b.departure_date) departure_date
+          FROM bookings b
+          LEFT JOIN cancellations c ON b.id = c.booking_id
+          WHERE b.departure_date <= :date
+            AND b.bed_id IN :bedIds
+            AND c.id IS NULL
+          GROUP BY b.bed_id)
+          
+      SELECT b.*,
+      cas3_bedspaces.id as bedspace_id,
+      cas3_bedspaces.reference as bedspace_reference,
+      cas3_bedspaces.created_at as bed_created_at,
+      cas3_bedspaces.end_date as bed_end_date
+      FROM bookings b
+      LEFT JOIN cas3_bedspaces ON b.bed_id = cas3_bedspaces.id  
+      INNER JOIN ClosestBooking cb ON b.bed_id = cb.bed_id AND b.departure_date = cb.departure_date
+      """,
+    nativeQuery = true,
+  )
+  fun findClosestBookingBeforeDateForBedspaces(date: LocalDate, bedIds: List<UUID>): List<Cas3BookingEntity>
+
+  @Query(
+    """
+    SELECT
+        bk.id as bookingId,
+        bk.crn as crn,
+        bk.arrival_date as arrivalDate,
+        bk.departure_date as departureDate,
+        bk.premises_id as premisesId,
+        b.id as bedspaceId,
+        a.id as assessmentId, 
+        CASE 
+            WHEN ap.is_registered_sex_offender = TRUE 
+            OR ap.is_concerning_sexual_behaviour = TRUE
+            OR ap.is_history_of_sexual_offence = TRUE 
+         THEN TRUE 
+        ELSE FALSE 
+        END as sexualRisk
+    FROM bookings bk
+             INNER JOIN cas3_premises p ON bk.premises_id = p.id
+             INNER JOIN cas3_bedspaces b ON bk.bed_id = b.id
+             LEFT JOIN temporary_accommodation_applications ap ON bk.application_id = ap.id
+             LEFT JOIN assessments a ON ap.id = a.application_id
+             LEFT JOIN cancellations c ON bk.id = c.booking_id
+    WHERE bk.premises_id IN (:premisesIds) AND bk.arrival_date <= :endDate AND bk.departure_date >= :startDate AND c.id IS NULL
+    """,
+    nativeQuery = true,
+  )
+  fun findAllNotCancelledByPremisesIdsAndOverlappingDate(
+    premisesIds: List<UUID>,
+    startDate: LocalDate,
+    endDate: LocalDate,
+  ): List<Cas3v2OverlapBookingsSearchResult>
 }
 
 @Suppress("TooManyFunctions")
@@ -207,4 +268,15 @@ interface Cas3v2BookingSearchResult {
   fun getPremisesPostcode(): String
   fun getBedspaceId(): UUID
   fun getBedspaceReference(): String
+}
+
+interface Cas3v2OverlapBookingsSearchResult {
+  val bookingId: UUID
+  val crn: String
+  val arrivalDate: LocalDate
+  val departureDate: LocalDate
+  val premisesId: UUID
+  val bedspaceId: UUID
+  val assessmentId: UUID?
+  val sexualRisk: Boolean
 }

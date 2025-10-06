@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
@@ -18,6 +19,7 @@ import java.util.UUID
 class CharacteristicService(
   val characteristicRepository: CharacteristicRepository,
   val bedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository,
+  val premisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
 ) {
   fun getCharacteristic(characteristicId: UUID): CharacteristicEntity? = characteristicRepository.findByIdOrNull(characteristicId)
 
@@ -36,6 +38,10 @@ class CharacteristicService(
   }
 
   fun getCas3BedspaceCharacteristic(characteristicId: UUID): Cas3BedspaceCharacteristicEntity? = bedspaceCharacteristicRepository.findByIdOrNull(characteristicId)
+
+  fun getCas3BedspaceCharacteristics() = bedspaceCharacteristicRepository.findByActive(active = true)
+
+  fun getCas3PremisesCharacteristics() = premisesCharacteristicRepository.findByActive(active = true)
 
   fun getCas3Characteristics(): List<CharacteristicEntity> = characteristicRepository.findActiveByServiceScopeAndModelScope(
     ServiceName.temporaryAccommodation.value,

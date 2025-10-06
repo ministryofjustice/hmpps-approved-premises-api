@@ -5,9 +5,6 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -19,10 +16,10 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
   private var characteristics: Yielded<MutableList<Cas3BedspaceCharacteristicEntity>> = { mutableListOf() }
   private var reference: Yielded<String> = { randomStringUpperCase(6) }
   private var notes: Yielded<String?> = { null }
-  private var startDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(6) }
-  private var endDate: Yielded<LocalDate?> = { LocalDate.now().randomDateAfter(6) }
-  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
-  private var createdDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(6) }
+  private var startDate: Yielded<LocalDate> = { LocalDate.now().minusDays(90) }
+  private var endDate: Yielded<LocalDate?>? = null
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
+  private var createdDate: Yielded<LocalDate> = { LocalDate.now().minusDays(90) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -68,7 +65,7 @@ class Cas3BedspaceEntityFactory : Factory<Cas3BedspacesEntity> {
     reference = this.reference(),
     notes = this.notes(),
     startDate = this.startDate(),
-    endDate = this.endDate(),
+    endDate = this.endDate?.invoke(),
     createdAt = this.createdAt(),
     createdDate = this.createdDate(),
   )

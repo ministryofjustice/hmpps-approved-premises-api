@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withConflictMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withNotFoundMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -717,6 +718,7 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
     val bedspaces = cas3BedspaceEntityFactory.produceAndPersistMultiple(2) {
       withPremises(premises)
       withStartDate(LocalDate.now().minusDays(10))
+      withEndDate(LocalDate.now().randomDateAfter(6))
     }
 
     val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
