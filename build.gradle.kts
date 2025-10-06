@@ -1,7 +1,7 @@
 
 plugins {
   // this adds the appinsights agent (see AppInsightsConfigManager.kt)
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.7"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.1"
   kotlin("plugin.spring") version "2.1.21"
   kotlin("plugin.jpa") version "2.1.21"
   id("io.gitlab.arturbosch.detekt") version "1.23.8"
@@ -21,7 +21,7 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.11")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.7.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -38,7 +38,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.7")
   implementation("org.javers:javers-core:7.8.0")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
 
   implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
@@ -80,7 +80,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.11")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
 }
