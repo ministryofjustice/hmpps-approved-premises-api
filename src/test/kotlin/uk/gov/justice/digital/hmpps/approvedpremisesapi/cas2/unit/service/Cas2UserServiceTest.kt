@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -234,7 +235,7 @@ class Cas2UserServiceTest {
         every { mockPrincipal.token.tokenValue } returns "abc123"
         every { mockPrincipal.authenticationSource() } returns "nomis"
         every { mockPrincipal.name } returns username
-        every { mockCas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.NOMIS) } returns existingCas2User
+        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, existingCas2User.serviceOrigin) } returns existingCas2User
         every { mockCas2UserRepository.save(any()) } answers { it.invocation.args[0] as Cas2UserEntity }
 
         val existingNomisUser = NomisUserDetailFactory()
@@ -249,7 +250,7 @@ class Cas2UserServiceTest {
           existingNomisUser,
         )
 
-        assertThat(cas2UserService.getCas2UserForRequest()).matches {
+        assertThat(cas2UserService.getCas2UserForRequest(serviceOrigin = existingCas2User.serviceOrigin)).matches {
           it.id == existingCas2User.id &&
             it.name == "This Should Not Be Updated" &&
             it.email == "new.email@example.com" &&
@@ -266,6 +267,7 @@ class Cas2UserServiceTest {
           .withName("This Should Not Be Updated")
           .withEmail("same@example.com")
           .withActiveNomisCaseloadId("123")
+          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .withDeliusTeamCodes(
             listOf(
               StaffDetailFactory.team().code,
@@ -280,7 +282,7 @@ class Cas2UserServiceTest {
         every { mockPrincipal.token.tokenValue } returns "abc123"
         every { mockPrincipal.authenticationSource() } returns "delius"
         every { mockPrincipal.name } returns username
-        every { mockCas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.DELIUS) } returns existingCas2User
+        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.DELIUS, Cas2ServiceOrigin.BAIL) } returns existingCas2User
         every { mockCas2UserRepository.save(any()) } answers { it.invocation.args[0] as Cas2UserEntity }
 
         val existingDeliusUser = StaffDetailFactory.staffDetail(
@@ -292,7 +294,7 @@ class Cas2UserServiceTest {
           existingDeliusUser,
         )
 
-        val cas2user = cas2UserService.getCas2UserForRequest()
+        val cas2user = cas2UserService.getCas2UserForRequest(existingCas2User.serviceOrigin)
         assertThat(cas2user).isNotNull()
         assertThat(cas2user.id).isEqualTo(existingCas2User.id)
         assertThat(cas2user.name).isEqualTo("This Should Not Be Updated")
@@ -312,7 +314,7 @@ class Cas2UserServiceTest {
         every { mockPrincipal.token.tokenValue } returns "abc123"
         every { mockPrincipal.authenticationSource() } returns "nomis"
         every { mockPrincipal.name } returns username
-        every { mockCas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.NOMIS) } returns null
+        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC) } returns null
         every { mockCas2UserRepository.save(any()) } answers { it.invocation.args[0] as Cas2UserEntity }
 
         val existingNomisUser = NomisUserDetailFactory()
@@ -327,7 +329,7 @@ class Cas2UserServiceTest {
           existingNomisUser,
         )
 
-        assertThat(cas2UserService.getCas2UserForRequest()).matches {
+        assertThat(cas2UserService.getCas2UserForRequest(Cas2ServiceOrigin.HDC)).matches {
           it.name == "Bob Robson" &&
             it.email == "new.email@example.com" &&
             it.activeNomisCaseloadId == "456"
@@ -344,7 +346,7 @@ class Cas2UserServiceTest {
         every { mockPrincipal.token.tokenValue } returns "abc123"
         every { mockPrincipal.authenticationSource() } returns "delius"
         every { mockPrincipal.name } returns username
-        every { mockCas2UserRepository.findByUsernameAndUserType(username, Cas2UserType.DELIUS) } returns null
+        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.DELIUS, Cas2ServiceOrigin.BAIL) } returns null
         every { mockCas2UserRepository.save(any()) } answers { it.invocation.args[0] as Cas2UserEntity }
 
         val existingDeliusUser = StaffDetailFactory.staffDetail(
@@ -357,7 +359,7 @@ class Cas2UserServiceTest {
           existingDeliusUser,
         )
 
-        val cas2user = cas2UserService.getCas2UserForRequest()
+        val cas2user = cas2UserService.getCas2UserForRequest(Cas2ServiceOrigin.BAIL)
         assertThat(cas2user).isNotNull()
         assertThat(cas2user.name).isEqualTo("Bob Robson")
         assertThat(cas2user.email).isEqualTo("new.email@example.com")

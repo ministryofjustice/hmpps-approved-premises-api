@@ -23,6 +23,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -134,7 +135,10 @@ data class Cas2ApplicationEntity(
   var telephoneNumber: String? = null,
   var bailHearingDate: LocalDate? = null,
   @Enumerated(EnumType.STRING)
-  var applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
+  var applicationOrigin: ApplicationOrigin,
+
+  @Enumerated(EnumType.STRING)
+  var serviceOrigin: Cas2ServiceOrigin,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
 

@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -37,6 +38,7 @@ class Cas2AssessmentMigrationJob(
               id = UUID.randomUUID(),
               application = application,
               createdAt = OffsetDateTime.now(),
+              serviceOrigin = Cas2ServiceOrigin.HDC,
             ),
           )
         }

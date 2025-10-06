@@ -5,6 +5,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -23,6 +24,7 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
   private var isEnabled: Yielded<Boolean> = { true }
   private var isActive: Yielded<Boolean> = { true }
   private var applications: Yielded<MutableList<Cas2ApplicationEntity>> = { mutableListOf() }
+  private var serviceOrigin: Yielded<Cas2ServiceOrigin> = { Cas2ServiceOrigin.HDC }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -72,6 +74,10 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.deliusTeamCodes = { deliusTeamCodes }
   }
 
+  fun withServiceOrigin(serviceOrigin: Cas2ServiceOrigin) = apply {
+    this.serviceOrigin = { serviceOrigin }
+  }
+
   override fun produce(): Cas2UserEntity = Cas2UserEntity(
     id = this.id(),
     username = this.username(),
@@ -85,5 +91,6 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     isEnabled = this.isEnabled(),
     isActive = this.isActive(),
     applications = this.applications(),
+    serviceOrigin = this.serviceOrigin(),
   )
 }
