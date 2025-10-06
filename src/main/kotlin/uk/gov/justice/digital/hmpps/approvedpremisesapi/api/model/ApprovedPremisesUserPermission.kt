@@ -56,4 +56,5 @@ enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
   reportsViewWithPii("cas1_reports_view_with_pii"),
   premisesLocalRestrictionsManage("cas1_premises_local_restrictions_manage"),
   cas1TestExperimentalPermission("cas1_test_experimental_permission"),
+  cas1SpaceBookingCreateAdditional("cas1_space_booking_create_additional"),
 }
