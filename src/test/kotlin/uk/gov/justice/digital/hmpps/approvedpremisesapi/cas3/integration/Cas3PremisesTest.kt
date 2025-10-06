@@ -2288,6 +2288,43 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `Can archive premises returns 200 when void is cancelled`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremisesWithRoomsAndBeds(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, rooms, bedspaces ->
+          val bedspace = bedspaces.first()
+          val futureDepartureDate = LocalDate.now(clock).plusMonths(4)
+
+          val voidBedspace = cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBed(bedspace)
+            withPremises(premises)
+            withStartDate(LocalDate.now(clock).plusDays(1))
+            withEndDate(futureDepartureDate)
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+
+          cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
+            withVoidBedspace(voidBedspace)
+            withNotes(randomStringMultiCaseWithNumbers(50))
+            withCreatedAt(OffsetDateTime.now())
+          }
+
+          webTestClient.get()
+            .uri("/cas3/premises/${premises.id}/can-archive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.items").isArray
+            .jsonPath("$.items").isEmpty
+        }
+      }
+    }
+
+    @Test
     fun `Can archive premises returns 404 when premises does not exist`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         val nonExistentPremisesId = UUID.randomUUID()
@@ -2744,6 +2781,41 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           cancellationEntityFactory.produceAndPersist {
             withBooking(booking)
             withReason(cancellationReasonEntityFactory.produceAndPersist())
+          }
+
+          webTestClient.get()
+            .uri("/cas3/premises/${premises.id}/bedspaces/${bedspace.id}/can-archive")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .isEmpty()
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive bedspace returns 200 when void is cancelled`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenATemporaryAccommodationPremisesWithRoomsAndBeds(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, rooms, bedspaces ->
+          val bedspace = bedspaces.first()
+
+          val voidBedspace = cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBed(bedspace)
+            withPremises(premises)
+            withStartDate(LocalDate.now(clock).plusDays(1))
+            withEndDate(LocalDate.now(clock).plusMonths(4))
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+
+          cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
+            withVoidBedspace(voidBedspace)
+            withNotes(randomStringMultiCaseWithNumbers(50))
+            withCreatedAt(OffsetDateTime.now())
           }
 
           webTestClient.get()
