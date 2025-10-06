@@ -112,6 +112,7 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
   CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE(ApprovedPremisesUserPermission.premisesLocalRestrictionsManage),
 
   CAS1_TEST_EXPERIMENTAL_PERMISSION(ApprovedPremisesUserPermission.cas1TestExperimentalPermission, experimental = true),
+  CAS1_SPACE_BOOKING_CREATE_ADDITIONAL(ApprovedPremisesUserPermission.cas1SpaceBookingCreateAdditional, experimental = true),
   ;
 
   fun isAvailable(environmentService: EnvironmentService): Boolean = !experimental || environmentService.isNotProd()
