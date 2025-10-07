@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
@@ -385,25 +384,6 @@ interface PremisesApi {
     consumes = ["application/json"],
   )
   fun premisesPremisesIdPut(@Parameter(description = "ID of the premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "Information to update the premises with", required = true) @RequestBody body: UpdatePremises): ResponseEntity<Premises> = getDelegate().premisesPremisesIdPut(premisesId, body)
-
-  @Operation(
-    tags = ["Rooms"],
-    summary = "Adds a new room for an approved premises",
-    operationId = "premisesPremisesIdRoomsPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "201", description = "successful operation", content = [Content(schema = Schema(implementation = Room::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/rooms"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdRoomsPost(@Parameter(description = "ID of the premises the room is in", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "details of the new room", required = true) @RequestBody newRoom: NewRoom): ResponseEntity<Room> = getDelegate().premisesPremisesIdRoomsPost(premisesId, newRoom)
 
   @Operation(
     tags = ["default"],
