@@ -4,19 +4,16 @@ import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -28,67 +25,6 @@ class RoomService(
   private val characteristicService: CharacteristicService,
 ) {
   fun getRoom(roomId: UUID) = roomRepository.findByIdOrNull(roomId)
-
-  fun createRoom(
-    premises: PremisesEntity,
-    roomName: String,
-    notes: String?,
-    characteristicIds: List<UUID>,
-    bedEndDate: LocalDate?,
-  ): ValidatableActionResult<RoomEntity> = validated {
-    // RoomEntity needs to be created before the validation so that the CharacteristicService can match the
-    // model and service scopes against it.
-    var room = RoomEntity(
-      id = UUID.randomUUID(),
-      name = roomName,
-      code = null,
-      notes = notes,
-      premises = premises,
-      beds = mutableListOf(),
-      characteristics = mutableListOf(),
-    )
-
-    if (roomName.isEmpty()) {
-      "$.name" hasValidationError "empty"
-    }
-
-    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
-      val entity = characteristicService.getCharacteristic(uuid)
-
-      if (entity == null) {
-        "$.characteristics[$index]" hasValidationError "doesNotExist"
-      } else {
-        if (!characteristicService.modelScopeMatches(entity, room)) {
-          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicModelScope"
-        }
-        if (!characteristicService.serviceScopeMatches(entity, room)) {
-          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
-        }
-      }
-
-      entity
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
-
-    room.characteristics.addAll(characteristicEntities.map { it!! })
-
-    room = roomRepository.save(room)
-
-    val automaticallyCreateBed = when (premises) {
-      is TemporaryAccommodationPremisesEntity -> true
-      else -> false
-    }
-
-    if (automaticallyCreateBed) {
-      val bed = createBedInternal(room, "default-bed", bedEndDate)
-      room.beds.add(bed)
-    }
-
-    return success(room)
-  }
 
   fun updateRoom(
     premises: PremisesEntity,
@@ -177,23 +113,6 @@ class RoomService(
       },
     )
   }
-
-  private fun createBedInternal(
-    room: RoomEntity,
-    bedName: String,
-    bedEndDate: LocalDate?,
-  ): BedEntity = bedRepository.save(
-    BedEntity(
-      id = UUID.randomUUID(),
-      name = bedName,
-      code = null,
-      room = room,
-      createdDate = null,
-      startDate = LocalDate.now(),
-      endDate = bedEndDate,
-      createdAt = OffsetDateTime.now(),
-    ),
-  )
 
   @Transactional
   fun deleteRoom(room: RoomEntity): ValidatableActionResult<Unit> = validated {

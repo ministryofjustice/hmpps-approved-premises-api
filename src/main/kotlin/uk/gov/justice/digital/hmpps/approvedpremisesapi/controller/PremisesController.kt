@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
@@ -658,20 +657,6 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(cas3VoidBedspaceCancellationTransformer.transformJpaToApi(cancellation))
-  }
-
-  override fun premisesPremisesIdRoomsPost(premisesId: UUID, newRoom: NewRoom): ResponseEntity<Room> {
-    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val room = extractResultEntityOrThrow(
-      roomService.createRoom(premises, newRoom.name, newRoom.notes, newRoom.characteristicIds, newRoom.bedEndDate),
-    )
-
-    return ResponseEntity(roomTransformer.transformJpaToApi(room), HttpStatus.CREATED)
   }
 
   @Transactional

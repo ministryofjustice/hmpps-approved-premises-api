@@ -22,22 +22,6 @@ class SeedTemporaryAccommodationSmokeTest : SeedTestBase() {
       """.trimIndent(),
     )
 
-    seed(
-      SeedFileType.temporaryAccommodationBedspace,
-      """
-        Property reference,Bedspace reference,Single bed?,Double bed?,Shared kitchen?,Floor level access?,Lift access?,Wheelchair accessible?,Not suitable for RSO?,Not suitable for arson offenders?,Optional notes about the bedspace,Email address,Start Date,End Date
-        WED,WED-1,TRUE,FALSE,FALSE,TRUE,TRUE,TRUE,FALSE,FALSE,"Bedspace is accessible for wheelchair users, as has ground floor access and a lift up to the property.",wed@email.com,"2025-01-01","2025-01-02"
-        WED,WED-2,TRUE,FALSE,FALSE,TRUE,TRUE,TRUE,FALSE,FALSE,"Bedspace is accessible for wheelchair users, as has ground floor access and a lift up to the property.",wed@email.com,"2025-01-01",
-        CHE,CHE-1,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,"Property is located on the same road as a primary school and a park.",che@emailaddress.com,"2025-01-01",
-        SIL,SIL-1,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,"Bedspace is 1 of 3 in the property, with access to a shared kitchen.",sil@email.com,"2025-01-01",
-        SIL,SIL-2,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,"Bedspace is 2 of 3 in the property, with access to a shared kitchen.",sil@email.com,"2025-01-01",
-        SIL,SIL-3,TRUE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,"Bedspace is 3 of 3 in the property, with access to a shared kitchen.",sil@email.com,"2025-01-01",
-        STR,STR-1,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,str@email.com,"2025-01-01",
-        APP,APP-1,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,app@email.com,"2025-01-01",
-        APP,APP-2,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,app@email.com,"2025-01-01",
-      """.trimIndent(),
-    )
-
     assertThat(logEntries).noneMatch {
       it.level == "error"
     }
