@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAcc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.validatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -35,6 +36,11 @@ class Cas3v2PremisesService(
     return CasResult.Success(premises)
   }
   fun getPremises(premisesId: UUID): Cas3PremisesEntity? = cas3PremisesRepository.findByIdOrNull(premisesId)
+
+  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?, premisesStatus: Cas3PremisesStatus?): List<TemporaryAccommodationPremisesSummary> {
+    val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
+    return cas3PremisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace, premisesStatus)
+  }
 
   fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate, transactionId: UUID) {
     val currentStartDate = premises.startDate

@@ -401,7 +401,7 @@ interface TemporaryAccommodationPremisesSummary {
   val postcode: String
   val town: String?
   val pdu: String
-  val status: PropertyStatus
+  val status: PropertyStatus?
   val localAuthorityAreaName: String?
   val bedspaceId: UUID?
   val bedspaceReference: String?

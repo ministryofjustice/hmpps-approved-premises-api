@@ -149,8 +149,9 @@ data class Cas3PremisesSummary(
   override val postcode: String,
   override val town: String?,
   override val pdu: String,
+  @Deprecated("This field is not used and will be removed in /v2/")
   @JsonIgnore
-  override val status: PropertyStatus,
+  override val status: PropertyStatus? = null,
   val premisesStatus: Cas3PremisesStatus,
   override val localAuthorityAreaName: String?,
   override val bedspaceId: UUID?,
