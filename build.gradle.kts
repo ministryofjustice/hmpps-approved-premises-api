@@ -219,7 +219,6 @@ detekt {
 
 dependencyCheck {
   suppressionFile = ".dependencycheckignore.xml"
-  analyzers.ossIndex.enabled = false
 }
 
 tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
