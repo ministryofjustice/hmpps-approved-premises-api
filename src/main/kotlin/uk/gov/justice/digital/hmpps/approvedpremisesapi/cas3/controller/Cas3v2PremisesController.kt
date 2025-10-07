@@ -31,7 +31,7 @@ class Cas3v2PremisesController(
       throw ForbiddenProblem()
     }
 
-    val (premises, bedspaceTotals) = extractEntityFromCasResult(
+    val premises = extractEntityFromCasResult(
       cas3v2PremisesService.createNewPremises(
         reference = body.reference,
         addressLine1 = body.addressLine1,
@@ -48,7 +48,7 @@ class Cas3v2PremisesController(
     )
 
     return ResponseEntity(
-      cas3PremisesTransformer.toCas3Premises(premises, bedspaceTotals),
+      cas3PremisesTransformer.toCas3Premises(premises),
       HttpStatus.CREATED,
     )
   }
@@ -62,7 +62,7 @@ class Cas3v2PremisesController(
       throw ForbiddenProblem()
     }
 
-    val result = cas3v2PremisesService.updatePremises(
+    val premises = cas3v2PremisesService.updatePremises(
       premisesId = premisesId,
       addressLine1 = body.addressLine1,
       addressLine2 = body.addressLine2,
@@ -77,8 +77,6 @@ class Cas3v2PremisesController(
       reference = body.reference,
     )
 
-    val (premises, bedspaceTotals) = extractEntityFromCasResult(result)
-
-    return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(premises, bedspaceTotals))
+    return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(extractEntityFromCasResult(premises)))
   }
 }

@@ -5,8 +5,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.countArchivedBedspaces
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.countOnlineBedspaces
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.countUpcomingBedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
@@ -23,7 +25,6 @@ class Cas3PremisesTransformer(
 
   fun toCas3Premises(
     premises: Cas3PremisesEntity,
-    bedspaceTotals: TemporaryAccommodationPremisesTotalBedspacesByStatus,
     archiveHistory: List<Cas3PremisesArchiveAction>? = emptyList(),
   ) = Cas3Premises(
     id = premises.id,
@@ -43,38 +44,46 @@ class Cas3PremisesTransformer(
     status = premises.status,
     notes = premises.notes,
     turnaroundWorkingDays = premises.turnaroundWorkingDays,
-    totalOnlineBedspaces = bedspaceTotals.onlineBedspaces,
-    totalUpcomingBedspaces = bedspaceTotals.upcomingBedspaces,
-    totalArchivedBedspaces = bedspaceTotals.archivedBedspaces,
+    totalOnlineBedspaces = premises.countOnlineBedspaces(),
+    totalUpcomingBedspaces = premises.countUpcomingBedspaces(),
+    totalArchivedBedspaces = premises.countArchivedBedspaces(),
     archiveHistory = archiveHistory,
   )
 
   fun transformDomainToApi(
     premisesEntity: TemporaryAccommodationPremisesEntity,
-    totalBedspacesByStatus: TemporaryAccommodationPremisesTotalBedspacesByStatus,
     archiveHistory: List<Cas3PremisesArchiveAction> = emptyList(),
-  ) = Cas3Premises(
-    id = premisesEntity.id,
-    reference = premisesEntity.name,
-    addressLine1 = premisesEntity.addressLine1,
-    addressLine2 = premisesEntity.addressLine2,
-    town = premisesEntity.town,
-    postcode = premisesEntity.postcode,
-    localAuthorityArea = premisesEntity.localAuthorityArea?.let { localAuthorityAreaTransformer.transformJpaToApi(it) },
-    probationRegion = probationRegionTransformer.transformJpaToApi(premisesEntity.probationRegion),
-    probationDeliveryUnit = premisesEntity.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) }!!,
-    characteristics = premisesEntity.characteristics.map(characteristicTransformer::transformJpaToApi).sortedBy { it.id },
-    startDate = premisesEntity.createdAt.toLocalDate(),
-    endDate = premisesEntity.endDate,
-    scheduleUnarchiveDate = isPremisesScheduleToUnarchive(premisesEntity.startDate),
-    status = getPremisesStatus(premisesEntity),
-    notes = premisesEntity.notes,
-    turnaroundWorkingDays = premisesEntity.turnaroundWorkingDays,
-    totalOnlineBedspaces = totalBedspacesByStatus.onlineBedspaces,
-    totalUpcomingBedspaces = totalBedspacesByStatus.upcomingBedspaces,
-    totalArchivedBedspaces = totalBedspacesByStatus.archivedBedspaces,
-    archiveHistory = archiveHistory,
-  )
+  ): Cas3Premises {
+    val bedspaces = premisesEntity.rooms.map { it.beds }.flatten()
+
+    return Cas3Premises(
+      id = premisesEntity.id,
+      reference = premisesEntity.name,
+      addressLine1 = premisesEntity.addressLine1,
+      addressLine2 = premisesEntity.addressLine2,
+      town = premisesEntity.town,
+      postcode = premisesEntity.postcode,
+      localAuthorityArea = premisesEntity.localAuthorityArea?.let { localAuthorityAreaTransformer.transformJpaToApi(it) },
+      probationRegion = probationRegionTransformer.transformJpaToApi(premisesEntity.probationRegion),
+      probationDeliveryUnit = premisesEntity.probationDeliveryUnit?.let {
+        probationDeliveryUnitTransformer.transformJpaToApi(
+          it,
+        )
+      }!!,
+      characteristics = premisesEntity.characteristics.map(characteristicTransformer::transformJpaToApi)
+        .sortedBy { it.id },
+      startDate = premisesEntity.createdAt.toLocalDate(),
+      endDate = premisesEntity.endDate,
+      scheduleUnarchiveDate = isPremisesScheduleToUnarchive(premisesEntity.startDate),
+      status = getPremisesStatus(premisesEntity),
+      notes = premisesEntity.notes,
+      turnaroundWorkingDays = premisesEntity.turnaroundWorkingDays,
+      totalOnlineBedspaces = bedspaces.countOnlineBedspaces(),
+      totalUpcomingBedspaces = bedspaces.countUpcomingBedspaces(),
+      totalArchivedBedspaces = bedspaces.countArchivedBedspaces(),
+      archiveHistory = archiveHistory,
+    )
+  }
 
   private fun getPremisesStatus(premises: TemporaryAccommodationPremisesEntity) = if (premises.isPremisesArchived()) Cas3PremisesStatus.archived else Cas3PremisesStatus.online
 

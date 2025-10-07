@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthority
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
@@ -27,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesTotalBedspacesByStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
@@ -75,13 +75,6 @@ class Cas3PremisesTransformerTest {
       .withLastUpdatedAt(lastUpdatedAt)
       .produce()
 
-    private val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-      premisesId = premises.id,
-      onlineBedspaces = 3,
-      upcomingBedspaces = 2,
-      archivedBedspaces = 1,
-    )
-
     private val archiveHistory = listOf(
       Cas3PremisesArchiveAction(
         status = Cas3PremisesStatus.online,
@@ -106,9 +99,17 @@ class Cas3PremisesTransformerTest {
 
     @Test
     fun `toCas3Premises transforms Cas3PremisesEntity to Cas3Premises correctly`() {
+      premises.bedspaces = mutableListOf(
+        Cas3BedspaceEntityFactory().archivedBedspace(premises),
+        Cas3BedspaceEntityFactory().onlineBedspace(premises),
+        Cas3BedspaceEntityFactory().onlineBedspace(premises),
+        Cas3BedspaceEntityFactory().onlineBedspace(premises),
+        Cas3BedspaceEntityFactory().upcomingBedspace(premises),
+        Cas3BedspaceEntityFactory().upcomingBedspace(premises),
+      )
+
       val result = cas3PremisesTransformer.toCas3Premises(
         premises = premises,
-        bedspaceTotals = totalBedspacesByStatus,
         archiveHistory = archiveHistory,
       )
 
@@ -143,7 +144,6 @@ class Cas3PremisesTransformerTest {
       val startDate = LocalDate.now().plusDays(1)
       val result = cas3PremisesTransformer.toCas3Premises(
         premises = premises.copy(startDate = startDate, status = Cas3PremisesStatus.archived),
-        bedspaceTotals = totalBedspacesByStatus,
         archiveHistory = archiveHistory,
       )
 
@@ -162,7 +162,6 @@ class Cas3PremisesTransformerTest {
           endDate = null,
 
         ),
-        bedspaceTotals = totalBedspacesByStatus,
         archiveHistory = archiveHistory,
       )
 
@@ -236,14 +235,7 @@ class Cas3PremisesTransformerTest {
         ),
       )
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 2,
-        upcomingBedspaces = 2,
-        archivedBedspaces = 1,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, archiveHistory)
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
       assertThat(result).isEqualTo(
         Cas3Premises(
@@ -311,14 +303,7 @@ class Cas3PremisesTransformerTest {
         ),
       )
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 2,
-        upcomingBedspaces = 1,
-        archivedBedspaces = 0,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, archiveHistory)
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
       assertThat(result).isEqualTo(
         Cas3Premises(
@@ -380,14 +365,7 @@ class Cas3PremisesTransformerTest {
         ),
       )
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 1,
-        upcomingBedspaces = 0,
-        archivedBedspaces = 1,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, archiveHistory)
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
       assertThat(result.archiveHistory).isEqualTo(
         listOf(
@@ -439,14 +417,7 @@ class Cas3PremisesTransformerTest {
         ),
       )
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 1,
-        upcomingBedspaces = 0,
-        archivedBedspaces = 1,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, archiveHistory)
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory)
 
       assertThat(result.archiveHistory).isEqualTo(
         listOf(
@@ -487,14 +458,7 @@ class Cas3PremisesTransformerTest {
       val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
       every { probationDeliveryUnitTransformer.transformJpaToApi(probationDeliveryUnitEntity) } returns probationDeliveryUnit
 
-      val totalBedspacesByStatus = TemporaryAccommodationPremisesTotalBedspacesByStatus(
-        premisesId = premises.id,
-        onlineBedspaces = 1,
-        upcomingBedspaces = 0,
-        archivedBedspaces = 1,
-      )
-
-      val result = cas3PremisesTransformer.transformDomainToApi(premises, totalBedspacesByStatus, emptyList())
+      val result = cas3PremisesTransformer.transformDomainToApi(premises, emptyList())
 
       assertThat(result.status).isEqualTo(Cas3PremisesStatus.online)
       assertThat(result.scheduleUnarchiveDate).isNull()

@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
@@ -120,7 +119,7 @@ class Cas3v2PremisesServiceTest {
         assertThat(capturedPremises.lastUpdatedAt).isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.SECONDS))
 
         assertThatCasResult(result).isSuccess().with {
-          assertThat(it.first).isEqualTo(capturedPremises)
+          assertThat(it).isEqualTo(capturedPremises)
         }
       })
 
@@ -382,7 +381,7 @@ class Cas3v2PremisesServiceTest {
         assertThat(capturedPremises.lastUpdatedAt).isNull()
 
         assertThatCasResult(result).isSuccess().with {
-          assertThat(it.first).isEqualTo(capturedPremises)
+          assertThat(it).isEqualTo(capturedPremises)
         }
       })
 
@@ -432,85 +431,10 @@ class Cas3v2PremisesServiceTest {
       assertAll({
         val capturedPremises = premisesSlot.captured
         assertThat(capturedPremises.turnaroundWorkingDays).isEqualTo(2)
-        assertThatCasResult(result).isSuccess().with { (createdPremises, _) ->
-          assertThat(createdPremises.turnaroundWorkingDays).isEqualTo(2)
+        assertThatCasResult(result).isSuccess().with {
+          assertThat(it.turnaroundWorkingDays).isEqualTo(2)
         }
       })
-    }
-  }
-
-  @Nested
-  inner class BedspaceTotals {
-
-    val premises = Cas3PremisesEntityFactory().withDefaults().produce()
-
-    val onlineBedspace =
-      Cas3BedspaceEntityFactory()
-        .withStartDate(LocalDate.now().minusDays(10))
-        .withEndDate(LocalDate.now().plusDays(10))
-        .withPremises(premises)
-        .produce()
-
-    val archivedBedspace =
-      Cas3BedspaceEntityFactory()
-        .withStartDate(LocalDate.now().minusDays(10))
-        .withEndDate(LocalDate.now().minusDays(5))
-        .withPremises(premises)
-        .produce()
-
-    val upcomingBedspace =
-      Cas3BedspaceEntityFactory()
-        .withStartDate(LocalDate.now().plusDays(10))
-        .withEndDate(LocalDate.now().plusDays(100))
-        .withPremises(premises)
-        .produce()
-
-    val onlineBedspace2 =
-      Cas3BedspaceEntityFactory()
-        .withStartDate(LocalDate.now().minusDays(10))
-        .withEndDate(LocalDate.now().plusDays(10))
-        .withPremises(premises)
-        .produce()
-
-    val archivedBedspace2 =
-      Cas3BedspaceEntityFactory()
-        .withStartDate(LocalDate.now().minusDays(10))
-        .withEndDate(LocalDate.now().minusDays(5))
-        .withPremises(premises)
-        .produce()
-
-    val upcomingBedspace2 =
-      Cas3BedspaceEntityFactory()
-        .withStartDate(LocalDate.now().plusDays(10))
-        .withEndDate(LocalDate.now().plusDays(100))
-        .withPremises(premises)
-        .produce()
-
-    @Test
-    fun `returns correct totals when premises has mixed bedspaces`() {
-      premises.bedspaces = mutableListOf(onlineBedspace, onlineBedspace2, archivedBedspace, archivedBedspace2, upcomingBedspace, upcomingBedspace2)
-      every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
-
-      val result = cas3v2PremisesService.getBedspaceTotals(premises.id)
-
-      assertThatCasResult(result).isSuccess().with {
-        assertThat(it.onlineBedspaces).isEqualTo(2)
-        assertThat(it.upcomingBedspaces).isEqualTo(2)
-        assertThat(it.archivedBedspaces).isEqualTo(2)
-      }
-    }
-
-    @Test
-    fun `returns all zeros when premises has no bedspaces`() {
-      premises.bedspaces = mutableListOf()
-      every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
-      val result = cas3v2PremisesService.getBedspaceTotals(premises.id)
-
-      assertThatCasResult(result).isSuccess().with {
-        assertThat(it.onlineBedspaces).isEqualTo(0)
-        assertThat(it.upcomingBedspaces).isEqualTo(0)
-        assertThat(it.archivedBedspaces).isEqualTo(0)
-      }
     }
   }
 
