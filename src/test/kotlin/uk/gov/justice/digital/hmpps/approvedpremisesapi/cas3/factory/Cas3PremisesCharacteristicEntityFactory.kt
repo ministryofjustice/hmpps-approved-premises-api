@@ -32,6 +32,6 @@ class Cas3PremisesCharacteristicEntityFactory : Factory<Cas3PremisesCharacterist
     id = this.id,
     name = this.name,
     description = this.description,
-    isActive = this.isActive,
+    active = this.isActive,
   )
 }

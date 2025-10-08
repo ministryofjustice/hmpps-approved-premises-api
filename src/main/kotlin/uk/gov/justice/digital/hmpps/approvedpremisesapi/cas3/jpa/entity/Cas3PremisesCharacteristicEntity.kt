@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
@@ -13,8 +14,22 @@ import java.util.UUID
 
 @Repository
 interface Cas3PremisesCharacteristicRepository : JpaRepository<Cas3PremisesCharacteristicEntity, UUID> {
-  @Query("select c from Cas3PremisesCharacteristicEntity c where c.id in (:ids) and c.isActive = true")
+
+  companion object Constants {
+    const val CAS3_PROPERTY_NAME_SINGLE_OCCUPANCY = "isSingleOccupancy"
+    const val CAS3_PROPERTY_NAME_SHARED_PROPERTY = "isSharedProperty"
+    const val CAS3_PROPERTY_NAME_WHEELCHAIR_ACCESSIBLE = "isWheelchairAccessible"
+    const val CAS3_PROPERTY_NAME_MEN_ONLY = "isMenOnly"
+    const val CAS3_PROPERTY_NAME_WOMEN_ONLY = "isWomenOnly"
+    const val CAS3_PROPERTY_NAME_PUB_NEAR_BY = "isPubNearBy"
+  }
+
+  fun findByActive(active: Boolean): List<Cas3PremisesCharacteristicEntity>
+
+  @Query("select c from Cas3PremisesCharacteristicEntity c where c.id in (:ids) and c.active = true")
   fun findActiveCharacteristicsByIdIn(ids: List<UUID>): List<Cas3PremisesCharacteristicEntity>
+
+  fun findByName(name: String): Cas3PremisesCharacteristicEntity?
 }
 
 @Entity
@@ -22,10 +37,11 @@ interface Cas3PremisesCharacteristicRepository : JpaRepository<Cas3PremisesChara
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 data class Cas3PremisesCharacteristicEntity(
   @Id
-  var id: UUID,
-  var name: String,
-  var description: String,
-  var isActive: Boolean,
+  val id: UUID,
+  val name: String,
+  val description: String,
+  @Column(name = "is_active")
+  val active: Boolean,
 ) {
   fun toCas3PremisesCharacteristic() = Cas3PremisesCharacteristic(
     id = this.id,

@@ -127,7 +127,7 @@ class Cas3MigrateNewBedspaceModelDataJob(
       id = it.id,
       name = it.propertyName,
       description = it.name,
-      isActive = it.isActive,
+      active = it.isActive,
     )
   }
 
@@ -139,7 +139,7 @@ class Cas3MigrateNewBedspaceModelDataJob(
       id = it.id,
       name = it.propertyName!!,
       description = it.name,
-      isActive = it.isActive,
+      active = it.isActive,
     )
   }
 

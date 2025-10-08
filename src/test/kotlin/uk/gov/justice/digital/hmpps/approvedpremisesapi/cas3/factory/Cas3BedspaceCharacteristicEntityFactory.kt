@@ -33,6 +33,6 @@ class Cas3BedspaceCharacteristicEntityFactory : Factory<Cas3BedspaceCharacterist
     id = this.id(),
     description = this.description(),
     name = this.name(),
-    isActive = this.isActive(),
+    active = this.isActive(),
   )
 }

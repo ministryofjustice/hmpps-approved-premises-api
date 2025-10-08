@@ -305,7 +305,7 @@ import java.util.UUID
 @Tag("integration")
 abstract class IntegrationTestBase {
   @Autowired
-  private lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
+  lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
 
   @Autowired
   private lateinit var cas3PemisesCharacteristicRepository: Cas3PremisesCharacteristicRepository
@@ -501,6 +501,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var characteristicRepository: CharacteristicRepository
+
+  @Autowired
+  lateinit var cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository
 
   @Autowired
   lateinit var roomRepository: RoomRepository
