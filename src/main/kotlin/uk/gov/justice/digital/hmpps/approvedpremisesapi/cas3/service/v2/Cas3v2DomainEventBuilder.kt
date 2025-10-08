@@ -3,10 +3,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledEvent
@@ -35,6 +40,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
 
+@Suppress("TooManyFunctions")
 @Component
 class Cas3v2DomainEventBuilder(
   @Value("\${url-templates.api.cas3.application}") private val applicationUrlTemplate: String,
@@ -391,6 +397,84 @@ class Cas3v2DomainEventBuilder(
     expectedDepartureOn = arrival.expectedDepartureDate,
     notes = arrival.notes ?: "",
     recordedBy = user?.let { populateStaffMember(it) },
+  )
+
+  fun getBedspaceArchiveEvent(
+    bedspace: Cas3BedspacesEntity,
+    premisesId: UUID,
+    currentEndDate: LocalDate?,
+    user: UserEntity,
+    transactionId: UUID,
+  ): DomainEvent<CAS3BedspaceArchiveEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    check(bedspace.endDate != null) { "Bedspace end date is null for bedspace id: ${bedspace.id}" }
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = CAS3BedspaceArchiveEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.bedspaceArchived,
+        eventDetails = buildCAS3BedspaceArchiveEventDetails(bedspace, premisesId, currentEndDate, user, transactionId),
+      ),
+    )
+  }
+
+  private fun buildCAS3BedspaceArchiveEventDetails(
+    bedspace: Cas3BedspacesEntity,
+    premisesId: UUID,
+    currentEndDate: LocalDate?,
+    user: UserEntity,
+    transactionId: UUID,
+  ) = CAS3BedspaceArchiveEventDetails(
+    bedspaceId = bedspace.id,
+    premisesId = premisesId,
+    currentEndDate = currentEndDate,
+    endDate = bedspace.endDate!!,
+    userId = user.id,
+    transactionId = transactionId,
+  )
+
+  fun getPremisesArchiveEvent(
+    premises: Cas3PremisesEntity,
+    endDate: LocalDate,
+    user: UserEntity,
+    transactionId: UUID,
+  ): DomainEvent<CAS3PremisesArchiveEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = CAS3PremisesArchiveEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.premisesArchived,
+        eventDetails = buildCAS3PremisesArchiveEventDetails(premises.id, endDate, user, transactionId),
+      ),
+    )
+  }
+
+  private fun buildCAS3PremisesArchiveEventDetails(
+    premisesId: UUID,
+    endDate: LocalDate,
+    user: UserEntity,
+    transactionId: UUID,
+  ) = CAS3PremisesArchiveEventDetails(
+    premisesId = premisesId,
+    endDate = endDate,
+    userId = user.id,
+    transactionId = transactionId,
   )
 
   private fun Cas3BookingEntity.toUrl(): URI = URI(bookingUrlTemplate.replace("#premisesId", this.premises.id.toString()).replace("#bookingId", this.id.toString()))

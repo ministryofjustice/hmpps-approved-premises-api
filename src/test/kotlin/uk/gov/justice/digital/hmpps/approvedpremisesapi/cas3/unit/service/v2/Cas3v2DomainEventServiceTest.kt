@@ -28,6 +28,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.CAS3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3BookingCancelledEvent
@@ -1612,6 +1616,160 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.cas3PremisesId).isEqualTo(premises.id) },
       { assertThat(savedEvent.cas3BedspaceId).isNull() },
       { assertThat(savedEvent.cas3TransactionId).isEqualTo(domainEventTransactionId) },
+      { assertThat(savedEvent.applicationId).isNull() },
+      { assertThat(savedEvent.cas1SpaceBookingId).isNull() },
+      { assertThat(savedEvent.assessmentId).isNull() },
+      { assertThat(savedEvent.service).isEqualTo("CAS3") },
+      { assertThat(savedEvent.bookingId).isNull() },
+      { assertThat(savedEvent.nomsNumber).isNull() },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEvent.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEvent.data)) },
+      { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
+      { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
+    )
+  }
+
+  @Test
+  fun `saveBedspaceArchiveEvent saves event but does not emit it`() {
+    val occuredAt = Instant.now()
+    val endDate = LocalDate.parse("2021-01-01")
+    val probationRegion = ProbationRegionEntityFactory().produce()
+    val premises = Cas3PremisesEntityFactory()
+      .withProbationDeliveryUnit(
+        ProbationDeliveryUnitEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(premises)
+      .withEndDate(null)
+      .produce()
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+    val domainEventTransactionId = UUID.randomUUID()
+
+    val eventDetails = CAS3BedspaceArchiveEventDetails(
+      bedspaceId = bedspace.id,
+      premisesId = premises.id,
+      currentEndDate = bedspace.endDate,
+      endDate = endDate,
+      userId = user.id,
+      transactionId = domainEventTransactionId,
+    )
+    val data = CAS3BedspaceArchiveEvent(
+      eventDetails = eventDetails,
+      id = UUID.randomUUID(),
+      timestamp = occuredAt,
+      eventType = EventType.bedspaceArchived,
+    )
+    val domainEventId = UUID.randomUUID()
+
+    val domainEvent = DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = data,
+    )
+
+    every { cas3DomainEventBuilderMock.getBedspaceArchiveEvent(eq(bedspace), eq(premises.id), null, eq(user), eq(domainEventTransactionId)) } returns domainEvent
+    every { domainEventRepositoryMock.save(any()) } returns null
+    every { userService.getUserForRequest() } returns user
+    every { userService.getUserForRequestOrNull() } returns user
+
+    cas3DomainEventService.saveBedspaceArchiveEvent(bedspace, premises.id, bedspace.endDate, domainEventTransactionId)
+
+    val slot = slot<DomainEventEntity>()
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEvent.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BEDSPACE_ARCHIVED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEvent.crn) },
+      { assertThat(savedEvent.cas3PremisesId).isEqualTo(premises.id) },
+      { assertThat(savedEvent.cas3BedspaceId).isEqualTo(bedspace.id) },
+      { assertThat(savedEvent.applicationId).isNull() },
+      { assertThat(savedEvent.cas1SpaceBookingId).isNull() },
+      { assertThat(savedEvent.assessmentId).isNull() },
+      { assertThat(savedEvent.service).isEqualTo("CAS3") },
+      { assertThat(savedEvent.bookingId).isNull() },
+      { assertThat(savedEvent.nomsNumber).isNull() },
+      { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEvent.occurredAt) },
+      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEvent.data)) },
+      { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
+      { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
+      { assertThat(savedEvent.cas3TransactionId).isEqualTo(domainEventTransactionId) },
+    )
+  }
+
+  @Test
+  fun `savePremisesArchiveEvent saves event but does not emit it`() {
+    val occurredAt = Instant.now()
+    val premisesEndDate = LocalDate.now().plusDays(3)
+    val probationRegion = ProbationRegionEntityFactory().produce()
+    val premises = Cas3PremisesEntityFactory()
+      .withProbationDeliveryUnit(
+        ProbationDeliveryUnitEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      )
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+    val domainEventTransactionId = UUID.randomUUID()
+
+    val eventDetails = CAS3PremisesArchiveEventDetails(
+      premisesId = premises.id,
+      endDate = premisesEndDate,
+      userId = user.id,
+      transactionId = domainEventTransactionId,
+    )
+
+    val data = CAS3PremisesArchiveEvent(
+      eventDetails = eventDetails,
+      id = UUID.randomUUID(),
+      timestamp = occurredAt,
+      eventType = EventType.premisesArchived,
+    )
+    val domainEventId = UUID.randomUUID()
+
+    val domainEvent = DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = data,
+    )
+
+    every { cas3DomainEventBuilderMock.getPremisesArchiveEvent(eq(premises), eq(premisesEndDate), eq(user), eq(domainEventTransactionId)) } returns domainEvent
+    every { domainEventRepositoryMock.save(any()) } returns null
+    every { userService.getUserForRequest() } returns user
+    every { userService.getUserForRequestOrNull() } returns user
+
+    cas3DomainEventService.savePremisesArchiveEvent(premises, premisesEndDate, domainEventTransactionId)
+
+    val slot = slot<DomainEventEntity>()
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(capture(slot))
+    }
+    val savedEvent = slot.captured
+    assertAll(
+      { assertThat(savedEvent.id).isEqualTo(domainEvent.id) },
+      { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_PREMISES_ARCHIVED) },
+      { assertThat(savedEvent.crn).isEqualTo(domainEvent.crn) },
+      { assertThat(savedEvent.cas3PremisesId).isEqualTo(premises.id) },
+      { assertThat(savedEvent.cas3BedspaceId).isNull() },
       { assertThat(savedEvent.applicationId).isNull() },
       { assertThat(savedEvent.cas1SpaceBookingId).isNull() },
       { assertThat(savedEvent.assessmentId).isNull() },

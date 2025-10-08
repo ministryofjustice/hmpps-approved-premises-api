@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
+import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
@@ -373,6 +374,82 @@ class Cas3v2DomainEventBuilderTest {
       assertThat(data.applicationUrl.toString()).isEqualTo("http://api/applications/${application.id}")
       assertThat(data.cancelledAt).isEqualTo(booking.cancellation?.date)
       assertThat(event.data.eventType).isEqualTo(EventType.bookingCancelledUpdated)
+    })
+  }
+
+  @Test
+  fun `getBedspaceArchiveEvent transforms the bedspace information correctly to a domain event`() {
+    val endDate = LocalDate.parse("2023-07-15")
+    val probationRegion = probationRegionEntity()
+    val user = userEntity(probationRegion)
+    val premises = cas3PremisesEntity(probationRegion)
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(premises)
+      .withEndDate(endDate)
+      .produce()
+    val transactionId = UUID.randomUUID()
+
+    val event = cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premises.id, null, user, transactionId)
+
+    assertAll(
+      {
+        assertThat(event.applicationId).isNull()
+        assertThat(event.bookingId).isNull()
+        assertThat(event.crn).isNull()
+        assertThat(event.nomsNumber).isNull()
+        assertThat(event.data.eventType).isEqualTo(EventType.bedspaceArchived)
+        assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspace.id)
+        assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+        assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+        assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
+        assertThat(event.data.eventDetails.transactionId).isEqualTo(transactionId)
+      },
+    )
+  }
+
+  @Test
+  fun `getBedspaceArchiveEvent errors when endDate is null`() {
+    val bedspaceId = UUID.randomUUID()
+    val probationRegion = probationRegionEntity()
+    val user = userEntity(probationRegion)
+    val premises = cas3PremisesEntity(probationRegion)
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(premises)
+      .withId(bedspaceId)
+      .withEndDate(null)
+      .produce()
+    val transactionId = UUID.randomUUID()
+
+    val error = assertThrows<IllegalStateException> {
+      cas3DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premises.id, null, user, transactionId)
+    }
+
+    assertThat(error.message).isEqualTo("Bedspace end date is null for bedspace id: ${bedspace.id}")
+  }
+
+  @Test
+  fun `getPremisesArchiveEvent transforms the premises information correctly to a domain event`() {
+    val endDate = LocalDate.now()
+    val probationRegion = probationRegionEntity()
+    val premises = cas3PremisesEntity(probationRegion)
+    val user = userEntity(probationRegion)
+    val transactionId = UUID.randomUUID()
+
+    val event = cas3DomainEventBuilder.getPremisesArchiveEvent(premises, endDate, user, transactionId)
+
+    assertAll({
+      assertThat(event.applicationId).isNull()
+      assertThat(event.bookingId).isNull()
+      assertThat(event.crn).isNull()
+      assertThat(event.nomsNumber).isNull()
+      assertThat(event.data.eventType).isEqualTo(EventType.premisesArchived)
+      assertThat(event.data.eventDetails.premisesId).isEqualTo(premises.id)
+      assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+      assertThat(event.data.eventDetails.endDate).isEqualTo(endDate)
+      assertThat(event.occurredAt).isWithinTheLastMinute()
+      assertThat(event.data.timestamp).isWithinTheLastMinute()
+      assertThat(event.id).isEqualTo(event.data.id)
+      assertThat(event.data.eventDetails.transactionId).isEqualTo(transactionId)
     })
   }
 
