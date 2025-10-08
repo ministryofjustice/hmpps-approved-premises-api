@@ -28,12 +28,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCanc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
@@ -61,7 +59,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
@@ -71,8 +68,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DateChangeTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -97,8 +92,6 @@ class PremisesController(
   private val cas3ConfirmationTransformer: Cas3ConfirmationTransformer,
   private val departureTransformer: DepartureTransformer,
   private val extensionTransformer: ExtensionTransformer,
-  private val roomService: RoomService,
-  private val roomTransformer: RoomTransformer,
   private val cas3VoidBedspaceCancellationTransformer: Cas3VoidBedspaceCancellationTransformer,
   private val cas3TurnaroundTransformer: Cas3TurnaroundTransformer,
   private val dateChangeTransformer: DateChangeTransformer,
@@ -657,49 +650,6 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(cas3VoidBedspaceCancellationTransformer.transformJpaToApi(cancellation))
-  }
-
-  @Transactional
-  override fun premisesPremisesIdRoomsRoomIdPut(
-    premisesId: UUID,
-    roomId: UUID,
-    updateRoom: UpdateRoom,
-  ): ResponseEntity<Room> {
-    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanManagePremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val updateRoomResult = roomService.updateRoom(premises, roomId, updateRoom.notes, updateRoom.characteristicIds)
-
-    var validationResult = when (updateRoomResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(roomId, "Room")
-      is AuthorisableActionResult.Success -> updateRoomResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    if (premises is TemporaryAccommodationPremisesEntity) {
-      val updateRoomName = updateRoom.name
-      if (updateRoomName != null) {
-        validationResult =
-          extractEntityFromAuthorisableActionResult(roomService.renameRoom(premises, roomId, updateRoomName))
-      }
-      val updateRoomEndDate = updateRoom.bedEndDate
-      if (updateRoomEndDate != null) {
-        validationResult = extractEntityFromAuthorisableActionResult(
-          roomService.updateBedEndDate(
-            premises,
-            roomId,
-            updateRoomEndDate,
-          ),
-        )
-      }
-    }
-
-    val room = extractResultEntityOrThrow(validationResult)
-
-    return ResponseEntity.ok(roomTransformer.transformJpaToApi(room))
   }
 
   override fun premisesPremisesIdBookingsBookingIdTurnaroundsPost(
