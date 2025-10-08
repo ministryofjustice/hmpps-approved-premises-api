@@ -39,6 +39,7 @@ class Cas2v2ApplicationNoteService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  // NOT UNIT TESTED
   @Suppress("ReturnCount")
   fun createAssessmentNote(assessmentId: UUID, note: NewCas2v2ApplicationNote): CasResult<Cas2v2ApplicationNoteEntity> {
     val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)

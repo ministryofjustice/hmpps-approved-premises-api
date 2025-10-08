@@ -27,6 +27,7 @@ class Cas2v2UserService(
     getUserForRequest()
   }
 
+  // NOT UNIT TESTED
   fun getUserForRequest(): Cas2v2UserEntity {
     val authenticatedPrincipal = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow()
     val jwt = authenticatedPrincipal.token.tokenValue
@@ -48,6 +49,7 @@ class Cas2v2UserService(
     return userEntity
   }
 
+  // NOT UNIT TESTED
   fun requiresCaseLoadIdCheck(): Boolean = !userForRequestHasRole(
     listOf(
       SimpleGrantedAuthority("ROLE_CAS2_COURT_BAIL_REFERRER"),
@@ -55,6 +57,7 @@ class Cas2v2UserService(
     ),
   )
 
+  // NOT UNIT TESTED
   fun userForRequestHasRole(grantedAuthorities: List<GrantedAuthority>): Boolean {
     val roles = getRolesForUserForRequest()
     return roles?.any { it in grantedAuthorities } ?: false

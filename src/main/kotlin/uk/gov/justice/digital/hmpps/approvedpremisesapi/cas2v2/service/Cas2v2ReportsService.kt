@@ -19,6 +19,7 @@ class Cas2v2ReportsService(
   private val cas2v2UnsubmittedApplicationsReportRepository: Cas2v2UnsubmittedApplicationsReportRepository,
 ) {
 
+  // NOT UNIT TESTED
   fun createSubmittedApplicationsReport(outputStream: OutputStream) {
     val reportData = cas2v2SubmittedApplicationReportRepository.generateSubmittedApplicationReportRows().map { row ->
       SubmittedApplicationReportRow(
@@ -45,6 +46,7 @@ class Cas2v2ReportsService(
       )
   }
 
+  // NOT UNIT TESTED
   fun createApplicationStatusUpdatesReport(outputStream: OutputStream) {
     val reportData = cas2v2ApplicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows().map { row ->
       ApplicationStatusUpdatesReportRow(
@@ -67,6 +69,7 @@ class Cas2v2ReportsService(
       )
   }
 
+  // NOT UNIT TESTED
   fun createUnsubmittedApplicationsReport(outputStream: OutputStream) {
     val reportData = cas2v2UnsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows().map { row ->
       UnsubmittedApplicationsReportRow(
