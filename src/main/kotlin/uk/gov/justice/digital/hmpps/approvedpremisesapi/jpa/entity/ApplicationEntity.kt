@@ -436,6 +436,7 @@ class ApprovedPremisesApplicationEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_offender_id", referencedColumnName = "id")
   var cas1OffenderEntity: Cas1OffenderEntity?,
+  var expiredReason: String?,
 ) : ApplicationEntity(
   id,
   crn,
