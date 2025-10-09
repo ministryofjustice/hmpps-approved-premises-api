@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -18,12 +17,10 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummaryMain
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceArchived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceOnline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
@@ -46,6 +43,7 @@ data class Cas3PremisesEntity(
 
   @Enumerated(value = EnumType.STRING)
   var status: Cas3PremisesStatus,
+
   var notes: String,
   @Column(name = "start_date")
   var startDate: LocalDate,
@@ -100,9 +98,9 @@ SELECT
           p.address_line1 as addressLine1,
           p.address_line2 as addressLine2,
           p.postcode as postcode,
-          pdu.name as pdu,
           p.town as town,
-          p.status as premisesStatus,
+          pdu.name as pdu,
+          p.status as status,
           la.name as localAuthorityAreaName,
           bs.id as bedspaceId,
           bs.reference as bedspaceReference,
@@ -125,15 +123,14 @@ SELECT
           OR lower(p.address_line2) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
           OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
           )
-        AND (
-          (:premisesStatus = 'active' AND (p.end_date IS NULL OR p.end_date > CURRENT_DATE) AND p.start_date <= CURRENT_DATE)
-          OR (:premisesStatus = 'online' AND ((p.end_date IS NOT NULL AND p.end_date <= CURRENT_DATE) OR p.start_date > CURRENT_DATE))
-          OR (:premisesStatus IS NULL)
-        )
+     AND (
+         (:premisesStatus = 'online' AND (p.end_date IS NULL OR p.end_date > CURRENT_DATE) AND p.start_date <= CURRENT_DATE)
+         OR (:premisesStatus = 'archived' AND ((p.end_date IS NOT NULL AND p.end_date <= CURRENT_DATE) OR p.start_date > CURRENT_DATE))
+         OR :premisesStatus IS NULL)
       """,
     nativeQuery = true,
   )
-  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: Cas3PremisesStatus?): List<Cas3PremisesSummary>
+  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<Cas3PremisesSummary>
 
   fun existsByNameIgnoreCaseAndProbationDeliveryUnitId(
     name: String,
@@ -141,20 +138,6 @@ SELECT
   ): Boolean
 }
 
-data class Cas3PremisesSummary(
-  override val id: UUID,
-  override val name: String,
-  override val addressLine1: String,
-  override val addressLine2: String?,
-  override val postcode: String,
-  override val town: String?,
-  override val pdu: String,
-  @Deprecated("This field is not used and will be removed in /v2/")
-  @JsonIgnore
-  override val status: PropertyStatus? = null,
-  val premisesStatus: Cas3PremisesStatus,
-  override val localAuthorityAreaName: String?,
-  override val bedspaceId: UUID?,
-  override val bedspaceReference: String,
-  override val bedspaceStatus: Cas3BedspaceStatus?,
-) : TemporaryAccommodationPremisesSummary
+interface Cas3PremisesSummary : TemporaryAccommodationPremisesSummaryMain {
+  val status: Cas3PremisesStatus?
+}

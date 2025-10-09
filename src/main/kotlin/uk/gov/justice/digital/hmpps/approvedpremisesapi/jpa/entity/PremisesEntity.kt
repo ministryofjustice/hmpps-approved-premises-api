@@ -392,8 +392,11 @@ class TemporaryAccommodationPremisesEntity(
       PropertyStatus.archived -> Cas3PremisesStatus.archived
     }
 }
+interface TemporaryAccommodationPremisesSummary : TemporaryAccommodationPremisesSummaryMain {
+  val status: PropertyStatus?
+}
 
-interface TemporaryAccommodationPremisesSummary {
+interface TemporaryAccommodationPremisesSummaryMain {
   val id: UUID
   val name: String
   val addressLine1: String
@@ -401,7 +404,6 @@ interface TemporaryAccommodationPremisesSummary {
   val postcode: String
   val town: String?
   val pdu: String
-  val status: PropertyStatus?
   val localAuthorityAreaName: String?
   val bedspaceId: UUID?
   val bedspaceReference: String?
