@@ -4,7 +4,6 @@ import io.sentry.Sentry
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEventDetails
@@ -18,8 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
@@ -65,9 +65,9 @@ class StatusUpdateService(
   fun createForAssessment(
     assessmentId: UUID,
     statusUpdate: Cas2AssessmentStatusUpdate,
-    assessor: ExternalUserEntity,
+    assessor: Cas2UserEntity,
   ): AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>> {
-    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+    val assessment = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)
       ?: return AuthorisableActionResult.NotFound()
 
     val status = findActiveStatusByName(statusUpdate.newStatus)
@@ -162,10 +162,10 @@ class StatusUpdateService(
               statusDetails = statusTransformer.transformStatusDetailListToDetailItemList(statusDetails),
             ),
             updatedBy = ExternalUser(
-              username = assessor.username,
+              username = assessor!!.username,
               name = assessor.name,
-              email = assessor.email,
-              origin = assessor.origin,
+              email = assessor.email!!,
+              origin = assessor.externalType,
             ),
             updatedAt = eventOccurredAt.toInstant(),
           ),
@@ -191,7 +191,7 @@ class StatusUpdateService(
         ),
       )
     } else {
-      val msg = "Email not found for User ${application.getCreatedById()}. Unable to send email when updating status of Application ${application.id}"
+      val msg = "Email not found for User ${application.createdByUser!!.id}. Unable to send email when updating status of Application ${application.id}"
       log.error(msg)
       Sentry.captureMessage(msg)
     }

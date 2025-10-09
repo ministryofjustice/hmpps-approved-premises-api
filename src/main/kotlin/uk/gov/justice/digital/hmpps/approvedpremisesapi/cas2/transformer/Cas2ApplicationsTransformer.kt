@@ -27,7 +27,7 @@ class Cas2ApplicationsTransformer(
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
-    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getNomisUserById(jpa.currentPomUserId!!) }
+    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getNomisUserById(jpa.currentPomUserId!!, jpa.serviceOrigin) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     return Cas2Application(
       id = jpa.id,
@@ -58,8 +58,8 @@ class Cas2ApplicationsTransformer(
     personName: String,
   ): Cas2ApplicationSummary = Cas2ApplicationSummary(
     id = jpaSummary.id,
-    createdByUserId = UUID.fromString(jpaSummary.getCreatedById()),
-    createdByUserName = jpaSummary.getCreatedByUsername(),
+    createdByUserId = UUID.fromString(jpaSummary.userId),
+    createdByUserName = jpaSummary.userName,
     // BAIL-WIP The two allocated POM fields are left unchanged as it will currently ALWAYS be a nomis user.
     allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.userId),
     allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.userName,

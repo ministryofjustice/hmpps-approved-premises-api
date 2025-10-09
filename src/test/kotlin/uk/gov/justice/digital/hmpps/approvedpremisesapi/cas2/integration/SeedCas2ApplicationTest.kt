@@ -8,6 +8,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -23,8 +24,8 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   fun `Attempting to seed a Cas2 Application succeeds`() {
     cas2ApplicationRepository.deleteAll()
 
-    val applicant = nomisUserEntityFactory.produceAndPersist {
-      withNomisUsername("ROGER_SMITH_FAKE")
+    val applicant = cas2UserEntityFactory.produceAndPersist {
+      withUsername("ROGER_SMITH_FAKE")
     }
 
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
@@ -54,7 +55,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(persistedApplication).isNotNull
     assertThat(persistedApplication.crn).isEqualTo("CRN-ABC")
     assertThat(persistedApplication.nomsNumber).isEqualTo("NOMS-123")
-    assertThat(persistedApplication.createdByUser.id).isEqualTo(applicant.id)
+    assertThat(persistedApplication.createdByUser!!.id).isEqualTo(applicant.id)
     assertThat(persistedApplication.createdAt).isEqualTo(creationTimestamp)
     assertThat(persistedApplication.statusUpdates).isEmpty()
   }
@@ -63,8 +64,8 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   fun `An IN_PROGRESS application has _data_ but no _document_ or Assessment`() {
     cas2ApplicationRepository.deleteAll()
 
-    nomisUserEntityFactory.produceAndPersist {
-      withNomisUsername("ROGER_SMITH_FAKE")
+    cas2UserEntityFactory.produceAndPersist {
+      withUsername("ROGER_SMITH_FAKE")
     }
 
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
@@ -107,11 +108,13 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   fun `A SUBMITTED application has _data_ AND _document_ AND an Assessment AND status updates AND first class fields`() {
     cas2ApplicationRepository.deleteAll()
 
-    nomisUserEntityFactory.produceAndPersist {
-      withNomisUsername("ROGER_SMITH_FAKE")
+    cas2UserEntityFactory.produceAndPersist {
+      withUsername("ROGER_SMITH_FAKE")
     }
 
-    externalUserEntityFactory.produceAndPersist()
+    cas2UserEntityFactory.produceAndPersist {
+      withUserType(Cas2UserType.EXTERNAL)
+    }
 
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
@@ -155,11 +158,12 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   fun `An IN_REVIEW application has _data_, _document_ AND status updates`() {
     cas2ApplicationRepository.deleteAll()
 
-    nomisUserEntityFactory.produceAndPersist {
-      withNomisUsername("ROGER_SMITH_FAKE")
+    cas2UserEntityFactory.produceAndPersist {
+      withUsername("ROGER_SMITH_FAKE")
     }
 
-    externalUserEntityFactory.produceAndPersist {
+    cas2UserEntityFactory.produceAndPersist {
+      withUserType(Cas2UserType.EXTERNAL)
       withUsername("CAS2_ASSESSOR")
     }
 
@@ -197,7 +201,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(persistedApplication.statusUpdates).isNotEmpty()
     assertThat(persistedApplication.statusUpdates!!.size).isEqualTo(2)
     persistedApplication.statusUpdates!!.forEach { statusUpdate ->
-      assertThat(statusUpdate.assessor.username).isEqualTo("CAS2_ASSESSOR")
+      assertThat(statusUpdate.assessor?.username).isEqualTo("CAS2_ASSESSOR")
     }
   }
 

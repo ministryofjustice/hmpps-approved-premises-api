@@ -6,11 +6,11 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import java.util.UUID
 
 @Repository
-interface CacheRefreshExclusionsInmateDetailsRepository : JpaRepository<ExternalUserEntity, UUID> {
+interface CacheRefreshExclusionsInmateDetailsRepository : JpaRepository<Cas2UserEntity, UUID> {
   @Query("SELECT DISTINCT(nomsNumber) FROM CacheRefreshExclusionsInmateDetailsEntity")
   fun getDistinctNomsNumbers(): List<String>
 }
