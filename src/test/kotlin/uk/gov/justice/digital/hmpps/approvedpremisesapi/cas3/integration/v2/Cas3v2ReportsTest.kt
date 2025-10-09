@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3Unallocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3ReportsTest.BookingGapReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
@@ -39,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.Cas3BookingGapReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.FutureBookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.TransitionalAccommodationReferralReportRow
@@ -79,9 +79,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.io.StringReader
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import kotlin.collections.listOf
 
 class Cas3v2ReportsTest : IntegrationTestBase() {
 
@@ -2602,7 +2604,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
   inner class GetBookingGapReport {
 
     @Test
-    fun `Get booking gap report returns OK with correct body`() {
+    fun `Get booking gap report for single booking within report period returns OK`() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val reportStartDate = LocalDate.of(2024, 4, 1)
@@ -2618,87 +2620,40 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationDeliveryUnit(probationDeliveryUnit)
           }
+          val bedStart = LocalDate.parse("2024-01-01")
+          val bedEnd = LocalDate.parse("2024-12-31")
 
-          val bedOne = createBedspace(premises, "room1", OffsetDateTime.parse("2024-02-01T14:03:00+00:00"))
-
-          val booking1 = createBooking(
-            premises,
-            bedOne,
-            offenderDetails.otherIds.crn,
-            LocalDate.of(2024, 4, 5),
-            LocalDate.of(2024, 4, 12),
-          )
-
-          cas3v2ConfirmationEntityFactory.produceAndPersist {
-            withBooking(booking1)
-          }
-
-          val bedTwo = createBedspace(premises, "room2", OffsetDateTime.parse("2024-03-21T17:08:00+00:00"))
-
-          val booking2 = createBooking(
-            premises,
-            bedTwo,
-            offenderDetails.otherIds.crn,
-            LocalDate.of(2024, 3, 27),
-            LocalDate.of(2024, 4, 21),
-          )
-
-          cas3v2ConfirmationEntityFactory.produceAndPersist {
-            withBooking(booking2)
-          }
-
-          val bedTwoVoid = cas3VoidBedspaceEntityFactory.produceAndPersist {
-            withBedspace(bedTwo)
-            withStartDate(LocalDate.of(2024, 4, 25))
-            withEndDate(LocalDate.of(2024, 4, 27))
-            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
-          }
-
-          val bedThree = createBedspace(premises, "room3", OffsetDateTime.parse("2024-02-01T13:41:00+00:00"))
-
+          // 1. Single booking within report period
+          val bed1 = createBedspace(premises, "bed1", bedStart, bedEnd)
           createBooking(
             premises,
-            bedThree,
+            bed1,
             offenderDetails.otherIds.crn,
-            LocalDate.of(2024, 3, 8),
-            LocalDate.of(2024, 6, 21),
+            LocalDate.parse("2024-04-05"),
+            LocalDate.parse("2024-04-12"),
           )
 
-          val bedFour = createBedspace(premises, "room4", OffsetDateTime.parse("2024-03-22T07:37:00+00:00"))
-
-          val booking4 = createBooking(
-            premises,
-            bedFour,
-            offenderDetails.otherIds.crn,
-            LocalDate.of(2024, 4, 9),
-            LocalDate.of(2024, 4, 19),
+          val expectedReportRows = listOf(
+            // 1. Single booking within report period
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-01,2024-04-04]",
+              4,
+              null,
+            ),
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-13,2024-04-30]",
+              18,
+              null,
+            ),
           )
-
-          cas3CancellationEntityFactory.produceAndPersist {
-            withBooking(booking4)
-            withYieldedReason {
-              cancellationReasonEntityFactory.produceAndPersist()
-            }
-          }
-
-          val bedFive = createBedspace(premises, "room5", OffsetDateTime.parse("2024-01-05T09:46:00+00:00"))
-
-          createBooking(
-            premises,
-            bedFive,
-            offenderDetails.otherIds.crn,
-            LocalDate.of(2024, 3, 12),
-            LocalDate.of(2024, 7, 17),
-          )
-
-          val bedSix = createBedspace(premises, "room6", OffsetDateTime.parse("2024-03-22T15:41:00+00:00"))
-
-          cas3VoidBedspaceEntityFactory.produceAndPersist {
-            withBedspace(bedSix)
-            withStartDate(LocalDate.of(2024, 3, 16))
-            withEndDate(LocalDate.of(2024, 5, 21))
-            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
-          }
 
           webTestClient.get()
             .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
@@ -2707,113 +2662,528 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .consumeWith { response ->
-              val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
-
-              val csvReader = CSVReaderBuilder(StringReader(completeCsvString)).build()
-              val headers = csvReader.readNext().toList()
-
-              assertReportHeader(headers)
-
+            .consumeWith {
               val actual = DataFrame
-                .readCSV(completeCsvString.byteInputStream())
-                .convertTo<BookingGapReportRow>()
-                .toList()
-
-              assertThat(actual.size).isEqualTo(5)
-
-              assertReportRow(
-                actual[0],
-                premises.probationDeliveryUnit.probationRegion.name,
-                probationDeliveryUnit.name,
-                premises.name,
-                bedOne.reference,
-                reportStartDate,
-                booking1.arrivalDate,
-                4,
-              )
-
-              assertReportRow(
-                actual[1],
-                premises.probationDeliveryUnit.probationRegion.name,
-                probationDeliveryUnit.name,
-                premises.name,
-                bedOne.reference,
-                booking1.departureDate.plusDays(1),
-                reportEndDate,
-                18,
-              )
-
-              assertReportRow(
-                actual[2],
-                premises.probationDeliveryUnit.probationRegion.name,
-                probationDeliveryUnit.name,
-                premises.name,
-                bedTwo.reference,
-                booking2.departureDate.plusDays(1),
-                bedTwoVoid.startDate,
-                3,
-              )
-
-              assertReportRow(
-                actual[3],
-                premises.probationDeliveryUnit.probationRegion.name,
-                probationDeliveryUnit.name,
-                premises.name,
-                bedTwo.reference,
-                bedTwoVoid.endDate.plusDays(1),
-                reportEndDate,
-                3,
-              )
-
-              assertReportRow(
-                actual[4],
-                premises.probationDeliveryUnit.probationRegion.name,
-                probationDeliveryUnit.name,
-                premises.name,
-                bedFour.reference,
-                reportStartDate,
-                reportEndDate,
-                30,
-              )
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<Cas3BookingGapReportRow>(Remove)
+              assertThat(actual).isEqualTo(expectedReportRows.toDataFrame())
             }
         }
       }
     }
 
-    private fun assertReportHeader(headers: List<String>) {
-      assertThat(headers).contains("probation_region")
-      assertThat(headers).contains("pdu_name")
-      assertThat(headers).contains("premises_name")
-      assertThat(headers).contains("bed_name")
-      assertThat(headers).contains("gap")
-      assertThat(headers).contains("gap_days")
-      assertThat(headers).contains("turnaround_days")
+    @Test
+    fun `Get booking gap report for multiple bookings for the same bedspace returns OK`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.of(2024, 4, 1)
+          val reportEndDate = LocalDate.of(2024, 4, 30)
+
+          val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(yorkshireRegion!!)
+          }
+
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationDeliveryUnit(probationDeliveryUnit)
+          }
+          val bedStart = LocalDate.parse("2024-01-01")
+          val bedEnd = LocalDate.parse("2024-12-31")
+
+          // 2. Multiple bookings for the same bedspace
+          val bed1 = createBedspace(premises, "bed1", bedStart, bedEnd)
+          createBooking(
+            premises,
+            bed1,
+            offenderDetails.otherIds.crn,
+            LocalDate.parse("2024-04-02"),
+            LocalDate.parse("2024-04-06"),
+          )
+          createBooking(
+            premises,
+            bed1,
+            offenderDetails.otherIds.crn,
+            LocalDate.parse("2024-04-10"),
+            LocalDate.parse("2024-04-15"),
+          )
+
+          // 3. Booking longer than report period
+          val bed2 = createBedspace(premises, "bed2", bedStart, bedEnd)
+          createBooking(
+            premises,
+            bed2,
+            offenderDetails.otherIds.crn,
+            LocalDate.parse("2024-03-25"),
+            LocalDate.parse("2024-05-05"),
+          )
+
+          val expectedReportRows = listOf(
+            // 2. Multiple bookings for the same bedspace
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-01,2024-04-01]",
+              1,
+              null,
+            ),
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-07,2024-04-09]",
+              3,
+              0,
+            ),
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-16,2024-04-30]",
+              15,
+              null,
+            ),
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<Cas3BookingGapReportRow>(Remove)
+              assertThat(actual).isEqualTo(expectedReportRows.toDataFrame())
+            }
+        }
+      }
     }
 
-    @Suppress("LongParameterList")
-    private fun assertReportRow(
-      row: BookingGapReportRow,
-      probationRegionName: String,
-      probationDeliveryUnitName: String,
-      premisesName: String,
-      bedName: String,
-      gapStartDate: LocalDate,
-      gapEndDate: LocalDate,
-      gapDays: Int,
-    ) {
-      assertThat(row.probation_region).isEqualTo(probationRegionName)
-      assertThat(row.pdu_name).isEqualTo(probationDeliveryUnitName)
-      assertThat(row.premises_name).isEqualTo(premisesName)
-      assertThat(row.bed_name).isEqualTo(bedName)
-      assertThat(row.gap).isEqualTo("[$gapStartDate,$gapEndDate)")
-      assertThat(row.gap_days).isEqualTo(gapDays.toString())
+    @Test
+    fun `Get booking gap report for bedspace start date after report start date returns OK`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.of(2024, 4, 1)
+          val reportEndDate = LocalDate.of(2024, 4, 30)
+
+          val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(yorkshireRegion!!)
+          }
+
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationDeliveryUnit(probationDeliveryUnit)
+          }
+          val bedStart = LocalDate.parse("2024-01-01")
+          val bedEnd = LocalDate.parse("2024-12-31")
+
+          // 4. Bedspace start date after report start date
+          val bed1 = createBedspace(premises, "bed1", LocalDate.parse("2024-04-10"), bedEnd)
+          createBooking(
+            premises,
+            bed1,
+            offenderDetails.otherIds.crn,
+            LocalDate.parse("2024-04-12"),
+            LocalDate.parse("2024-04-20"),
+          )
+
+          val expectedReportRows = listOf(
+            // 4. Bedspace start date after report start date
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-10,2024-04-11]",
+              2,
+              null,
+            ),
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-21,2024-04-30]",
+              10,
+              null,
+            ),
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<Cas3BookingGapReportRow>(Remove)
+              assertThat(actual).isEqualTo(expectedReportRows.toDataFrame())
+            }
+        }
+      }
     }
 
-    private fun createBedspace(premises: Cas3PremisesEntity, roomName: String, createAt: OffsetDateTime) = cas3BedspaceEntityFactory.produceAndPersist {
+    @Test
+    fun `Get booking gap report for bedspace end date before report end date returns OK`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.of(2024, 4, 1)
+          val reportEndDate = LocalDate.of(2024, 4, 30)
+
+          val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(yorkshireRegion!!)
+          }
+
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationDeliveryUnit(probationDeliveryUnit)
+          }
+          val bedStart = LocalDate.parse("2024-01-01")
+          val bedEnd = LocalDate.parse("2024-12-31")
+
+          // 5. Bedspace end date before report end date
+          val bed1 = createBedspace(premises, "bed1", bedStart, LocalDate.parse("2024-04-20"))
+          createBooking(
+            premises,
+            bed1,
+            offenderDetails.otherIds.crn,
+            LocalDate.parse("2024-04-05"),
+            LocalDate.parse("2024-04-15"),
+          )
+
+          val expectedReportRows = listOf(
+            // 5. Bedspace end date before report end date
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-01,2024-04-04]",
+              4,
+              null,
+            ),
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-16,2024-04-20]",
+              5,
+              null,
+            ),
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<Cas3BookingGapReportRow>(Remove)
+              assertThat(actual).isEqualTo(expectedReportRows.toDataFrame())
+            }
+        }
+      }
+    }
+
+    @Test
+    fun `Get booking gap report for bed with both bookings and voids returns OK`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.of(2024, 4, 1)
+          val reportEndDate = LocalDate.of(2024, 4, 30)
+
+          val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(yorkshireRegion!!)
+          }
+
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationDeliveryUnit(probationDeliveryUnit)
+          }
+          val bedStart = LocalDate.parse("2024-01-01")
+          val bedEnd = LocalDate.parse("2024-12-31")
+
+          // 6. Bed with both bookings and voids
+          val bed1 = createBedspace(premises, "bed1", bedStart, bedEnd)
+          createBooking(
+            premises,
+            bed1,
+            offenderDetails.otherIds.crn,
+            LocalDate.parse("2024-04-02"),
+            LocalDate.parse("2024-04-06"),
+          )
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBedspace(bed1)
+            withStartDate(LocalDate.parse("2024-04-08"))
+            withEndDate(LocalDate.parse("2024-04-12"))
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+
+          val expectedReportRows = listOf(
+            // 6. Bed with both bookings and voids
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-01,2024-04-01]",
+              1,
+              null,
+            ),
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-07,2024-04-07]",
+              1,
+              0,
+            ),
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+
+              "[2024-04-13,2024-04-30]",
+              18,
+              null,
+            ),
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<Cas3BookingGapReportRow>(Remove)
+              assertThat(actual).isEqualTo(expectedReportRows.toDataFrame())
+            }
+        }
+      }
+    }
+
+    @Test
+    fun `Get booking gap report for bed with only voids & no bookings returns OK`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.of(2024, 4, 1)
+          val reportEndDate = LocalDate.of(2024, 4, 30)
+
+          val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(yorkshireRegion!!)
+          }
+
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationDeliveryUnit(probationDeliveryUnit)
+          }
+          val bedStart = LocalDate.parse("2024-01-01")
+          val bedEnd = LocalDate.parse("2024-12-31")
+
+          // 7. Bed with only voids (no bookings)
+          val bed1 = createBedspace(premises, "bed1", bedStart, bedEnd)
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBedspace(bed1)
+            withStartDate(LocalDate.parse("2024-04-01"))
+            withEndDate(LocalDate.parse("2024-04-10"))
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+
+          val expectedReportRows = listOf(
+            // 7. Bed with only voids (no bookings)
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-11,2024-04-30]",
+              20,
+              null,
+            ),
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<Cas3BookingGapReportRow>(Remove)
+              assertThat(actual).isEqualTo(expectedReportRows.toDataFrame())
+            }
+        }
+      }
+    }
+
+    @Test
+    fun `Get booking gap report for bed with cancelled bookings returns OK`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.of(2024, 4, 1)
+          val reportEndDate = LocalDate.of(2024, 4, 30)
+
+          val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(yorkshireRegion!!)
+          }
+
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationDeliveryUnit(probationDeliveryUnit)
+          }
+          val bedStart = LocalDate.parse("2024-01-01")
+          val bedEnd = LocalDate.parse("2024-12-31")
+
+          // 8. Bed with cancelled bookings
+          val bed1 = createBedspace(premises, "bed1", bedStart, bedEnd)
+
+          val cancelledBooking = createBooking(premises, bed1, offenderDetails.otherIds.crn, LocalDate.parse("2024-04-05"), LocalDate.parse("2024-04-12"))
+          val cancellationReason = cancellationReasonEntityFactory.produceAndPersist { withServiceScope("temporary-accommodation") }
+          cas3CancellationEntityFactory.produceAndPersist {
+            withBooking(cancelledBooking)
+            withYieldedReason { cancellationReason }
+          }
+
+          val expectedReportRows = listOf(
+            // 8. Bed with cancelled bookings
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-01,2024-04-30]",
+              30,
+              null,
+            ),
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<Cas3BookingGapReportRow>(Remove)
+              assertThat(actual).isEqualTo(expectedReportRows.toDataFrame())
+            }
+        }
+      }
+    }
+
+    @Test
+    fun `Get booking gap report for bed with gaps at the start and end returns OK`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val reportStartDate = LocalDate.of(2024, 4, 1)
+          val reportEndDate = LocalDate.of(2024, 4, 30)
+
+          val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
+
+          val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(yorkshireRegion!!)
+          }
+
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationDeliveryUnit(probationDeliveryUnit)
+          }
+          val bedStart = LocalDate.parse("2024-01-01")
+          val bedEnd = LocalDate.parse("2024-12-31")
+
+          // 9. Gaps at the start or end of bed’s active period
+          val bed1 = createBedspace(premises, "bed1", bedStart, bedEnd)
+          createBooking(
+            premises,
+            bed1,
+            offenderDetails.otherIds.crn,
+            LocalDate.parse("2024-04-10"),
+            LocalDate.parse("2024-04-15"),
+          )
+
+          val expectedReportRows = listOf(
+            // 9. Gaps at the start or end of bed’s active period
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-01,2024-04-09]",
+              9,
+              null,
+            ),
+            Cas3BookingGapReportRow(
+              premises.probationDeliveryUnit.probationRegion.name,
+              probationDeliveryUnit.name,
+              premises.name,
+              bed1.reference,
+              "[2024-04-16,2024-04-30]",
+              15,
+              null,
+            ),
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<Cas3BookingGapReportRow>(Remove)
+              assertThat(actual).isEqualTo(expectedReportRows.toDataFrame())
+            }
+        }
+      }
+    }
+
+    private fun createBedspace(premises: Cas3PremisesEntity, roomName: String, startDate: LocalDate, endDate: LocalDate) = cas3BedspaceEntityFactory.produceAndPersist {
       withPremises(premises)
       withReference(roomName)
-      withCreatedAt(createAt)
+      withStartDate(startDate)
+      withEndDate(endDate)
+      withCreatedAt(OffsetDateTime.of(startDate, LocalTime.MIDNIGHT, ZoneOffset.UTC))
     }
 
     private fun createBooking(

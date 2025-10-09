@@ -7,9 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.CsvObjectListConsumer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingGapReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3FutureBookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
@@ -17,12 +15,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceOccupancyReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceUsageReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BookingGapReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsCsvReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.TransitionalAccommodationReferralReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceOccupancyReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingGapReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.FutureBookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.PersonInformationReportData
@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUtilisationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedspaceOccupancyReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BookingsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3BookingGapReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.TransitionalAccommodationReferralReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -316,27 +317,6 @@ class Cas3ReportService(
       )
   }
 
-  fun createBookingGapReport(properties: BookingGapReportProperties, outputStream: OutputStream) {
-    log.info("Beginning CAS3 Booking Gap Report")
-
-    CsvJdbcResultSetConsumer(
-      outputStream = outputStream,
-    ).use { consumer ->
-      when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
-        true -> cas3BookingGapReportRepository.generateBookingGapReportV2(
-          properties.startDate,
-          properties.endDate,
-          consumer,
-        )
-        false -> cas3BookingGapReportRepository.generateBookingGapReport(
-          properties.startDate,
-          properties.endDate,
-          consumer,
-        )
-      }
-    }
-  }
-
   fun createFutureBookingReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
     log.info("Beginning CAS3 Future Booking Report")
     val bookingsInScope = when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
@@ -397,6 +377,48 @@ class Cas3ReportService(
     CsvObjectListConsumer(
       outputStream = outputStream,
     ).consume(reportData)
+  }
+
+  fun createBookingGapReport(properties: BookingGapReportProperties, outputStream: OutputStream) {
+    log.info("Beginning CAS3 Bookings Gap Report")
+    when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
+      true -> {
+        log.info("Creating V2 report")
+        val bedspaces = cas3BookingGapReportRepository.getBedspacesV2(properties.startDate, properties.endDate)
+        BookingGapReportGenerator()
+          .createReport(
+            listOf(
+              BookingGapReportData(
+                bedspaces,
+                cas3BookingGapReportRepository.getBookings(properties.startDate, properties.endDate),
+                cas3BookingGapReportRepository.getBedspaceVoidsV2(properties.startDate, properties.endDate, bedspaces.map { it.id }),
+              ),
+            ),
+            properties,
+          ).writeExcel(
+            outputStream = outputStream,
+            factory = WorkbookFactory.create(true),
+          )
+      }
+      false -> {
+        log.info("Creating report")
+        val bedspaces = cas3BookingGapReportRepository.getBedspaces(properties.startDate, properties.endDate)
+        BookingGapReportGenerator()
+          .createReport(
+            listOf(
+              BookingGapReportData(
+                bedspaces,
+                cas3BookingGapReportRepository.getBookings(properties.startDate, properties.endDate),
+                cas3BookingGapReportRepository.getBedspaceVoids(properties.startDate, properties.endDate, bedspaces.map { it.id }),
+              ),
+            ),
+            properties,
+          ).writeExcel(
+            outputStream = outputStream,
+            factory = WorkbookFactory.create(true),
+          )
+      }
+    }
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
