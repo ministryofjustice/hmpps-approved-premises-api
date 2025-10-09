@@ -8,6 +8,7 @@ import java.util.UUID
 
 @Repository
 interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
+  // TODO besscerule check it is ok for Cas2v2 reports as removed Z from startedAt for Cas2v2 reports (prev they had them but now they use Cas2)
   @Query(
     """
       SELECT
@@ -15,11 +16,11 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
         applications.crn AS personCrn,
         applications.noms_number AS personNoms,
         to_char(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
-        users.nomis_username AS startedBy,
+        users.username AS startedBy,
         applications.application_origin AS applicationOrigin
 
       FROM cas_2_applications applications
-      JOIN nomis_users users ON users.id = applications.created_by_user_id
+      JOIN cas_2_users users ON users.id = applications.created_by_user_id
       WHERE applications.submitted_at IS NULL
         AND applications.created_at  > CURRENT_DATE - 365
       ORDER BY startedAt DESC;

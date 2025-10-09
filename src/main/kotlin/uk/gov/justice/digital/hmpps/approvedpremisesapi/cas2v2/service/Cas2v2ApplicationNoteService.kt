@@ -7,13 +7,13 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationNoteRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -26,9 +26,9 @@ import java.util.UUID
 
 @Service
 class Cas2v2ApplicationNoteService(
-  private val cas2v2ApplicationRepository: Cas2v2ApplicationRepository,
-  private val cas2v2AssessmentRepository: Cas2v2AssessmentRepository,
-  private val cas2v2ApplicationNoteRepository: Cas2v2ApplicationNoteRepository,
+  private val cas2ApplicationRepository: Cas2ApplicationRepository,
+  private val cas2AssessmentRepository: Cas2AssessmentRepository,
+  private val cas2ApplicationNoteRepository: Cas2ApplicationNoteRepository,
   private val userService: Cas2v2UserService,
   private val userAccessService: Cas2v2UserAccessService,
   private val emailNotificationService: EmailNotificationService,
@@ -40,11 +40,11 @@ class Cas2v2ApplicationNoteService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @Suppress("ReturnCount")
-  fun createAssessmentNote(assessmentId: UUID, note: NewCas2v2ApplicationNote): CasResult<Cas2v2ApplicationNoteEntity> {
-    val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)
+  fun createAssessmentNote(assessmentId: UUID, note: NewCas2v2ApplicationNote): CasResult<Cas2ApplicationNoteEntity> {
+    val assessment = cas2AssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("Cas2v2ApplicationNoteEntity", assessmentId.toString())
 
-    val application = cas2v2ApplicationRepository.findByIdOrNull(assessment.application.id)
+    val application = cas2ApplicationRepository.findByIdOrNull(assessment.application.id)
       ?: return CasResult.NotFound("Cas2v2ApplicationNoteEntity", assessmentId.toString())
 
     if (application.submittedAt == null) {
@@ -65,8 +65,8 @@ class Cas2v2ApplicationNoteService(
 
   private fun sendEmail(
     isExternalUser: Boolean,
-    application: Cas2v2ApplicationEntity,
-    savedNote: Cas2v2ApplicationNoteEntity,
+    application: Cas2ApplicationEntity,
+    savedNote: Cas2ApplicationNoteEntity,
   ) {
     if (isExternalUser) {
       sendEmailToReferrer(application, savedNote)
@@ -76,8 +76,8 @@ class Cas2v2ApplicationNoteService(
   }
 
   private fun sendEmailToReferrer(
-    application: Cas2v2ApplicationEntity,
-    savedNote: Cas2v2ApplicationNoteEntity,
+    application: Cas2ApplicationEntity,
+    savedNote: Cas2ApplicationNoteEntity,
   ) {
     if (application.createdByUser.email != null) {
       val applicationOrigin = application.applicationOrigin
@@ -107,8 +107,8 @@ class Cas2v2ApplicationNoteService(
   }
 
   private fun sendEmailToAssessors(
-    application: Cas2v2ApplicationEntity,
-    savedNote: Cas2v2ApplicationNoteEntity,
+    application: Cas2ApplicationEntity,
+    savedNote: Cas2ApplicationNoteEntity,
   ) {
     val applicationOrigin = application.applicationOrigin
     val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
@@ -136,14 +136,14 @@ class Cas2v2ApplicationNoteService(
     )
   }
 
-  private fun getSubjectLineReferenceIdOrPlaceholder(assessment: Cas2v2AssessmentEntity): String {
+  private fun getSubjectLineReferenceIdOrPlaceholder(assessment: Cas2AssessmentEntity): String {
     if (assessment.nacroReferralId != null) {
       return "(${assessment.nacroReferralId!!})"
     }
     return ""
   }
 
-  private fun getNacroReferenceIdOrPlaceholder(assessment: Cas2v2AssessmentEntity): String {
+  private fun getNacroReferenceIdOrPlaceholder(assessment: Cas2AssessmentEntity): String {
     if (assessment.nacroReferralId != null) {
       return assessment.nacroReferralId!!
     }
@@ -151,23 +151,23 @@ class Cas2v2ApplicationNoteService(
       "The Nacro CAS-2 reference number has not been added to the application yet."
   }
 
-  private fun getAssessorNameOrPlaceholder(assessment: Cas2v2AssessmentEntity): String {
+  private fun getAssessorNameOrPlaceholder(assessment: Cas2AssessmentEntity): String {
     if (assessment.assessorName != null) {
       return assessment.assessorName!!
     }
     return "Unknown. " + "The assessor has not added their name to the application yet."
   }
 
-  private fun saveNote(application: Cas2v2ApplicationEntity, assessment: Cas2v2AssessmentEntity, body: String, user: Cas2v2UserEntity): Cas2v2ApplicationNoteEntity {
-    val newNote = Cas2v2ApplicationNoteEntity(
+  private fun saveNote(application: Cas2ApplicationEntity, assessment: Cas2AssessmentEntity, body: String, user: Cas2UserEntity): Cas2ApplicationNoteEntity {
+    val newNote = Cas2ApplicationNoteEntity(
       id = UUID.randomUUID(),
       application = application,
       body = body,
       createdAt = OffsetDateTime.now(),
-      createdByUser = user,
+      createdByCas2User = user,
       assessment = assessment,
     )
 
-    return cas2v2ApplicationNoteRepository.save(newNote)
+    return cas2ApplicationNoteRepository.save(newNote)
   }
 }

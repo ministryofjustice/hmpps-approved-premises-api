@@ -18,8 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -55,24 +54,24 @@ class Cas2ApplicationService(
 ) {
 
   fun getApplicationSummaries(
-    user: NomisUserEntity,
+    user: Cas2UserEntity,
     pageCriteria: PageCriteria<String>,
     assignmentType: AssignmentType,
   ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val response = when (assignmentType) {
       AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsInSamePrisonAsUser(
-        user.activeCaseloadId!!,
+        user.activeNomisCaseloadId!!,
         getPageableOrAllPages(pageCriteria),
       )
 
       AssignmentType.IN_PROGRESS -> applicationSummaryRepository.findInProgressApplications(
-        user.id.toString(),
+        user.id,
         getPageableOrAllPages(pageCriteria),
       )
 
       AssignmentType.PRISON -> {
         applicationSummaryRepository.findAllocatedApplicationsInSamePrisonAsUser(
-          user.activeCaseloadId!!,
+          user.activeNomisCaseloadId!!,
           getPageableOrAllPages(pageCriteria),
         )
       }
@@ -86,7 +85,7 @@ class Cas2ApplicationService(
 
       AssignmentType.DEALLOCATED -> {
         val deallocatedApplicationIds =
-          applicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(user.id, user.activeCaseloadId!!)
+          applicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(user.id, user.activeNomisCaseloadId!!)
         applicationSummaryRepository.findAllByIdIn(
           deallocatedApplicationIds,
           getPageableOrAllPages(pageCriteria),
@@ -119,7 +118,7 @@ class Cas2ApplicationService(
     return CasResult.Success(applicationEntity)
   }
 
-  fun getApplicationForUser(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2ApplicationEntity> {
+  fun getApplicationForUser(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
 
     if (applicationEntity == null || applicationEntity.abandonedAt != null) {
@@ -139,7 +138,7 @@ class Cas2ApplicationService(
 
   fun createApplication(
     personInfoResult: PersonInfoResult.Success.Full,
-    user: NomisUserEntity,
+    user: Cas2UserEntity,
   ): CasResult<Cas2ApplicationEntity> {
     val createdApplication = applicationRepository.save(
       Cas2ApplicationEntity(
@@ -152,8 +151,6 @@ class Cas2ApplicationService(
         submittedAt = null,
         nomsNumber = personInfoResult.offenderDetailSummary.otherIds.nomsNumber!!,
         telephoneNumber = null,
-        applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
-        serviceOrigin = Cas2ServiceOrigin.HDC,
       ),
     )
 
@@ -161,7 +158,7 @@ class Cas2ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun updateApplication(applicationId: UUID, data: String?, user: NomisUserEntity): CasResult<Cas2ApplicationEntity> {
+  fun updateApplication(applicationId: UUID, data: String?, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
@@ -187,7 +184,7 @@ class Cas2ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonApplication(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2ApplicationEntity> {
+  fun abandonApplication(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
@@ -217,7 +214,7 @@ class Cas2ApplicationService(
   @Transactional
   fun submitApplication(
     submitApplication: SubmitCas2Application,
-    user: NomisUserEntity,
+    user: Cas2UserEntity,
   ): CasResult<Cas2ApplicationEntity> {
     val applicationId = submitApplication.applicationId
 
@@ -308,10 +305,9 @@ class Cas2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByUser.nomisStaffId,
-                cas2StaffIdentifier = application.createdByCas2User?.staffIdentifier(),
-                name = application.getCreatedByCanonicalName(),
-                username = application.getCreatedByUsername(),
+                staffIdentifier = application.createdByUser.staffIdentifier(),
+                name = application.createdByUser.name,
+                username = application.createdByUser.username,
                 usertype = application.getCreatedByUserType(),
               ),
             ),
@@ -341,7 +337,7 @@ class Cas2ApplicationService(
     return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
   }
 
-  private fun sendEmailApplicationSubmitted(user: NomisUserEntity, application: Cas2ApplicationEntity) {
+  private fun sendEmailApplicationSubmitted(user: Cas2UserEntity, application: Cas2ApplicationEntity) {
     emailNotificationService.sendEmail(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
       templateId = Cas2NotifyTemplates.cas2ApplicationSubmitted,

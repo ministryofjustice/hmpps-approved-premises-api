@@ -37,7 +37,7 @@ class Cas2PeopleController(
   @SuppressWarnings("TooGenericExceptionThrown", "ThrowsCount")
   @GetMapping("/people/search")
   fun peopleSearchGet(@RequestParam nomsNumber: String): ResponseEntity<Person> {
-    val currentUser = cas2UserService.getUserForRequest()
+    val currentUser = cas2UserService.getCas2UserForRequest()
 
     val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
 

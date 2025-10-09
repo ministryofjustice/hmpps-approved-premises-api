@@ -5,10 +5,10 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
@@ -23,8 +23,10 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
   private var deliusTeamCodes: Yielded<List<String>?> = { null }
   private var isEnabled: Yielded<Boolean> = { true }
   private var isActive: Yielded<Boolean> = { true }
+  private var externalType: Yielded<String?> = { null }
+  private var nomisAccountType: Yielded<String?> = { null }
   private var applications: Yielded<MutableList<Cas2ApplicationEntity>> = { mutableListOf() }
-  private var serviceOrigin: Yielded<Cas2ServiceOrigin> = { Cas2ServiceOrigin.HDC }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -46,20 +48,20 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     this.nomisStaffId = { nomisStaffId }
   }
 
-  fun withDeliusStaffCode(deliusStaffCode: String) = apply {
-    this.deliusStaffCode = { deliusStaffCode }
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
   }
 
   fun withNomisStaffIdentifier(nomisStaffId: Long) = apply {
     this.nomisStaffId = { nomisStaffId }
   }
 
-  fun withApplications(applications: MutableList<Cas2ApplicationEntity>) = apply {
-    this.applications = { applications }
-  }
-
   fun withEmail(email: String?) = apply {
     this.email = { email }
+  }
+
+  fun withExternalType(externalType: String?) = apply {
+    this.externalType = { externalType }
   }
 
   fun withUserType(t: Cas2UserType) = apply {
@@ -72,10 +74,6 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
 
   fun withDeliusTeamCodes(deliusTeamCodes: List<String>?) = apply {
     this.deliusTeamCodes = { deliusTeamCodes }
-  }
-
-  fun withServiceOrigin(serviceOrigin: Cas2ServiceOrigin) = apply {
-    this.serviceOrigin = { serviceOrigin }
   }
 
   override fun produce(): Cas2UserEntity = Cas2UserEntity(
@@ -91,6 +89,8 @@ class Cas2UserEntityFactory : Factory<Cas2UserEntity> {
     isEnabled = this.isEnabled(),
     isActive = this.isActive(),
     applications = this.applications(),
-    serviceOrigin = this.serviceOrigin(),
+    externalType = this.externalType(),
+    nomisAccountType = this.nomisAccountType(),
+    createdAt = this.createdAt(),
   )
 }

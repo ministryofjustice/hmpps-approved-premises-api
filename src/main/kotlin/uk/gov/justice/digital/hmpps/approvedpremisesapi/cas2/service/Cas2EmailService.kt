@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
@@ -14,7 +14,7 @@ import kotlin.jvm.optionals.getOrElse
 @Service
 class Cas2EmailService(
   private val emailNotificationService: EmailNotificationService,
-  private val nomisUserRepository: NomisUserRepository,
+  private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
@@ -35,7 +35,7 @@ class Cas2EmailService(
 
     // only send an email to previous POM if the offender actually has one
     transferringFromPomId?.let {
-      val transferringFromPom = nomisUserRepository.findById(it).getOrElse { error("No Nomis User found for id $it.") }
+      val transferringFromPom = cas2UserRepository.findById(it).getOrElse { error("No Nomis User found for id $it.") }
       emailNotificationService.sendCas2Email(
         transferringFromPom.email!!,
         Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
@@ -109,7 +109,7 @@ class Cas2EmailService(
         ?: offenderManagementUnitRepository.findByPrisonCode(it.prisonCode)!!.email
     }
 
-    return application.getCreatedByUserEmail()
+    return application.createdByUser.email
   }
 
   fun getApplicationStatusOrDefault(applicationId: UUID): String = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)?.label ?: "Received"

@@ -36,6 +36,10 @@ class ExternalUserEntityFactory : Factory<ExternalUserEntity> {
     this.email = { email }
   }
 
+  fun withIsEnabled(isEnabled: Boolean) = apply {
+    this.isEnabled = { isEnabled }
+  }
+
   fun withOrigin(origin: String) = apply {
     this.origin = { origin }
   }

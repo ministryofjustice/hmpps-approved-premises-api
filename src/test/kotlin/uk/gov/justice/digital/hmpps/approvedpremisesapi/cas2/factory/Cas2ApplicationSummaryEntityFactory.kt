@@ -32,7 +32,7 @@ object Cas2ApplicationSummaryEntityFactory {
     id = id,
     crn = crn,
     nomsNumber = nomsNumber,
-    userId = userId.toString(),
+    userId = userId,
     userName = userName,
     allocatedPomUserId = allocatedPomUserId,
     allocatedPomName = allocatedPomName,

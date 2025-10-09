@@ -43,9 +43,9 @@ class Cas2ApplicationsController(
     @RequestParam assignmentType: AssignmentType,
     @RequestParam page: Int?,
   ): ResponseEntity<List<Cas2ApplicationSummary>> {
-    val user = userService.getUserForRequest()
+    val user = userService.getCas2UserForRequest()
 
-    if (user.activeCaseloadId == null) throw ForbiddenProblem()
+    if (user.activeNomisCaseloadId == null) throw ForbiddenProblem()
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
@@ -61,7 +61,7 @@ class Cas2ApplicationsController(
 
   @GetMapping("/applications/{applicationId}")
   fun getCas2Application(@PathVariable applicationId: UUID): ResponseEntity<Cas2Application> {
-    val user = userService.getUserForRequest()
+    val user = userService.getCas2UserForRequest()
     val application = extractEntityFromCasResult(applicationService.getApplicationForUser(applicationId, user))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
@@ -69,7 +69,7 @@ class Cas2ApplicationsController(
   @Transactional
   @PostMapping("/applications")
   fun createCas2Application(@RequestBody body: NewApplication): ResponseEntity<Cas2Application> {
-    val user = userService.getUserForRequest()
+    val user = userService.getCas2UserForRequest()
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
     val applicationResult = applicationService.createApplication(personInfo, user)
 
@@ -86,7 +86,7 @@ class Cas2ApplicationsController(
     @PathVariable applicationId: UUID,
     @RequestBody body: UpdateCas2Application,
   ): ResponseEntity<Cas2Application> {
-    val user = userService.getUserForRequest()
+    val user = userService.getCas2UserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
@@ -103,7 +103,7 @@ class Cas2ApplicationsController(
   @Transactional
   @PutMapping("/applications/{applicationId}/abandon")
   fun abandonCas2Application(@PathVariable applicationId: UUID): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest()
+    val user = userService.getCas2UserForRequest()
     extractEntityFromCasResult(applicationService.abandonApplication(applicationId, user))
     return ResponseEntity.ok(Unit)
   }

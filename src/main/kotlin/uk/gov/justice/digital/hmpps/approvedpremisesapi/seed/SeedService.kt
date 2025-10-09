@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateSpac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1WithdrawPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2ApplicationsSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2UpdateAssessmentStatusSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.NomisUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.ShortTermAccommodationCreateOmusSeedJob
@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed.Cas2v2UsersS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3AssignApplicationToPduSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3ReferralRejectionSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2NomisUserEmailSeedJob
@@ -80,11 +81,13 @@ class SeedService(
         SeedFileType.cas2Applications -> getBean(Cas2ApplicationsSeedJob::class)
         SeedFileType.cas2v2Applications -> getBean(Cas2v2ApplicationsSeedJob::class)
         SeedFileType.cas2v2Users -> getBean(Cas2v2UsersSeedJob::class)
+        SeedFileType.cas2Users -> getBean(Cas2UsersSeedJob::class)
         SeedFileType.approvedPremisesUsers -> getBean(Cas1UsersSeedJob::class)
         SeedFileType.temporaryAccommodationUsers -> getBean(Cas3UsersSeedJob::class)
         SeedFileType.characteristics -> getBean(CharacteristicsSeedJob::class)
         SeedFileType.updateNomsNumber -> getBean(Cas1UpdateNomsNumberSeedJob::class)
         SeedFileType.temporaryAccommodationPremises -> getBean(TemporaryAccommodationPremisesSeedJob::class)
+        SeedFileType.temporaryAccommodationBedspace -> getBean(TemporaryAccommodationBedspaceSeedJob::class)
         SeedFileType.approvedPremisesAssessmentMoreInfoBugFix -> getBean(Cas1FurtherInfoBugFixSeedJob::class)
         SeedFileType.approvedPremisesRedactAssessmentDetails -> getBean(Cas1RemoveAssessmentDetailsSeedJob::class)
         SeedFileType.approvedPremisesWithdrawPlacementRequest -> getBean(Cas1WithdrawPlacementRequestSeedJob::class)
@@ -105,7 +108,6 @@ class SeedService(
         SeedFileType.shortTermAccommodationCreateOmus -> getBean(ShortTermAccommodationCreateOmusSeedJob::class)
         SeedFileType.temporaryAccommodationAssignApplicationToPdu -> getBean(Cas3AssignApplicationToPduSeedJob::class)
         SeedFileType.Cas2UpdateNomisUserEmailAddress -> getBean(Cas2NomisUserEmailSeedJob::class)
-        SeedFileType.cas2UpdateAssessmentStatus -> getBean(Cas2UpdateAssessmentStatusSeedJob::class)
       }
 
       val seedStarted = LocalDateTime.now()

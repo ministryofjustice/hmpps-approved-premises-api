@@ -2,25 +2,27 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
+  private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.homeDetentionCurfew }
+  private var cas2User = Cas2UserEntityFactory().withUserType(Cas2UserType.NOMIS).produce()
   private var application: Yielded<Cas2ApplicationEntity> = {
     Cas2ApplicationEntityFactory()
-      .withCreatedByUser(NomisUserEntityFactory().produce())
+      .withCreatedByUser(cas2User)
       .produce()
   }
   private var nacroReferralId: String? = null
   private var assessorName: String? = null
   private var statusUpdates: MutableList<Cas2StatusUpdateEntity> = mutableListOf()
-  private var serviceOrigin: Yielded<Cas2ServiceOrigin> = { Cas2ServiceOrigin.HDC }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -42,12 +44,12 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
     this.assessorName = name
   }
 
-  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
-    this.createdAt = { createdAt }
+  fun withApplicationOrigin(applicationOrigin: ApplicationOrigin) = apply {
+    this.applicationOrigin = { applicationOrigin }
   }
 
-  fun withServiceOrigin(serviceOrigin: Cas2ServiceOrigin) = apply {
-    this.serviceOrigin = { serviceOrigin }
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
   }
 
   override fun produce(): Cas2AssessmentEntity = Cas2AssessmentEntity(
@@ -57,6 +59,6 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
     nacroReferralId = this.nacroReferralId,
     assessorName = this.assessorName,
     statusUpdates = this.statusUpdates,
-    serviceOrigin = this.serviceOrigin(),
+    applicationOrigin = this.applicationOrigin(),
   )
 }

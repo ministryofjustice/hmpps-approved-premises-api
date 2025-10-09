@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import java.util.UUID
 
 @Component("Cas2SubmittedApplicationTransformer")
 class SubmissionsTransformer(
@@ -27,7 +26,7 @@ class SubmissionsTransformer(
     jpa: Cas2ApplicationEntity,
     personInfo: PersonInfoResult.Success,
   ): Cas2SubmittedApplication {
-    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getNomisUserById(jpa.currentPomUserId!!) }
+    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getCas2UserById(jpa.currentPomUserId!!) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     return Cas2SubmittedApplication(
       id = jpa.id,
@@ -54,7 +53,7 @@ class SubmissionsTransformer(
   ): Cas2SubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
     id = jpaSummary.id,
     personName = personName,
-    createdByUserId = UUID.fromString(jpaSummary.getCreatedById()),
+    createdByUserId = jpaSummary.userId,
     createdAt = jpaSummary.createdAt.toInstant(),
     submittedAt = jpaSummary.submittedAt?.toInstant(),
     crn = jpaSummary.crn,

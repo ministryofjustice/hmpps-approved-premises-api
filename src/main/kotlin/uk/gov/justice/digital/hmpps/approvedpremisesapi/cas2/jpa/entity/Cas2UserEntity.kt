@@ -7,10 +7,10 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -28,7 +28,10 @@ enum class Cas2UserType(val authSource: String) {
 
 @Repository
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
-  fun findByUsernameAndUserTypeAndServiceOrigin(username: String, type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByUsername(username: String): Cas2UserEntity?
+  fun findByUsernameAndUserType(username: String, type: Cas2UserType): Cas2UserEntity?
+  fun findByUserType(type: Cas2UserType): List<Cas2UserEntity>
+  fun findByNomisStaffId(nomisStaffId: Long): Cas2UserEntity?
 }
 
 @Entity
@@ -64,16 +67,16 @@ data class Cas2UserEntity(
   var isEnabled: Boolean,
   var isActive: Boolean,
 
+  @CreationTimestamp
+  private val createdAt: OffsetDateTime? = null,
+
   @UpdateTimestamp
   private val updatedAt: OffsetDateTime? = null,
 
-  val createdAt: OffsetDateTime = OffsetDateTime.now(),
-
-  @OneToMany(mappedBy = "createdByCas2User")
+  @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
 
-  @Enumerated(EnumType.STRING)
-  var serviceOrigin: Cas2ServiceOrigin,
+  // TODO removed Cas2User as no longer necessary as just one user type
 ) {
   override fun toString() = "CAS2 user $id"
 
@@ -82,4 +85,6 @@ data class Cas2UserEntity(
     Cas2UserType.DELIUS -> deliusStaffCode ?: error("Couldn't resolve delius ID for user $id")
     Cas2UserType.EXTERNAL -> "" // BAIL-WIP - this currently needs to be not null - refactor them when we add the user type to cas2 user type
   }
+
+  fun isExternal() = userType == Cas2UserType.EXTERNAL
 }

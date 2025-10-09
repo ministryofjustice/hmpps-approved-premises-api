@@ -23,8 +23,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -32,8 +30,6 @@ import java.util.UUID
 @Suppress("TooManyFunctions")
 @Repository
 interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
-  @Query("SELECT n.id FROM Cas2ApplicationEntity n")
-  fun findApplicationIds(): List<UUID>
 
   fun findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber: String): Cas2ApplicationEntity?
 
@@ -90,16 +86,10 @@ data class Cas2ApplicationEntity(
 
   val crn: String,
 
-  // BAIL-WIP - When start to create application for delius users, this will need to be nullable, but that creates cas2cade effects whenever we us code like `staffIdentifier = application.createdByUser.nomisStaffId`,`
-  // BAIL-WIP - Set this to deprecated when we make it optional
-  // BAIL-WIP - this will become private to force the use of getters
+  // TODO besscerule merged the user type to just one (Cas2UserEntity)
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
-  val createdByUser: NomisUserEntity,
-
-  @ManyToOne
-  @JoinColumn(name = "created_by_cas2_user_id")
-  val createdByCas2User: Cas2UserEntity? = null,
+  val createdByUser: Cas2UserEntity,
 
   @Type(JsonType::class)
   var data: String?,
@@ -135,32 +125,19 @@ data class Cas2ApplicationEntity(
   var telephoneNumber: String? = null,
   var bailHearingDate: LocalDate? = null,
   @Enumerated(EnumType.STRING)
-  var applicationOrigin: ApplicationOrigin,
-
-  @Enumerated(EnumType.STRING)
-  var serviceOrigin: Cas2ServiceOrigin,
+  var applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
 ) {
+
+  // TODO besscerule deleted and refactored a load of code that was present to allow 2 users - now we just have cas2 users
+
   override fun toString() = "Cas2ApplicationEntity: $id"
 
-  fun isCreatedBy(user: NomisUserEntity): Boolean = createdByUser.id == user.id
-  fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByCas2User?.id == user.id
+  fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByUser.id == user.id
 
-  fun getCreatedById(): UUID = createdByCas2User?.id ?: createdByUser.id
-  fun getCreatedByCanonicalName(): String = createdByCas2User?.name ?: createdByUser.name
-  fun getCreatedByUsername(): String = createdByCas2User?.username ?: createdByUser.nomisUsername
-  fun getCreatedByUserIdentifier(): String = createdByCas2User?.staffIdentifier() ?: createdByUser.nomisStaffId.toString()
-  fun getCreatedByUserEmail(): String? = createdByCas2User?.email ?: createdByUser.email
-  fun getCreatedByUserIsActive(): Boolean = createdByCas2User?.isActive ?: createdByUser.isActive
-
-  fun getCreatedByUserType(): Cas2StaffMember.Usertype {
-    if (createdByCas2User != null) {
-      return when (createdByCas2User!!.userType) {
-        Cas2UserType.NOMIS -> Cas2StaffMember.Usertype.nomis
-        Cas2UserType.DELIUS -> Cas2StaffMember.Usertype.delius
-        Cas2UserType.EXTERNAL -> throw ForbiddenProblem() // BAIL-WIP - The cas2 staff member usertype does not know about external users, we need to add it in the yaml
-      }
-    }
-    return Cas2StaffMember.Usertype.nomis
+  fun getCreatedByUserType() = when (createdByUser.userType) {
+    Cas2UserType.NOMIS -> Cas2StaffMember.Usertype.nomis
+    Cas2UserType.DELIUS -> Cas2StaffMember.Usertype.delius
+    Cas2UserType.EXTERNAL -> Cas2StaffMember.Usertype.auth
   }
 
   val currentPrisonCode: String?
@@ -173,7 +150,7 @@ data class Cas2ApplicationEntity(
 
   fun isLocationChange(latestPrisonCode: String) = currentPrisonCode != latestPrisonCode
   fun isTransferredApplication() = applicationAssignments.map { it.prisonCode }.distinct().size > 1
-  fun createApplicationAssignment(prisonCode: String, allocatedPomUser: NomisUserEntity?) {
+  fun createApplicationAssignment(prisonCode: String, allocatedPomUser: Cas2UserEntity?) {
     this.applicationAssignments.add(
       Cas2ApplicationAssignmentEntity(
         id = UUID.randomUUID(),
