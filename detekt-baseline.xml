@@ -68,7 +68,6 @@
     <ID>SwallowedException:OffenderService.kt$OffenderService$exception: Exception</ID>
     <ID>SwallowedException:PlacementRequestTransformer.kt$PlacementRequestTransformer$exception: Exception</ID>
     <ID>SwallowedException:SeedService.kt$SeedService$exception: Exception</ID>
-    <ID>ThrowsCount:DeletePremisesController.kt$DeletePremisesController$@RequestMapping(method = [RequestMethod.DELETE], value = ["/internal/premises/{premisesId}"]) fun internalDeletePremises(@PathVariable("premisesId") premisesId: UUID): ResponseEntity&lt;Unit&gt;</ID>
     <ID>TooGenericExceptionCaught:BaseHMPPSClient.kt$BaseHMPPSClient$exception: Exception</ID>
     <ID>TooGenericExceptionCaught:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$exception: Exception</ID>
     <ID>TooGenericExceptionCaught:DeserializationValidationService.kt$e: Exception</ID>
