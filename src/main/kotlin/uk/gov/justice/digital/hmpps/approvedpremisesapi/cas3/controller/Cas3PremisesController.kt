@@ -81,11 +81,12 @@ class Cas3PremisesController(
   private val cas3BedspaceTransformer: Cas3BedspaceTransformer,
   private val cas3ArrivalTransformer: Cas3ArrivalTransformer,
 ) {
+  @Deprecated("This endpoint will be removed in v2. Use /cas3/v2/premises/{premisesId}")
   @GetMapping("/premises/{premisesId}")
   fun getPremisesById(@PathVariable premisesId: UUID): ResponseEntity<Cas3Premises> {
     val premises = getAndCheckUserCanViewPremises(premisesId)
 
-    val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises))
+    val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises.id))
 
     return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory))
   }

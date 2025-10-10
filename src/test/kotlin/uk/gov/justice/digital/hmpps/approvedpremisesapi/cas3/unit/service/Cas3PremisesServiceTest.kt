@@ -2899,7 +2899,7 @@ class Cas3PremisesServiceTest {
 
       every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED, CAS3_PREMISES_UNARCHIVED)) } returns emptyList()
 
-      val result = premisesService.getPremisesArchiveHistory(premises)
+      val result = premisesService.getPremisesArchiveHistory(premises.id)
 
       assertThatCasResult(result).isSuccess().with { archiveHistory ->
         assertThat(archiveHistory).isEqualTo(emptyList<Cas3PremisesArchiveAction>())
@@ -2945,7 +2945,7 @@ class Cas3PremisesServiceTest {
           domainEvent3DaysAgo,
         )
 
-      val result = premisesService.getPremisesArchiveHistory(premises)
+      val result = premisesService.getPremisesArchiveHistory(premises.id)
 
       assertThatCasResult(result).isSuccess().with { archiveHistory ->
         assertThat(archiveHistory).isEqualTo(
@@ -2989,7 +2989,7 @@ class Cas3PremisesServiceTest {
       every { cas3DomainEventServiceMock.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED, CAS3_PREMISES_UNARCHIVED)) } returns
         listOf(domainEventTomorrow, domainEventIn2Days)
 
-      val result = premisesService.getPremisesArchiveHistory(premises)
+      val result = premisesService.getPremisesArchiveHistory(premises.id)
 
       assertThatCasResult(result).isSuccess().with { archiveHistory ->
         assertThat(archiveHistory).isEqualTo(emptyList<Cas3PremisesArchiveAction>())

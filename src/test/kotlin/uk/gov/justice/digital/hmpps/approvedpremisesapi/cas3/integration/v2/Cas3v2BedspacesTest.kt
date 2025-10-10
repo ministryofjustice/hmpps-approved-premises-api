@@ -415,7 +415,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Not Found")
           .jsonPath("status").isEqualTo(404)
-          .jsonPath("detail").isEqualTo("No Premises with an ID of $premisesId could be found")
+          .jsonPath("detail").isEqualTo("No Cas3Premises with an ID of $premisesId could be found")
       }
     }
 
