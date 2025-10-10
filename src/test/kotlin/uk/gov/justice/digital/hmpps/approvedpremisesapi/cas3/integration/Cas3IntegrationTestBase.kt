@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
@@ -44,6 +45,46 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
+  inner class V2 {
+    @SuppressWarnings("LongParameterList")
+    fun getListPremisesByStatus(
+      probationDeliveryUnit: ProbationDeliveryUnitEntity,
+      localAuthorityArea: LocalAuthorityAreaEntity,
+      numberOfPremises: Int,
+      premisesStatus: Cas3PremisesStatus,
+      startDate: LocalDate = LocalDate.now().minusDays(180),
+      endDate: LocalDate? = null,
+    ): List<Cas3PremisesEntity> {
+      val premisesCharacteristics = cas3PremisesCharacteristicEntityFactory.produceAndPersistMultiple(2)
+
+      val premises = cas3PremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
+        withProbationDeliveryUnit(probationDeliveryUnit)
+        withLocalAuthorityArea(localAuthorityArea)
+        withStatus(premisesStatus)
+        withStartDate(startDate)
+        withEndDate(endDate)
+        withAddressLine2(randomStringUpperCase(10))
+        withCharacteristics(premisesCharacteristics.toMutableList())
+      }
+
+      return premises
+    }
+
+    fun createBedspaceInPremises(
+      premises: Cas3PremisesEntity,
+      startDate: LocalDate,
+      endDate: LocalDate? = null,
+    ): Cas3BedspacesEntity {
+      val bedspaceCharacteristics = cas3BedspaceCharacteristicEntityFactory.produceAndPersistMultiple(2)
+      val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withStartDate(startDate)
+        withEndDate(endDate)
+        withCharacteristics(bedspaceCharacteristics.toMutableList())
+      }
+      return bedspace
+    }
+  }
 
   @SuppressWarnings("LongParameterList")
   protected fun getListPremisesByStatus(
@@ -188,6 +229,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     bedspaceCount = bedspaceCount,
     town = premises.town,
     localAuthorityAreaName = premises.localAuthorityArea?.name!!,
+    premisesStatus = premises.cas3PremisesStatus,
   )
 
   @SuppressWarnings("LongParameterList")

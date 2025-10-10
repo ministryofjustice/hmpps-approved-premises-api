@@ -13,6 +13,21 @@ class Cas3PremisesSummaryTransformer {
     addressLine2 = domain.addressLine2,
     postcode = domain.postcode,
     status = domain.status,
+    premisesStatus = null,
+    bedspaceCount = bedspaceCount,
+    pdu = domain.pdu,
+    town = domain.town,
+    localAuthorityAreaName = domain.localAuthorityAreaName,
+  )
+
+  fun transformDomainToCas3PremisesSummaryV2(domain: Cas3PremisesSummary, bedspaceCount: Int): Cas3PremisesSummary = Cas3PremisesSummary(
+    id = domain.id,
+    name = domain.name,
+    addressLine1 = domain.addressLine1,
+    addressLine2 = domain.addressLine2,
+    postcode = domain.postcode,
+    status = null,
+    premisesStatus = domain.premisesStatus,
     bedspaceCount = bedspaceCount,
     pdu = domain.pdu,
     town = domain.town,
