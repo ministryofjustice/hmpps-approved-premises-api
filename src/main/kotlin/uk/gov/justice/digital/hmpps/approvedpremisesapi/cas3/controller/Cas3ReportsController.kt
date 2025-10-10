@@ -145,9 +145,7 @@ class Cas3ReportsController(
         )
       }
 
-      bookingGap -> generateStreamingResponse(
-        contentType = ContentType.CSV,
-      ) { outputStream ->
+      bookingGap -> generateXlsxStreamingResponse { outputStream ->
         cas3ReportService.createBookingGapReport(
           BookingGapReportProperties(
             startDate = startDate,

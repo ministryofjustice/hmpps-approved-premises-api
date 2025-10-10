@@ -64,7 +64,6 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.DELETE, "/cache/*", permitAll)
         authorize(HttpMethod.POST, "/migration-job", permitAll)
         authorize(HttpMethod.DELETE, "/internal/premises/*", permitAll)
-        authorize(HttpMethod.DELETE, "/internal/room/*", permitAll)
         authorize(HttpMethod.GET, "/events/cas2/**", hasAuthority("ROLE_CAS2_EVENTS"))
         authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))
         authorize(HttpMethod.PUT, "/cas2/assessments/**", hasRole("CAS2_ASSESSOR"))

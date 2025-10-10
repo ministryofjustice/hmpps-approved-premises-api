@@ -15,13 +15,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingSummaryFo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -35,8 +33,6 @@ class PremisesServiceTest {
   private val probationRegionRepositoryMock = mockk<ProbationRegionRepository>()
   private val probationDeliveryUnitRepositoryMock = mockk<ProbationDeliveryUnitRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
-  private val roomRepositoryMock = mockk<RoomRepository>()
-  private val bedRepositoryMock = mockk<BedRepository>()
 
   private val approvedPremisesFactory = ApprovedPremisesEntityFactory()
     .withYieldedProbationRegion {
@@ -54,8 +50,6 @@ class PremisesServiceTest {
     probationRegionRepositoryMock,
     probationDeliveryUnitRepositoryMock,
     characteristicServiceMock,
-    roomRepositoryMock,
-    bedRepositoryMock,
   )
 
   @Test

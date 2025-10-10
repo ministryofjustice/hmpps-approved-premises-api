@@ -146,7 +146,7 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
       val sourcePremisesCharacteristic = temporaryAccommodationPremisesEntity.characteristics.first { it.id == migratedCharacteristic.id }
       assertThat(migratedCharacteristic.description).isEqualTo(sourcePremisesCharacteristic.name)
       assertThat(migratedCharacteristic.name).isEqualTo(sourcePremisesCharacteristic.propertyName)
-      assertThat(migratedCharacteristic.isActive).isEqualTo(sourcePremisesCharacteristic.isActive)
+      assertThat(migratedCharacteristic.active).isEqualTo(sourcePremisesCharacteristic.isActive)
     }
   }
 
@@ -156,7 +156,7 @@ class Cas3MigrateNewBedspaceModelDataJobTest : Cas3IntegrationTestBase() {
       val sourcePremisesCharacterists = expectedRoomToMatch.characteristics.first { it.id == migratedCharacteristic.id }
       assertThat(migratedCharacteristic.description).isEqualTo(sourcePremisesCharacterists.name)
       assertThat(migratedCharacteristic.name).isEqualTo(sourcePremisesCharacterists.propertyName)
-      assertThat(migratedCharacteristic.isActive).isEqualTo(sourcePremisesCharacterists.isActive)
+      assertThat(migratedCharacteristic.active).isEqualTo(sourcePremisesCharacterists.isActive)
     }
   }
 }

@@ -120,7 +120,7 @@ class Cas3v2BookingService(
     val bedspace = cas3BedspaceRepository.findByIdOrNull(bedspaceId)
     if (bedspace == null) {
       "$.bedspaceId" hasValidationError "doesNotExist"
-    } else if (bedspace.startDate != null && bedspace.startDate!!.isAfter(arrivalDate)) {
+    } else if (bedspace.startDate.isAfter(arrivalDate)) {
       "$.arrivalDate" hasValidationError "bookingArrivalDateBeforeBedspaceStartDate"
     }
 

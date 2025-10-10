@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import arrow.core.Either
-import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
@@ -9,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -17,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -37,8 +34,6 @@ class PremisesService(
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
-  private val roomRepository: RoomRepository,
-  private val bedRepository: BedRepository,
 ) {
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
 
@@ -265,27 +260,6 @@ class PremisesService(
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedPremises),
     )
-  }
-
-  @Transactional
-  fun deletePremises(premises: PremisesEntity): ValidatableActionResult<Unit> = validated {
-    if (premises.bookings.any()) {
-      return premises.id hasConflictError "A premises cannot be hard-deleted if it has any bookings associated with it"
-    }
-
-    premises.voidBedspaces.forEach { voidBedspace ->
-      cas3VoidBedspacesRepository.delete(voidBedspace)
-    }
-
-    premises.rooms.forEach { room ->
-      room.beds.forEach { bed ->
-        bedRepository.delete(bed)
-      }
-      roomRepository.delete(room)
-    }
-    premisesRepository.delete(premises)
-
-    success(Unit)
   }
 
   private fun tryGetProbationDeliveryUnit(

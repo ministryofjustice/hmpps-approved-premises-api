@@ -68,8 +68,6 @@
     <ID>SwallowedException:OffenderService.kt$OffenderService$exception: Exception</ID>
     <ID>SwallowedException:PlacementRequestTransformer.kt$PlacementRequestTransformer$exception: Exception</ID>
     <ID>SwallowedException:SeedService.kt$SeedService$exception: Exception</ID>
-    <ID>ThrowsCount:DeletePremisesController.kt$DeletePremisesController$@RequestMapping(method = [RequestMethod.DELETE], value = ["/internal/premises/{premisesId}"]) fun internalDeletePremises(@PathVariable("premisesId") premisesId: UUID): ResponseEntity&lt;Unit&gt;</ID>
-    <ID>ThrowsCount:DeleteRoomController.kt$DeleteRoomController$@RequestMapping(method = [RequestMethod.DELETE], value = ["/internal/room/{roomId}"]) fun internalDeletePremises(@PathVariable("roomId") roomId: UUID): ResponseEntity&lt;Unit&gt;</ID>
     <ID>TooGenericExceptionCaught:BaseHMPPSClient.kt$BaseHMPPSClient$exception: Exception</ID>
     <ID>TooGenericExceptionCaught:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$exception: Exception</ID>
     <ID>TooGenericExceptionCaught:DeserializationValidationService.kt$e: Exception</ID>
@@ -170,8 +168,6 @@
     <ID>TooGenericExceptionThrown:TemporaryAccommodationApplicationEntityFactory.kt$TemporaryAccommodationApplicationEntityFactory$throw RuntimeException("A probation region must be provided")</ID>
     <ID>TooGenericExceptionThrown:TemporaryAccommodationApplicationEntityFactory.kt$TemporaryAccommodationApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
     <ID>TooGenericExceptionThrown:TemporaryAccommodationAssessmentEntityFactory.kt$TemporaryAccommodationAssessmentEntityFactory$throw RuntimeException("Must provide an application")</ID>
-    <ID>TooGenericExceptionThrown:TemporaryAccommodationBedspaceSeedJob.kt$TemporaryAccommodationBedspaceSeedJob$throw RuntimeException("Characteristic $it does not exist")</ID>
-    <ID>TooGenericExceptionThrown:TemporaryAccommodationBedspaceSeedJob.kt$TemporaryAccommodationBedspaceSeedJob$throw RuntimeException("Premises with reference '${row.premisesName}' does not exist")</ID>
     <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesEntityFactory.kt$TemporaryAccommodationPremisesEntityFactory$throw RuntimeException("Must provide a probation region")</ID>
     <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesSeedJob.kt$TemporaryAccommodationPremisesSeedJob$throw RuntimeException("Model scope does not match for Characteristic $it")</ID>
     <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesSeedJob.kt$TemporaryAccommodationPremisesSeedJob$throw RuntimeException("Service scope does not match for Characteristic $it")</ID>
