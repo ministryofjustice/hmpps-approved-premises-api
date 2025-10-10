@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
-import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import java.util.UUID
 
 data class Cas3PremisesSummary(
   override val id: UUID,
