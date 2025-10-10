@@ -17,12 +17,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UpdateApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefor
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
 
 class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
@@ -604,6 +605,58 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             .responseBody
 
           assertThat(cas3ApiResult!!.assessmentId).isNotNull()
+          assertThat(cas3ApiResult.assessmentDecision).isNull()
+        }
+      }
+    }
+
+    @Test
+    fun `GET submitted CAS3 application return the last assessment decision in the response`() {
+      givenAUser { submittingUser, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+          val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withCreatedByUser(submittingUser)
+            withProbationRegion(submittingUser.probationRegion)
+            withName(offenderName)
+            withData("{}")
+          }
+
+          temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withDecision(AssessmentDecision.ACCEPTED)
+            withCreatedAt(OffsetDateTime.now().minusDays(30))
+          }
+
+          // last assessment
+          temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withDecision(AssessmentDecision.REJECTED)
+            withCreatedAt(OffsetDateTime.now().minusDays(20))
+          }
+
+          val casApiResult = callCasApi(jwt, applicationId)
+            .expectStatus()
+            .isOk
+            .expectBody(TemporaryAccommodationApplication::class.java)
+            .returnResult()
+            .responseBody
+
+          assertThat(casApiResult!!.assessmentId).isNotNull()
+
+          val cas3ApiResult = callCas3Api(jwt, applicationId)
+            .expectStatus()
+            .isOk
+            .expectBody(Cas3Application::class.java)
+            .returnResult()
+            .responseBody
+
+          assertThat(cas3ApiResult!!.assessmentId).isNotNull()
+          assertThat(cas3ApiResult.assessmentDecision).isEqualTo(AssessmentDecisionApi.rejected)
         }
       }
     }
