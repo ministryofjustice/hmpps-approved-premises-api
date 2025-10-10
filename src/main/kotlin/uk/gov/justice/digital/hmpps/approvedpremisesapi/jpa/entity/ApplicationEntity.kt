@@ -542,7 +542,11 @@ class TemporaryAccommodationApplicationEntity(
   deletedAt,
   assessments,
   nomsNumber,
-)
+) {
+  override fun getLatestAssessment(): TemporaryAccommodationAssessmentEntity? = this.assessments
+    .filterIsInstance<TemporaryAccommodationAssessmentEntity>()
+    .maxByOrNull { it.createdAt }
+}
 
 /**
  * Provides a version of the ApplicationEntity with no relationships, allowing

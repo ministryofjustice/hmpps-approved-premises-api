@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -30,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as AssessmentDecisionApi
 
 class Cas3ApplicationTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
@@ -71,7 +71,7 @@ class Cas3ApplicationTransformerTest {
     .withResponse("Response")
     .withCreatedBy(allocatedToUser)
 
-  private val assessmentFactory = ApprovedPremisesAssessmentEntityFactory()
+  private val assessmentFactory = TemporaryAccommodationAssessmentEntityFactory()
     .withAllocatedToUser(allocatedToUser)
 
   private val cas3ApplicationsTransformer = Cas3ApplicationTransformer(objectMapper, mockPersonTransformer, mockRisksTransformer)
@@ -116,6 +116,7 @@ class Cas3ApplicationTransformerTest {
     val result = cas3ApplicationsTransformer.transformJpaToApi(application, mockk())
 
     assertThat(result.assessmentId).isEqualTo(assessment.id)
+    assertThat(result.assessmentDecision).isEqualTo(AssessmentDecisionApi.accepted)
   }
 
   @Test
@@ -230,6 +231,47 @@ class Cas3ApplicationTransformerTest {
     val result = cas3ApplicationsTransformer.transformJpaToApi(application, mockk())
 
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+  }
+
+  @Test
+  fun `transformJpaToApi uses the latest assessment when assessment decision is accepted`() {
+    val application = submittedTemporaryAccommodationApplicationFactory
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce(),
+          )
+          .produce()
+      }
+      .produce()
+    val oldAssessment = assessmentFactory.withApplication(application)
+      .withCreatedAt(OffsetDateTime.parse("2022-09-01T12:34:56.789Z"))
+      .withDecision(AssessmentDecision.REJECTED)
+      .produce()
+    val latestAssessment = assessmentFactory.withApplication(application)
+      .withDecision(AssessmentDecision.ACCEPTED)
+      .withCreatedAt(OffsetDateTime.now())
+      .produce()
+
+    oldAssessment.clarificationNotes = mutableListOf(
+      awaitingClarificationNoteFactory
+        .withAssessment(oldAssessment)
+        .produce(),
+    )
+
+    latestAssessment.clarificationNotes = mutableListOf(
+      completedClarificationNoteFactory
+        .withAssessment(latestAssessment)
+        .produce(),
+    )
+
+    application.assessments = mutableListOf(oldAssessment, latestAssessment)
+
+    val result = cas3ApplicationsTransformer.transformJpaToApi(application, mockk())
+
+    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.assessmentDecision).isEqualTo(AssessmentDecisionApi.accepted)
   }
 
   @Test

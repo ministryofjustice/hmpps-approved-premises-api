@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
@@ -46,6 +46,7 @@ class Cas3ApplicationTransformer(
       status = getStatus(applicationEntity, latestAssessment),
       offenceId = applicationEntity.offenceId,
       assessmentId = latestAssessment?.id,
+      assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
     )
   }
 
@@ -78,5 +79,11 @@ class Cas3ApplicationTransformer(
     latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
     entity.submittedAt !== null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
+  }
+
+  fun transformJpaDecisionToApi(decision: AssessmentDecision?) = when (decision) {
+    AssessmentDecision.ACCEPTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted
+    AssessmentDecision.REJECTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.rejected
+    null -> null
   }
 }

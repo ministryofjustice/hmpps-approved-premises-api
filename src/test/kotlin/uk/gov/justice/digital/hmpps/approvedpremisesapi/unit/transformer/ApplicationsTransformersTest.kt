@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -273,7 +273,7 @@ class ApplicationsTransformersTest {
           .produce()
       }
       .produce()
-    val assessment = assessmentFactory.withApplication(application).produce()
+    val assessment = TemporaryAccommodationAssessmentEntityFactory().withApplication(application).produce()
 
     application.assessments = mutableListOf(assessment)
     assessment.clarificationNotes = mutableListOf(
