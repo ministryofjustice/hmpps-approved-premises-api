@@ -391,8 +391,11 @@ class TemporaryAccommodationPremisesEntity(
       PropertyStatus.archived -> Cas3PremisesStatus.archived
     }
 }
+interface TemporaryAccommodationPremisesSummary : TemporaryAccommodationPremisesSummaryMain {
+  val status: PropertyStatus
+}
 
-interface TemporaryAccommodationPremisesSummary {
+interface TemporaryAccommodationPremisesSummaryMain {
   val id: UUID
   val name: String
   val addressLine1: String

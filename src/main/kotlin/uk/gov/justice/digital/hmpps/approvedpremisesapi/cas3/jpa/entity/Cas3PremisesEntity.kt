@@ -15,10 +15,12 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummaryMain
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceArchived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceOnline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
@@ -91,4 +93,50 @@ interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID> {
     name: String,
     probationDeliveryUnitId: UUID,
   ): Boolean
+
+  @Query(
+    """
+SELECT
+          p.id as id,
+          p.name as name,
+          p.address_line1 as addressLine1,
+          p.address_line2 as addressLine2,
+          p.postcode as postcode,
+          p.town as town,
+          pdu.name as pdu,
+          p.status as status,
+          la.name as localAuthorityAreaName,
+          bs.id as bedspaceId,
+          bs.reference as bedspaceReference,
+          CASE 
+            WHEN bs.end_date <= CURRENT_DATE THEN 'archived' 
+            WHEN bs.start_date IS NOT NULL AND bs.start_date > CURRENT_DATE THEN 'upcoming' 
+            WHEN bs.id IS NOT NULL THEN 'online'
+            ELSE NULL END as bedspaceStatus
+      FROM
+          cas3_premises p
+          INNER JOIN probation_delivery_units pdu ON p.probation_delivery_unit_id = pdu.id
+          INNER JOIN probation_regions pr ON pdu.probation_region_id = pr.id
+          LEFT JOIN local_authority_areas la ON p.local_authority_area_id = la.id
+          LEFT JOIN cas3_bedspaces bs on bs.premises_id = p.id
+      WHERE pr.id = :regionId
+        AND (:postcodeOrAddress is null
+          OR lower(p.town) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(p.postcode) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(p.address_line1) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(p.address_line2) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
+          )
+     AND (
+         (:premisesStatus = 'online' AND (p.end_date IS NULL OR p.end_date > CURRENT_DATE) AND p.start_date <= CURRENT_DATE)
+         OR (:premisesStatus = 'archived' AND ((p.end_date IS NOT NULL AND p.end_date <= CURRENT_DATE) OR p.start_date > CURRENT_DATE))
+         OR :premisesStatus IS NULL)
+      """,
+    nativeQuery = true,
+  )
+  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<Cas3PremisesSummaryResult>
+}
+
+interface Cas3PremisesSummaryResult : TemporaryAccommodationPremisesSummaryMain {
+  val status: Cas3PremisesStatus
 }

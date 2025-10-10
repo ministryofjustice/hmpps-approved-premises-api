@@ -19,12 +19,14 @@ import java.util.UUID
 fun IntegrationTestBase.givenACas3Premises(
   probationRegion: ProbationRegionEntity,
   status: Cas3PremisesStatus = randomOf(Cas3PremisesStatus.entries),
+  startDate: LocalDate? = null,
   endDate: LocalDate? = null,
 ) = givenACas3Premises(
   probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
     withProbationRegion(probationRegion)
   },
   status = status,
+  startDate = startDate,
   endDate = endDate,
 )
 
@@ -33,11 +35,13 @@ fun IntegrationTestBase.givenACas3Premises(
     withProbationRegion(probationRegionEntityFactory.produceAndPersist())
   },
   status: Cas3PremisesStatus = randomOf(Cas3PremisesStatus.entries),
+  startDate: LocalDate? = null,
   endDate: LocalDate? = null,
 ) = givenACas3Premises(
   name = randomStringMultiCaseWithNumbers(8),
   probationDeliveryUnit = probationDeliveryUnit,
   status = status,
+  startDate = startDate,
   endDate = endDate,
 )
 
@@ -51,7 +55,7 @@ fun IntegrationTestBase.givenACas3Premises(
   postCode: String = randomPostCode(),
   characteristics: List<Cas3PremisesCharacteristicEntity> = emptyList(),
   id: UUID = UUID.randomUUID(),
-  startDate: LocalDate = LocalDate.now().minusDays(180),
+  startDate: LocalDate? = null,
   endDate: LocalDate? = null,
 ): Cas3PremisesEntity = cas3PremisesEntityFactory
   .produceAndPersist {
@@ -62,7 +66,7 @@ fun IntegrationTestBase.givenACas3Premises(
     withStatus(status)
     withPostcode(postCode)
     withCharacteristics(characteristics.toMutableList())
-    withStartDate(startDate)
+    withStartDate(startDate ?: LocalDate.now().minusDays(180))
     withEndDate(endDate)
   }
 
