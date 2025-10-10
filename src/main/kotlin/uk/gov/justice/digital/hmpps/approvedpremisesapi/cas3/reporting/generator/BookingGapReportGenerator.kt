@@ -10,9 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.DateRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.UnavailablePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingGapReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
 
-class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3BookingGapReportRow, BookingGapReportProperties>(Cas3BookingGapReportRow::class) {
+class BookingGapReportGenerator(private val workingDayService: WorkingDayService) : ReportGenerator<BookingGapReportData, Cas3BookingGapReportRow, BookingGapReportProperties>(Cas3BookingGapReportRow::class) {
   override fun filter(properties: BookingGapReportProperties): (BookingGapReportData) -> Boolean = {
     true
   }
@@ -60,11 +61,12 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
     val bookingPeriods = bedspaceBookings
       .filter { it.arrivalDate != it.departureDate }
       .map { booking ->
+        val endDateWithTurnaround = workingDayService.addWorkingDays(booking.departureDate, booking.turnaroundDays ?: 0)
         UnavailablePeriod(
           bedId = booking.bedId,
           startDate = booking.arrivalDate,
-          endDate = booking.departureDate,
-          turnaroundDays = booking.turnaroundDays ?: 0,
+          endDate = endDateWithTurnaround,
+          turnaroundDays = endDateWithTurnaround.compareTo(booking.departureDate),
         )
       }
 
@@ -157,7 +159,7 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
             bedspace,
             currentEnd.plusDays(1),
             nextStart.minusDays(1),
-            unavailablePeriods[i + 1].turnaroundDays,
+            unavailablePeriods[i].turnaroundDays,
           ),
         )
       }
