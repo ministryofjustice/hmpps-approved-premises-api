@@ -1,5 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
+import java.time.Instant
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
@@ -7,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
@@ -21,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSummaryV2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -38,12 +44,48 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
-import java.time.Instant
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.util.UUID
 
 abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
+  inner class V2 {
+    @SuppressWarnings("LongParameterList")
+    fun getListPremisesByStatus(
+      probationDeliveryUnit: ProbationDeliveryUnitEntity,
+      localAuthorityArea: LocalAuthorityAreaEntity,
+      numberOfPremises: Int,
+      premisesStatus: Cas3PremisesStatus,
+      startDate: LocalDate = LocalDate.now().minusDays(180),
+      endDate: LocalDate? = null,
+    ): List<Cas3PremisesEntity> {
+      val premisesCharacteristics = cas3PremisesCharacteristicEntityFactory.produceAndPersistMultiple(2)
+
+      val premises = cas3PremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
+        withProbationDeliveryUnit(probationDeliveryUnit)
+        withLocalAuthorityArea(localAuthorityArea)
+        withStatus(premisesStatus)
+        withStartDate(startDate)
+        withEndDate(endDate)
+        withAddressLine2(randomStringUpperCase(10))
+        withCharacteristics(premisesCharacteristics.toMutableList())
+      }
+
+      return premises
+    }
+
+    fun createBedspaceInPremises(
+      premises: Cas3PremisesEntity,
+      startDate: LocalDate,
+      endDate: LocalDate? = null,
+    ): Cas3BedspacesEntity {
+      val bedspaceCharacteristics = cas3BedspaceCharacteristicEntityFactory.produceAndPersistMultiple(2)
+      val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withStartDate(startDate)
+        withEndDate(endDate)
+        withCharacteristics(bedspaceCharacteristics.toMutableList())
+      }
+      return bedspace
+    }
+  }
 
   @SuppressWarnings("LongParameterList")
   protected fun getListPremisesByStatus(
@@ -189,6 +231,19 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     town = premises.town,
     localAuthorityAreaName = premises.localAuthorityArea?.name!!,
   )
+
+  protected fun createPremisesSummaryV2(premises: TemporaryAccommodationPremisesEntity, bedspaceCount: Int) = Cas3PremisesSummaryV2(
+      id = premises.id,
+      name = premises.name,
+      addressLine1 = premises.addressLine1,
+      addressLine2 = premises.addressLine2,
+      postcode = premises.postcode,
+      pdu = premises.probationDeliveryUnit?.name!!,
+      status = premises.cas3PremisesStatus,
+      bedspaceCount = bedspaceCount,
+      town = premises.town,
+      localAuthorityAreaName = premises.localAuthorityArea?.name!!,
+    )
 
   @SuppressWarnings("LongParameterList")
   fun createPremisesUnarchiveDomainEvent(
