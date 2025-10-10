@@ -7,5 +7,4 @@ data class Cas3BookingGapReportRow(
   val bedName: String?,
   val gap: String?,
   val gapDays: Long?,
-  val turnaroundDays: Int?,
 )

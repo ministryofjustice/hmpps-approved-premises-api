@@ -10,9 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.DateRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.UnavailablePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingGapReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
 
-class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3BookingGapReportRow, BookingGapReportProperties>(Cas3BookingGapReportRow::class) {
+class BookingGapReportGenerator(private val workingDayService: WorkingDayService) : ReportGenerator<BookingGapReportData, Cas3BookingGapReportRow, BookingGapReportProperties>(Cas3BookingGapReportRow::class) {
   override fun filter(properties: BookingGapReportProperties): (BookingGapReportData) -> Boolean = {
     true
   }
@@ -29,7 +30,7 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
     val gaps = findGapsForAllBedspaces(bedspaces, unavailablePeriods, properties.startDate, properties.endDate)
 
     // Step 6: Filter out zero-day gaps and sort
-    val result = gaps.filter { it.gapDays!! > 0 }
+    val result = gaps
       .sortedWith(compareBy({ it.probationRegion }, { it.pduName }, { it.premisesName }, { it.bedName })).toMutableList()
     result
   }
@@ -58,13 +59,12 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
     bedspaceVoids: List<BedspaceVoid>,
   ): List<UnavailablePeriod> {
     val bookingPeriods = bedspaceBookings
-      .filter { it.arrivalDate != it.departureDate }
       .map { booking ->
+        val endDateWithTurnaround = if ((booking.turnaroundDays ?: 0) > 0) workingDayService.addWorkingDays(booking.departureDate, booking.turnaroundDays ?: 0) else booking.departureDate
         UnavailablePeriod(
           bedId = booking.bedId,
           startDate = booking.arrivalDate,
-          endDate = booking.departureDate,
-          turnaroundDays = booking.turnaroundDays ?: 0,
+          endDate = endDateWithTurnaround,
         )
       }
 
@@ -73,7 +73,6 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
         bedId = void.bedId,
         startDate = void.startDate,
         endDate = void.endDate,
-        turnaroundDays = 0,
       )
     }
 
@@ -107,7 +106,6 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
           bedName = bedspace.roomName,
           gap = DateRange(reportStartDate, reportEndDate).toString(),
           gapDays = DateRange(reportStartDate, reportEndDate).daysBetween(),
-          turnaroundDays = null,
         ),
       )
     }
@@ -135,20 +133,18 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
     reportEndDate: LocalDate,
   ): List<Cas3BookingGapReportRow> {
     val gaps = mutableListOf<Cas3BookingGapReportRow>()
-
-    if (unavailablePeriods.isEmpty()) {
-      return gaps
-    }
+    if (unavailablePeriods.isEmpty()) return gaps
 
     val analysisStart = minOf(unavailablePeriods.minOfOrNull { it.startDate } ?: reportStartDate, reportStartDate)
     val analysisEnd = maxOf(unavailablePeriods.maxOfOrNull { it.endDate } ?: reportEndDate, reportEndDate)
 
     if (analysisStart < unavailablePeriods.first().startDate) {
-      gaps.add(createGap(bedspace, analysisStart, unavailablePeriods.first().startDate.minusDays(1), null))
+      gaps.add(createGap(bedspace, analysisStart, unavailablePeriods.first().startDate.minusDays(1)))
     }
 
     for (i in 0 until unavailablePeriods.size - 1) {
-      val currentEnd = unavailablePeriods[i].endDate
+      val prev = unavailablePeriods[i]
+      val currentEnd = prev.endDate
       val nextStart = unavailablePeriods[i + 1].startDate
 
       if (currentEnd < nextStart) {
@@ -157,16 +153,20 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
             bedspace,
             currentEnd.plusDays(1),
             nextStart.minusDays(1),
-            unavailablePeriods[i + 1].turnaroundDays,
           ),
         )
       }
     }
 
     if (unavailablePeriods.last().endDate < analysisEnd) {
-      gaps.add(createGap(bedspace, unavailablePeriods.last().endDate.plusDays(1), analysisEnd, null))
+      gaps.add(
+        createGap(
+          bedspace,
+          unavailablePeriods.last().endDate.plusDays(1),
+          analysisEnd,
+        ),
+      )
     }
-
     return gaps
   }
 
@@ -174,7 +174,6 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
     bedspace: BedspaceInfo,
     startDate: LocalDate,
     endDate: LocalDate,
-    turnaroundDays: Int?,
   ): Cas3BookingGapReportRow = Cas3BookingGapReportRow(
     probationRegion = bedspace.probationRegion,
     pduName = bedspace.pduName,
@@ -182,6 +181,5 @@ class BookingGapReportGenerator : ReportGenerator<BookingGapReportData, Cas3Book
     bedName = bedspace.roomName,
     gap = DateRange(startDate, endDate).toString(),
     gapDays = DateRange(startDate, endDate).daysBetween(),
-    turnaroundDays = turnaroundDays,
   )
 }
