@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
-import java.time.Instant
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LocalAuthorityArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
@@ -44,6 +40,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.Instant
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.UUID
 
 abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
   inner class V2 {
@@ -233,17 +233,17 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
   )
 
   protected fun createPremisesSummaryV2(premises: TemporaryAccommodationPremisesEntity, bedspaceCount: Int) = Cas3PremisesSummaryV2(
-      id = premises.id,
-      name = premises.name,
-      addressLine1 = premises.addressLine1,
-      addressLine2 = premises.addressLine2,
-      postcode = premises.postcode,
-      pdu = premises.probationDeliveryUnit?.name!!,
-      status = premises.cas3PremisesStatus,
-      bedspaceCount = bedspaceCount,
-      town = premises.town,
-      localAuthorityAreaName = premises.localAuthorityArea?.name!!,
-    )
+    id = premises.id,
+    name = premises.name,
+    addressLine1 = premises.addressLine1,
+    addressLine2 = premises.addressLine2,
+    postcode = premises.postcode,
+    pdu = premises.probationDeliveryUnit?.name!!,
+    status = premises.cas3PremisesStatus,
+    bedspaceCount = bedspaceCount,
+    town = premises.town,
+    localAuthorityAreaName = premises.localAuthorityArea?.name!!,
+  )
 
   @SuppressWarnings("LongParameterList")
   fun createPremisesUnarchiveDomainEvent(
