@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
@@ -176,6 +177,8 @@ class Cas3v2DomainEventService(
     val cas3PremisesId = when (domainEvent.data) {
       is CAS3PremisesArchiveEvent -> domainEvent.data.eventDetails.premisesId
       is CAS3PremisesUnarchiveEvent -> domainEvent.data.eventDetails.premisesId
+      is CAS3BedspaceArchiveEvent -> domainEvent.data.eventDetails.premisesId
+      is CAS3BedspaceUnarchiveEvent -> domainEvent.data.eventDetails.premisesId
       else -> null
     }
 
@@ -307,4 +310,32 @@ class Cas3v2DomainEventService(
     listOf(id),
     bedspaceDomainEventTypes.map { it.toString() },
   )
+
+  @Transactional
+  fun saveBedspaceArchiveEvent(bedspace: Cas3BedspacesEntity, premisesId: UUID, currentEndDate: LocalDate?, transactionId: UUID) {
+    val user = userService.getUserForRequest()
+    val domainEvent = cas3v2DomainEventBuilder.getBedspaceArchiveEvent(bedspace, premisesId, currentEndDate, user, transactionId)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.crn,
+      nomsNumber = domainEvent.nomsNumber,
+      triggerSourceType = TriggerSourceType.USER,
+      emit = false,
+    )
+  }
+
+  @Transactional
+  fun savePremisesArchiveEvent(premises: Cas3PremisesEntity, endDate: LocalDate, transactionId: UUID) {
+    val user = userService.getUserForRequest()
+    val domainEvent = cas3v2DomainEventBuilder.getPremisesArchiveEvent(premises, endDate, user, transactionId)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.crn,
+      nomsNumber = domainEvent.nomsNumber,
+      triggerSourceType = TriggerSourceType.USER,
+      emit = false,
+    )
+  }
 }

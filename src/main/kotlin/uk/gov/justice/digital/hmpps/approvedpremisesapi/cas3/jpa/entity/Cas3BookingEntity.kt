@@ -189,6 +189,27 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
   @Query("SELECT b FROM Cas3BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bedspace = :bedspace")
   fun findAllByOverlappingDateForBedspace(startDate: LocalDate, endDate: LocalDate, bedspace: Cas3BedspacesEntity): List<Cas3BookingEntity>
 
+  @Query(
+    """
+      SELECT b FROM Cas3BookingEntity b
+      JOIN Cas3PremisesEntity p ON b.premises.id = p.id
+      WHERE p.id = :premisesId
+      AND NOT EXISTS (SELECT na FROM Cas3NonArrivalEntity na WHERE na.booking = b )
+      AND b.departureDate >= :date
+      AND SIZE(b.cancellations) = 0 
+    """,
+  )
+  fun findActiveOverlappingBookingByPremisesId(premisesId: UUID, date: LocalDate): List<Cas3BookingEntity>
+
+  @Query(
+    "SELECT b FROM Cas3BookingEntity b " +
+      "WHERE b.bedspace.id = :bedspaceId " +
+      "AND NOT EXISTS (SELECT na FROM Cas3NonArrivalEntity na WHERE na.booking = b ) " +
+      "AND b.departureDate >= :date " +
+      "AND SIZE(b.cancellations) = 0 ",
+  )
+  fun findActiveOverlappingBookingByBedspace(bedspaceId: UUID, date: LocalDate): List<Cas3BookingEntity>
+
   /*
   This query is to find the closest booking to the start date for the current bedspace search
   The ClosestBooking is to get the closest booking to the bedspace search start date that is not cancelled
