@@ -25,6 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelpe
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummaryMain
 
 @SuppressWarnings("LongParameterList")
 @Entity
@@ -92,3 +94,8 @@ interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID> {
     probationDeliveryUnitId: UUID,
   ): Boolean
 }
+
+interface Cas3PremisesSummaryResult : TemporaryAccommodationPremisesSummaryMain {
+  val status: Cas3PremisesStatus
+}
+
