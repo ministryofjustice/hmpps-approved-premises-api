@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'chore/CAS-2002-delete-merge-migration-job-and-unused-columns'
 
 permissions:
   contents: read
