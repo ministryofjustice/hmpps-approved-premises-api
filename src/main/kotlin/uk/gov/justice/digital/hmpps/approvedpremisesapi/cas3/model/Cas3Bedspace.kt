@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceCharacteristic
 import java.time.LocalDate
 import java.util.UUID
 

@@ -7,11 +7,15 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.ReferenceData
 import java.util.UUID
 
 @Repository
-interface Cas3BedspaceCharacteristicRepository : JpaRepository<Cas3BedspaceCharacteristicEntity, UUID> {
+interface Cas3BedspaceCharacteristicRepository :
+  JpaRepository<Cas3BedspaceCharacteristicEntity, UUID>,
+  ReferenceDataRepository<Cas3BedspaceCharacteristicEntity> {
   fun findByActive(active: Boolean): List<Cas3BedspaceCharacteristicEntity>
+  override fun findAllByActiveIsTrue(): List<Cas3BedspaceCharacteristicEntity>
 
   fun findByName(name: String): Cas3BedspaceCharacteristicEntity?
 }
@@ -21,9 +25,9 @@ interface Cas3BedspaceCharacteristicRepository : JpaRepository<Cas3BedspaceChara
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 data class Cas3BedspaceCharacteristicEntity(
   @Id
-  val id: UUID,
-  val name: String?,
-  val description: String,
+  override val id: UUID,
+  override val name: String?,
+  override val description: String,
   @Column(name = "is_active")
   val active: Boolean,
-)
+) : ReferenceData
