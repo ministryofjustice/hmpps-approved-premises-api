@@ -48,9 +48,9 @@ class Cas3v2PremisesSearchTest : Cas3IntegrationTestBase() {
     val premises = listOf(
       givenACas3Premises(probationRegion, Cas3PremisesStatus.archived, endDate = LocalDate.now().minusDays(1)),
       givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
-      givenACas3Premises(probationRegion, Cas3PremisesStatus.archived, endDate = LocalDate.now().minusDays(1)),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.archived, endDate = LocalDate.now().minusDays(10)),
       givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
-      givenACas3Premises(probationRegion, Cas3PremisesStatus.archived, endDate = LocalDate.now().minusDays(1)),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.archived, endDate = LocalDate.now().minusDays(100)),
       givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
       givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
       givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
