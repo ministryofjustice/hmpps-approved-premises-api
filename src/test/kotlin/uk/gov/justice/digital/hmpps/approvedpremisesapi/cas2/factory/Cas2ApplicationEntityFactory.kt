@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -25,7 +24,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var createdByUser: Yielded<Cas2UserEntity?> = { null }
-  private var createdByNomisUser: Yielded<NomisUserEntity?> = { null }
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
@@ -64,10 +62,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
 
   fun withYieldedCreatedByUser(createdByUser: Yielded<Cas2UserEntity>) = apply {
     this.createdByUser = createdByUser
-  }
-
-  fun withCreatedByNomisUser(createdByNomisUser: NomisUserEntity) = apply {
-    this.createdByNomisUser = { createdByNomisUser }
   }
 
   fun withData(data: String?) = apply {
@@ -181,7 +175,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
       preferredAreas = this.preferredAreas(),
       applicationOrigin = this.applicationOrigin(),
       bailHearingDate = this.bailHearingDate(),
-      createdByNomisUser = this.createdByNomisUser(),
       serviceOrigin = this.serviceOrigin(),
     )
     return application
