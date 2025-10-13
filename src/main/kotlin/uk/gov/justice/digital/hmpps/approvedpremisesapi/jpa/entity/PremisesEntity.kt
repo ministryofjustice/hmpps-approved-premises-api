@@ -46,7 +46,6 @@ SELECT
           p.postcode as postcode,
           pdu.name as pdu,
           p.town as town,
-          p.status as status,
           la.name as localAuthorityAreaName,
           beds.id as bedspaceId,
           rooms.name as bedspaceReference,
@@ -401,7 +400,6 @@ interface TemporaryAccommodationPremisesSummary {
   val postcode: String
   val town: String?
   val pdu: String
-  val status: PropertyStatus
   val localAuthorityAreaName: String?
   val bedspaceId: UUID?
   val bedspaceReference: String?
