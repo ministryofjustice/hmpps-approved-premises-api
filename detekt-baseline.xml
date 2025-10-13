@@ -169,8 +169,6 @@
     <ID>TooGenericExceptionThrown:TemporaryAccommodationApplicationEntityFactory.kt$TemporaryAccommodationApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
     <ID>TooGenericExceptionThrown:TemporaryAccommodationAssessmentEntityFactory.kt$TemporaryAccommodationAssessmentEntityFactory$throw RuntimeException("Must provide an application")</ID>
     <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesEntityFactory.kt$TemporaryAccommodationPremisesEntityFactory$throw RuntimeException("Must provide a probation region")</ID>
-    <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesSeedJob.kt$TemporaryAccommodationPremisesSeedJob$throw RuntimeException("Model scope does not match for Characteristic $it")</ID>
-    <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesSeedJob.kt$TemporaryAccommodationPremisesSeedJob$throw RuntimeException("Service scope does not match for Characteristic $it")</ID>
     <ID>TooGenericExceptionThrown:UserEntityFactory.kt$UserEntityFactory$throw RuntimeException("A probation region must be provided")</ID>
     <ID>TooGenericExceptionThrown:UserQualificationAssignmentEntityFactory.kt$UserQualificationAssignmentEntityFactory$throw RuntimeException("Must provide a User")</ID>
     <ID>TooGenericExceptionThrown:UserRoleAssignmentEntityFactory.kt$UserRoleAssignmentEntityFactory$throw RuntimeException("Must provide a User")</ID>

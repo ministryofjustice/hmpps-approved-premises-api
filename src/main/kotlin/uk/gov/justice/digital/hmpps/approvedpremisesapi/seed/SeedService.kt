@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed.Cas2v2UsersS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3AssignApplicationToPduSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3ReferralRejectionSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2NomisUserEmailSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
@@ -84,7 +83,6 @@ class SeedService(
         SeedFileType.temporaryAccommodationUsers -> getBean(Cas3UsersSeedJob::class)
         SeedFileType.characteristics -> getBean(CharacteristicsSeedJob::class)
         SeedFileType.updateNomsNumber -> getBean(Cas1UpdateNomsNumberSeedJob::class)
-        SeedFileType.temporaryAccommodationPremises -> getBean(TemporaryAccommodationPremisesSeedJob::class)
         SeedFileType.approvedPremisesAssessmentMoreInfoBugFix -> getBean(Cas1FurtherInfoBugFixSeedJob::class)
         SeedFileType.approvedPremisesRedactAssessmentDetails -> getBean(Cas1RemoveAssessmentDetailsSeedJob::class)
         SeedFileType.approvedPremisesWithdrawPlacementRequest -> getBean(Cas1WithdrawPlacementRequestSeedJob::class)
