@@ -32,8 +32,6 @@ import java.util.UUID
 @Suppress("TooManyFunctions")
 @Repository
 interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
-  @Query("SELECT n.id FROM Cas2ApplicationEntity n")
-  fun findApplicationIds(): List<UUID>
   fun findFirstByNomsNumberAndServiceOriginAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber: String, serviceOrigin: Cas2ServiceOrigin): Cas2ApplicationEntity?
   fun findByIdAndServiceOriginAndSubmittedAtIsNotNull(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2ApplicationEntity?
   fun findByIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2ApplicationEntity?
@@ -91,10 +89,6 @@ data class Cas2ApplicationEntity(
   val id: UUID,
 
   val crn: String,
-
-  @ManyToOne
-  @JoinColumn(name = "created_by_user_id")
-  val createdByNomisUser: NomisUserEntity? = null,
 
   @ManyToOne
   @JoinColumn(name = "created_by_cas2_user_id")
