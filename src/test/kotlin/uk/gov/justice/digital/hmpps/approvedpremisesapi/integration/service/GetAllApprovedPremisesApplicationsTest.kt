@@ -415,6 +415,35 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     }
   }
 
+  @Test
+  fun `findAllApprovedPremisesSummaries returns all applications by page size`() {
+    allApplications.sortBy { it.createdAt }
+    val chunkedApplications = allApplications.chunked(5)
+
+    chunkedApplications.forEachIndexed { page, chunk ->
+      val (result, metadata) = cas1ApplicationService.getAllApprovedPremisesApplications(
+        page + 1,
+        null,
+        null,
+        emptyList(),
+        null,
+        null,
+        null,
+        5,
+      )
+
+      assertThat(metadata).isNotNull()
+      assertThat(metadata!!.currentPage).isEqualTo(page + 1)
+      assertThat(metadata.totalPages).isEqualTo(chunkedApplications.size)
+      assertThat(metadata.totalResults).isEqualTo(allApplications.size.toLong())
+      assertThat(metadata.pageSize).isEqualTo(5)
+
+      result.forEachIndexed { index, summary ->
+        assertThat(summary.matches(chunk[index]))
+      }
+    }
+  }
+
   private fun List<ApprovedPremisesApplicationEntity>.sort(sortDirection: SortDirection, sortField: ApplicationSortField): List<ApprovedPremisesApplicationEntity> {
     val comparator = Comparator<ApprovedPremisesApplicationEntity> { a, b ->
       val ascendingCompare = when (sortField) {
