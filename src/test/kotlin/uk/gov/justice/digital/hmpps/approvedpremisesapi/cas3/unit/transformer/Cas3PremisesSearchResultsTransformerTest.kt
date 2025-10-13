@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspacePremisesSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSearchResult
@@ -99,7 +98,6 @@ class Cas3PremisesSearchResultsTransformerTest {
         postcode = "123ABC",
         town = "Wednesbury",
         pdu = "North east",
-        status = PropertyStatus.active,
         localAuthorityAreaName = "Rochford",
         bedspaceReference = randomStringMultiCaseWithNumbers(10),
         bedspaceId = UUID.randomUUID(),
@@ -116,7 +114,6 @@ class Cas3PremisesSearchResultsTransformerTest {
         postcode = "123ABC",
         town = null,
         pdu = "North east",
-        status = PropertyStatus.active,
         localAuthorityAreaName = null,
         bedspaceReference = null,
         bedspaceId = null,
@@ -140,7 +137,6 @@ class Cas3PremisesSearchResultsTransformerTest {
     override val postcode: String,
     override val pdu: String,
     override val town: String?,
-    override val status: PropertyStatus,
     override val bedspaceId: UUID?,
     override val bedspaceReference: String?,
     override val bedspaceStatus: Cas3BedspaceStatus?,
