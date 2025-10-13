@@ -59,6 +59,8 @@ class Cas3v2PremisesSearchTest : Cas3IntegrationTestBase() {
     return premises
   }
 
+  val onlineStatusPair = Pair("premisesStatus", Cas3PremisesStatus.online.value)
+
   private fun createBedspaces(premises: List<Cas3PremisesEntity>) {
     premises.forEach {
       if (it.status == Cas3PremisesStatus.archived) {
@@ -67,17 +69,6 @@ class Cas3v2PremisesSearchTest : Cas3IntegrationTestBase() {
       } else {
         cas3BedspacesRepository.saveAndFlush(Cas3BedspaceEntityFactory().onlineBedspace(it))
       }
-    }
-  }
-
-  @Test
-  fun `basic search returns all premises`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-      val premises = createPremises(user.probationRegion)
-      createBedspaces(premises)
-      val response = doGetRequst(jwt, emptyMap()).bodyAsObject<Cas3PremisesSearchResults>()
-      assertThat(response.results).hasSize(9)
-      assertThat(response.totalPremises).isEqualTo(9)
     }
   }
 
@@ -92,7 +83,7 @@ class Cas3v2PremisesSearchTest : Cas3IntegrationTestBase() {
       val archivedResponse = doGetRequst(jwt, mapOf("premisesStatus" to Cas3PremisesStatus.archived.value))
         .bodyAsObject<Cas3PremisesSearchResults>()
 
-      val onlineResponse = doGetRequst(jwt, mapOf("premisesStatus" to Cas3PremisesStatus.online.value))
+      val onlineResponse = doGetRequst(jwt, mapOf(onlineStatusPair))
         .bodyAsObject<Cas3PremisesSearchResults>()
 
       assertAll({
@@ -116,39 +107,44 @@ class Cas3v2PremisesSearchTest : Cas3IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       val premises = createPremises(user.probationRegion)
       createBedspaces(premises)
+      val premisesToUse = premises.first { it.status == Cas3PremisesStatus.online }
 
-      val addressLine1Result = doGetRequst(jwt, mapOf("postcodeOrAddress" to premises.get(0).addressLine1))
-        .bodyAsObject<Cas3PremisesSearchResults>()
+      val addressLine1Result =
+        doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.addressLine1))
+          .bodyAsObject<Cas3PremisesSearchResults>()
       assertThat(addressLine1Result.results).hasSize(1)
-      assertThat(addressLine1Result.results!!.get(0).id).isEqualTo(premises.get(0).id)
+      assertThat(addressLine1Result.results!!.get(0).id).isEqualTo(premisesToUse.id)
 
-      val addressLine2Result = doGetRequst(jwt, mapOf("postcodeOrAddress" to premises.get(1).addressLine2!!))
-        .bodyAsObject<Cas3PremisesSearchResults>()
+      val addressLine2Result =
+        doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.addressLine2!!))
+          .bodyAsObject<Cas3PremisesSearchResults>()
       assertThat(addressLine2Result.results).hasSize(1)
-      assertThat(addressLine2Result.results!!.get(0).id).isEqualTo(premises.get(1).id)
+      assertThat(addressLine2Result.results!!.get(0).id).isEqualTo(premisesToUse.id)
 
-      val townResult = doGetRequst(jwt, mapOf("postcodeOrAddress" to premises.get(2).town!!))
+      val townResult = doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.town!!))
         .bodyAsObject<Cas3PremisesSearchResults>()
       assertThat(townResult.results).hasSize(1)
-      assertThat(townResult.results!!.get(0).id).isEqualTo(premises.get(2).id)
+      assertThat(townResult.results!!.get(0).id).isEqualTo(premisesToUse.id)
 
-      val postcodeResult = doGetRequst(jwt, mapOf("postcodeOrAddress" to premises.get(3).postcode))
+      val postcodeResult = doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.postcode))
         .bodyAsObject<Cas3PremisesSearchResults>()
       assertThat(postcodeResult.results).hasSize(1)
-      assertThat(postcodeResult.results!!.get(0).id).isEqualTo(premises.get(3).id)
+      assertThat(postcodeResult.results!!.get(0).id).isEqualTo(premisesToUse.id)
 
-      val partialSearchResult = doGetRequst(jwt, mapOf("postcodeOrAddress" to premises.get(4).postcode.split(" ").first()))
-        .bodyAsObject<Cas3PremisesSearchResults>()
+      val partialSearchResult =
+        doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.postcode.split(" ").first()))
+          .bodyAsObject<Cas3PremisesSearchResults>()
       assertThat(partialSearchResult.results).hasSize(1)
-      assertThat(partialSearchResult.results!!.map { it.id }.contains(premises.get(4).id))
+      assertThat(partialSearchResult.results!!.map { it.id }.contains(premisesToUse.id))
     }
   }
 
-  @Test
-  fun `Searching for Premises returns OK with correct premises sorted and containing online, upcoming and archived bedspaces`() {
+  @ParameterizedTest
+  @EnumSource(Cas3PremisesStatus::class)
+  fun `Searching for Premises returns OK with correct premises sorted and containing online, upcoming and archived bedspaces`(status: Cas3PremisesStatus) {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-      val (_, expectedPremisesSearchResults) = getListPremises(user.probationRegion, null)
-      val response = doGetRequst(jwt, emptyMap()).bodyAsObject<Cas3PremisesSearchResults>()
+      val (_, expectedPremisesSearchResults) = getListPremises(user.probationRegion, status)
+      val response = doGetRequst(jwt, mapOf("premisesStatus" to status.value)).bodyAsObject<Cas3PremisesSearchResults>()
       assertThat(response).isEqualTo(expectedPremisesSearchResults)
     }
   }
@@ -188,7 +184,10 @@ class Cas3v2PremisesSearchTest : Cas3IntegrationTestBase() {
         totalOnlineBedspaces = 0,
         totalUpcomingBedspaces = 0,
       )
-      val response = doGetRequst(jwt, emptyMap()).bodyAsObject<Cas3PremisesSearchResults>()
+      val response = doGetRequst(
+        jwt,
+        mapOf("premisesStatus" to Cas3PremisesStatus.online.value),
+      ).bodyAsObject<Cas3PremisesSearchResults>()
       assertThat(response).isEqualTo(expectedPremisesSearchResults)
     }
   }
@@ -290,7 +289,7 @@ class Cas3v2PremisesSearchTest : Cas3IntegrationTestBase() {
       )
       val response = doGetRequst(
         jwt,
-        mapOf("postcodeOrAddress" to randomStringMultiCaseWithNumbers(10)),
+        mapOf(onlineStatusPair, "postcodeOrAddress" to randomStringMultiCaseWithNumbers(10)),
       ).bodyAsObject<Cas3PremisesSearchResults>()
       assertThat(response).isEqualTo(expectedPremisesSearchResults)
     }

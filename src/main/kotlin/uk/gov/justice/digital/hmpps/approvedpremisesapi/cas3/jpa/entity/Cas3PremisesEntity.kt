@@ -128,12 +128,11 @@ SELECT
           )
      AND (
          (:premisesStatus = 'online' AND (p.end_date IS NULL OR p.end_date > CURRENT_DATE) AND p.start_date <= CURRENT_DATE)
-         OR (:premisesStatus = 'archived' AND ((p.end_date IS NOT NULL AND p.end_date <= CURRENT_DATE) OR p.start_date > CURRENT_DATE))
-         OR :premisesStatus IS NULL)
+         OR (:premisesStatus = 'archived' AND ((p.end_date IS NOT NULL AND p.end_date <= CURRENT_DATE) OR p.start_date > CURRENT_DATE)))
       """,
     nativeQuery = true,
   )
-  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<Cas3PremisesSummaryResult>
+  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String): List<Cas3PremisesSummaryResult>
 }
 
 interface Cas3PremisesSummaryResult {

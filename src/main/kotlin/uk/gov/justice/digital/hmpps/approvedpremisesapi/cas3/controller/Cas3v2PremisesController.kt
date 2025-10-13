@@ -45,7 +45,7 @@ class Cas3v2PremisesController(
   @GetMapping("/premises/search")
   fun premisesSearch(
     @RequestParam postcodeOrAddress: String?,
-    @RequestParam premisesStatus: Cas3PremisesStatus?,
+    @RequestParam premisesStatus: Cas3PremisesStatus,
   ): ResponseEntity<Cas3PremisesSearchResults> {
     val user = userService.getUserForRequest()
     val premisesSummaries = cas3v2PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, premisesStatus).groupBy { it.id }
