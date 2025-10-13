@@ -17,10 +17,10 @@ import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummaryMain
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceArchived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceOnline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
@@ -136,4 +136,16 @@ SELECT
   fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<Cas3PremisesSummaryResult>
 }
 
-interface Cas3PremisesSummaryResult : TemporaryAccommodationPremisesSummaryMain
+interface Cas3PremisesSummaryResult {
+  val id: UUID
+  val name: String
+  val addressLine1: String
+  val addressLine2: String?
+  val postcode: String
+  val town: String?
+  val pdu: String
+  val localAuthorityAreaName: String?
+  val bedspaceId: UUID?
+  val bedspaceReference: String?
+  val bedspaceStatus: Cas3BedspaceStatus?
+}
