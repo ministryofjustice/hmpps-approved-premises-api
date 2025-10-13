@@ -832,6 +832,36 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Get applications returns two items when CRN parameter is passed, two CRNs exist in the database, and pageSize parameter is provided`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          givenAnOffender { offenderDetails2, _ ->
+
+            val crn1 = offenderDetails.otherIds.crn
+            createTwelveApplications(crn1, userEntity)
+
+            val crn2 = offenderDetails2.otherIds.crn
+            createTwelveApplications(crn2, userEntity)
+
+            val responseBody = webTestClient.get()
+              .uri("/cas1/applications/all?page=2&sortDirection=desc&crnOrName=$crn2&pageSize=5")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 5)
+              .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+            assertThat(responseBody.count()).isEqualTo(5)
+          }
+        }
+      }
+    }
   }
 
   @Nested

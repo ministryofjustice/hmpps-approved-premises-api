@@ -111,6 +111,7 @@ class Cas1ApplicationsController(
     @RequestParam sortBy: ApplicationSortField?,
     @RequestParam apAreaId: UUID?,
     @RequestParam releaseType: ReleaseTypeOption?,
+    @RequestParam pageSize: Int?,
   ): ResponseEntity<List<Cas1ApplicationSummary>> {
     val user = userService.getUserForRequest()
     val statusTransformed = status?.map { DomainApprovedPremisesApplicationStatus.valueOf(it) } ?: emptyList()
@@ -124,6 +125,7 @@ class Cas1ApplicationsController(
         sortBy,
         apAreaId,
         releaseType?.name,
+        pageSize,
       )
 
     return ResponseEntity.ok().headers(
