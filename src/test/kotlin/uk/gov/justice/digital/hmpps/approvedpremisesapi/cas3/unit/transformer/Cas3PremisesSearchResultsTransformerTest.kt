@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesSummaryResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspacePremisesSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspacePremisesSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3PremisesSearchResults
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesSearchResultsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 
@@ -15,7 +15,7 @@ class Cas3PremisesSearchResultsTransformerTest {
   private val cas3PremisesSearchResultsTransformer = Cas3PremisesSearchResultsTransformer()
 
   @Test
-  fun `transformDomainToCas3PremisesSearchResults transforms the TemporaryAccommodationPremisesSummary into a Cas3PremisesSearchResults`() {
+  fun `transformDomainToCas3PremisesSearchResults transforms the Cas3PremisesSummaryResult into a Cas3PremisesSearchResults`() {
     val premisesId = UUID.randomUUID()
     val bedspaceOne = createPremisesSummaryData(premisesId, Cas3BedspaceStatus.online, true)
     val bedspaceTwo = createPremisesSummaryData(premisesId, Cas3BedspaceStatus.archived, true)
@@ -54,7 +54,7 @@ class Cas3PremisesSearchResultsTransformerTest {
   }
 
   @Test
-  fun `transformDomainToCas3PremisesSearchResults transforms the TemporaryAccommodationPremisesSummary into a Cas3PremisesSearchResults without optional elements`() {
+  fun `transformDomainToCas3PremisesSearchResults transforms the Cas3PremisesSummaryResult into a Cas3PremisesSearchResults without optional elements`() {
     val premisesId = UUID.randomUUID()
     val bedspaceOne = createPremisesSummaryData(premisesId, Cas3BedspaceStatus.online, false)
     val domainPremisesSummary = mapOf(premisesId to listOf(bedspaceOne))
@@ -141,5 +141,5 @@ class Cas3PremisesSearchResultsTransformerTest {
     override val bedspaceReference: String?,
     override val bedspaceStatus: Cas3BedspaceStatus?,
     override val localAuthorityAreaName: String?,
-  ) : TemporaryAccommodationPremisesSummary
+  ) : Cas3PremisesSummaryResult
 }

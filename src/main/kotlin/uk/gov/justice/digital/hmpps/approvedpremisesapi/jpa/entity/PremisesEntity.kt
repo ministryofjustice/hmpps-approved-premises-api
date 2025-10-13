@@ -26,8 +26,8 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity.Companion.resolveFullAddress
 import java.time.LocalDate
@@ -78,7 +78,7 @@ SELECT
       """,
     nativeQuery = true,
   )
-  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<TemporaryAccommodationPremisesSummary>
+  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<Cas3PremisesSummaryResult>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE p.name = :name AND TYPE(p) = :type AND (p.id != :id OR :id is null)")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>, id: UUID? = null): Boolean
@@ -390,20 +390,6 @@ class TemporaryAccommodationPremisesEntity(
       PropertyStatus.active -> Cas3PremisesStatus.online
       PropertyStatus.archived -> Cas3PremisesStatus.archived
     }
-}
-
-interface TemporaryAccommodationPremisesSummary {
-  val id: UUID
-  val name: String
-  val addressLine1: String
-  val addressLine2: String?
-  val postcode: String
-  val town: String?
-  val pdu: String
-  val localAuthorityAreaName: String?
-  val bedspaceId: UUID?
-  val bedspaceReference: String?
-  val bedspaceStatus: Cas3BedspaceStatus?
 }
 
 data class ApprovedPremisesBasicSummary(

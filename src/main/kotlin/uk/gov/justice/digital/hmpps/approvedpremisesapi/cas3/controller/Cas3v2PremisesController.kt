@@ -8,14 +8,19 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSearchResults
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesSearchResultsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
@@ -26,6 +31,8 @@ class Cas3v2PremisesController(
   private val cas3PremisesService: Cas3PremisesService,
   private val cas3v2PremisesService: Cas3v2PremisesService,
   private val cas3PremisesTransformer: Cas3PremisesTransformer,
+  private val cas3PremisesSearchResultsTransformer: Cas3PremisesSearchResultsTransformer,
+  private val userService: UserService,
 ) {
 
   @GetMapping("/premises/{premisesId}")
@@ -33,6 +40,24 @@ class Cas3v2PremisesController(
     val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
     val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises.id))
     return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(premises, archiveHistory))
+  }
+
+  @GetMapping("/premises/search")
+  fun premisesSearch(
+    @RequestParam postcodeOrAddress: String?,
+    @RequestParam premisesStatus: Cas3PremisesStatus,
+  ): ResponseEntity<Cas3PremisesSearchResults> {
+    val user = userService.getUserForRequest()
+    val premisesSummaries = cas3v2PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, premisesStatus).groupBy { it.id }
+    val premisesSearchResults = cas3PremisesSearchResultsTransformer.transformDomainToCas3PremisesSearchResults(premisesSummaries)
+    val sortedResults = Cas3PremisesSearchResults(
+      results = premisesSearchResults.results?.sortedBy { it.id },
+      totalPremises = premisesSearchResults.totalPremises,
+      totalOnlineBedspaces = premisesSearchResults.totalOnlineBedspaces,
+      totalUpcomingBedspaces = premisesSearchResults.totalUpcomingBedspaces,
+    )
+
+    return ResponseEntity.ok(sortedResults)
   }
 
   @PostMapping("/premises")

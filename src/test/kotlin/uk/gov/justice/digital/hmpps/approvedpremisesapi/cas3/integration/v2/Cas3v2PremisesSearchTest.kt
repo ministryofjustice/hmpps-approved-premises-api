@@ -1,13 +1,17 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.v2
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
-import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.util.UriComponentsBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspacePremisesSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSearchResult
@@ -15,8 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -26,21 +30,122 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
-  companion object Constants {
-    const val PREMISES_SEARCH_API_URL = "/cas3/premises/search"
+class Cas3v2PremisesSearchTest : Cas3IntegrationTestBase() {
+
+  private fun buildUri(params: Map<String, String>) = UriComponentsBuilder.fromPath("/cas3/v2/premises/search")
+    .apply {
+      if (params.isNotEmpty()) queryParams(LinkedMultiValueMap(params.mapValues { listOf(it.value) }))
+    }
+    .build()
+    .toUriString()
+
+  private fun doGetRequst(jwt: String, searchParameters: Map<String, String>) = webTestClient.get()
+    .uri(buildUri(searchParameters))
+    .headers(buildTemporaryAccommodationHeaders(jwt))
+    .exchange()
+
+  private fun createPremises(probationRegion: ProbationRegionEntity): List<Cas3PremisesEntity> {
+    val premises = listOf(
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.archived, endDate = LocalDate.now().minusDays(1)),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.archived, endDate = LocalDate.now().minusDays(10)),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.archived, endDate = LocalDate.now().minusDays(100)),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.online),
+      givenACas3Premises(probationRegion, Cas3PremisesStatus.archived, startDate = LocalDate.now().plusDays(1)),
+    )
+    return premises
+  }
+
+  val onlineStatusPair = Pair("premisesStatus", Cas3PremisesStatus.online.value)
+
+  private fun createBedspaces(premises: List<Cas3PremisesEntity>) {
+    premises.forEach {
+      if (it.status == Cas3PremisesStatus.archived) {
+        cas3BedspacesRepository.saveAndFlush(Cas3BedspaceEntityFactory().upcomingBedspace(it))
+        cas3BedspacesRepository.saveAndFlush(Cas3BedspaceEntityFactory().archivedBedspace(it))
+      } else {
+        cas3BedspacesRepository.saveAndFlush(Cas3BedspaceEntityFactory().onlineBedspace(it))
+      }
+    }
   }
 
   @Test
-  fun `Searching for Premises returns OK with correct premises sorted and containing online, upcoming and archived bedspaces`() {
+  fun `search with premises status returns expected premises`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
-      val (_, expectedPremisesSearchResults) = getListPremises(user.probationRegion, null)
+      val premises = createPremises(user.probationRegion)
+      createBedspaces(premises)
+      val archivedPremises = premises.filter { it.status == Cas3PremisesStatus.archived }
+      val onlinePremises = premises.filter { it.status == Cas3PremisesStatus.online }
 
-      assertUrlReturnsPremises(
-        jwt,
-        PREMISES_SEARCH_API_URL,
-        expectedPremisesSearchResults,
-      )
+      val archivedResponse = doGetRequst(jwt, mapOf("premisesStatus" to Cas3PremisesStatus.archived.value))
+        .bodyAsObject<Cas3PremisesSearchResults>()
+
+      val onlineResponse = doGetRequst(jwt, mapOf(onlineStatusPair))
+        .bodyAsObject<Cas3PremisesSearchResults>()
+
+      assertAll({
+        assertThat(archivedResponse.results).hasSize(4)
+        assertThat(archivedResponse.results?.map { it.id }).containsAll(archivedPremises.map { it.id })
+        assertThat(archivedResponse.totalPremises).isEqualTo(4)
+        assertThat(archivedResponse.totalOnlineBedspaces).isEqualTo(0)
+        assertThat(archivedResponse.totalUpcomingBedspaces).isEqualTo(4)
+
+        assertThat(onlineResponse.results).hasSize(5)
+        assertThat(onlineResponse.results?.map { it.id }).containsAll(onlinePremises.map { it.id })
+        assertThat(onlineResponse.totalPremises).isEqualTo(5)
+        assertThat(onlineResponse.totalOnlineBedspaces).isEqualTo(5)
+        assertThat(onlineResponse.totalUpcomingBedspaces).isEqualTo(0)
+      })
+    }
+  }
+
+  @Test
+  fun `address search returns expected premises`() {
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      val premises = createPremises(user.probationRegion)
+      createBedspaces(premises)
+      val premisesToUse = premises.first { it.status == Cas3PremisesStatus.online }
+
+      val addressLine1Result =
+        doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.addressLine1))
+          .bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(addressLine1Result.results).hasSize(1)
+      assertThat(addressLine1Result.results!!.get(0).id).isEqualTo(premisesToUse.id)
+
+      val addressLine2Result =
+        doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.addressLine2!!))
+          .bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(addressLine2Result.results).hasSize(1)
+      assertThat(addressLine2Result.results!!.get(0).id).isEqualTo(premisesToUse.id)
+
+      val townResult = doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.town!!))
+        .bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(townResult.results).hasSize(1)
+      assertThat(townResult.results!!.get(0).id).isEqualTo(premisesToUse.id)
+
+      val postcodeResult = doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.postcode))
+        .bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(postcodeResult.results).hasSize(1)
+      assertThat(postcodeResult.results!!.get(0).id).isEqualTo(premisesToUse.id)
+
+      val partialSearchResult =
+        doGetRequst(jwt, mapOf(onlineStatusPair, "postcodeOrAddress" to premisesToUse.postcode.split(" ").first()))
+          .bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(partialSearchResult.results).hasSize(1)
+      assertThat(partialSearchResult.results!!.map { it.id }.contains(premisesToUse.id))
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(Cas3PremisesStatus::class)
+  fun `Searching for Premises returns OK with correct premises sorted and containing online, upcoming and archived bedspaces`(status: Cas3PremisesStatus) {
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      val (_, expectedPremisesSearchResults) = getListPremises(user.probationRegion, status)
+      val response = doGetRequst(jwt, mapOf("premisesStatus" to status.value)).bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(response).isEqualTo(expectedPremisesSearchResults)
     }
   }
 
@@ -48,12 +153,11 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
   fun `Searching for Premises when 'online' premises status is passed in to the query parameter returns only online premises`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       val (_, expectedPremisesSearchResults) = getListPremises(user.probationRegion, Cas3PremisesStatus.online)
-
-      assertUrlReturnsPremises(
+      val response = doGetRequst(
         jwt,
-        "$PREMISES_SEARCH_API_URL?premisesStatus=${Cas3PremisesStatus.online}",
-        expectedPremisesSearchResults,
-      )
+        mapOf("premisesStatus" to Cas3PremisesStatus.online.value),
+      ).bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(response).isEqualTo(expectedPremisesSearchResults)
     }
   }
 
@@ -61,12 +165,11 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
   fun `Searching for Premises when 'archived' premises status is passed in to the query parameter returns only archived premises`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
       val (_, expectedPremisesSearchResults) = getListPremises(user.probationRegion, Cas3PremisesStatus.archived)
-
-      assertUrlReturnsPremises(
+      val response = doGetRequst(
         jwt,
-        "$PREMISES_SEARCH_API_URL?premisesStatus=${Cas3PremisesStatus.archived}",
-        expectedPremisesSearchResults,
-      )
+        mapOf("premisesStatus" to Cas3PremisesStatus.archived.value),
+      ).bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(response).isEqualTo(expectedPremisesSearchResults)
     }
   }
 
@@ -81,12 +184,11 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
         totalOnlineBedspaces = 0,
         totalUpcomingBedspaces = 0,
       )
-
-      assertUrlReturnsPremises(
+      val response = doGetRequst(
         jwt,
-        PREMISES_SEARCH_API_URL,
-        expectedPremisesSearchResults,
-      )
+        mapOf("premisesStatus" to Cas3PremisesStatus.online.value),
+      ).bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(response).isEqualTo(expectedPremisesSearchResults)
     }
   }
 
@@ -185,47 +287,46 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
         totalOnlineBedspaces = 0,
         totalUpcomingBedspaces = 0,
       )
-
-      assertUrlReturnsPremises(
+      val response = doGetRequst(
         jwt,
-        "$PREMISES_SEARCH_API_URL?postcodeOrAddress=${randomStringMultiCaseWithNumbers(10)}",
-        expectedPremisesSearchResults,
-      )
+        mapOf(onlineStatusPair, "postcodeOrAddress" to randomStringMultiCaseWithNumbers(10)),
+      ).bodyAsObject<Cas3PremisesSearchResults>()
+      assertThat(response).isEqualTo(expectedPremisesSearchResults)
     }
   }
 
-  private fun getPremises(probationRegion: ProbationRegionEntity) = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+  private fun getPremises(probationRegion: ProbationRegionEntity) = cas3PremisesEntityFactory.produceAndPersist {
     withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-    withProbationRegion(probationRegion)
     withId(UUID.randomUUID())
     withAddressLine1(randomStringMultiCaseWithNumbers(20))
     withAddressLine2(randomStringLowerCase(10))
     withPostcode(randomPostCode())
-    withStatus(PropertyStatus.active)
-    withYieldedProbationDeliveryUnit {
+    withStatus(Cas3PremisesStatus.online)
+    withProbationDeliveryUnit(
       probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
-      }
-    }
-    withService("CAS3")
+      },
+    )
   }
 
-  private fun getListPremises(probationRegion: ProbationRegionEntity, premisesStatus: Cas3PremisesStatus?): Pair<List<TemporaryAccommodationPremisesEntity>, Cas3PremisesSearchResults> {
+  private fun getListPremises(
+    probationRegion: ProbationRegionEntity,
+    premisesStatus: Cas3PremisesStatus?,
+  ): Pair<List<Cas3PremisesEntity>, Cas3PremisesSearchResults> {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
       withProbationRegion(probationRegion)
     }
     val premisesSearchResult = mutableListOf<Cas3PremisesSearchResult>()
-    val allPremises = mutableListOf<TemporaryAccommodationPremisesEntity>()
+    val allPremises = mutableListOf<Cas3PremisesEntity>()
 
-    val onlinePremisesWithBedspaceWithoutEndDate = getListPremisesByStatus(
-      probationRegion = probationRegion,
+    val onlinePremisesWithBedspaceWithoutEndDate = V2().getListPremisesByStatus(
       probationDeliveryUnit = probationDeliveryUnit,
       localAuthorityArea = localAuthorityArea,
       numberOfPremises = 3,
       startDate = LocalDate.now().randomDateBefore(90),
       endDate = null,
-      propertyStatus = PropertyStatus.active,
+      premisesStatus = Cas3PremisesStatus.online,
     ).map { premises ->
       val onlineBedspacesSearchResult =
         createBedspacesAndBedspacesSearchResult(premises, Cas3BedspaceStatus.online, true)
@@ -239,12 +340,11 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       premises
     }
 
-    val onlinePremisesWithBedspaceWithEndDate = getListPremisesByStatus(
-      probationRegion = probationRegion,
+    val onlinePremisesWithBedspaceWithEndDate = V2().getListPremisesByStatus(
       probationDeliveryUnit = probationDeliveryUnit,
       localAuthorityArea = localAuthorityArea,
       numberOfPremises = 3,
-      propertyStatus = PropertyStatus.active,
+      premisesStatus = Cas3PremisesStatus.online,
       startDate = LocalDate.now().randomDateBefore(180),
       endDate = null,
     ).map { premises ->
@@ -261,12 +361,11 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       premises
     }
 
-    val archivedPremisesWithEndDateInTheFuture = getListPremisesByStatus(
-      probationRegion = probationRegion,
+    val archivedPremisesWithEndDateInTheFuture = V2().getListPremisesByStatus(
       probationDeliveryUnit = probationDeliveryUnit,
       localAuthorityArea = localAuthorityArea,
       numberOfPremises = 3,
-      propertyStatus = PropertyStatus.archived,
+      premisesStatus = Cas3PremisesStatus.archived,
       startDate = LocalDate.now().randomDateBefore(90),
       endDate = LocalDate.now().randomDateAfter(10),
     ).map { premises ->
@@ -278,12 +377,11 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       premises
     }
 
-    val archivedPremises = getListPremisesByStatus(
-      probationRegion = probationRegion,
+    val archivedPremises = V2().getListPremisesByStatus(
       probationDeliveryUnit = probationDeliveryUnit,
       localAuthorityArea = localAuthorityArea,
       numberOfPremises = 3,
-      propertyStatus = PropertyStatus.archived,
+      premisesStatus = Cas3PremisesStatus.archived,
       startDate = LocalDate.now().randomDateBefore(180),
       endDate = LocalDate.now().randomDateBefore(5),
     ).map { premises ->
@@ -294,12 +392,11 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       premises
     }
 
-    val archivedPremisesWithStartDateInTheFuture = getListPremisesByStatus(
-      probationRegion = probationRegion,
+    val archivedPremisesWithStartDateInTheFuture = V2().getListPremisesByStatus(
       probationDeliveryUnit = probationDeliveryUnit,
       localAuthorityArea = localAuthorityArea,
       numberOfPremises = 3,
-      propertyStatus = PropertyStatus.active,
+      premisesStatus = Cas3PremisesStatus.online,
       startDate = LocalDate.now().randomDateAfter(15),
       endDate = null,
     ).map { premises ->
@@ -329,7 +426,7 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
   }
 
   private fun createBedspacesAndBedspacesSearchResult(
-    premises: TemporaryAccommodationPremisesEntity,
+    premises: Cas3PremisesEntity,
     status: Cas3BedspaceStatus,
     withoutEndDate: Boolean = false,
     withEndDateInFuture: Boolean = false,
@@ -364,9 +461,9 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
         }
       }
 
-      val bedspace = createBedspaceInPremises(premises, startDate, endDate)
+      val bedspace = V2().createBedspaceInPremises(premises, startDate, endDate)
 
-      bedspacesSearchResult.add(createBedspaceSearchResult(bedspace.id, bedspace.room.name, status))
+      bedspacesSearchResult.add(createBedspaceSearchResult(bedspace.id, bedspace.reference, status))
     }
 
     return bedspacesSearchResult
@@ -378,14 +475,17 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
     bedspaceStatus,
   )
 
-  private fun createPremisesSearchResult(premises: TemporaryAccommodationPremisesEntity, bedspaces: List<Cas3BedspacePremisesSearchResult>) = Cas3PremisesSearchResult(
+  private fun createPremisesSearchResult(
+    premises: Cas3PremisesEntity,
+    bedspaces: List<Cas3BedspacePremisesSearchResult>,
+  ) = Cas3PremisesSearchResult(
     id = premises.id,
     reference = premises.name,
     addressLine1 = premises.addressLine1,
     addressLine2 = premises.addressLine2,
     postcode = premises.postcode,
     town = premises.town,
-    pdu = premises.probationDeliveryUnit?.name!!,
+    pdu = premises.probationDeliveryUnit.name,
     localAuthorityAreaName = premises.localAuthorityArea?.name!!,
     totalArchivedBedspaces = bedspaces.count { it.status == Cas3BedspaceStatus.archived },
     bedspaces = bedspaces,
@@ -406,11 +506,11 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       totalUpcomingBedspaces = expectedPremisesSearchResult.sumOf { premises -> premises.bedspaces?.count { it.status == Cas3BedspaceStatus.upcoming }!! },
     )
 
-    assertUrlReturnsPremises(
+    val response = doGetRequst(
       jwt,
-      "$PREMISES_SEARCH_API_URL?premisesStatus=$premisesStatus&postcodeOrAddress=$postcodeToSearchBy",
-      expectedPremisesSearchResults,
-    )
+      mapOf("premisesStatus" to premisesStatus.value, "postcodeOrAddress" to postcodeToSearchBy),
+    ).bodyAsObject<Cas3PremisesSearchResults>()
+    assertThat(response).isEqualTo(expectedPremisesSearchResults)
   }
 
   @SuppressWarnings("LongParameterList")
@@ -434,33 +534,10 @@ class Cas3PremisesSearchTest : Cas3IntegrationTestBase() {
       totalOnlineBedspaces = expectedPremisesSearchResult.sumOf { premises -> premises.bedspaces?.count { it.status == Cas3BedspaceStatus.online }!! },
       totalUpcomingBedspaces = expectedPremisesSearchResult.sumOf { premises -> premises.bedspaces?.count { it.status == Cas3BedspaceStatus.upcoming }!! },
     )
-
-    assertUrlReturnsPremises(
+    val response = doGetRequst(
       jwt,
-      "$PREMISES_SEARCH_API_URL?premisesStatus=$premisesStatus&postcodeOrAddress=$addressToSearchBy",
-      expectedPremisesSearchResults,
-    )
-  }
-
-  private fun assertUrlReturnsPremises(
-    jwt: String,
-    url: String,
-    expectedPremisesSearchResults: Cas3PremisesSearchResults,
-  ): WebTestClient.ResponseSpec {
-    val response = webTestClient.get()
-      .uri(url)
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    val responseBody = response
-      .returnResult<String>()
-      .responseBody
-      .blockFirst()
-
-    assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedPremisesSearchResults))
-
-    return response
+      mapOf("premisesStatus" to premisesStatus.value, "postcodeOrAddress" to addressToSearchBy),
+    ).bodyAsObject<Cas3PremisesSearchResults>()
+    assertThat(response).isEqualTo(expectedPremisesSearchResults)
   }
 }
