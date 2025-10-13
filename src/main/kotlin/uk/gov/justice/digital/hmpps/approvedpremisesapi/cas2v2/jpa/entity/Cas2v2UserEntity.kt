@@ -9,7 +9,6 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
 import java.time.OffsetDateTime
@@ -29,9 +28,6 @@ enum class Cas2v2UserType(val authSource: String) {
 @Repository
 interface Cas2v2UserRepository : JpaRepository<Cas2v2UserEntity, UUID> {
   fun findByUsername(username: String): Cas2v2UserEntity?
-
-  @Query("SELECT n.id FROM Cas2v2UserEntity n")
-  fun findCas2v2UserIds(): List<UUID>
 }
 
 @Entity
