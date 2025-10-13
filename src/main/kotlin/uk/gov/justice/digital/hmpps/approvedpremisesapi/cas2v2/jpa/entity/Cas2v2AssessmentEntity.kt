@@ -7,16 +7,12 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
-interface Cas2v2AssessmentRepository : JpaRepository<Cas2v2AssessmentEntity, UUID> {
-  @Query("SELECT n.id FROM Cas2v2AssessmentEntity n")
-  fun findAssessmentIds(): List<UUID>
-}
+interface Cas2v2AssessmentRepository : JpaRepository<Cas2v2AssessmentEntity, UUID>
 
 @Entity
 @Table(name = "cas_2_v2_assessments")
