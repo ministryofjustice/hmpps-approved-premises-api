@@ -104,7 +104,6 @@ SELECT
           p.postcode as postcode,
           p.town as town,
           pdu.name as pdu,
-          p.status as status,
           la.name as localAuthorityAreaName,
           bs.id as bedspaceId,
           bs.reference as bedspaceReference,
@@ -137,6 +136,4 @@ SELECT
   fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<Cas3PremisesSummaryResult>
 }
 
-interface Cas3PremisesSummaryResult : TemporaryAccommodationPremisesSummaryMain {
-  val status: Cas3PremisesStatus
-}
+interface Cas3PremisesSummaryResult : TemporaryAccommodationPremisesSummaryMain

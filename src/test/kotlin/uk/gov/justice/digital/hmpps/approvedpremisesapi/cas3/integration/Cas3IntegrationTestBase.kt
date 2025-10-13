@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -217,19 +216,6 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
 
     return bedspaces
   }
-
-  protected fun createPremisesSummary(premises: TemporaryAccommodationPremisesEntity, bedspaceCount: Int) = Cas3PremisesSummary(
-    id = premises.id,
-    name = premises.name,
-    addressLine1 = premises.addressLine1,
-    addressLine2 = premises.addressLine2,
-    postcode = premises.postcode,
-    pdu = premises.probationDeliveryUnit?.name!!,
-    status = premises.status,
-    bedspaceCount = bedspaceCount,
-    town = premises.town,
-    localAuthorityAreaName = premises.localAuthorityArea?.name!!,
-  )
 
   @SuppressWarnings("LongParameterList")
   fun createPremisesUnarchiveDomainEvent(
