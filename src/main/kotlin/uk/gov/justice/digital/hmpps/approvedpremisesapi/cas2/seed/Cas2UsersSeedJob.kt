@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -13,9 +14,10 @@ import java.util.UUID
 import kotlin.random.Random
 
 @Component
-class Cas2v2UsersSeedJob(
+class Cas2UsersSeedJob(
   private val cas2UserRepository: Cas2UserRepository,
-) : SeedJob<Cas2v2UserSeedCsvRow>(
+  private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
+) : SeedJob<Cas2UserSeedCsvRow>(
   requiredHeaders = setOf(
     "username",
     "email",
@@ -26,11 +28,15 @@ class Cas2v2UsersSeedJob(
     "deliusTeamCodes",
     "deliusStaffCode",
     "isEnabled",
+    "isActive",
+    "serviceOrigin",
+    "nomisAccountType",
+    "externalType",
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun deserializeRow(columns: Map<String, String>) = Cas2v2UserSeedCsvRow(
+  override fun deserializeRow(columns: Map<String, String>) = Cas2UserSeedCsvRow(
     username = columns["username"]!!.trim().uppercase(),
     email = columns["email"]!!.trim(),
     name = columns["name"]!!.trim(),
@@ -41,17 +47,16 @@ class Cas2v2UsersSeedJob(
     deliusStaffCode = columns["deliusStaffCode"]?.trim()?.takeIf { it.isNotEmpty() },
     isEnabled = columns["isEnabled"]!!.trim().uppercase() == "TRUE",
     isActive = columns["isActive"]!!.trim().uppercase() == "TRUE",
+    serviceOrigin = cas2ApplicationsTransformer.serviceOriginFromText(columns["serviceOrigin"]!!.trim()),
+    nomisAccountType = columns["nomisAccountType"]!!.trim(),
+    externalType = columns["externalType"]!!.trim(),
   )
 
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  override fun processRow(row: Cas2v2UserSeedCsvRow) {
+  override fun processRow(row: Cas2UserSeedCsvRow) {
     log.info("Setting up ${row.username}")
 
-    val users = cas2UserRepository.findAll()
-    users.map { user ->
-    }
-
-    if (cas2UserRepository.findByUsernameAndServiceOrigin(row.username, Cas2ServiceOrigin.BAIL) !== null) {
+    if (cas2UserRepository.findByUsernameAndServiceOrigin(row.username, row.serviceOrigin) !== null) {
       return log.info("Skipping ${row.username}: already seeded")
     }
 
@@ -63,7 +68,7 @@ class Cas2v2UsersSeedJob(
   }
 
   @SuppressWarnings("MagicNumber")
-  private fun createCas2User(row: Cas2v2UserSeedCsvRow) {
+  private fun createCas2User(row: Cas2UserSeedCsvRow) {
     cas2UserRepository.save(
       Cas2UserEntity(
         id = UUID.randomUUID(),
@@ -79,7 +84,9 @@ class Cas2v2UsersSeedJob(
         isActive = row.isActive,
         createdAt = OffsetDateTime.now(ZoneOffset.UTC).minusDays(Random.nextLong(1, 365)),
         applications = mutableListOf(),
-        serviceOrigin = Cas2ServiceOrigin.BAIL,
+        serviceOrigin = row.serviceOrigin,
+        externalType = row.externalType,
+        nomisAccountType = row.nomisAccountType,
       ),
     )
   }
@@ -91,7 +98,7 @@ class Cas2v2UsersSeedJob(
   }
 }
 
-data class Cas2v2UserSeedCsvRow(
+data class Cas2UserSeedCsvRow(
   val username: String,
   val email: String,
   val name: String,
@@ -102,4 +109,7 @@ data class Cas2v2UserSeedCsvRow(
   val deliusStaffCode: String?,
   val isEnabled: Boolean,
   val isActive: Boolean,
+  val externalType: String,
+  val nomisAccountType: String,
+  val serviceOrigin: Cas2ServiceOrigin,
 )
