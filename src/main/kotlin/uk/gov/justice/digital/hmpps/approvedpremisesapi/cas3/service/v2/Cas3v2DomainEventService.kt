@@ -338,4 +338,18 @@ class Cas3v2DomainEventService(
       emit = false,
     )
   }
+
+  @Transactional
+  fun saveBedspaceUnarchiveEvent(bedspace: Cas3BedspacesEntity, premisesId: UUID, currentStartDate: LocalDate, currentEndDate: LocalDate, transactionId: UUID) {
+    val user = userService.getUserForRequest()
+    val domainEvent = cas3v2DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, premisesId, currentStartDate, currentEndDate, user, transactionId)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      crn = domainEvent.crn,
+      nomsNumber = domainEvent.nomsNumber,
+      triggerSourceType = TriggerSourceType.USER,
+      false,
+    )
+  }
 }

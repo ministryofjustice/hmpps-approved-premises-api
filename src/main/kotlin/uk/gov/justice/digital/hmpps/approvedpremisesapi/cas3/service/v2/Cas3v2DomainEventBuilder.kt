@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Depa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
@@ -473,6 +475,56 @@ class Cas3v2DomainEventBuilder(
   ) = CAS3PremisesArchiveEventDetails(
     premisesId = premisesId,
     endDate = endDate,
+    userId = user.id,
+    transactionId = transactionId,
+  )
+
+  fun getBedspaceUnarchiveEvent(
+    bedspace: Cas3BedspacesEntity,
+    premisesId: UUID,
+    currentStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    user: UserEntity,
+    transactionId: UUID,
+  ): DomainEvent<CAS3BedspaceUnarchiveEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = CAS3BedspaceUnarchiveEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.bedspaceUnarchived,
+        eventDetails = buildCAS3BedspaceUnarchiveEventDetails(
+          bedspace,
+          premisesId,
+          currentStartDate,
+          currentEndDate,
+          user,
+          transactionId,
+        ),
+      ),
+    )
+  }
+
+  private fun buildCAS3BedspaceUnarchiveEventDetails(
+    bedspace: Cas3BedspacesEntity,
+    premisesId: UUID,
+    currentStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    user: UserEntity,
+    transactionId: UUID,
+  ) = CAS3BedspaceUnarchiveEventDetails(
+    bedspaceId = bedspace.id,
+    premisesId = premisesId,
+    currentStartDate = currentStartDate,
+    currentEndDate = currentEndDate,
+    newStartDate = bedspace.startDate,
     userId = user.id,
     transactionId = transactionId,
   )

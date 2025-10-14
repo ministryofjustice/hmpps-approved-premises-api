@@ -30,6 +30,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Book
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
@@ -1781,6 +1783,85 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
+  }
+
+  @Test
+  fun `saveBedspaceUnarchiveEvent saves event but does not emit it`() {
+    val occuredAt = Instant.now()
+    val newStartDate = LocalDate.now().plusDays(5)
+    val currentStartDate = LocalDate.now().minusDays(20)
+    val currentEndDate = LocalDate.now().minusDays(2)
+    val probationRegion = ProbationRegionEntityFactory().produce()
+    val premises = Cas3PremisesEntityFactory()
+      .withProbationDeliveryUnit(
+        ProbationDeliveryUnitEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce(),
+      ).produce()
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withEndDate(null)
+      .withPremises(premises)
+      .produce()
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val eventDetails = CAS3BedspaceUnarchiveEventDetails(
+      bedspaceId = bedspace.id,
+      premisesId = premises.id,
+      newStartDate = newStartDate,
+      currentStartDate = currentStartDate,
+      currentEndDate = currentEndDate,
+      userId = user.id,
+      transactionId = UUID.randomUUID(),
+    )
+    val data = CAS3BedspaceUnarchiveEvent(
+      eventDetails = eventDetails,
+      id = UUID.randomUUID(),
+      timestamp = occuredAt,
+      eventType = EventType.bedspaceUnarchived,
+    )
+    val domainEventId = UUID.randomUUID()
+    val domainEventTransactionId = UUID.randomUUID()
+
+    val domainEvent = DomainEvent(
+      id = domainEventId,
+      applicationId = null,
+      bookingId = null,
+      crn = null,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = data,
+    )
+
+    every { cas3DomainEventBuilderMock.getBedspaceUnarchiveEvent(eq(bedspace), eq(premises.id), eq(currentStartDate), eq(currentEndDate), eq(user), any()) } returns domainEvent
+    every { domainEventRepositoryMock.save(any()) } returns null
+    every { userService.getUserForRequest() } returns user
+    every { userService.getUserForRequestOrNull() } returns user
+
+    cas3DomainEventService.saveBedspaceUnarchiveEvent(bedspace, premises.id, currentStartDate, currentEndDate, domainEventTransactionId)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEvent.id &&
+            it.type == DomainEventType.CAS3_BEDSPACE_UNARCHIVED &&
+            it.crn == domainEvent.crn &&
+            it.cas3PremisesId == premises.id &&
+            it.cas3BedspaceId == bedspace.id &&
+            it.applicationId == null &&
+            it.cas1SpaceBookingId == null &&
+            it.assessmentId == null &&
+            it.service == "CAS3" &&
+            it.bookingId == null &&
+            it.nomsNumber == null &&
+            it.occurredAt.toInstant() == domainEvent.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.triggeredByUserId == user.id &&
+            it.triggerSource == TriggerSourceType.USER
+        },
+      )
+    }
   }
 
   private fun createApplicationAndPremises(): Pair<TemporaryAccommodationApplicationEntity, Cas3PremisesEntity> {
