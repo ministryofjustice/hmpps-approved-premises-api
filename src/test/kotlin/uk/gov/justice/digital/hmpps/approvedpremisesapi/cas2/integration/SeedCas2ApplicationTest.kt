@@ -108,8 +108,11 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   fun `A SUBMITTED application has _data_ AND _document_ AND an Assessment AND status updates AND first class fields`() {
     cas2ApplicationRepository.deleteAll()
 
+    val referringPrisonCode = "EXAMPLE_CODE"
+
     cas2UserEntityFactory.produceAndPersist {
       withUsername("ROGER_SMITH_FAKE")
+      withActiveNomisCaseloadId(referringPrisonCode)
     }
 
     cas2UserEntityFactory.produceAndPersist {
@@ -134,7 +137,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
             .withState("SUBMITTED")
             .withStatusUpdates("1")
             .withLocation(null)
-            .withReferringPrisonCode("EXAMPLE_CODE")
+            .withReferringPrisonCode(referringPrisonCode)
             .produce(),
         ),
       ),
