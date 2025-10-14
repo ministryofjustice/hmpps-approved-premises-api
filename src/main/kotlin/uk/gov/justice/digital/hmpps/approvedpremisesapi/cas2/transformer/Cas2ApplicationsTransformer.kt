@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
@@ -107,5 +108,11 @@ class Cas2ApplicationsTransformer(
   private fun getStatusFromSummary(summary: Cas2ApplicationSummaryEntity): ApplicationStatus = when {
     summary.submittedAt != null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
+  }
+
+  fun serviceOriginFromText(serviceOrigin: String): Cas2ServiceOrigin = when (serviceOrigin.uppercase()) {
+    "HDC" -> Cas2ServiceOrigin.HDC
+    "BAIL" -> Cas2ServiceOrigin.BAIL
+    else -> error("Unexpected service origin value $serviceOrigin")
   }
 }
