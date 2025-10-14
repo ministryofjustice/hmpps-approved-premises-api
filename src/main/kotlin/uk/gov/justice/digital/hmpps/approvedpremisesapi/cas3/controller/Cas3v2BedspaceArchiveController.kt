@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UnarchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspaceArchiveService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
@@ -37,5 +38,20 @@ class Cas3v2BedspaceArchiveController(
     )
     val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(archivedBedspace)
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(archivedBedspace, bedspaceStatus))
+  }
+
+  @Transactional
+  @PostMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/unarchive")
+  fun unarchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+    @RequestBody body: Cas3UnarchiveBedspace,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+    val unarchivedBedspace = extractEntityFromCasResult(
+      cas3v2BedspaceArchiveService.unarchiveBedspace(premises, bedspaceId, body.restartDate),
+    )
+    val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(unarchivedBedspace)
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(unarchivedBedspace, bedspaceStatus))
   }
 }

@@ -453,6 +453,40 @@ class Cas3v2DomainEventBuilderTest {
     })
   }
 
+  @Test
+  fun `getBedspaceUnarchiveEvent transforms the bedspace information correctly to a domain event`() {
+    val newStartDate = LocalDate.now().plusDays(5)
+    val currentEndDate = LocalDate.now().minusDays(2)
+    val currentStartDate = LocalDate.now().minusDays(20)
+    val bedspaceId = UUID.randomUUID()
+    val probationRegion = probationRegionEntity()
+    val premises = cas3PremisesEntity(probationRegion)
+    val user = userEntity(probationRegion)
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(premises)
+      .withId(bedspaceId)
+      .withEndDate(null)
+      .withStartDate(newStartDate)
+      .produce()
+    val transactionId = UUID.randomUUID()
+
+    val event = cas3DomainEventBuilder.getBedspaceUnarchiveEvent(bedspace, premises.id, currentStartDate, currentEndDate, user, transactionId)
+
+    assertAll({
+      assertThat(event.applicationId).isNull()
+      assertThat(event.bookingId).isNull()
+      assertThat(event.crn).isNull()
+      assertThat(event.nomsNumber).isNull()
+      assertThat(event.data.eventType).isEqualTo(EventType.bedspaceUnarchived)
+      assertThat(event.data.eventDetails.bedspaceId).isEqualTo(bedspaceId)
+      assertThat(event.data.eventDetails.userId).isEqualTo(user.id)
+      assertThat(event.data.eventDetails.currentEndDate).isEqualTo(currentEndDate)
+      assertThat(event.data.eventDetails.currentStartDate).isEqualTo(currentStartDate)
+      assertThat(event.data.eventDetails.newStartDate).isEqualTo(newStartDate)
+      assertThat(event.data.eventDetails.transactionId).isEqualTo(transactionId)
+    })
+  }
+
   private fun cas3DepartureEntity(
     booking: Cas3BookingEntity,
     departureDateTime: OffsetDateTime,
