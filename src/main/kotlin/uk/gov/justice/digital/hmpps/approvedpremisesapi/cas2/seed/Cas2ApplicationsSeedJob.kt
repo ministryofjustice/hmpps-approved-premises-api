@@ -58,12 +58,20 @@ class Cas2ApplicationsSeedJob(
     }
 
     @SuppressWarnings("TooGenericExceptionThrown")
-    val applicant =
+    val applicant = if (row.referringPrisonCode != "") {
+      cas2UserRepository.findByUsernameAndUserTypeAndServiceOriginAndActiveNomisCaseloadId(
+        row.createdBy,
+        Cas2UserType.NOMIS,
+        Cas2ServiceOrigin.HDC,
+        row.referringPrisonCode,
+      ) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
+    } else {
       cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(
         row.createdBy,
         Cas2UserType.NOMIS,
         Cas2ServiceOrigin.HDC,
       ) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
+    }
 
     try {
       createApplication(row, applicant)
