@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportNam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.Instant
@@ -316,11 +317,13 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class ApplicationStatusUpdates {
+    @Suppress("LongMethod")
     @Test
     fun `streams spreadsheet of Cas2ApplicationStatusUpdatedEvents, last 12 months only`() {
       val event1Id = UUID.randomUUID()
       val event2Id = UUID.randomUUID()
       val event3Id = UUID.randomUUID()
+      val event4Id = UUID.randomUUID()
 
       val old = Instant.now().minusSeconds(daysInSeconds(365))
       val newer = Instant.now().minusSeconds(daysInSeconds(100))
@@ -351,8 +354,24 @@ class Cas2ReportsTest : IntegrationTestBase() {
         .withStatus(event2Status)
         .withUpdatedAt(newer)
         .produce()
+
       val event3Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
         .withUpdatedAt(tooOld)
+        .produce()
+
+      val event4StatusDetails = listOf(
+        Cas2StatusDetail("personalInformation", "Personal information"),
+        Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
+        Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
+      )
+
+      val event4Status = Cas2StatusFactory()
+        .withStatusDetails(event4StatusDetails)
+        .produce()
+
+      val event4Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+        .withStatus(event4Status)
+        .withUpdatedAt(old)
         .produce()
 
       val event1ToSave = Cas2ApplicationStatusUpdatedEvent(
@@ -376,6 +395,13 @@ class Cas2ReportsTest : IntegrationTestBase() {
         eventDetails = event3Details,
       )
 
+      val event4ToSave = Cas2ApplicationStatusUpdatedEvent(
+        id = event4Id,
+        timestamp = Instant.now(),
+        eventType = EventType.applicationStatusUpdated,
+        eventDetails = event4Details,
+      )
+
       val event1 = domainEventFactory.produceAndPersist {
         withId(event1Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
@@ -392,21 +418,60 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
       // we don't expect this event to be included as it relates to an update
       // outside the time range
-      domainEventFactory.produceAndPersist {
+      val event3 = domainEventFactory.produceAndPersist {
         withId(event3Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData(objectMapper.writeValueAsString(event3ToSave))
       }
 
+      val event4 = domainEventFactory.produceAndPersist {
+        withId(event4Id)
+        withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData(objectMapper.writeValueAsString(event4ToSave))
+      }
+
       val user1 = nomisUserEntityFactory.produceAndPersist {
         withNomisUsername("NOMIS_USER_1")
+      }
+
+      val user2v2 = cas2v2UserEntityFactory.produceAndPersist {
+        withUsername("NOMIS_USER_1")
+        withUserType(Cas2v2UserType.NOMIS)
       }
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
         withId(event1.applicationId!!)
         withCreatedByUser(user1)
         withCrn(event1Details.personReference.crn.toString())
+        withNomsNumber(event1Details.personReference.noms)
+        withData("{}")
+        withReferringPrisonCode("NEW")
+      }
+
+      cas2ApplicationEntityFactory.produceAndPersist {
+        withId(event2.applicationId!!)
+        withCreatedByUser(user1)
+        withCrn(event2Details.personReference.crn.toString())
+        withNomsNumber(event2Details.personReference.noms)
+        withData("{}")
+        withReferringPrisonCode("NEW")
+      }
+
+      cas2ApplicationEntityFactory.produceAndPersist {
+        withId(event3.applicationId!!)
+        withCreatedByUser(user1)
+        withCrn(event3Details.personReference.crn.toString())
+        withNomsNumber(event3Details.personReference.noms)
+        withData("{}")
+        withReferringPrisonCode("NEW")
+      }
+
+      cas2v2ApplicationEntityFactory.produceAndPersist {
+        withId(event4.applicationId!!)
+        withCreatedByUser(user2v2)
+        withCrn(event4Details.personReference.crn.toString())
         withNomsNumber(event2Details.personReference.noms)
         withData("{}")
         withReferringPrisonCode("NEW")
