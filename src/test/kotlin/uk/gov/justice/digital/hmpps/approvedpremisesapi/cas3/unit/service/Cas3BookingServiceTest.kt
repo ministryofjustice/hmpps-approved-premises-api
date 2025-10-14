@@ -1621,7 +1621,6 @@ class Cas3BookingServiceTest {
         "CRN123",
         CaseSummaryFactory().withCrn("CRN123").withName(Name("John", "Smith", emptyList())).produce(),
       )
-      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-arrival-after-bedspace-start-date") } returns true
     }
 
     @Test
