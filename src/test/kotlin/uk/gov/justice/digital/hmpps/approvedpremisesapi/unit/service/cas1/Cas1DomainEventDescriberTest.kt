@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Da
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationExpiredManuallyPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
@@ -43,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.GetCas1DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.TimelineFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
@@ -56,11 +59,12 @@ import java.util.UUID
 class Cas1DomainEventDescriberTest {
   private val mockDomainEventService = mockk<Cas1DomainEventService>()
   private val mockAssessmentClarificationNoteRepository = mockk<AssessmentClarificationNoteRepository>()
+  private val payloadFactories = mutableListOf<TimelineFactory<*>>()
 
   private val cas1DomainEventDescriber = Cas1DomainEventDescriber(
     mockDomainEventService,
     mockAssessmentClarificationNoteRepository,
-    emptyList(),
+    payloadFactories,
     emptyList(),
   )
 
@@ -276,6 +280,26 @@ class Cas1DomainEventDescriberTest {
     val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The application was withdrawn. The reason was: 'change in circumstances new application to be submitted'")
+  }
+
+  @Test
+  fun `Returns expected description and payload for application expired manually event`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED_MANUALLY)
+
+    val mockFactory = mockk<TimelineFactory<*>>()
+    every { mockFactory.forType() } returns DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED_MANUALLY
+    every { mockFactory.produce(any()) } returns Cas1ApplicationExpiredManuallyPayload(
+      type = Cas1TimelineEventType.applicationManuallyExpired,
+      expiredReason = "Superseded by another application.",
+    )
+    payloadFactories.add(mockFactory)
+
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    assertThat(result.description).isNull()
+
+    val payload = result.payload as Cas1ApplicationExpiredManuallyPayload
+    assertThat(payload.type).isEqualTo(Cas1TimelineEventType.applicationManuallyExpired)
+    assertThat(payload.expiredReason).isEqualTo("Superseded by another application.")
   }
 
   @Test

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredManually
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedSubmittedBy
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -129,6 +131,35 @@ class Cas1ApplicationDomainEventService(
           eventDetails = getApplicationWithdrawn(application, withdrawingUser, eventOccurredAt),
         ),
         emit = application.isSubmitted(),
+      ),
+    )
+  }
+
+  fun applicationExpiredManually(
+    application: ApprovedPremisesApplicationEntity,
+    user: UserEntity,
+    expiryReason: String,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+
+    val eventPayload = ApplicationExpiredManually(
+      applicationId = application.id,
+      expiredBy = domainEventTransformer.toStaffMember(user),
+      expiredAt = eventOccurredAt,
+      expiredReason = expiryReason,
+    )
+
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        nomsNumber = application.nomsNumber,
+        occurredAt = eventOccurredAt,
+        data = eventPayload,
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED_MANUALLY,
+        emit = false,
       ),
     )
   }

@@ -94,6 +94,7 @@ class Cas1ApplicationTimelineTransformer(
     )
     DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
     DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+    DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED_MANUALLY,
     -> listOfNotNull(
       applicationUrlOrNull(domainEventSummary),
     )

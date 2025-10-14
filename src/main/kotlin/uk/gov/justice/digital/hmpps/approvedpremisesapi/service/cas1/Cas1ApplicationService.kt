@@ -141,6 +141,27 @@ class Cas1ApplicationService(
     return CasResult.Success(Unit)
   }
 
+  @Transactional
+  fun expireApprovedPremisesApplication(applicationId: UUID, user: UserEntity, expiredReason: String): CasResult<Unit> {
+    val application = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
+      ?: return CasResult.NotFound(entityType = "application", applicationId.toString())
+
+    if (application.status == ApprovedPremisesApplicationStatus.EXPIRED) {
+      return CasResult.Success(Unit)
+    }
+
+    val updatedApplication = application.apply {
+      this.status = ApprovedPremisesApplicationStatus.EXPIRED
+      this.expiredReason = expiredReason
+    }
+
+    approvedPremisesApplicationRepository.save(updatedApplication)
+
+    cas1ApplicationDomainEventService.applicationExpiredManually(application, user, expiredReason)
+
+    return CasResult.Success(Unit)
+  }
+
   fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState = WithdrawableState(
     withdrawable = !application.isWithdrawn,
     withdrawn = application.isWithdrawn,

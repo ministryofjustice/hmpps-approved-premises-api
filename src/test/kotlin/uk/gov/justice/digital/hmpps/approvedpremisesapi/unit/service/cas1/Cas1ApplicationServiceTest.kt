@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
@@ -312,6 +313,93 @@ class Cas1ApplicationServiceTest {
       verify { cas1ApplicationStatusService.applicationWithdrawn(application) }
       verify { cas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
       verify { cas1ApplicationEmailService.applicationWithdrawn(application, user) }
+    }
+  }
+
+  @Nested
+  inner class ExpireApprovedPremisesApplication {
+
+    @Test
+    fun `expireApprovedPremisesApplication returns NotFound if Application does not exist`() {
+      val applicationId = UUID.fromString("bb13d346-f278-43d7-9c23-5c4077c031ca")
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      every { approvedPremisesApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+      val result = service.expireApprovedPremisesApplication(
+        applicationId,
+        user,
+        "Expired reason",
+      )
+
+      assertThat(result is CasResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `expireApprovedPremisesApplication is idempotent and returns success if already expired`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withStatus(ApprovedPremisesApplicationStatus.EXPIRED)
+        .produce()
+
+      every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
+
+      val result = service.expireApprovedPremisesApplication(
+        application.id,
+        user,
+        "Expire reason.",
+      )
+
+      assertThat(result is CasResult.Success).isTrue
+    }
+
+    @Test
+    fun `expireApprovedPremisesApplication returns Success and sets status to EXPIRED and saves reason and triggers domain event`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      application.assessments.add(assessment)
+
+      every { approvedPremisesApplicationRepository.findByIdOrNull(application.id) } returns application
+      every { approvedPremisesApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesApplicationEntity }
+      every { cas1ApplicationDomainEventService.applicationExpiredManually(any(), user, "Expired reason.") } just Runs
+
+      val result = service.expireApprovedPremisesApplication(
+        application.id,
+        user,
+        "Expired reason.",
+      )
+
+      assertThat(result is CasResult.Success).isTrue
+
+      verify {
+        approvedPremisesApplicationRepository.save(
+          match {
+            it.id == application.id &&
+              it is ApprovedPremisesApplicationEntity &&
+              it.status == ApprovedPremisesApplicationStatus.EXPIRED &&
+              it.expiredReason == "Expired reason."
+          },
+        )
+      }
+
+      verify { cas1ApplicationDomainEventService.applicationExpiredManually(application, user, "Expired reason.") }
     }
   }
 

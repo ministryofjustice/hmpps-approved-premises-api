@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ExpireApplicationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -56,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WithdrawalTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -2474,6 +2476,47 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           )
         }
       }
+    }
+  }
+
+  @Nested
+  inner class ExpireApplications {
+    @Test
+    fun `Expire Application without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/cas1/applications/${UUID.randomUUID()}/expire")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `returns success when application is expired and domain event is saved`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+
+      val application = givenACas1Application()
+
+      webTestClient.post()
+        .uri("/cas1/applications/${application.id}/expire")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1ExpireApplicationReason(
+            reason = "Superseded by another application.",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
+      assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.EXPIRED)
+      assertThat(updatedApplication.expiredReason).isEqualTo("Superseded by another application.")
+
+      domainEventAsserter.assertDomainEventStoreCount(application.id, 1)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        application.id,
+        DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED_MANUALLY,
+      )
     }
   }
 

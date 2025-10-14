@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationExpiredFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationExpiredManuallyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAllocatedFactory
@@ -84,6 +85,7 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
       DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> RequestForPlacementAssessedFactory().produce()
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> FurtherInformationRequestedFactory().withRequestId(requestId).produce()
       DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> ApplicationExpiredFactory().produce()
+      DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED_MANUALLY -> ApplicationExpiredManuallyFactory().produce()
       DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED -> PlacementChangeRequestCreatedFactory().produce()
       DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED -> PlacementChangeRequestRejectedFactory().produce()
       else -> throw RuntimeException("Domain event type $type not supported")

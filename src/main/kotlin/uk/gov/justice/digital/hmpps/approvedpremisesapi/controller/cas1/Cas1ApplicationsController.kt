@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTim
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ExpireApplicationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
@@ -292,6 +293,25 @@ class Cas1ApplicationsController(
           user = user,
           withdrawalReason = body.reason.value,
           otherReason = body.otherReason,
+        ),
+      ),
+    )
+  }
+
+  @Operation(summary = "Expire an application with a reason")
+  @PostMapping("/applications/{applicationId}/expire")
+  fun expireApplication(
+    @PathVariable applicationId: UUID,
+    @RequestBody body: Cas1ExpireApplicationReason,
+  ): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    return ResponseEntity.ok(
+      extractEntityFromCasResult(
+        cas1ApplicationService.expireApprovedPremisesApplication(
+          applicationId = applicationId,
+          user = user,
+          expiredReason = body.reason,
         ),
       ),
     )
