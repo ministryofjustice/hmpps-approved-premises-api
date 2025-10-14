@@ -457,6 +457,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-08-01"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withName("test-room")
@@ -717,6 +718,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-07-01"))
           withEndDate { departureDate }
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
@@ -792,6 +794,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-06-11"))
           withEndDate { departureDate.plusDays(1) }
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
@@ -864,6 +867,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-07-01"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withName("test-room")
@@ -952,6 +956,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-07-01"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withName("test-room")
@@ -1017,6 +1022,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-07-01"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withName("test-room")
@@ -1111,6 +1117,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-04-02"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withName("test-room")
@@ -1276,6 +1283,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-07-01"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withName("test-room")
@@ -1350,6 +1358,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-03-21"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withName("test-room")
@@ -1462,6 +1471,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
+          withStartDate(LocalDate.parse("2022-06-15"))
           withYieldedRoom {
             roomEntityFactory.produceAndPersist {
               withName("test-room")
