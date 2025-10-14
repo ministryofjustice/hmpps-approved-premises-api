@@ -34,6 +34,7 @@ interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
   fun findByIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
   fun findByNomisStaffIdAndServiceOrigin(nomisStaffId: Long, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
   fun findByUsernameAndUserTypeAndServiceOrigin(username: String, type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByUsernameAndUserTypeAndServiceOriginAndActiveNomisCaseloadId(username: String, type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin, activeNomisCaseloadId: String?): Cas2UserEntity?
 }
 
 @Entity
