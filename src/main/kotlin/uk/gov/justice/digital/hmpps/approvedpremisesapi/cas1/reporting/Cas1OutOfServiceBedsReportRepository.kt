@@ -29,7 +29,7 @@ class Cas1OutOfServiceBedsReportRepository(
           rooms.name AS "roomName",
           beds.name AS "bedName",
           oos_bed.id AS id,
-          latest_revisions.reference_number AS "workOrderId",
+          left(latest_revisions.reference_number, 32) AS "workOrderId",
           probation_regions.name AS region,
           premises.name AS ap,
           ap.q_code AS "apQCode",

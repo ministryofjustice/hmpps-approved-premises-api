@@ -126,7 +126,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
           this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
             withCreatedAt(OffsetDateTime.parse("2020-12-01T14:36:12+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             withCreatedBy(userEntity)
-            withReferenceNumber("ref3")
+            withReferenceNumber("WORKORDER-2024-12345-EXTENDED-REFERENCE-NUMBER-EXAMPLE")
             withOutOfServiceBed(this@apply)
             withStartDate(LocalDate.of(2023, 4, 1))
             withEndDate(LocalDate.of(2023, 7, 5))
@@ -228,7 +228,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(actualRows[2].roomName).isEqualTo("room3")
         assertThat(actualRows[2].bedName).isEqualTo("bed3")
         assertThat(actualRows[2].id).isEqualTo(oosbRecordBed3.id.toString())
-        assertThat(actualRows[2].workOrderId).isEqualTo("ref3")
+        assertThat(actualRows[2].workOrderId).isEqualTo("WORKORDER-2024-12345-EXTENDED-RE")
         assertThat(actualRows[2].ap).isEqualTo("ap name")
         assertThat(actualRows[2].apQCode).isEqualTo("Q001")
         assertThat(actualRows[2].reason).isEqualTo("Reason3")
