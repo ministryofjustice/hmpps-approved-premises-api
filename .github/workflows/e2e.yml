@@ -24,3 +24,13 @@ jobs:
     name: "CAS3 E2E"
     uses: ministryofjustice/hmpps-temporary-accommodation-ui/.github/workflows/e2e_tests.yml@main
     secrets: inherit
+
+  cas3_ndelius_cleanup:
+    name: "X371199 address clean up"
+    needs: cas3_e2e_test
+    uses: ministryofjustice/hmpps-probation-integration-e2e-tests/.github/workflows/delete-data.yml@main
+    with:
+      project: "delete-previous-addresses-for-offender"
+      crn: "X371199"
+    secrets: inherit
+
