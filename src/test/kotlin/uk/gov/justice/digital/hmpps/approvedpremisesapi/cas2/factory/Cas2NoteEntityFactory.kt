@@ -23,7 +23,7 @@ class Cas2NoteEntityFactory : Factory<Cas2ApplicationNoteEntity> {
     this.application = { application }
   }
 
-  fun withAssessment(assessment: Cas2AssessmentEntity) = apply {
+  fun withAssessment(assessment: Cas2AssessmentEntity?) = apply {
     this.assessment = { assessment }
   }
 

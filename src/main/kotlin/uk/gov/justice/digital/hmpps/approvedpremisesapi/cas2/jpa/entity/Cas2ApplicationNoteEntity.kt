@@ -15,6 +15,9 @@ import java.util.UUID
 
 @Repository
 interface Cas2ApplicationNoteRepository : JpaRepository<Cas2ApplicationNoteEntity, UUID> {
+  @Query("SELECT n.id FROM Cas2ApplicationNoteEntity n")
+  fun findApplicationNoteIds(): List<UUID>
+
   @Query(
     "SELECT n FROM Cas2ApplicationNoteEntity n WHERE n.assessment IS NULL",
   )
@@ -78,6 +81,7 @@ data class Cas2ApplicationNoteEntity(
   }
 
   fun getUser(): UnifiedUser = this.createdByNomisUser ?: this.createdByExternalUser ?: error("No user found!")
+  fun getUserId(): UUID = this.createdByNomisUser?.id ?: this.createdByExternalUser?.id ?: error("No user id found!")
 
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
 }
