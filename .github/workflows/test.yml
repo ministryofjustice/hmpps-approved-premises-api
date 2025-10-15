@@ -199,7 +199,7 @@ jobs:
       - name: Run integration test
         run: |
           # Format the arguments to "./gradlew integrationTest"
-          SPECS_LIST=$(echo  ${{ steps.split-tests.outputs.test-suite }} | sed 's/src\/test\/kotlin\///g;s/\//./g;s/\.kt / /g' | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
+          SPECS_LIST=$(echo  ${{ steps.split-tests.outputs.test-suite }} | sed 's/src\/test\/kotlin\///g;s/\//./g;s/\.kt/ /g' | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
           echo "Prepared arguments for Gradle: $SPECS_LIST"
           ./gradlew integrationTest $SPECS_LIST
 
