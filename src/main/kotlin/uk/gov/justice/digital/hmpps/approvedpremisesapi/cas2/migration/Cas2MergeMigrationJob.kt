@@ -35,7 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogge
 import java.time.OffsetDateTime
 import java.util.UUID
 
-const val BATCH_SIZE = 100
+const val BATCH_SIZE = 1000
 const val FIXED_CREATED_BY_NOMIS_USER_ID_FOR_CAS2_V2_USER = "93c4a5f0-ce8f-4576-b920-c8e0f938b896"
 const val FIXED_CREATED_BY_EXTERNAL_USER_ID_FOR_CAS2_V2_USER = "bce27384-95b3-4ff7-9478-3e0a9e8f7c3f"
 
@@ -70,7 +70,7 @@ class Cas2MergeMigrationJob(
     migrateCas2Users()
     migrateAndUpdateCas2Applications()
     migrateCas2Assessments()
-    migrateCas2ApplicationNotes()
+    migrateAndUpdateCas2ApplicationNotes()
     migrateAndUpdateCas2StatusUpdates()
     migrateCas2StatusUpdateDetails()
     updateCas2ApplicationAssignments()
@@ -117,11 +117,17 @@ class Cas2MergeMigrationJob(
     migrationLogger.info("Finished cas2 application migration process...")
   }
 
-  private fun migrateCas2ApplicationNotes() {
+  private fun migrateAndUpdateCas2ApplicationNotes() {
     migrationLogger.info("Starting cas2 application note migration process...")
-    val entityIds = cas2v2ApplicationNoteRepository.findApplicationNoteIds()
-    migrationLogger.info("Cas2v2 application notes to migrate: ${entityIds.size}.")
-    super.processInBatches(entityIds, batchSize = BATCH_SIZE) { batchIds ->
+    val cas2EntityIds = cas2ApplicationNoteRepository.findApplicationNoteIds()
+    migrationLogger.info("Cas2 applications notes to update: ${cas2EntityIds.size}.")
+    super.processInBatches(cas2EntityIds, batchSize = BATCH_SIZE) { batchIds ->
+      migrationLogger.info("Update with batch size of ${batchIds.size} in process")
+      cas2ApplicationNoteRepository.saveAllAndFlush(generateCas2ApplicationNote(batchIds))
+    }
+    val cas2v2EntityIds = cas2v2ApplicationNoteRepository.findApplicationNoteIds()
+    migrationLogger.info("Cas2v2 application notes to migrate: ${cas2v2EntityIds.size}.")
+    super.processInBatches(cas2v2EntityIds, batchSize = BATCH_SIZE) { batchIds ->
       migrationLogger.info("Migrate with batch size of ${batchIds.size} in process")
       cas2ApplicationNoteRepository.saveAllAndFlush(generateCas2v2ApplicationNote(batchIds))
     }
@@ -310,6 +316,18 @@ class Cas2MergeMigrationJob(
       },
     )
     note
+  }
+
+  private fun generateCas2ApplicationNote(applicationNoteIds: List<UUID>) = cas2ApplicationNoteRepository.findAllById(applicationNoteIds).map {
+    Cas2ApplicationNoteEntity(
+      id = it.id,
+      application = it.application,
+      createdByUser = it.getUser(),
+      createdByCas2User = cas2UserRepository.findById(it.getUserId()).get(),
+      body = it.body,
+      createdAt = it.createdAt,
+      assessment = it.assessment,
+    )
   }
 
   private fun generateNomisUser(nomisIds: List<UUID>) = nomisUserRepository.findAllById(nomisIds).map {

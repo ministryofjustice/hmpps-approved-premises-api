@@ -52,6 +52,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
   lateinit var cas2ApplicationAssignments: List<Cas2ApplicationAssignmentEntity>
   lateinit var cas2v2Assessments: List<Cas2v2AssessmentEntity>
   lateinit var cas2v2ApplicationNotes: List<Cas2v2ApplicationNoteEntity>
+  lateinit var cas2ApplicationNotes: List<Cas2ApplicationNoteEntity>
   lateinit var cas2v2StatusUpdates: List<Cas2v2StatusUpdateEntity>
   lateinit var cas2StatusUpdates: List<Cas2StatusUpdateEntity>
   lateinit var cas2v2StatusUpdateDetails: List<Cas2v2StatusUpdateDetailEntity>
@@ -139,6 +140,15 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
         withAssessor(externalUsers.random())
       }
     }.take(NO_OF_CAS_2_STATUS_UPDATES_TO_UPDATE).toList()
+    cas2ApplicationNotes = cas2Applications.map {
+      val applicationNote = cas2NoteEntityFactory.produceAndPersist {
+        withApplication(it)
+        withAssessment(it.assessment)
+        withCreatedByUser(it.createdByUser)
+      }
+      cas2ApplicationRepository.save(it)
+      applicationNote
+    }
   }
 
   @Test
@@ -166,7 +176,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     assertThatCas2v2AssessmentsDataWasMigratedSuccessfully(allCas2Assessments)
 
     val allCas2ApplicationNotes = assertExpectedNumberOfCas2v2ApplicationNotesWereMigrated()
-    assertThatCas2v2ApplicationNotesDataWasMigratedSuccessfully(allCas2ApplicationNotes)
+    assertThatAllApplicationNotesDataWasMigratedOrUpdatedSuccessfully(allCas2ApplicationNotes)
 
     val allCas2StatusUpdates = assertExpectedNumberOfCas2v2StatusUpdatesWereMigrated()
     assertThatAllStatusUpdatesDataWasMigratedOrUpdatedSuccessfully(allCas2StatusUpdates)
@@ -198,7 +208,7 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
 
   private fun assertExpectedNumberOfCas2v2ApplicationNotesWereMigrated(): List<Cas2ApplicationNoteEntity> {
     val allApplicationNotes = cas2NoteRepository.findAll()
-    assertThat(allApplicationNotes.size).isEqualTo(NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE)
+    assertThat(allApplicationNotes.size).isEqualTo(NO_OF_CAS_2_APPLICATIONS_TO_UPDATE + NO_OF_CAS_2_V2_APPLICATIONS_TO_MIGRATE)
     return allApplicationNotes
   }
 
@@ -314,13 +324,18 @@ class Cas2MergeMigrationJobTest : Cas2v2IntegrationTestBase() {
     }
   }
 
-  private fun assertThatCas2v2ApplicationNotesDataWasMigratedSuccessfully(allApplicationNotes: List<Cas2ApplicationNoteEntity>) {
+  private fun assertThatAllApplicationNotesDataWasMigratedOrUpdatedSuccessfully(allApplicationNotes: List<Cas2ApplicationNoteEntity>) {
     allApplicationNotes.forEach { cas2ApplicationNote ->
-      val cas2v2ApplicationNote = cas2v2ApplicationNotes.firstOrNull { it.id == cas2ApplicationNote.id }!!
-      assertThatCas2v2ApplicationNotesMatch(
-        cas2ApplicationNoteEntity = cas2ApplicationNote,
-        cas2v2ApplicationNoteEntity = cas2v2ApplicationNote,
-      )
+      val cas2v2ApplicationNote = cas2v2ApplicationNotes.firstOrNull { it.id == cas2ApplicationNote.id }
+
+      if (cas2v2ApplicationNote != null) {
+        assertThatCas2v2ApplicationNotesMatch(
+          cas2ApplicationNoteEntity = cas2ApplicationNote,
+          cas2v2ApplicationNoteEntity = cas2v2ApplicationNote,
+        )
+      } else {
+        assertThat(cas2ApplicationNote.createdByCas2User!!.id).isEqualTo(cas2ApplicationNote.getUserId())
+      }
     }
   }
 
