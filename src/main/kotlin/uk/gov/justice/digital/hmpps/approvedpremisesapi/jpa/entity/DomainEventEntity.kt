@@ -19,6 +19,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredManually
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocated
@@ -302,6 +303,21 @@ enum class DomainEventType(
       schemaVersions = listOf(
         DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
         DomainEventSchemaVersion(2, "Added statusBeforeExpiry and expiryReason fields"),
+      ),
+    ),
+  ),
+  APPROVED_PREMISES_APPLICATION_EXPIRED_MANUALLY(
+    DomainEventCas.CAS1,
+    Cas1EventType.applicationExpiredManually.value,
+    "An Approved Premises application has been manually expired",
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.applicationManuallyExpired,
+      emittable = false,
+      payloadType = ApplicationExpiredManually::class,
+      apiType = Cas1EventType.applicationExpiredManually,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "Added expiryReason field"),
       ),
     ),
   ),

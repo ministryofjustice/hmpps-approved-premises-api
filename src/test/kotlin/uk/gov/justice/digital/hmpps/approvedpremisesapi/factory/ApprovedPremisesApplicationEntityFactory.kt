@@ -70,6 +70,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var noticeType: Yielded<Cas1ApplicationTimelinessCategory?> = { null }
   private var licenseExpiryDate: Yielded<LocalDate?> = { null }
   private var cas1OffenderEntity: Yielded<Cas1OffenderEntity?> = { null }
+  private var expiredReason: Yielded<String?> = { null }
 
   fun withDefaults() = apply {
     withCreatedByUser(UserEntityFactory().withDefaults().produce())
@@ -276,5 +277,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     noticeType = this.noticeType(),
     licenceExpiryDate = this.licenseExpiryDate(),
     cas1OffenderEntity = this.cas1OffenderEntity(),
+    expiredReason = this.expiredReason(),
   )
 }

@@ -174,6 +174,7 @@ class Cas1ApplicationCreationService(
     noticeType = null,
     licenceExpiryDate = null,
     cas1OffenderEntity = cas1OffenderEntity,
+    expiredReason = null,
   )
 
   fun createOfflineApplication(offlineApplication: OfflineApplicationEntity) = offlineApplicationRepository.save(offlineApplication)

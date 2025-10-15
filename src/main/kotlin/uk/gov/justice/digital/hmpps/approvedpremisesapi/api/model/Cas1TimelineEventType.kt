@@ -22,6 +22,7 @@ enum class Cas1TimelineEventType(@get:JsonValue val value: kotlin.String) {
   bookingKeyworkerAssigned("booking_keyworker_assigned"),
   applicationWithdrawn("application_withdrawn"),
   applicationExpired("application_expired"),
+  applicationManuallyExpired("application_manually_expired"),
   informationRequest("information_request"),
   assessmentAppealed("assessment_appealed"),
   assessmentAllocated("assessment_allocated"),

@@ -18,6 +18,7 @@ enum class EventType(@get:JsonValue val value: String) {
   bookingKeyWorkerAssigned("approved-premises.booking.keyworker.assigned"),
   applicationWithdrawn("approved-premises.application.withdrawn"),
   applicationExpired("approved-premises.application.expired"),
+  applicationExpiredManually("approved-premises.application.expired-manually"),
   assessmentAppealed("approved-premises.assessment.appealed"),
   assessmentAllocated("approved-premises.assessment.allocated"),
   informationRequestMade("approved-premises.assessment.info-requested"),
