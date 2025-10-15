@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
@@ -121,7 +122,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
     }
 
     @Test
-    fun `When archive the last online bedspace returns OK and archives the premises with the latest bedspae end date when given valid data`() {
+    fun `When archive the last online bedspace returns OK and archives the premises with the latest bedspace end date when given valid data`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val latestBedspaceArchiveDate = LocalDate.now(clock).plusDays(35)
         givenACas3PremisesWithBedspaces(
@@ -723,6 +724,155 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
             .bodyValue(
               mapOf("restartDate" to restartDate.toString()),
             )
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class CancelScheduledUnarchiveBedspace {
+    @BeforeEach
+    fun setup() {
+      clock.setNow(Instant.parse("2025-09-03T11:34:09Z"))
+    }
+
+    @Test
+    fun `Cancel scheduled unarchive bedspace returns 200 OK when successful`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val bedspaceStartDate = LocalDate.now(clock).minusDays(10)
+        givenACas3PremisesWithBedspaces(
+          region = user.probationRegion,
+          bedspaceCount = 1,
+          bedspacesStartDates = listOf(bedspaceStartDate),
+          bedspacesEndDates = listOf(
+            LocalDate.now(clock).minusDays(3),
+          ),
+          bedspacesCreatedDate = listOf(bedspaceStartDate),
+        ) { premises, bedspaces ->
+          val scheduledBedspaceToUnarchived = bedspaces.first()
+          createBedspaceUnarchiveDomainEvent(
+            scheduledBedspaceToUnarchived,
+            premises.id,
+            user.id,
+            LocalDate.now(clock).minusDays(30),
+          )
+          val lastBedspaceUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(
+            scheduledBedspaceToUnarchived,
+            premises.id,
+            user.id,
+            LocalDate.now(clock).plusDays(10),
+          )
+
+          webTestClient.put()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${scheduledBedspaceToUnarchived.id}/cancel-unarchive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("id").isEqualTo(scheduledBedspaceToUnarchived.id)
+            .jsonPath("startDate").isEqualTo(scheduledBedspaceToUnarchived.createdDate)
+            .jsonPath("endDate").isEqualTo(scheduledBedspaceToUnarchived.endDate)
+
+          // Verify the bedspace was updated
+          val updatedBedspace = cas3BedspacesRepository.findById(scheduledBedspaceToUnarchived.id).get()
+          assertThat(updatedBedspace.createdDate).isEqualTo(scheduledBedspaceToUnarchived.createdDate)
+          assertThat(updatedBedspace.startDate).isEqualTo(scheduledBedspaceToUnarchived.startDate)
+          assertThat(updatedBedspace.endDate).isEqualTo(scheduledBedspaceToUnarchived.endDate)
+
+          val updatedBedspaceUnarchiveDomainEvent =
+            domainEventRepository.findByIdOrNull(lastBedspaceUnarchiveDomainEvent.id)
+          assertThat(updatedBedspaceUnarchiveDomainEvent).isNotNull()
+          assertThat(updatedBedspaceUnarchiveDomainEvent?.cas3CancelledAt).isEqualTo(OffsetDateTime.now(clock))
+        }
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled unarchive bedspace returns 400 when it has a field validation error (startDate is today)`() {
+      val startDate = LocalDate.now(clock)
+
+      givenACas3PremisesComplete(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        bedspaceCount = 1,
+        bedspaceStartDates = listOf(
+          startDate,
+        ),
+        bedspaceEndDates = listOf(
+          null,
+        ),
+      ) { _, jwt, premises, bedspaces ->
+        val scheduledToUnarchivedBedspace = bedspaces.first()
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${premises.id}/bedspaces/${scheduledToUnarchivedBedspace.id}/cancel-unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.bedspaceId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("bedspaceAlreadyOnline")
+
+        // Verify the bedspace was not updated
+        val originalBedspace = cas3BedspacesRepository.findById(scheduledToUnarchivedBedspace.id).get()
+        assertThat(originalBedspace.startDate).isEqualTo(startDate)
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled unarchive bedspace returns 403 when user does not have permission to manage premises without CAS3_ASSESOR role`() {
+      givenACas3PremisesComplete(
+        roles = listOf(UserRole.CAS3_REFERRER),
+        bedspaceCount = 1,
+        bedspaceStartDates = listOf(
+          LocalDate.now(clock).minusDays(10),
+        ),
+        bedspaceEndDates = listOf(
+          null,
+        ),
+      ) { _, jwt, premises, bedspaces ->
+        val scheduledToUnarchivedBedspace = bedspaces.first()
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${premises.id}/bedspaces/${scheduledToUnarchivedBedspace.id}/cancel-unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled unarchive bedspace returns 404 when the bedspace is not found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${UUID.randomUUID()}/bedspaces/${UUID.randomUUID()}/cancel-unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled unarchive bedspace returns 403 when user does not have permission to manage premises in that region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenACas3PremisesWithBedspaces(
+          bedspaceCount = 1,
+          bedspacesStartDates = listOf(
+            LocalDate.now(clock).minusDays(30),
+          ),
+          bedspacesEndDates = listOf(
+            null,
+          ),
+        ) { premises, bedspaces ->
+          val scheduledToUnarchivedBedspace = bedspaces.first()
+          webTestClient.put()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${scheduledToUnarchivedBedspace.id}/cancel-unarchive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
             .exchange()
             .expectStatus()
             .isForbidden
