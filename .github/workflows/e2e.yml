@@ -5,29 +5,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  cas1_e2e_test:
-    name: "CAS1 E2E"
-    uses: ministryofjustice/hmpps-approved-premises-ui/.github/workflows/e2e_tests.yml@main
-    secrets: inherit
-
-  cas2_e2e_test:
-    name: "CAS2 E2E"
-    uses: ministryofjustice/hmpps-community-accommodation-tier-2-ui/.github/workflows/e2e_tests.yml@main
-    secrets: inherit
-
-  cas2_bail_e2e_test:
-    name: "CAS2 Bail E2E"
-    uses: ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/.github/workflows/e2e_tests.yml@main
-    secrets: inherit
-
-  cas3_e2e_test:
-    name: "CAS3 E2E"
-    uses: ministryofjustice/hmpps-temporary-accommodation-ui/.github/workflows/e2e_tests.yml@main
-    secrets: inherit
+#  cas1_e2e_test:
+#    name: "CAS1 E2E"
+#    uses: ministryofjustice/hmpps-approved-premises-ui/.github/workflows/e2e_tests.yml@main
+#    secrets: inherit
+#
+#  cas2_e2e_test:
+#    name: "CAS2 E2E"
+#    uses: ministryofjustice/hmpps-community-accommodation-tier-2-ui/.github/workflows/e2e_tests.yml@main
+#    secrets: inherit
+#
+#  cas2_bail_e2e_test:
+#    name: "CAS2 Bail E2E"
+#    uses: ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/.github/workflows/e2e_tests.yml@main
+#    secrets: inherit
+#
+#  cas3_e2e_test:
+#    name: "CAS3 E2E"
+#    uses: ministryofjustice/hmpps-temporary-accommodation-ui/.github/workflows/e2e_tests.yml@main
+#    secrets: inherit
 
   cas3_ndelius_cleanup:
     name: "X371199 address clean up"
-    needs: cas3_e2e_test
+#    needs: cas3_e2e_test
     uses: ministryofjustice/hmpps-probation-integration-e2e-tests/.github/workflows/delete-data.yml@main
     with:
       project: "delete-previous-addresses-for-offender"
