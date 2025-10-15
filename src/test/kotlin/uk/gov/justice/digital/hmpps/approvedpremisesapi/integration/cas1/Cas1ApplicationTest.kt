@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
@@ -59,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
@@ -2566,6 +2568,25 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withPlacementRequirements(placementRequirements)
           }
 
+          val region = givenAProbationRegion()
+
+          val premises = givenAnApprovedPremises(
+            region = region,
+            supportsSpaceBookings = true,
+          )
+
+          val (offender) = givenAnOffender()
+
+          cas1SpaceBookingEntityFactory.produceAndPersist {
+            withCrn(offender.otherIds.crn)
+            withPremises(premises)
+            withPlacementRequest(placementRequest)
+            withApplication(placementRequest.application)
+            withCreatedBy(user)
+            withExpectedArrivalDate(LocalDate.now())
+            withExpectedDepartureDate(LocalDate.now().plusDays(10))
+          }
+
           val withdrawnPlacementRequest = placementRequestFactory.produceAndPersist {
             withCreatedAt(OffsetDateTime.parse("2007-09-03T10:15:30+01"))
             withApplication(application)
@@ -2622,12 +2643,20 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
           assertThat(requestForPlacements[4].id).isEqualTo(placementRequest.id)
           assertThat(requestForPlacements[4].type).isEqualTo(RequestForPlacementType.automatic)
-          assertThat(requestForPlacements[4].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+          assertThat(requestForPlacements[4].status).isEqualTo(RequestForPlacementStatus.placementBooked)
           assertThat(requestForPlacements[4].requestedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
           assertThat(requestForPlacements[4].authorisedPlacementPeriod).isEqualTo(Cas1RequestedPlacementPeriod(arrival = LocalDate.now(), duration = 12, arrivalFlexible = null))
           assertThat(requestForPlacements[4].sentenceType).isNull()
           assertThat(requestForPlacements[4].releaseType).isEqualTo(ReleaseTypeOption.licence)
           assertThat(requestForPlacements[4].situation).isNull()
+          // Validate space bookings are returned on the placement request
+          assertThat(requestForPlacements[4].placements).hasSize(1)
+          val spaceBooking = requestForPlacements[4].placements[0]
+          assertThat(spaceBooking.expectedArrivalDate).isEqualTo(LocalDate.now())
+          assertThat(spaceBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(10))
+          assertThat(spaceBooking.premises).isEqualTo(NamedId(premises.id, premises.name))
+          assertThat(spaceBooking.apArea).isEqualTo(NamedId(premises.probationRegion.apArea!!.id, premises.probationRegion.apArea!!.name))
+          assertThat(spaceBooking.createdAt).isEqualTo(spaceBooking.createdAt)
         }
       }
     }
