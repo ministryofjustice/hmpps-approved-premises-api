@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingNonArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -91,6 +92,31 @@ class Cas1SpaceBookingTransformer(
       reason = jpa.reason,
     )
   }
+
+  fun transformToCas1SpaceBookingShortSummary(
+    spaceBooking: Cas1SpaceBookingEntity,
+  ): Cas1SpaceBookingShortSummary = Cas1SpaceBookingShortSummary(
+    id = spaceBooking.id,
+    premises = NamedId(
+      id = spaceBooking.premises.id,
+      name = spaceBooking.premises.name,
+    ),
+    apArea = spaceBooking.premises.probationRegion.apArea!!.let {
+      NamedId(
+        id = it.id,
+        name = it.name,
+      )
+    },
+    deliusEventNumber = spaceBooking.deliusEventNumber,
+    actualArrivalDate = spaceBooking.actualArrivalDate,
+    actualDepartureDate = spaceBooking.actualDepartureDate,
+    expectedArrivalDate = spaceBooking.expectedArrivalDate,
+    expectedDepartureDate = spaceBooking.expectedDepartureDate,
+    createdAt = spaceBooking.createdAt.toLocalDateTime(),
+    isNonArrival = spaceBooking.hasNonArrival(),
+    cancellation = spaceBooking.extractCancellation(),
+    characteristics = spaceBooking.criteria.toCas1SpaceCharacteristics(),
+  )
 
   private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() = Cas1SpaceBookingDates(
     id = this.id,

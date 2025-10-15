@@ -3,12 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import java.util.UUID
 
 @Component
@@ -18,6 +20,8 @@ class Cas1RequestForPlacementService(
   private val placementRequestService: Cas1PlacementRequestService,
   private val requestForPlacementTransformer: RequestForPlacementTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
+  private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
+  private val cas1SpaceBookingTransformer: Cas1SpaceBookingTransformer,
 ) {
   fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity): CasResult<List<RequestForPlacement>> {
     val application = applicationService.getApplication(applicationId)
@@ -40,10 +44,15 @@ class Cas1RequestForPlacementService(
     cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user),
   )
 
-  private fun toRequestForPlacement(placementRequest: PlacementRequestEntity, user: UserEntity) = requestForPlacementTransformer.transformPlacementRequestEntityToApi(
-    placementRequest,
-    cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user),
-  )
+  private fun toRequestForPlacement(placementRequest: PlacementRequestEntity, user: UserEntity): RequestForPlacement = requestForPlacementTransformer
+    .transformPlacementRequestEntityToApi(
+      placementRequest,
+      cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user),
+    ).apply {
+      placements = cas1SpaceBookingRepository
+        .findByPlacementRequestId(placementRequest.id)
+        .map { cas1SpaceBookingTransformer.transformToCas1SpaceBookingShortSummary(it) }
+    }
 
   private sealed class RequestForPlacementServiceException(message: String) : RuntimeException(message) {
     class AmbiguousRequestForPlacementId : RequestForPlacementServiceException("A placement application and placement request could not be distinguished as they share the same UUID")

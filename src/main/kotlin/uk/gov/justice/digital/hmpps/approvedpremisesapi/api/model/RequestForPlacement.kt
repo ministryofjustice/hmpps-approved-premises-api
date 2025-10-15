@@ -25,4 +25,5 @@ data class RequestForPlacement(
   val sentenceType: SentenceTypeOption? = null,
   val releaseType: ReleaseTypeOption? = null,
   val situation: SituationOption? = null,
+  var placements: List<Cas1SpaceBookingShortSummary> = emptyList(),
 )
