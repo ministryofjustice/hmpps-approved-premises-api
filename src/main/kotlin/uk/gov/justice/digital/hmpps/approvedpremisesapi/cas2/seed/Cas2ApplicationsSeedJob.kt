@@ -11,9 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
@@ -29,8 +29,7 @@ import java.util.UUID
 @SuppressWarnings("LongParameterList")
 class Cas2ApplicationsSeedJob(
   private val repository: Cas2ApplicationRepository,
-  private val userRepository: NomisUserRepository,
-  private val externalUserRepository: ExternalUserRepository,
+  private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
@@ -58,7 +57,13 @@ class Cas2ApplicationsSeedJob(
       return log.info("Skipping ${row.id}: already seeded")
     }
 
-    val applicant = userRepository.findByNomisUsername(row.createdBy) ?: throw RuntimeException("Could not find applicant with nomisUsername ${row.createdBy}")
+    @SuppressWarnings("TooGenericExceptionThrown")
+    val applicant =
+      cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(
+        row.createdBy,
+        Cas2UserType.NOMIS,
+        Cas2ServiceOrigin.HDC,
+      ) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
 
     try {
       createApplication(row, applicant)
@@ -67,7 +72,7 @@ class Cas2ApplicationsSeedJob(
     }
   }
 
-  private fun createApplication(row: Cas2ApplicationSeedCsvRow, applicant: NomisUserEntity) {
+  private fun createApplication(row: Cas2ApplicationSeedCsvRow, applicant: Cas2UserEntity) {
     val application = repository.save(
       Cas2ApplicationEntity(
         id = row.id,
@@ -106,7 +111,7 @@ class Cas2ApplicationsSeedJob(
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     log.info("Seeding status update $idx for application ${application.id}")
-    val assessor = externalUserRepository.findAll().random()
+    val assessor = cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.EXTERNAL, application.serviceOrigin).random()
     val status = findStatusAtPosition(idx)
     statusUpdateRepository.save(
       Cas2StatusUpdateEntity(
@@ -130,7 +135,7 @@ class Cas2ApplicationsSeedJob(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
-        serviceOrigin = Cas2ServiceOrigin.HDC,
+        serviceOrigin = application.serviceOrigin,
       ),
     )
     application.assessment = assessment

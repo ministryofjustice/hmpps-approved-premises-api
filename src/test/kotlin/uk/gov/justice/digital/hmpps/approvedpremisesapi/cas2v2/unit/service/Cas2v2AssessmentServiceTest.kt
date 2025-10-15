@@ -6,12 +6,12 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.OffsetDateTime
@@ -19,10 +19,10 @@ import java.util.UUID
 
 class Cas2v2AssessmentServiceTest {
 
-  private val mockCas2v2AssessmentRepository = mockk<Cas2v2AssessmentRepository>()
+  private val mockCas2AssessmentRepository = mockk<Cas2AssessmentRepository>()
 
   private val cas2v2AssessmentService = Cas2v2AssessmentService(
-    mockCas2v2AssessmentRepository,
+    mockCas2AssessmentRepository,
   )
 
   @Nested
@@ -30,18 +30,21 @@ class Cas2v2AssessmentServiceTest {
 
     @Test
     fun `saves and returns entity from db`() {
-      val cas2v2Application = Cas2v2ApplicationEntityFactory()
+      val cas2v2Application = Cas2ApplicationEntityFactory()
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .withCreatedByUser(
-          Cas2v2UserEntityFactory()
+          Cas2UserEntityFactory()
+            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
             .produce(),
         ).produce()
-      val assessEntity = Cas2v2AssessmentEntity(
+      val assessEntity = Cas2AssessmentEntity(
         id = UUID.randomUUID(),
         application = cas2v2Application,
         createdAt = OffsetDateTime.now(),
+        serviceOrigin = cas2v2Application.serviceOrigin,
       )
 
-      every { mockCas2v2AssessmentRepository.save(any()) } answers
+      every { mockCas2AssessmentRepository.save(any()) } answers
         {
           assessEntity
         }
@@ -52,7 +55,7 @@ class Cas2v2AssessmentServiceTest {
       Assertions.assertThat(result).isEqualTo(assessEntity)
 
       verify(exactly = 1) {
-        mockCas2v2AssessmentRepository.save(
+        mockCas2AssessmentRepository.save(
           match { it.application == cas2v2Application },
         )
       }
@@ -65,15 +68,18 @@ class Cas2v2AssessmentServiceTest {
     @Test
     fun `saves and returns entity from db`() {
       val assessmentId = UUID.randomUUID()
-      val cas2v2Application = Cas2v2ApplicationEntityFactory()
+      val cas2v2Application = Cas2ApplicationEntityFactory()
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .withCreatedByUser(
-          Cas2v2UserEntityFactory()
+          Cas2UserEntityFactory()
+            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
             .produce(),
         ).produce()
-      val assessEntity = Cas2v2AssessmentEntity(
+      val assessEntity = Cas2AssessmentEntity(
         id = assessmentId,
         application = cas2v2Application,
         createdAt = OffsetDateTime.now(),
+        serviceOrigin = cas2v2Application.serviceOrigin,
       )
 
       val newAssessmentData = UpdateCas2v2Assessment(
@@ -81,12 +87,12 @@ class Cas2v2AssessmentServiceTest {
         assessorName = "Anne Assessor",
       )
 
-      every { mockCas2v2AssessmentRepository.save(any()) } answers
+      every { mockCas2AssessmentRepository.save(any()) } answers
         {
           assessEntity
         }
 
-      every { mockCas2v2AssessmentRepository.findByIdOrNull(assessmentId) } answers
+      every { mockCas2AssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.BAIL) } answers
         {
           assessEntity
         }
@@ -102,7 +108,7 @@ class Cas2v2AssessmentServiceTest {
       )
 
       verify(exactly = 1) {
-        mockCas2v2AssessmentRepository.save(
+        mockCas2AssessmentRepository.save(
           match {
             it.id == assessEntity.id &&
               it.nacroReferralId == newAssessmentData.nacroReferralId &&
@@ -120,7 +126,7 @@ class Cas2v2AssessmentServiceTest {
         assessorName = "Anne Assessor",
       )
 
-      every { mockCas2v2AssessmentRepository.findByIdOrNull(assessmentId) } answers
+      every { mockCas2AssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.BAIL) } answers
         {
           null
         }

@@ -5,25 +5,28 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateDetailEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2StatusUpdateDetailEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2StatusUpdateEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2UserTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2StatusUpdateTransformerTest {
-  private val user = Cas2v2UserEntityFactory().produce()
-  private val cas2v2SubmittedApplication = Cas2v2ApplicationEntityFactory()
+  private val user = Cas2UserEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .produce()
+  private val cas2v2SubmittedApplication = Cas2ApplicationEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
     .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
@@ -40,10 +43,13 @@ class Cas2v2StatusUpdateTransformerTest {
   @Test
   fun `transforms JPA Cas2v2StatusUpdate db entity to API representation`() {
     val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2).random()
-
-    val jpaEntity = Cas2v2StatusUpdateEntityFactory()
+    val assessor = Cas2UserEntityFactory()
+      .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      .produce()
+    val jpaEntity = Cas2StatusUpdateEntityFactory()
       .withStatusId(status.id)
       .withApplication(cas2v2SubmittedApplication)
+      .withAssessor(assessor)
       .produce()
 
     val expectedRepresentation = Cas2v2StatusUpdate(
@@ -63,7 +69,7 @@ class Cas2v2StatusUpdateTransformerTest {
 
   @Test
   fun `test transformStatusUpdateDetailsJpaToApi accepts a CAS2v2 update detail`() {
-    val mockStatusUpdate = mockk<Cas2v2StatusUpdateEntity>()
+    val mockStatusUpdate = mockk<Cas2StatusUpdateEntity>()
 
     val statusId = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")
     every { mockStatusUpdate.statusId } returns statusId
@@ -74,7 +80,7 @@ class Cas2v2StatusUpdateTransformerTest {
       label = "Applicant details",
     )
 
-    val updateDetail = Cas2v2StatusUpdateDetailEntityFactory()
+    val updateDetail = Cas2StatusUpdateDetailEntityFactory()
       .withId(UUID.fromString("3df29b1b-e2fc-4df7-b4b8-0527cd9e3a6f"))
       .withLabel("Applicant details")
       .withStatusDetailId(UUID.fromString("3df29b1b-e2fc-4df7-b4b8-0527cd9e3a6f"))
@@ -83,24 +89,5 @@ class Cas2v2StatusUpdateTransformerTest {
     val transformation = cas2v2StatusUpdateTransformer.transformStatusUpdateDetailsJpaToApi(updateDetail)
 
     Assertions.assertThat(transformation).isEqualTo(cas2v2StatusUpdateDetail)
-  }
-
-  @Test
-  fun `test transformStatusUpdateDetailsJpaToApi rejects a CAS2 update detail`() {
-    val mockStatusUpdate = mockk<Cas2v2StatusUpdateEntity>()
-
-    val statusId = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")
-    every { mockStatusUpdate.statusId } returns statusId
-
-    val updateDetail = Cas2v2StatusUpdateDetailEntityFactory()
-      .withId(UUID.fromString("fabbb8c0-344e-4a9d-a964-7987b22d09c6"))
-      .withLabel("Personal information")
-      .withStatusDetailId(UUID.fromString("fabbb8c0-344e-4a9d-a964-7987b22d09c6"))
-      .withStatusUpdate(mockStatusUpdate)
-      .produce()
-
-    assertThrows<IllegalStateException> {
-      cas2v2StatusUpdateTransformer.transformStatusUpdateDetailsJpaToApi(updateDetail)
-    }
   }
 }

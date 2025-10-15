@@ -47,12 +47,12 @@ data class Cas2StatusUpdateEntity(
   val label: String,
 
   @ManyToOne
-  @JoinColumn(name = "assessor_id")
-  val assessor: ExternalUserEntity,
+  @JoinColumn(name = "cas2_user_assessor_id")
+  val assessor: Cas2UserEntity? = null,
 
   @ManyToOne
-  @JoinColumn(name = "cas2_user_assessor_id")
-  val cas2UserAssessor: Cas2UserEntity? = null,
+  @JoinColumn(name = "assessor_id")
+  val externalAssessor: ExternalUserEntity? = null,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
