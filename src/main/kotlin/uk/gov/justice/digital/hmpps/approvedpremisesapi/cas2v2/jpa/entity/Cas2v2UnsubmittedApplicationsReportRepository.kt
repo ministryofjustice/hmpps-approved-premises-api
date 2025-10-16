@@ -23,6 +23,7 @@ interface Cas2v2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Appl
       LEFT JOIN cas_2_users users ON users.id = applications.created_by_cas2_user_id
       WHERE applications.submitted_at IS NULL
         AND applications.created_at  > CURRENT_DATE - 365
+        AND applications.service_origin = 'BAIL'
       ORDER BY startedAt DESC;
     """,
     nativeQuery = true,

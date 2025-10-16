@@ -45,7 +45,7 @@ data class Cas2StatusUpdateEntity(
 
   @ManyToOne
   @JoinColumn(name = "cas2_user_assessor_id")
-  val assessor: Cas2UserEntity? = null,
+  val assessor: Cas2UserEntity,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
