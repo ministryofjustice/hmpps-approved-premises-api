@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspaceArchiveService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2ArchiveService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
@@ -45,7 +45,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class Cas3V2BedspaceArchiveServiceTest {
+class Cas3V2ArchiveServiceTest {
   private val cas3PremisesRepositoryMock = mockk<Cas3PremisesRepository>()
   private val cas3VoidBedspacesRepositoryMock = mockk<Cas3VoidBedspacesRepository>()
   private val cas3v2BookingRepositoryMock = mockk<Cas3v2BookingRepository>()
@@ -54,7 +54,7 @@ class Cas3V2BedspaceArchiveServiceTest {
   private val cas3DomainEventServiceMock = mockk<Cas3v2DomainEventService>()
   private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
-  private val premisesService = Cas3v2BedspaceArchiveService(
+  private val premisesService = Cas3v2ArchiveService(
     cas3BedspaceRepositoryMock,
     cas3PremisesRepositoryMock,
     cas3v2BookingRepositoryMock,

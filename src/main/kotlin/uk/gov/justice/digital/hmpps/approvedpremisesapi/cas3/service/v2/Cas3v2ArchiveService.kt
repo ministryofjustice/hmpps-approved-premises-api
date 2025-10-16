@@ -29,7 +29,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 @Service
-class Cas3v2BedspaceArchiveService(
+class Cas3v2ArchiveService(
   private val cas3BedspacesRepository: Cas3BedspacesRepository,
   private val cas3PremisesRepository: Cas3PremisesRepository,
   private val cas3v2BookingRepository: Cas3v2BookingRepository,
