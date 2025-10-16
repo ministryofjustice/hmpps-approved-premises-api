@@ -59,13 +59,18 @@ class TimelineEventsTransformerTest {
               id = UUID.randomUUID(),
               statusDetailId = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),
               label = "first detail",
-              statusUpdate = Cas2StatusUpdateEntityFactory().withApplication(submittedCas2ApplicationFactory.produce()).produce(),
+              statusUpdate = Cas2StatusUpdateEntityFactory()
+                .withAssessor(Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce())
+                .withApplication(submittedCas2ApplicationFactory.produce()).produce(),
             ),
             Cas2StatusUpdateDetailEntity(
               id = UUID.randomUUID(),
               statusDetailId = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),
               label = "second detail",
-              statusUpdate = Cas2StatusUpdateEntityFactory().withApplication(submittedCas2ApplicationFactory.produce()).produce(),
+              statusUpdate = Cas2StatusUpdateEntityFactory()
+                .withAssessor(Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce())
+                .withApplication(submittedCas2ApplicationFactory.produce())
+                .produce(),
             ),
           ),
         )
@@ -153,14 +158,14 @@ class TimelineEventsTransformerTest {
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusWithDetailCreatedAt.toInstant(),
             label = statusUpdateWithDetailsEntity.label,
-            createdByName = statusUpdateWithDetailsEntity.assessor?.name,
+            createdByName = statusUpdateWithDetailsEntity.assessor.name,
             body = "first detail, second detail",
           ),
           Cas2TimelineEvent(
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusCreatedAt.toInstant(),
             label = statusUpdateEntity.label,
-            createdByName = statusUpdateEntity.assessor?.name,
+            createdByName = statusUpdateEntity.assessor.name,
             body = null,
           ),
           Cas2TimelineEvent(

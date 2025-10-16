@@ -234,7 +234,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       	"noms_number": "${statusUpdate.application.nomsNumber}", 
       	"application_id": "${statusUpdate.application.id}",
       	"assessment_id": "${statusUpdate.assessment!!.id}",
-      	"assessor_name": "${statusUpdate.assessor!!.name}",
+      	"assessor_name": "${statusUpdate.assessor.name}",
         "created_at": "${statusUpdate.createdAt.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}",
         "description": "${statusUpdate.description}",
         "label": "${statusUpdate.label}"
@@ -275,7 +275,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "noms_number": "${application.nomsNumber}",
       "data": ${application.data},
       "document": ${application.document},
-      "created_by_user": "${application.createdByUser!!.name}",
+      "created_by_user": "${application.createdByUser.name}",
       "created_at": "$CREATED_AT",
       "submitted_at": "$SUBMITTED_AT",
       "referring_prison_code": "${application.referringPrisonCode}",

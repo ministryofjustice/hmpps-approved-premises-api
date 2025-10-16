@@ -314,10 +314,10 @@ class Cas2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByUser!!.nomisStaffId!!,
-                cas2StaffIdentifier = application.createdByUser!!.staffIdentifier(),
-                name = application.createdByUser!!.name,
-                username = application.createdByUser!!.username,
+                staffIdentifier = application.createdByUser.nomisStaffId!!,
+                cas2StaffIdentifier = application.createdByUser.staffIdentifier(),
+                name = application.createdByUser.name,
+                username = application.createdByUser.username,
                 usertype = application.getCreatedByUserType(),
               ),
             ),

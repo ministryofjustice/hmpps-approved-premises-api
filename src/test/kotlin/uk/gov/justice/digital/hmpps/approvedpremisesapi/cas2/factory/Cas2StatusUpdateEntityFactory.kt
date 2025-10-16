@@ -15,7 +15,7 @@ import java.util.UUID
 
 class Cas2StatusUpdateEntityFactory : Factory<Cas2StatusUpdateEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var assessor: Yielded<Cas2UserEntity?> = { null }
+  private var assessor: Yielded<Cas2UserEntity>? = null
   private var assessment: Yielded<Cas2AssessmentEntity?> = { null }
   private var application: Yielded<Cas2ApplicationEntity>? = null
   private var statusId: Yielded<UUID> = { Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2).random().id }
@@ -62,7 +62,7 @@ class Cas2StatusUpdateEntityFactory : Factory<Cas2StatusUpdateEntity> {
 
   override fun produce(): Cas2StatusUpdateEntity = Cas2StatusUpdateEntity(
     id = this.id(),
-    assessor = this.assessor(),
+    assessor = this.assessor?.invoke() ?: error("Must provide an assessor"),
     application = this.application?.invoke() ?: error("Must provide a submitted application"),
     assessment = this.assessment(),
     statusId = this.statusId(),

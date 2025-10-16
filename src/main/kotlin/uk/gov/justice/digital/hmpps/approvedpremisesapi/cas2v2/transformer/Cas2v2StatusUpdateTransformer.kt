@@ -21,7 +21,7 @@ class Cas2v2StatusUpdateTransformer(
     name = jpa.status().name,
     label = jpa.label,
     description = jpa.description,
-    updatedBy = cas2v2UserTransformer.transformJpaToApi(jpa.assessor!!),
+    updatedBy = cas2v2UserTransformer.transformJpaToApi(jpa.assessor),
     updatedAt = jpa.createdAt.toInstant(),
     statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
   )

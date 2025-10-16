@@ -619,7 +619,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = application2.crn,
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
-          startedBy = application2.createdByUser!!.username,
+          startedBy = application2.createdByUser.username,
           applicationOrigin = application2.applicationOrigin,
         ),
         UnsubmittedApplicationsReportRow(
@@ -627,7 +627,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = application1.crn,
           personNoms = application1.nomsNumber.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
-          startedBy = application1.createdByUser!!.username,
+          startedBy = application1.createdByUser.username,
           applicationOrigin = application1.applicationOrigin,
         ),
       )
