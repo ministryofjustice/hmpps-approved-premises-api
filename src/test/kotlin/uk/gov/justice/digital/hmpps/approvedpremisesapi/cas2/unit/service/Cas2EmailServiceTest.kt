@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
@@ -94,6 +95,7 @@ class Cas2EmailServiceTest {
   private val cas2StatusUpdateEntity = Cas2StatusUpdateEntityFactory()
     .withApplication(application)
     .withLabel("Status Update")
+    .withAssessor(Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce())
     .produce()
 
   @Test
@@ -541,7 +543,7 @@ class Cas2EmailServiceTest {
     fun `createdByUser email is returned when the application has not been assigned to a POM`() {
       val email = emailService.getReferrerEmail(application)
       assertThat(application.applicationAssignments).hasSize(0)
-      assertThat(email).isEqualTo(application.createdByUser!!.email)
+      assertThat(email).isEqualTo(application.createdByUser.email)
     }
   }
 }

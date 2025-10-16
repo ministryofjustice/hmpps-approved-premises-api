@@ -48,7 +48,10 @@ class Cas2v2TimelineEventsTransformerTest {
             .withName("Anne Assessor")
             .produce(),
         ).produce()
-
+      val assessor = Cas2UserEntityFactory()
+        .withUserType(Cas2UserType.EXTERNAL)
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .produce()
       val statusWithDetailCreatedAt = OffsetDateTime.now().minusDays(1)
       val statusUpdateWithDetailsEntity = Cas2StatusUpdateEntityFactory()
         .withStatusUpdateDetails(
@@ -57,13 +60,19 @@ class Cas2v2TimelineEventsTransformerTest {
               id = UUID.randomUUID(),
               statusDetailId = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),
               label = "first detail",
-              statusUpdate = Cas2StatusUpdateEntityFactory().withApplication(submittedCas2ApplicationFactory.produce()).produce(),
+              statusUpdate = Cas2StatusUpdateEntityFactory()
+                .withAssessor(assessor)
+                .withApplication(submittedCas2ApplicationFactory.produce())
+                .produce(),
             ),
             Cas2StatusUpdateDetailEntity(
               id = UUID.randomUUID(),
               statusDetailId = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),
               label = "second detail",
-              statusUpdate = Cas2StatusUpdateEntityFactory().withApplication(submittedCas2ApplicationFactory.produce()).produce(),
+              statusUpdate = Cas2StatusUpdateEntityFactory()
+                .withAssessor(assessor)
+                .withApplication(submittedCas2ApplicationFactory.produce())
+                .produce(),
             ),
           ),
         )
@@ -113,14 +122,14 @@ class Cas2v2TimelineEventsTransformerTest {
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusWithDetailCreatedAt.toInstant(),
             label = statusUpdateWithDetailsEntity.label,
-            createdByName = statusUpdateWithDetailsEntity.assessor?.name,
+            createdByName = statusUpdateWithDetailsEntity.assessor.name,
             body = "first detail, second detail",
           ),
           Cas2TimelineEvent(
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusCreatedAt.toInstant(),
             label = statusUpdateEntity.label,
-            createdByName = statusUpdateEntity.assessor?.name,
+            createdByName = statusUpdateEntity.assessor.name,
             body = null,
           ),
           Cas2TimelineEvent(

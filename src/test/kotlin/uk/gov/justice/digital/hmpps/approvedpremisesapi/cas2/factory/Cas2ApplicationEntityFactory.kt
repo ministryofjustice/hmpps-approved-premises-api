@@ -23,7 +23,7 @@ import java.util.UUID
 class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
-  private var createdByUser: Yielded<Cas2UserEntity?> = { null }
+  private var createdByUser: Yielded<Cas2UserEntity>? = null
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
@@ -153,11 +153,12 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.bailHearingDate = { bailHearingDate }
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce(): Cas2ApplicationEntity {
     val application = Cas2ApplicationEntity(
       id = this.id(),
       crn = this.crn(),
-      createdByUser = this.createdByUser(),
+      createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
       data = this.data(),
       document = this.document(),
       createdAt = this.createdAt(),
