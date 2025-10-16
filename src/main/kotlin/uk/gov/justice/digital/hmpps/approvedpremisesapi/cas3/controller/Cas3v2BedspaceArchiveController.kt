@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UnarchiveBedspace
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspaceArchiveService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2ArchiveService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BedspaceTransformer
@@ -21,7 +21,7 @@ import java.util.UUID
 class Cas3v2BedspaceArchiveController(
   private val cas3v2PremisesService: Cas3v2PremisesService,
   private val cas3v2BedspacesService: Cas3v2BedspacesService,
-  private val cas3v2BedspaceArchiveService: Cas3v2BedspaceArchiveService,
+  private val cas3V2ArchiveService: Cas3v2ArchiveService,
   private val cas3BedspaceTransformer: Cas3BedspaceTransformer,
 ) {
 
@@ -34,7 +34,7 @@ class Cas3v2BedspaceArchiveController(
   ): ResponseEntity<Cas3Bedspace> {
     val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
     val archivedBedspace = extractEntityFromCasResult(
-      cas3v2BedspaceArchiveService.archiveBedspace(bedspaceId, premises, body.endDate),
+      cas3V2ArchiveService.archiveBedspace(bedspaceId, premises, body.endDate),
     )
     val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(archivedBedspace)
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(archivedBedspace, bedspaceStatus))
@@ -49,7 +49,7 @@ class Cas3v2BedspaceArchiveController(
   ): ResponseEntity<Cas3Bedspace> {
     val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
     val unarchivedBedspace = extractEntityFromCasResult(
-      cas3v2BedspaceArchiveService.unarchiveBedspace(premises, bedspaceId, body.restartDate),
+      cas3V2ArchiveService.unarchiveBedspace(premises, bedspaceId, body.restartDate),
     )
     val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(unarchivedBedspace)
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(unarchivedBedspace, bedspaceStatus))
