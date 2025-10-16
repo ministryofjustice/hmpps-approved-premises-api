@@ -420,6 +420,7 @@ class Cas3PremisesService(
 
   @Suppress("CyclomaticComplexMethod")
   @Transactional
+  @Deprecated("Use Cas3v2ArchiveService.archivePremises() instead")
   fun archivePremises(
     premises: TemporaryAccommodationPremisesEntity,
     archivePremisesEndDate: LocalDate,
