@@ -505,7 +505,8 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
-      val application1 = cas2ApplicationEntityFactory.produceAndPersist {
+      // HDC application, which should not feature in report
+      cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
@@ -529,8 +530,10 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user2)
         withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withApplicationOrigin(ApplicationOrigin.prisonBail)
         withData("{}")
         withSubmittedAt(null)
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       // submitted application, which should not feature in report
@@ -538,7 +541,9 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withCreatedByUser(user2)
         withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
         withData("{}")
+        withApplicationOrigin(ApplicationOrigin.prisonBail)
         withSubmittedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(50))
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       val expectedDataFrame = listOf(
@@ -548,15 +553,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           applicationOrigin = application2.applicationOrigin,
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first() + 'Z',
-          startedBy = application2.createdByUser!!.username,
-        ),
-        UnsubmittedApplicationsReportRow(
-          applicationId = application1.id.toString(),
-          personCrn = application1.crn,
-          personNoms = application1.nomsNumber.toString(),
-          startedAt = application1.createdAt.toString().split(".").first() + 'Z',
-          startedBy = application1.createdByUser!!.username,
-          applicationOrigin = application1.applicationOrigin,
+          startedBy = application2.createdByUser.username,
         ),
       )
         .toDataFrame()

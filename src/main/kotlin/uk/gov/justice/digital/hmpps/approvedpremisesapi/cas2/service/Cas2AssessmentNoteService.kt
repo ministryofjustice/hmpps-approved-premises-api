@@ -84,7 +84,7 @@ class Cas2AssessmentNoteService(
         ),
       )
     } else {
-      val msg = "Email not found for User ${savedNote.application.createdByUser!!.id}. Unable to send email for Note ${savedNote.id} on Application ${savedNote.application.id}"
+      val msg = "Email not found for User ${savedNote.application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${savedNote.application.id}"
       log.error(msg)
       Sentry.captureMessage(msg)
     }

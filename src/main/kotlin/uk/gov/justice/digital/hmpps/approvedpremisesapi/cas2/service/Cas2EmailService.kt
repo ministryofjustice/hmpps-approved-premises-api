@@ -109,7 +109,7 @@ class Cas2EmailService(
         ?: offenderManagementUnitRepository.findByPrisonCode(it.prisonCode)!!.email
     }
 
-    return application.createdByUser!!.email
+    return application.createdByUser.email
   }
 
   fun getApplicationStatusOrDefault(applicationId: UUID): String = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)?.label ?: "Received"

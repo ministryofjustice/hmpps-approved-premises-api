@@ -298,7 +298,7 @@ class Cas2SubmissionTest(
           expectedSubmittedApplication.crn == it.crn &&
           expectedSubmittedApplication.nomsNumber == it.nomsNumber &&
           expectedSubmittedApplication.createdAt.toInstant() == it.createdAt &&
-          expectedSubmittedApplication.createdByUser!!.id == it.createdByUserId &&
+          expectedSubmittedApplication.createdByUser.id == it.createdByUserId &&
           expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt
       }
 
@@ -485,7 +485,7 @@ class Cas2SubmissionTest(
 
             val applicant = nomisUserTransformer.transformJpaToApi(
               applicationEntity
-                .createdByUser!!,
+                .createdByUser,
             )
 
             assertThat(responseBody).matches {
@@ -650,7 +650,7 @@ class Cas2SubmissionTest(
 
                 val applicant = nomisUserTransformer.transformJpaToApi(
                   applicationEntity
-                    .createdByUser!!,
+                    .createdByUser,
                 )
 
                 assertThat(responseBody).matches {

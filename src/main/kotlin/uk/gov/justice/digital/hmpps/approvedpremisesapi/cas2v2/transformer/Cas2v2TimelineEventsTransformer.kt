@@ -38,7 +38,7 @@ class Cas2v2TimelineEventsTransformer {
         type = TimelineEventType.cas2StatusUpdate,
         occurredAt = it.createdAt.toInstant(),
         label = it.label,
-        createdByName = it.assessor?.name,
+        createdByName = it.assessor.name,
         body = it.statusUpdateDetails?.joinToString { detail -> detail.label },
       )
     }
@@ -50,7 +50,7 @@ class Cas2v2TimelineEventsTransformer {
         type = TimelineEventType.cas2ApplicationSubmitted,
         occurredAt = jpa.submittedAt?.toInstant()!!,
         label = "Application submitted",
-        createdByName = jpa.createdByUser?.name,
+        createdByName = jpa.createdByUser.name,
       )
       timelineEvents += submittedAtEvent
     }

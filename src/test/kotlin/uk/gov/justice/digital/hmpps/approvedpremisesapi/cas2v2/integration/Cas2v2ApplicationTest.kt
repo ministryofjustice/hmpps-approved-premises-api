@@ -417,10 +417,10 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             firstApplicationEntity.nomsNumber == it.nomsNumber &&
             "${offenderDetails.firstName} ${offenderDetails.surname}" == it.personName &&
             firstApplicationEntity.createdAt.toInstant() == it.createdAt &&
-            firstApplicationEntity.createdByUser!!.id == it.createdByUserId &&
+            firstApplicationEntity.createdByUser.id == it.createdByUserId &&
             firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
             firstApplicationEntity.hdcEligibilityDate == it.hdcEligibilityDate &&
-            firstApplicationEntity.createdByUser!!.name == it.createdByUserName
+            firstApplicationEntity.createdByUser.name == it.createdByUserName
         }
 
         Assertions.assertThat(responseBody).noneMatch {
@@ -1146,7 +1146,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               applicationEntity.id == it.id &&
                 applicationEntity.crn == it.person.crn &&
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByUser!!.id == it.createdBy.id &&
+                applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
             }
@@ -1696,7 +1696,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             application.id == it.id &&
               application.crn == it.person.crn &&
               application.createdAt.toInstant() == it.createdAt &&
-              application.createdByUser!!.id == it.createdBy.id &&
+              application.createdByUser.id == it.createdBy.id &&
               application.submittedAt?.toInstant() == it.submittedAt &&
               serializableToJsonNode(application.data) == serializableToJsonNode(it.data)
           }
