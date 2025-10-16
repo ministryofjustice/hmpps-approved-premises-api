@@ -12,11 +12,9 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Version
-import org.springframework.data.domain.Limit
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
-import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -91,9 +89,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query("SELECT DISTINCT(b.nomsNumber) FROM BookingEntity b WHERE b.nomsNumber IS NOT NULL")
   fun getDistinctNomsNumbers(): List<String>
 
-  @Query("SELECT b FROM BookingEntity b WHERE b.bed.id IN :bedIds")
-  fun findByBedIds(bedIds: List<UUID>): List<BookingEntity>
-
   /*
    * There is a bug in Hibernate that has been around since 2010. It is the reason why we have this awful line
    *
@@ -112,11 +107,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       "AND (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR b.id != :thisEntityId)",
   )
   fun findByBedIdAndArrivingBeforeDate(bedId: UUID, date: LocalDate, thisEntityId: UUID?): List<BookingEntity>
-
-  @Query(
-    "SELECT b From BookingEntity b WHERE b.application = :application AND (b.adhoc IS TRUE or b.adhoc IS NULL)",
-  )
-  fun findAllAdhocOrUnknownByApplication(application: ApplicationEntity): List<BookingEntity>
 
   fun findAllByApplication(application: ApplicationEntity): List<BookingEntity>
 
@@ -156,8 +146,10 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   )
   fun findFutureBookingsByPremisesIdAndStatus(serviceName: String, premisesId: UUID, date: LocalDate, statuses: List<BookingStatus>): List<BookingEntity>
 
-  fun findByBedId(id: UUID, by: Sort, limit: Limit): List<BookingEntity>
-  fun findByPremisesId(id: UUID, by: Sort, limit: Limit): List<BookingEntity>
+  @Query(
+    "SELECT b FROM BookingEntity b WHERE b.bed.id = :bedId ORDER BY b.arrivalDate ASC limit 1",
+  )
+  fun findFirstBookingByBedId(bedId: UUID): BookingEntity?
 }
 
 @Repository

@@ -28,4 +28,5 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   migrateDataToCas2Tables("migrate_data_to_cas2_tables"),
   updateCas3DomainEventArchiveUnarchiveTransaction("update_cas3_domain_event_archive_unarchive_transaction"),
   updateCas3ArchiveUnarchiveDomainEventDetails("update_cas3_archive_unarchive_domain_event_details"),
+  updateCas3BedspaceStartDate("update_cas3_bedspace_start_date"),
 }

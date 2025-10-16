@@ -44,6 +44,22 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
   )
   fun findCas3Bedspace(premisesId: UUID, bedspaceId: UUID): BedEntity?
 
+  @Query(
+    """
+      select b.*
+      from beds b
+      inner join (
+      select bk.bed_id,min(bk.arrival_date) earliest_arrival
+      from bookings bk
+      inner join beds b on bk.bed_id = b.id
+      where bk.service = 'temporary-accommodation'
+      group by bk.bed_id) earliest_bookings on b.id = earliest_bookings.bed_id
+      where b.start_date > earliest_bookings.earliest_arrival
+    """,
+    nativeQuery = true,
+  )
+  fun findCas3BedspacesWithStartDateAfterBookingArrivalDate(): List<BedEntity>
+
   @Query(nativeQuery = true)
   fun getDetailById(id: UUID): DomainBedSummary?
 
