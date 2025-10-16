@@ -55,7 +55,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(persistedApplication).isNotNull
     assertThat(persistedApplication.crn).isEqualTo("CRN-ABC")
     assertThat(persistedApplication.nomsNumber).isEqualTo("NOMS-123")
-    assertThat(persistedApplication.createdByUser!!.id).isEqualTo(applicant.id)
+    assertThat(persistedApplication.createdByUser.id).isEqualTo(applicant.id)
     assertThat(persistedApplication.createdAt).isEqualTo(creationTimestamp)
     assertThat(persistedApplication.statusUpdates).isEmpty()
   }
@@ -204,7 +204,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(persistedApplication.statusUpdates).isNotEmpty()
     assertThat(persistedApplication.statusUpdates!!.size).isEqualTo(2)
     persistedApplication.statusUpdates!!.forEach { statusUpdate ->
-      assertThat(statusUpdate.assessor?.username).isEqualTo("CAS2_ASSESSOR")
+      assertThat(statusUpdate.assessor.username).isEqualTo("CAS2_ASSESSOR")
     }
   }
 

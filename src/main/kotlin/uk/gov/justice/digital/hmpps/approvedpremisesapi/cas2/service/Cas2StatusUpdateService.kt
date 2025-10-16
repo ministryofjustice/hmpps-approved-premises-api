@@ -162,7 +162,7 @@ class StatusUpdateService(
               statusDetails = statusTransformer.transformStatusDetailListToDetailItemList(statusDetails),
             ),
             updatedBy = ExternalUser(
-              username = assessor!!.username,
+              username = assessor.username,
               name = assessor.name,
               email = assessor.email!!,
               origin = assessor.externalType,
@@ -191,7 +191,7 @@ class StatusUpdateService(
         ),
       )
     } else {
-      val msg = "Email not found for User ${application.createdByUser!!.id}. Unable to send email when updating status of Application ${application.id}"
+      val msg = "Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}"
       log.error(msg)
       Sentry.captureMessage(msg)
     }

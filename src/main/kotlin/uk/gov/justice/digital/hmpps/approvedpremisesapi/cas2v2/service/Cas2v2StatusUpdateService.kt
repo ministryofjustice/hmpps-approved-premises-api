@@ -103,7 +103,7 @@ class Cas2v2StatusUpdateService(
       )
     }
 
-    sendEmailStatusUpdated(assessment.application.createdByUser!!, assessment.application, createdStatusUpdate)
+    sendEmailStatusUpdated(assessment.application.createdByUser, assessment.application, createdStatusUpdate)
 
     createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
@@ -149,7 +149,7 @@ class Cas2v2StatusUpdateService(
               statusDetails = statusDetails?.let { statusTransformer.transformStatusDetailListToDetailItemList(it) },
             ),
             updatedBy = ExternalUser(
-              username = assessor!!.username,
+              username = assessor.username,
               name = assessor.name,
               email = assessor.email!!,
               origin = "assessor.origin",
@@ -162,7 +162,7 @@ class Cas2v2StatusUpdateService(
   }
 
   private fun sendEmailStatusUpdated(user: Cas2UserEntity, application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
-    if (application.createdByUser?.email != null) {
+    if (application.createdByUser.email != null) {
       val applicationOrigin = application.applicationOrigin
       val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
@@ -186,8 +186,8 @@ class Cas2v2StatusUpdateService(
         ),
       )
     } else {
-      log.error("Email not found for User ${application.createdByUser?.id}. Unable to send email when updating status of Application ${application.id}")
-      Sentry.captureMessage("Email not found for User ${application.createdByUser?.id}. Unable to send email when updating status of Application ${application.id}")
+      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
+      Sentry.captureMessage("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
     }
   }
 }

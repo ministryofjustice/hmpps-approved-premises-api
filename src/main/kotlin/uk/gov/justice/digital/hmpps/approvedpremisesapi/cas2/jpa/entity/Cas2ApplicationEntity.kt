@@ -86,7 +86,7 @@ data class Cas2ApplicationEntity(
 
   @ManyToOne
   @JoinColumn(name = "created_by_cas2_user_id")
-  val createdByUser: Cas2UserEntity? = null,
+  val createdByUser: Cas2UserEntity,
 
   @Type(JsonType::class)
   var data: String?,
@@ -128,14 +128,13 @@ data class Cas2ApplicationEntity(
   var serviceOrigin: Cas2ServiceOrigin,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
-  fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByUser?.id == user.id
+  fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByUser.id == user.id
 
   fun getCreatedByUserType(): Cas2StaffMember.Usertype {
-    return when (createdByUser?.userType) {
+    return when (createdByUser.userType) {
       Cas2UserType.NOMIS -> Cas2StaffMember.Usertype.nomis
       Cas2UserType.DELIUS -> Cas2StaffMember.Usertype.delius
       Cas2UserType.EXTERNAL -> throw ForbiddenProblem() // BAIL-WIP - The cas2 staff member usertype does not know about external users, we need to add it in the yaml
-      null -> error("Created by user should not be null")
     }
     return Cas2StaffMember.Usertype.nomis
   }
