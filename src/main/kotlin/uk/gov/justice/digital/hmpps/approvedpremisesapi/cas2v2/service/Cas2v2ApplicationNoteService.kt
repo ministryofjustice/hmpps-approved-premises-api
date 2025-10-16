@@ -79,7 +79,7 @@ class Cas2v2ApplicationNoteService(
     application: Cas2ApplicationEntity,
     savedNote: Cas2ApplicationNoteEntity,
   ) {
-    if (application.createdByUser!!.email != null) {
+    if (application.createdByUser.email != null) {
       val applicationOrigin = application.applicationOrigin
       val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
@@ -89,7 +89,7 @@ class Cas2v2ApplicationNoteService(
         ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_REFERRER
       }
       emailNotificationService.sendCas2Email(
-        recipientEmailAddress = application.createdByUser!!.email!!,
+        recipientEmailAddress = application.createdByUser.email!!,
         templateId = templateId,
         personalisation = mapOf(
           "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
@@ -101,8 +101,8 @@ class Cas2v2ApplicationNoteService(
         ),
       )
     } else {
-      log.error("Email not found for User ${application.createdByUser!!.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
-      Sentry.captureMessage("Email not found for User ${application.createdByUser!!.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
+      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
+      Sentry.captureMessage("Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
     }
   }
 

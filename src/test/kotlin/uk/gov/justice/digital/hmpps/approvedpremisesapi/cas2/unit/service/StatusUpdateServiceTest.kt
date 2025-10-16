@@ -183,7 +183,7 @@ class StatusUpdateServiceTest {
 
       @Test
       fun `saves and asks the domain event service to create a status-updated event`() {
-        every { cas2EmailService.getReferrerEmail(any()) }.returns(application.createdByUser!!.email)
+        every { cas2EmailService.getReferrerEmail(any()) }.returns(application.createdByUser.email)
         statusUpdateService.createForAssessment(
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
@@ -314,7 +314,7 @@ class StatusUpdateServiceTest {
           every { mockStatusTransformer.transformStatusDetailListToDetailItemList(listOf(statusDetail)) } returns listOf(
             Cas2StatusDetail("exampleStatusDetail", ""),
           )
-          every { cas2EmailService.getReferrerEmail(any()) } returns assessment.application.createdByUser!!.email
+          every { cas2EmailService.getReferrerEmail(any()) } returns assessment.application.createdByUser.email
 
           statusUpdateService.createForAssessment(
             assessmentId = assessment.id,

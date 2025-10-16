@@ -92,7 +92,7 @@ class Cas2UserService(
     }
   }
 
-  fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
+  private fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val normalisedUsername = username.uppercase()
 
     val userEntity = when (userType) {
@@ -120,7 +120,10 @@ class Cas2UserService(
 
     val existingUser = getExistingCas2User(username, Cas2UserType.NOMIS, serviceOrigin)
     if (existingUser != null) {
-      if (existingUser.email != nomisUserDetails.primaryEmail || existingUser.activeNomisCaseloadId != nomisUserDetails.activeCaseloadId) {
+      if (
+        existingUser.email != nomisUserDetails.primaryEmail ||
+        existingUser.activeNomisCaseloadId != nomisUserDetails.activeCaseloadId
+      ) {
         existingUser.email = nomisUserDetails.primaryEmail
         existingUser.activeNomisCaseloadId = nomisUserDetails.activeCaseloadId
 
@@ -145,6 +148,7 @@ class Cas2UserService(
         deliusStaffCode = null,
         createdAt = OffsetDateTime.now(),
         serviceOrigin = serviceOrigin,
+        nomisAccountType = nomisUserDetails.accountType,
       ),
     )
   }
@@ -213,6 +217,7 @@ class Cas2UserService(
         isActive = true,
         createdAt = OffsetDateTime.now(),
         serviceOrigin = serviceOrigin,
+        externalType = "NACRO",
       ),
     )
   }
