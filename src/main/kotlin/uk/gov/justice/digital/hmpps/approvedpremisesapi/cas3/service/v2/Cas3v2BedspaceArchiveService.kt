@@ -16,12 +16,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_UNARCHIVE_BEDSPACE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Cas3FieldValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceArchived
 import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
@@ -97,6 +99,72 @@ class Cas3v2BedspaceArchiveService(
     archivePremisesIfAllBedspacesArchived(premises, domainEventTransactionId)
 
     return success(updatedBedspace)
+  }
+
+  fun unarchiveBedspace(
+    premises: Cas3PremisesEntity,
+    bedspaceId: UUID,
+    restartDate: LocalDate,
+  ): CasResult<Cas3BedspacesEntity> = validatedCasResult {
+    val bedspace = cas3BedspacesRepository.findCas3Bedspace(premises.id, bedspaceId) ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
+
+    if (!isCas3BedspaceArchived(bedspace.endDate)) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotArchived"
+    }
+
+    val today = LocalDate.now()
+
+    if (restartDate.isBefore(today.minusDays(MAX_DAYS_UNARCHIVE_BEDSPACE))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInThePast"
+    }
+
+    if (restartDate.isAfter(today.plusDays(MAX_DAYS_UNARCHIVE_BEDSPACE))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInTheFuture"
+    }
+
+    if (restartDate.isBefore(bedspace.endDate)) {
+      "$.restartDate" hasValidationError "beforeLastBedspaceArchivedDate"
+    }
+
+    if (hasErrors()) {
+      return@validatedCasResult errors()
+    }
+
+    val domainEventTransactionId = UUID.randomUUID()
+
+    val unarchivedBedspace = unarchiveBedspaceAndSaveDomainEvent(bedspace, premises.id, restartDate, domainEventTransactionId)
+
+    if (premises.status == Cas3PremisesStatus.archived) {
+      unarchivePremisesAndSaveDomainEvent(premises, restartDate, domainEventTransactionId)
+    }
+
+    success(unarchivedBedspace)
+  }
+
+  private fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate, transactionId: UUID): Cas3PremisesEntity {
+    val currentStartDate = premises.startDate
+    val currentEndDate = premises.endDate
+    premises.startDate = restartDate
+    premises.endDate = null
+    premises.status = Cas3PremisesStatus.online
+    val updatedPremises = cas3PremisesRepository.save(premises)
+    cas3v2DomainEventService.savePremisesUnarchiveEvent(premises, currentStartDate, restartDate, currentEndDate, transactionId)
+    return updatedPremises
+  }
+
+  private fun unarchiveBedspaceAndSaveDomainEvent(bedspace: Cas3BedspacesEntity, premisesId: UUID, restartDate: LocalDate, transactionId: UUID): Cas3BedspacesEntity {
+    val originalStartDate = bedspace.startDate
+    val originalEndDate = bedspace.endDate!!
+
+    val updatedBedspace = cas3BedspacesRepository.save(
+      bedspace.copy(
+        startDate = restartDate,
+        endDate = null,
+      ),
+    )
+
+    cas3v2DomainEventService.saveBedspaceUnarchiveEvent(updatedBedspace, premisesId, originalStartDate, originalEndDate, transactionId)
+    return updatedBedspace
   }
 
   private fun canArchiveBedspace(bedspaceId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = null, filterByBedspaceId = bedspaceId, endDate = endDate)

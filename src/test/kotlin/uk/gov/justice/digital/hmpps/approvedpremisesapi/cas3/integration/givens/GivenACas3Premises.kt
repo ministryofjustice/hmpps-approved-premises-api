@@ -7,9 +7,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -120,4 +123,39 @@ fun IntegrationTestBase.givenACas3PremisesWithBedspaces(
   }
 
   block(premises, bedspaces)
+}
+
+fun IntegrationTestBase.givenACas3PremisesComplete(
+  roles: List<UserRole> = emptyList(),
+  bedspaceCount: Int = 1,
+  premisesStatus: Cas3PremisesStatus = Cas3PremisesStatus.online,
+  premisesStartDate: LocalDate = LocalDate.now().minusDays(180),
+  premisesEndDate: LocalDate? = null,
+  bedspaceStartDates: List<LocalDate> = emptyList(),
+  bedspaceEndDates: List<LocalDate?> = emptyList(),
+  bedspaceReferences: List<String> = emptyList(),
+  bedspaceCharacteristics: List<Cas3BedspaceCharacteristicEntity> = emptyList(),
+  block: (user: UserEntity, jwt: String, premises: Cas3PremisesEntity, bedspaces: List<Cas3BedspacesEntity>) -> Unit,
+) {
+  givenAUser(
+    roles = roles,
+  ) { user, jwt ->
+    givenACas3PremisesWithBedspaces(
+      region = user.probationRegion,
+      bedspaceCount = bedspaceCount,
+      bedspacesStartDates = bedspaceStartDates,
+      bedspacesEndDates = bedspaceEndDates,
+      bedspaceReferences = bedspaceReferences,
+      bedspaceCharacteristics = bedspaceCharacteristics,
+    ) { premises, bedspaces ->
+      // Update premises with status and end date if provided
+      if (premisesStatus != premises.status || premisesEndDate != premises.endDate || premisesStartDate != premises.startDate) {
+        premises.status = premisesStatus
+        premises.startDate = premisesStartDate
+        premises.endDate = premisesEndDate
+        cas3PremisesRepository.save(premises)
+      }
+      block(user, jwt, premises, bedspaces)
+    }
+  }
 }
