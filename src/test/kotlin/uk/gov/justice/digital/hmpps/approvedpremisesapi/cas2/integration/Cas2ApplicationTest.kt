@@ -1241,7 +1241,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               applicationEntity.id == it.id &&
                 applicationEntity.crn == it.person.crn &&
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByUser!!.id == it.createdBy.id &&
+                applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
             }

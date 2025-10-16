@@ -37,7 +37,7 @@ class Cas2v2UserService(
     return getUserForUsername(username, jwt, userType)
   }
 
-  fun getUserForUsername(username: String, jwt: String, userType: Cas2UserType): Cas2UserEntity {
+  private fun getUserForUsername(username: String, jwt: String, userType: Cas2UserType): Cas2UserEntity {
     val normalisedUsername = username.uppercase()
 
     val userEntity = when (userType) {
@@ -61,7 +61,7 @@ class Cas2v2UserService(
     return roles?.any { it in grantedAuthorities } ?: false
   }
 
-  fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority>? = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
+  private fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority>? = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
 
   private fun getExistingUser(username: String, userType: Cas2UserType): Cas2UserEntity? = cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, userType, Cas2ServiceOrigin.BAIL)
 
@@ -99,6 +99,7 @@ class Cas2v2UserService(
         deliusTeamCodes = null,
         deliusStaffCode = null,
         serviceOrigin = Cas2ServiceOrigin.BAIL,
+        nomisAccountType = nomisUserDetails.accountType,
       ),
     )
   }
@@ -165,6 +166,7 @@ class Cas2v2UserService(
         isEnabled = externalUserDetails.enabled,
         isActive = true,
         serviceOrigin = Cas2ServiceOrigin.BAIL,
+        externalType = "NACRO",
       ),
     )
   }

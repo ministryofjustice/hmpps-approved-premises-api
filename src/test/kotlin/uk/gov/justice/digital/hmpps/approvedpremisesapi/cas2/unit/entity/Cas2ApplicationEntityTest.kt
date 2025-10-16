@@ -13,14 +13,18 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `createApplicationAssigment adds assignment to list`() {
-    val application = Cas2ApplicationEntityFactory().produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByUser(Cas2UserEntityFactory().produce())
+      .produce()
     application.createApplicationAssignment("PRI", application.createdByUser)
     assertThat(application.applicationAssignments).hasSize(1)
   }
 
   @Test
   fun `entity returns values from the newest assignment`() {
-    val application = Cas2ApplicationEntityFactory().produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByUser(Cas2UserEntityFactory().produce())
+      .produce()
     application.createApplicationAssignment("ONE", application.createdByUser)
     val user2 = Cas2UserEntityFactory().produce()
     application.createApplicationAssignment("TWO", user2)
@@ -30,7 +34,9 @@ class Cas2ApplicationEntityTest {
 
   @Test
   fun `currentPomUserId returns null when not allocated`() {
-    val application = Cas2ApplicationEntityFactory().produce()
+    val application = Cas2ApplicationEntityFactory()
+      .withCreatedByUser(Cas2UserEntityFactory().produce())
+      .produce()
     application.createApplicationAssignment("ONE", application.createdByUser)
     application.createApplicationAssignment("TWO", null)
     assertThat(application.currentPomUserId).isEqualTo(null)
