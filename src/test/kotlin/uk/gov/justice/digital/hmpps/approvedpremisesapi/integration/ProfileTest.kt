@@ -125,7 +125,7 @@ class ProfileTest : IntegrationTestBase() {
                 loadError = null,
                 ApprovedPremisesUser(
                   id = id,
-                  region = ProbationRegion(region.id, region.name),
+                  region = ProbationRegion(region.id, region.name, region.hptEmail),
                   deliusUsername = deliusUsername,
                   email = email,
                   name = expectedName,
@@ -231,7 +231,7 @@ class ProfileTest : IntegrationTestBase() {
               loadError = null,
               TemporaryAccommodationUser(
                 id = id,
-                region = ProbationRegion(region.id, region.name),
+                region = ProbationRegion(region.id, region.name, region.hptEmail),
                 deliusUsername = deliusUsername,
                 email = email,
                 name = expectedName,
@@ -476,7 +476,7 @@ class ProfileTest : IntegrationTestBase() {
               loadError = null,
               TemporaryAccommodationUser(
                 id = id,
-                region = ProbationRegion(region.id, region.name),
+                region = ProbationRegion(region.id, region.name, region.hptEmail),
                 deliusUsername = deliusUsername,
                 email = email,
                 name = expectedName,

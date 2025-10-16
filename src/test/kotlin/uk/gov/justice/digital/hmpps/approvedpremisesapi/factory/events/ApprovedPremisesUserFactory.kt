@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
@@ -37,6 +38,7 @@ class ApprovedPremisesUserFactory : Factory<ApprovedPremisesUser> {
     ProbationRegion(
       UUID.randomUUID(),
       randomStringMultiCaseWithNumbers(20),
+      randomEmailAddress(),
     )
   }
   private var email: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }

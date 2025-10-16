@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthori
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import java.util.UUID
 
 class PremisesTransformerTest {
@@ -66,7 +67,7 @@ class PremisesTransformerTest {
       .withStatus(PropertyStatus.active)
       .produce()
 
-    val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+    val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion", randomEmailAddress())
     every { probationRegionTransformer.transformJpaToApi(probationRegionEntity) } returns probationRegion
 
     val apArea = ApArea(UUID.randomUUID(), "someIdentifier", "someName")

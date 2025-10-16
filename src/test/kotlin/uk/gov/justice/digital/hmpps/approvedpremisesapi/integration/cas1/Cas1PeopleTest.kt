@@ -119,6 +119,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
                           region = ProbationRegion(
                             id = userEntity.probationRegion.id,
                             name = userEntity.probationRegion.name,
+                            hptEmail = userEntity.probationRegion.hptEmail,
                           ),
                           email = userEntity.email,
                           telephoneNumber = userEntity.telephoneNumber,
@@ -331,6 +332,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
                           region = ProbationRegion(
                             id = userEntity.probationRegion.id,
                             name = userEntity.probationRegion.name,
+                            hptEmail = userEntity.probationRegion.hptEmail,
                           ),
                           email = userEntity.email,
                           telephoneNumber = userEntity.telephoneNumber,

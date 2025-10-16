@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -112,6 +113,7 @@ class Cas3BookingTransformerTest {
         name = "region",
         deliusCode = "ABC",
         apArea = null,
+        hptEmail = randomEmailAddress(),
       ),
     ).produce(),
     bedspaces = mutableListOf(),

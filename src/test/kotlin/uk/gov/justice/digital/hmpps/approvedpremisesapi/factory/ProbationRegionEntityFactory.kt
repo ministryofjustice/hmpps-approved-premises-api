@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 
@@ -12,6 +13,7 @@ class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var apArea: Yielded<ApAreaEntity?> = { null }
   private var deliusCode: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
+  private var hptEmail: Yielded<String> = { randomEmailAddress() }
 
   fun withDefaults() = apply {
     withDefaultApArea()
@@ -41,10 +43,15 @@ class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
     this.deliusCode = { deliusCode }
   }
 
+  fun with(hptEmail: String) = apply {
+    this.hptEmail = { hptEmail }
+  }
+
   override fun produce(): ProbationRegionEntity = ProbationRegionEntity(
     id = this.id(),
     name = this.name(),
     apArea = this.apArea(),
     deliusCode = this.deliusCode(),
+    hptEmail = this.hptEmail(),
   )
 }

@@ -6,5 +6,5 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 
 @Component
 class ProbationRegionTransformer {
-  fun transformJpaToApi(jpa: ProbationRegionEntity) = ProbationRegion(id = jpa.id, name = jpa.name)
+  fun transformJpaToApi(jpa: ProbationRegionEntity) = ProbationRegion(id = jpa.id, name = jpa.name, hptEmail = jpa.hptEmail)
 }

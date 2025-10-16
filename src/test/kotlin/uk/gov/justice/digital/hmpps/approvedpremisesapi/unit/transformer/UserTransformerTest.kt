@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import java.time.OffsetDateTime
 import java.util.UUID.randomUUID
 
@@ -59,7 +60,7 @@ class UserTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { probationRegionTransformer.transformJpaToApi(any()) } returns ProbationRegion(randomUUID(), "someName")
+    every { probationRegionTransformer.transformJpaToApi(any()) } returns ProbationRegion(randomUUID(), "someName", randomEmailAddress())
     every { environmentService.isNotProd() } returns false
   }
 
