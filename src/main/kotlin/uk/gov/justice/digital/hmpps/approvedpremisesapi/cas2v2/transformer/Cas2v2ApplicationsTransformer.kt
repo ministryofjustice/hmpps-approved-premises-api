@@ -29,7 +29,7 @@ class Cas2v2ApplicationsTransformer(
   fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person): Cas2v2Application = Cas2v2Application(
     id = jpa.id,
     person = fullPerson,
-    createdBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser!!),
+    createdBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),
     data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
@@ -45,7 +45,7 @@ class Cas2v2ApplicationsTransformer(
   fun transformJpaAndFullPersonToApiSubmitted(jpa: Cas2ApplicationEntity, fullPerson: Person): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
     id = jpa.id,
     person = fullPerson,
-    submittedBy = Cas2v2UserTransformer().transformJpaToApi(jpa.createdByUser!!),
+    submittedBy = Cas2v2UserTransformer().transformJpaToApi(jpa.createdByUser),
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),
     document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,

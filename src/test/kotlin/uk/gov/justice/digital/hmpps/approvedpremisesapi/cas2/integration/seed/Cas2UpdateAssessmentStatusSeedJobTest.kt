@@ -68,7 +68,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
         ?: fail("No status update found for assessment ${assessment.id}")
     assertThat(statusUpdate.application.id).isEqualTo(application.id)
     assertThat(statusUpdate.assessment!!.id).isEqualTo(assessment.id)
-    assertThat(statusUpdate.assessor?.id).isEqualTo(assessor.id)
+    assertThat(statusUpdate.assessor.id).isEqualTo(assessor.id)
     assertThat(statusUpdate.statusId).isNotNull()
     assertThat(statusUpdate.description)
       .isEqualTo(

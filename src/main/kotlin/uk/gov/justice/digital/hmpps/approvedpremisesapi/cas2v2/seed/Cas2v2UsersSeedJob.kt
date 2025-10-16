@@ -26,6 +26,9 @@ class Cas2v2UsersSeedJob(
     "deliusTeamCodes",
     "deliusStaffCode",
     "isEnabled",
+    "isActive",
+    "nomisAccountType",
+    "externalType",
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -41,6 +44,9 @@ class Cas2v2UsersSeedJob(
     deliusStaffCode = columns["deliusStaffCode"]?.trim()?.takeIf { it.isNotEmpty() },
     isEnabled = columns["isEnabled"]!!.trim().uppercase() == "TRUE",
     isActive = columns["isActive"]!!.trim().uppercase() == "TRUE",
+    nomisAccountType = columns["nomisAccountType"]!!.trim(),
+    externalType = columns["externalType"]!!.trim(),
+
   )
 
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
@@ -80,6 +86,8 @@ class Cas2v2UsersSeedJob(
         createdAt = OffsetDateTime.now(ZoneOffset.UTC).minusDays(Random.nextLong(1, 365)),
         applications = mutableListOf(),
         serviceOrigin = Cas2ServiceOrigin.BAIL,
+        externalType = row.externalType,
+        nomisAccountType = row.nomisAccountType,
       ),
     )
   }
@@ -102,4 +110,7 @@ data class Cas2v2UserSeedCsvRow(
   val deliusStaffCode: String?,
   val isEnabled: Boolean,
   val isActive: Boolean,
+  val externalType: String?,
+  val nomisAccountType: String?,
+
 )
