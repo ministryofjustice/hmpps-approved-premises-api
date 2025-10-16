@@ -291,7 +291,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
           expectedSubmittedApplication.crn == it.crn &&
           expectedSubmittedApplication.nomsNumber == it.nomsNumber &&
           expectedSubmittedApplication.createdAt.toInstant() == it.createdAt &&
-          expectedSubmittedApplication.createdByUser!!.id == it.createdByUserId &&
+          expectedSubmittedApplication.createdByUser.id == it.createdByUserId &&
           expectedSubmittedApplication.submittedAt?.toInstant() == it.submittedAt
       }
 
@@ -451,7 +451,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
 
             val applicant = userTransformer.transformJpaToApi(
               applicationEntity
-                .createdByUser!!,
+                .createdByUser,
             )
 
             Assertions.assertThat(responseBody).matches {
@@ -632,7 +632,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
 
             val applicant = userTransformer.transformJpaToApi(
               applicationEntity
-                .createdByUser!!,
+                .createdByUser,
             )
 
             Assertions.assertThat(responseBody).matches {
@@ -778,7 +778,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
 
                 val applicant = userTransformer.transformJpaToApi(
                   applicationEntity
-                    .createdByUser!!,
+                    .createdByUser,
                 )
 
                 Assertions.assertThat(responseBody).matches {
