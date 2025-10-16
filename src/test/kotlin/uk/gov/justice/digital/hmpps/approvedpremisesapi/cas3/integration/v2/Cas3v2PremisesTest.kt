@@ -224,7 +224,8 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
       probationDeliveryUnitId = pdu.id,
       localAuthorityAreaId = null,
       characteristicIds = characteristicIds,
-      turnaroundWorkingDayCount = 59,
+      turnaroundWorkingDayCount = null,
+      turnaroundWorkingDays = 59,
     )
 
     @Test

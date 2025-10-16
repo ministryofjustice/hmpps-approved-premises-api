@@ -203,7 +203,7 @@ class Cas3PremisesController(
       characteristicIds = body.characteristicIds,
       notes = body.notes,
       probationDeliveryUnitId = body.probationDeliveryUnitId,
-      turnaroundWorkingDays = body.turnaroundWorkingDayCount,
+      turnaroundWorkingDays = body.turnaroundWorkingDayCount!!,
       reference = body.reference,
     )
       .let { extractEntityFromCasResult(it) }

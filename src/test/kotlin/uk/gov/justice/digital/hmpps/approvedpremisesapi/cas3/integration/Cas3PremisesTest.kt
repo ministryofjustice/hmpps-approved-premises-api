@@ -934,6 +934,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             characteristic.id
           },
           turnaroundWorkingDayCount = 3,
+          turnaroundWorkingDays = null,
         )
 
         webTestClient.put()
@@ -982,6 +983,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             characteristic.id
           },
           turnaroundWorkingDayCount = 3,
+          turnaroundWorkingDays = null,
         )
 
         webTestClient.put()
@@ -1024,6 +1026,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
               characteristic.id
             },
             turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
+            turnaroundWorkingDays = null,
           )
 
           webTestClient.put()
@@ -1058,6 +1061,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           localAuthorityAreaId = localAuthorityArea.id,
           characteristicIds = emptyList(),
           turnaroundWorkingDayCount = 2,
+          turnaroundWorkingDays = null,
         )
 
         val id = UUID.randomUUID()
