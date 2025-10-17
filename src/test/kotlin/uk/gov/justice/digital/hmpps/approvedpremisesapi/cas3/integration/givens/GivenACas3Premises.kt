@@ -125,6 +125,7 @@ fun IntegrationTestBase.givenACas3PremisesWithBedspaces(
   bedspaceCharacteristics: List<Cas3BedspaceCharacteristicEntity> = emptyList(),
   bedspacesStartDates: List<LocalDate> = emptyList(),
   bedspacesEndDates: List<LocalDate?> = emptyList(),
+  bedspacesCreatedDate: List<LocalDate> = emptyList(),
   block: (premises: Cas3PremisesEntity, bedspaces: List<Cas3BedspacesEntity>) -> Unit,
 ) {
   val premises = givenACas3Premises(region, startDate = bedspacesStartDates[0])
@@ -134,11 +135,13 @@ fun IntegrationTestBase.givenACas3PremisesWithBedspaces(
     val bedspaceReference = if (bedspaceReferences.size > index) bedspaceReferences[index] else randomStringMultiCaseWithNumbers(8)
     val startDate = if (bedspacesStartDates.size > index) bedspacesStartDates[index] else LocalDate.now().minusDays(30)
     val endDate = if (bedspacesEndDates.size > index) bedspacesEndDates[index] else null
+    val createdDate = if (bedspacesCreatedDate.size > index) bedspacesCreatedDate[index] else LocalDate.now().minusDays(90)
     val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
       withPremises(premises)
       withReference(bedspaceReference)
       withStartDate(startDate)
       withEndDate(endDate)
+      withCreatedDate(createdDate)
       withCharacteristics(bedspaceCharacteristics.toMutableList())
     }
     bedspaces.add(bedspace)

@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
@@ -21,7 +22,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_UNARCHIVE_BEDSPACE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -33,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelpe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
 import java.time.Clock
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -41,6 +45,7 @@ class Cas3v2ArchiveService(
   private val cas3PremisesRepository: Cas3PremisesRepository,
   private val cas3v2BookingRepository: Cas3v2BookingRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
+  private val domainEventRepository: DomainEventRepository,
   private val cas3v2DomainEventService: Cas3v2DomainEventService,
   private val workingDayService: WorkingDayService,
   private val objectMapper: ObjectMapper,
@@ -241,6 +246,40 @@ class Cas3v2ArchiveService(
     }
 
     return success(archivedPremises)
+  }
+
+  @Transactional
+  fun cancelScheduledUnarchiveBedspace(
+    bedspaceId: UUID,
+  ): CasResult<Cas3BedspacesEntity> = validatedCasResult {
+    val bedspace = cas3BedspacesRepository.findByIdOrNull(bedspaceId)
+      ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
+
+    if (isCas3BedspaceOnline(startDate = bedspace.startDate, endDate = bedspace.endDate)) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceAlreadyOnline"
+    }
+
+    val latestBedspaceUnarchiveDomainEvent = domainEventRepository.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(
+      bedspace.id,
+      CAS3_BEDSPACE_UNARCHIVED,
+    ) ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotScheduledToUnarchive"
+
+    domainEventRepository.save(
+      latestBedspaceUnarchiveDomainEvent.copy(
+        cas3CancelledAt = OffsetDateTime.now(clock),
+      ),
+    )
+
+    val eventDetails = objectMapper.readValue(latestBedspaceUnarchiveDomainEvent.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails
+
+    val updatedBedspace = cas3BedspacesRepository.save(
+      bedspace.copy(
+        startDate = eventDetails.currentStartDate,
+        endDate = eventDetails.currentEndDate,
+      ),
+    )
+
+    success(updatedBedspace)
   }
 
   private fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate, transactionId: UUID): Cas3PremisesEntity {
