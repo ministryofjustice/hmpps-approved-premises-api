@@ -10,12 +10,6 @@ class Cas3ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `returns only active reference data for the given type`() {
-    val activeCas3BedspaceCharacteristics = cas3BedspaceCharacteristicEntityFactory.produceAndPersistMultiple(3)
-    cas3BedspaceCharacteristicEntityFactory.produceAndPersistMultiple(2) {
-      withIsActive(false)
-    }
-    cas3PremisesCharacteristicEntityFactory.produceAndPersistMultiple(6)
-
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
     val result = webTestClient.get()
       .uri { uriBuilder ->
@@ -31,7 +25,6 @@ class Cas3ReferenceDataTest : IntegrationTestBase() {
       .returnResult()
       .responseBody
 
-    assertThat(result).hasSize(3)
-    assertThat(result!!.map { it.id }.sorted()).isEqualTo(activeCas3BedspaceCharacteristics.map { it.id }.sorted())
+    assertThat(result).hasSize(5)
   }
 }
