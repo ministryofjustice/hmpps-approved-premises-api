@@ -1305,7 +1305,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               assertThat(response.spaceBookings[1].canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
               assertThat(response.openChangeRequests).isEqualTo(cas1PlacementRequestDetail.openChangeRequests)
               assertThat(response.notes).isEqualTo(cas1PlacementRequestDetail.notes)
-              assertThat(response.booking).isEqualTo(cas1PlacementRequestDetail.booking)
               assertThat(response.requestType).isEqualTo(cas1PlacementRequestDetail.requestType)
               assertThat(response.withdrawalReason).isEqualTo(cas1PlacementRequestDetail.withdrawalReason)
               assertThat(response.legacyBooking).isEqualTo(cas1PlacementRequestDetail.legacyBooking)

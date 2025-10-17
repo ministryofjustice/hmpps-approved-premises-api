@@ -31,7 +31,6 @@ data class Cas1PlacementRequestDetail(
   val openChangeRequests: List<Cas1ChangeRequestSummary>,
   @Schema(description = "Notes from the assessor for the CRU Manager")
   val notes: String? = null,
-  val booking: PlacementRequestBookingSummary? = null,
   val requestType: PlacementRequestRequestType? = null,
   val withdrawalReason: WithdrawPlacementRequestReason? = null,
   val legacyBooking: PlacementRequestBookingSummary? = null,

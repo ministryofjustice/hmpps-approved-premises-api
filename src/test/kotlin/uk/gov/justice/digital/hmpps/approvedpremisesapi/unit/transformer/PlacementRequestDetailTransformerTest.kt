@@ -151,7 +151,6 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result.applicationDate).isEqualTo(transformedPlacementRequest.applicationDate)
     assertThat(result.assessor).isEqualTo(transformedPlacementRequest.assessor)
     assertThat(result.notes).isEqualTo(transformedPlacementRequest.notes)
-    assertThat(result.booking).isNull()
     assertThat(result.legacyBooking).isNull()
     assertThat(result.spaceBookings).isEmpty()
     assertThat(result.isWithdrawn).isEqualTo(true)
