@@ -14,14 +14,11 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.support.TransactionTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
@@ -35,8 +32,6 @@ class Cas3MigrateNewBedspaceModelDataJob(
   private val temporaryAccommodationPremisesRepository: TemporaryAccommodationPremisesRepository,
   private val cas3PremisesRepository: Cas3PremisesRepository,
   private val cas3BedspacesRepository: Cas3BedspacesRepository,
-  private val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
-  private val cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository,
   private val characteristicRepository: CharacteristicRepository,
   private val cas3BedspaceCharacteristicMappingRepository: Cas3BedspaceCharacteristicMappingRepository,
   private val cas3PremisesCharacteristicMappingRepository: Cas3PremisesCharacteristicMappingRepository,
@@ -47,19 +42,11 @@ class Cas3MigrateNewBedspaceModelDataJob(
 
   override fun process(pageSize: Int) {
     migrationLogger.info("Starting migration process...")
-    migrateDataToCas3CharacteristicsTables()
     val cas3PremisesIds = temporaryAccommodationPremisesRepository.findTemporaryAccommodationPremisesIds()
     super.processInBatches(cas3PremisesIds, batchSize = 100) { batchIds ->
       migrateDataToNewBedspaceModelTables(batchIds)
     }
     migrationLogger.info("Completed migration process...")
-  }
-
-  private fun migrateDataToCas3CharacteristicsTables() {
-    val cas3PremisesCharacteristicsReferenceData = generateCas3PremisesCharacteristics()
-    cas3PremisesCharacteristicRepository.saveAllAndFlush(cas3PremisesCharacteristicsReferenceData)
-    val cas3BedspaceCharacteristicsReferenceData = generateCas3BedspacesCharacteristics()
-    cas3BedspaceCharacteristicRepository.saveAllAndFlush(cas3BedspaceCharacteristicsReferenceData)
   }
 
   private fun migrateDataToNewBedspaceModelTables(premiseIds: List<UUID>) {
@@ -118,30 +105,6 @@ class Cas3MigrateNewBedspaceModelDataJob(
         )
       }
   }.flatten()
-
-  private fun generateCas3BedspacesCharacteristics(): List<Cas3BedspaceCharacteristicEntity> = characteristicRepository.findAllByServiceAndModelScope(
-    modelScope = "room",
-    serviceScope = ServiceName.temporaryAccommodation.value,
-  ).map {
-    Cas3BedspaceCharacteristicEntity(
-      id = it.id,
-      name = it.propertyName,
-      description = it.name,
-      active = it.isActive,
-    )
-  }
-
-  private fun generateCas3PremisesCharacteristics() = characteristicRepository.findAllByServiceAndModelScope(
-    modelScope = "premises",
-    serviceScope = ServiceName.temporaryAccommodation.value,
-  ).map {
-    Cas3PremisesCharacteristicEntity(
-      id = it.id,
-      name = it.propertyName!!,
-      description = it.name,
-      active = it.isActive,
-    )
-  }
 
   private fun generateCas3BedspacesCharacteristicsMappingBatch(cas3BedspacesBatch: List<Cas3BedspacesEntity>) = characteristicRepository.findBedspaceCharacteristicsMappingsByBedIds(cas3BedspacesBatch.map { it.id })
     .map { Cas3BedspaceCharacteristicAssignmentEntity(id = it) }
