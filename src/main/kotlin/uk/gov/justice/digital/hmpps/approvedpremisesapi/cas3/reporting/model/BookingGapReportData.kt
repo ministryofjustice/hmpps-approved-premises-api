@@ -48,11 +48,12 @@ data class UnavailablePeriod(
   val bedId: UUID,
   val startDate: LocalDate,
   val endDate: LocalDate,
-  val turnaroundDays: Int,
 ) {
-  fun overlaps(other: UnavailablePeriod): Boolean = startDate <= other.endDate && endDate >= other.startDate
+  // Add helper: periods are contiguous if day-adjacent
+  fun isDayAdjacentWith(other: UnavailablePeriod): Boolean = endDate.plusDays(1) == other.startDate || other.endDate.plusDays(1) == startDate
 
-  fun canMergeWith(other: UnavailablePeriod): Boolean = bedId == other.bedId && (overlaps(other) || endDate == other.startDate || startDate == other.endDate)
+  // Merge if overlap or day adjacency, and same bed
+  fun canMergeWith(other: UnavailablePeriod): Boolean = bedId == other.bedId && isDayAdjacentWith(other)
 }
 
 data class DateRange(
@@ -60,12 +61,6 @@ data class DateRange(
   val endDate: LocalDate,
 ) {
   fun daysBetween(): Long = ChronoUnit.DAYS.between(startDate, endDate) + 1
-
-  fun overlaps(other: DateRange): Boolean = startDate <= other.endDate && endDate >= other.startDate
-
-  fun contains(date: LocalDate): Boolean = date >= startDate && date <= endDate
-
-  fun isEmpty(): Boolean = startDate >= endDate
 
   override fun toString(): String = "[$startDate,$endDate]"
 }
@@ -93,7 +88,6 @@ data class BedspaceUnavailableRanges(
         // Merge overlapping or adjacent periods
         current = current.copy(
           endDate = maxOf(current.endDate, period.endDate),
-          turnaroundDays = maxOf(current.turnaroundDays, period.turnaroundDays),
         )
       } else {
         // No overlap - add current to result and start new period

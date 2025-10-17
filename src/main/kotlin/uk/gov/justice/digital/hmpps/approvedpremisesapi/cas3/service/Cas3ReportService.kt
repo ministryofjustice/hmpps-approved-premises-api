@@ -385,40 +385,55 @@ class Cas3ReportService(
       true -> {
         log.info("Creating V2 report")
         val bedspaces = cas3BookingGapReportRepository.getBedspacesV2(properties.startDate, properties.endDate)
-        BookingGapReportGenerator()
-          .createReport(
-            listOf(
-              BookingGapReportData(
-                bedspaces,
-                cas3BookingGapReportRepository.getBookings(properties.startDate, properties.endDate),
-                cas3BookingGapReportRepository.getBedspaceVoidsV2(properties.startDate, properties.endDate, bedspaces.map { it.id }),
-              ),
+        if (bedspaces.isEmpty()) {
+          createBookingGapReport(BookingGapReportData(bedspaces, emptyList(), emptyList()), properties, outputStream)
+        } else {
+          createBookingGapReport(
+            BookingGapReportData(
+              bedspaces,
+              cas3BookingGapReportRepository.getBookings(properties.startDate, properties.endDate),
+              cas3BookingGapReportRepository.getBedspaceVoidsV2(properties.startDate),
             ),
             properties,
-          ).writeExcel(
-            outputStream = outputStream,
-            factory = WorkbookFactory.create(true),
+            outputStream,
           )
+        }
       }
       false -> {
         log.info("Creating report")
         val bedspaces = cas3BookingGapReportRepository.getBedspaces(properties.startDate, properties.endDate)
-        BookingGapReportGenerator()
-          .createReport(
-            listOf(
-              BookingGapReportData(
-                bedspaces,
-                cas3BookingGapReportRepository.getBookings(properties.startDate, properties.endDate),
-                cas3BookingGapReportRepository.getBedspaceVoids(properties.startDate, properties.endDate, bedspaces.map { it.id }),
-              ),
+        if (bedspaces.isEmpty()) {
+          createBookingGapReport(BookingGapReportData(bedspaces, emptyList(), emptyList()), properties, outputStream)
+        } else {
+          createBookingGapReport(
+            BookingGapReportData(
+              bedspaces,
+              cas3BookingGapReportRepository.getBookings(properties.startDate, properties.endDate),
+              cas3BookingGapReportRepository.getBedspaceVoids(properties.startDate),
             ),
             properties,
-          ).writeExcel(
-            outputStream = outputStream,
-            factory = WorkbookFactory.create(true),
+            outputStream,
           )
+        }
       }
     }
+  }
+
+  private fun createBookingGapReport(
+    bookingGapReportData: BookingGapReportData,
+    properties: BookingGapReportProperties,
+    outputStream: OutputStream,
+  ) {
+    BookingGapReportGenerator(workingDayService)
+      .createReport(
+        listOf(
+          bookingGapReportData,
+        ),
+        properties,
+      ).writeExcel(
+        outputStream = outputStream,
+        factory = WorkbookFactory.create(true),
+      )
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
