@@ -37,7 +37,7 @@ data class ProbationRegionEntity(
   val apArea: ApAreaEntity?,
   @Deprecated(message = "There can be multiple codes to a region, so use probation_area_probation_region_mappings instead")
   val deliusCode: String,
-  val hptEmail: String,
+  val hptEmail: String?,
 ) {
   override fun toString() = "ProbationRegionEntity:$id"
 }

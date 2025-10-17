@@ -5,5 +5,5 @@ import java.util.UUID
 data class ProbationRegion(
   val id: UUID,
   val name: String,
-  val hptEmail: String,
+  val hptEmail: String?,
 )
