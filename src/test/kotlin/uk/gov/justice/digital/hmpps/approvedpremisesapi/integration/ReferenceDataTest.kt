@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCatego
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
 import java.util.UUID
 
 class ReferenceDataTest : IntegrationTestBase() {
@@ -61,9 +60,6 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer
-
-  @Autowired
-  lateinit var referralRejectionReasonTransformer: ReferralRejectionReasonTransformer
 
   @Nested
   inner class GetCharacteristics {

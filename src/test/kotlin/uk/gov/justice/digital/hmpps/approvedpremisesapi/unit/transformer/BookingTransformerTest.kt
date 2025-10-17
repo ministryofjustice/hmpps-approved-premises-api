@@ -61,6 +61,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -101,6 +102,7 @@ class BookingTransformerTest {
       name = "region",
       deliusCode = "ABC",
       apArea = null,
+      hptEmail = randomEmailAddress(),
     ),
     localAuthorityArea = LocalAuthorityAreaEntity(
       id = UUID.fromString("ee39d3bc-e9ad-4408-a21d-cf763aa1d981"),

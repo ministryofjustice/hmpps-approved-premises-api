@@ -300,7 +300,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     addressLine2 = premises.addressLine2,
     postcode = premises.postcode,
     town = premises.town,
-    probationRegion = ProbationRegion(probationRegion.id, probationRegion.name),
+    probationRegion = ProbationRegion(probationRegion.id, probationRegion.name, probationRegion.hptEmail),
     probationDeliveryUnit = ProbationDeliveryUnit(probationDeliveryUnit.id, probationDeliveryUnit.name),
     localAuthorityArea = LocalAuthorityArea(
       localAuthorityArea.id,

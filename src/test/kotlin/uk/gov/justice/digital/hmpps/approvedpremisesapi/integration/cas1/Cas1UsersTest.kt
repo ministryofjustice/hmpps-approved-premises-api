@@ -152,7 +152,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         .blockFirst()!!
 
       assertThat(result.id).isEqualTo(id)
-      assertThat(result.region).isEqualTo(ProbationRegion(region.id, region.name))
+      assertThat(result.region).isEqualTo(ProbationRegion(region.id, region.name, region.hptEmail))
       assertThat(result.deliusUsername).isEqualTo(deliusUsername)
       assertThat(result.name).isEqualTo(name)
       assertThat(result.email).isEqualTo(email)

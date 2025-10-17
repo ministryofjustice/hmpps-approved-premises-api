@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Characterist
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -86,7 +87,7 @@ class Cas3PremisesTransformerTest {
       ),
     )
 
-    private val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+    private val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion", randomEmailAddress())
     private val localAuthorityArea = LocalAuthorityArea(UUID.randomUUID(), "identifier", "name")
     private val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
 
@@ -210,7 +211,7 @@ class Cas3PremisesTransformerTest {
       // archived bedspaces
       createRoomWithOneBedspace(premises, LocalDate.now().minusDays(360), LocalDate.now().minusDays(31))
 
-      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion", randomEmailAddress())
       every { probationRegionTransformer.transformJpaToApi(probationRegionEntity) } returns probationRegion
 
       val localAuthorityArea = LocalAuthorityArea(UUID.randomUUID(), "identifier", "name")
@@ -290,7 +291,7 @@ class Cas3PremisesTransformerTest {
       // upcoming bedspaces
       createRoomWithOneBedspace(premises, LocalDate.now().plusDays(1), null)
 
-      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion", randomEmailAddress())
       every { probationRegionTransformer.transformJpaToApi(probationRegionEntity) } returns probationRegion
 
       val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
@@ -348,7 +349,7 @@ class Cas3PremisesTransformerTest {
         .withEndDate(endDate)
         .produce()
 
-      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion", randomEmailAddress())
       every { probationRegionTransformer.transformJpaToApi(probationRegionEntity) } returns probationRegion
 
       val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
@@ -400,7 +401,7 @@ class Cas3PremisesTransformerTest {
         .withEndDate(endDate)
         .produce()
 
-      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion", randomEmailAddress())
       every { probationRegionTransformer.transformJpaToApi(probationRegionEntity) } returns probationRegion
 
       val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
@@ -452,7 +453,7 @@ class Cas3PremisesTransformerTest {
         .withEndDate(endDate)
         .produce()
 
-      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
+      val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion", randomEmailAddress())
       every { probationRegionTransformer.transformJpaToApi(probationRegionEntity) } returns probationRegion
 
       val probationDeliveryUnit = ProbationDeliveryUnit(UUID.randomUUID(), "pduName")
