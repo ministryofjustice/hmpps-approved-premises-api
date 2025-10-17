@@ -84,7 +84,7 @@ class AssessmentStateTest : IntegrationTestBase() {
 
   private fun TemporaryAccommodationApplicationEntity.submitAndGetAssessment(jwt: String, probationDeliveryUnitId: UUID): TemporaryAccommodationAssessmentEntity {
     webTestClient.post()
-      .uri("/applications/${this.id}/submission")
+      .uri("/cas3/applications/${this.id}/submission")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(
