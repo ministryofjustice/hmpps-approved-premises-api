@@ -13,5 +13,7 @@ data class Cas3UpdatePremises(
   val town: String? = null,
   val localAuthorityAreaId: UUID? = null,
   val notes: String? = null,
-  val turnaroundWorkingDayCount: Int,
+  @Deprecated("Will be replaced with turnaroundWorkingDays for v2")
+  val turnaroundWorkingDayCount: Int?,
+  val turnaroundWorkingDays: Int?,
 )

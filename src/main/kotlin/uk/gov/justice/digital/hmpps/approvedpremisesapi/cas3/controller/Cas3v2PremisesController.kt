@@ -108,7 +108,7 @@ class Cas3v2PremisesController(
       characteristicIds = body.characteristicIds,
       notes = body.notes,
       probationDeliveryUnitId = body.probationDeliveryUnitId,
-      turnaroundWorkingDays = body.turnaroundWorkingDayCount,
+      turnaroundWorkingDays = body.turnaroundWorkingDays!!,
       reference = body.reference,
     )
 
