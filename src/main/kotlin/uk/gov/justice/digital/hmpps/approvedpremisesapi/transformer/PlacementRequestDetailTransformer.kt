@@ -52,7 +52,6 @@ class PlacementRequestDetailTransformer(
       applicationDate = placementRequest.applicationDate,
       assessor = placementRequest.assessor,
       notes = placementRequest.notes,
-      booking = placementRequestBookingSummary,
       legacyBooking = if (placementRequestBookingSummary?.type == PlacementRequestBookingSummary.Type.legacy) {
         placementRequestBookingSummary
       } else {
