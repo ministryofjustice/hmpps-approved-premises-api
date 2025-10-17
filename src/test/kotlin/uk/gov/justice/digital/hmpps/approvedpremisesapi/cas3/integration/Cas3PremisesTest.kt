@@ -1929,6 +1929,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
   }
 
   @Nested
+  @Deprecated("Superseded by Cas3v2PremisesArchiveTest.")
   inner class ArchivePremises {
     @Test
     fun `Given archive a premises when successfully passed all validations then returns 200 OK`() {

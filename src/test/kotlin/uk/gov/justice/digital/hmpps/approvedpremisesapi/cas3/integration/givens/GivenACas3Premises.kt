@@ -96,6 +96,28 @@ fun IntegrationTestBase.givenACas3Premises(
   return premises
 }
 
+fun IntegrationTestBase.givenACas3PremisesWithUser(
+  roles: List<UserRole> = emptyList(),
+  probationRegion: ProbationRegionEntity? = null,
+  premisesStatus: Cas3PremisesStatus = Cas3PremisesStatus.online,
+  premisesStartDate: LocalDate = LocalDate.now().minusDays(180),
+  premisesEndDate: LocalDate? = null,
+  block: (user: UserEntity, jwt: String, premises: Cas3PremisesEntity) -> Unit,
+) {
+  givenAUser(
+    roles = roles,
+    probationRegion = probationRegion,
+  ) { user, jwt ->
+    val premises = givenACas3Premises(
+      region = user.probationRegion,
+      status = premisesStatus,
+      startDate = premisesStartDate,
+      endDate = premisesEndDate,
+    )
+    block(user, jwt, premises)
+  }
+}
+
 fun IntegrationTestBase.givenACas3PremisesWithBedspaces(
   region: ProbationRegionEntity = givenAProbationRegion(),
   bedspaceCount: Int = 1,

@@ -13,17 +13,24 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_PREMISES_IN_PAST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_UNARCHIVE_BEDSPACE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Cas3FieldValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceActive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceArchived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceOnline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.BedspaceStatusHelper.isCas3BedspaceUpcoming
 import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
@@ -141,6 +148,101 @@ class Cas3v2ArchiveService(
     success(unarchivedBedspace)
   }
 
+  @Suppress("CyclomaticComplexMethod")
+  @Transactional
+  fun archivePremises(
+    premises: Cas3PremisesEntity,
+    archivePremisesEndDate: LocalDate,
+  ): CasResult<Cas3PremisesEntity> = validatedCasResult {
+    if (archivePremisesEndDate.isBefore(LocalDate.now().minusDays(MAX_DAYS_ARCHIVE_PREMISES_IN_PAST))) {
+      return "$.endDate" hasSingleValidationError "invalidEndDateInThePast"
+    }
+
+    if (archivePremisesEndDate.isAfter(LocalDate.now().plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE))) {
+      return "$.endDate" hasSingleValidationError "invalidEndDateInTheFuture"
+    }
+
+    if (archivePremisesEndDate.isBefore(premises.startDate)) {
+      return Cas3FieldValidationError(
+        mapOf(
+          "$.endDate" to Cas3ValidationMessage(
+            entityId = premises.id.toString(),
+            message = "endDateBeforePremisesStartDate",
+            value = premises.startDate.toString(),
+          ),
+        ),
+      )
+    }
+
+    cas3v2DomainEventService.getPremisesActiveDomainEvents(premises.id, listOf(CAS3_PREMISES_ARCHIVED))
+      .sortedByDescending { it.createdAt }
+      .asSequence()
+      .map { objectMapper.readValue(it.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate }
+      .firstOrNull { it >= archivePremisesEndDate }
+      ?.let { archiveDate ->
+        return Cas3FieldValidationError(
+          mapOf(
+            "$.endDate" to Cas3ValidationMessage(
+              entityId = premises.id.toString(),
+              message = "endDateOverlapPreviousPremisesArchiveEndDate",
+              value = archiveDate.toString(),
+            ),
+          ),
+        )
+      }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val activeBedspaces = cas3BedspacesRepository.findByPremisesId(premises.id)
+      .asSequence()
+      .filter {
+        (
+          isCas3BedspaceOnline(
+            it.startDate,
+            it.endDate,
+          ) ||
+            isCas3BedspaceUpcoming(it.startDate)
+          ) &&
+          isCas3BedspaceActive(it.endDate, archivePremisesEndDate)
+      }
+
+    if (activeBedspaces.any()) {
+      val lastUpcomingBedspace = activeBedspaces.maxByOrNull { it.startDate!! }
+
+      if (lastUpcomingBedspace != null && lastUpcomingBedspace.startDate!! > archivePremisesEndDate) {
+        return Cas3FieldValidationError(
+          mapOf(
+            "$.endDate" to Cas3ValidationMessage(
+              entityId = lastUpcomingBedspace.id.toString(),
+              message = "existingUpcomingBedspace",
+              value = lastUpcomingBedspace.startDate!!.plusDays(1).toString(),
+            ),
+          ),
+        )
+      }
+
+      canArchivePremisesBedspaces(premises.id, archivePremisesEndDate)?.let {
+        return Cas3FieldValidationError(it.validationMessages.entries.associate { entry -> entry.key to entry.value })
+      }
+    }
+
+    val domainEventTransactionId = UUID.randomUUID()
+
+    // archive premises
+    val archivedPremises = archivePremisesAndSaveDomainEvent(premises, archivePremisesEndDate, domainEventTransactionId)
+
+    if (activeBedspaces.any()) {
+      // archive all online bedspaces
+      activeBedspaces.forEach { bedspace ->
+        archiveBedspaceAndSaveDomainEvent(bedspace, premises.id, archivePremisesEndDate, domainEventTransactionId)
+      }
+    }
+
+    return success(archivedPremises)
+  }
+
   private fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate, transactionId: UUID): Cas3PremisesEntity {
     val currentStartDate = premises.startDate
     val currentEndDate = premises.endDate
@@ -168,6 +270,8 @@ class Cas3v2ArchiveService(
   }
 
   private fun canArchiveBedspace(bedspaceId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = null, filterByBedspaceId = bedspaceId, endDate = endDate)
+
+  private fun canArchivePremisesBedspaces(premisesId: UUID, endDate: LocalDate) = canArchiveBedspace(filterByPremisesId = premisesId, filterByBedspaceId = null, endDate = endDate)
 
   @SuppressWarnings("CyclomaticComplexMethod")
   private fun canArchiveBedspace(filterByPremisesId: UUID?, filterByBedspaceId: UUID?, endDate: LocalDate): Cas3FieldValidationError<Cas3BedspacesEntity>? {

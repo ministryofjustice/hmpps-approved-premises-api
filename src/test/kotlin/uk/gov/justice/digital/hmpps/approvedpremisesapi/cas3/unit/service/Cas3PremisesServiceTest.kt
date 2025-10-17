@@ -997,6 +997,7 @@ class Cas3PremisesServiceTest {
   }
 
   @Nested
+  @Deprecated("Superseded by Cas3v2ArchiveServiceTest.ArchivePremises")
   inner class ArchivePremises {
     @Test
     fun `When archive a premises returns Success with correct result when validation passed`() {

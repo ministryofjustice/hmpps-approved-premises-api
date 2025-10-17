@@ -282,6 +282,36 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     )
   }
 
+  fun createCas3PremisesArchiveDomainEvent(
+    premises: Cas3PremisesEntity,
+    userEntity: UserEntity,
+    date: LocalDate,
+    cancelledAt: OffsetDateTime? = null,
+    transactionId: UUID = UUID.randomUUID(),
+  ) = domainEventFactory.produceAndPersist {
+    withService(ServiceName.temporaryAccommodation)
+    withCas3PremisesId(premises.id)
+    withType(DomainEventType.CAS3_PREMISES_ARCHIVED)
+    withCas3TransactionId(transactionId)
+    withCas3CancelledAt(cancelledAt)
+    withData(
+      objectMapper.writeValueAsString(
+        CAS3PremisesArchiveEvent(
+          id = UUID.randomUUID(),
+          timestamp = Instant.now(),
+          eventType = EventType.premisesArchived,
+          eventDetails =
+          CAS3PremisesArchiveEventDetails(
+            premisesId = premises.id,
+            endDate = date,
+            userId = userEntity.id,
+            transactionId = transactionId,
+          ),
+        ),
+      ),
+    )
+  }
+
   @SuppressWarnings("LongParameterList")
   protected fun createCas3Premises(
     premises: TemporaryAccommodationPremisesEntity,

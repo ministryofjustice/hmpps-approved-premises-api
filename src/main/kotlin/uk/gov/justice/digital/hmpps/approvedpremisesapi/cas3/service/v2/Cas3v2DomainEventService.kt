@@ -311,6 +311,11 @@ class Cas3v2DomainEventService(
     bedspaceDomainEventTypes.map { it.toString() },
   )
 
+  fun getPremisesActiveDomainEvents(id: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findPremisesActiveDomainEventsByType(
+    id,
+    premisesDomainEventTypes.map { it.toString() },
+  )
+
   @Transactional
   fun saveBedspaceArchiveEvent(bedspace: Cas3BedspacesEntity, premisesId: UUID, currentEndDate: LocalDate?, transactionId: UUID) {
     val user = userService.getUserForRequest()
