@@ -15,11 +15,12 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
         applications.crn AS personCrn,
         applications.noms_number AS personNoms,
         to_char(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
-        users.nomis_username AS startedBy,
+        COALESCE(cu.username, users.nomis_username, 'Unknown') AS startedBy,
         applications.application_origin AS applicationOrigin
 
       FROM cas_2_applications applications
-      JOIN nomis_users users ON users.id = applications.created_by_user_id
+      LEFT JOIN nomis_users users ON users.id = applications.created_by_user_id
+      LEFT JOIN cas_2_users cu ON cu.id = applications.created_by_cas2_user_id
       WHERE applications.submitted_at IS NULL
         AND applications.created_at  > CURRENT_DATE - 365
       ORDER BY startedAt DESC;
