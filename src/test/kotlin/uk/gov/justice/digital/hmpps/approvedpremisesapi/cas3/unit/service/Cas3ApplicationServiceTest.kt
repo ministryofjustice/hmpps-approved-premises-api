@@ -16,9 +16,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderLanguages
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderProfile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationEntity
@@ -26,10 +36,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -44,6 +63,8 @@ class Cas3ApplicationServiceTest {
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockUserService = mockk<UserService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
+  private val mockOffenderService = mockk<OffenderService>()
+  private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
 
@@ -55,6 +76,8 @@ class Cas3ApplicationServiceTest {
     mockUserAccessService,
     mockAssessmentService,
     mockCas3DomainEventService,
+    mockOffenderService,
+    mockOffenderRisksService,
     mockObjectMapper,
     mockProbationRegionRepository,
   )
@@ -74,6 +97,454 @@ class Cas3ApplicationServiceTest {
     .withProbationRegion(user.probationRegion)
     .withSubmittedAt(null)
     .produce()
+
+  @Nested
+  inner class CreateApplication {
+    @Test
+    fun `createApplication returns Unauthorised when user doesn't have CAS3_REFERRER role`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val offenderDetailSummary = createOffenderDetailsSummary(crn)
+      val inmateDetail = createInmateDetail(InmateStatus.IN, "Bristol Prison")
+      val personInfo = PersonInfoResult.Success.Full(
+        crn = crn,
+        offenderDetailSummary = offenderDetailSummary,
+        inmateDetail = inmateDetail,
+      )
+      val user = userWithUsername(username).apply {
+        this.roles.add(
+          UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS3_ASSESSOR)
+            .produce(),
+        )
+      }
+
+      val result = cas3ApplicationService.createApplication(
+        crn,
+        user,
+        123,
+        "1",
+        "A12HI",
+        personInfo = personInfo,
+      )
+
+      assertThatCasResult(result).isUnauthorised()
+    }
+
+    @Test
+    fun `createApplication returns FieldValidationError when CRN does not exist`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val offenderDetailSummary = createOffenderDetailsSummary(crn)
+      val inmateDetail = createInmateDetail(InmateStatus.IN, "Bristol Prison")
+      val personInfo = PersonInfoResult.Success.Full(
+        crn = crn,
+        offenderDetailSummary = offenderDetailSummary,
+        inmateDetail = inmateDetail,
+      )
+      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
+
+      val user = userWithUsername(username).apply {
+        this.roles.add(
+          UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS3_REFERRER)
+            .produce(),
+        )
+      }
+
+      val result = cas3ApplicationService.createApplication(
+        crn,
+        user,
+        123,
+        "1",
+        "A12HI",
+        personInfo = personInfo,
+      )
+
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.crn", "doesNotExist")
+    }
+
+    @Test
+    fun `createApplication returns FieldValidationError when CRN is LAO restricted`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val offenderDetailSummary = createOffenderDetailsSummary(crn)
+      val inmateDetail = createInmateDetail(InmateStatus.IN, "Bristol Prison")
+      val personInfo = PersonInfoResult.Success.Full(
+        crn = crn,
+        offenderDetailSummary = offenderDetailSummary,
+        inmateDetail = inmateDetail,
+      )
+      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
+
+      val user = userWithUsername(username).apply {
+        this.roles.add(
+          UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS3_REFERRER)
+            .produce(),
+        )
+      }
+
+      val result = cas3ApplicationService.createApplication(
+        crn,
+        user,
+        123,
+        "1",
+        "A12HI",
+        personInfo = personInfo,
+      )
+
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.crn", "userPermission")
+    }
+
+    @Test
+    fun `createApplication returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val offenderDetailSummary = createOffenderDetailsSummary(crn)
+      val inmateDetail = createInmateDetail(InmateStatus.IN, "HMP Bristol")
+      val personInfo = PersonInfoResult.Success.Full(
+        crn = crn,
+        offenderDetailSummary = offenderDetailSummary,
+        inmateDetail = inmateDetail,
+      )
+
+      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      val user = userWithUsername(username).apply {
+        this.roles.add(
+          UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS3_REFERRER)
+            .produce(),
+        )
+      }
+
+      val result = cas3ApplicationService.createApplication(
+        crn,
+        user,
+        null,
+        null,
+        null,
+        personInfo = personInfo,
+      )
+
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.convictionId", "empty")
+        .hasMessage("$.deliusEventNumber", "empty")
+        .hasMessage("$.offenceId", "empty")
+    }
+
+    @Test
+    fun `createApplication returns Success with created Application + persisted Risk data`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val offenderDetailSummary = createOffenderDetailsSummary(crn)
+      val agencyName = "HMP Bristol"
+      val inmateDetail = createInmateDetail(InmateStatus.IN, agencyName)
+      val personInfo = PersonInfoResult.Success.Full(
+        crn = crn,
+        offenderDetailSummary = offenderDetailSummary,
+        inmateDetail = inmateDetail,
+      )
+
+      val user = userWithUsername(username).apply {
+        this.roles.add(
+          UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS3_REFERRER)
+            .produce(),
+        )
+      }
+
+      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+      val riskRatings = PersonRisksFactory()
+        .withRoshRisks(
+          RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = "High",
+              riskToChildren = "Medium",
+              riskToPublic = "Low",
+              riskToKnownAdult = "High",
+              riskToStaff = "High",
+              lastUpdated = null,
+            ),
+          ),
+        )
+        .withMappa(
+          RiskWithStatus(
+            value = Mappa(
+              level = "",
+              lastUpdated = LocalDate.parse("2022-12-12"),
+            ),
+          ),
+        )
+        .withFlags(
+          RiskWithStatus(
+            value = listOf(
+              "flag1",
+              "flag2",
+            ),
+          ),
+        )
+        .produce()
+
+      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+
+      val result = cas3ApplicationService.createApplication(
+        crn,
+        user,
+        123,
+        "1",
+        "A12HI",
+        personInfo = personInfo,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.riskRatings).isEqualTo(riskRatings)
+        assertThat(it.prisonNameOnCreation).isEqualTo(agencyName)
+      }
+    }
+
+    @Test
+    fun `createApplication returns Success with created Application with prison name when person status is TRN`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val offenderDetailSummary = createOffenderDetailsSummary(crn)
+      val agencyName = "HMP Bristol"
+      val inmateDetail = createInmateDetail(InmateStatus.TRN, agencyName)
+      val personInfo = PersonInfoResult.Success.Full(
+        crn = crn,
+        offenderDetailSummary = offenderDetailSummary,
+        inmateDetail = inmateDetail,
+      )
+
+      val user = userWithUsername(username).apply {
+        this.roles.add(
+          UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS3_REFERRER)
+            .produce(),
+        )
+      }
+
+      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+      val riskRatings = PersonRisksFactory()
+        .withRoshRisks(
+          RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = "High",
+              riskToChildren = "Medium",
+              riskToPublic = "Low",
+              riskToKnownAdult = "High",
+              riskToStaff = "High",
+              lastUpdated = null,
+            ),
+          ),
+        )
+        .withMappa(
+          RiskWithStatus(
+            value = Mappa(
+              level = "",
+              lastUpdated = LocalDate.parse("2022-12-12"),
+            ),
+          ),
+        )
+        .withFlags(
+          RiskWithStatus(
+            value = listOf(
+              "flag1",
+              "flag2",
+            ),
+          ),
+        )
+        .produce()
+
+      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+
+      val result = cas3ApplicationService.createApplication(
+        crn,
+        user,
+        123,
+        "1",
+        "A12HI",
+        personInfo = personInfo,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.riskRatings).isEqualTo(riskRatings)
+        assertThat(it.prisonNameOnCreation).isEqualTo(agencyName)
+      }
+    }
+
+    @Test
+    fun `createApplication returns Success with created Application without prison name when person status is Out`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val offenderDetailSummary = createOffenderDetailsSummary(crn)
+      val inmateDetail = createInmateDetail(InmateStatus.OUT, "HMP Bristol")
+      val personInfo = PersonInfoResult.Success.Full(
+        crn = crn,
+        offenderDetailSummary = offenderDetailSummary,
+        inmateDetail = inmateDetail,
+      )
+
+      val user = userWithUsername(username).apply {
+        this.roles.add(
+          UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS3_REFERRER)
+            .produce(),
+        )
+      }
+
+      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+      val riskRatings = PersonRisksFactory()
+        .withRoshRisks(
+          RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = "High",
+              riskToChildren = "Medium",
+              riskToPublic = "Low",
+              riskToKnownAdult = "High",
+              riskToStaff = "High",
+              lastUpdated = null,
+            ),
+          ),
+        )
+        .withMappa(
+          RiskWithStatus(
+            value = Mappa(
+              level = "",
+              lastUpdated = LocalDate.parse("2022-12-12"),
+            ),
+          ),
+        )
+        .withFlags(
+          RiskWithStatus(
+            value = listOf(
+              "flag1",
+              "flag2",
+            ),
+          ),
+        )
+        .produce()
+
+      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+
+      val result = cas3ApplicationService.createApplication(
+        crn,
+        user,
+        123,
+        "1",
+        "A12HI",
+        personInfo = personInfo,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        val temporaryAccommodationApplication = it
+        assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+        assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+      }
+    }
+
+    @Test
+    fun `createApplication returns Success with created Application without prison name when assignedLivingUnit is null`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val offenderDetailSummary = createOffenderDetailsSummary(crn)
+      val inmateDetail = createInmateDetail(InmateStatus.IN, null)
+      val personInfo = PersonInfoResult.Success.Full(
+        crn = crn,
+        offenderDetailSummary = offenderDetailSummary,
+        inmateDetail = inmateDetail,
+      )
+
+      val user = userWithUsername(username).apply {
+        this.roles.add(
+          UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS3_REFERRER)
+            .produce(),
+        )
+      }
+
+      every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+      val riskRatings = PersonRisksFactory()
+        .withRoshRisks(
+          RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = "High",
+              riskToChildren = "Medium",
+              riskToPublic = "Low",
+              riskToKnownAdult = "High",
+              riskToStaff = "High",
+              lastUpdated = null,
+            ),
+          ),
+        )
+        .withMappa(
+          RiskWithStatus(
+            value = Mappa(
+              level = "",
+              lastUpdated = LocalDate.parse("2022-12-12"),
+            ),
+          ),
+        )
+        .withFlags(
+          RiskWithStatus(
+            value = listOf(
+              "flag1",
+              "flag2",
+            ),
+          ),
+        )
+        .produce()
+
+      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+
+      val result = cas3ApplicationService.createApplication(
+        crn,
+        user,
+        123,
+        "1",
+        "A12HI",
+        personInfo = personInfo,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.riskRatings).isEqualTo(riskRatings)
+        assertThat(it.prisonNameOnCreation).isNull()
+      }
+    }
+  }
 
   @SuppressWarnings("UnusedPrivateProperty")
   @Nested
@@ -479,4 +950,77 @@ class Cas3ApplicationServiceTest {
       verify { mockApplicationRepository.save(application) }
     }
   }
+
+  private fun userWithUsername(username: String) = UserEntityFactory()
+    .withDeliusUsername(username)
+    .withProbationRegion(
+      ProbationRegionEntityFactory()
+        .withApArea(ApAreaEntityFactory().produce())
+        .produce(),
+    )
+    .produce()
+
+  private fun createInmateDetail(
+    status: InmateStatus,
+    agencyName: String?,
+  ) = InmateDetail(
+    offenderNo = "NOMS321",
+    assignedLivingUnit = agencyName?.let {
+      AssignedLivingUnit(
+        agencyId = "BRI",
+        locationId = 5,
+        description = "B-2F-004",
+        agencyName = it,
+      )
+    },
+    custodyStatus = status,
+  )
+
+  private fun createOffenderDetailsSummary(crn: String) = OffenderDetailSummary(
+    offenderId = 547839,
+    title = "Mr",
+    firstName = "Greggory",
+    middleNames = listOf(),
+    surname = "Someone",
+    previousSurname = null,
+    preferredName = null,
+    dateOfBirth = LocalDate.parse("1980-09-12"),
+    gender = "Male",
+    otherIds = OffenderIds(
+      crn = crn,
+      croNumber = null,
+      immigrationNumber = null,
+      mostRecentPrisonNumber = null,
+      niNumber = null,
+      nomsNumber = "NOMS321",
+      pncNumber = "PNC456",
+    ),
+    offenderProfile = OffenderProfile(
+      ethnicity = "White and Asian",
+      nationality = "Spanish",
+      secondaryNationality = null,
+      notes = null,
+      immigrationStatus = null,
+      offenderLanguages = OffenderLanguages(
+        primaryLanguage = null,
+        otherLanguages = listOf(),
+        languageConcerns = null,
+        requiresInterpreter = null,
+      ),
+      religion = "Sikh",
+      sexualOrientation = null,
+      offenderDetails = null,
+      remandStatus = null,
+      riskColour = null,
+      disabilities = listOf(),
+      genderIdentity = null,
+      selfDescribedGender = null,
+    ),
+    softDeleted = null,
+    currentDisposal = "",
+    partitionArea = null,
+    currentRestriction = false,
+    currentExclusion = false,
+    isActiveProbationManagedSentence = false,
+  )
 }

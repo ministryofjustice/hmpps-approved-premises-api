@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
@@ -20,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
@@ -150,85 +148,6 @@ class ApplicationsController(
         ),
       )
     }
-  }
-
-  @Operation(
-    summary = "Creates an application",
-    description = """deprecated for cas3, use /cas3/applications""",
-  )
-  @PostMapping("/applications")
-  @Transactional
-  fun applicationsPost(
-    @RequestBody body: NewApplication,
-    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
-    @RequestParam(value = "createWithRisks", required = false) createWithRisks: Boolean?,
-  ): ResponseEntity<Application> {
-    val user = userService.getUserForRequest()
-
-    val personInfo =
-      when (val personInfoResult = offenderDetailService.getPersonInfoResult(body.crn, user.deliusUsername, false)) {
-        is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
-          personInfoResult.crn,
-          "Offender",
-        )
-
-        is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
-        is PersonInfoResult.Success.Full -> personInfoResult
-      }
-
-    val applicationResult = createApplication(
-      xServiceName ?: ServiceName.approvedPremises,
-      personInfo,
-      user,
-      body,
-      createWithRisks,
-    )
-
-    val application = extractEntityFromCasResult(applicationResult)
-
-    return ResponseEntity
-      .created(URI.create("/applications/${application.id}"))
-      .body(applicationsTransformer.transformJpaToApi(application, personInfo))
-  }
-
-  @Suppress("TooGenericExceptionThrown")
-  private fun createApplication(
-    serviceName: ServiceName,
-    personInfo: PersonInfoResult.Success.Full,
-    user: UserEntity,
-    body: NewApplication,
-    createWithRisks: Boolean?,
-  ): CasResult<out ApplicationEntity> = when (serviceName) {
-    ServiceName.approvedPremises ->
-      cas1ApplicationCreationService.createApprovedPremisesApplication(
-        personInfo.offenderDetailSummary,
-        user,
-        body.convictionId,
-        body.deliusEventNumber,
-        body.offenceId,
-      )
-
-    ServiceName.temporaryAccommodation -> {
-      applicationService.createTemporaryAccommodationApplication(
-        body.crn,
-        user,
-        body.convictionId,
-        body.deliusEventNumber,
-        body.offenceId,
-        createWithRisks,
-        personInfo,
-      )
-    }
-
-    ServiceName.cas2 -> throw RuntimeException(
-      "CAS2 now has its own " +
-        "Cas2ApplicationsController",
-    )
-
-    ServiceName.cas2v2 -> throw RuntimeException(
-      "CAS2v2 now has its own " +
-        "Cas2v2ApplicationsController",
-    )
   }
 
   @Operation(summary = "Updates an application")

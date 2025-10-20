@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
@@ -722,12 +721,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     fun `Create new application returns 403 when user isn't  CAS3_REFERRER role`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         givenAnOffender { offenderDetails, _ ->
-
-          callCasApi(jwt, offenderDetails.otherIds.crn, "789")
-            .expectStatus()
-            .isForbidden
-
-          callCas3Api(jwt, offenderDetails.otherIds.crn, "789")
+          callApplicationsApi(jwt, offenderDetails.otherIds.crn, "789")
             .expectStatus()
             .isForbidden
         }
@@ -738,12 +732,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     fun `Should get 403 forbidden error when create new application with user CAS3_REPORTER`() {
       givenAUser(roles = listOf(UserRole.CAS3_REPORTER)) { _, jwt ->
         givenAnOffender { offenderDetails, _ ->
-
-          callCasApi(jwt, offenderDetails.otherIds.crn, "789")
-            .expectStatus()
-            .isForbidden
-
-          callCas3Api(jwt, offenderDetails.otherIds.crn, "789")
+          callApplicationsApi(jwt, offenderDetails.otherIds.crn, "789")
             .expectStatus()
             .isForbidden
         }
@@ -754,9 +743,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     fun `Create new application returns 201 with correct body and Location header`() {
       givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
         givenAnOffender { offenderDetails, _ ->
-
-          callCasApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
-          callCas3ApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
+          callApplicationsApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
         }
       }
     }
@@ -767,9 +754,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         givenAnOffender(
           offenderDetailsConfigBlock = { withoutNomsNumber() },
         ) { offenderDetails, _ ->
-
-          callCasApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
-          callCas3ApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
+          callApplicationsApiAndAssertResponse(jwt, offenderDetails.otherIds.crn)
         }
       }
     }
@@ -805,70 +790,25 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             )
           },
         ) { offenderDetails, _ ->
-          callCasApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, agencyName)
-          callCas3ApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, agencyName)
+          callApplicationsApiAndAssertResponse(jwt, offenderDetails.otherIds.crn, agencyName)
         }
       }
     }
 
-    private fun callCasApiAndAssertResponse(
+    private fun callApplicationsApiAndAssertResponse(
       jwt: String,
       crn: String,
       agencyName: String? = null,
     ) {
       val offenceId = "789"
 
-      val result = callCasApi(jwt, crn, offenceId)
-        .expectStatus()
-        .isCreated
-        .returnResult(TemporaryAccommodationApplication::class.java)
-
-      assertThat(result.responseHeaders["Location"]).anyMatch {
-        it.matches(Regex("/applications/.+"))
-      }
-
-      val blockFirst = result.responseBody.blockFirst()
-      assertThat(blockFirst).matches {
-        it.person.crn == crn &&
-          it.offenceId == offenceId
-      }
-
-      if (agencyName != null) {
-        val accommodationApplicationEntity =
-          temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst.id)
-        assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isNotNull()
-        assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isEqualTo(agencyName)
-      }
-    }
-
-    private fun callCasApi(jwt: String, crn: String, offenceId: String) = webTestClient.post()
-      .uri("/applications")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-      .bodyValue(
-        NewApplication(
-          crn = crn,
-          convictionId = 123,
-          deliusEventNumber = "1",
-          offenceId = offenceId,
-        ),
-      )
-      .exchange()
-
-    private fun callCas3ApiAndAssertResponse(
-      jwt: String,
-      crn: String,
-      agencyName: String? = null,
-    ) {
-      val offenceId = "789"
-
-      val result = callCas3Api(jwt, crn, offenceId)
+      val result = callApplicationsApi(jwt, crn, offenceId)
         .expectStatus()
         .isCreated
         .returnResult(Cas3Application::class.java)
 
       assertThat(result.responseHeaders["Location"]).anyMatch {
-        it.matches(Regex("/applications/.+"))
+        it.matches(Regex("/cas3/applications/.+"))
       }
 
       val blockFirst = result.responseBody.blockFirst()
@@ -885,7 +825,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    private fun callCas3Api(jwt: String, crn: String, offenceId: String) = webTestClient.post()
+    private fun callApplicationsApi(jwt: String, crn: String, offenceId: String) = webTestClient.post()
       .uri("/cas3/applications")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
