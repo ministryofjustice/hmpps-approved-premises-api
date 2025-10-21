@@ -56,7 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WithdrawalTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1WithdrawalTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -2382,7 +2382,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   }
 
   /**
-   * Note - Withdrawal cascading is tested in [WithdrawalTest]
+   * Note - Withdrawal cascading is tested in [Cas1WithdrawalTest]
    */
   @Nested
   inner class WithdrawApplication {

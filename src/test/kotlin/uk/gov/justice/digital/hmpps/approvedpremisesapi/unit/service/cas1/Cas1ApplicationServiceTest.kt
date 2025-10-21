@@ -13,19 +13,24 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
@@ -39,7 +44,6 @@ import java.util.UUID
 @SuppressWarnings("UnusedPrivateProperty")
 @ExtendWith(MockKExtension::class)
 class Cas1ApplicationServiceTest {
-
   @MockK
   private lateinit var approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository
 
@@ -66,6 +70,9 @@ class Cas1ApplicationServiceTest {
 
   @MockK
   private lateinit var userAccessService: UserAccessService
+
+  @MockK
+  private lateinit var offenderService: OffenderService
 
   @MockK
   private lateinit var userRepository: UserRepository
@@ -141,6 +148,128 @@ class Cas1ApplicationServiceTest {
       assertThatCasResult(result).isSuccess().with {
         assertThat(it).isEqualTo(applicationEntity)
       }
+    }
+  }
+
+  @Nested
+  inner class GetOfflineApplicationForUsername {
+    @Test
+    fun `getOfflineApplicationForUsername where application does not exist returns NotFound result`() {
+      val distinguishedName = "SOMEPERSON"
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      every { offlineApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+      assertThat(
+        service.getOfflineApplicationForUsername(
+          applicationId,
+          distinguishedName,
+        ) is CasResult.NotFound,
+      ).isTrue
+    }
+
+    @Test
+    fun `getOfflineApplicationForUsername where where caller is not one of one of roles CAS1_CRU_MEMBER, ASSESSOR, MATCHER, MANAGER returns Unauthorised result`() {
+      val distinguishedName = "SOMEPERSON"
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      every { userRepository.findByDeliusUsername(distinguishedName) } returns UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+      every { offlineApplicationRepository.findByIdOrNull(applicationId) } returns OfflineApplicationEntityFactory()
+        .produce()
+
+      assertThat(
+        service.getOfflineApplicationForUsername(
+          applicationId,
+          distinguishedName,
+        ) is CasResult.Unauthorised,
+      ).isTrue
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
+    )
+    fun `getOfflineApplicationForUsername where user has one of roles CAS1_CRU_MEMBER, ASSESSOR, FUTURE_MANAGER but does not pass LAO check returns Unauthorised result`(
+      role: UserRole,
+    ) {
+      val distinguishedName = "SOMEPERSON"
+      val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      val userEntity = UserEntityFactory()
+        .withId(userId)
+        .withDeliusUsername(distinguishedName)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+        .apply {
+          roles += UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(role)
+            .produce()
+        }
+
+      val applicationEntity = OfflineApplicationEntityFactory()
+        .produce()
+
+      every { offlineApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
+      every { userRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+      every { offenderService.canAccessOffender(distinguishedName, applicationEntity.crn) } returns false
+
+      val result = service.getOfflineApplicationForUsername(applicationId, distinguishedName)
+
+      assertThat(result is CasResult.Unauthorised).isTrue
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+      value = UserRole::class,
+      names = ["CAS1_CRU_MEMBER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
+    )
+    fun `getOfflineApplicationForUsername where user has permission of roles CAS1_CRU_MEMBER, ASSESSOR, FUTURE_MANAGER and passes LAO check returns Success result with entity from db`(role: UserRole) {
+      val distinguishedName = "SOMEPERSON"
+      val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      val userEntity = UserEntityFactory()
+        .withId(userId)
+        .withDeliusUsername(distinguishedName)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+        .apply {
+          roles += UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(role)
+            .produce()
+        }
+
+      val applicationEntity = OfflineApplicationEntityFactory()
+        .produce()
+
+      every { offlineApplicationRepository.findByIdOrNull(applicationId) } returns applicationEntity
+      every { userRepository.findByDeliusUsername(distinguishedName) } returns userEntity
+      every { offenderService.canAccessOffender(distinguishedName, applicationEntity.crn) } returns true
+
+      val result = service.getOfflineApplicationForUsername(applicationId, distinguishedName)
+
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
+
+      assertThat(result.value).isEqualTo(applicationEntity)
     }
   }
 

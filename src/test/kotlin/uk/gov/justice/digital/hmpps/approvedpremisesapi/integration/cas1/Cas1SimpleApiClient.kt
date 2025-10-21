@@ -74,7 +74,7 @@ class Cas1SimpleApiClient {
     val appealsManagerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)).second
 
     integrationTestBase.webTestClient.post()
-      .uri("/applications/$applicationId/appeals")
+      .uri("/cas1/applications/$applicationId/appeals")
       .header("Authorization", "Bearer $appealsManagerJwt")
       .bodyValue(body)
       .exchange()

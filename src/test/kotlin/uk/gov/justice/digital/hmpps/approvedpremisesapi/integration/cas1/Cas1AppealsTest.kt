@@ -1,7 +1,7 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
@@ -29,13 +30,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisT
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 
-class AppealsTest : InitialiseDatabasePerClassTestBase() {
+class Cas1AppealsTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get appeal without JWT returns 401`() {
     webTestClient.get()
-      .uri("/applications/${UUID.randomUUID()}/appeals/${UUID.randomUUID()}")
+      .uri("/cas1/applications/${UUID.randomUUID()}/appeals/${UUID.randomUUID()}")
       .exchange()
       .expectStatus()
       .isUnauthorized
@@ -45,7 +45,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
   fun `Get appeal returns 404 when application could not be found`() {
     givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
       webTestClient.get()
-        .uri("/applications/${UUID.randomUUID()}/appeals/${UUID.randomUUID()}")
+        .uri("/cas1/applications/${UUID.randomUUID()}/appeals/${UUID.randomUUID()}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -70,7 +70,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
       ) { _, application ->
         givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
           webTestClient.get()
-            .uri("/applications/${application.id}/appeals/${UUID.randomUUID()}")
+            .uri("/cas1/applications/${application.id}/appeals/${UUID.randomUUID()}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -85,7 +85,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
       givenAnApplication(userEntity) { application ->
         webTestClient.get()
-          .uri("/applications/${application.id}/appeals/${UUID.randomUUID()}")
+          .uri("/cas1/applications/${application.id}/appeals/${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -106,7 +106,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
         }
 
         webTestClient.get()
-          .uri("/applications/${application.id}/appeals/${appeal.id}")
+          .uri("/cas1/applications/${application.id}/appeals/${appeal.id}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -128,7 +128,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Create new appeal without JWT returns 401`() {
     webTestClient.post()
-      .uri("/applications/${UUID.randomUUID()}/appeals")
+      .uri("/cas1/applications/${UUID.randomUUID()}/appeals")
       .bodyValue(
         NewAppeal(
           appealDate = LocalDate.parse("2024-01-01"),
@@ -146,7 +146,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
   fun `Create new appeal returns 404 when application could not be found`() {
     givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
       webTestClient.post()
-        .uri("/applications/${UUID.randomUUID()}/appeals")
+        .uri("/cas1/applications/${UUID.randomUUID()}/appeals")
         .bodyValue(
           NewAppeal(
             appealDate = LocalDate.parse("2024-01-01"),
@@ -179,7 +179,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
       ) { _, application ->
         givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
           webTestClient.post()
-            .uri("/applications/${application.id}/appeals")
+            .uri("/cas1/applications/${application.id}/appeals")
             .bodyValue(
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
@@ -202,7 +202,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
     givenAUser { userEntity, jwt ->
       givenAnAssessmentForApprovedPremises(userEntity, userEntity) { _, application ->
         webTestClient.post()
-          .uri("/applications/${application.id}/appeals")
+          .uri("/cas1/applications/${application.id}/appeals")
           .bodyValue(
             NewAppeal(
               appealDate = LocalDate.parse("2024-01-01"),
@@ -224,7 +224,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
       givenAnAssessmentForApprovedPremises(userEntity, userEntity) { _, application ->
         webTestClient.post()
-          .uri("/applications/${application.id}/appeals")
+          .uri("/cas1/applications/${application.id}/appeals")
           .bodyValue(
             NewAppeal(
               appealDate = LocalDate.now().plusDays(1),
@@ -246,7 +246,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
       givenAnApplication(userEntity) { application ->
         webTestClient.post()
-          .uri("/applications/${application.id}/appeals")
+          .uri("/cas1/applications/${application.id}/appeals")
           .bodyValue(
             NewAppeal(
               appealDate = LocalDate.parse("2024-01-01"),
@@ -260,7 +260,8 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isEqualTo(HttpStatus.CONFLICT)
           .expectBody()
-          .jsonPath("$.detail").isEqualTo("An appeal cannot be created when the application does not have an assessment: ${application.id}")
+          .jsonPath("$.detail")
+          .isEqualTo("An appeal cannot be created when the application does not have an assessment: ${application.id}")
       }
     }
   }
@@ -277,7 +278,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           submittedAt = OffsetDateTime.now(),
         ) { assessment, application ->
           webTestClient.post()
-            .uri("/applications/${application.id}/appeals")
+            .uri("/cas1/applications/${application.id}/appeals")
             .bodyValue(
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
@@ -319,7 +320,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           submittedAt = OffsetDateTime.now(),
         ) { assessment, application ->
           webTestClient.post()
-            .uri("/applications/${application.id}/appeals")
+            .uri("/cas1/applications/${application.id}/appeals")
             .bodyValue(
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
@@ -335,7 +336,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             .returnResult(Appeal::class.java)
 
           val applicationResult = webTestClient.get()
-            .uri("/applications/${application.id}")
+            .uri("/cas1/applications/${application.id}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -344,18 +345,20 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
           val applicationBody = applicationResult.responseBody.blockFirst()!!
 
-          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.rejected)
+          Assertions.assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.rejected)
 
-          assertThat(applicationBody.assessmentId).isEqualTo(assessment.id)
-          assertThat(applicationBody.assessmentDecision).isEqualTo(ApiAssessmentDecision.rejected)
-          assertThat(applicationBody.assessmentDecisionDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
+          Assertions.assertThat(applicationBody.assessmentId).isEqualTo(assessment.id)
+          Assertions.assertThat(applicationBody.assessmentDecision)
+            .isEqualTo(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.rejected)
+          Assertions.assertThat(applicationBody.assessmentDecisionDate)
+            .isEqualTo(assessment.submittedAt!!.toLocalDate())
 
           emailAsserter.assertEmailsRequestedCount(1)
           emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.APPLICATION_APPEAL_REJECTED)
 
           val assessments = assessmentTestRepository.findAllByApplication(application)
-          assertThat(assessments.size).isEqualTo(1)
-          assertThat(assessments[0].id).isEqualTo(assessment.id)
+          Assertions.assertThat(assessments.size).isEqualTo(1)
+          Assertions.assertThat(assessments[0].id).isEqualTo(assessment.id)
         }
       }
     }
@@ -375,7 +378,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
           webTestClient.post()
-            .uri("/applications/${application.id}/appeals")
+            .uri("/cas1/applications/${application.id}/appeals")
             .bodyValue(
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
@@ -391,7 +394,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             .returnResult(Appeal::class.java)
 
           val applicationResult = webTestClient.get()
-            .uri("/applications/${application.id}")
+            .uri("/cas1/applications/${application.id}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -400,24 +403,23 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
           val applicationBody = applicationResult.responseBody.blockFirst()!!
 
-          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.awaitingAssesment)
+          Assertions.assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.awaitingAssesment)
 
-          assertThat(applicationBody.assessmentId).isNotNull()
-          assertThat(applicationBody.assessmentId).isNotEqualTo(assessment.id)
-          assertThat(applicationBody.assessmentDecision).isNull()
-          assertThat(applicationBody.assessmentDecisionDate).isNull()
+          Assertions.assertThat(applicationBody.assessmentId).isNotNull()
+          Assertions.assertThat(applicationBody.assessmentId).isNotEqualTo(assessment.id)
+          Assertions.assertThat(applicationBody.assessmentDecision).isNull()
+          Assertions.assertThat(applicationBody.assessmentDecisionDate).isNull()
 
           val newAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(applicationBody.assessmentId!!)
 
-          assertThat(newAssessment).isNotNull()
-          assertThat(newAssessment!!.createdFromAppeal).isTrue()
-          assertThat(newAssessment.allocatedToUser).isNotNull()
-          assertThat(newAssessment.allocatedToUser!!.id).isEqualTo(userEntity.id)
+          Assertions.assertThat(newAssessment).isNotNull()
+          Assertions.assertThat(newAssessment!!.createdFromAppeal).isTrue()
+          Assertions.assertThat(newAssessment.allocatedToUser).isNotNull()
+          Assertions.assertThat(newAssessment.allocatedToUser!!.id).isEqualTo(userEntity.id)
 
           emailAsserter.assertEmailsRequestedCount(3)
           emailAsserter.assertEmailRequested(userEntity.email!!, Cas1NotifyTemplates.APPLICATION_APPEAL_SUCCESS)
           emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.APPLICATION_APPEAL_SUCCESS)
-
           emailAsserter.assertEmailRequested(userEntity.email!!, Cas1NotifyTemplates.APPEALED_ASSESSMENT_ALLOCATED)
         }
       }
@@ -438,7 +440,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
           webTestClient.post()
-            .uri("/applications/${application.id}/appeals")
+            .uri("/cas1/applications/${application.id}/appeals")
             .bodyValue(
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
@@ -465,10 +467,13 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
           val timeline = objectMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
-          assertThat(timeline).anyMatch {
+          Assertions.assertThat(timeline).anyMatch {
             it.type == Cas1TimelineEventType.assessmentAppealed &&
               it.associatedUrls?.contains(
-                Cas1TimelineEventAssociatedUrl(Cas1TimelineEventUrlType.assessmentAppeal, "http://frontend/applications/${application.id}/appeals/${appeal.id}"),
+                Cas1TimelineEventAssociatedUrl(
+                  Cas1TimelineEventUrlType.assessmentAppeal,
+                  "http://frontend/applications/${application.id}/appeals/${appeal.id}",
+                ),
               ) == true
           }
         }
@@ -490,7 +495,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
           webTestClient.post()
-            .uri("/applications/${application.id}/appeals")
+            .uri("/cas1/applications/${application.id}/appeals")
             .bodyValue(
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
@@ -505,7 +510,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             .isCreated
 
           webTestClient.post()
-            .uri("/applications/${application.id}/appeals")
+            .uri("/cas1/applications/${application.id}/appeals")
             .bodyValue(
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
@@ -530,7 +535,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
           val timeline = objectMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
-          assertThat(timeline.size).isEqualTo(2)
+          Assertions.assertThat(timeline.size).isEqualTo(2)
         }
       }
     }
