@@ -18,25 +18,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
@@ -71,12 +62,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 
 class ApplicationTest : IntegrationTestBase() {
 
@@ -93,253 +82,6 @@ class ApplicationTest : IntegrationTestBase() {
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationTeamCodeRepository)
     clearMocks(realApplicationRepository)
-  }
-
-  @Nested
-  inner class GetApplications {
-
-    @Test
-    fun `Get all applications without JWT returns 401`() {
-      webTestClient.get()
-        .uri("/applications")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Get all applications returns 200 - when user has no roles returns applications managed by their teams`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnOffender { otherOffenderDetails, _ ->
-              val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(userEntity)
-                withData(
-                  """
-                {
-                   "thingId": 123
-                }
-              """,
-                )
-              }
-
-              upToDateApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
-                ApplicationTeamCodeEntity(
-                  id = UUID.randomUUID(),
-                  application = upToDateApplicationEntityManagedByTeam,
-                  teamCode = "TEAM1",
-                ),
-              )
-
-              val outdatedApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
-                withCreatedByUser(userEntity)
-                withCrn(offenderDetails.otherIds.crn)
-                withData("{}")
-              }
-
-              outdatedApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
-                ApplicationTeamCodeEntity(
-                  id = UUID.randomUUID(),
-                  application = outdatedApplicationEntityManagedByTeam,
-                  teamCode = "TEAM1",
-                ),
-              )
-
-              val outdatedApplicationEntityNotManagedByTeam =
-                approvedPremisesApplicationEntityFactory.produceAndPersist {
-                  withCreatedByUser(otherUser)
-                  withCrn(otherOffenderDetails.otherIds.crn)
-                  withData("{}")
-                }
-
-              apDeliusContextAddResponseToUserAccessCall(
-                listOf(
-                  CaseAccessFactory()
-                    .withCrn(offenderDetails.otherIds.crn)
-                    .produce(),
-                ),
-                userEntity.deliusUsername,
-              )
-
-              val responseBody = webTestClient.get()
-                .uri("/applications")
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
-                .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
-
-              assertThat(responseBody).anyMatch {
-                outdatedApplicationEntityManagedByTeam.id == it.id &&
-                  outdatedApplicationEntityManagedByTeam.crn == it.person.crn &&
-                  outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
-                  outdatedApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                  outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
-              }
-
-              assertThat(responseBody).anyMatch {
-                upToDateApplicationEntityManagedByTeam.id == it.id &&
-                  upToDateApplicationEntityManagedByTeam.crn == it.person.crn &&
-                  upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
-                  upToDateApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                  upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
-              }
-
-              assertThat(responseBody).noneMatch {
-                outdatedApplicationEntityNotManagedByTeam.id == it.id
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all applications returns limited information when a person cannot be found`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        val crn = "X1234"
-
-        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-
-        apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
-
-        apDeliusContextMockUserAccess(
-          CaseAccessFactory()
-            .withCrn(crn)
-            .produce(),
-          userEntity.deliusUsername,
-        )
-
-        webTestClient.get()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              listOf(
-                ApprovedPremisesApplicationSummary(
-                  createdByUserId = userEntity.id,
-                  status = ApiApprovedPremisesApplicationStatus.started,
-                  type = "CAS1",
-                  id = application.id,
-                  person = UnknownPerson(
-                    crn = crn,
-                    type = PersonType.unknownPerson,
-                  ),
-                  createdAt = application.createdAt.toInstant(),
-                  isWomensApplication = null,
-                  isEmergencyApplication = null,
-                  arrivalDate = null,
-                  risks = PersonRisks(
-                    crn = crn,
-                    roshRisks = RoshRisksEnvelope(RiskEnvelopeStatus.notFound),
-                    tier = RiskTierEnvelope(RiskEnvelopeStatus.notFound),
-                    flags = FlagsEnvelope(RiskEnvelopeStatus.notFound),
-                    mappa = MappaEnvelope(RiskEnvelopeStatus.notFound),
-                  ),
-                  submittedAt = null,
-                  isWithdrawn = false,
-                  hasRequestsForPlacement = false,
-                ),
-              ),
-            ),
-          )
-      }
-    }
-
-    @Test
-    fun `Get all applications returns successfully when a person has no NOMS number`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        givenAnOffender(
-          offenderDetailsConfigBlock = { withoutNomsNumber() },
-        ) { offenderDetails, _ ->
-          val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
-
-          apDeliusContextAddResponseToUserAccessCall(
-            listOf(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
-            ),
-            userEntity.deliusUsername,
-          )
-
-          val responseBody = webTestClient.get()
-            .uri("/applications")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
-
-          assertThat(responseBody).matches {
-            val person = it[0].person as FullPerson
-
-            application.id == it[0].id &&
-              application.crn == person.crn &&
-              person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
-              person.prisonName == null
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all applications returns successfully when the person cannot be fetched from the prisons API`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        val crn = "X1234"
-
-        givenAnOffender(
-          offenderDetailsConfigBlock = {
-            withCrn(crn)
-            withNomsNumber("ABC123")
-          },
-        ) { _, _ ->
-          val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-
-          val responseBody = webTestClient.get()
-            .uri("/applications")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
-
-          assertThat(responseBody).matches {
-            val person = it[0].person as FullPerson
-
-            application.id == it[0].id &&
-              application.crn == person.crn &&
-              person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
-              person.prisonName == null
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get single application without JWT returns 401`() {
-      webTestClient.get()
-        .uri("/applications/9b785e59-b85c-4be0-b271-d9ac287684b6")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
   }
 
   @Nested

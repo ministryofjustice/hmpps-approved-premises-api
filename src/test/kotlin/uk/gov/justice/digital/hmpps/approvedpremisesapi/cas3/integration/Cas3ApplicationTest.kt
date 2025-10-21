@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UpdateApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
@@ -52,11 +51,10 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
   @Nested
   inner class GetApplications {
-    @ParameterizedTest
-    @CsvSource("/applications", "/cas3/applications")
-    fun `Get all applications without JWT returns 401`(baseUrl: String) {
+    @Test
+    fun `Get all applications without JWT returns 401`() {
       webTestClient.get()
-        .uri(baseUrl)
+        .uri("/cas3/applications")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -69,72 +67,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       "CAS3_ASSESSOR",
     )
     fun `Get all applications returns 200 and returns all applications for user`(userRole: UserRole) {
-      givenAProbationRegion { probationRegion ->
-        givenAUser(roles = listOf(userRole), probationRegion = probationRegion) { otherUser, _ ->
-          givenAUser(
-            roles = listOf(UserRole.CAS3_REFERRER),
-            probationRegion = probationRegion,
-          ) { referrerUser, jwt ->
-            givenAnOffender { offenderDetails, _ ->
-              val applicationInProgress =
-                createApplicationEntity(referrerUser, offenderDetails, probationRegion, null)
-
-              val applicationSubmitted =
-                createApplicationEntity(
-                  referrerUser,
-                  offenderDetails,
-                  probationRegion,
-                  OffsetDateTime.now().randomDateTimeBefore(5),
-                )
-
-              val anotherUsersApplication =
-                createApplicationEntity(otherUser, offenderDetails, probationRegion, null)
-
-              apDeliusContextAddResponseToUserAccessCall(
-                listOf(
-                  CaseAccessFactory()
-                    .withCrn(offenderDetails.otherIds.crn)
-                    .produce(),
-                ),
-                referrerUser.deliusUsername,
-              )
-
-              val responseBody = webTestClient.get()
-                .uri("/applications")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-                .exchange()
-                .expectStatus()
-                .isOk
-                .bodyAsListOfObjects<TemporaryAccommodationApplicationSummary>()
-
-              assertApplicationSummaryResponse(
-                applicationInProgress,
-                responseBody.firstOrNull { it.id == applicationInProgress.id },
-                ApplicationStatus.inProgress,
-              )
-              assertApplicationSummaryResponse(
-                applicationSubmitted,
-                responseBody.firstOrNull { it.id == applicationSubmitted.id },
-                ApplicationStatus.submitted,
-              )
-
-              assertThat(responseBody).noneMatch {
-                anotherUsersApplication.id == it.id
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @SuppressWarnings("CyclomaticComplexMethod")
-    @ParameterizedTest
-    @CsvSource(
-      "CAS3_REFERRER",
-      "CAS3_ASSESSOR",
-    )
-    fun `Get all Cas3 applications returns 200 and returns all applications for user`(userRole: UserRole) {
       givenAProbationRegion { probationRegion ->
         givenAUser(roles = listOf(userRole), probationRegion = probationRegion) { otherUser, _ ->
           givenAUser(
@@ -224,20 +156,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       withCrn(offenderDetails.otherIds.crn)
       withData("{}")
       withProbationRegion(probationRegion)
-    }
-
-    private fun assertApplicationSummaryResponse(
-      application: TemporaryAccommodationApplicationEntity,
-      applicationSummary: TemporaryAccommodationApplicationSummary?,
-      status: ApplicationStatus,
-    ) {
-      assertThat(applicationSummary).isNotNull()
-      assertThat(applicationSummary?.id).isEqualTo(application.id)
-      assertThat(applicationSummary?.person?.crn).isEqualTo(application.crn)
-      assertThat(applicationSummary?.createdAt).isEqualTo(application.createdAt.toInstant())
-      assertThat(applicationSummary?.createdByUserId).isEqualTo(application.createdByUser.id)
-      assertThat(applicationSummary?.submittedAt).isEqualTo(application.submittedAt?.toInstant())
-      assertThat(applicationSummary?.status).isEqualTo(status)
     }
 
     private fun assertApplicationSummaryResponse(
