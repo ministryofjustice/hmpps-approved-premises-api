@@ -3,13 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.UnifiedUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -26,8 +26,7 @@ import java.util.UUID
 class Cas2AssessmentNoteService(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationNoteRepository: Cas2ApplicationNoteRepository,
-  private val userService: Cas2UserService,
-  private val externalUserService: ExternalUserService,
+  private val cas2UserService: Cas2UserService,
   private val httpAuthService: HttpAuthService,
   private val emailNotificationService: EmailNotificationService,
   private val userAccessService: Cas2UserAccessService,
@@ -41,11 +40,11 @@ class Cas2AssessmentNoteService(
 
   @Suppress("ReturnCount")
   fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
-    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+    val assessment = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)
       ?: return AuthorisableActionResult.NotFound()
 
     if (httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()) {
-      val savedNote = saveNote(assessment, note.note, externalUserService.getUserForRequest())
+      val savedNote = saveNote(assessment, note.note, cas2UserService.getUserForRequest(assessment.serviceOrigin))
       sendEmailToReferrer(savedNote)
 
       return AuthorisableActionResult.Success(
@@ -54,8 +53,8 @@ class Cas2AssessmentNoteService(
         ),
       )
     } else {
-      val user = userService.getUserForRequest()
-      if (userAccessService.offenderIsFromSamePrisonAsUser(assessment.application.currentPrisonCode, user.activeCaseloadId)) {
+      val user = cas2UserService.getUserForRequest(assessment.serviceOrigin)
+      if (userAccessService.offenderIsFromSamePrisonAsUser(assessment.application.currentPrisonCode, user.activeNomisCaseloadId)) {
         val savedNote = saveNote(assessment, note.note, user)
         sendEmailToAssessors(savedNote)
 
@@ -85,7 +84,7 @@ class Cas2AssessmentNoteService(
         ),
       )
     } else {
-      val msg = "Email not found for User ${savedNote.application.getCreatedById()}. Unable to send email for Note ${savedNote.id} on Application ${savedNote.application.id}"
+      val msg = "Email not found for User ${savedNote.application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${savedNote.application.id}"
       log.error(msg)
       Sentry.captureMessage(msg)
     }
@@ -132,7 +131,7 @@ class Cas2AssessmentNoteService(
       "The assessor has not added their name to the application yet."
   }
 
-  private fun saveNote(assessment: Cas2AssessmentEntity, body: String, user: UnifiedUser): Cas2ApplicationNoteEntity {
+  private fun saveNote(assessment: Cas2AssessmentEntity, body: String, user: Cas2UserEntity): Cas2ApplicationNoteEntity {
     val newNote = Cas2ApplicationNoteEntity(
       id = UUID.randomUUID(),
       application = assessment.application,

@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
@@ -19,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.StatusU
 import java.time.OffsetDateTime
 
 class StatusUpdateTransformerTest {
-  private val user = NomisUserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory().produce()
   private val cas2User = Cas2UserEntityFactory()
     .withUserType(Cas2UserType.DELIUS)
     .produce()
@@ -30,7 +29,7 @@ class StatusUpdateTransformerTest {
     .produce()
 
   private val submittedApplicationWithCas2UserDelius = Cas2ApplicationEntityFactory()
-    .withCreatedByCas2User(cas2User)
+    .withCreatedByUser(cas2User)
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
 
@@ -40,7 +39,7 @@ class StatusUpdateTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockExternalUserTransformer.transformJpaToApi(any()) } returns mockExternalUserApi
+    every { mockExternalUserTransformer.transformJpaToApi(ofType()) } returns mockExternalUserApi
   }
 
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by NomisUser`() {
@@ -69,10 +68,11 @@ class StatusUpdateTransformerTest {
   @Test
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by Cas2User of type delius`() {
     val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2).random()
-
+    val assessor = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
     val jpaEntity = Cas2StatusUpdateEntityFactory()
       .withStatusId(status.id)
       .withApplication(submittedApplicationWithCas2UserDelius)
+      .withAssessor(assessor)
       .produce()
 
     val expectedRepresentation = Cas2StatusUpdate(
