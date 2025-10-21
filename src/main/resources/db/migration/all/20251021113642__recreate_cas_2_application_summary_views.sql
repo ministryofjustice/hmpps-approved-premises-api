@@ -1,41 +1,7 @@
-ALTER TABLE cas_2_application_assignments
-ADD CONSTRAINT cas_2_application_assignments_allocated_pom_user_id_cas_2_fkey
-        FOREIGN KEY (allocated_pom_cas_2_user_id) REFERENCES cas_2_users(id);
-ALTER TABLE cas_2_application_assignments DROP COLUMN allocated_pom_user_id CASCADE;
-
-ALTER TABLE cas_2_application_notes
-    ADD CONSTRAINT cas_2_application_notes_created_by_cas2_user_id_fkey
-        FOREIGN KEY (created_by_cas2_user_id) REFERENCES cas_2_users(id);
-ALTER TABLE cas_2_application_notes ALTER COLUMN created_by_cas2_user_id SET NOT NULL;
-ALTER TABLE cas_2_application_notes DROP COLUMN created_by_nomis_user_id;
-ALTER TABLE cas_2_application_notes DROP COLUMN created_by_external_user_id;
-
-ALTER TABLE cas_2_applications
-    ADD CONSTRAINT cas_2_applications_created_by_cas2_user_id_fkey
-        FOREIGN KEY (created_by_cas2_user_id) REFERENCES cas_2_users(id);
-ALTER TABLE cas_2_applications ALTER COLUMN created_by_cas2_user_id SET NOT NULL;
-ALTER TABLE cas_2_applications DROP COLUMN created_by_user_id;
-ALTER TABLE cas_2_assessments ALTER COLUMN service_origin SET NOT NULL;
-
-ALTER TABLE cas_2_assessments ALTER COLUMN service_origin SET NOT NULL;
-ALTER TABLE cas_2_assessments DROP COLUMN application_origin;
-
-ALTER TABLE cas_2_status_updates
-    ADD CONSTRAINT cas_2_status_updates_cas2_user_assessor_id_fkey
-        FOREIGN KEY (cas2_user_assessor_id) REFERENCES cas_2_users(id);
-ALTER TABLE cas_2_status_updates ALTER COLUMN cas2_user_assessor_id SET NOT NULL;
-ALTER TABLE cas_2_status_updates DROP COLUMN assessor_id;
-
-ALTER TABLE cas_2_users ALTER COLUMN service_origin SET NOT NULL;
-ALTER TABLE cas_2_users ALTER COLUMN updated_at SET NOT NULL;
-ALTER TABLE cas_2_users ALTER COLUMN is_active SET NOT NULL;
-ALTER TABLE cas_2_users ALTER COLUMN is_enabled SET NOT NULL;
-
 DROP VIEW IF EXISTS cas_2_application_live_summary;
 DROP VIEW IF EXISTS cas_2_application_summary;
 
--- Adding the most recent assignment data from the cas_2_application_assignments view
-CREATE OR REPLACE VIEW cas_2_application_summary AS
+CREATE VIEW cas_2_application_summary AS
 SELECT a.id,
        a.crn,
        a.noms_number,
@@ -71,9 +37,7 @@ FROM cas_2_applications a
          LEFT JOIN cas_2_users cu ON cu.id = a.created_by_cas2_user_id
          LEFT JOIN cas_2_users cu2 ON cu2.id = aa.allocated_pom_cas_2_user_id;
 
-
--- Adding the most recent assignment data from the cas_2_application_live_assignments view
-CREATE OR REPLACE VIEW cas_2_application_live_summary AS
+CREATE VIEW cas_2_application_live_summary AS
 SELECT a.id,
        a.crn,
        a.noms_number,
@@ -104,9 +68,3 @@ WHERE (a.conditional_release_date IS NULL OR a.conditional_release_date >= CURRE
       a.status_created_at > (CURRENT_DATE - '32 days'::interval)
    OR (a.status_id <> ALL
        (ARRAY ['004e2419-9614-4c1e-a207-a8418009f23d'::text, 'f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9'::text, '89458555-3219-44a2-9584-c4f715d6b565'::text]));
-
-
-
-
-
-
