@@ -235,7 +235,7 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
             .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.endDate")
             .jsonPath("$.invalid-params[0].errorType").isEqualTo("existingUpcomingBedspace")
             .jsonPath("$.invalid-params[0].entityId").isEqualTo(upcomingBedspace.id.toString())
-            .jsonPath("$.invalid-params[0].value").isEqualTo(upcomingBedspace.startDate?.plusDays(1).toString())
+            .jsonPath("$.invalid-params[0].value").isEqualTo(upcomingBedspace.startDate.plusDays(1).toString())
         }
       }
     }

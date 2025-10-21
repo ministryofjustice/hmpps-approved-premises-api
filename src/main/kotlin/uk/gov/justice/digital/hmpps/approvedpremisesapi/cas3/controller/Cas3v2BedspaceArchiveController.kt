@@ -68,4 +68,17 @@ class Cas3v2BedspaceArchiveController(
     val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(bedspace)
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace, bedspaceStatus))
   }
+
+  @PutMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/cancel-archive")
+  fun cancelScheduledArchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+    val bedspace = extractEntityFromCasResult(
+      cas3v2ArchiveService.cancelScheduledArchiveBedspace(premises, bedspaceId),
+    )
+    val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(bedspace)
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace, bedspaceStatus))
+  }
 }
