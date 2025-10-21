@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchivePremises
@@ -35,5 +36,18 @@ class Cas3v2ArchivePremisesController(
     )
 
     return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(archivedPremises))
+  }
+
+  @PutMapping("/premises/{premisesId}/cancel-archive")
+  fun cancelScheduledArchivePremises(
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<Cas3Premises> {
+    extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+
+    val updatedPremises = extractEntityFromCasResult(
+      archiveService.cancelScheduledArchivePremises(premisesId),
+    )
+
+    return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(updatedPremises))
   }
 }
