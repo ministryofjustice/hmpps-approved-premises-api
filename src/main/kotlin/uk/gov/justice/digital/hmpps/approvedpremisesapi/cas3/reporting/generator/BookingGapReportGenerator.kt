@@ -24,7 +24,7 @@ class BookingGapReportGenerator(private val workingDayService: WorkingDayService
     val bedspaceBookings = combineBedspacesWithBookings(bedspaces, bookings)
 
     // Step 4: Create unavailable periods
-    val unavailablePeriods = createUnavailablePeriods(bedspaceBookings, bedspaceVoids)
+    val unavailablePeriods = createUnavailablePeriods(bedspaceBookings, bedspaceVoids, properties.endDate)
 
     // Step 5: Find gaps for each bedspace
     val gaps = findGapsForAllBedspaces(bedspaces, unavailablePeriods, properties.startDate, properties.endDate)
@@ -57,6 +57,7 @@ class BookingGapReportGenerator(private val workingDayService: WorkingDayService
   private fun createUnavailablePeriods(
     bedspaceBookings: List<BedspaceBooking>,
     bedspaceVoids: List<BedspaceVoid>,
+    reportEndDate: LocalDate,
   ): List<UnavailablePeriod> {
     val bookingPeriods = bedspaceBookings
       .map { booking ->
@@ -68,7 +69,7 @@ class BookingGapReportGenerator(private val workingDayService: WorkingDayService
         )
       }
 
-    val voidPeriods = bedspaceVoids.map { void ->
+    val voidPeriods = bedspaceVoids.filter { it.startDate <= reportEndDate }.map { void ->
       UnavailablePeriod(
         bedId = void.bedId,
         startDate = void.startDate,
