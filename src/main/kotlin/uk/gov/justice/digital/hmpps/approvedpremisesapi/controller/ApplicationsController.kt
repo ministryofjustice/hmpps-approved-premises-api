@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
@@ -48,8 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealService
@@ -67,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as JPAApplicationSummary
 
 @RestController
 @RequestMapping("\${openapi.approvedPremises.base-path:}")
@@ -90,29 +86,6 @@ class ApplicationsController(
   private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
   private val offenderDetailService: OffenderDetailService,
 ) {
-
-  @Operation(
-    summary = "Lists all applications that the user has created",
-    description = """deprecated, for cas1 use /cas1/applications and for cas3 use /cas3/applications""",
-  )
-  @GetMapping("/applications")
-  fun applicationsGet(
-    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
-  ): ResponseEntity<List<ApplicationSummary>> {
-    val serviceName = xServiceName ?: ServiceName.approvedPremises
-
-    val user = userService.getUserForRequest()
-
-    val applications = applicationService.getAllApplicationsForUsername(user, serviceName)
-
-    return ResponseEntity.ok(
-      getPersonDetailAndTransformToSummary(
-        applications = applications,
-        laoStrategy = CheckUserAccess(user.deliusUsername),
-      ),
-    )
-  }
-
   @Operation(
     summary = "Gets a single application by its ID",
     description = """deprecated for cas3, use /cas3/applications/{applicationId}""",
@@ -459,22 +432,6 @@ class ApplicationsController(
     val personInfo = offenderDetailService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return applicationsTransformer.transformJpaToApi(application, personInfo)
-  }
-
-  private fun getPersonDetailAndTransformToSummary(
-    applications: List<JPAApplicationSummary>,
-    laoStrategy: LaoStrategy,
-  ): List<ApplicationSummary> {
-    val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
-
-    return applications.map {
-      val crn = it.getCrn()
-      applicationsTransformer.transformDomainToApiSummary(
-        it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
-      )
-    }
   }
 
   private fun getPersonDetailAndTransform(

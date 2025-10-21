@@ -200,7 +200,6 @@ class Cas1ApplicationsController(
 
   @Operation(
     summary = "Creates an application",
-    description = """deprecated for cas3, use /cas3/applications""",
   )
   @PostMapping("/applications")
   @Transactional

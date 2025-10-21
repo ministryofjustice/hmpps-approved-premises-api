@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewApplication
@@ -51,7 +50,7 @@ class Cas3ApplicationsController(
   fun getApplicationsForUser(): ResponseEntity<List<Cas3ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    val applications = applicationService.getAllApplicationsForUsername(user, ServiceName.temporaryAccommodation)
+    val applications = cas3ApplicationService.getApplicationSummariesForUser(user)
 
     return ResponseEntity.ok(
       getPersonDetailAndTransformToSummary(

@@ -2,12 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
@@ -47,17 +45,6 @@ class ApplicationService(
   private val lockableApplicationRepository: LockableApplicationRepository,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
-
-  fun getAllApplicationsForUsername(userEntity: UserEntity, serviceName: ServiceName): List<ApplicationSummary> = when (serviceName) {
-    ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(userEntity)
-    ServiceName.cas2 -> throw RuntimeException("CAS2 applications now require NomisUser")
-    ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 applications now require Cas2v2User")
-    ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
-  }
-
-  fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) = applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
-
-  private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
 
   fun getApplicationForUsername(
     applicationId: UUID,

@@ -7,9 +7,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderIds
@@ -28,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
@@ -47,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -73,52 +68,6 @@ class ApplicationServiceTest {
     mockUserAccessService,
     mockLockableApplicationRepository,
   )
-
-  @Test
-  fun `Get all applications where Probation Officer exists returns applications returned from repository`() {
-    val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
-    val deliusUsername = "SOMEPERSON"
-    val userEntity = UserEntityFactory()
-      .withId(userId)
-      .withDeliusUsername(deliusUsername)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-    val applicationSummaries = listOf(
-      object : ApprovedPremisesApplicationSummary {
-        override fun getIsWomensApplication(): Boolean? = true
-        override fun getIsPipeApplication(): Boolean? = true
-        override fun getIsEsapApplication() = true
-        override fun getIsEmergencyApplication() = true
-        override fun getArrivalDate(): Instant? = null
-        override fun getRiskRatings(): String? = null
-        override fun getId(): UUID = UUID.fromString("8ecbbd9c-3c66-4f0b-8f21-87f537676422")
-        override fun getCrn(): String = "CRN123"
-        override fun getCreatedByUserId(): UUID = UUID.fromString("60d0a768-1d05-4538-a6fd-78eb723dd310")
-        override fun getCreatedByUserName() = "Test User"
-        override fun getCreatedAt(): Instant = Instant.parse("2023-04-20T10:11:00+01:00")
-        override fun getSubmittedAt(): Instant? = null
-        override fun getTier(): String? = null
-        override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
-        override fun getIsWithdrawn(): Boolean = false
-        override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
-        override fun getHasRequestsForPlacement(): Boolean = false
-      },
-    )
-
-    every { mockUserRepository.findByDeliusUsername(deliusUsername) } returns userEntity
-    every { mockApplicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(userId) } returns applicationSummaries
-
-    assertThat(
-      applicationService.getAllApplicationsForUsername(
-        userEntity = userEntity,
-        ServiceName.approvedPremises,
-      ),
-    ).containsAll(applicationSummaries)
-  }
 
   @Test
   fun `getApplicationForUsername where application does not exist returns NotFound result`() {

@@ -21,15 +21,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -40,6 +44,7 @@ class Cas3ApplicationServiceTest {
   private val mockApplicationRepository = mockk<ApplicationRepository>()
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
+  private val mockUserRepository = mockk<UserRepository>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockUserService = mockk<UserService>()
@@ -74,6 +79,46 @@ class Cas3ApplicationServiceTest {
     .withProbationRegion(user.probationRegion)
     .withSubmittedAt(null)
     .produce()
+
+  @Nested
+  inner class GetApplicationSummaries {
+    @Test
+    fun `Get all applications where Probation Officer exists returns applications returned from repository`() {
+      val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
+      val deliusUsername = "SOMEPERSON"
+      val userEntity = UserEntityFactory()
+        .withId(userId)
+        .withDeliusUsername(deliusUsername)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val applicationSummaries = listOf(
+        object : TemporaryAccommodationApplicationSummary {
+          override fun getRiskRatings(): String? = null
+          override fun getId(): UUID = UUID.fromString("8ecbbd9c-3c66-4f0b-8f21-87f537676422")
+          override fun getCrn(): String = "CRN123"
+          override fun getCreatedByUserId(): UUID = UUID.fromString("60d0a768-1d05-4538-a6fd-78eb723dd310")
+          override fun getCreatedAt(): Instant = Instant.parse("2023-04-20T10:11:00+01:00")
+          override fun getSubmittedAt(): Instant? = null
+          override fun getLatestAssessmentSubmittedAt(): Instant? = null
+          override fun getLatestAssessmentDecision(): AssessmentDecision? = null
+          override fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean = false
+          override fun getHasBooking(): Boolean = false
+        },
+      )
+
+      every { mockUserRepository.findByDeliusUsername(deliusUsername) } returns userEntity
+      every { mockApplicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(userId) } returns applicationSummaries
+
+      assertThat(
+        cas3ApplicationService.getApplicationSummariesForUser(userEntity),
+      ).containsAll(applicationSummaries)
+    }
+  }
 
   @SuppressWarnings("UnusedPrivateProperty")
   @Nested
