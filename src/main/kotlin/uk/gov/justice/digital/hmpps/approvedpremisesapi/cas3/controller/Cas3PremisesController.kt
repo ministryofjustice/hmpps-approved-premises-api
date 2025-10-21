@@ -191,7 +191,7 @@ class Cas3PremisesController(
   @PutMapping("/premises/{premisesId}")
   fun updatePremises(@PathVariable premisesId: UUID, @RequestBody body: Cas3UpdatePremises): ResponseEntity<Cas3Premises> {
     val premises = getAndCheckUserCanViewPremises(premisesId)
-
+    val turnaroundWorkingDays = body.turnaroundWorkingDays ?: body.turnaroundWorkingDayCount!!
     return cas3PremisesService.updatePremises(
       premises = premises,
       addressLine1 = body.addressLine1,
@@ -203,7 +203,7 @@ class Cas3PremisesController(
       characteristicIds = body.characteristicIds,
       notes = body.notes,
       probationDeliveryUnitId = body.probationDeliveryUnitId,
-      turnaroundWorkingDays = body.turnaroundWorkingDayCount!!,
+      turnaroundWorkingDays = turnaroundWorkingDays,
       reference = body.reference,
     )
       .let { extractEntityFromCasResult(it) }
