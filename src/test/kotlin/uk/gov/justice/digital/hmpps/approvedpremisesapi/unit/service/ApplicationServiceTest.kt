@@ -98,6 +98,7 @@ class ApplicationServiceTest {
         override fun getId(): UUID = UUID.fromString("8ecbbd9c-3c66-4f0b-8f21-87f537676422")
         override fun getCrn(): String = "CRN123"
         override fun getCreatedByUserId(): UUID = UUID.fromString("60d0a768-1d05-4538-a6fd-78eb723dd310")
+        override fun getCreatedByUserName() = "Test User"
         override fun getCreatedAt(): Instant = Instant.parse("2023-04-20T10:11:00+01:00")
         override fun getSubmittedAt(): Instant? = null
         override fun getTier(): String? = null

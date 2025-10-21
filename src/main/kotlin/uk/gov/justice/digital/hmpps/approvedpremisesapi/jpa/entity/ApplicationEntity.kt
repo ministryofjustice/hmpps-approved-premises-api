@@ -56,6 +56,7 @@ SELECT
     CAST(a.id AS TEXT) as id,
     a.crn,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    u.name as createdByUserName,
     a.created_at as createdAt,
     a.submitted_at as submittedAt,
     apa.is_womens_application as isWomensApplication,
@@ -72,6 +73,7 @@ SELECT
     ) as hasRequestsForPlacement
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
+LEFT JOIN users u on u.id = a.created_by_user_id
 WHERE apa.is_inapplicable IS NOT TRUE 
 AND (
       :crnOrName IS NULL OR 
@@ -582,6 +584,7 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
   fun getIsWithdrawn(): Boolean
   fun getReleaseType(): String?
   fun getHasRequestsForPlacement(): Boolean
+  fun getCreatedByUserName(): String?
 }
 
 interface TemporaryAccommodationApplicationSummary : ApplicationSummary {
