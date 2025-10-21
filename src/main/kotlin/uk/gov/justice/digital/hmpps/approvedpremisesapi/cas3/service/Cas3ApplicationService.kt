@@ -35,6 +35,42 @@ class Cas3ApplicationService(
   private val probationRegionRepository: ProbationRegionRepository,
 ) {
   @SuppressWarnings("ReturnCount")
+  fun updateApplication(
+    applicationId: UUID,
+    data: String,
+  ): CasResult<TemporaryAccommodationApplicationEntity> {
+    lockableApplicationRepository.acquirePessimisticLock(applicationId)
+    val application = applicationRepository.findByIdOrNull(applicationId)
+      ?: return CasResult.NotFound("Application", applicationId.toString())
+
+    if (application !is TemporaryAccommodationApplicationEntity) {
+      return CasResult.GeneralValidationError("onlyCas3Supported")
+    }
+
+    val user = userService.getUserForRequest()
+
+    if (application.createdByUser != user) {
+      return CasResult.Unauthorised()
+    }
+
+    if (application.deletedAt != null) {
+      return CasResult.GeneralValidationError("This application has already been deleted")
+    }
+
+    if (application.submittedAt != null) {
+      return CasResult.GeneralValidationError("This application has already been submitted")
+    }
+
+    application.apply {
+      this.data = data
+    }
+
+    val savedApplication = applicationRepository.save(application)
+
+    return CasResult.Success(savedApplication)
+  }
+
+  @SuppressWarnings("ReturnCount")
   @Transactional
   fun submitApplication(
     applicationId: UUID,

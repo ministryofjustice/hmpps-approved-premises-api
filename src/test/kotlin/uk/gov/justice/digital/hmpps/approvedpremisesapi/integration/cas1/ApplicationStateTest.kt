@@ -439,7 +439,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
   private fun setApplicationToInapplicable() {
     webTestClient.put()
-      .uri("/applications/$applicationId")
+      .uri("/cas1/applications/$applicationId")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         UpdateApprovedPremisesApplication(

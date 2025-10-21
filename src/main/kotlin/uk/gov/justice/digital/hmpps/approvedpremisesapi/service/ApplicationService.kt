@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Inmate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -41,10 +40,8 @@ class ApplicationService(
   private val applicationRepository: ApplicationRepository,
   private val offenderService: OffenderService,
   private val offenderRisksService: OffenderRisksService,
-  private val userService: UserService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val userAccessService: UserAccessService,
-  private val lockableApplicationRepository: LockableApplicationRepository,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -216,41 +213,6 @@ class ApplicationService(
 
   fun updateApprovedPremisesApplicationStatus(applicationId: UUID, status: ApprovedPremisesApplicationStatus) {
     applicationRepository.updateStatus(applicationId, status)
-  }
-
-  fun updateTemporaryAccommodationApplication(
-    applicationId: UUID,
-    data: String,
-  ): CasResult<ApplicationEntity> {
-    lockableApplicationRepository.acquirePessimisticLock(applicationId)
-    val application = applicationRepository.findByIdOrNull(applicationId)
-      ?: return CasResult.NotFound("Application", applicationId.toString())
-
-    if (application !is TemporaryAccommodationApplicationEntity) {
-      return CasResult.GeneralValidationError("onlyCas3Supported")
-    }
-
-    val user = userService.getUserForRequest()
-
-    if (application.createdByUser != user) {
-      return CasResult.Unauthorised()
-    }
-
-    if (application.deletedAt != null) {
-      return CasResult.GeneralValidationError("This application has already been deleted")
-    }
-
-    if (application.submittedAt != null) {
-      return CasResult.GeneralValidationError("This application has already been submitted")
-    }
-
-    application.apply {
-      this.data = data
-    }
-
-    val savedApplication = applicationRepository.save(application)
-
-    return CasResult.Success(savedApplication)
   }
 
   fun getArrivalDate(arrivalDate: LocalDate?): OffsetDateTime? {

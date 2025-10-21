@@ -29,8 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -61,17 +59,14 @@ class ApplicationServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
-  private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
     mockApplicationRepository,
     mockOffenderService,
     mockOffenderRisksService,
-    mockUserService,
     mockOfflineApplicationRepository,
     mockUserAccessService,
-    mockLockableApplicationRepository,
   )
 
   @Test
@@ -678,174 +673,6 @@ class ApplicationServiceTest {
       assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
       assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
     }
-  }
-
-  @Test
-  fun `updateTemporaryAccommodationApplication returns NotFound when application doesn't exist`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
-
-    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
-    assertThat(
-      applicationService.updateTemporaryAccommodationApplication(
-        applicationId = applicationId,
-        data = "{}",
-      ) is CasResult.NotFound,
-    ).isTrue
-  }
-
-  @Test
-  fun `updateTemporaryAccommodationApplication returns Unauthorised when application doesn't belong to request user`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withId(applicationId)
-      .withYieldedCreatedByUser {
-        UserEntityFactory()
-          .withProbationRegion(probationRegion)
-          .produce()
-      }
-      .withProbationRegion(probationRegion)
-      .produce()
-
-    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
-    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-
-    assertThat(
-      applicationService.updateTemporaryAccommodationApplication(
-        applicationId = applicationId,
-        data = "{}",
-      ) is CasResult.Unauthorised,
-    ).isTrue
-  }
-
-  @Test
-  fun `updateTemporaryAccommodationApplication returns GeneralValidationError when application has already been submitted`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val user = UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withId(applicationId)
-      .withCreatedByUser(user)
-      .withSubmittedAt(OffsetDateTime.now())
-      .withProbationRegion(user.probationRegion)
-      .produce()
-
-    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-
-    val result = applicationService.updateTemporaryAccommodationApplication(
-      applicationId = applicationId,
-      data = "{}",
-    )
-
-    assertThat(result is CasResult.GeneralValidationError).isTrue
-    result as CasResult.GeneralValidationError
-
-    assertThat(result.message).isEqualTo("This application has already been submitted")
-  }
-
-  @Test
-  fun `updateTemporaryAccommodationApplication returns GeneralValidationError when application has already been deleted`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val user = UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withId(applicationId)
-      .withCreatedByUser(user)
-      .withDeletedAt(OffsetDateTime.now().minusDays(7))
-      .withProbationRegion(user.probationRegion)
-      .produce()
-
-    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-
-    val result = applicationService.updateTemporaryAccommodationApplication(
-      applicationId = applicationId,
-      data = "{}",
-    )
-
-    assertThat(result is CasResult.GeneralValidationError).isTrue
-    result as CasResult.GeneralValidationError
-
-    assertThat(result.message).isEqualTo("This application has already been deleted")
-  }
-
-  @Test
-  fun `updateTemporaryAccommodationApplication returns Success with updated Application`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val user = UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val updatedData = """
-      {
-        "aProperty": "value"
-      }
-    """
-
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withId(applicationId)
-      .withCreatedByUser(user)
-      .withProbationRegion(user.probationRegion)
-      .produce()
-
-    every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-
-    val result = applicationService.updateTemporaryAccommodationApplication(
-      applicationId = applicationId,
-      data = updatedData,
-    )
-
-    assertThat(result is CasResult.Success).isTrue
-    result as CasResult.Success
-
-    val approvedPremisesApplication = result.value as TemporaryAccommodationApplicationEntity
-
-    assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
   }
 
   @Test

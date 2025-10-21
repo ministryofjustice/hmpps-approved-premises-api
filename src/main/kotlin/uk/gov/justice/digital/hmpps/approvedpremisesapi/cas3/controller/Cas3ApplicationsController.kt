@@ -126,12 +126,12 @@ class Cas3ApplicationsController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = applicationService.updateTemporaryAccommodationApplication(
+    val applicationResult = cas3ApplicationService.updateApplication(
       applicationId = applicationId,
       data = serializedData,
     )
 
-    val updatedApplication = extractEntityFromCasResult(applicationResult) as TemporaryAccommodationApplicationEntity
+    val updatedApplication = extractEntityFromCasResult(applicationResult)
 
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user, false))
   }

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
@@ -8,7 +7,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
@@ -28,9 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -76,7 +71,6 @@ class ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
-  private val objectMapper: ObjectMapper,
   private val documentTransformer: DocumentTransformer,
   private val userService: UserService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
@@ -229,46 +223,6 @@ class ApplicationsController(
       "CAS2v2 now has its own " +
         "Cas2v2ApplicationsController",
     )
-  }
-
-  @Operation(summary = "Updates an application")
-  @PutMapping("/applications/{applicationId}")
-  @Transactional
-  fun applicationsApplicationIdPut(
-    @PathVariable applicationId: UUID,
-    @RequestBody body: UpdateApplication,
-  ): ResponseEntity<Application> {
-    val user = userService.getUserForRequest()
-
-    val serializedData = objectMapper.writeValueAsString(body.data)
-
-    val applicationResult = when (body) {
-      is UpdateApprovedPremisesApplication -> cas1ApplicationCreationService.updateApplication(
-        applicationId = applicationId,
-        Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
-          data = serializedData,
-          isWomensApplication = body.isWomensApplication,
-          isEmergencyApplication = body.isEmergencyApplication,
-          apType = body.apType,
-          releaseType = body.releaseType?.name,
-          arrivalDate = body.arrivalDate,
-          isInapplicable = body.isInapplicable,
-          noticeType = body.noticeType,
-        ),
-        userForRequest = user,
-      )
-
-      is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
-        applicationId = applicationId,
-        data = serializedData,
-      )
-
-      else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
-    }
-
-    val updatedApplication = extractEntityFromCasResult(applicationResult)
-
-    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
   }
 
   @Operation(summary = "Add a note on applications")
