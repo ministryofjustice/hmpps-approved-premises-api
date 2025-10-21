@@ -282,6 +282,66 @@ class Cas3v2ArchiveService(
     success(updatedBedspace)
   }
 
+  @Transactional
+  fun cancelScheduledArchivePremises(
+    premisesId: UUID,
+  ): CasResult<Cas3PremisesEntity> = validatedCasResult {
+    val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
+      ?: return CasResult.NotFound("Premises", premisesId.toString())
+
+    if (premises.endDate == null) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotScheduledToArchive"
+    }
+
+    if (premises.endDate!! <= LocalDate.now(clock)) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesAlreadyArchived"
+    }
+
+    val latestPremisesArchiveDomainEvent = domainEventRepository.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(
+      premisesId,
+      CAS3_PREMISES_ARCHIVED,
+    ) ?: return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotScheduledToArchive"
+
+    val premisesArchiveDomainEventData = objectMapper.readValue(latestPremisesArchiveDomainEvent.data, CAS3PremisesArchiveEvent::class.java)
+
+    if (premisesArchiveDomainEventData.eventDetails.endDate <= LocalDate.now(clock)) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesArchiveDateInThePast"
+    }
+
+    if (latestPremisesArchiveDomainEvent.cas3TransactionId == null) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesArchiveDomainEventIncorrect"
+    }
+
+    domainEventRepository.findByCas3TransactionIdAndType(latestPremisesArchiveDomainEvent.cas3TransactionId!!, CAS3_BEDSPACE_ARCHIVED).forEach { bedspaceDomainEvent ->
+      val bedspaceArchiveDomainEventData =
+        objectMapper.readValue(bedspaceDomainEvent.data, CAS3BedspaceArchiveEvent::class.java)
+
+      val bedspace = cas3BedspacesRepository.findByIdOrNull(bedspaceDomainEvent.cas3BedspaceId!!) ?: return CasResult.NotFound("Bedspace", bedspaceDomainEvent.cas3BedspaceId!!.toString())
+      cas3BedspacesRepository.save(
+        bedspace.copy(
+          endDate = bedspaceArchiveDomainEventData.eventDetails.currentEndDate,
+        ),
+      )
+
+      domainEventRepository.save(
+        bedspaceDomainEvent.copy(
+          cas3CancelledAt = OffsetDateTime.now(clock),
+        ),
+      )
+    }
+
+    domainEventRepository.save(
+      latestPremisesArchiveDomainEvent.copy(
+        cas3CancelledAt = OffsetDateTime.now(clock),
+      ),
+    )
+
+    premises.endDate = null
+    premises.status = Cas3PremisesStatus.online
+
+    return success(cas3PremisesRepository.save(premises))
+  }
+
   private fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate, transactionId: UUID): Cas3PremisesEntity {
     val currentStartDate = premises.startDate
     val currentEndDate = premises.endDate
