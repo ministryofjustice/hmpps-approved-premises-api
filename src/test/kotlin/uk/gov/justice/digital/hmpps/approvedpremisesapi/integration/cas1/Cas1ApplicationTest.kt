@@ -440,6 +440,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
           assertThat(responseBody.count()).isEqualTo(3)
           assertThat(responseBody[0].createdAt).isEqualTo(date3.toInstant())
+          assertThat(responseBody[0].createdByUserName).isEqualTo(userEntity.name)
           assertThat(responseBody[1].createdAt).isEqualTo(date2.toInstant())
           assertThat(responseBody[2].createdAt).isEqualTo(date1.toInstant())
         }

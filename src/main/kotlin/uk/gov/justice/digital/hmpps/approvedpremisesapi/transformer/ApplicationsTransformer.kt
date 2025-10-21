@@ -204,6 +204,7 @@ class ApplicationsTransformer(
       isWithdrawn = domain.getIsWithdrawn(),
       releaseType = domain.getReleaseType()?.let { ReleaseTypeOption.valueOf(it) },
       hasRequestsForPlacement = domain.getHasRequestsForPlacement(),
+      createdByUserName = domain.getCreatedByUserName(),
     )
   }
 
