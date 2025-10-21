@@ -64,9 +64,6 @@ data class Cas2UserEntity(
   var isEnabled: Boolean,
   var isActive: Boolean,
 
-  @UpdateTimestamp
-  private val updatedAt: OffsetDateTime? = null,
-
   val createdAt: OffsetDateTime = OffsetDateTime.now(),
 
   @OneToMany(mappedBy = "createdByCas2User")
