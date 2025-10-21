@@ -1308,6 +1308,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               assertThat(response.requestType).isEqualTo(cas1PlacementRequestDetail.requestType)
               assertThat(response.withdrawalReason).isEqualTo(cas1PlacementRequestDetail.withdrawalReason)
               assertThat(response.legacyBooking).isEqualTo(cas1PlacementRequestDetail.legacyBooking)
+              assertThat(response.booking).isEqualTo(cas1PlacementRequestDetail.booking)
               assertThat(response.requestedPlacementPeriod).isEqualTo(cas1PlacementRequestDetail.requestedPlacementPeriod)
               assertThat(response.authorisedPlacementPeriod).isEqualTo(cas1PlacementRequestDetail.authorisedPlacementPeriod)
               assertThat(response.expectedArrival).isEqualTo(cas1PlacementRequestDetail.expectedArrival)

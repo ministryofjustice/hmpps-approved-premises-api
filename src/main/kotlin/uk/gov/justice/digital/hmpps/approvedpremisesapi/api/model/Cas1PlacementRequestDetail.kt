@@ -28,6 +28,8 @@ data class Cas1PlacementRequestDetail(
   val isWithdrawn: Boolean,
   val application: Cas1Application,
   val spaceBookings: List<Cas1SpaceBookingSummary>,
+  @Deprecated("Use spaceBookings instead")
+  val booking: PlacementRequestBookingSummary? = null,
   val openChangeRequests: List<Cas1ChangeRequestSummary>,
   @Schema(description = "Notes from the assessor for the CRU Manager")
   val notes: String? = null,
