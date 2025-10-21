@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -910,8 +911,10 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
 
   @Nested
   inner class UpdatePremises {
-    @Test
-    fun `Update premises returns 200 OK with correct body`() {
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `Update premises returns 200 OK with correct body`(isNewTurnaroundWorkingDaysField: Boolean) {
       givenATemporaryAccommodationPremisesWithUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
       ) { user, jwt, premises ->
@@ -933,8 +936,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           characteristicIds = premises.characteristics.sortedBy { it.id }.map { characteristic ->
             characteristic.id
           },
-          turnaroundWorkingDayCount = 3,
-          turnaroundWorkingDays = null,
+          turnaroundWorkingDayCount = if (isNewTurnaroundWorkingDaysField) null else 3,
+          turnaroundWorkingDays = if (isNewTurnaroundWorkingDaysField) 3 else null,
         )
 
         webTestClient.put()
@@ -959,8 +962,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Update premises returns 200 OK with correct body when the reference hasn't been changed`() {
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `Update premises returns 200 OK with correct body when the reference hasn't been changed`(isNewTurnaroundWorkingDaysField: Boolean) {
       givenATemporaryAccommodationPremisesWithUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
       ) { user, jwt, premises ->
@@ -982,8 +986,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           characteristicIds = premises.characteristics.sortedBy { it.id }.map { characteristic ->
             characteristic.id
           },
-          turnaroundWorkingDayCount = 3,
-          turnaroundWorkingDays = null,
+          turnaroundWorkingDayCount = if (isNewTurnaroundWorkingDaysField) null else 3,
+          turnaroundWorkingDays = if (isNewTurnaroundWorkingDaysField) 3 else null,
         )
 
         webTestClient.put()
@@ -1008,8 +1012,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Update premises returns 403 Forbidden when user access is not allowed as they are out of region`() {
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `Update premises returns 403 Forbidden when user access is not allowed as they are out of region`(isNewTurnaroundWorkingDaysField: Boolean) {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         givenATemporaryAccommodationPremises { premises ->
           val updatedPremises = Cas3UpdatePremises(
@@ -1025,8 +1030,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
             characteristicIds = premises.characteristics.sortedBy { it.id }.map { characteristic ->
               characteristic.id
             },
-            turnaroundWorkingDayCount = premises.turnaroundWorkingDays,
-            turnaroundWorkingDays = null,
+            turnaroundWorkingDayCount = if (isNewTurnaroundWorkingDaysField) null else 3,
+            turnaroundWorkingDays = if (isNewTurnaroundWorkingDaysField) 3 else null,
           )
 
           webTestClient.put()
@@ -1042,8 +1047,9 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Update premises returns 404 when premises to update is not found`() {
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `Update premises returns 404 when premises to update is not found`(isNewTurnaroundWorkingDaysField: Boolean) {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
         val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
@@ -1060,8 +1066,8 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
           probationDeliveryUnitId = probationDeliveryUnit.id,
           localAuthorityAreaId = localAuthorityArea.id,
           characteristicIds = emptyList(),
-          turnaroundWorkingDayCount = 2,
-          turnaroundWorkingDays = null,
+          turnaroundWorkingDayCount = if (isNewTurnaroundWorkingDaysField) null else 3,
+          turnaroundWorkingDays = if (isNewTurnaroundWorkingDaysField) 3 else null,
         )
 
         val id = UUID.randomUUID()
