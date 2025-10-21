@@ -32,8 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -41,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -76,7 +75,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSu
 class ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
-  private val cas3ApplicationService: Cas3ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val documentTransformer: DocumentTransformer,
@@ -320,7 +318,6 @@ class ApplicationsController(
     @RequestBody submitApplication: SubmitApplication,
   ): ResponseEntity<Unit> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = deliusPrincipal.name
 
     val submitResult = when (submitApplication) {
       is SubmitApprovedPremisesApplication -> {
@@ -338,10 +335,7 @@ class ApplicationsController(
         )
       }
 
-      is SubmitTemporaryAccommodationApplication -> {
-        val cas3SubmitApplication = transformToCas3SubmitApplication(submitApplication)
-        cas3ApplicationService.submitApplication(applicationId, cas3SubmitApplication)
-      }
+      is SubmitTemporaryAccommodationApplication -> throw BadRequestProblem(errorDetail = "CAS3 not supported. Use POST /cas3/applications/{applicationId}/submission instead")
       else -> throw RuntimeException("Unsupported SubmitApplication type: ${submitApplication::class.qualifiedName}")
     }
 
@@ -492,25 +486,4 @@ class ApplicationsController(
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }
-
-  private fun transformToCas3SubmitApplication(submitApplication: SubmitTemporaryAccommodationApplication) = Cas3SubmitApplication(
-    arrivalDate = submitApplication.arrivalDate,
-    summaryData = submitApplication.summaryData,
-    isRegisteredSexOffender = submitApplication.isRegisteredSexOffender,
-    needsAccessibleProperty = submitApplication.needsAccessibleProperty,
-    hasHistoryOfArson = submitApplication.hasHistoryOfArson,
-    isDutyToReferSubmitted = submitApplication.isDutyToReferSubmitted,
-    dutyToReferSubmissionDate = submitApplication.dutyToReferSubmissionDate,
-    dutyToReferOutcome = submitApplication.dutyToReferOutcome,
-    isApplicationEligible = submitApplication.isApplicationEligible,
-    eligibilityReason = submitApplication.eligibilityReason,
-    dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName,
-    personReleaseDate = submitApplication.personReleaseDate,
-    probationDeliveryUnitId = submitApplication.probationDeliveryUnitId,
-    isHistoryOfSexualOffence = submitApplication.isHistoryOfSexualOffence,
-    isConcerningSexualBehaviour = submitApplication.isConcerningSexualBehaviour,
-    isConcerningArsonBehaviour = submitApplication.isConcerningArsonBehaviour,
-    prisonReleaseTypes = submitApplication.prisonReleaseTypes,
-    translatedDocument = submitApplication.translatedDocument,
-  )
 }

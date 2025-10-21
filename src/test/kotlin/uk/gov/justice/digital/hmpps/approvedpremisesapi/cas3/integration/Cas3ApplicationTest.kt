@@ -569,7 +569,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           }
 
           webTestClient.post()
-            .uri("/applications/$applicationId/submission")
+            .uri("/cas3/applications/$applicationId/submission")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .bodyValue(
@@ -1030,9 +1030,8 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
   @Nested
   inner class SubmitApplication {
 
-    @ParameterizedTest
-    @CsvSource("CAS", "CAS3")
-    fun `Submit Temporary Accommodation application returns 200`(apiEndpoint: String) {
+    @Test
+    fun `Submit an application returns 200`() {
       givenAUser { submittingUser, jwt ->
         givenAUser { _, _ ->
           givenAnOffender { offenderDetails, _ ->
@@ -1056,36 +1055,19 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            if (apiEndpoint == "CAS") {
-              val submitApplication = SubmitTemporaryAccommodationApplication(
-                translatedDocument = {},
-                type = "CAS3",
-                arrivalDate = LocalDate.now(),
-                summaryData = object {
-                  val num = 50
-                  val text = "Hello world!"
-                },
-                probationDeliveryUnitId = probationDeliveryUnit.id,
-              )
+            val cas3SubmitApplication = Cas3SubmitApplication(
+              translatedDocument = {},
+              arrivalDate = LocalDate.now(),
+              summaryData = object {
+                val num = 50
+                val text = "Hello world!"
+              },
+              probationDeliveryUnitId = probationDeliveryUnit.id,
+            )
 
-              callCasApiAndAssertApiResponse(jwt, applicationId, submitApplication)
-                .expectStatus()
-                .isOk
-            } else {
-              val cas3SubmitApplication = Cas3SubmitApplication(
-                translatedDocument = {},
-                arrivalDate = LocalDate.now(),
-                summaryData = object {
-                  val num = 50
-                  val text = "Hello world!"
-                },
-                probationDeliveryUnitId = probationDeliveryUnit.id,
-              )
-
-              callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
-                .expectStatus()
-                .isOk
-            }
+            callApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+              .expectStatus()
+              .isOk
 
             val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
             val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
@@ -1097,9 +1079,8 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @CsvSource("CAS", "CAS3")
-    fun `Submit Temporary Accommodation application returns 200 with optional elements in the request`(apiEndpoint: String) {
+    @Test
+    fun `Submit an application returns 200 with optional elements in the request`() {
       givenAUser { submittingUser, jwt ->
         givenAUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
@@ -1133,54 +1114,28 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            if (apiEndpoint == "CAS") {
-              val submitApplication = SubmitTemporaryAccommodationApplication(
-                translatedDocument = {},
-                type = "CAS3",
-                arrivalDate = LocalDate.now(),
-                summaryData = object {
-                  val num = 50
-                  val text = "Hello world!"
-                },
-                personReleaseDate = LocalDate.now(),
-                isHistoryOfSexualOffence = true,
-                isConcerningSexualBehaviour = true,
-                isConcerningArsonBehaviour = true,
-                dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
-                prisonReleaseTypes = listOf(
-                  "Parole",
-                  "CRD licence",
-                ),
-                probationDeliveryUnitId = pdu.id,
-              )
+            val cas3SubmitApplication = Cas3SubmitApplication(
+              translatedDocument = {},
+              arrivalDate = LocalDate.now(),
+              summaryData = object {
+                val num = 50
+                val text = "Hello world!"
+              },
+              personReleaseDate = LocalDate.now(),
+              isHistoryOfSexualOffence = true,
+              isConcerningSexualBehaviour = true,
+              isConcerningArsonBehaviour = true,
+              dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
+              prisonReleaseTypes = listOf(
+                "Parole",
+                "CRD licence",
+              ),
+              probationDeliveryUnitId = pdu.id,
+            )
 
-              callCasApiAndAssertApiResponse(jwt, applicationId, submitApplication)
-                .expectStatus()
-                .isOk
-            } else {
-              val cas3SubmitApplication = Cas3SubmitApplication(
-                translatedDocument = {},
-                arrivalDate = LocalDate.now(),
-                summaryData = object {
-                  val num = 50
-                  val text = "Hello world!"
-                },
-                personReleaseDate = LocalDate.now(),
-                isHistoryOfSexualOffence = true,
-                isConcerningSexualBehaviour = true,
-                isConcerningArsonBehaviour = true,
-                dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
-                prisonReleaseTypes = listOf(
-                  "Parole",
-                  "CRD licence",
-                ),
-                probationDeliveryUnitId = pdu.id,
-              )
-
-              callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
-                .expectStatus()
-                .isOk
-            }
+            callApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+              .expectStatus()
+              .isOk
 
             val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
             val persistedAssessment =
@@ -1198,7 +1153,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Submit Temporary Accommodation application returns 400 when the application was deleted`() {
+    fun `Submit an application returns 400 when the application was deleted`() {
       givenAUser { submittingUser, jwt ->
         givenAUser { _, _ ->
           givenAnOffender { offenderDetails, _ ->
@@ -1223,24 +1178,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            val submitApplication = SubmitTemporaryAccommodationApplication(
-              translatedDocument = {},
-              type = "CAS3",
-              arrivalDate = LocalDate.now(),
-              summaryData = object {
-                val num = 50
-                val text = "Hello world!"
-              },
-              probationDeliveryUnitId = probationDeliveryUnit.id,
-            )
-
-            callCasApiAndAssertApiResponse(jwt, applicationId, submitApplication)
-              .expectStatus()
-              .isBadRequest
-              .expectBody()
-              .jsonPath("$.status").isEqualTo("400")
-              .jsonPath("$.detail").isEqualTo("This application has already been deleted")
-
             val cas3SubmitApplication = Cas3SubmitApplication(
               translatedDocument = {},
               arrivalDate = LocalDate.now(),
@@ -1251,7 +1188,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               probationDeliveryUnitId = probationDeliveryUnit.id,
             )
 
-            callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+            callApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
               .expectStatus()
               .isBadRequest
               .expectBody()
@@ -1263,7 +1200,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Submit Temporary Accommodation application with out of region fields returns 200 and persists out of region data`() {
+    fun `Submit an application with out of region fields returns 200 and persists out of region data`() {
       givenAUser { submittingUser, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val applicationId = UUID.randomUUID()
@@ -1306,7 +1243,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             outOfRegionPduId = outOfRegionProbationDeliveryUnit.id,
           )
 
-          callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+          callApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
             .expectStatus()
             .isOk
 
@@ -1330,7 +1267,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Submit Temporary Accommodation application without out of region fields returns 200 and persists null out of region data`() {
+    fun `Submit an application without out of region fields returns 200 and persists null out of region data`() {
       givenAUser { submittingUser, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val applicationId = UUID.randomUUID()
@@ -1364,7 +1301,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             probationDeliveryUnitId = probationDeliveryUnit.id,
           )
 
-          callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+          callApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
             .expectStatus()
             .isOk
 
@@ -1383,14 +1320,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    private fun callCasApiAndAssertApiResponse(jwt: String, applicationId: UUID, submitApplication: SubmitTemporaryAccommodationApplication) = webTestClient.post()
-      .uri("/applications/$applicationId/submission")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-      .bodyValue(submitApplication)
-      .exchange()
-
-    private fun callCas3ApiAndAssertApiResponse(jwt: String, applicationId: UUID, submitApplication: Cas3SubmitApplication) = webTestClient.post()
+    private fun callApiAndAssertApiResponse(jwt: String, applicationId: UUID, submitApplication: Cas3SubmitApplication) = webTestClient.post()
       .uri("/cas3/applications/$applicationId/submission")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
