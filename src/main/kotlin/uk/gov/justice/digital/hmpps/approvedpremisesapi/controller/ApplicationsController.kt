@@ -24,9 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
@@ -38,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -60,7 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.WithdrawableTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
@@ -283,39 +278,6 @@ class ApplicationsController(
   ): ResponseEntity<List<RequestForPlacement>> = ResponseEntity.ok(
     extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
   )
-
-  @Operation(summary = "Submits an Application")
-  @PostMapping("/applications/{applicationId}/submission")
-  fun applicationsApplicationIdSubmissionPost(
-    @PathVariable applicationId: UUID,
-    @RequestBody submitApplication: SubmitApplication,
-  ): ResponseEntity<Unit> {
-    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
-
-    val submitResult = when (submitApplication) {
-      is SubmitApprovedPremisesApplication -> {
-        var apAreaId = submitApplication.apAreaId
-
-        if (apAreaId == null) {
-          val user = userService.getUserForRequest()
-          apAreaId = user.apArea!!.id
-        }
-        cas1ApplicationCreationService.submitApplication(
-          applicationId,
-          submitApplication,
-          userService.getUserForRequest(),
-          apAreaId,
-        )
-      }
-
-      is SubmitTemporaryAccommodationApplication -> throw BadRequestProblem(errorDetail = "CAS3 not supported. Use POST /cas3/applications/{applicationId}/submission instead")
-      else -> throw RuntimeException("Unsupported SubmitApplication type: ${submitApplication::class.qualifiedName}")
-    }
-
-    ensureEntityFromCasResultIsSuccess(submitResult)
-
-    return ResponseEntity(HttpStatus.OK)
-  }
 
   @Operation(summary = "Returns meta info on documents at the person level or at the Conviction level for the index Offence of this application.")
   @GetMapping("/applications/{applicationId}/documents")
