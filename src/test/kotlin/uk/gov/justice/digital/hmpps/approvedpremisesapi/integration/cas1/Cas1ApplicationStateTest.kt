@@ -51,7 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import java.time.LocalDate
 import java.util.UUID
 
-class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
+class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var realApplicationRepository: ApplicationRepository
 
@@ -439,7 +439,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
   private fun setApplicationToInapplicable() {
     webTestClient.put()
-      .uri("/applications/$applicationId")
+      .uri("/cas1/applications/$applicationId")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         UpdateApprovedPremisesApplication(
@@ -457,7 +457,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
   private fun withdrawApplication() {
     webTestClient.post()
-      .uri("/applications/$applicationId/withdrawal")
+      .uri("/cas1/applications/$applicationId/withdrawal")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewWithdrawal(
@@ -481,7 +481,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     realApplicationRepository.save(application)
 
     webTestClient.post()
-      .uri("/applications/$applicationId/submission")
+      .uri("/cas1/applications/$applicationId/submission")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         SubmitApprovedPremisesApplication(

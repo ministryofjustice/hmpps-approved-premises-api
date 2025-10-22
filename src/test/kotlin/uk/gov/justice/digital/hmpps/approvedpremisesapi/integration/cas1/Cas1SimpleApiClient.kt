@@ -42,7 +42,7 @@ class Cas1SimpleApiClient {
     body: SubmitApprovedPremisesApplication,
   ) {
     integrationTestBase.webTestClient.post()
-      .uri("/applications/$id/submission")
+      .uri("/cas1/applications/$id/submission")
       .header("Authorization", "Bearer $applicantJwt")
       .bodyValue(body)
       .exchange()

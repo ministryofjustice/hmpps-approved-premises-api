@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.transaction.Transactional
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -21,16 +20,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -43,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Request
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
@@ -221,37 +215,6 @@ class ApplicationsController(
   ): ResponseEntity<List<RequestForPlacement>> = ResponseEntity.ok(
     extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
   )
-
-  @Operation(summary = "Submits an Application")
-  @PostMapping("/applications/{applicationId}/submission")
-  fun applicationsApplicationIdSubmissionPost(
-    @PathVariable applicationId: UUID,
-    @RequestBody submitApplication: SubmitApplication,
-  ): ResponseEntity<Unit> {
-    val submitResult = when (submitApplication) {
-      is SubmitApprovedPremisesApplication -> {
-        var apAreaId = submitApplication.apAreaId
-
-        if (apAreaId == null) {
-          val user = userService.getUserForRequest()
-          apAreaId = user.apArea!!.id
-        }
-        cas1ApplicationCreationService.submitApplication(
-          applicationId,
-          submitApplication,
-          userService.getUserForRequest(),
-          apAreaId,
-        )
-      }
-
-      is SubmitTemporaryAccommodationApplication -> throw BadRequestProblem(errorDetail = "CAS3 not supported. Use POST /cas3/applications/{applicationId}/submission instead")
-      else -> throw RuntimeException("Unsupported SubmitApplication type: ${submitApplication::class.qualifiedName}")
-    }
-
-    ensureEntityFromCasResultIsSuccess(submitResult)
-
-    return ResponseEntity(HttpStatus.OK)
-  }
 
   private fun getPersonDetailAndTransform(
     application: ApplicationEntity,
