@@ -305,6 +305,9 @@ interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremises
 }
 
 @Repository
+interface TemporaryAccommodationApplicationRepository : JpaRepository<TemporaryAccommodationApplicationEntity, UUID>
+
+@Repository
 interface LockableApplicationRepository : JpaRepository<LockableApplicationEntity, UUID> {
   @Query("SELECT a FROM LockableApplicationEntity a WHERE a.id = :id")
   @Lock(LockModeType.PESSIMISTIC_WRITE)

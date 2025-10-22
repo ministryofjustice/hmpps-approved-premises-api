@@ -64,9 +64,9 @@ class Cas3ApplicationsController(
   fun getApplicationById(@PathVariable applicationId: UUID): ResponseEntity<Cas3Application> {
     val user = userService.getUserForRequest()
 
-    val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)
+    val applicationResult = cas3ApplicationService.getApplicationForUsername(applicationId, user.deliusUsername)
 
-    val application = extractEntityFromCasResult(applicationResult) as TemporaryAccommodationApplicationEntity
+    val application = extractEntityFromCasResult(applicationResult)
     return ResponseEntity.ok(
       getPersonDetailAndTransform(
         application = application,

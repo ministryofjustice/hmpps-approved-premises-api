@@ -1,6 +1,6 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -71,7 +72,7 @@ import java.util.UUID
  * Note: The general functionality of each entities' withdrawal endpoint is tested in the corresponding API Test Class
  */
 @SuppressWarnings("LongParameterList")
-class WithdrawalTest : IntegrationTestBase() {
+class Cas1WithdrawalTest : IntegrationTestBase() {
 
   @Nested
   inner class GetWithdrawables {
@@ -88,7 +89,8 @@ class WithdrawalTest : IntegrationTestBase() {
       givenAUser { applicationCreator, _ ->
         givenAUser { _, jwt ->
           givenAnOffender { offenderDetails, _ ->
-            val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
+            val application =
+              produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
 
             val expected = Withdrawables(
               notes = emptyList(),
@@ -96,7 +98,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
 
             webTestClient.get()
-              .uri("/applications/${application.id}/withdrawablesWithNotes")
+              .uri("/cas1/applications/${application.id}/withdrawablesWithNotes")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
@@ -128,7 +130,7 @@ class WithdrawalTest : IntegrationTestBase() {
           )
 
           webTestClient.get()
-            .uri("/applications/${application.id}/withdrawablesWithNotes")
+            .uri("/cas1/applications/${application.id}/withdrawablesWithNotes")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -184,7 +186,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
 
             webTestClient.get()
-              .uri("/applications/${application.id}/withdrawablesWithNotes")
+              .uri("/cas1/applications/${application.id}/withdrawablesWithNotes")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
@@ -272,7 +274,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
 
             webTestClient.get()
-              .uri("/applications/${application.id}/withdrawablesWithNotes")
+              .uri("/cas1/applications/${application.id}/withdrawablesWithNotes")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
@@ -353,7 +355,7 @@ class WithdrawalTest : IntegrationTestBase() {
               )
 
               webTestClient.get()
-                .uri("/applications/${application.id}/withdrawablesWithNotes")
+                .uri("/cas1/applications/${application.id}/withdrawablesWithNotes")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -427,7 +429,7 @@ class WithdrawalTest : IntegrationTestBase() {
               )
 
               webTestClient.get()
-                .uri("/applications/${application.id}/withdrawablesWithNotes")
+                .uri("/cas1/applications/${application.id}/withdrawablesWithNotes")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -500,7 +502,7 @@ class WithdrawalTest : IntegrationTestBase() {
               )
 
               webTestClient.get()
-                .uri("/applications/${application.id}/withdrawablesWithNotes")
+                .uri("/cas1/applications/${application.id}/withdrawablesWithNotes")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()
@@ -714,7 +716,7 @@ class WithdrawalTest : IntegrationTestBase() {
           )
 
           webTestClient.post()
-            .uri("/applications/${application.id}/withdrawal")
+            .uri("/cas1/applications/${application.id}/withdrawal")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewWithdrawal(
@@ -751,7 +753,8 @@ class WithdrawalTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
             val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-            val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2), createdBy = placementAppCreator)
+            val placementApplication1 =
+              createPlacementApplication(application, DateSpan(now(), duration = 2), createdBy = placementAppCreator)
             val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
             val booking1PendingArrival = givenACas1SpaceBooking(
               crn = application.crn,
@@ -836,7 +839,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           val placementRequest = createPlacementRequest(application)
 
-          assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
+          Assertions.assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
 
           withdrawPlacementRequest(
             placementRequest,
@@ -893,7 +896,7 @@ class WithdrawalTest : IntegrationTestBase() {
             nonArrivalConfirmedAt = null,
           )
 
-          assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
+          Assertions.assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
 
           withdrawPlacementRequest(
             placementRequest,
@@ -954,7 +957,7 @@ class WithdrawalTest : IntegrationTestBase() {
             placementRequest = placementRequest,
           )
 
-          assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
+          Assertions.assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
 
           withdrawPlacementRequest(
             placementRequest,
@@ -1024,7 +1027,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
   private fun withdrawApplication(application: ApprovedPremisesApplicationEntity, jwt: String) {
     webTestClient.post()
-      .uri("/applications/${application.id}/withdrawal")
+      .uri("/cas1/applications/${application.id}/withdrawal")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewWithdrawal(
@@ -1066,12 +1069,12 @@ class WithdrawalTest : IntegrationTestBase() {
 
   private fun assertAssessmentNotWithdrawn(assessment: AssessmentEntity) {
     val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-    assertThat(updatedAssessment.isWithdrawn).isFalse
+    Assertions.assertThat(updatedAssessment.isWithdrawn).isFalse
   }
 
   private fun assertAssessmentWithdrawn(assessment: AssessmentEntity) {
     val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-    assertThat(updatedAssessment.isWithdrawn).isTrue
+    Assertions.assertThat(updatedAssessment.isWithdrawn).isTrue
   }
 
   private fun assertPlacementApplicationWithdrawn(
@@ -1079,54 +1082,60 @@ class WithdrawalTest : IntegrationTestBase() {
     reason: PlacementApplicationWithdrawalReason,
   ) {
     val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
-    assertThat(updatedPlacementApplication.withdrawalReason).isEqualTo(reason)
-    assertThat(updatedPlacementApplication.isWithdrawn).isTrue()
+    Assertions.assertThat(updatedPlacementApplication.withdrawalReason).isEqualTo(reason)
+    Assertions.assertThat(updatedPlacementApplication.isWithdrawn).isTrue()
   }
 
   private fun assertPlacementApplicationNotWithdrawn(placementApplication: PlacementApplicationEntity) {
     val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
-    assertThat(updatedPlacementApplication.isWithdrawn).isFalse()
-    assertThat(updatedPlacementApplication.withdrawalReason).isNull()
+    Assertions.assertThat(updatedPlacementApplication.isWithdrawn).isFalse()
+    Assertions.assertThat(updatedPlacementApplication.withdrawalReason).isNull()
   }
 
-  private fun assertApplicationStatus(application: ApprovedPremisesApplicationEntity, expectedStatus: ApprovedPremisesApplicationStatus) {
+  private fun assertApplicationStatus(
+    application: ApprovedPremisesApplicationEntity,
+    expectedStatus: ApprovedPremisesApplicationStatus,
+  ) {
     val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
-    assertThat(updatedApplication.status).isEqualTo(expectedStatus)
+    Assertions.assertThat(updatedApplication.status).isEqualTo(expectedStatus)
   }
 
   private fun assertApplicationNotWithdrawn(application: ApprovedPremisesApplicationEntity) {
     val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
-    assertThat(updatedApplication.isWithdrawn).isFalse
-    assertThat(updatedApplication.status).isNotEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
+    Assertions.assertThat(updatedApplication.isWithdrawn).isFalse
+    Assertions.assertThat(updatedApplication.status).isNotEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
   }
 
   private fun assertApplicationWithdrawn(application: ApprovedPremisesApplicationEntity) {
     val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
-    assertThat(updatedApplication.isWithdrawn).isTrue
-    assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
+    Assertions.assertThat(updatedApplication.isWithdrawn).isTrue
+    Assertions.assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.WITHDRAWN)
   }
 
-  private fun assertPlacementRequestWithdrawn(placementRequest: PlacementRequestEntity, reason: PlacementRequestWithdrawalReason) {
+  private fun assertPlacementRequestWithdrawn(
+    placementRequest: PlacementRequestEntity,
+    reason: PlacementRequestWithdrawalReason,
+  ) {
     val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-    assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(true)
-    assertThat(updatedPlacementRequest.withdrawalReason).isEqualTo(reason)
+    Assertions.assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(true)
+    Assertions.assertThat(updatedPlacementRequest.withdrawalReason).isEqualTo(reason)
   }
 
   private fun assertPlacementRequestNotWithdrawn(placementRequest: PlacementRequestEntity) {
     val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-    assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(false)
+    Assertions.assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(false)
   }
 
   private fun assertSpaceBookingWithdrawn(spaceBooking: Cas1SpaceBookingEntity, cancellationReason: String) {
     val updatedBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
-    assertThat(updatedBooking.cancellationOccurredAt).isNotNull()
-    assertThat(updatedBooking.cancellationReason!!.name).isEqualTo(cancellationReason)
+    Assertions.assertThat(updatedBooking.cancellationOccurredAt).isNotNull()
+    Assertions.assertThat(updatedBooking.cancellationReason!!.name).isEqualTo(cancellationReason)
   }
 
   private fun assertSpaceBookingNotWithdrawn(spaceBooking: Cas1SpaceBookingEntity) {
     val updatedBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
-    assertThat(updatedBooking.cancellationOccurredAt).isNull()
-    assertThat(updatedBooking.cancellationReason).isNull()
+    Assertions.assertThat(updatedBooking.cancellationOccurredAt).isNull()
+    Assertions.assertThat(updatedBooking.cancellationReason).isNull()
   }
 
   @SuppressWarnings("LongParameterList")

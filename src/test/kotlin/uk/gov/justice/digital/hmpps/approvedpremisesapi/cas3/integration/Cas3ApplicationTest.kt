@@ -202,7 +202,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             userEntity.deliusUsername,
           )
 
-          callCasApiAndAssertApiResponse(jwt, applicationEntity)
           callCas3ApiAndAssertApiResponse(jwt, applicationEntity)
         }
       }
@@ -237,7 +236,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               userEntity.deliusUsername,
             )
 
-            callCasApiAndAssertApiResponse(jwt, applicationEntity)
             callCas3ApiAndAssertApiResponse(jwt, applicationEntity)
           }
         }
@@ -274,15 +272,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             ),
             createdByUser.deliusUsername,
           )
-
-          val casApiResponseBody = callCasApi(jwt, applicationEntity.id)
-            .expectStatus()
-            .isOk
-            .expectBody(TemporaryAccommodationApplication::class.java)
-            .returnResult()
-            .responseBody
-
-          assertThat(casApiResponseBody?.person).isInstanceOf(FullPerson::class.java)
 
           val cas3ApiResponseBody = callCas3Api(jwt, applicationEntity.id)
             .expectStatus()
@@ -322,15 +311,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               """,
               )
             }
-
-            val casApiResult = callCasApi(otherUserJwt, applicationEntity.id)
-              .expectStatus()
-              .isOk
-              .expectBody(TemporaryAccommodationApplication::class.java)
-              .returnResult()
-              .responseBody
-
-            assertThat(casApiResult!!.person.type).isEqualTo(PersonType.restrictedPerson)
 
             val cas3ApiResult = callCas3Api(otherUserJwt, applicationEntity.id)
               .expectStatus()
@@ -374,10 +354,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               userEntity.deliusUsername,
             )
 
-            callCasApi(jwt, applicationEntity.id)
-              .expectStatus()
-              .isForbidden
-
             callCas3Api(jwt, applicationEntity.id)
               .expectStatus()
               .isForbidden
@@ -415,10 +391,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               userEntity.deliusUsername,
             )
 
-            callCasApi(jwt, applicationEntity.id)
-              .expectStatus()
-              .isForbidden
-
             callCas3Api(jwt, applicationEntity.id)
               .expectStatus()
               .isForbidden
@@ -454,10 +426,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             ),
             userEntity.deliusUsername,
           )
-
-          callCasApi(jwt, applicationEntity.id)
-            .expectStatus()
-            .isNotFound
 
           callCas3Api(jwt, applicationEntity.id)
             .expectStatus()
@@ -506,15 +474,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
 
-          val casApiResult = callCasApi(jwt, applicationId)
-            .expectStatus()
-            .isOk
-            .expectBody(TemporaryAccommodationApplication::class.java)
-            .returnResult()
-            .responseBody
-
-          assertThat(casApiResult!!.assessmentId).isNotNull()
-
           val cas3ApiResult = callCas3Api(jwt, applicationId)
             .expectStatus()
             .isOk
@@ -557,15 +516,6 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             withCreatedAt(OffsetDateTime.now().minusDays(20))
           }
 
-          val casApiResult = callCasApi(jwt, applicationId)
-            .expectStatus()
-            .isOk
-            .expectBody(TemporaryAccommodationApplication::class.java)
-            .returnResult()
-            .responseBody
-
-          assertThat(casApiResult!!.assessmentId).isNotNull()
-
           val cas3ApiResult = callCas3Api(jwt, applicationId)
             .expectStatus()
             .isOk
@@ -579,37 +529,10 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    private fun callCasApi(jwt: String, applicationId: UUID) = webTestClient.get()
-      .uri("/applications/$applicationId")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-      .exchange()
-
     private fun callCas3Api(jwt: String, applicationId: UUID) = webTestClient.get()
       .uri("/cas3/applications/$applicationId")
       .header("Authorization", "Bearer $jwt")
       .exchange()
-
-    private fun callCasApiAndAssertApiResponse(
-      jwt: String,
-      applicationEntity: TemporaryAccommodationApplicationEntity,
-    ) {
-      val responseBody = callCasApi(jwt, applicationEntity.id)
-        .expectStatus()
-        .isOk
-        .expectBody(TemporaryAccommodationApplication::class.java)
-        .returnResult()
-        .responseBody
-
-      assertThat(responseBody).matches {
-        applicationEntity.id == it.id &&
-          applicationEntity.crn == it.person.crn &&
-          applicationEntity.createdAt.toInstant() == it.createdAt &&
-          applicationEntity.createdByUser.id == it.createdByUserId &&
-          applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-          serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
-      }
-    }
 
     private fun callCas3ApiAndAssertApiResponse(
       jwt: String,

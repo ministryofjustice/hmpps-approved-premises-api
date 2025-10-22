@@ -11,12 +11,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -28,13 +31,14 @@ class Cas1ApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val applicationRepository: ApplicationRepository,
   private val offlineApplicationRepository: OfflineApplicationRepository,
+  private val userRepository: UserRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
   private val cas1AssessmentService: Cas1AssessmentService,
   private val cas1UserAccessService: Cas1UserAccessService,
   private val userAccessService: UserAccessService,
-  private val userRepository: UserRepository,
+  private val offenderService: OffenderService,
 ) {
   fun getApplication(applicationId: UUID) = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
 
@@ -55,6 +59,25 @@ class Cas1ApplicationService(
     } else {
       CasResult.Unauthorised()
     }
+  }
+
+  fun getOfflineApplicationForUsername(
+    applicationId: UUID,
+    deliusUsername: String,
+  ): CasResult<OfflineApplicationEntity> {
+    val applicationEntity = offlineApplicationRepository.findByIdOrNull(applicationId)
+      ?: return CasResult.NotFound("Application", applicationId.toString())
+
+    val userEntity = userRepository.findByDeliusUsername(deliusUsername)
+      ?: throw RuntimeException("Could not get user")
+
+    if (userEntity.hasPermission(UserPermission.CAS1_OFFLINE_APPLICATION_VIEW) &&
+      offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
+    ) {
+      return CasResult.Success(applicationEntity)
+    }
+
+    return CasResult.Unauthorised()
   }
 
   fun getSubmittedApplicationsForCrn(crn: String, limit: Int) = approvedPremisesApplicationRepository.findByCrnAndSubmittedAtIsNotNull(crn, Limit.of(limit))

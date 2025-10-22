@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import io.mockk.every
@@ -9,19 +7,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
@@ -29,16 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -65,401 +52,6 @@ class ApplicationTest : IntegrationTestBase() {
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationTeamCodeRepository)
     clearMocks(realApplicationRepository)
-  }
-
-  @Nested
-  inner class Cas1GetApplication {
-
-    @Test
-    fun `Get single non LAO application returns 200 with correct body`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-
-          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(userEntity)
-            withData("""{"thingId":123}""")
-            withReleaseType(ReleaseTypeOption.inCommunity.name)
-            withSentenceType(SentenceTypeOption.bailPlacement.name)
-          }
-
-          val rawResponseBody = webTestClient.get()
-            .uri("/applications/${applicationEntity.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-          assertThat(responseBody.id).isEqualTo(applicationEntity.id)
-          assertThat(responseBody.person.crn).isEqualTo(applicationEntity.crn)
-          assertThat(responseBody.createdAt).isEqualTo(applicationEntity.createdAt.toInstant())
-          assertThat(responseBody.createdByUserId).isEqualTo(applicationEntity.createdByUser.id)
-          assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
-          assertThat(responseBody.releaseType).isEqualTo(ReleaseTypeOption.inCommunity)
-          assertThat(responseBody.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
-          assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))
-        }
-      }
-    }
-
-    @Test
-    fun `Get single LAO application for creator, LAO Access, no LAO Qualification returns 200`() {
-      givenAUser { applicationCreator, jwt ->
-        givenAnOffender(
-          offenderDetailsConfigBlock = {
-            withCurrentRestriction(true)
-          },
-        ) { offenderDetails, _ ->
-          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(applicationCreator)
-            withData(
-              """
-          {
-             "thingId": 123
-          }
-          """,
-            )
-          }
-
-          apDeliusContextMockUserAccess(
-            caseAccess = CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .withUserExcluded(false)
-              .withUserRestricted(false)
-              .produce(),
-            username = applicationCreator.deliusUsername,
-          )
-
-          val rawResponseBody = webTestClient.get()
-            .uri("/applications/${applicationEntity.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-          assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
-        }
-      }
-    }
-
-    @Test
-    fun `Get single LAO application for creator, no LAO Access, has LAO Qualification returns 200`() {
-      givenAUser(qualifications = listOf(UserQualification.LAO)) { applicationCreator, jwt ->
-        givenAnOffender(
-          offenderDetailsConfigBlock = {
-            withCurrentRestriction(true)
-          },
-        ) { offenderDetails, _ ->
-          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(applicationCreator)
-            withData(
-              """
-          {
-             "thingId": 123
-          }
-          """,
-            )
-          }
-
-          val rawResponseBody = webTestClient.get()
-            .uri("/applications/${applicationEntity.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-          assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
-        }
-      }
-    }
-
-    @Test
-    fun `Get single LAO application for non creator, no LAO Access, no LAO Qualification returns 403`() {
-      givenAUser { applicationCreator, _ ->
-        givenAUser { _, otherUserJwt ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentRestriction(true)
-            },
-          ) { offenderDetails, _ ->
-            val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(applicationCreator)
-              withData(
-                """
-          {
-             "thingId": 123
-          }
-          """,
-              )
-            }
-
-            webTestClient.get()
-              .uri("/applications/${applicationEntity.id}")
-              .header("Authorization", "Bearer $otherUserJwt")
-              .exchange()
-              .expectStatus()
-              .isForbidden
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get single LAO application for non creator, no LAO Access, has LAO Qualification returns 200`() {
-      givenAUser { applicationCreator, _ ->
-        givenAUser(qualifications = listOf(UserQualification.LAO)) { _, otherUserJwt ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCurrentRestriction(true)
-            },
-          ) { offenderDetails, _ ->
-            val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(applicationCreator)
-              withData(
-                """
-          {
-             "thingId": 123
-          }
-          """,
-              )
-            }
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/applications/${applicationEntity.id}")
-              .header("Authorization", "Bearer $otherUserJwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-            assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get single non LAO application for non creator returns 200`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM2"))),
-      ) { _, jwt ->
-        givenAUser { otherUser, _ ->
-          val crn = "X1234"
-          givenAnOffender(offenderDetailsConfigBlock = { withCrn(crn) }) { offenderDetails, _ ->
-            val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/applications/${application.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-            assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get single non LAO application returns 200 when a person has no NOMS number`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        givenAnOffender(
-          offenderDetailsConfigBlock = { withoutNomsNumber() },
-        ) { offenderDetails, _ ->
-          val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
-
-          apDeliusContextAddResponseToUserAccessCall(
-            listOf(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
-            ),
-            userEntity.deliusUsername,
-          )
-
-          val rawResponseBody = webTestClient.get()
-            .uri("/applications/${application.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-          assertThat(responseBody.person is FullPerson).isTrue
-          assertThat(responseBody).matches {
-            val person = it.person as FullPerson
-
-            application.id == it.id &&
-              application.crn == person.crn &&
-              person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
-              person.prisonName == null
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get single non LAO application returns 200 when the person cannot be fetched from the prisons API`() {
-      givenAUser(
-        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-      ) { userEntity, jwt ->
-        val crn = "X1234"
-
-        givenAnOffender(
-          offenderDetailsConfigBlock = {
-            withCrn(crn)
-            withNomsNumber("ABC123")
-          },
-        ) { _, _ ->
-          val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-
-          val rawResponseBody = webTestClient.get()
-            .uri("/applications/${application.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-          assertThat(responseBody.person is FullPerson).isTrue
-
-          assertThat(responseBody).matches {
-            val person = it.person as FullPerson
-
-            application.id == it.id &&
-              application.crn == person.crn &&
-              person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
-              person.prisonName == null
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get single online application returns 200 non-upgradable outdated application marked as such`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          val nonUpgradableApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(userEntity)
-            withData("{}")
-          }
-
-          apDeliusContextAddResponseToUserAccessCall(
-            listOf(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
-            ),
-            userEntity.deliusUsername,
-          )
-
-          val rawResponseBody = webTestClient.get()
-            .uri("/applications/${nonUpgradableApplicationEntity.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-          assertThat(responseBody).matches {
-            nonUpgradableApplicationEntity.id == it.id &&
-              nonUpgradableApplicationEntity.crn == it.person.crn &&
-              nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt &&
-              nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
-              nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-              serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data)
-          }
-        }
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(
-      value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER"],
-    )
-    fun `Get single offline application returns 200 with correct body`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-          }
-
-          apDeliusContextAddResponseToUserAccessCall(
-            listOf(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
-            ),
-            userEntity.deliusUsername,
-          )
-
-          val rawResponseBody = webTestClient.get()
-            .uri("/applications/${offlineApplicationEntity.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
-
-          assertThat(responseBody).matches {
-            offlineApplicationEntity.id == it.id &&
-              offlineApplicationEntity.crn == it.person.crn &&
-              offlineApplicationEntity.createdAt.toInstant() == it.createdAt
-          }
-        }
-      }
-    }
   }
 
   @Nested
@@ -794,7 +386,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   /**
-   * Note - Withdrawal cascading is tested in [WithdrawalTest]
+   * Note - Withdrawal cascading is tested in [uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1WithdrawalTest]
    */
   @Nested
   inner class WithdrawApplication {
@@ -890,13 +482,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-  }
-
-  private fun serializableToJsonNode(serializable: Any?): JsonNode {
-    if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
-
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 
   private fun produceAndPersistBasicApplication(

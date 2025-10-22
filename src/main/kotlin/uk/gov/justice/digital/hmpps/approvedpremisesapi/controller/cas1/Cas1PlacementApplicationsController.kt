@@ -11,13 +11,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
@@ -28,7 +27,7 @@ import java.util.UUID
 @Service
 class Cas1PlacementApplicationsController(
   private val userService: UserService,
-  private val applicationService: ApplicationService,
+  private val cas1ApplicationService: Cas1ApplicationService,
   private val offenderService: OffenderService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val placementApplicationTransformer: PlacementApplicationTransformer,
@@ -41,12 +40,8 @@ class Cas1PlacementApplicationsController(
     val user = userService.getUserForRequest()
 
     val application = extractEntityFromCasResult(
-      applicationService.getApplicationForUsername(newPlacementApplication.applicationId, user.deliusUsername),
+      cas1ApplicationService.getApplicationForUsername(newPlacementApplication.applicationId, user.deliusUsername),
     )
-
-    if (application !is ApprovedPremisesApplicationEntity) {
-      throw RuntimeException("Only CAS1 Applications are currently supported")
-    }
 
     val placementApplication = extractEntityFromCasResult(
       cas1PlacementApplicationService.createPlacementApplication(application, user),
