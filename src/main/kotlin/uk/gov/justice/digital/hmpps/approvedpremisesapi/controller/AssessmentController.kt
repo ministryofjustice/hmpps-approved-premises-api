@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -33,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
@@ -53,6 +53,7 @@ class AssessmentController(
   private val assessmentTransformer: AssessmentTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val cas3AssessmentService: Cas3AssessmentService,
+  private val cas3AssessmentTransformer: Cas3AssessmentTransformer,
 ) {
 
   @PaginationHeaders
@@ -76,16 +77,15 @@ class AssessmentController(
     @RequestParam perPage: Int?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
-    val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
+    val domainSummaryStatuses = statuses?.map { cas3AssessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
 
     val (summaries, metadata) = when (xServiceName) {
       ServiceName.cas2v2 -> throw UnsupportedOperationException("CAS2v2 not supported")
       ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
       ServiceName.temporaryAccommodation -> {
-        val (summaries, metadata) = assessmentService.getAssessmentSummariesForUserCAS3(
+        val (summaries, metadata) = cas3AssessmentService.getAssessmentSummariesForUser(
           user,
           crnOrName,
-          xServiceName,
           domainSummaryStatuses,
           PageCriteria(sortBy, sortDirection, page, perPage),
         )
@@ -99,14 +99,7 @@ class AssessmentController(
         Pair(transformSummaries, metadata)
       }
 
-      else -> {
-        val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(
-          user,
-          domainSummaryStatuses,
-          PageCriteria(sortBy, sortDirection, page, perPage),
-        )
-        Pair(transformDomainToApi(summaries, user.cas1LaoStrategy()), metadata)
-      }
+      else -> throw BadRequestProblem(errorDetail = "This Api endpoint does not support get assessments for CAS1 use /cas1/assessments Api endpoint.")
     }
 
     return ResponseEntity.ok()
