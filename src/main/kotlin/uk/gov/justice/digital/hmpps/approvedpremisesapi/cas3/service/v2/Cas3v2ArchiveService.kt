@@ -283,6 +283,62 @@ class Cas3v2ArchiveService(
   }
 
   @Transactional
+  fun cancelScheduledArchiveBedspace(
+    premises: Cas3PremisesEntity,
+    bedspaceId: UUID,
+  ): CasResult<Cas3BedspacesEntity> = validatedCasResult {
+    val bedspace = cas3BedspacesRepository.findCas3Bedspace(premises.id, bedspaceId) ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "doesNotExist"
+
+    // Check if bedspace not scheduled to archive
+    if (bedspace.endDate == null) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotScheduledToArchive"
+    }
+
+    // Check if bedspace is already archived
+    if (isCas3BedspaceArchived(bedspace.endDate)) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceAlreadyArchived"
+    }
+
+    val latestBedspaceArchiveDomainEvent = domainEventRepository.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(
+      bedspace.id,
+      CAS3_BEDSPACE_ARCHIVED,
+    ) ?: return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceNotScheduledToArchive"
+
+    if (latestBedspaceArchiveDomainEvent.cas3TransactionId == null) {
+      return@validatedCasResult "$.bedspaceId" hasSingleValidationError "bedspaceArchiveDomainEventIncorrect"
+    }
+
+    if (premises.endDate != null && premises.endDate!!.isAfter(LocalDate.now(clock))) {
+      domainEventRepository.findByCas3TransactionIdAndType(latestBedspaceArchiveDomainEvent.cas3TransactionId!!, CAS3_PREMISES_ARCHIVED).let {
+        // Premises scheduled to archive, cancel scheduled premises and bedspaces set to archive
+        val result = cancelScheduledArchivePremises(premises.id)
+        if (result is CasResult.FieldValidationError) {
+          return Cas3FieldValidationError(result.validationMessages as Map<String, Cas3ValidationMessage>)
+        }
+
+        return success(bedspace)
+      }
+    }
+
+    domainEventRepository.save(
+      latestBedspaceArchiveDomainEvent.copy(
+        cas3CancelledAt = OffsetDateTime.now(clock),
+      ),
+    )
+
+    val bedspaceArchiveDomainEventData = objectMapper.readValue(latestBedspaceArchiveDomainEvent.data, CAS3BedspaceArchiveEvent::class.java)
+
+    // Update the bedspace to cancel a scheduled archive
+    val updatedBedspace = cas3BedspacesRepository.save(
+      bedspace.copy(
+        endDate = bedspaceArchiveDomainEventData.eventDetails.currentEndDate,
+      ),
+    )
+
+    success(updatedBedspace)
+  }
+
+  @Transactional
   fun cancelScheduledArchivePremises(
     premisesId: UUID,
   ): CasResult<Cas3PremisesEntity> = validatedCasResult {

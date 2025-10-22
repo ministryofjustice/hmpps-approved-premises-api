@@ -946,7 +946,7 @@ class Cas3v2ArchiveServiceTest {
 
       val result = cas3v2ArchiveService.archivePremises(premises, archiveDate)
 
-      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", bedspaceTwo.id.toString(), "existingUpcomingBedspace", bedspaceTwo.startDate!!.plusDays(1).toString())
+      assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", bedspaceTwo.id.toString(), "existingUpcomingBedspace", bedspaceTwo.startDate.plusDays(1).toString())
     }
 
     @Test
@@ -1006,6 +1006,88 @@ class Cas3v2ArchiveServiceTest {
       val result = cas3v2ArchiveService.archivePremises(premises, archiveDate)
 
       assertThatCasResult(result).isCas3FieldValidationError().hasMessage("$.endDate", bedspace.id.toString(), "existingBookings", booking.departureDate.plusDays(1).toString())
+    }
+  }
+
+  @Nested
+  inner class CancelScheduledArchiveBedspace {
+    @Test
+    fun `cancelScheduledArchiveBedspace returns Success when scheduled bedspace to archive is cancelled`() {
+      val premises = createPremisesEntity()
+      val bedspaceArchiveDate = LocalDate.now().plusDays(1)
+      val archivedBedspace = createBedspace(premises, startDate = LocalDate.now().minusDays(30), endDate = bedspaceArchiveDate)
+
+      val updatedBedspace = archivedBedspace.copy(endDate = null)
+
+      every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, archivedBedspace.id) } returns archivedBedspace
+      val bedspaceDomainEventData = createBedspaceArchiveEvent(premisesId = premises.id, bedspaceId = archivedBedspace.id, userId = UUID.randomUUID(), currentEndDate = null, endDate = bedspaceArchiveDate)
+      val bedspaceDomainEvent = createBedspaceArchiveDomainEvent(bedspaceDomainEventData)
+
+      every { domainEventRepositoryMock.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(archivedBedspace.id, CAS3_BEDSPACE_ARCHIVED) } returns bedspaceDomainEvent
+      every { cas3BedspaceRepositoryMock.save(match { it.id == archivedBedspace.id }) } returns updatedBedspace
+
+      val updatedBedspaceDomainEvent = bedspaceDomainEvent.copy(
+        cas3CancelledAt = OffsetDateTime.now(),
+      )
+      every { domainEventRepositoryMock.save(match { it.id == bedspaceDomainEvent.id }) } returns updatedBedspaceDomainEvent
+
+      val result = cas3v2ArchiveService.cancelScheduledArchiveBedspace(premises, archivedBedspace.id)
+
+      assertThatCasResult(result).isSuccess().with { bed ->
+        assertThat(bed.id).isEqualTo(archivedBedspace.id)
+        assertThat(bed.endDate).isNull()
+      }
+
+      verify(exactly = 1) {
+        cas3BedspaceRepositoryMock.save(
+          match<Cas3BedspacesEntity> {
+            it.id == archivedBedspace.id && it.endDate == null
+          },
+        )
+
+        domainEventRepositoryMock.save(
+          match<DomainEventEntity> {
+            it.id == updatedBedspaceDomainEvent.id && it.cas3CancelledAt != null
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `cancelScheduledArchiveBedspace returns FieldValidationError when bedspace does not exist`() {
+      val premises = createPremisesEntity()
+      val nonExistentBedspaceId = UUID.randomUUID()
+
+      every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, nonExistentBedspaceId) } returns null
+
+      val result = cas3v2ArchiveService.cancelScheduledArchiveBedspace(premises, nonExistentBedspaceId)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "doesNotExist")
+    }
+
+    @Test
+    fun `cancelScheduledArchiveBedspace returns FieldValidationError when bedspace is not scheduled to be archived`() {
+      val premises = createPremisesEntity()
+      val onlineBedspace = createBedspace(premises, startDate = LocalDate.now().minusDays(10))
+
+      every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, onlineBedspace.id) } returns onlineBedspace
+
+      val result = cas3v2ArchiveService.cancelScheduledArchiveBedspace(premises, onlineBedspace.id)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceNotScheduledToArchive")
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.Cas3PremisesServiceTest#endDateProvider")
+    fun `cancelScheduledArchiveBedspace returns FieldValidationError when bedspace is already archived`(endDate: LocalDate) {
+      val premises = createPremisesEntity()
+      val archivedBedspace = createBedspace(premises, startDate = LocalDate.now().minusDays(10), endDate = endDate)
+
+      every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, archivedBedspace.id) } returns archivedBedspace
+
+      val result = cas3v2ArchiveService.cancelScheduledArchiveBedspace(premises, archivedBedspace.id)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.bedspaceId", "bedspaceAlreadyArchived")
     }
   }
 
@@ -1077,7 +1159,7 @@ class Cas3v2ArchiveServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.Cas3PremisesServiceTest#startDateProvider")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2.Cas3v2ArchiveServiceTest#startDateProvider")
     fun `cancelScheduledUnarchiveBedspace returns FieldValidationError when bedspace startDate (already online)`(startDate: LocalDate) {
       val premises = createPremisesEntity()
       val scheduledToUnarchiveBedspace = createBedspace(premises, startDate = startDate)
@@ -1280,6 +1362,16 @@ class Cas3v2ArchiveServiceTest {
   )
 
   companion object {
+    @JvmStatic
+    fun startDateProvider(): Stream<Arguments> {
+      val startDateNow = LocalDate.now().toString()
+      val starDatePast = LocalDate.now().minusDays(1).toString()
+      return Stream.of(
+        Arguments.of(startDateNow),
+        Arguments.of(starDatePast),
+      )
+    }
+
     @JvmStatic
     fun endDateProvider(): Stream<Arguments> {
       val endDateNow = LocalDate.now().toString()
