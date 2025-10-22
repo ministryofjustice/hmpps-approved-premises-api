@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -42,6 +43,7 @@ import java.util.UUID
 
 class Cas3ApplicationServiceTest {
   private val mockApplicationRepository = mockk<ApplicationRepository>()
+  private val mockTemporaryAccommodationApplicationRepository = mockk<TemporaryAccommodationApplicationRepository>()
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockUserRepository = mockk<UserRepository>()
@@ -54,14 +56,17 @@ class Cas3ApplicationServiceTest {
 
   private val cas3ApplicationService = Cas3ApplicationService(
     mockApplicationRepository,
+    mockTemporaryAccommodationApplicationRepository,
     mockLockableApplicationRepository,
     mockProbationDeliveryUnitRepository,
+    mockProbationRegionRepository,
+    mockUserRepository,
     mockUserService,
     mockUserAccessService,
     mockAssessmentService,
     mockCas3DomainEventService,
     mockObjectMapper,
-    mockProbationRegionRepository,
+
   )
 
   val user = UserEntityFactory()
@@ -79,6 +84,117 @@ class Cas3ApplicationServiceTest {
     .withProbationRegion(user.probationRegion)
     .withSubmittedAt(null)
     .produce()
+
+  @Nested
+  inner class GetApplicationForUsername {
+    @Test
+    fun `getApplicationForUsername where application does not exist returns NotFound result`() {
+      val distinguishedName = "SOMEPERSON"
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+      val deletedApplication = TemporaryAccommodationApplicationEntityFactory()
+        .withId(applicationId)
+        .withYieldedCreatedByUser {
+          UserEntityFactory()
+            .withProbationRegion(probationRegion)
+            .produce()
+        }
+        .withProbationRegion(probationRegion)
+        .withDeletedAt(OffsetDateTime.now().minusDays(10))
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByIdOrNull(applicationId) } returns deletedApplication
+
+      assertThat(
+        cas3ApplicationService.getApplicationForUsername(
+          applicationId,
+          distinguishedName,
+        ) is CasResult.NotFound,
+      ).isTrue
+    }
+
+    @Test
+    fun `getApplicationForUsername where application was deleted returns NotFound result`() {
+      val distinguishedName = "SOMEPERSON"
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+      every { mockTemporaryAccommodationApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+      assertThat(
+        cas3ApplicationService.getApplicationForUsername(
+          applicationId,
+          distinguishedName,
+        ) is CasResult.NotFound,
+      ).isTrue
+    }
+
+    @Test
+    fun `getApplicationForUsername where user cannot access the application returns Unauthorised result`() {
+      val distinguishedName = "SOMEPERSON"
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+
+      every { mockUserRepository.findByDeliusUsername(any()) } returns UserEntityFactory()
+        .withDeliusUsername(distinguishedName)
+        .withYieldedProbationRegion { probationRegion }
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByIdOrNull(any()) } returns TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion { probationRegion }
+            .produce(),
+        )
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      every { mockUserAccessService.userCanViewApplication(any(), any()) } returns false
+
+      assertThat(
+        cas3ApplicationService.getApplicationForUsername(
+          applicationId,
+          distinguishedName,
+        ) is CasResult.Unauthorised,
+      ).isTrue
+    }
+
+    @Test
+    fun `getApplicationForUsername where user can access the application returns Success result with entity from db`() {
+      val distinguishedName = "SOMEPERSON"
+      val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+
+      val userEntity = UserEntityFactory()
+        .withId(userId)
+        .withDeliusUsername(distinguishedName)
+        .withYieldedProbationRegion { probationRegion }
+        .produce()
+
+      val applicationEntity = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(userEntity)
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
+      every { mockUserRepository.findByDeliusUsername(any()) } returns userEntity
+      every { mockUserAccessService.userCanViewApplication(any(), any()) } returns true
+
+      val result = cas3ApplicationService.getApplicationForUsername(applicationId, distinguishedName)
+
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
+
+      assertThat(result.value).isEqualTo(applicationEntity)
+    }
+  }
 
   @Nested
   inner class GetApplicationSummaries {

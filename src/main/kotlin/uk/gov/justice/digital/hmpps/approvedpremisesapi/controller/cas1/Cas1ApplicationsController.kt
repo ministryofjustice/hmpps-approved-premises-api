@@ -42,7 +42,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -78,7 +77,6 @@ class Cas1ApplicationsController(
   private val offenderDetailService: OffenderDetailService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val httpAuthService: HttpAuthService,
-  private val applicationService: ApplicationService,
   private val objectMapper: ObjectMapper,
   private val documentTransformer: DocumentTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
@@ -185,7 +183,7 @@ class Cas1ApplicationsController(
       )
     } else {
       val offlineApplication = extractEntityFromCasResult(
-        applicationService.getOfflineApplicationForUsername(applicationId, user.deliusUsername),
+        cas1ApplicationService.getOfflineApplicationForUsername(applicationId, user.deliusUsername),
       )
 
       return ResponseEntity.ok(
@@ -355,7 +353,7 @@ class Cas1ApplicationsController(
   ): ResponseEntity<List<Document>> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
-    val application = extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, username))
+    val application = extractEntityFromCasResult(cas1ApplicationService.getApplicationForUsername(applicationId, username))
 
     val documentsResult = extractEntityFromCasResult(
       documentService.getDocumentsFromApDeliusApi(application.crn),
@@ -373,7 +371,7 @@ class Cas1ApplicationsController(
   ): ResponseEntity<Appeal> {
     val user = userService.getUserForRequest()
     val application =
-      extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, user.deliusUsername))
+      extractEntityFromCasResult(cas1ApplicationService.getApplicationForUsername(applicationId, user.deliusUsername))
 
     val appeal = when (val getAppealResult = cas1AppealService.getAppeal(appealId, application)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(appealId, "Appeal")
@@ -391,11 +389,7 @@ class Cas1ApplicationsController(
   ): ResponseEntity<Appeal> {
     val user = userService.getUserForRequest()
     val application =
-      extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, user.deliusUsername))
-
-    if (application !is ApprovedPremisesApplicationEntity) {
-      throw ConflictProblem(applicationId, "Only CAS1 applications are supported")
-    }
+      extractEntityFromCasResult(cas1ApplicationService.getApplicationForUsername(applicationId, user.deliusUsername))
 
     val assessment = application.getLatestAssessment()
       ?: throw ConflictProblem(
@@ -427,11 +421,7 @@ class Cas1ApplicationsController(
   ): ResponseEntity<Withdrawables> {
     val user = userService.getUserForRequest()
     val application =
-      extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, user.deliusUsername))
-
-    if (application !is ApprovedPremisesApplicationEntity) {
-      throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
-    }
+      extractEntityFromCasResult(cas1ApplicationService.getApplicationForUsername(applicationId, user.deliusUsername))
 
     val result = cas1WithdrawableService.allDirectlyWithdrawables(application, user)
 

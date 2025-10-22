@@ -1359,7 +1359,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
   }
 
   /**
-   * Note - Withdrawal cascading is tested in [WithdrawalTest]
+   * Note - Withdrawal cascading is tested in [uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1WithdrawalTest]
    */
   @Nested
   inner class WithdrawPlacementApplication {

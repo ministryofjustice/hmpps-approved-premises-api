@@ -12,7 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -26,16 +28,42 @@ import java.util.UUID
 @Service
 class Cas3ApplicationService(
   private val applicationRepository: ApplicationRepository,
+  private val temporaryAccommodationApplicationRepository: TemporaryAccommodationApplicationRepository,
   private val lockableApplicationRepository: LockableApplicationRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
+  private val probationRegionRepository: ProbationRegionRepository,
+  private val userRepository: UserRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
   private val cas3DomainEventService: Cas3DomainEventService,
   private val objectMapper: ObjectMapper,
-  private val probationRegionRepository: ProbationRegionRepository,
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+
+  @Suppress("TooGenericExceptionThrown")
+  fun getApplicationForUsername(
+    applicationId: UUID,
+    userDistinguishedName: String,
+  ): CasResult<TemporaryAccommodationApplicationEntity> {
+    val applicationEntity = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)
+      ?: return CasResult.NotFound("Application", applicationId.toString())
+
+    if (applicationEntity.deletedAt != null) {
+      return CasResult.NotFound("Application", applicationId.toString())
+    }
+
+    val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
+      ?: throw RuntimeException("Could not get user")
+
+    val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
+
+    return if (canAccess) {
+      CasResult.Success(applicationEntity)
+    } else {
+      CasResult.Unauthorised()
+    }
+  }
 
   @SuppressWarnings("ReturnCount")
   @Transactional

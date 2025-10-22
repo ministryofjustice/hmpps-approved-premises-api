@@ -7,12 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Inmate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -20,10 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import java.time.LocalDate
-import java.time.LocalTime
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 @Service
@@ -35,58 +28,13 @@ import java.util.UUID
   "TooGenericExceptionThrown",
 )
 class ApplicationService(
-  private val userRepository: UserRepository,
   private val applicationRepository: ApplicationRepository,
   private val offenderService: OffenderService,
   private val offenderRisksService: OffenderRisksService,
   private val userService: UserService,
-  private val offlineApplicationRepository: OfflineApplicationRepository,
-  private val userAccessService: UserAccessService,
   private val lockableApplicationRepository: LockableApplicationRepository,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
-
-  fun getApplicationForUsername(
-    applicationId: UUID,
-    userDistinguishedName: String,
-  ): CasResult<ApplicationEntity> {
-    val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
-      ?: return CasResult.NotFound("Application", applicationId.toString())
-
-    if (applicationEntity is TemporaryAccommodationApplicationEntity && applicationEntity.deletedAt != null) {
-      return CasResult.NotFound("Application", applicationId.toString())
-    }
-
-    val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
-      ?: throw RuntimeException("Could not get user")
-
-    val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
-
-    return if (canAccess) {
-      CasResult.Success(applicationEntity)
-    } else {
-      CasResult.Unauthorised()
-    }
-  }
-
-  fun getOfflineApplicationForUsername(
-    applicationId: UUID,
-    deliusUsername: String,
-  ): CasResult<OfflineApplicationEntity> {
-    val applicationEntity = offlineApplicationRepository.findByIdOrNull(applicationId)
-      ?: return CasResult.NotFound("Application", applicationId.toString())
-
-    val userEntity = userRepository.findByDeliusUsername(deliusUsername)
-      ?: throw RuntimeException("Could not get user")
-
-    if (userEntity.hasPermission(UserPermission.CAS1_OFFLINE_APPLICATION_VIEW) &&
-      offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
-    ) {
-      return CasResult.Success(applicationEntity)
-    }
-
-    return CasResult.Unauthorised()
-  }
 
   fun createTemporaryAccommodationApplication(
     crn: String,
@@ -238,13 +186,6 @@ class ApplicationService(
     val savedApplication = applicationRepository.save(application)
 
     return CasResult.Success(savedApplication)
-  }
-
-  fun getArrivalDate(arrivalDate: LocalDate?): OffsetDateTime? {
-    if (arrivalDate !== null) {
-      return OffsetDateTime.of(arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
-    }
-    return null
   }
 
   private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {
