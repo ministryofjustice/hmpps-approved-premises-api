@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -14,11 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplicationTimelineNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
@@ -33,10 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
@@ -50,10 +41,6 @@ class ApplicationsController(
   private val applicationsTransformer: ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val userService: UserService,
-  private val cas1WithdrawableService: Cas1WithdrawableService,
-  private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
-  private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
-  private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
   private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
   private val offenderDetailService: OffenderDetailService,
 ) {
@@ -175,46 +162,6 @@ class ApplicationsController(
 
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
   }
-
-  @Operation(summary = "Add a note on applications")
-  @PostMapping("/applications/{applicationId}/notes")
-  fun applicationsApplicationIdNotesPost(
-    @PathVariable applicationId: UUID,
-    @RequestBody body: NewApplicationTimelineNote,
-  ): ResponseEntity<ApplicationTimelineNote> {
-    val user = userService.getUserForRequest()
-    val savedNote = cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(applicationId, body.note, user)
-
-    return ResponseEntity.ok(applicationTimelineNoteTransformer.transformJpaToApi(savedNote))
-  }
-
-  @Operation(summary = "Withdraws an application with a reason")
-  @PostMapping("/applications/{applicationId}/withdrawal")
-  fun applicationsApplicationIdWithdrawalPost(
-    @PathVariable applicationId: UUID,
-    @RequestBody body: NewWithdrawal,
-  ): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest()
-
-    return ResponseEntity.ok(
-      extractEntityFromCasResult(
-        cas1WithdrawableService.withdrawApplication(
-          applicationId = applicationId,
-          user = user,
-          withdrawalReason = body.reason.value,
-          otherReason = body.otherReason,
-        ),
-      ),
-    )
-  }
-
-  @Operation(summary = "Returns a list of Requests for Placement for the given application.")
-  @GetMapping("/applications/{applicationId}/requests-for-placement")
-  fun applicationsApplicationIdRequestsForPlacementGet(
-    @PathVariable applicationId: UUID,
-  ): ResponseEntity<List<RequestForPlacement>> = ResponseEntity.ok(
-    extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
-  )
 
   private fun getPersonDetailAndTransform(
     application: ApplicationEntity,

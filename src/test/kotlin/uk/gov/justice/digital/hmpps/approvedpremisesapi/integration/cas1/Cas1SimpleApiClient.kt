@@ -58,7 +58,7 @@ class Cas1SimpleApiClient {
     val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
-      .uri("/applications/$id/withdrawal")
+      .uri("/cas1/applications/$id/withdrawal")
       .header("Authorization", "Bearer $managerJwt")
       .bodyValue(body)
       .exchange()
