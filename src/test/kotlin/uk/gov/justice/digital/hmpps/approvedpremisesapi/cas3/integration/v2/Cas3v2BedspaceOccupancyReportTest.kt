@@ -16,14 +16,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceOccupancyReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.toShortBase58
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -43,59 +46,27 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
   fun `Get bedspace occupancy report returns OK with correct body`() {
     givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
-        val (premisesOne, bedspaceOne) = setupPremisesWithABedspace(user)
-        bedspaceOne.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-        cas3BedspacesRepository.save(bedspaceOne)
-
-        val (_, bedspaceTwo) = setupPremisesWithABedspace(user)
-        bedspaceTwo.apply {
-          createdAt = OffsetDateTime.parse("2023-01-09T08:31:00+00:00")
-          endDate = LocalDate.parse("2023-03-27")
-        }
-        cas3BedspacesRepository.save(bedspaceTwo)
-
-        val (_, bedspaceThree) = setupPremisesWithABedspace(user)
-        bedspaceThree.apply { createdAt = OffsetDateTime.parse("2023-07-11T13:07:00+00:00") }
-        cas3BedspacesRepository.save(bedspaceThree)
-
-        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-        cas3BookingEntityFactory.produceAndPersist {
-          withPremises(premisesOne)
-          withBedspace(bedspaceOne)
-          withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
-          withArrivalDate(LocalDate.parse("2023-03-25"))
-          withDepartureDate(LocalDate.parse("2023-04-17"))
+        val localAuthority = localAuthorityEntityFactory.produceAndPersist()
+        val expectedReportRows = ArrayList<BedspaceOccupancyReportRow>()
+        repeat(times = 2) { index ->
+          val bedspaceReference = if (index == 0) {
+            "ZZZ bedspace"
+          } else {
+            "AAA bedspace"
+          }
+          expectedReportRows.add(
+            setupBedspaceOccupancyReportData(
+              user,
+              localAuthority,
+              offenderDetails,
+              bedspaceReference
+            )
+          )
         }
 
-        val expectedReportRows = listOf(
-          BedspaceOccupancyReportRow(
-            probationRegion = user.probationRegion.name,
-            pdu = premisesOne.probationDeliveryUnit.name,
-            localAuthority = premisesOne.localAuthorityArea?.name,
-            propertyRef = premisesOne.name,
-            addressLine1 = premisesOne.addressLine1,
-            town = premisesOne.town,
-            postCode = premisesOne.postcode,
-            bedspaceRef = bedspaceOne.reference,
-            bookedDaysActiveAndClosed = 0,
-            confirmedDays = 0,
-            provisionalDays = 17,
-            scheduledTurnaroundDays = 0,
-            effectiveTurnaroundDays = 0,
-            voidDays = 0,
-            totalBookedDays = 0,
-            bedspaceStartDate = bedspaceOne.createdAt.toLocalDate(),
-            bedspaceEndDate = bedspaceOne.endDate,
-            bedspaceOnlineDays = 30,
-            occupancyRate = 0.0,
-            uniquePropertyRef = premisesOne.id.toShortBase58(),
-            uniqueBedspaceRef = bedspaceOne.id.toShortBase58(),
-          ),
-        )
-
-        val expectedDataFrame = expectedReportRows.toDataFrame()
+        val expectedDataFrame = expectedReportRows
+          .reversed()
+          .toDataFrame()
 
         webTestClient.get()
           .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
@@ -112,6 +83,63 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
           }
       }
     }
+  }
+
+  private fun setupBedspaceOccupancyReportData(
+    user: UserEntity,
+    localAuthority: LocalAuthorityAreaEntity,
+    offenderDetails: OffenderDetailSummary,
+    bedspaceReference: String,
+  ): BedspaceOccupancyReportRow {
+    val (premisesOne, bedspaceOne) = setupPremisesWithABedspace(user, localAuthority, bedspaceReference = bedspaceReference)
+    bedspaceOne.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
+    cas3BedspacesRepository.save(bedspaceOne)
+
+    val (_, bedspaceTwo) = setupPremisesWithABedspace(user)
+    bedspaceTwo.apply {
+      createdAt = OffsetDateTime.parse("2023-01-09T08:31:00+00:00")
+      endDate = LocalDate.parse("2023-03-27")
+    }
+    cas3BedspacesRepository.save(bedspaceTwo)
+
+    val (_, bedspaceThree) = setupPremisesWithABedspace(user)
+    bedspaceThree.apply { createdAt = OffsetDateTime.parse("2023-07-11T13:07:00+00:00") }
+    cas3BedspacesRepository.save(bedspaceThree)
+
+    govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+    cas3BookingEntityFactory.produceAndPersist {
+      withPremises(premisesOne)
+      withBedspace(bedspaceOne)
+      withServiceName(ServiceName.temporaryAccommodation)
+      withCrn(offenderDetails.otherIds.crn)
+      withArrivalDate(LocalDate.parse("2023-03-25"))
+      withDepartureDate(LocalDate.parse("2023-04-17"))
+    }
+
+    return BedspaceOccupancyReportRow(
+      probationRegion = user.probationRegion.name,
+      pdu = premisesOne.probationDeliveryUnit.name,
+      localAuthority = premisesOne.localAuthorityArea?.name,
+      propertyRef = premisesOne.name,
+      addressLine1 = premisesOne.addressLine1,
+      town = premisesOne.town,
+      postCode = premisesOne.postcode,
+      bedspaceRef = bedspaceOne.reference,
+      bookedDaysActiveAndClosed = 0,
+      confirmedDays = 0,
+      provisionalDays = 17,
+      scheduledTurnaroundDays = 0,
+      effectiveTurnaroundDays = 0,
+      voidDays = 0,
+      totalBookedDays = 0,
+      bedspaceStartDate = bedspaceOne.createdAt.toLocalDate(),
+      bedspaceEndDate = bedspaceOne.endDate,
+      bedspaceOnlineDays = 30,
+      occupancyRate = 0.0,
+      uniquePropertyRef = premisesOne.id.toShortBase58(),
+      uniqueBedspaceRef = bedspaceOne.id.toShortBase58()
+    )
   }
 
   @Test
@@ -1125,15 +1153,19 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
 
   private fun setupPremisesWithABedspace(
     user: UserEntity,
+    localAuthorityArea: LocalAuthorityAreaEntity = localAuthorityEntityFactory.produceAndPersist(),
     startDate: LocalDate = LocalDate.now().randomDateBefore(6),
+    bedspaceReference: String = randomStringUpperCase(6)
   ): Pair<Cas3PremisesEntity, Cas3BedspacesEntity> {
     val premises = givenACas3Premises(
       probationDeliveryUnit = user.probationDeliveryUnit!!,
+      localAuthorityArea  = localAuthorityArea,
       status = Cas3PremisesStatus.online,
     )
     val bedspaceStartDate = startDate.minusDays(100)
     val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
       withPremises(premises)
+      withReference(bedspaceReference)
       withStartDate(bedspaceStartDate)
       withCreatedDate(bedspaceStartDate)
       withEndDate(null)
