@@ -1720,6 +1720,51 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Create new application without risks returns 201 with correct body and Location header`() {
+      givenAUser { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          apDeliusContextMockSuccessfulTeamsManagingCaseCall(
+            offenderDetails.otherIds.crn,
+            ManagingTeamsResponse(
+              teamCodes = listOf("TEAM1"),
+            ),
+          )
+
+          apOASysContextMockSuccessfulNeedsDetailsCall(
+            offenderDetails.otherIds.crn,
+            NeedsDetailsFactory().produce(),
+          )
+
+          val result = webTestClient.post()
+            .uri("/cas1/applications?createWithRisks=false")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(ApprovedPremisesApplication::class.java)
+
+          assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/cas1/applications/.+"))
+          }
+
+          assertThat(result.responseBody.blockFirst()).matches {
+            it.person.crn == offenderDetails.otherIds.crn &&
+              cas1OffenderRepository.findByCrn(it.person.crn) != null
+          }
+        }
+      }
+    }
   }
 
   @Nested
