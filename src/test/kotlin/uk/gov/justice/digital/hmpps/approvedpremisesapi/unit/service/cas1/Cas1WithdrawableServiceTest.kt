@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -45,6 +46,7 @@ class Cas1WithdrawableServiceTest {
   private val cas1SpaceBookingService = mockk<Cas1SpaceBookingService>()
   private val cas1WithdrawableTreeBuilder = mockk<Cas1WithdrawableTreeBuilder>()
   private val cas1WithdrawableTreeOperations = mockk<Cas1WithdrawableTreeOperations>()
+  private val lockablePlacementApplicationRepository = mockk<LockablePlacementApplicationRepository>()
 
   private val cas1WithdrawableService = Cas1WithdrawableService(
     cas1ApplicationService,
@@ -53,6 +55,7 @@ class Cas1WithdrawableServiceTest {
     cas1SpaceBookingService,
     cas1WithdrawableTreeBuilder,
     cas1WithdrawableTreeOperations,
+    lockablePlacementApplicationRepository,
   )
 
   val probationRegion = ProbationRegionEntityFactory()
@@ -532,6 +535,8 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun success() {
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
+
       every { cas1PlacementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTree(
@@ -574,6 +579,8 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun `fails if user may not directly withdraw()`() {
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
+
       every { cas1PlacementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTree(
@@ -594,6 +601,8 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun `fails if not withdrawable()`() {
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
+
       every { cas1PlacementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTree(
@@ -615,6 +624,8 @@ class Cas1WithdrawableServiceTest {
 
     @Test
     fun `fails if blocked()`() {
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
+
       every { cas1PlacementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTree(

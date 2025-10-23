@@ -587,6 +587,8 @@ class Cas1PlacementApplicationServiceTest {
         decisionSummary = "decisionSummary accepted",
       )
 
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
+
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every {
         placementRequestService.createPlacementRequestsFromPlacementApplication(any(), any())
@@ -642,7 +644,7 @@ class Cas1PlacementApplicationServiceTest {
         summaryOfChanges = "summaryOfChanges",
         decisionSummary = "decisionSummary rejected",
       )
-
+      every { lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplication.id) } returns null
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationEmailService.placementApplicationRejected(any()) } returns Unit
