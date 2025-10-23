@@ -1,0 +1,3 @@
+ALTER TABLE cas_2_users ALTER COLUMN service_origin SET NOT NULL;
+ALTER TABLE cas_2_users ALTER COLUMN is_active SET NOT NULL;
+ALTER TABLE cas_2_users ALTER COLUMN is_enabled SET NOT NULL;
