@@ -1,11 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
 import com.opencsv.CSVReaderBuilder
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.DataRow
-import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns.Remove
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.sortBy
@@ -60,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision.REJECTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -147,7 +146,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .isBadRequest
         .expectBody()
         .jsonPath("invalid-params[0].errorType").isEqualTo("rangeTooLarge")
-        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.endDate")
     }
 
     givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
@@ -162,7 +161,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .isBadRequest
         .expectBody()
         .jsonPath("invalid-params[0].errorType").isEqualTo("rangeTooLarge")
-        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.endDate")
     }
   }
 
@@ -181,7 +180,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .isBadRequest
         .expectBody()
         .jsonPath("invalid-params[0].errorType").isEqualTo("afterEndDate")
-        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.startDate")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.startDate")
     }
   }
 
@@ -200,7 +199,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .isBadRequest
         .expectBody()
         .jsonPath("invalid-params[0].errorType").isEqualTo("afterEndDate")
-        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.startDate")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.startDate")
     }
   }
 
@@ -220,7 +219,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .isBadRequest
         .expectBody()
         .jsonPath("invalid-params[0].errorType").isEqualTo("inFuture")
-        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.endDate")
     }
   }
 
@@ -1127,7 +1126,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
+                PersonInformationReportData(
+                  caseSummary.pnc,
+                  caseSummary.name,
+                  caseSummary.dateOfBirth,
+                  caseSummary.gender,
+                  caseSummary.profile?.ethnicity
+                )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1233,7 +1238,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
+                PersonInformationReportData(
+                  caseSummary.pnc,
+                  caseSummary.name,
+                  caseSummary.dateOfBirth,
+                  caseSummary.gender,
+                  caseSummary.profile?.ethnicity
+                )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1345,7 +1356,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
+                PersonInformationReportData(
+                  caseSummary.pnc,
+                  caseSummary.name,
+                  caseSummary.dateOfBirth,
+                  caseSummary.gender,
+                  caseSummary.profile?.ethnicity
+                )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1435,7 +1452,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
+                PersonInformationReportData(
+                  caseSummary.pnc,
+                  caseSummary.name,
+                  caseSummary.dateOfBirth,
+                  caseSummary.gender,
+                  caseSummary.profile?.ethnicity
+                )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1558,7 +1581,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               shouldBeIncludedBookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
+                PersonInformationReportData(
+                  caseSummary.pnc,
+                  caseSummary.name,
+                  caseSummary.dateOfBirth,
+                  caseSummary.gender,
+                  caseSummary.profile?.ethnicity
+                )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1664,7 +1693,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
+                PersonInformationReportData(
+                  caseSummary.pnc,
+                  caseSummary.name,
+                  caseSummary.dateOfBirth,
+                  caseSummary.gender,
+                  caseSummary.profile?.ethnicity
+                )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1731,7 +1766,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
+                PersonInformationReportData(
+                  caseSummary.pnc,
+                  caseSummary.name,
+                  caseSummary.dateOfBirth,
+                  caseSummary.gender,
+                  caseSummary.profile?.ethnicity
+                )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1757,7 +1798,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bookings report returns OK with only bookings from the specified service`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 4, 30)
@@ -1774,7 +1815,9 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withDepartureDate(LocalDate.of(2023, 4, 7))
           }
 
-          bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
+          bookings[1].let {
+            it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+          }
           bookings[2].let {
             it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
             it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
@@ -1826,7 +1869,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BookingsReportGenerator()
             .createReport(
               bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
+                PersonInformationReportData(
+                  caseSummary.pnc,
+                  caseSummary.name,
+                  caseSummary.dateOfBirth,
+                  caseSummary.gender,
+                  caseSummary.profile?.ethnicity
+                )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
@@ -1842,9 +1891,9 @@ class Cas3ReportsTest : IntegrationTestBase() {
             .consumeWith {
               val actual = DataFrame
                 .readExcel(it.responseBody!!.inputStream())
-                .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+                .convertTo<BookingsReportRow>(Remove)
                 .sortBy(BookingsReportRow::bookingId)
-              Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+              assertThat(actual).isEqualTo(expectedDataFrame)
             }
         }
       }
@@ -2027,7 +2076,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   inner class GetBedUtilReport {
     @Test
     fun `Get bed utilisation report for all regions returns 403 Forbidden if user does not have all regions access`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30")
           .header("Authorization", "Bearer $jwt")
@@ -2040,7 +2089,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `Get bed utilisation report for a region returns 403 Forbidden if user cannot access the specified region`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
         webTestClient.get()
           .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
@@ -2071,66 +2120,28 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(userEntity.probationRegion)
           }
+          val localAuthorityArea: LocalAuthorityAreaEntity = localAuthorityEntityFactory.produceAndPersist()
 
-          val (premisesOne, roomPremisesOne) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
-          val bedPremisesOne = createBed(roomPremisesOne)
-
-          bedPremisesOne.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bedPremisesOne)
-
-          val (premisesTwo, roomPremisesTwo) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
-          val bedPremisesTwo = createBed(roomPremisesTwo)
-
-          bedPremisesTwo.apply {
-            createdAt = OffsetDateTime.parse("2023-01-09T08:31:00+00:00")
-            endDate = LocalDate.parse("2023-03-27")
+          val expectedReportRows = ArrayList<BedUtilisationReportRow>()
+          repeat(times = 2) { index ->
+            val roomName = if (index == 0) {
+              "ZZZ room"
+            } else {
+              "AAA room"
+            }
+            expectedReportRows.add(
+              setupBedUtilisationReportData(
+                probationDeliveryUnit,
+                userEntity.probationRegion,
+                offenderDetails,
+                localAuthorityArea,
+                roomName
+              )
+            )
           }
-
-          bedRepository.save(bedPremisesTwo)
-
-          val (premisesThree, roomPremisesThree) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
-          val bedPremisesThree = createBed(roomPremisesThree)
-
-          bedPremisesThree.apply { createdAt = OffsetDateTime.parse("2023-07-11T13:07:00+00:00") }
-          bedRepository.save(bedPremisesThree)
-
-          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-          createBooking(
-            premisesOne,
-            bedPremisesOne,
-            offenderDetails.otherIds.crn,
-            LocalDate.parse("2023-03-25"),
-            LocalDate.parse("2023-04-17"),
-          )
-
-          val expectedReportRows = listOf(
-            BedUtilisationReportRow(
-              probationRegion = userEntity.probationRegion.name,
-              pdu = probationDeliveryUnit.name,
-              localAuthority = premisesOne.localAuthorityArea?.name,
-              propertyRef = premisesOne.name,
-              addressLine1 = premisesOne.addressLine1,
-              town = premisesOne.town,
-              postCode = premisesOne.postcode,
-              bedspaceRef = roomPremisesOne.name,
-              bookedDaysActiveAndClosed = 0,
-              confirmedDays = 0,
-              provisionalDays = 17,
-              scheduledTurnaroundDays = 0,
-              effectiveTurnaroundDays = 0,
-              voidDays = 0,
-              totalBookedDays = 0,
-              bedspaceStartDate = bedPremisesOne.createdAt?.toLocalDate(),
-              bedspaceEndDate = bedPremisesOne.endDate,
-              bedspaceOnlineDays = 30,
-              occupancyRate = 0.0,
-              uniquePropertyRef = premisesOne.id.toShortBase58(),
-              uniqueBedspaceRef = roomPremisesOne.id.toShortBase58(),
-            ),
-          )
-
-          val expectedDataFrame = expectedReportRows.toDataFrame()
+          val expectedDataFrame = expectedReportRows
+            .reversed()
+            .toDataFrame()
 
           webTestClient.get()
             .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${userEntity.probationRegion.id}")
@@ -2148,6 +2159,76 @@ class Cas3ReportsTest : IntegrationTestBase() {
             }
         }
       }
+    }
+
+    private fun setupBedUtilisationReportData(
+      probationDeliveryUnit: ProbationDeliveryUnitEntity,
+      probationRegion: ProbationRegionEntity,
+      offenderDetails: OffenderDetailSummary,
+      localAuthorityArea: LocalAuthorityAreaEntity,
+      roomName: String
+    ): BedUtilisationReportRow {
+
+      val (premisesOne, roomPremisesOne) = createPremisesAndRoom(
+        probationRegion,
+        probationDeliveryUnit,
+        localAuthorityArea,
+        roomName
+      )
+      val bedPremisesOne = createBed(roomPremisesOne)
+
+      bedPremisesOne.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
+      bedRepository.save(bedPremisesOne)
+
+      val (_, roomPremisesTwo) = createPremisesAndRoom(probationRegion, probationDeliveryUnit)
+      val bedPremisesTwo = createBed(roomPremisesTwo)
+
+      bedPremisesTwo.apply {
+        createdAt = OffsetDateTime.parse("2023-01-09T08:31:00+00:00")
+        endDate = LocalDate.parse("2023-03-27")
+      }
+
+      bedRepository.save(bedPremisesTwo)
+
+      val (_, roomPremisesThree) = createPremisesAndRoom(probationRegion, probationDeliveryUnit)
+      val bedPremisesThree = createBed(roomPremisesThree)
+
+      bedPremisesThree.apply { createdAt = OffsetDateTime.parse("2023-07-11T13:07:00+00:00") }
+      bedRepository.save(bedPremisesThree)
+
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+      createBooking(
+        premisesOne,
+        bedPremisesOne,
+        offenderDetails.otherIds.crn,
+        LocalDate.parse("2023-03-25"),
+        LocalDate.parse("2023-04-17"),
+      )
+
+      return BedUtilisationReportRow(
+        probationRegion = probationRegion.name,
+        pdu = probationDeliveryUnit.name,
+        localAuthority = premisesOne.localAuthorityArea?.name,
+        propertyRef = premisesOne.name,
+        addressLine1 = premisesOne.addressLine1,
+        town = premisesOne.town,
+        postCode = premisesOne.postcode,
+        bedspaceRef = roomPremisesOne.name,
+        bookedDaysActiveAndClosed = 0,
+        confirmedDays = 0,
+        provisionalDays = 17,
+        scheduledTurnaroundDays = 0,
+        effectiveTurnaroundDays = 0,
+        voidDays = 0,
+        totalBookedDays = 0,
+        bedspaceStartDate = bedPremisesOne.createdAt.toLocalDate(),
+        bedspaceEndDate = bedPremisesOne.endDate,
+        bedspaceOnlineDays = 30,
+        occupancyRate = 0.0,
+        uniquePropertyRef = premisesOne.id.toShortBase58(),
+        uniqueBedspaceRef = roomPremisesOne.id.toShortBase58(),
+      )
     }
 
     @Test
@@ -2191,7 +2272,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -2252,7 +2333,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedReportRows = listOf(
             BedUtilisationReportRow(
               probationRegion = userEntity.probationRegion.name,
-              pdu = probationDeliveryUnit?.name,
+              pdu = probationDeliveryUnit.name,
               localAuthority = premises.localAuthorityArea?.name,
               propertyRef = premises.name,
               addressLine1 = premises.addressLine1,
@@ -2266,7 +2347,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 17,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.5666666666666667,
@@ -2379,7 +2460,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedReportRows = listOf(
             BedUtilisationReportRow(
               probationRegion = userEntity.probationRegion.name,
-              pdu = probationDeliveryUnit?.name,
+              pdu = probationDeliveryUnit.name,
               localAuthority = premises.localAuthorityArea?.name,
               propertyRef = premises.name,
               addressLine1 = premises.addressLine1,
@@ -2393,7 +2474,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 30,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 1.0,
@@ -2510,7 +2591,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedReportRows = listOf(
             BedUtilisationReportRow(
               probationRegion = userEntity.probationRegion.name,
-              pdu = probationDeliveryUnit?.name,
+              pdu = probationDeliveryUnit.name,
               localAuthority = premises.localAuthorityArea?.name,
               propertyRef = premises.name,
               addressLine1 = premises.addressLine1,
@@ -2524,7 +2605,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 2,
               voidDays = 3,
               totalBookedDays = 20,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.6666666666666666,
@@ -2607,7 +2688,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val expectedReportRows = listOf(
             BedUtilisationReportRow(
               probationRegion = userEntity.probationRegion.name,
-              pdu = probationDeliveryUnit?.name,
+              pdu = probationDeliveryUnit.name,
               localAuthority = premises.localAuthorityArea?.name,
               propertyRef = premises.name,
               addressLine1 = premises.addressLine1,
@@ -2621,7 +2702,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 26,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.8666666666666667,
@@ -2695,7 +2776,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -2770,7 +2851,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 7,
               voidDays = 0,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -2845,7 +2926,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 7,
               voidDays = 0,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -3024,7 +3105,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 5,
               voidDays = 0,
               totalBookedDays = 19,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.6333333333333333,
@@ -3102,7 +3183,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 10,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -3189,7 +3270,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 7,
               voidDays = 0,
               totalBookedDays = 4,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
+              bedspaceStartDate = bed.createdAt.toLocalDate(),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.13333333333333333,
@@ -3402,7 +3483,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withProbationRegion(yorkshireRegion!!)
             withProbationDeliveryUnit(probationDeliveryUnit)
           }
-          val bedStart = LocalDate.parse("2024-01-01")
           val bedEnd = LocalDate.parse("2024-12-31")
 
           // 4. Bedspace start date after report start date
@@ -3471,7 +3551,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withProbationDeliveryUnit(probationDeliveryUnit)
           }
           val bedStart = LocalDate.parse("2024-01-01")
-          val bedEnd = LocalDate.parse("2024-12-31")
 
           // 5. Bedspace end date before report end date
           val bed1 = createBed(premises, "bed1", bedStart, LocalDate.parse("2024-04-20"))
@@ -4614,7 +4693,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withProbationRegion(yorkshireRegion!!)
           }
 
-          val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(yorkshireRegion!!)
             withProbationDeliveryUnit(probationDeliveryUnit)
@@ -5498,7 +5577,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
       }
     }
 
-    val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+    temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
       withApplication(application)
       withDecision(ACCEPTED)
       withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
@@ -5522,8 +5601,9 @@ class Cas3ReportsTest : IntegrationTestBase() {
   private fun createPremisesAndRoom(
     probationRegion: ProbationRegionEntity,
     probationDeliveryUnit: ProbationDeliveryUnitEntity,
+    localAuthorityArea: LocalAuthorityAreaEntity = localAuthorityEntityFactory.produceAndPersist(),
+    roomName: String = randomStringMultiCaseWithNumbers(8)
   ): Pair<PremisesEntity, RoomEntity> {
-    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
       withProbationDeliveryUnit(probationDeliveryUnit)
@@ -5532,6 +5612,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
+      withName(roomName)
     }
 
     return Pair(premises, room)
@@ -5541,7 +5622,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
     withRoom(room)
   }
 
-  private fun createBed(premises: PremisesEntity, roomName: String, startDate: LocalDate, endDate: LocalDate): BedEntity {
+  private fun createBed(
+    premises: PremisesEntity,
+    roomName: String,
+    startDate: LocalDate,
+    endDate: LocalDate
+  ): BedEntity {
     val bed = bedEntityFactory.produceAndPersist {
       withStartDate(startDate)
       withEndDate(endDate)
@@ -5592,14 +5678,4 @@ class Cas3ReportsTest : IntegrationTestBase() {
   }
 
   private fun randomBoolean() = randomInt(0, 20) > 10
-
-  @SuppressWarnings("ConstructorParameterNaming")
-  data class BookingGapReportRow(
-    val probation_region: String,
-    val pdu_name: String,
-    val premises_name: String,
-    val bed_name: String,
-    val gap: String,
-    val gap_days: String?,
-  )
 }

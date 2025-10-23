@@ -37,12 +37,14 @@ fun IntegrationTestBase.givenACas3Premises(
   probationDeliveryUnit: ProbationDeliveryUnitEntity = probationDeliveryUnitFactory.produceAndPersist {
     withProbationRegion(probationRegionEntityFactory.produceAndPersist())
   },
+  localAuthorityArea: LocalAuthorityAreaEntity = localAuthorityEntityFactory.produceAndPersist(),
   status: Cas3PremisesStatus = randomOf(Cas3PremisesStatus.entries),
   startDate: LocalDate? = null,
   endDate: LocalDate? = null,
 ) = givenACas3Premises(
   name = randomStringMultiCaseWithNumbers(8),
   probationDeliveryUnit = probationDeliveryUnit,
+  localAuthorityArea = localAuthorityArea,
   status = status,
   startDate = startDate,
   endDate = endDate,
