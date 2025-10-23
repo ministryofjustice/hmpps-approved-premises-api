@@ -8,9 +8,11 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3PremisesWithBedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Bedspaces
@@ -25,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
@@ -229,6 +232,183 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
+      }
+    }
+  }
+
+  @Nested
+  inner class GetBedspace {
+    @Test
+    fun `Get Bedspace by ID returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val bedspaceCharacteristics = getBedspaceCharacteristics().take(2).toMutableList()
+        val bedspaceCharacteristicOne = bedspaceCharacteristics[0]
+        val bedspaceCharacteristicTwo = bedspaceCharacteristics[1]
+
+        givenACas3PremisesWithBedspaces(
+          region = user.probationRegion,
+          bedspaceCharacteristics = bedspaceCharacteristics,
+          bedspacesStartDates = listOf(LocalDate.now(clock).minusDays(30)),
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+
+          val archiveBedspaceYesterday = LocalDate.now().minusDays(1)
+          createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, null, archiveBedspaceYesterday)
+
+          val archiveBedspace3DaysAgo = LocalDate.now().minusDays(3)
+          createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, null, archiveBedspace3DaysAgo)
+
+          createBedspaceArchiveDomainEvent(
+            bedspace.id,
+            premises.id,
+            user.id,
+            null,
+            LocalDate.now().minusDays(10),
+            OffsetDateTime.now().minusDays(13),
+          )
+
+          val archiveBedspaceDayAfterTomorrow = LocalDate.now().plusDays(2)
+          createBedspaceArchiveDomainEvent(bedspace.id, premises.id, user.id, null, archiveBedspaceDayAfterTomorrow)
+
+          val archivedBedspace = bedspace.copy(
+            endDate = LocalDate.now().minusDays(7),
+          )
+
+          val unarchiveBedspaceToday = LocalDate.now()
+          createBedspaceUnarchiveDomainEvent(archivedBedspace, premises.id, user.id, unarchiveBedspaceToday)
+
+          val unarchiveBedspace4DaysAgo = LocalDate.now().minusDays(4)
+          createBedspaceUnarchiveDomainEvent(archivedBedspace, premises.id, user.id, unarchiveBedspace4DaysAgo)
+
+          createBedspaceUnarchiveDomainEvent(
+            archivedBedspace,
+            premises.id,
+            user.id,
+            LocalDate.now().minusDays(15),
+            OffsetDateTime.now().minusDays(9),
+          )
+
+          val unarchiveBedspaceTomorrow = LocalDate.now().plusDays(1)
+          createBedspaceUnarchiveDomainEvent(archivedBedspace, premises.id, user.id, unarchiveBedspaceTomorrow)
+
+          val expectedBedspace = Cas3Bedspace(
+            id = bedspace.id,
+            reference = bedspace.reference,
+            startDate = bedspace.createdDate,
+            endDate = bedspace.endDate,
+            status = Cas3BedspaceStatus.online,
+            archiveHistory = listOf(
+              Cas3BedspaceArchiveAction(
+                status = Cas3BedspaceStatus.online,
+                date = unarchiveBedspace4DaysAgo,
+              ),
+              Cas3BedspaceArchiveAction(
+                status = Cas3BedspaceStatus.archived,
+                date = archiveBedspace3DaysAgo,
+              ),
+              Cas3BedspaceArchiveAction(
+                status = Cas3BedspaceStatus.archived,
+                date = archiveBedspaceYesterday,
+              ),
+              Cas3BedspaceArchiveAction(
+                status = Cas3BedspaceStatus.online,
+                date = unarchiveBedspaceToday,
+              ),
+            ),
+            bedspaceCharacteristics = listOf(
+              Cas3BedspaceCharacteristic(
+                id = bedspaceCharacteristicOne.id,
+                description = bedspaceCharacteristicOne.description,
+                name = bedspaceCharacteristicOne.name,
+              ),
+              Cas3BedspaceCharacteristic(
+                id = bedspaceCharacteristicTwo.id,
+                description = bedspaceCharacteristicTwo.description,
+                name = bedspaceCharacteristicTwo.name,
+              ),
+            ),
+            notes = bedspace.notes,
+          )
+
+          val responseBody = webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+          assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedBedspace))
+        }
+      }
+    }
+
+    @Test
+    fun `Get Bedspace by ID returns Not Found with correct body when Premises does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenACas3PremisesWithBedspaces(
+          region = user.probationRegion,
+          bedspaceCount = 1,
+          bedspacesStartDates = listOf(LocalDate.now(clock).minusDays(30)),
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+          val nonExistentPremisesId = UUID.randomUUID().toString()
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/$nonExistentPremisesId/bedspaces/${bedspace.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectHeader().contentType("application/problem+json")
+            .expectStatus()
+            .isNotFound
+            .expectBody()
+            .jsonPath("title").isEqualTo("Not Found")
+            .jsonPath("status").isEqualTo(404)
+            .jsonPath("detail").isEqualTo("No Cas3Premises with an ID of $nonExistentPremisesId could be found")
+        }
+      }
+    }
+
+    @Test
+    fun `Get Bedspace by ID returns Not Found with correct body when Bedspace does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(
+          user.probationRegion,
+          status = Cas3PremisesStatus.online,
+        )
+        val nonExistentBedspaceId = UUID.randomUUID().toString()
+
+        webTestClient.get()
+          .uri("/cas3/v2/premises/${premises.id}/bedspaces/$nonExistentBedspaceId")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectHeader().contentType("application/problem+json")
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("title").isEqualTo("Not Found")
+          .jsonPath("status").isEqualTo(404)
+          .jsonPath("detail").isEqualTo("No Bedspace with an ID of $nonExistentBedspaceId could be found")
+      }
+    }
+
+    @Test
+    fun `Get Bedspace by ID for a Premises that's not in the user's region returns 403 Forbidden`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenACas3PremisesWithBedspaces(
+          bedspaceCount = 1,
+          bedspacesStartDates = listOf(LocalDate.now(clock).minusDays(30)),
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
       }
     }
   }
