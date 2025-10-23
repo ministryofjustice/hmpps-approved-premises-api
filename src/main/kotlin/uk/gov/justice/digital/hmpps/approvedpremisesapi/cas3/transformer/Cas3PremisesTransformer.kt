@@ -41,7 +41,7 @@ class Cas3PremisesTransformer(
     startDate = premises.startDate,
     endDate = premises.endDate,
     scheduleUnarchiveDate = isPremisesScheduleToUnarchive(premises.startDate),
-    status = premises.status,
+    status = getPremisesStatus(premises),
     notes = premises.notes,
     turnaroundWorkingDays = premises.turnaroundWorkingDays,
     totalOnlineBedspaces = premises.countOnlineBedspaces(),
@@ -86,6 +86,7 @@ class Cas3PremisesTransformer(
   }
 
   private fun getPremisesStatus(premises: TemporaryAccommodationPremisesEntity) = if (premises.isPremisesArchived()) Cas3PremisesStatus.archived else Cas3PremisesStatus.online
+  private fun getPremisesStatus(premises: Cas3PremisesEntity) = if (premises.isPremisesArchived()) Cas3PremisesStatus.archived else Cas3PremisesStatus.online
 
   private fun isPremisesScheduleToUnarchive(premisesStartDate: LocalDate) = premisesStartDate.takeIf { it.isAfter(LocalDate.now()) }
 }

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Validatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_PREMISES_IN_PAST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_UNARCHIVE_BEDSPACE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_UNARCHIVE_PREMISES
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -246,6 +247,46 @@ class Cas3v2ArchiveService(
     }
 
     return success(archivedPremises)
+  }
+
+  fun unarchivePremises(
+    premises: Cas3PremisesEntity,
+    restartDate: LocalDate,
+  ): CasResult<Cas3PremisesEntity> = validatedCasResult {
+    if (!premises.isPremisesArchived()) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotArchived"
+    }
+
+    val today = LocalDate.now()
+
+    if (restartDate.isBefore(today.minusDays(MAX_DAYS_UNARCHIVE_PREMISES))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInThePast"
+    }
+
+    if (restartDate.isAfter(today.plusDays(MAX_DAYS_UNARCHIVE_PREMISES))) {
+      "$.restartDate" hasValidationError "invalidRestartDateInTheFuture"
+    }
+
+    if (restartDate.isBefore(premises.endDate)) {
+      "$.restartDate" hasValidationError "beforeLastPremisesArchivedDate"
+    }
+
+    if (hasErrors()) {
+      return@validatedCasResult errors()
+    }
+
+    val domainEventTransactionId = UUID.randomUUID()
+
+    val unarchivePremises = unarchivePremisesAndSaveDomainEvent(premises, restartDate, domainEventTransactionId)
+
+    val bedspaces = cas3BedspacesRepository.findByPremisesId(premises.id)
+    val uniqueBedspaces = bedspaces.groupBy { b -> b.reference }
+    uniqueBedspaces.forEach { bedspaces ->
+      val lastBedspace = bedspaces.value.sortedByDescending { it.createdAt }.first()
+      unarchiveBedspaceAndSaveDomainEvent(lastBedspace, premises.id, restartDate, domainEventTransactionId)
+    }
+
+    success(unarchivePremises)
   }
 
   @Transactional

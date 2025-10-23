@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UnarchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -500,6 +501,285 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
+      }
+    }
+  }
+
+  @Nested
+  inner class UnarchivePremises {
+    @Test
+    fun `Unarchive premises returns 200 OK when successful`() {
+      givenACas3PremisesComplete(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().minusDays(30),
+        premisesEndDate = LocalDate.now().minusDays(1),
+        premisesStatus = Cas3PremisesStatus.archived,
+        bedspaceCount = 3,
+        bedspaceStartDates = listOf(
+          LocalDate.now().minusDays(30),
+          LocalDate.now().minusDays(20),
+          LocalDate.now().minusDays(74),
+        ),
+        bedspaceEndDates = listOf(
+          LocalDate.now().minusDays(1),
+          LocalDate.now().minusDays(5),
+          LocalDate.now().minusDays(19),
+        ),
+      ) { user, jwt, premises, bedspaces ->
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(1))
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(cas3UnarchivePremises)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id.toString())
+          .jsonPath("status").isEqualTo("archived")
+
+        val updatedPremises = cas3PremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.status).isEqualTo(Cas3PremisesStatus.online)
+        assertThat(updatedPremises.startDate).isEqualTo(cas3UnarchivePremises.restartDate)
+        assertThat(updatedPremises.endDate).isNull()
+
+        val updatedBedspaces = cas3BedspacesRepository.findAll()
+        assertThat(updatedBedspaces).hasSize(3)
+        updatedBedspaces.forEach { bedspace ->
+          assertThat(bedspace.startDate).isEqualTo(cas3UnarchivePremises.restartDate)
+          assertThat(bedspace.endDate).isNull()
+        }
+
+        val premisesDomainEvents = domainEventRepository.findByCas3PremisesIdAndType(premises.id, DomainEventType.CAS3_PREMISES_UNARCHIVED)
+        assertThat(premisesDomainEvents).hasSize(1)
+
+        val bedspaceOneDomainEvents = domainEventRepository.findByCas3BedspaceId(bedspaces[0].id)
+        assertThat(bedspaceOneDomainEvents).hasSize(1)
+        assertThat(bedspaceOneDomainEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+
+        val bedspaceTwoDomainEvents = domainEventRepository.findByCas3BedspaceId(bedspaces[1].id)
+        assertThat(bedspaceTwoDomainEvents).hasSize(1)
+        assertThat(bedspaceTwoDomainEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+
+        val bedspaceThreeDomainEvents = domainEventRepository.findByCas3BedspaceId(bedspaces[2].id)
+        assertThat(bedspaceThreeDomainEvents).hasSize(1)
+        assertThat(bedspaceThreeDomainEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+      }
+    }
+
+    @Test
+    fun `Given unarchive premises with duplicated bedspace reference returns 200 OK and unarchive the lastest created bedspace with the same reference`() {
+      givenACas3PremisesComplete(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().minusDays(180),
+        premisesEndDate = LocalDate.now().minusDays(1),
+        premisesStatus = Cas3PremisesStatus.archived,
+        bedspaceCount = 3,
+        bedspaceStartDates = listOf(
+          LocalDate.now().minusDays(130),
+          LocalDate.now().minusDays(20),
+          LocalDate.now().minusDays(80),
+        ),
+        bedspaceEndDates = listOf(
+          LocalDate.now().minusDays(11),
+          LocalDate.now().minusDays(21),
+          LocalDate.now().minusDays(1),
+        ),
+      ) { user, jwt, premises, bedspaces ->
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(5))
+        val bedspaceThree = bedspaces.drop(2).first()
+
+        val duplicatedBedspaceThree = cas3BedspaceEntityFactory.produceAndPersist {
+          withStartDate(LocalDate.now().minusDays(120))
+          withEndDate(LocalDate.now().minusDays(90))
+          withReference(bedspaceThree.reference)
+          withPremises(bedspaceThree.premises)
+        }
+
+        duplicatedBedspaceThree.createdAt = OffsetDateTime.now().minusDays(120)
+        cas3BedspacesRepository.save(duplicatedBedspaceThree)
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(cas3UnarchivePremises)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id.toString())
+          .jsonPath("status").isEqualTo("archived")
+
+        val updatedPremises = cas3PremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.status).isEqualTo(Cas3PremisesStatus.online)
+        assertThat(updatedPremises.startDate).isEqualTo(cas3UnarchivePremises.restartDate)
+        assertThat(updatedPremises.endDate).isNull()
+
+        val premisesDomainEvents = domainEventRepository.findByCas3PremisesIdAndType(premises.id, DomainEventType.CAS3_PREMISES_UNARCHIVED)
+        assertThat(premisesDomainEvents).hasSize(1)
+
+        val allBedspaces = cas3BedspacesRepository.findAll()
+        val updateBedspace = allBedspaces.filter { it.startDate == cas3UnarchivePremises.restartDate }
+        assertThat(updateBedspace).hasSize(3)
+        assertThat(updateBedspace.map { it.id }).contains(bedspaceThree.id)
+        assertThat(updateBedspace.map { it.id }).doesNotContain(duplicatedBedspaceThree.id)
+
+        val bedspaceOneDomainEvents = domainEventRepository.findByCas3BedspaceId(bedspaces[0].id)
+        assertThat(bedspaceOneDomainEvents).hasSize(1)
+        assertThat(bedspaceOneDomainEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+
+        val bedspaceTwoDomainEvents = domainEventRepository.findByCas3BedspaceId(bedspaces[1].id)
+        assertThat(bedspaceTwoDomainEvents).hasSize(1)
+        assertThat(bedspaceTwoDomainEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+
+        val bedspaceThreeDomainEvents = domainEventRepository.findByCas3BedspaceId(bedspaces[2].id)
+        assertThat(bedspaceThreeDomainEvents).hasSize(1)
+        assertThat(bedspaceThreeDomainEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+
+        val duplicatedBedspaceThreeDomainEvents = domainEventRepository.findByCas3BedspaceId(duplicatedBedspaceThree.id)
+        assertThat(duplicatedBedspaceThreeDomainEvents).hasSize(0)
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 400 when restart date is too far in the past`() {
+      givenACas3PremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().minusDays(30),
+        premisesEndDate = LocalDate.now().minusDays(10),
+        premisesStatus = Cas3PremisesStatus.archived,
+      ) { _, jwt, premises ->
+
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().minusDays(8))
+        val restartDate = LocalDate.now()
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(cas3UnarchivePremises)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.restartDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidRestartDateInThePast")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 400 when restart date is too far in the future`() {
+      givenACas3PremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().minusDays(30),
+        premisesEndDate = LocalDate.now().minusDays(1),
+        premisesStatus = Cas3PremisesStatus.archived,
+      ) { _, jwt, premises ->
+
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(9))
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(cas3UnarchivePremises)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.restartDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidRestartDateInTheFuture")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 400 when restart date is before last archive end date`() {
+      val lastArchiveEndDate = LocalDate.now().minusDays(3)
+      givenACas3PremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = LocalDate.now().minusDays(30),
+        premisesEndDate = lastArchiveEndDate,
+        premisesStatus = Cas3PremisesStatus.archived,
+      ) { _, jwt, premises ->
+
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().minusDays(6))
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(cas3UnarchivePremises)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.restartDate")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("beforeLastPremisesArchivedDate")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 404 when premises does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val nonExistentPremisesId = UUID.randomUUID()
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(4))
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/$nonExistentPremisesId/unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(cas3UnarchivePremises)
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Not Found")
+          .jsonPath("$.detail").isEqualTo("No Cas3Premises with an ID of $nonExistentPremisesId could be found")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 400 when premises is not archived`() {
+      givenACas3PremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStatus = Cas3PremisesStatus.online,
+      ) { _, jwt, premises ->
+
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(3))
+
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${premises.id}/unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(cas3UnarchivePremises)
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+          .expectBody()
+          .jsonPath("$.title").isEqualTo("Bad Request")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.premisesId")
+          .jsonPath("$.invalid-params[0].errorType").isEqualTo("premisesNotArchived")
+      }
+    }
+
+    @Test
+    fun `Unarchive premises returns 403 when user does not have permission to manage premises`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        givenACas3Premises(
+          startDate = LocalDate.now().minusDays(30),
+          endDate = LocalDate.now().minusDays(1),
+          status = Cas3PremisesStatus.archived,
+        ) { premises ->
+
+          val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(2))
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${premises.id}/unarchive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .bodyValue(cas3UnarchivePremises)
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
       }
     }
   }
