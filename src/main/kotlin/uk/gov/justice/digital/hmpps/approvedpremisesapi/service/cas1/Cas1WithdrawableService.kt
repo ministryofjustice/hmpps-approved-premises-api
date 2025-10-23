@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -23,6 +24,7 @@ class Cas1WithdrawableService(
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1WithdrawableTreeBuilder: Cas1WithdrawableTreeBuilder,
   private val cas1WithdrawableTreeOperations: Cas1WithdrawableTreeOperations,
+  private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -116,6 +118,8 @@ class Cas1WithdrawableService(
     user: UserEntity,
     userProvidedReason: PlacementApplicationWithdrawalReason?,
   ): CasResult<PlacementApplicationEntity> {
+    lockablePlacementApplicationRepository.acquirePessimisticLock(placementApplicationId)
+
     val placementApplication = cas1PlacementApplicationService.getApplicationOrNull(placementApplicationId)
       ?: return CasResult.NotFound(entityType = "PlacementApplication", id = placementApplicationId.toString())
 

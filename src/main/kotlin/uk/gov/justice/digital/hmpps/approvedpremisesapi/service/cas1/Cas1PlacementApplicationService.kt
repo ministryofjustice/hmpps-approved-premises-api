@@ -450,6 +450,9 @@ class Cas1PlacementApplicationService(
     placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
   ): CasResult<PlacementApplicationEntity> {
     val user = userService.getUserForRequest()
+
+    lockablePlacementApplicationRepository.acquirePessimisticLock(id)
+
     val placementApplicationEntity =
       placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound(
         entityType = "PlacementApplication",
