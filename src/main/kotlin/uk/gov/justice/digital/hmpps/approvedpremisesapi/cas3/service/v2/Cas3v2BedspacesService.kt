@@ -36,6 +36,12 @@ class Cas3v2BedspacesService(
   private val cas3v2DomainEventService: Cas3v2DomainEventService,
   private val objectMapper: ObjectMapper,
 ) {
+
+  fun getBedspace(premisesId: UUID, bedspaceId: UUID): CasResult<Cas3BedspacesEntity> = validatedCasResult {
+    val bedspace = cas3BedspacesRepository.findCas3Bedspace(premisesId, bedspaceId) ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
+    return success(bedspace)
+  }
+
   @SuppressWarnings("MagicNumber")
   fun createBedspace(
     premises: Cas3PremisesEntity,

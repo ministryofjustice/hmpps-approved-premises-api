@@ -44,6 +44,19 @@ class Cas3v2BedspaceController(
     )
   }
 
+  @Suppress("ThrowsCount")
+  @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}")
+  fun getBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3Bedspace> {
+    val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+    val bedspace = extractEntityFromCasResult(cas3v2BedspacesService.getBedspace(premises.id, bedspaceId))
+    val archiveHistory = extractEntityFromCasResult(cas3v2BedspacesService.getBedspaceArchiveHistory(bedspaceId))
+    val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(bedspace)
+    return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace, bedspaceStatus, archiveHistory))
+  }
+
   @GetMapping("/premises/{premisesId}/bedspaces")
   fun getBedspaces(@PathVariable premisesId: UUID): ResponseEntity<Cas3Bedspaces> {
     val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))

@@ -252,6 +252,38 @@ class Cas3v2BedspaceServiceTest {
   }
 
   @Nested
+  inner class GetBedspace {
+    @Test
+    fun `When get a bedspace returns Success with correct result when validation passed`() {
+      val (premises, bedspace) = createPremisesAndBedspace(
+        bedspaceStartDate = LocalDate.now().minusDays(5),
+      )
+
+      every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
+
+      val result = cas3v2BedspacesService.getBedspace(premises.id, bedspace.id)
+
+      assertThatCasResult(result).isSuccess().with { bedspace ->
+        assertThat(bedspace.reference).isEqualTo(bedspace.reference)
+        assertThat(bedspace.startDate).isEqualTo(bedspace.startDate)
+        assertThat(bedspace.premises).isEqualTo(premises)
+      }
+    }
+
+    @Test
+    fun `When get a bedspace returns not found as bedspace does not exist`() {
+      val nonExistingBedspaceId = UUID.randomUUID()
+      val (premises, _) = createPremisesAndBedspace()
+
+      every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, nonExistingBedspaceId) } returns null
+
+      val result = cas3v2BedspacesService.getBedspace(premises.id, nonExistingBedspaceId)
+
+      assertThatCasResult(result).isNotFound("Bedspace", nonExistingBedspaceId)
+    }
+  }
+
+  @Nested
   inner class GetBedspaceArchiveHistory {
     @Test
     fun `When getBedspaceArchiveHistory returns Success with empty list of histories`() {
