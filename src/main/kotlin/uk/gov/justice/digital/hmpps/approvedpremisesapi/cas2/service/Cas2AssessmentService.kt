@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
 import jakarta.transaction.Transactional
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
@@ -24,12 +23,12 @@ class Cas2AssessmentService(
       id = UUID.randomUUID(),
       createdAt = OffsetDateTime.now(),
       application = cas2ApplicationEntity,
-      serviceOrigin = Cas2ServiceOrigin.HDC,
+      serviceOrigin = cas2ApplicationEntity.serviceOrigin,
     ),
   )
 
   fun updateAssessment(assessmentId: UUID, newAssessment: UpdateCas2Assessment): AuthorisableActionResult<ValidatableActionResult<Cas2AssessmentEntity>> {
-    val assessmentEntity = assessmentRepository.findByIdOrNull(assessmentId)
+    val assessmentEntity = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)
       ?: return AuthorisableActionResult.NotFound()
 
     assessmentEntity.apply {
@@ -45,7 +44,7 @@ class Cas2AssessmentService(
   }
 
   fun getAssessment(assessmentId: UUID): AuthorisableActionResult<Cas2AssessmentEntity> {
-    val assessmentEntity = assessmentRepository.findByIdOrNull(assessmentId)
+    val assessmentEntity = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)
       ?: return AuthorisableActionResult.NotFound()
 
     return AuthorisableActionResult.Success(assessmentEntity)
