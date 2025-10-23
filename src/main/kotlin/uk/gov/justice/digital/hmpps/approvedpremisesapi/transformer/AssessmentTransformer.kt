@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
@@ -179,19 +178,6 @@ class AssessmentTransformer(
     JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.accepted
     JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.rejected
     null -> null
-  }
-
-  fun transformApiStatusToDomainSummaryState(status: AssessmentStatus) = when (status) {
-    AssessmentStatus.cas1Completed -> DomainAssessmentSummaryStatus.COMPLETED
-    AssessmentStatus.cas1AwaitingResponse -> DomainAssessmentSummaryStatus.AWAITING_RESPONSE
-    AssessmentStatus.cas1InProgress -> DomainAssessmentSummaryStatus.IN_PROGRESS
-    AssessmentStatus.cas1NotStarted -> DomainAssessmentSummaryStatus.NOT_STARTED
-    AssessmentStatus.cas1Reallocated -> DomainAssessmentSummaryStatus.REALLOCATED
-    AssessmentStatus.cas3InReview -> DomainAssessmentSummaryStatus.IN_REVIEW
-    AssessmentStatus.cas3Unallocated -> DomainAssessmentSummaryStatus.UNALLOCATED
-    AssessmentStatus.cas3Rejected -> DomainAssessmentSummaryStatus.REJECTED
-    AssessmentStatus.cas3Closed -> DomainAssessmentSummaryStatus.CLOSED
-    AssessmentStatus.cas3ReadyToPlace -> DomainAssessmentSummaryStatus.READY_TO_PLACE
   }
 
   fun transformDomainToCas1AssessmentSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult): Cas1AssessmentSummary = Cas1AssessmentSummary(

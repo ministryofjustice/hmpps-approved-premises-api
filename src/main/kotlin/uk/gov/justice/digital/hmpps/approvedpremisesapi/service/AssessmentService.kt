@@ -5,11 +5,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -19,8 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRef
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
@@ -29,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -43,9 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.Clock
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -72,63 +64,6 @@ class AssessmentService(
   private val cas1AssessmentService: Cas1AssessmentService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
-
-  @Deprecated("Use getVisibleCas1AssessmentSummariesForUser instead")
-  fun getVisibleAssessmentSummariesForUserCAS1(
-    user: UserEntity,
-    statuses: List<DomainAssessmentSummaryStatus>,
-    pageCriteria: PageCriteria<AssessmentSortField>,
-  ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
-    val pageable = pageCriteria.toPageableOrAllPages(
-      sortBy = when (pageCriteria.sortBy) {
-        AssessmentSortField.assessmentStatus -> "status"
-        AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
-        AssessmentSortField.assessmentCreatedAt -> "createdAt"
-        AssessmentSortField.assessmentDueAt -> "dueAt"
-        AssessmentSortField.personCrn -> "crn"
-        AssessmentSortField.personName -> "personName"
-        AssessmentSortField.applicationProbationDeliveryUnitName -> error("not supported for CAS1")
-      },
-    )
-
-    val response = assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(
-      user.id.toString(),
-      statuses.map { it.name },
-      pageable,
-    )
-
-    return Pair(response.content, getMetadata(response, pageCriteria))
-  }
-
-  fun getAssessmentSummariesForUserCAS3(
-    user: UserEntity,
-    crnOrName: String?,
-    serviceName: ServiceName,
-    statuses: List<DomainAssessmentSummaryStatus>,
-    pageCriteria: PageCriteria<AssessmentSortField>,
-  ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
-    when (serviceName) {
-      ServiceName.temporaryAccommodation -> {
-        val sortFieldString = when (pageCriteria.sortBy) {
-          AssessmentSortField.assessmentStatus -> "status"
-          AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
-          AssessmentSortField.assessmentCreatedAt -> "createdAt"
-          AssessmentSortField.personCrn -> "crn"
-          AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnitName"
-          else -> "arrivalDate"
-        }
-        val response = assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
-          user.probationRegion.id,
-          crnOrName,
-          statuses.map { it.name },
-          getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString)),
-        )
-
-        return Pair(response.content, getMetadata(response, pageCriteria))
-      }
-      else -> throw RuntimeException("Only CAS3 assessments are currently supported")
-    }
-  }
 
   fun getAssessmentAndValidate(
     user: UserEntity,
@@ -528,14 +463,12 @@ class AssessmentService(
     prePersistAssessment(newAssessment)
     assessmentRepository.save(newAssessment)
 
-    if (application is ApprovedPremisesApplicationEntity) {
-      cas1AssessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application, newAssessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
-      val allocatedToUser = currentAssessment.allocatedToUser
-      if (allocatedToUser != null) {
-        cas1AssessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application)
-      }
-      cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, allocatingUser)
+    cas1AssessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application, newAssessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
+    val allocatedToUser = currentAssessment.allocatedToUser
+    if (allocatedToUser != null) {
+      cas1AssessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application)
     }
+    cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, allocatingUser)
 
     return CasResult.Success(newAssessment)
   }

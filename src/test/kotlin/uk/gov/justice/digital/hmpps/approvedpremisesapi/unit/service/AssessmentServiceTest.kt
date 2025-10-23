@@ -9,7 +9,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -17,17 +16,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -49,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
@@ -76,7 +67,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -120,239 +110,6 @@ class AssessmentServiceTest {
     lockableAssessmentRepository,
     cas1AssessmentService,
   )
-
-  @Test
-  @Deprecated("This test is no longer needed, we can remove it once the deprecated `getVisibleAssessmentSummariesForUserCAS1` method is removed")
-  fun `getVisibleAssessmentSummariesForUserCAS1 only fetches Approved Premises assessments allocated to the user that have not been reallocated`() {
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    user.roles.add(
-      UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.CAS1_ASSESSOR)
-        .withUser(user)
-        .produce(),
-    )
-
-    every {
-      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
-        any(),
-        listOf("NOT_STARTED", "IN_PROGRESS"),
-        PageRequest.of(4, 7, Sort.by("status").ascending()),
-      )
-    } returns Page.empty()
-
-    assessmentService.getVisibleAssessmentSummariesForUserCAS1(
-      user,
-      statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS),
-      PageCriteria(
-        sortBy = AssessmentSortField.assessmentStatus,
-        sortDirection = SortDirection.asc,
-        page = 5,
-        perPage = 7,
-      ),
-    )
-
-    verify {
-      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
-        user.id.toString(),
-        listOf("NOT_STARTED", "IN_PROGRESS"),
-        PageRequest.of(4, 7, Sort.by("status").ascending()),
-      )
-    }
-  }
-
-  @Test
-  fun `getVisibleAssessmentSummariesForUserCAS3 only fetches Temporary Accommodation assessments within the user's probation region`() {
-    val pageCriteria = PageCriteria(
-      sortBy = AssessmentSortField.assessmentStatus,
-      sortDirection = SortDirection.asc,
-      page = 5,
-      perPage = 7,
-    )
-    val pageRequest = PageRequest.of(4, 7, Sort.by("status").ascending())
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    user.roles.add(
-      UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.CAS3_ASSESSOR)
-        .withUser(user)
-        .produce(),
-    )
-
-    every {
-      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
-        any(),
-        null,
-        emptyList(),
-        pageRequest,
-      )
-    } returns Page.empty()
-
-    assessmentService.getAssessmentSummariesForUserCAS3(user, null, temporaryAccommodation, emptyList(), pageCriteria)
-
-    verify(exactly = 1) {
-      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
-        user.probationRegion.id,
-        null,
-        emptyList(),
-        pageRequest,
-      )
-    }
-  }
-
-  @Test
-  fun `getAssessmentSummariesByCrnForUser is not supported for Approved Premises`() {
-    val pageCriteria = PageCriteria(
-      sortBy = AssessmentSortField.assessmentStatus,
-      sortDirection = SortDirection.asc,
-      page = 5,
-      perPage = 7,
-    )
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    user.roles.add(
-      UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.CAS1_ASSESSOR)
-        .withUser(user)
-        .produce(),
-    )
-
-    assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy {
-        assessmentService.getAssessmentSummariesForUserCAS3(
-          user,
-          "SOMECRN",
-          ServiceName.approvedPremises,
-          emptyList(),
-          pageCriteria,
-        )
-      }
-      .withMessage("Only CAS3 assessments are currently supported")
-  }
-
-  @Test
-  fun `getAssessmentSummariesByCrnForUser only fetches Temporary Accommodation assessments for the given CRN and within the user's probation region`() {
-    val pageCriteria = PageCriteria(
-      sortBy = AssessmentSortField.assessmentStatus,
-      sortDirection = SortDirection.asc,
-      page = 5,
-      perPage = 7,
-    )
-    val pageRequest = PageRequest.of(4, 7, Sort.by("status").ascending())
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    user.roles.add(
-      UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.CAS3_ASSESSOR)
-        .withUser(user)
-        .produce(),
-    )
-
-    every {
-      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
-        user.probationRegion.id,
-        "SOMECRN",
-        emptyList(),
-        pageRequest,
-      )
-    } returns Page.empty()
-
-    assessmentService.getAssessmentSummariesForUserCAS3(
-      user,
-      "SOMECRN",
-      temporaryAccommodation,
-      emptyList(),
-      pageCriteria,
-    )
-
-    verify(exactly = 1) {
-      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
-        user.probationRegion.id,
-        "SOMECRN",
-        emptyList(),
-        pageRequest,
-      )
-    }
-  }
-
-  @Test
-  fun `getAssessmentSummariesForUserCAS3 only fetches Temporary Accommodation assessments sorted by default arrivalDate when requested sort field is personName`() {
-    val pageCriteria = PageCriteria(
-      sortBy = AssessmentSortField.personName,
-      sortDirection = SortDirection.asc,
-      page = 5,
-      perPage = 7,
-    )
-    val pageRequest = PageRequest.of(4, 7, Sort.by("arrivalDate").ascending())
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    user.roles.add(
-      UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.CAS3_ASSESSOR)
-        .withUser(user)
-        .produce(),
-    )
-
-    every {
-      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
-        user.probationRegion.id,
-        "SOMECRN",
-        listOf(),
-        pageRequest,
-      )
-    } returns Page.empty()
-
-    assessmentService.getAssessmentSummariesForUserCAS3(
-      user,
-      "SOMECRN",
-      temporaryAccommodation,
-      emptyList(),
-      pageCriteria,
-    )
-
-    verify(exactly = 1) {
-      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
-        user.probationRegion.id,
-        "SOMECRN",
-        emptyList(),
-        pageRequest,
-      )
-    }
-  }
 
   @Test
   fun `getAssessmentAndValidate gets assessment when user is authorised to view assessment`() {

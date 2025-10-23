@@ -2,21 +2,28 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.findAssessmentById
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -32,6 +39,30 @@ class Cas3AssessmentService(
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
 ) {
+  fun getAssessmentSummariesForUser(
+    user: UserEntity,
+    crnOrName: String?,
+    statuses: List<DomainAssessmentSummaryStatus>,
+    pageCriteria: PageCriteria<AssessmentSortField>,
+  ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
+    val sortFieldString = when (pageCriteria.sortBy) {
+      AssessmentSortField.assessmentStatus -> "status"
+      AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
+      AssessmentSortField.assessmentCreatedAt -> "createdAt"
+      AssessmentSortField.personCrn -> "crn"
+      AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnitName"
+      else -> "arrivalDate"
+    }
+    val response = assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
+      user.probationRegion.id,
+      crnOrName,
+      statuses.map { it.name },
+      getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString)),
+    )
+
+    return Pair(response.content, getMetadata(response, pageCriteria))
+  }
+
   @Suppress("ReturnCount")
   fun updateAssessment(
     user: UserEntity,
