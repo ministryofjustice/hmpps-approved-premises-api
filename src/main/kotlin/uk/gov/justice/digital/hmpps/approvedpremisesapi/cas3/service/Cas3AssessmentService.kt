@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
@@ -18,9 +19,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.findAssessmentById
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -36,6 +41,7 @@ class Cas3AssessmentService(
   private val cas3DomainEventService: Cas3DomainEventService,
   private val cas3DomainEventBuilder: Cas3DomainEventBuilder,
   private val userService: UserService,
+  private val offenderService: OffenderService,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
 ) {
@@ -61,6 +67,29 @@ class Cas3AssessmentService(
     )
 
     return Pair(response.content, getMetadata(response, pageCriteria))
+  }
+
+  fun getAssessmentAndValidate(
+    user: UserEntity,
+    assessmentId: UUID,
+    forTimeline: Boolean = false,
+  ): CasResult<TemporaryAccommodationAssessmentEntity> {
+    val assessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessmentId)
+      ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
+
+    val isAuthorised = userAccessService.userCanViewAssessment(user, assessment) || (forTimeline && userAccessService.userCanViewApplication(user, assessment.application))
+
+    if (!isAuthorised) {
+      return CasResult.Unauthorised("Not authorised to view the assessment")
+    }
+
+    val offenderDetails = getOffenderDetails(assessment.application.crn, user.cas1LaoStrategy())
+
+    if (offenderDetails == null) {
+      return CasResult.Unauthorised()
+    }
+
+    return CasResult.Success(assessment)
   }
 
   @Suppress("ReturnCount")
@@ -195,4 +224,18 @@ class Cas3AssessmentService(
   private fun notAfterValidationResult(existingDate: LocalDate) = CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
     "Release date cannot be after accommodation required from date: $existingDate",
   )
+
+  private fun getOffenderDetails(offenderCrn: String, laoStrategy: LaoStrategy): CaseSummary? {
+    val offenderDetails = offenderService.getPersonSummaryInfoResult(
+      offenderCrn,
+      laoStrategy,
+    ).let { offenderDetailsResult ->
+      when (offenderDetailsResult) {
+        is PersonSummaryInfoResult.Success.Full -> offenderDetailsResult.summary
+        else -> null
+      }
+    }
+
+    return offenderDetails
+  }
 }

@@ -126,6 +126,7 @@ class AssessmentController(
   @Operation(
     tags = ["Assessment data"],
     summary = "Gets a single assessment by its id",
+    description = """This endpoint is deprecated; please use the CAS-specific endpoint instead""",
   )
   @RequestMapping(
     method = [RequestMethod.GET],
