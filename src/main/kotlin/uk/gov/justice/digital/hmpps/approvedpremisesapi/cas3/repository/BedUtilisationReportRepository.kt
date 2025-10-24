@@ -35,7 +35,7 @@ interface BedUtilisationReportRepository : JpaRepository<BedEntity, UUID> {
       p.service = 'temporary-accommodation'
       AND (CAST(:probationRegionId AS UUID) IS NULL OR p.probation_region_id = :probationRegionId)
       AND ((b.created_at IS NULL OR b.created_at <= :endDate) AND (b.end_date IS NULL OR b.end_date >= :startDate))
-    ORDER BY b.name      
+    ORDER BY r.name
     """,
     nativeQuery = true,
   )
