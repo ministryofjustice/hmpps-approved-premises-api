@@ -18,6 +18,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
@@ -27,6 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -38,9 +41,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -73,8 +80,125 @@ class Cas3AssessmentServiceTest {
   @MockK
   lateinit var cas3DomainEventBuilder: Cas3DomainEventBuilder
 
+  @MockK
+  lateinit var offenderService: OffenderService
+
   @InjectMockKs
   lateinit var assessmentService: Cas3AssessmentService
+
+  @Nested
+  inner class GetAssessmentAndValidate {
+    @Test
+    fun `getAssessmentAndValidate gets assessment when user is authorised to view assessment`() {
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion { probationRegion }
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withAllocatedToUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion { probationRegion }
+            .produce(),
+        )
+        .withApplication(
+          TemporaryAccommodationApplicationEntityFactory()
+            .withProbationRegion(probationRegion)
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion { probationRegion }
+                .produce(),
+            )
+            .produce(),
+        )
+        .produce()
+
+      every { userAccessService.userCanViewAssessment(user, assessment) } returns true
+
+      every { temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
+      every {
+        offenderService.getOffenderByCrn(
+          assessment.application.crn,
+          user.deliusUsername,
+        )
+      } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      every { offenderService.getPersonSummaryInfoResult(assessment.application.crn, user.cas1LaoStrategy()) } returns
+        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce())
+
+      val result = assessmentService.getAssessmentAndValidate(user, assessment.id)
+
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
+      assertThat(result.value).isEqualTo(assessment)
+    }
+
+    @Test
+    fun `getAssessmentAndValidate does not get assessment when user is not authorised to view assessment`() {
+      val assessmentId = UUID.randomUUID()
+
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion { probationRegion }
+        .produce()
+
+      val assessment =
+        TemporaryAccommodationAssessmentEntityFactory()
+          .withId(assessmentId)
+          .withAllocatedToUser(
+            UserEntityFactory()
+              .withYieldedProbationRegion { probationRegion }
+              .produce(),
+          )
+          .withApplication(
+            TemporaryAccommodationApplicationEntityFactory()
+              .withProbationRegion(probationRegion)
+              .withCreatedByUser(
+                UserEntityFactory()
+                  .withYieldedProbationRegion { probationRegion }
+                  .produce(),
+              )
+              .produce(),
+          )
+          .produce()
+
+      every { userAccessService.userCanViewAssessment(user, assessment) } returns false
+
+      every { temporaryAccommodationAssessmentRepository.findByIdOrNull(assessmentId) } returns assessment
+
+      val result = assessmentService.getAssessmentAndValidate(user, assessmentId)
+
+      assertThat(result is CasResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `getAssessmentAndValidate returns not found for non-existent Assessment`() {
+      val assessmentId = UUID.randomUUID()
+
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      every { temporaryAccommodationAssessmentRepository.findByIdOrNull(assessmentId) } returns null
+
+      val result = assessmentService.getAssessmentAndValidate(user, assessmentId) as CasResult.NotFound
+
+      assertThat(result.id).isEqualTo(assessmentId.toString())
+      assertThat(result.entityType).isEqualTo("AssessmentEntity")
+    }
+  }
 
   @Nested
   inner class GetAssessmentSummariesForUser {

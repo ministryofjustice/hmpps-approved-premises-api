@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3AssessmentTransformer
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sortCas3AssessmentsByName
 import java.util.UUID
 
@@ -61,6 +63,19 @@ class Cas3AssessmentController(
     return ResponseEntity.ok()
       .headers(metadata?.toHeaders())
       .body(transformSummaries)
+  }
+
+  @GetMapping("/assessments/{assessmentId}")
+  fun assessmentsAssessmentIdGet(@PathVariable assessmentId: UUID): ResponseEntity<Cas3Assessment> {
+    val user = userService.getUserForRequest()
+
+    val assessment = extractEntityFromCasResult(cas3AssessmentService.getAssessmentAndValidate(user, assessmentId))
+
+    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
+
+    val transformedResponse = cas3AssessmentTransformer.transformJpaToApi(assessment, personInfo)
+
+    return ResponseEntity.ok(transformedResponse)
   }
 
   @DeleteMapping("/assessments/{assessmentId}/allocations")
