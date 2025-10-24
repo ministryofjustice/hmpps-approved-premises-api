@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
+@SuppressWarnings("LargeClass")
 class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
 
   @BeforeEach
@@ -59,8 +60,8 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
               user,
               localAuthority,
               offenderDetails,
-              bedspaceReference
-            )
+              bedspaceReference,
+            ),
           )
         }
 
@@ -138,7 +139,7 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
       bedspaceOnlineDays = 30,
       occupancyRate = 0.0,
       uniquePropertyRef = premisesOne.id.toShortBase58(),
-      uniqueBedspaceRef = bedspaceOne.id.toShortBase58()
+      uniqueBedspaceRef = bedspaceOne.id.toShortBase58(),
     )
   }
 
@@ -1155,11 +1156,11 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
     user: UserEntity,
     localAuthorityArea: LocalAuthorityAreaEntity = localAuthorityEntityFactory.produceAndPersist(),
     startDate: LocalDate = LocalDate.now().randomDateBefore(6),
-    bedspaceReference: String = randomStringUpperCase(6)
+    bedspaceReference: String = randomStringUpperCase(6),
   ): Pair<Cas3PremisesEntity, Cas3BedspacesEntity> {
     val premises = givenACas3Premises(
       probationDeliveryUnit = user.probationDeliveryUnit!!,
-      localAuthorityArea  = localAuthorityArea,
+      localAuthorityArea = localAuthorityArea,
       status = Cas3PremisesStatus.online,
     )
     val bedspaceStartDate = startDate.minusDays(100)
