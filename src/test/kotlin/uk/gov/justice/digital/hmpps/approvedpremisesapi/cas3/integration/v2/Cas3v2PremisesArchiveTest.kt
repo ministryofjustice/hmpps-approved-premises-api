@@ -506,6 +506,136 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
   }
 
   @Nested
+  inner class CancelScheduledUnarchivePremises {
+    @BeforeEach
+    fun setup() {
+      clock.setNow(Instant.parse("2025-08-27T15:21:34Z"))
+    }
+
+    @Test
+    fun `Cancel scheduled unarchive premises returns 200 OK when successful`() {
+      val previousStartDate = LocalDate.now(clock).minusDays(60)
+      val previousEndDate = previousStartDate.plusDays(30)
+      val newStartDate = LocalDate.now(clock).plusDays(5)
+      givenACas3PremisesWithUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        premisesStartDate = previousStartDate,
+        premisesEndDate = previousEndDate,
+        premisesStatus = Cas3PremisesStatus.archived,
+      ) { userEntity, jwt, premises ->
+        premises.createdAt = OffsetDateTime.now(clock).minusDays(60)
+        cas3PremisesRepository.saveAndFlush(premises)
+
+        val bedspace = V2().createBedspaceInPremises(premises, previousStartDate, previousEndDate)
+
+        // previous unarchive domain events
+        createCas3PremisesUnarchiveDomainEvent(
+          premises,
+          userEntity,
+          previousEndDate.minusDays(180),
+          previousEndDate.plusDays(15),
+          previousStartDate.minusDays(30),
+        )
+
+        val lastPremisesUnarchiveDomainEvent = createCas3PremisesUnarchiveDomainEvent(
+          premises,
+          userEntity,
+          previousStartDate,
+          newStartDate,
+          previousEndDate,
+        )
+
+        createBedspaceUnarchiveDomainEvent(
+          bedspace,
+          premises.id,
+          userEntity.id,
+          previousStartDate.minusDays(40),
+        )
+
+        val lastBedspaceUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(
+          bedspace,
+          premises.id,
+          userEntity.id,
+          newStartDate,
+        )
+
+        premises.startDate = newStartDate
+        premises.endDate = null
+        premises.status = Cas3PremisesStatus.online
+        cas3PremisesRepository.save(premises)
+
+        val updatedBedspace = bedspace.copy(
+          startDate = newStartDate,
+          endDate = null,
+        )
+        cas3BedspacesRepository.save(updatedBedspace)
+
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${premises.id}/cancel-unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("id").isEqualTo(premises.id.toString())
+          .jsonPath("startDate").isEqualTo(previousStartDate)
+          .jsonPath("endDate").isEqualTo(previousEndDate)
+
+        // Verify that premise was updated
+        val updatedPremises = cas3PremisesRepository.findById(premises.id).get()
+        assertThat(updatedPremises.status).isEqualTo(Cas3PremisesStatus.archived)
+        assertThat(updatedPremises.startDate).isEqualTo(premises.createdAt.toLocalDate())
+        assertThat(updatedPremises.endDate).isEqualTo(previousEndDate)
+
+        val updatedPremisesUnarchiveDomainEvent =
+          domainEventRepository.findByIdOrNull(lastPremisesUnarchiveDomainEvent.id)
+        assertThat(updatedPremisesUnarchiveDomainEvent).isNotNull()
+        assertThat(updatedPremisesUnarchiveDomainEvent?.cas3CancelledAt).isEqualTo(OffsetDateTime.now(clock))
+
+        // Verify that bedspace was updated
+        val updatedBed = cas3BedspacesRepository.findById(bedspace.id).get()
+        assertThat(updatedBed.startDate).isEqualTo(previousStartDate)
+        assertThat(updatedBed.endDate).isEqualTo(previousEndDate)
+
+        val updatedBedspaceUnarchiveDomainEvent =
+          domainEventRepository.findByIdOrNull(lastBedspaceUnarchiveDomainEvent.id)
+        assertThat(updatedBedspaceUnarchiveDomainEvent).isNotNull()
+        assertThat(updatedBedspaceUnarchiveDomainEvent?.cas3CancelledAt).isEqualTo(OffsetDateTime.now(clock))
+      }
+    }
+
+    @Test
+    fun `Cancel scheduled unarchive premises returns 404 when premises is not found`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val id = UUID.randomUUID()
+
+        webTestClient.put()
+          .uri("/cas3/v2/premises/$id/cancel-unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("detail").isEqualTo("No Cas3Premises with an ID of $id could be found")
+      }
+    }
+
+    @Test
+    fun `Cancel unarchive premises returns 403 when user is not authorized`() {
+      givenAUser { _, jwt ->
+        val premises = givenACas3Premises()
+
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${premises.id}/cancel-unarchive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+  }
+
+  @Nested
   inner class UnarchivePremises {
     @Test
     fun `Unarchive premises returns 200 OK when successful`() {
