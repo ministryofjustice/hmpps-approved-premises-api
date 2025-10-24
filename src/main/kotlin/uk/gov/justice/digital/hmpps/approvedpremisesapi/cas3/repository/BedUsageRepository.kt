@@ -16,6 +16,7 @@ interface BedUsageRepository : JpaRepository<BedEntity, UUID> {
     INNER JOIN premises p ON r.premises_id = p.id
     WHERE p.service = 'temporary-accommodation'
       AND (CAST(:probationRegionId AS UUID) IS NULL OR p.probation_region_id = :probationRegionId)
+    ORDER BY r.name
     """,
     nativeQuery = true,
   )
@@ -30,6 +31,7 @@ interface BedUsageRepository : JpaRepository<BedEntity, UUID> {
     INNER JOIN cas3_premises p ON b.premises_id = p.id
     LEFT JOIN probation_delivery_units pdu ON p.probation_delivery_unit_id = pdu.id
     WHERE (CAST(:probationRegionId AS UUID) IS NULL OR pdu.probation_region_id = :probationRegionId)
+    ORDER BY b.reference
     """,
     nativeQuery = true,
   )

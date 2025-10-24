@@ -1131,7 +1131,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                   caseSummary.name,
                   caseSummary.dateOfBirth,
                   caseSummary.gender,
-                  caseSummary.profile?.ethnicity
+                  caseSummary.profile?.ethnicity,
                 )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
@@ -1243,7 +1243,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                   caseSummary.name,
                   caseSummary.dateOfBirth,
                   caseSummary.gender,
-                  caseSummary.profile?.ethnicity
+                  caseSummary.profile?.ethnicity,
                 )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
@@ -1361,7 +1361,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                   caseSummary.name,
                   caseSummary.dateOfBirth,
                   caseSummary.gender,
-                  caseSummary.profile?.ethnicity
+                  caseSummary.profile?.ethnicity,
                 )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
@@ -1457,7 +1457,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                   caseSummary.name,
                   caseSummary.dateOfBirth,
                   caseSummary.gender,
-                  caseSummary.profile?.ethnicity
+                  caseSummary.profile?.ethnicity,
                 )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
@@ -1586,7 +1586,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                   caseSummary.name,
                   caseSummary.dateOfBirth,
                   caseSummary.gender,
-                  caseSummary.profile?.ethnicity
+                  caseSummary.profile?.ethnicity,
                 )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
@@ -1698,7 +1698,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                   caseSummary.name,
                   caseSummary.dateOfBirth,
                   caseSummary.gender,
-                  caseSummary.profile?.ethnicity
+                  caseSummary.profile?.ethnicity,
                 )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
@@ -1771,7 +1771,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                   caseSummary.name,
                   caseSummary.dateOfBirth,
                   caseSummary.gender,
-                  caseSummary.profile?.ethnicity
+                  caseSummary.profile?.ethnicity,
                 )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
@@ -1874,7 +1874,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                   caseSummary.name,
                   caseSummary.dateOfBirth,
                   caseSummary.gender,
-                  caseSummary.profile?.ethnicity
+                  caseSummary.profile?.ethnicity,
                 )
               },
               BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
@@ -1948,44 +1948,55 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(userEntity.probationRegion)
           }
-          val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
-          val bed = createBed(room)
 
-          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+          val expectedReportRows = ArrayList<BedUsageReportRow>()
+          repeat(2) { index ->
+            val roomName = if (index == 0) {
+              "ZZZ room"
+            } else {
+              "AAA room"
+            }
+            val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit, roomName = roomName)
+            val bed = createBed(room)
 
-          createBooking(
-            premises,
-            bed,
-            offenderDetails.otherIds.crn,
-            LocalDate.parse("2023-04-05"),
-            LocalDate.parse("2023-04-15"),
-          )
+            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-          val expectedReportRows = listOf(
-            BedUsageReportRow(
-              probationRegion = userEntity.probationRegion.name,
-              pdu = probationDeliveryUnit.name,
-              localAuthority = premises.localAuthorityArea?.name,
-              propertyRef = premises.name,
-              addressLine1 = premises.addressLine1,
-              town = premises.town,
-              postCode = premises.postcode,
-              bedspaceRef = room.name,
-              crn = offenderDetails.otherIds.crn,
-              type = BedUsageType.Booking,
-              startDate = LocalDate.parse("2023-04-05"),
-              endDate = LocalDate.parse("2023-04-15"),
-              durationOfBookingDays = 10,
-              bookingStatus = BookingStatus.provisional,
-              voidCategory = null,
-              voidNotes = null,
-              costCentre = null,
-              uniquePropertyRef = premises.id.toShortBase58(),
-              uniqueBedspaceRef = room.id.toShortBase58(),
-            ),
-          )
+            createBooking(
+              premises,
+              bed,
+              offenderDetails.otherIds.crn,
+              LocalDate.parse("2023-04-05"),
+              LocalDate.parse("2023-04-15"),
+            )
 
-          val expectedDataFrame = expectedReportRows.toDataFrame()
+            expectedReportRows.add(
+              BedUsageReportRow(
+                probationRegion = userEntity.probationRegion.name,
+                pdu = probationDeliveryUnit.name,
+                localAuthority = premises.localAuthorityArea?.name,
+                propertyRef = premises.name,
+                addressLine1 = premises.addressLine1,
+                town = premises.town,
+                postCode = premises.postcode,
+                bedspaceRef = room.name,
+                crn = offenderDetails.otherIds.crn,
+                type = BedUsageType.Booking,
+                startDate = LocalDate.parse("2023-04-05"),
+                endDate = LocalDate.parse("2023-04-15"),
+                durationOfBookingDays = 10,
+                bookingStatus = BookingStatus.provisional,
+                voidCategory = null,
+                voidNotes = null,
+                costCentre = null,
+                uniquePropertyRef = premises.id.toShortBase58(),
+                uniqueBedspaceRef = room.id.toShortBase58(),
+              ),
+            )
+          }
+
+          val expectedDataFrame = expectedReportRows
+            .reversed()
+            .toDataFrame()
 
           webTestClient.get()
             .uri("/cas3/reports/bedUsage?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${userEntity.probationRegion.id}")
@@ -2135,8 +2146,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
                 userEntity.probationRegion,
                 offenderDetails,
                 localAuthorityArea,
-                roomName
-              )
+                roomName,
+              ),
             )
           }
           val expectedDataFrame = expectedReportRows
@@ -2166,14 +2177,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
       probationRegion: ProbationRegionEntity,
       offenderDetails: OffenderDetailSummary,
       localAuthorityArea: LocalAuthorityAreaEntity,
-      roomName: String
+      roomName: String,
     ): BedUtilisationReportRow {
-
       val (premisesOne, roomPremisesOne) = createPremisesAndRoom(
         probationRegion,
         probationDeliveryUnit,
         localAuthorityArea,
-        roomName
+        roomName,
       )
       val bedPremisesOne = createBed(roomPremisesOne)
 
@@ -5602,7 +5612,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
     probationRegion: ProbationRegionEntity,
     probationDeliveryUnit: ProbationDeliveryUnitEntity,
     localAuthorityArea: LocalAuthorityAreaEntity = localAuthorityEntityFactory.produceAndPersist(),
-    roomName: String = randomStringMultiCaseWithNumbers(8)
+    roomName: String = randomStringMultiCaseWithNumbers(8),
   ): Pair<PremisesEntity, RoomEntity> {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
@@ -5626,7 +5636,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
     premises: PremisesEntity,
     roomName: String,
     startDate: LocalDate,
-    endDate: LocalDate
+    endDate: LocalDate,
   ): BedEntity {
     val bed = bedEntityFactory.produceAndPersist {
       withStartDate(startDate)
