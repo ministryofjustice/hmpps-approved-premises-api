@@ -31,6 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
@@ -47,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
@@ -470,6 +473,177 @@ class Cas3v2ArchiveServiceTest {
         "$.premisesId",
         "premisesArchiveDateInThePast",
       )
+    }
+  }
+
+  @Nested
+  inner class CancelScheduledUnarchivePremises {
+    @Test
+    fun `cancelScheduledUnarchivePremises returns Success when premises is successfully restored to previous state`() {
+      val previousStartDate = LocalDate.now().minusDays(30)
+      val currentEndDate = LocalDate.now().plusDays(21)
+      val currentStartDate = LocalDate.now().plusDays(5)
+      val (premises, bedspace) = createPremisesAndBedspace()
+
+      premises.startDate = previousStartDate
+      premises.endDate = currentEndDate
+
+      val premisesUnarchiveEvent = createPremisesUnarchiveEvent(
+        premisesId = premises.id,
+        userId = UUID.randomUUID(),
+        currentStartDate = previousStartDate,
+        newStartDate = currentStartDate,
+        currentEndDate = currentEndDate,
+      )
+
+      val bedspaceUnarchiveEvent = createBedspaceUnarchiveEvent(
+        bedspaceId = bedspace.id,
+        premisesId = premises.id,
+        userId = UUID.randomUUID(),
+        currentStartDate = previousStartDate,
+        currentEndDate = LocalDate.now().minusDays(1),
+        newStartDate = currentStartDate,
+      )
+
+      val premisesDomainEvent = DomainEventEntityFactory()
+        .withData(objectMapper.writeValueAsString(premisesUnarchiveEvent))
+        .produce()
+
+      val bedspaceDomainEvent = DomainEventEntityFactory()
+        .withData(objectMapper.writeValueAsString(bedspaceUnarchiveEvent))
+        .produce()
+
+      every { cas3PremisesRepositoryMock.findByIdOrNull(premises.id) } returns premises
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_UNARCHIVED) } returns premisesDomainEvent
+      every { cas3BedspaceRepositoryMock.findByPremisesId(premises.id) } returns listOf(bedspace)
+      every { domainEventRepositoryMock.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(bedspace.id, CAS3_BEDSPACE_UNARCHIVED) } returns bedspaceDomainEvent
+      every { cas3PremisesRepositoryMock.save(match { it.id == premises.id }) } returns premises
+      every { cas3BedspaceRepositoryMock.save(match { it.id == bedspace.id }) } returns bedspace
+
+      val updatedPremisesDomainEvent = premisesDomainEvent.copy(
+        cas3CancelledAt = OffsetDateTime.now(),
+      )
+      every { domainEventRepositoryMock.save(match { it.id == premisesDomainEvent.id }) } returns updatedPremisesDomainEvent
+
+      val updatedBedspaceDomainEvent = bedspaceDomainEvent.copy(
+        cas3CancelledAt = OffsetDateTime.now(),
+      )
+      every { domainEventRepositoryMock.save(match { it.id == bedspaceDomainEvent.id }) } returns updatedBedspaceDomainEvent
+
+      val result = cas3v2ArchiveService.cancelScheduledUnarchivePremises(premises.id)
+
+      assertThatCasResult(result).isSuccess().with { updatedPremises ->
+        assertThat(updatedPremises.id).isEqualTo(premises.id)
+        assertThat(updatedPremises.startDate).isEqualTo(previousStartDate)
+        assertThat(updatedPremises.endDate).isEqualTo(currentEndDate)
+        assertThat(updatedPremises.status).isEqualTo(Cas3PremisesStatus.archived)
+      }
+
+      verify(exactly = 1) {
+        cas3PremisesRepositoryMock.save(
+          match<Cas3PremisesEntity> {
+            it.id == premises.id && it.startDate == previousStartDate && it.status == Cas3PremisesStatus.archived
+          },
+        )
+
+        domainEventRepositoryMock.save(
+          match<DomainEventEntity> {
+            it.id == updatedPremisesDomainEvent.id && it.cas3CancelledAt != null
+          },
+        )
+
+        val previousBedspaceStartDate = bedspaceUnarchiveEvent.eventDetails.currentStartDate
+        val previousBedspaceEndDate = bedspaceUnarchiveEvent.eventDetails.currentEndDate
+
+        cas3BedspaceRepositoryMock.save(
+          match<Cas3BedspacesEntity> {
+            it.id == bedspace.id && it.startDate == previousBedspaceStartDate && it.endDate == previousBedspaceEndDate
+          },
+        )
+
+        domainEventRepositoryMock.save(
+          match<DomainEventEntity> {
+            it.id == updatedBedspaceDomainEvent.id && it.cas3CancelledAt != null
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when premises have end date today`() {
+      val premises = createPremisesEntity(endDate = LocalDate.now())
+
+      every { cas3PremisesRepositoryMock.findByIdOrNull(premises.id) } returns premises
+
+      val result = cas3v2ArchiveService.cancelScheduledUnarchivePremises(premises.id)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesAlreadyArchived")
+    }
+
+    @Test
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when premises status is archived`() {
+      val premises = createPremisesEntity(
+        startDate = LocalDate.now().minusDays(30),
+        endDate = LocalDate.now(),
+        status = Cas3PremisesStatus.archived,
+      )
+
+      every { cas3PremisesRepositoryMock.findByIdOrNull(premises.id) } returns premises
+
+      val result = cas3v2ArchiveService.cancelScheduledUnarchivePremises(premises.id)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesAlreadyArchived")
+    }
+
+    @Test
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when no unarchive event found`() {
+      val premises = createPremisesEntity(
+        startDate = LocalDate.now().minusDays(30),
+        endDate = null,
+        status = Cas3PremisesStatus.online,
+      )
+
+      every { cas3PremisesRepositoryMock.findByIdOrNull(premises.id) } returns premises
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_UNARCHIVED) } returns null
+
+      val result = cas3v2ArchiveService.cancelScheduledUnarchivePremises(premises.id)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesNotScheduledToUnarchive")
+    }
+
+    @Test
+    fun `cancelScheduledUnarchivePremises returns FieldValidationError when unarchive event in the past`() {
+      val premises = createPremisesEntity(
+        startDate = LocalDate.now().plusDays(10),
+        status = Cas3PremisesStatus.online,
+      )
+
+      val dataPremisesDomainEvent = createPremisesUnarchiveEvent(
+        premises.id,
+        UUID.randomUUID(),
+        LocalDate.now().minusDays(10),
+        LocalDate.now().minusDays(20),
+        LocalDate.now().minusDays(30),
+      )
+      val premisesDomainEvent = createPremisesUnarchiveDomainEvent(dataPremisesDomainEvent)
+
+      every { cas3PremisesRepositoryMock.findByIdOrNull(premises.id) } returns premises
+      every { domainEventRepositoryMock.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(premises.id, CAS3_PREMISES_UNARCHIVED) } returns premisesDomainEvent
+
+      val result = cas3v2ArchiveService.cancelScheduledUnarchivePremises(premises.id)
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "premisesUnarchiveDateInThePast")
+    }
+
+    @Test
+    fun `cancelScheduledUnarchivePremises returns NotFound when premises does not exist`() {
+      val premisesId = UUID.randomUUID()
+
+      every { cas3PremisesRepositoryMock.findByIdOrNull(premisesId) } returns null
+
+      val result = cas3v2ArchiveService.cancelScheduledUnarchivePremises(premisesId)
+
+      assertThatCasResult(result).isNotFound("Premises", premisesId.toString())
     }
   }
 
@@ -1665,6 +1839,41 @@ class Cas3v2ArchiveServiceTest {
     occurredAt = data.timestamp.atOffset(ZoneOffset.UTC),
     data = objectMapper.writeValueAsString(data),
     type = CAS3_PREMISES_ARCHIVED,
+    premisesId = data.eventDetails.premisesId,
+    transactionId = data.eventDetails.transactionId!!,
+  )
+
+  @SuppressWarnings("LongParameterList")
+  private fun createPremisesUnarchiveEvent(
+    premisesId: UUID,
+    userId: UUID,
+    newStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    currentStartDate: LocalDate = LocalDate.now(),
+    transactionId: UUID = UUID.randomUUID(),
+  ): CAS3PremisesUnarchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3PremisesUnarchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.premisesUnarchived,
+      eventDetails = CAS3PremisesUnarchiveEventDetails(
+        premisesId = premisesId,
+        currentStartDate = currentStartDate,
+        newStartDate = newStartDate,
+        currentEndDate = currentEndDate,
+        userId = userId,
+        transactionId = transactionId,
+      ),
+    )
+  }
+
+  private fun createPremisesUnarchiveDomainEvent(data: CAS3PremisesUnarchiveEvent) = createDomainEvent(
+    id = data.id,
+    occurredAt = data.timestamp.atOffset(ZoneOffset.UTC),
+    data = objectMapper.writeValueAsString(data),
+    type = CAS3_PREMISES_UNARCHIVED,
     premisesId = data.eventDetails.premisesId,
     transactionId = data.eventDetails.transactionId!!,
   )
