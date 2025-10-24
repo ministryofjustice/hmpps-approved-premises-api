@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
@@ -98,17 +97,20 @@ class Cas3ApplicationsController(
         is PersonInfoResult.Success.Full -> personInfoResult
       }
 
-    val applicationResult = createApplication(
-      personInfo,
+    val applicationResult = cas3ApplicationService.createApplication(
+      body.crn,
       user,
-      body,
+      body.convictionId,
+      body.deliusEventNumber,
+      body.offenceId,
       createWithRisks,
+      personInfo,
     )
 
     val application = extractEntityFromCasResult(applicationResult)
 
     return ResponseEntity
-      .created(URI.create("/applications/${application.id}"))
+      .created(URI.create("/cas3/applications/${application.id}"))
       .body(cas3ApplicationTransformer.transformJpaToApi(application, personInfo))
   }
 
@@ -151,21 +153,6 @@ class Cas3ApplicationsController(
   @DeleteMapping("/applications/{applicationId}")
   fun deleteApplication(@PathVariable applicationId: UUID): ResponseEntity<Unit> = ResponseEntity.ok(
     extractEntityFromCasResult(cas3ApplicationService.markApplicationAsDeleted(applicationId)),
-  )
-
-  private fun createApplication(
-    personInfo: PersonInfoResult.Success.Full,
-    user: UserEntity,
-    body: Cas3NewApplication,
-    createWithRisks: Boolean?,
-  ): CasResult<out TemporaryAccommodationApplicationEntity> = applicationService.createTemporaryAccommodationApplication(
-    body.crn,
-    user,
-    body.convictionId,
-    body.deliusEventNumber,
-    body.offenceId,
-    createWithRisks,
-    personInfo,
   )
 
   private fun getPersonDetailAndTransform(

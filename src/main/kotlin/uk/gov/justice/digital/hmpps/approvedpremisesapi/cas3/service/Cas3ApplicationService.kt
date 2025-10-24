@@ -5,6 +5,8 @@ import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
@@ -15,9 +17,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.LocalTime
@@ -37,6 +46,8 @@ class Cas3ApplicationService(
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
   private val cas3DomainEventService: Cas3DomainEventService,
+  private val offenderService: OffenderService,
+  private val offenderRisksService: OffenderRisksService,
   private val objectMapper: ObjectMapper,
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
@@ -62,6 +73,72 @@ class Cas3ApplicationService(
       CasResult.Success(applicationEntity)
     } else {
       CasResult.Unauthorised()
+    }
+  }
+
+  fun createApplication(
+    crn: String,
+    user: UserEntity,
+    convictionId: Long?,
+    deliusEventNumber: String?,
+    offenceId: String?,
+    createWithRisks: Boolean? = true,
+    personInfo: PersonInfoResult.Success.Full,
+  ): CasResult<TemporaryAccommodationApplicationEntity> {
+    if (!user.hasRole(UserRole.CAS3_REFERRER)) {
+      return CasResult.Unauthorised()
+    }
+
+    return validatedCasResult {
+      val offenderDetails =
+        when (
+          val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+        ) {
+          is AuthorisableActionResult.NotFound -> return@validatedCasResult "$.crn" hasSingleValidationError "doesNotExist"
+          is AuthorisableActionResult.Unauthorised ->
+            return@validatedCasResult "$.crn" hasSingleValidationError "userPermission"
+
+          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        }
+
+      if (convictionId == null) {
+        "$.convictionId" hasValidationError "empty"
+      }
+
+      if (deliusEventNumber == null) {
+        "$.deliusEventNumber" hasValidationError "empty"
+      }
+
+      if (offenceId == null) {
+        "$.offenceId" hasValidationError "empty"
+      }
+
+      if (validationErrors.any()) {
+        return@validatedCasResult fieldValidationError
+      }
+
+      val riskRatings: PersonRisks? = if (createWithRisks == true) {
+        offenderRisksService.getPersonRisks(crn)
+      } else {
+        null
+      }
+
+      val prisonName = getPrisonName(personInfo)
+
+      val createdApplication = applicationRepository.save(
+        createApplicationEntity(
+          crn,
+          user,
+          convictionId,
+          deliusEventNumber,
+          offenceId,
+          riskRatings,
+          offenderDetails,
+          prisonName,
+        ),
+      )
+
+      success(createdApplication)
     }
   }
 
@@ -158,6 +235,65 @@ class Cas3ApplicationService(
     } else {
       CasResult.GeneralValidationError("Cannot mark as deleted: temporary accommodation application already submitted.")
     }
+  }
+
+  private fun createApplicationEntity(
+    crn: String,
+    user: UserEntity,
+    convictionId: Long?,
+    deliusEventNumber: String?,
+    offenceId: String?,
+    riskRatings: PersonRisks?,
+    offenderDetails: OffenderDetailSummary,
+    prisonName: String?,
+  ): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
+    id = UUID.randomUUID(),
+    crn = crn,
+    createdByUser = user,
+    data = null,
+    document = null,
+    createdAt = OffsetDateTime.now(),
+    submittedAt = null,
+    deletedAt = null,
+    convictionId = convictionId!!,
+    eventNumber = deliusEventNumber!!,
+    offenceId = offenceId!!,
+    riskRatings = riskRatings,
+    assessments = mutableListOf(),
+    probationRegion = user.probationRegion,
+    nomsNumber = offenderDetails.otherIds.nomsNumber,
+    arrivalDate = null,
+    isRegisteredSexOffender = null,
+    needsAccessibleProperty = null,
+    hasHistoryOfArson = null,
+    isDutyToReferSubmitted = null,
+    dutyToReferSubmissionDate = null,
+    isEligible = null,
+    eligibilityReason = null,
+    dutyToReferLocalAuthorityAreaName = null,
+    dutyToReferOutcome = null,
+    prisonNameOnCreation = prisonName,
+    personReleaseDate = null,
+    name = "${offenderDetails.firstName} ${offenderDetails.surname}",
+    isHistoryOfSexualOffence = null,
+    isConcerningSexualBehaviour = null,
+    isConcerningArsonBehaviour = null,
+    prisonReleaseTypes = null,
+    probationDeliveryUnit = null,
+    previousReferralProbationRegion = null,
+    previousReferralProbationDeliveryUnit = null,
+  )
+
+  private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {
+    val prisonName = when (personInfo.inmateDetail?.custodyStatus) {
+      InmateStatus.IN,
+      InmateStatus.TRN,
+      -> {
+        personInfo.inmateDetail.assignedLivingUnit?.agencyName ?: personInfo.inmateDetail.assignedLivingUnit?.agencyId
+      }
+      else -> null
+    }
+    return prisonName
   }
 
   private fun isUserAuthorizedToAccessApplication(user: UserEntity, application: ApplicationEntity): Boolean = userAccessService.userCanAccessTemporaryAccommodationApplication(user, application)
