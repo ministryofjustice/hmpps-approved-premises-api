@@ -38,16 +38,16 @@ class ExternalUserDetailsFactory : Factory<ExternalUserDetails> {
   }
 
   override fun produce(): ExternalUserDetails = ExternalUserDetails(
-      username = this.username(),
-      userId = this.userId(),
-      firstName = this.firstName(),
-      lastName = this.lastName(),
-      email = this.email(),
-      authSource = this.authSource(),
-      enabled = this.enabled(),
-      locked = this.locked(),
-      verified = this.verified(),
-      lastLoggedIn = this.lastLoggedIn(),
-      inactiveReason = this.inactiveReason(),
+    username = this.username(),
+    userId = this.userId(),
+    firstName = this.firstName(),
+    lastName = this.lastName(),
+    email = this.email(),
+    authSource = this.authSource(),
+    enabled = this.enabled(),
+    locked = this.locked(),
+    verified = this.verified(),
+    lastLoggedIn = this.lastLoggedIn(),
+    inactiveReason = this.inactiveReason(),
   )
 }

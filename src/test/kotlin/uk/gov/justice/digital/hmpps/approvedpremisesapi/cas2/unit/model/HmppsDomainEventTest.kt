@@ -11,24 +11,24 @@ import java.time.ZonedDateTime
 class HmppsDomainEventTest {
 
   private fun buildDomainEvent(
-      occurredAt: ZonedDateTime = ZonedDateTime.now(),
-      additionalInfo: AdditionalInformation = AdditionalInformation(mutableMapOf("staffCode" to "staffCode1234")),
-      personReference: PersonReference = PersonReference(
-          listOf(
-              PersonIdentifier(
-                  type = "NOMS",
-                  value = "nomsNumber",
-              ),
-          ),
+    occurredAt: ZonedDateTime = ZonedDateTime.now(),
+    additionalInfo: AdditionalInformation = AdditionalInformation(mutableMapOf("staffCode" to "staffCode1234")),
+    personReference: PersonReference = PersonReference(
+      listOf(
+        PersonIdentifier(
+          type = "NOMS",
+          value = "nomsNumber",
+        ),
       ),
+    ),
   ) = HmppsDomainEvent(
-      eventType = "eventType",
-      version = 1,
-      detailUrl = "detailUrl",
-      occurredAt = occurredAt,
-      description = "description",
-      additionalInformation = additionalInfo,
-      personReference = personReference,
+    eventType = "eventType",
+    version = 1,
+    detailUrl = "detailUrl",
+    occurredAt = occurredAt,
+    description = "description",
+    additionalInformation = additionalInfo,
+    personReference = personReference,
   )
 
   @Test

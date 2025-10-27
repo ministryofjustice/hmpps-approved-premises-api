@@ -28,9 +28,9 @@ class Cas2NomisUserEmailSeedJobTest {
   fun `fails if no user found`() {
     every { nomisUserRepository.findByNomisUsername("testuser") } returns null
 
-      assertThrows<RuntimeException> {
-          seedJob.processRow(NomisUsernameEmailRow("testuser", "asd@asd.com"))
-      }
+    assertThrows<RuntimeException> {
+      seedJob.processRow(NomisUsernameEmailRow("testuser", "asd@asd.com"))
+    }
   }
 
   @Test
