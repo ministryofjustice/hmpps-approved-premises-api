@@ -1948,55 +1948,44 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(userEntity.probationRegion)
           }
+          val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
+          val bed = createBed(room)
 
-          val expectedReportRows = ArrayList<BedUsageReportRow>()
-          repeat(2) { index ->
-            val roomName = if (index == 0) {
-              "ZZZ room"
-            } else {
-              "AAA room"
-            }
-            val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit, roomName = roomName)
-            val bed = createBed(room)
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+          createBooking(
+            premises,
+            bed,
+            offenderDetails.otherIds.crn,
+            LocalDate.parse("2023-04-05"),
+            LocalDate.parse("2023-04-15"),
+          )
 
-            createBooking(
-              premises,
-              bed,
-              offenderDetails.otherIds.crn,
-              LocalDate.parse("2023-04-05"),
-              LocalDate.parse("2023-04-15"),
-            )
+          val expectedReportRows = listOf(
+            BedUsageReportRow(
+              probationRegion = userEntity.probationRegion.name,
+              pdu = probationDeliveryUnit.name,
+              localAuthority = premises.localAuthorityArea?.name,
+              propertyRef = premises.name,
+              addressLine1 = premises.addressLine1,
+              town = premises.town,
+              postCode = premises.postcode,
+              bedspaceRef = room.name,
+              crn = offenderDetails.otherIds.crn,
+              type = BedUsageType.Booking,
+              startDate = LocalDate.parse("2023-04-05"),
+              endDate = LocalDate.parse("2023-04-15"),
+              durationOfBookingDays = 10,
+              bookingStatus = BookingStatus.provisional,
+              voidCategory = null,
+              voidNotes = null,
+              costCentre = null,
+              uniquePropertyRef = premises.id.toShortBase58(),
+              uniqueBedspaceRef = room.id.toShortBase58(),
+            ),
+          )
 
-            expectedReportRows.add(
-              BedUsageReportRow(
-                probationRegion = userEntity.probationRegion.name,
-                pdu = probationDeliveryUnit.name,
-                localAuthority = premises.localAuthorityArea?.name,
-                propertyRef = premises.name,
-                addressLine1 = premises.addressLine1,
-                town = premises.town,
-                postCode = premises.postcode,
-                bedspaceRef = room.name,
-                crn = offenderDetails.otherIds.crn,
-                type = BedUsageType.Booking,
-                startDate = LocalDate.parse("2023-04-05"),
-                endDate = LocalDate.parse("2023-04-15"),
-                durationOfBookingDays = 10,
-                bookingStatus = BookingStatus.provisional,
-                voidCategory = null,
-                voidNotes = null,
-                costCentre = null,
-                uniquePropertyRef = premises.id.toShortBase58(),
-                uniqueBedspaceRef = room.id.toShortBase58(),
-              ),
-            )
-          }
-
-          val expectedDataFrame = expectedReportRows
-            .reversed()
-            .toDataFrame()
+          val expectedDataFrame = expectedReportRows.toDataFrame()
 
           webTestClient.get()
             .uri("/cas3/reports/bedUsage?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${userEntity.probationRegion.id}")
