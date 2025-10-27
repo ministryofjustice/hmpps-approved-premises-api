@@ -18,6 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_PREMISES_IN_PAST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_UNARCHIVE_BEDSPACE
@@ -154,6 +156,48 @@ class Cas3v2ArchiveService(
     }
 
     success(unarchivedBedspace)
+  }
+
+  fun canArchivePremisesInFuture(premisesId: UUID): Cas3ValidationResults {
+    val maximumPremisesArchiveDate = LocalDate.now(clock).plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
+    var affectedBedspaces = mutableListOf<Cas3ValidationResult>()
+
+    val overlapBookings = cas3v2BookingRepository.findActiveOverlappingBookingByPremisesId(premisesId, LocalDate.now(clock))
+
+    overlapBookings.map {
+      val bookingTurnaround = workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
+      if (bookingTurnaround >= maximumPremisesArchiveDate) {
+        affectedBedspaces.add(
+          Cas3ValidationResult(
+            entityId = it.bedspace.id,
+            entityReference = it.bedspace.reference,
+            date = bookingTurnaround,
+          ),
+        )
+      }
+    }
+
+    val overlappingVoids = cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesIdV2(premisesId, maximumPremisesArchiveDate)
+
+    overlappingVoids.map {
+      affectedBedspaces.add(
+        Cas3ValidationResult(
+          entityId = it.bedspace!!.id,
+          entityReference = it.bedspace!!.reference,
+          date = it.endDate,
+        ),
+      )
+    }
+
+    affectedBedspaces = affectedBedspaces
+      .groupBy { it.entityId }
+      .mapValues { it.value.sortedByDescending { it.date }.take(1) }
+      .map { it.value.first() }
+      .toMutableList()
+
+    return Cas3ValidationResults(
+      items = affectedBedspaces,
+    )
   }
 
   @Suppress("CyclomaticComplexMethod")

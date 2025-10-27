@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
 import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UnarchivePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2ArchiveService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
@@ -23,6 +25,15 @@ class Cas3v2ArchivePremisesController(
   private val cas3PremisesTransformer: Cas3PremisesTransformer,
   private val archiveService: Cas3v2ArchiveService,
 ) {
+
+  @GetMapping("/premises/{premisesId}/can-archive")
+  fun canArchivePremises(@PathVariable premisesId: UUID): ResponseEntity<Cas3ValidationResults> {
+    extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+
+    val result = archiveService.canArchivePremisesInFuture(premisesId)
+
+    return ResponseEntity.ok(result)
+  }
 
   @Transactional
   @PostMapping("/premises/{premisesId}/archive")
