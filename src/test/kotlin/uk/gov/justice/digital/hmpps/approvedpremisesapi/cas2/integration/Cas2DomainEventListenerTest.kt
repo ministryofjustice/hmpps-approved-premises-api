@@ -22,8 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prison
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisStaffInformationFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisStaffInformationFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor

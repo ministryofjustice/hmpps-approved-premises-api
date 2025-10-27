@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
 import java.time.ZonedDateTime
 

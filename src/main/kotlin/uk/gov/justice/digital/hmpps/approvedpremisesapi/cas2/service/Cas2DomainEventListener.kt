@@ -7,7 +7,7 @@ import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
 @ConditionalOnProperty(prefix = "feature-flags", name = ["cas2-sqs-listener-enabled"], havingValue = "true")

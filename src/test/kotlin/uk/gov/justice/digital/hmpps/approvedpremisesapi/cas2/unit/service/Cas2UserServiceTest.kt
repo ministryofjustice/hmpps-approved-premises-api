@@ -28,9 +28,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesForRequesterApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisGeneralAccountFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisStaffInformationFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisGeneralAccountFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisStaffInformationFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 

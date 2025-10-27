@@ -21,10 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Locatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.AdditionalInformation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.AdditionalInformation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.PersonIdentifier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import java.time.Instant
 import java.time.ZoneId

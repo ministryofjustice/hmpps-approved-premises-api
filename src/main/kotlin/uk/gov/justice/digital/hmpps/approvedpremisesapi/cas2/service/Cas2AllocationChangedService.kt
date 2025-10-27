@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 
 @Service
