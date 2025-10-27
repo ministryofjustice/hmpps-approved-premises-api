@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -928,6 +929,43 @@ class AssessmentTest : IntegrationTestBase() {
       .isUnauthorized
   }
 
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class)
+  fun `Get assessment by ID returns 200 with correct body for all roles`(role: UserRole) {
+    givenAUser(roles = listOf(role)) { _, jwt ->
+      givenAUser { userEntity, _ ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          webTestClient.get()
+            .uri("/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                assessmentTransformer.transformJpaToApi(
+                  assessment,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                ),
+              ),
+            )
+        }
+      }
+    }
+  }
+
   @Test
   fun `Get assessment by ID returns 403 when Offender is LAO and user does not have LAO qualification or pass the LAO check`() {
     givenAUser { userEntity, jwt ->
@@ -974,6 +1012,44 @@ class AssessmentTest : IntegrationTestBase() {
             .produce(),
           userEntity.deliusUsername,
         )
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(userEntity)
+        }
+
+        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+          withAllocatedToUser(userEntity)
+          withApplication(application)
+        }
+
+        webTestClient.get()
+          .uri("/assessments/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              assessmentTransformer.transformJpaToApi(
+                assessment,
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              ),
+            ),
+          )
+      }
+    }
+  }
+
+  @Test
+  fun `Get assessment by ID returns 200 when Offender is LAO and user does have LAO qualification but does not pass the LAO check`() {
+    givenAUser(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+      givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCurrentRestriction(true)
+        },
+      ) { offenderDetails, inmateDetails ->
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)

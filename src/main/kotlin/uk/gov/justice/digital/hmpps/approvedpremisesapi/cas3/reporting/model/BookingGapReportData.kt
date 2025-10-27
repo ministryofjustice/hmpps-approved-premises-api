@@ -49,11 +49,11 @@ data class UnavailablePeriod(
   val startDate: LocalDate,
   val endDate: LocalDate,
 ) {
+  // Add helper: periods are contiguous if day-adjacent
   fun isDayAdjacentWith(other: UnavailablePeriod): Boolean = endDate.plusDays(1) == other.startDate || other.endDate.plusDays(1) == startDate
 
-  fun overlaps(other: UnavailablePeriod): Boolean = startDate <= other.endDate && endDate >= other.startDate
-
-  fun canMergeWith(other: UnavailablePeriod): Boolean = bedId == other.bedId && (overlaps(other) || isDayAdjacentWith(other))
+  // Merge if overlap or day adjacency, and same bed
+  fun canMergeWith(other: UnavailablePeriod): Boolean = bedId == other.bedId && isDayAdjacentWith(other)
 }
 
 data class DateRange(

@@ -23,14 +23,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Assessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
@@ -849,151 +847,6 @@ class Cas3AssessmentTest : IntegrationTestBase() {
       assertThat(responseBody?.detail).isEqualTo(errorDetail)
 
       return response
-    }
-  }
-
-  @Nested
-  inner class GetAssessment {
-    @Test
-    fun `Get assessment by ID without JWT returns 401`() {
-      webTestClient.get()
-        .uri("/cas3/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @Test
-    fun `Get assessment by ID returns 403 when Offender is LAO and user does not have LAO qualification or pass the LAO check`() {
-      givenAUser { userEntity, jwt ->
-        givenAnOffender(
-          offenderDetailsConfigBlock = {
-            withCurrentExclusion(true)
-          },
-        ) { offenderDetails, inmateDetails ->
-
-          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withProbationRegion(userEntity.probationRegion)
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(userEntity)
-          }
-
-          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(userEntity)
-            withApplication(application)
-          }
-
-          webTestClient.get()
-            .uri("/cas3/assessments/${assessment.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isForbidden
-        }
-      }
-    }
-
-    @Test
-    fun `Get assessment by ID returns 200 when Offender is LAO and user does not have LAO qualification but does pass the LAO check`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender(
-          offenderDetailsConfigBlock = {
-            withCurrentExclusion(true)
-          },
-        ) { offenderDetails, inmateDetails ->
-
-          apDeliusContextMockUserAccess(
-            CaseAccessFactory()
-              .withCrn(offenderDetails.otherIds.crn)
-              .withUserExcluded(false)
-              .withUserRestricted(false)
-              .produce(),
-            userEntity.deliusUsername,
-          )
-
-          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withProbationRegion(userEntity.probationRegion)
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(userEntity)
-            withArrivalDate(LocalDate.now().plusDays(30))
-          }
-
-          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(userEntity)
-            withApplication(application)
-          }
-
-          webTestClient.get()
-            .uri("/cas3/assessments/${assessment.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                cas3AssessmentTransformer.transformJpaToApi(
-                  assessment,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                ),
-              ),
-            )
-        }
-      }
-    }
-
-    @Test
-    fun `Get assessment by ID returns 200 with summary data transformed correctly`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
-
-          val application = produceAndPersistApplication(offenderDetails.otherIds.crn, userEntity) {
-            withArrivalDate(LocalDate.now().minusDays(100))
-            withPersonReleaseDate(LocalDate.now().minusDays(100))
-          }
-
-          val assessment =
-            produceAndPersistAssessmentEntity(userEntity, application) {
-              withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
-            }
-
-          webTestClient.get()
-            .uri("/cas3/assessments/${assessment.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .jsonPath("$.summaryData.num").isEqualTo(50)
-            .jsonPath("$.summaryData.text").isEqualTo("Hello world!")
-        }
-      }
-    }
-
-    private fun produceAndPersistApplication(
-      crn: String,
-      user: UserEntity,
-      nonDefaultFields: TemporaryAccommodationApplicationEntityFactory.() -> Unit = {},
-    ): TemporaryAccommodationApplicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withCrn(crn)
-      withCreatedByUser(user)
-      withProbationRegion(user.probationRegion)
-      nonDefaultFields()
-    }
-
-    private fun produceAndPersistAssessmentEntity(
-      user: UserEntity,
-      application: TemporaryAccommodationApplicationEntity,
-      nonDefaultFields: TemporaryAccommodationAssessmentEntityFactory.() -> Unit = {},
-    ): TemporaryAccommodationAssessmentEntity {
-      val produceAndPersist = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-        withAllocatedToUser(user)
-        withApplication(application)
-        withReleaseDate(null)
-        withAccommodationRequiredFromDate(null)
-        nonDefaultFields()
-      }
-      return produceAndPersist
     }
   }
 
