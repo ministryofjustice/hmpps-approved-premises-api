@@ -45,7 +45,7 @@ data class Cas2StaffMember(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Usertype = values().first { it -> it.value == value }
+      fun forValue(value: kotlin.String): Usertype = values().first { it.value == value }
     }
   }
 }
