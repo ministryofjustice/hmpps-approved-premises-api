@@ -13,6 +13,7 @@ enum class TemporaryAccommodationUserRole(@get:JsonValue val value: kotlin.Strin
   assessor("assessor"),
   referrer("referrer"),
   reporter("reporter"),
+  admin("admin"),
   ;
 
   companion object {
