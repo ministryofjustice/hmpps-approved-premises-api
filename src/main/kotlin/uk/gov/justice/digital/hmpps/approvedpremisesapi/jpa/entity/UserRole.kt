@@ -157,6 +157,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
   CAS3_REFERRER(ServiceName.temporaryAccommodation, null),
   CAS3_REPORTER(ServiceName.temporaryAccommodation, null),
+  CAS3_ADMIN(ServiceName.temporaryAccommodation, null),
   ;
 
   fun hasPermission(permission: UserPermission) = permissions.contains(permission)

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUserRole.admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUserRole.referrer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUserRole.reporter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_USER_MANAGER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_ADMIN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
@@ -106,6 +108,18 @@ class UserTransformerTest {
       ) as TemporaryAccommodationUser
 
       assertThat(result.roles).contains(referrer)
+      assertThat(result.service).isEqualTo("CAS3")
+      verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
+    }
+
+    @Test
+    fun `transformJpaToApi CAS3 Should successfully transfer user entity role CAS3_ADMIN to admin`() {
+      val result = userTransformer.transformJpaToApi(
+        buildUserEntity(CAS3_ADMIN),
+        temporaryAccommodation,
+      ) as TemporaryAccommodationUser
+
+      assertThat(result.roles).contains(admin)
       assertThat(result.service).isEqualTo("CAS3")
       verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
     }

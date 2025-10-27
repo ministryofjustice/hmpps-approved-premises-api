@@ -115,6 +115,7 @@ class UserTransformer(
     UserRole.CAS3_ASSESSOR -> TemporaryAccommodationUserRole.assessor
     UserRole.CAS3_REFERRER -> TemporaryAccommodationUserRole.referrer
     UserRole.CAS3_REPORTER -> TemporaryAccommodationUserRole.reporter
+    UserRole.CAS3_ADMIN -> TemporaryAccommodationUserRole.admin
     else -> null
   }
 
