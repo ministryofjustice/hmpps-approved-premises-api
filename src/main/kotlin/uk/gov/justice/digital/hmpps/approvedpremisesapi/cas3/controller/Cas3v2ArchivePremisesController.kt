@@ -66,4 +66,17 @@ class Cas3v2ArchivePremisesController(
 
     return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(updatedPremises))
   }
+
+  @PutMapping("/premises/{premisesId}/cancel-unarchive")
+  fun cancelScheduledUnarchivePremises(
+    @PathVariable premisesId: UUID,
+  ): ResponseEntity<Cas3Premises> {
+    val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+
+    val updatedPremises = extractEntityFromCasResult(
+      archiveService.cancelScheduledUnarchivePremises(premisesId),
+    )
+
+    return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(updatedPremises))
+  }
 }

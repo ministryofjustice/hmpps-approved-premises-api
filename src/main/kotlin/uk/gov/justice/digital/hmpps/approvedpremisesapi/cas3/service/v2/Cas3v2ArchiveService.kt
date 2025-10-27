@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Cas3FieldValidationError
@@ -437,6 +439,70 @@ class Cas3v2ArchiveService(
     premises.status = Cas3PremisesStatus.online
 
     return success(cas3PremisesRepository.save(premises))
+  }
+
+  @Transactional
+  fun cancelScheduledUnarchivePremises(
+    premisesId: UUID,
+  ): CasResult<Cas3PremisesEntity> = validatedCasResult {
+    val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
+      ?: return CasResult.NotFound("Premises", premisesId.toString())
+
+    if (premises.status == Cas3PremisesStatus.archived || (premises.endDate != null && premises.endDate!! <= LocalDate.now(clock))) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesAlreadyArchived"
+    }
+
+    val latestUnarchivePremisesDomainEvent = domainEventRepository.findLastCas3PremisesActiveDomainEventByPremisesIdAndType(
+      premisesId,
+      CAS3_PREMISES_UNARCHIVED,
+    ) ?: return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesNotScheduledToUnarchive"
+
+    val unarchivePremisesDomainEventDetails = objectMapper.readValue(latestUnarchivePremisesDomainEvent.data, CAS3PremisesUnarchiveEvent::class.java).eventDetails
+
+    if (unarchivePremisesDomainEventDetails.newStartDate <= LocalDate.now(clock)) {
+      return@validatedCasResult "$.premisesId" hasSingleValidationError "premisesUnarchiveDateInThePast"
+    }
+
+    domainEventRepository.save(
+      latestUnarchivePremisesDomainEvent.copy(
+        cas3CancelledAt = OffsetDateTime.now(clock),
+      ),
+    )
+
+    premises.startDate = unarchivePremisesDomainEventDetails.currentStartDate
+    premises.endDate = unarchivePremisesDomainEventDetails.currentEndDate
+    premises.status = Cas3PremisesStatus.archived
+
+    val updatedPremises = cas3PremisesRepository.save(premises)
+
+    val bedspaces = cas3BedspacesRepository.findByPremisesId(premises.id)
+    bedspaces.forEach { bedspace ->
+      val latestBedspaceUnarchiveDomainEvent = domainEventRepository.findLastCas3BedspaceActiveDomainEventByBedspaceIdAndType(
+        bedspace.id,
+        CAS3_BEDSPACE_UNARCHIVED,
+      )
+
+      if (latestBedspaceUnarchiveDomainEvent != null) {
+        domainEventRepository.save(
+          latestBedspaceUnarchiveDomainEvent.copy(
+            cas3CancelledAt = OffsetDateTime.now(clock),
+          ),
+        )
+
+        val bedspaceUnarchiveEventDetails = objectMapper.readValue(latestBedspaceUnarchiveDomainEvent.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails
+        val previousBedspaceStartDate = bedspaceUnarchiveEventDetails.currentStartDate
+        val previousBedspaceEndDate = bedspaceUnarchiveEventDetails.currentEndDate
+
+        cas3BedspacesRepository.save(
+          bedspace.copy(
+            startDate = previousBedspaceStartDate,
+            endDate = previousBedspaceEndDate,
+          ),
+        )
+      }
+    }
+
+    success(updatedPremises)
   }
 
   private fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate, transactionId: UUID): Cas3PremisesEntity {
