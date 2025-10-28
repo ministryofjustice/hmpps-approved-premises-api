@@ -127,7 +127,7 @@ class Cas1SpaceBookingCreateService(
       transferredFrom = details.transferredFrom?.booking,
       transferType = details.transferredFrom?.type,
       deliusId = null,
-      reason = details.reason,
+      additionalInformation = details.additionalInformation,
     )
   }
 
@@ -144,6 +144,6 @@ class Cas1SpaceBookingCreateService(
     val createdBy: UserEntity,
     val characteristics: List<CharacteristicEntity>,
     val transferredFrom: TransferInfo?,
-    val reason: String?,
+    val additionalInformation: String?,
   )
 }

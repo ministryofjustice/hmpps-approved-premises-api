@@ -394,7 +394,7 @@ class Cas1ApplicationSeedService(
         deliusEventNumber = "2",
         migratedManagementInfoFrom = null,
         deliusId = null,
-        reason = null,
+        additionalInformation = null,
       ),
     )
   }

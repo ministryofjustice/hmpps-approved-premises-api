@@ -186,7 +186,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = characteristics,
         transferredFrom = null,
-        reason = "Transfer to another AP",
+        additionalInformation = "Transfer to another AP",
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
@@ -200,7 +200,7 @@ class Cas1SpaceBookingServiceTest {
           premisesId = premises.id,
           arrivalDate = LocalDate.now(),
           departureDate = LocalDate.now().plusDays(1),
-          reason = "Transfer to another AP",
+          additionalInformation = "Transfer to another AP",
         ),
         createdBy = user,
         characteristics = characteristics,
@@ -252,7 +252,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = characteristics,
         transferredFrom = null,
-        reason = null,
+        additionalInformation = null,
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
@@ -1040,7 +1040,7 @@ class Cas1SpaceBookingServiceTest {
           booking = existingSpaceBooking,
           changeRequestId = null,
         ),
-        reason = null,
+        additionalInformation = null,
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("oh no create validation failed")
@@ -1143,7 +1143,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = existingSpaceBooking.criteria,
         transferredFrom = transferredFrom,
-        reason = null,
+        additionalInformation = null,
       )
 
       val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
@@ -1369,7 +1369,7 @@ class Cas1SpaceBookingServiceTest {
           booking = existingSpaceBooking,
           changeRequestId = existingChangeRequest.id,
         ),
-        reason = null,
+        additionalInformation = null,
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("common create validation failed")
@@ -1413,7 +1413,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = emptyList(),
         transferredFrom = transferInfo,
-        reason = null,
+        additionalInformation = null,
       )
 
       val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
@@ -1477,7 +1477,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = emptyList(),
         transferredFrom = transferInfo,
-        reason = null,
+        additionalInformation = null,
       )
 
       val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()

@@ -34,5 +34,5 @@ data class Cas1SpaceBooking(
   val cancellation: Cas1SpaceBookingCancellation? = null,
   val nonArrival: Cas1SpaceBookingNonArrival? = null,
   val deliusEventNumber: String? = null,
-  val reason: String? = null,
+  val additionalInformation: String? = null,
 )
