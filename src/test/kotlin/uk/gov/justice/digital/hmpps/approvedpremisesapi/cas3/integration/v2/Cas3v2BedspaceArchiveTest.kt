@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
@@ -18,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -575,7 +578,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           .isBadRequest
           .expectBody()
           .jsonPath("$.title").isEqualTo("Bad Request")
-          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.bedspaceId")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("doesNotExist")
       }
     }
@@ -602,7 +605,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           .isBadRequest
           .expectBody()
           .jsonPath("$.title").isEqualTo("Bad Request")
-          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.bedspaceId")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("bedspaceNotScheduledToArchive")
       }
     }
@@ -629,7 +632,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           .isBadRequest
           .expectBody()
           .jsonPath("$.title").isEqualTo("Bad Request")
-          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.bedspaceId")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("bedspaceAlreadyArchived")
       }
     }
@@ -862,7 +865,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           .isBadRequest
           .expectBody()
           .jsonPath("$.title").isEqualTo("Bad Request")
-          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.restartDate")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.restartDate")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("invalidRestartDateInTheFuture")
       }
     }
@@ -891,7 +894,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           .isBadRequest
           .expectBody()
           .jsonPath("$.title").isEqualTo("Bad Request")
-          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.restartDate")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.restartDate")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("beforeLastBedspaceArchivedDate")
       }
     }
@@ -952,7 +955,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           .isBadRequest
           .expectBody()
           .jsonPath("$.title").isEqualTo("Bad Request")
-          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("\$.bedspaceId")
+          .jsonPath("$.invalid-params[0].propertyName").isEqualTo("$.bedspaceId")
           .jsonPath("$.invalid-params[0].errorType").isEqualTo("bedspaceNotArchived")
       }
     }
@@ -1133,5 +1136,306 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
         }
       }
     }
+  }
+
+  @Nested
+  inner class CanArchiveBedspace {
+    @BeforeEach
+    fun setup() {
+      clock.setNow(Instant.parse("2025-08-26T00:00:00Z"))
+    }
+
+    @Test
+    fun `Can archive bedspace returns 200 when there are no bookings or voids after 3 months from today's date`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenACas3PremisesWithBedspaces(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}/can-archive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .isEmpty()
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.v2.Cas3v2BedspaceArchiveTest#getCanArchiveBedspaceBookingsByStatusCases")
+    fun `Can archive bedspace returns 200 with Cas3ValidationResult when a provisional booking departure date is more than 3 months from today's date`(args: Pair<LocalDate, Cas3BookingStatus>) {
+      val (departureDate, status) = args
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenACas3PremisesWithBedspaces(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+          cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.now().plusDays(1))
+            withDepartureDate(departureDate)
+            withStatus(status)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}/can-archive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.entityId").isEqualTo(bedspace.id.toString())
+            .jsonPath("$.entityReference").isEqualTo(bedspace.reference)
+            .jsonPath("$.date").isEqualTo(departureDate.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive bedspace returns 200 when a booking is cancelled`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenACas3PremisesWithBedspaces(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.now(clock).plusDays(1))
+            withDepartureDate(LocalDate.now(clock).plusMonths(4))
+            withStatus(Cas3BookingStatus.provisional)
+          }
+
+          cas3CancellationEntityFactory.produceAndPersist {
+            withBooking(booking)
+            withReason(cancellationReasonEntityFactory.produceAndPersist())
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}/can-archive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .isEmpty()
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive bedspace returns 200 when void is cancelled`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenACas3PremisesWithBedspaces(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBedspace(bedspace)
+            withStartDate(LocalDate.now(clock).plusDays(1))
+            withEndDate(LocalDate.now(clock).plusMonths(4))
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+            withCancellationDate(OffsetDateTime.now())
+            withCancellationNotes(randomStringMultiCaseWithNumbers(50))
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}/can-archive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .isEmpty()
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive bedspace returns 200 with Cas3ValidationResult when a void end date is more than 3 months from today's date`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenACas3PremisesWithBedspaces(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+          val futureVoidEndDate = LocalDate.now(clock).plusMonths(4)
+
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withBedspace(bedspace)
+            withStartDate(LocalDate.now(clock).plusDays(10))
+            withEndDate(futureVoidEndDate)
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}/can-archive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.entityId").isEqualTo(bedspace.id.toString())
+            .jsonPath("$.entityReference").isEqualTo(bedspace.reference)
+            .jsonPath("$.date").isEqualTo(futureVoidEndDate.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive bedspace returns 200 with Cas3ValidationResult when booking turnaround date is more than 3 months from today's date`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenACas3PremisesWithBedspaces(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+          val justUnder3Months = LocalDate.now(clock).plusMonths(3)
+
+          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.now(clock).plusDays(1))
+            withDepartureDate(justUnder3Months)
+            withStatus(Cas3BookingStatus.provisional)
+          }
+
+          cas3v2TurnaroundFactory.produceAndPersist {
+            withWorkingDayCount(2)
+            withBooking(booking)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}/can-archive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.entityId").isEqualTo(bedspace.id.toString())
+            .jsonPath("$.entityReference").isEqualTo(bedspace.reference)
+            .jsonPath("$.date").isEqualTo(justUnder3Months.plusDays(2).toString())
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive bedspace returns 200 when booking departure date is 3 months minus 1 day from today's date`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenACas3PremisesWithBedspaces(
+          region = userEntity.probationRegion,
+          bedspaceCount = 1,
+        ) { premises, bedspaces ->
+          val bedspace = bedspaces.first()
+          val exactlyThreeMonthsMinusOneDay = LocalDate.now(clock).plusMonths(3).minusDays(1)
+
+          cas3BookingEntityFactory.produceAndPersist {
+            withServiceName(ServiceName.temporaryAccommodation)
+            withPremises(premises)
+            withBedspace(bedspace)
+            withArrivalDate(LocalDate.now(clock).minusDays(5))
+            withDepartureDate(exactlyThreeMonthsMinusOneDay)
+            withStatus(Cas3BookingStatus.provisional)
+          }
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}/can-archive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .isEmpty()
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive bedspace returns 404 when premises does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val nonExistentPremisesId = UUID.randomUUID()
+        val nonExistentBedspaceId = UUID.randomUUID()
+
+        webTestClient.get()
+          .uri("/cas3/v2/premises/$nonExistentPremisesId/bedspaces/$nonExistentBedspaceId/can-archive")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Can archive bedspace returns 404 when bedspace does not exist`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenACas3PremisesWithBedspaces(region = userEntity.probationRegion) { premises, _ ->
+          val nonExistentBedspaceId = UUID.randomUUID()
+
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/$nonExistentBedspaceId/can-archive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isNotFound
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive bedspace returns 403 when user does not have permission to view premises in that region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenACas3PremisesWithBedspaces(bedspaceCount = 1) { premises, bedspaces ->
+          givenACas3PremisesWithBedspaces(bedspaceCount = 1) { premisesTwo, bedspacesPremisesTwo ->
+            val bedspace = bedspacesPremisesTwo.first()
+
+            webTestClient.get()
+              .uri("/cas3/v2/premises/${premisesTwo.id}/bedspaces/${bedspace.id}/can-archive")
+              .headers(buildTemporaryAccommodationHeaders(jwt))
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Can archive a bedspace for a Premises that's not in the user's region returns 403 Forbidden`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenACas3PremisesWithBedspaces { premises, bedspaces ->
+          webTestClient.get()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspaces[0].id}/can-archive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+  }
+
+  private companion object {
+    @JvmStatic
+    fun getCanArchiveBedspaceBookingsByStatusCases() = listOf(
+      Pair(LocalDate.now().plusMonths(4), Cas3BookingStatus.provisional),
+      Pair(LocalDate.now().plusMonths(5), Cas3BookingStatus.arrived),
+      Pair(LocalDate.now().plusMonths(6), Cas3BookingStatus.confirmed),
+    )
   }
 }

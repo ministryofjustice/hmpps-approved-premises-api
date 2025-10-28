@@ -125,7 +125,9 @@ fun IntegrationTestBase.givenACas3PremisesWithBedspaces(
   bedspaceCount: Int = 1,
   bedspaceReferences: List<String> = emptyList(),
   bedspaceCharacteristics: List<Cas3BedspaceCharacteristicEntity> = emptyList(),
-  bedspacesStartDates: List<LocalDate> = emptyList(),
+  bedspacesStartDates: List<LocalDate> = listOf(
+    LocalDate.now(clock).minusDays(30),
+  ),
   bedspacesEndDates: List<LocalDate?> = emptyList(),
   bedspacesCreatedDate: List<LocalDate> = emptyList(),
   block: (premises: Cas3PremisesEntity, bedspaces: List<Cas3BedspacesEntity>) -> Unit,

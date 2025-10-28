@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
 import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ArchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Bedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UnarchiveBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2ArchiveService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
@@ -80,5 +82,19 @@ class Cas3v2BedspaceArchiveController(
     )
     val bedspaceStatus = cas3v2BedspacesService.getBedspaceStatus(bedspace)
     return ResponseEntity.ok(cas3BedspaceTransformer.transformJpaToApi(bedspace, bedspaceStatus))
+  }
+
+  @GetMapping("/premises/{premisesId}/bedspaces/{bedspaceId}/can-archive")
+  fun canArchiveBedspace(
+    @PathVariable premisesId: UUID,
+    @PathVariable bedspaceId: UUID,
+  ): ResponseEntity<Cas3ValidationResult?> {
+    val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+
+    val result = extractEntityFromCasResult(
+      cas3v2ArchiveService.canArchiveBedspaceInFuture(premisesId, bedspaceId),
+    )
+
+    return ResponseEntity.ok(result)
   }
 }
