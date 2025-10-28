@@ -197,28 +197,6 @@ WHERE a.created_by_user_id = :userId and a.deleted_at IS NULL
   )
   fun findAllTemporaryAccommodationSummariesCreatedByUser(userId: UUID): List<TemporaryAccommodationApplicationSummary>
 
-  @Query(
-    """
-SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt,
-    ass.submitted_at as latestAssessmentSubmittedAt,
-    ass.decision as latestAssessmentDecision,
-    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
-    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = taa.id) > 0 as hasBooking,
-    CAST(taa.risk_ratings AS TEXT) as riskRatings
-FROM temporary_accommodation_applications taa 
-LEFT JOIN applications a ON a.id = taa.id 
-LEFT JOIN assessments ass ON ass.application_id = taa.id AND ass.reallocated_at IS NULL 
-WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NULL
-    """,
-    nativeQuery = true,
-  )
-  fun findAllSubmittedTemporaryAccommodationSummariesByRegion(probationRegionId: UUID): List<TemporaryAccommodationApplicationSummary>
-
   @Query("SELECT DISTINCT(a.nomsNumber) FROM ApplicationEntity a WHERE a.nomsNumber IS NOT NULL")
   fun getDistinctNomsNumbers(): List<String>
 

@@ -372,7 +372,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     )
 
     webTestClient.put()
-      .uri("/assessments/${realApplicationRepository.findByIdOrNull(applicationId)!!.getLatestAssessment()!!.id}")
+      .uri("/cas1/assessments/${realApplicationRepository.findByIdOrNull(applicationId)!!.getLatestAssessment()!!.id}")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         UpdateAssessment(

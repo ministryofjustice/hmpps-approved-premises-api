@@ -7,10 +7,13 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
@@ -66,7 +69,7 @@ class Cas3AssessmentController(
   }
 
   @GetMapping("/assessments/{assessmentId}")
-  fun assessmentsAssessmentIdGet(@PathVariable assessmentId: UUID): ResponseEntity<Cas3Assessment> {
+  fun getAssessmentById(@PathVariable assessmentId: UUID): ResponseEntity<Cas3Assessment> {
     val user = userService.getUserForRequest()
 
     val assessment = extractEntityFromCasResult(cas3AssessmentService.getAssessmentAndValidate(user, assessmentId))
@@ -76,6 +79,23 @@ class Cas3AssessmentController(
     val transformedResponse = cas3AssessmentTransformer.transformJpaToApi(assessment, personInfo)
 
     return ResponseEntity.ok(transformedResponse)
+  }
+
+  @PutMapping("/assessments/{assessmentId}")
+  @Transactional
+  fun updateAssessment(
+    @PathVariable assessmentId: UUID,
+    @RequestBody updateAssessment: UpdateAssessment,
+  ): ResponseEntity<Cas3Assessment> {
+    val user = userService.getUserForRequest()
+
+    val assessment = extractEntityFromCasResult(cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment))
+
+    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
+
+    return ResponseEntity.ok(
+      cas3AssessmentTransformer.transformJpaToApi(assessment, personInfo),
+    )
   }
 
   @DeleteMapping("/assessments/{assessmentId}/allocations")
