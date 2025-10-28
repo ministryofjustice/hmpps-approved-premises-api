@@ -200,17 +200,10 @@ class AssessmentController(
 
     val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
 
-    val assessmentAuthResult = assessmentService.acceptAssessment(
+    val assessmentAuthResult = cas3AssessmentService.acceptAssessment(
       acceptingUser = user,
       assessmentId = assessmentId,
       document = serializedData,
-      placementRequirements = assessmentAcceptance.requirements,
-      placementDates = assessmentAcceptance.placementDates,
-      apType = assessmentAcceptance.apType,
-      notes = assessmentAcceptance.notes,
-      agreeWithShortNoticeReason = assessmentAcceptance.agreeWithShortNoticeReason,
-      agreeWithShortNoticeReasonComments = assessmentAcceptance.agreeWithShortNoticeReasonComments,
-      reasonForLateApplication = assessmentAcceptance.reasonForLateApplication,
     )
 
     extractEntityFromCasResult(assessmentAuthResult)

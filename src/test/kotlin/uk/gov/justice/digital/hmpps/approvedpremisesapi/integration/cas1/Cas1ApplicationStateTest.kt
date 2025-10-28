@@ -151,7 +151,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   fun `a CAS1 application can transition between all states correctly with no arrival date`() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
 
-    submitApplication(false)
+    submitApplication()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
 
     reallocateAssessment(user1)
@@ -161,7 +161,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
 
     approveAssessment()
-    assertApplicationStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
 
     createSpaceBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
@@ -214,7 +214,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `a CAS1 application with one booking will transition correctly if the booking is cancelled `() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
-    submitApplication(false)
+    submitApplication()
     allocateAndUpdateAssessment()
     approveAssessment()
     createSpaceBooking()
@@ -226,7 +226,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `a CAS1 application with multiple bookings will not change status if 1 booking is cancelled `() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
-    submitApplication(false)
+    submitApplication()
     allocateAndUpdateAssessment()
     approveAssessment()
     createSpaceBooking()
@@ -239,7 +239,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `a CAS1 application with space booking will transition correctly if the space booking is cancelled `() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
-    submitApplication(false)
+    submitApplication()
     allocateAndUpdateAssessment()
     approveAssessment()
     createSpaceBooking()
@@ -251,7 +251,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `a CAS1 application with space bookings will not change status if 1 space booking is cancelled `() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
-    submitApplication(false)
+    submitApplication()
     allocateAndUpdateAssessment()
     approveAssessment()
     createSpaceBooking()
@@ -398,7 +398,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     )
 
     webTestClient.post()
-      .uri("/assessments/${assessment.id}/acceptance")
+      .uri("/cas1/assessments/${assessment.id}/acceptance")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         AssessmentAcceptance(

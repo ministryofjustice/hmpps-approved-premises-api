@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -34,9 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import java.time.Clock
 import java.time.OffsetDateTime
@@ -51,13 +45,10 @@ class AssessmentService(
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
   private val referralRejectionReasonRepository: ReferralRejectionReasonRepository,
   private val offenderService: OffenderService,
-  private val placementRequestService: Cas1PlacementRequestService,
-  private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
   private val objectMapper: ObjectMapper,
   private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
-  private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val clock: Clock,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
@@ -125,109 +116,41 @@ class AssessmentService(
     return assessment
   }
 
-  /**
-   * This function is now only used by CAS1 for reporting integration tests
-   * (see Cas1RequestForPlacementReportTest.acceptLatestAssessmentLegacyBehaviour).
-   *
-   * The UI is now using `Cas1AssessmentService` via /cas1/ endpoints.
-   *
-   * Once APS-2577 is complete the related report test can be removed as it's no
-   * longer required (via APS-2596), meaning CAS1 specific code can also
-   * be removed from this function
-   *
-   * Note that CAS3 may still be using this function
-   */
-  @Deprecated("will be removed in the near future, use cas specific version instead")
-  @SuppressWarnings("ThrowsCount")
-  fun acceptAssessment(
-    acceptingUser: UserEntity,
+  fun updateAssessment(
+    updatingUser: UserEntity,
     assessmentId: UUID,
-    document: String?,
-    placementRequirements: PlacementRequirements?,
-    placementDates: PlacementDates?,
-    apType: ApType?,
-    notes: String?,
-    agreeWithShortNoticeReason: Boolean? = null,
-    agreeWithShortNoticeReasonComments: String? = null,
-    reasonForLateApplication: String? = null,
+    data: String?,
   ): CasResult<AssessmentEntity> {
-    val acceptedAt = OffsetDateTime.now(clock)
-    val createPlacementRequest = placementDates != null
-
-    val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
-      is CasResult.Success -> validation.value
-      else -> return validation
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)) {
+      is CasResult.Success -> assessmentResult.value
+      else -> return assessmentResult
     }
 
     if (assessment is ApprovedPremisesAssessmentEntity) {
-      val validationErrors = ValidationErrors()
-      if (placementRequirements == null) {
-        validationErrors["$.requirements"] = "empty"
-        return CasResult.FieldValidationError(validationErrors)
-      }
-      when (val dataValidation = validateCas1AssessmentData(assessment)) {
-        is CasResult.Success -> {}
-        is CasResult.Error -> return dataValidation
-      }
+      val allocatedToUser = assessment.allocatedToUser
+        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
 
-      assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
-      assessment.agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments
-      assessment.reasonForLateApplication = reasonForLateApplication
+      if (allocatedToUser.id != updatingUser.id) {
+        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+      }
     }
 
-    assessment.document = document
-    assessment.submittedAt = acceptedAt
-    assessment.decision = AssessmentDecision.ACCEPTED
-
-    if (assessment is TemporaryAccommodationAssessmentEntity) {
-      assessment.completedAt = null
+    if (assessment.isWithdrawn) {
+      return CasResult.GeneralValidationError("The application has been withdrawn.")
     }
+
+    if (assessment.submittedAt != null) {
+      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
+    }
+
+    if (assessment.reallocatedAt != null) {
+      return CasResult.GeneralValidationError("The assessment has been reallocated, this assessment is read only")
+    }
+
+    assessment.data = data
 
     preUpdateAssessment(assessment)
     val savedAssessment = assessmentRepository.save(assessment)
-
-    if (savedAssessment is TemporaryAccommodationAssessmentEntity) {
-      savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.READY_TO_PLACE)
-    }
-
-    if (assessment is ApprovedPremisesAssessmentEntity) {
-      val placementRequirementsResult = cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
-
-      if (createPlacementRequest) {
-        placementRequestService.createPlacementRequest(
-          placementRequirementsResult,
-          placementDates,
-          notes,
-          false,
-          null,
-        )
-      }
-    }
-
-    val application = savedAssessment.application
-
-    val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, acceptingUser.deliusUsername, true)) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
-        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
-      }
-
-    if (application is ApprovedPremisesApplicationEntity) {
-      cas1AssessmentDomainEventService.assessmentAccepted(
-        application = application,
-        assessment = assessment,
-        offenderDetails = offenderDetails,
-        placementDates = placementDates,
-        apType = apType,
-        acceptingUser = acceptingUser,
-      )
-      cas1AssessmentEmailService.assessmentAccepted(application)
-
-      if (createPlacementRequest) {
-        cas1PlacementRequestEmailService.placementRequestSubmitted(application)
-      }
-    }
 
     return CasResult.Success(savedAssessment)
   }

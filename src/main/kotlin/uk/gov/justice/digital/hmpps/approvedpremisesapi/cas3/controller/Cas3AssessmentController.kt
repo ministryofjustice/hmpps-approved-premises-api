@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Assessment
@@ -32,6 +34,7 @@ import java.util.UUID
 
 @Cas3Controller
 class Cas3AssessmentController(
+  private val objectMapper: ObjectMapper,
   private val cas3AssessmentService: Cas3AssessmentService,
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
@@ -96,6 +99,27 @@ class Cas3AssessmentController(
     return ResponseEntity.ok(
       cas3AssessmentTransformer.transformJpaToApi(assessment, personInfo),
     )
+  }
+
+  @PostMapping("/assessments/{assessmentId}/acceptance")
+  @Transactional
+  fun acceptAssessment(
+    @PathVariable assessmentId: UUID,
+    @RequestBody assessmentAcceptance: Cas3AssessmentAcceptance,
+  ): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
+
+    val assessmentAuthResult = cas3AssessmentService.acceptAssessment(
+      acceptingUser = user,
+      assessmentId = assessmentId,
+      document = serializedData,
+    )
+
+    extractEntityFromCasResult(assessmentAuthResult)
+
+    return ResponseEntity(HttpStatus.OK)
   }
 
   @DeleteMapping("/assessments/{assessmentId}/allocations")

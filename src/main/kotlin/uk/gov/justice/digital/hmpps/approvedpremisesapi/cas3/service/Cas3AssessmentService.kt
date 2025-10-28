@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -44,6 +46,7 @@ class Cas3AssessmentService(
   private val offenderService: OffenderService,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
   private val lockableAssessmentRepository: LockableAssessmentRepository,
+  private val clock: Clock,
 ) {
   fun getAssessmentSummariesForUser(
     user: UserEntity,
@@ -158,6 +161,30 @@ class Cas3AssessmentService(
     return CasResult.Success(assessmentRepository.save(assessment))
   }
 
+  @SuppressWarnings("ThrowsCount")
+  fun acceptAssessment(
+    acceptingUser: UserEntity,
+    assessmentId: UUID,
+    document: String?,
+  ): CasResult<TemporaryAccommodationAssessmentEntity> {
+    val acceptedAt = OffsetDateTime.now(clock)
+
+    val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
+      is CasResult.Success -> validation.value
+      else -> return validation
+    }
+
+    assessment.document = document
+    assessment.submittedAt = acceptedAt
+    assessment.decision = AssessmentDecision.ACCEPTED
+    assessment.completedAt = null
+
+    val savedAssessment = assessmentRepository.save(assessment)
+    savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.READY_TO_PLACE)
+
+    return CasResult.Success(savedAssessment)
+  }
+
   fun deallocateAssessment(requestUser: UserEntity, assessmentId: UUID): CasResult<Unit> {
     if (!userAccessService.userCanDeallocateTask(requestUser)) {
       return CasResult.Unauthorised()
@@ -224,6 +251,22 @@ class Cas3AssessmentService(
   private fun notAfterValidationResult(existingDate: LocalDate) = CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
     "Release date cannot be after accommodation required from date: $existingDate",
   )
+
+  private fun validateAssessment(
+    user: UserEntity,
+    assessmentId: UUID,
+  ): CasResult<TemporaryAccommodationAssessmentEntity> {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+      is CasResult.Success -> assessmentResult.value
+      else -> return assessmentResult
+    }
+
+    if (assessment.reallocatedAt != null) {
+      return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
+    }
+
+    return CasResult.Success(assessment)
+  }
 
   private fun getOffenderDetails(offenderCrn: String, laoStrategy: LaoStrategy): CaseSummary? {
     val offenderDetails = offenderService.getPersonSummaryInfoResult(

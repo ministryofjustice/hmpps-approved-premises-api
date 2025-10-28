@@ -279,7 +279,7 @@ class Cas1ApplicationSeedService(
     )
 
     ensureEntityFromCasResultIsSuccess(
-      assessmentService.acceptAssessment(
+      cas1AssessmentService.acceptAssessment(
         acceptingUser = assessor,
         assessmentId = getAssessmentId(application),
         document = ASSESSMENT_DOCUMENT_JSON,

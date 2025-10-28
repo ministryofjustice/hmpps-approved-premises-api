@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
@@ -99,6 +100,7 @@ class Cas3v2BookingServiceTest {
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
+  private val mockCas3AssessmentService = mockk<Cas3AssessmentService>()
   private val mockDepartureRepository = mockk<Cas3DepartureRepository>()
   private val mockDepartureReasonRepository = mockk<DepartureReasonRepository>()
   private val mockMoveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
@@ -124,6 +126,7 @@ class Cas3v2BookingServiceTest {
     cas3DomainEventService = mockCas3DomainEventService,
     userAccessService = mockUserAccessService,
     assessmentService = mockAssessmentService,
+    cas3AssessmentService = mockCas3AssessmentService,
     featureFlagService = mockFeatureFlagService,
   )
 
@@ -1401,14 +1404,14 @@ class Cas3v2BookingServiceTest {
     fun `createCancellation returns Success and move the assessment to read-to-place state`() {
       val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
       val bookingWithAssessmentEntity = createBookingWithAssessment()
-      val assessmentEntity = bookingWithAssessmentEntity.application?.getLatestAssessment()
+      val assessmentEntity = bookingWithAssessmentEntity.application?.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
       val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as Cas3CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any(Cas3BookingEntity::class), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
-      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } returns CasResult.Success(assessmentEntity!!)
+      every { mockCas3AssessmentService.acceptAssessment(user, any(), any()) } returns CasResult.Success(assessmentEntity)
       mockkStatic(Sentry::class)
 
       val result = cas3BookingService.createCancellation(
@@ -1440,7 +1443,7 @@ class Cas3v2BookingServiceTest {
         mockBookingRepository.save(bookingWithAssessmentEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockCas3AssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document)
       }
       verify(exactly = 0) {
         Sentry.captureException(any())
@@ -1458,7 +1461,7 @@ class Cas3v2BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as Cas3CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any(Cas3BookingEntity::class), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
-      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } returns CasResult.Unauthorised()
+      every { mockCas3AssessmentService.acceptAssessment(user, any(), any()) } returns CasResult.Unauthorised()
       mockkStatic(Sentry::class)
       every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
 
@@ -1491,7 +1494,7 @@ class Cas3v2BookingServiceTest {
         mockBookingRepository.save(bookingWithAssessmentEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockCas3AssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document)
       }
       verify(exactly = 1) {
         Sentry.captureException(any())
@@ -1509,7 +1512,7 @@ class Cas3v2BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as Cas3CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any(Cas3BookingEntity::class), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
-      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } throws RuntimeException("some-exception")
+      every { mockCas3AssessmentService.acceptAssessment(user, any(), any()) } throws RuntimeException("some-exception")
       mockkStatic(Sentry::class)
 
       val result = cas3BookingService.createCancellation(
@@ -1541,7 +1544,7 @@ class Cas3v2BookingServiceTest {
         mockBookingRepository.save(bookingWithAssessmentEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockCas3AssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document)
       }
       verify(exactly = 1) {
         Sentry.captureException(any())
@@ -1559,7 +1562,7 @@ class Cas3v2BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as Cas3CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any(Cas3BookingEntity::class), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
-      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } throws Throwable("some-exception")
+      every { mockCas3AssessmentService.acceptAssessment(user, any(), any()) } throws Throwable("some-exception")
       mockkStatic(Sentry::class)
 
       assertThatExceptionOfType(Throwable::class.java)
@@ -1586,7 +1589,7 @@ class Cas3v2BookingServiceTest {
         mockBookingRepository.save(bookingWithAssessmentEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockCas3AssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document)
       }
       verify(exactly = 0) {
         Sentry.captureException(any())
@@ -1628,7 +1631,7 @@ class Cas3v2BookingServiceTest {
         mockBookingRepository.save(bookingWithAssessmentEntity)
       }
       verify(exactly = 0) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockCas3AssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document)
       }
       verify(exactly = 0) {
         Sentry.captureException(any())
@@ -1646,7 +1649,7 @@ class Cas3v2BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as Cas3CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any(Cas3BookingEntity::class), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
-      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any(), any()) } returns CasResult.GeneralValidationError("Error")
+      every { mockCas3AssessmentService.acceptAssessment(user, any(), any()) } returns CasResult.GeneralValidationError("Error")
       mockkStatic(Sentry::class)
       every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
 
@@ -1676,7 +1679,7 @@ class Cas3v2BookingServiceTest {
         mockBookingRepository.save(bookingWithAssessmentEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, null, any())
+        mockCas3AssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document)
       }
       verify(exactly = 1) {
         Sentry.captureException(any())
@@ -1720,7 +1723,7 @@ class Cas3v2BookingServiceTest {
         mockBookingRepository.save(bookingWithoutAssessmentEntity)
       }
       verify(exactly = 0) {
-        mockAssessmentService.acceptAssessment(user, any(), any(), null, null, null, any())
+        mockCas3AssessmentService.acceptAssessment(user, any(), any())
       }
       verify(exactly = 0) {
         Sentry.captureException(any())
