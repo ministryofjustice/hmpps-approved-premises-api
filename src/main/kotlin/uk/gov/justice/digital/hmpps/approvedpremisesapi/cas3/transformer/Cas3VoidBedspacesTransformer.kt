@@ -44,5 +44,6 @@ class Cas3VoidBedspacesTransformer(
     cancellationDate = entity.cancellationDate?.toLocalDate(),
     cancellationNotes = entity.cancellationNotes,
     status = if (entity.cancellationDate == null) Cas3VoidBedspaceStatus.ACTIVE else Cas3VoidBedspaceStatus.CANCELLED,
+    costCentre = entity.costCentre,
   )
 }
