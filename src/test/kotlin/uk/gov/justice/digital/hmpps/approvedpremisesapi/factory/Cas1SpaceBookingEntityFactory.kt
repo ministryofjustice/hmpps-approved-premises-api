@@ -257,6 +257,6 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     deliusId = null,
     transferredFrom = this.transferredFrom(),
     transferType = this.transferType(),
-    reason = this.reason(),
+    additionalInformation = this.reason(),
   )
 }
