@@ -150,6 +150,7 @@ class AssessmentController(
   @Operation(
     tags = ["Assessment data"],
     summary = "Updates an assessment",
+    description = """This endpoint is deprecated; please use the CAS-specific endpoint instead""",
   )
   @RequestMapping(
     method = [RequestMethod.PUT],
@@ -170,22 +171,11 @@ class AssessmentController(
           extractEntityFromCasResult(cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment))
         }
 
-        else -> {
-          extractEntityFromCasResult(
-            assessmentService
-              .updateAssessment(
-                user,
-                assessmentId,
-                objectMapper.writeValueAsString(updateAssessment.data),
-              ),
-          )
-        }
+        ServiceName.approvedPremises -> throw BadRequestProblem(errorDetail = "This Api endpoint does not support get assessments for CAS1 use PUT /cas1/assessments/{assessmentId} Api endpoint.")
+        else -> throw BadRequestProblem(errorDetail = "This Api endpoint is deprecated; please use the CAS-specific Api endpoint instead")
       }
 
-    val ignoreLao =
-      (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
-
-    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLao)
+    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),

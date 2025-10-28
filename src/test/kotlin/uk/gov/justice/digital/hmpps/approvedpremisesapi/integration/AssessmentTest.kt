@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeyResolver
@@ -1483,96 +1482,6 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `PUT Update release date on temporary accommodation assessment `() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-
-        val accommodationDateFromApplication = LocalDate.now().plusDays(10)
-        val releaseDateFromApplication = accommodationDateFromApplication.minusDays(1)
-        var newReleaseDate = LocalDate.now()
-
-        val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity) {
-          withPersonReleaseDate(releaseDateFromApplication)
-          withArrivalDate(accommodationDateFromApplication)
-        }
-
-        val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
-
-        webTestClient.put()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-service-name", "temporary-accommodation")
-          .bodyValue(
-            UpdateAssessment(
-              data = emptyMap(),
-              releaseDate = newReleaseDate,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.releaseDate").isEqualTo(newReleaseDate.toString())
-          .jsonPath("$.accommodationRequiredFromDate").isEqualTo(accommodationDateFromApplication.toString())
-
-        val domainEvents =
-          domainEventRepository.findByAssessmentIdAndType(
-            assessmentId = assessment.id,
-            type = DomainEventType.CAS3_ASSESSMENT_UPDATED,
-          )
-
-        assertThat(domainEvents.size).isEqualTo(1)
-      }
-    }
-  }
-
-  @Test
-  fun `PUT Update accommodation required from date on temporary accommodation assessment`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-
-        val accommodationDateFromApplication = LocalDate.now()
-        val releaseDateFromApplication = accommodationDateFromApplication.minusDays(1)
-        var newAccommodationDate = accommodationDateFromApplication.plusDays(1)
-
-        val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity) {
-          withPersonReleaseDate(releaseDateFromApplication)
-          withArrivalDate(accommodationDateFromApplication)
-        }
-
-        val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
-
-        webTestClient.put()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-service-name", "temporary-accommodation")
-          .bodyValue(
-            UpdateAssessment(
-              data = emptyMap(),
-              accommodationRequiredFromDate = newAccommodationDate,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.releaseDate").isEqualTo(releaseDateFromApplication.toString())
-          .jsonPath("$.accommodationRequiredFromDate").isEqualTo(newAccommodationDate.toString())
-
-        val domainEvents =
-          domainEventRepository.findByAssessmentIdAndType(
-            assessmentId = assessment.id,
-            type = DomainEventType.CAS3_ASSESSMENT_UPDATED,
-          )
-
-        assertThat(domainEvents.size).isEqualTo(1)
-      }
-    }
-  }
-
-  @Test
   fun `GET temporary accommodation assessment contains updated release date and accommodation required from date`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
@@ -1796,84 +1705,6 @@ class AssessmentTest : IntegrationTestBase() {
         val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
         assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
         assertThat(persistedAssessment.completedAt).isNotNull
-      }
-    }
-  }
-
-  @Test
-  fun `Update does not let withdrawn assessments be updated`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-          withIsWithdrawn(true)
-        }
-
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(userEntity)
-          withApplication(application)
-          withIsWithdrawn(true)
-        }
-
-        webTestClient.put()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            UpdateAssessment(
-              data = mapOf("some text" to 5),
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isBadRequest
-      }
-    }
-  }
-
-  @Test
-  fun `Update assessment with an outstanding clarification note does not change the application status`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, _ ->
-        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-          withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
-        }
-
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(userEntity)
-          withApplication(application)
-          withDecision(null)
-        }
-
-        assessmentClarificationNoteEntityFactory.produceAndPersist {
-          withAssessment(assessment)
-          withResponse(null)
-          withResponseReceivedOn(null)
-          withCreatedBy(userEntity)
-        }.apply {
-          assessment.clarificationNotes = mutableListOf(this)
-        }
-
-        webTestClient.put()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            UpdateAssessment(
-              data = mapOf("some text" to 5),
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-
-        val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-        assertThat((persistedAssessment.application as ApprovedPremisesApplicationEntity).status)
-          .isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
       }
     }
   }

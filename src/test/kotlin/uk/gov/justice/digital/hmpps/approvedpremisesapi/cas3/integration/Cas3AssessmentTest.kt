@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.COMPLETED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -745,32 +747,6 @@ class Cas3AssessmentTest : IntegrationTestBase() {
       return assessment
     }
 
-    private fun produceAndPersistApplication(
-      crn: String,
-      user: UserEntity,
-      nonDefaultFields: TemporaryAccommodationApplicationEntityFactory.() -> Unit = {},
-    ): TemporaryAccommodationApplicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withCrn(crn)
-      withCreatedByUser(user)
-      withProbationRegion(user.probationRegion)
-      nonDefaultFields()
-    }
-
-    private fun produceAndPersistAssessmentEntity(
-      user: UserEntity,
-      application: TemporaryAccommodationApplicationEntity,
-      nonDefaultFields: TemporaryAccommodationAssessmentEntityFactory.() -> Unit = {},
-    ): TemporaryAccommodationAssessmentEntity {
-      val produceAndPersist = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-        withAllocatedToUser(user)
-        withApplication(application)
-        withReleaseDate(null)
-        withAccommodationRequiredFromDate(null)
-        nonDefaultFields()
-      }
-      return produceAndPersist
-    }
-
     private fun assertAssessmentsReturnedGivenStatus(
       jwt: String,
       expectedAssessments: List<Cas3AssessmentSummary>,
@@ -998,6 +974,98 @@ class Cas3AssessmentTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class UpdateAssessment {
+    @Test
+    fun `Successfully update release date on assessment`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val accommodationDateFromApplication = LocalDate.now().plusDays(10)
+          val releaseDateFromApplication = accommodationDateFromApplication.minusDays(1)
+          var newReleaseDate = LocalDate.now()
+
+          val application = produceAndPersistApplication(offenderDetails.otherIds.crn, userEntity) {
+            withPersonReleaseDate(releaseDateFromApplication)
+            withArrivalDate(accommodationDateFromApplication)
+          }
+
+          val assessment = produceAndPersistAssessmentEntity(userEntity, application)
+
+          webTestClient.put()
+            .uri("/cas3/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-service-name", "temporary-accommodation")
+            .bodyValue(
+              UpdateAssessment(
+                data = emptyMap(),
+                releaseDate = newReleaseDate,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.releaseDate").isEqualTo(newReleaseDate.toString())
+            .jsonPath("$.accommodationRequiredFromDate").isEqualTo(accommodationDateFromApplication.toString())
+
+          val domainEvents =
+            domainEventRepository.findByAssessmentIdAndType(
+              assessmentId = assessment.id,
+              type = DomainEventType.CAS3_ASSESSMENT_UPDATED,
+            )
+
+          assertThat(domainEvents.size).isEqualTo(1)
+        }
+      }
+    }
+
+    @Test
+    fun `Successfully update accommodation required from date on assessment`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val accommodationDateFromApplication = LocalDate.now()
+          val releaseDateFromApplication = accommodationDateFromApplication.minusDays(1)
+          var newAccommodationDate = accommodationDateFromApplication.plusDays(1)
+
+          val application = produceAndPersistApplication(offenderDetails.otherIds.crn, userEntity) {
+            withPersonReleaseDate(releaseDateFromApplication)
+            withArrivalDate(accommodationDateFromApplication)
+          }
+
+          val assessment =
+            produceAndPersistAssessmentEntity(userEntity, application)
+
+          webTestClient.put()
+            .uri("/cas3/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-service-name", "temporary-accommodation")
+            .bodyValue(
+              UpdateAssessment(
+                data = emptyMap(),
+                accommodationRequiredFromDate = newAccommodationDate,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.releaseDate").isEqualTo(releaseDateFromApplication.toString())
+            .jsonPath("$.accommodationRequiredFromDate").isEqualTo(newAccommodationDate.toString())
+
+          val domainEvents =
+            domainEventRepository.findByAssessmentIdAndType(
+              assessmentId = assessment.id,
+              type = DomainEventType.CAS3_ASSESSMENT_UPDATED,
+            )
+
+          assertThat(domainEvents.size).isEqualTo(1)
+        }
+      }
+    }
+  }
+
+  @Nested
   inner class DeallocateAssessmentTest {
     @Test
     fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
@@ -1112,6 +1180,32 @@ class Cas3AssessmentTest : IntegrationTestBase() {
         }
       }
     }
+  }
+
+  private fun produceAndPersistApplication(
+    crn: String,
+    user: UserEntity,
+    nonDefaultFields: TemporaryAccommodationApplicationEntityFactory.() -> Unit = {},
+  ): TemporaryAccommodationApplicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+    withCrn(crn)
+    withCreatedByUser(user)
+    withProbationRegion(user.probationRegion)
+    nonDefaultFields()
+  }
+
+  private fun produceAndPersistAssessmentEntity(
+    user: UserEntity,
+    application: TemporaryAccommodationApplicationEntity,
+    nonDefaultFields: TemporaryAccommodationAssessmentEntityFactory.() -> Unit = {},
+  ): TemporaryAccommodationAssessmentEntity {
+    val produceAndPersist = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+      withAllocatedToUser(user)
+      withApplication(application)
+      withReleaseDate(null)
+      withAccommodationRequiredFromDate(null)
+      nonDefaultFields()
+    }
+    return produceAndPersist
   }
 
   sealed interface ExpectedResponse {
