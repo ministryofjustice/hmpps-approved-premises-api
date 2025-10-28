@@ -18,6 +18,7 @@ data class Cas3VoidBedspace(
   val notes: String?,
   val cancellationDate: LocalDate?,
   val cancellationNotes: String?,
+  val costCentre: Cas3CostCentre? = null,
 )
 
 data class Cas3VoidBedspaceRequest(

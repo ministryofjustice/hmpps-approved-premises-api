@@ -223,6 +223,7 @@ class Cas3VoidBedspacesTransformerTest {
         assertThat(transformed.reason.name).isEqualTo(voidBedspaceEntity.reason.name)
         assertThat(transformed.referenceNumber).isEqualTo(voidBedspaceEntity.referenceNumber)
         assertThat(transformed.notes).isEqualTo(voidBedspaceEntity.notes)
+        assertThat(transformed.costCentre).isEqualTo(voidBedspaceEntity.costCentre)
       })
     }
   }
