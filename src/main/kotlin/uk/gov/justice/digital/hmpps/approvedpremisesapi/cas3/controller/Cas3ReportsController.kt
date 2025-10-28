@@ -35,6 +35,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 private const val MAXIMUM_REPORT_DURATION_IN_MONTHS = 3
+private const val MAXIMUM_GAP_REPORT_DURATION_IN_DAYS = 31
 private const val FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS = 6
 
 @Cas3Controller
@@ -58,7 +59,7 @@ class Cas3ReportsController(
       throw ForbiddenProblem()
     }
 
-    validateRequestParameters(probationRegionId, startDate, endDate)
+    validateRequestParameters(probationRegionId, startDate, endDate, reportName)
 
     return when (reportName) {
       referral ->
@@ -157,18 +158,22 @@ class Cas3ReportsController(
     }
   }
 
-  private fun validateRequestParameters(probationRegionId: UUID?, startDate: LocalDate, endDate: LocalDate) {
+  private fun validateRequestParameters(probationRegionId: UUID?, startDate: LocalDate, endDate: LocalDate, reportName: Cas3ReportType) {
     validateUserAccessibility(probationRegionId)
-    validateRequestedDates(startDate, endDate)
+    validateRequestedDates(startDate, endDate, reportName)
   }
 
   @SuppressWarnings("ThrowsCount")
-  private fun validateRequestedDates(startDate: LocalDate, endDate: LocalDate) {
+  private fun validateRequestedDates(startDate: LocalDate, endDate: LocalDate, reportName: Cas3ReportType) {
     when {
       startDate.isAfter(endDate) || startDate.isEqual(endDate) -> throw BadRequestProblem(invalidParams = mapOf("$.startDate" to ParamDetails("afterEndDate")))
       endDate.isAfter(LocalDate.now()) -> throw BadRequestProblem(invalidParams = mapOf("$.endDate" to ParamDetails("inFuture")))
-      ChronoUnit.MONTHS.between(startDate, endDate)
-        .toInt() >= MAXIMUM_REPORT_DURATION_IN_MONTHS -> throw BadRequestProblem(invalidParams = mapOf("$.endDate" to ParamDetails("rangeTooLarge")))
+      reportName != bookingGap &&
+        ChronoUnit.MONTHS.between(startDate, endDate)
+          .toInt() >= MAXIMUM_REPORT_DURATION_IN_MONTHS -> throw BadRequestProblem(invalidParams = mapOf("$.endDate" to ParamDetails("rangeTooLarge")))
+      reportName == bookingGap &&
+        ChronoUnit.DAYS.between(startDate, endDate)
+          .toInt() >= MAXIMUM_GAP_REPORT_DURATION_IN_DAYS -> throw BadRequestProblem(invalidParams = mapOf("$.endDate" to ParamDetails("rangeTooLargeGapReport")))
     }
   }
 
