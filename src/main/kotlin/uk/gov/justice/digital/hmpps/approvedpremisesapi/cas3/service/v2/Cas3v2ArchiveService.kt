@@ -44,6 +44,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@SuppressWarnings("TooManyFunctions")
 @Service
 class Cas3v2ArchiveService(
   private val cas3BedspacesRepository: Cas3BedspacesRepository,
@@ -547,6 +548,37 @@ class Cas3v2ArchiveService(
     }
 
     success(updatedPremises)
+  }
+
+  fun canArchiveBedspaceInFuture(premisesId: UUID, bedspaceId: UUID): CasResult<Cas3ValidationResult?> {
+    val bedspacesEntity = cas3BedspacesRepository.findCas3Bedspace(premisesId, bedspaceId) ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
+
+    val threeMonthsFromToday = LocalDate.now(clock).plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
+    val blockingArchiveDates = mutableListOf<LocalDate>()
+
+    val overlapBookings = cas3v2BookingRepository.findActiveOverlappingBookingByBedspace(bedspaceId, LocalDate.now(clock))
+
+    overlapBookings.map {
+      val bookingTurnaround = workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
+      if (bookingTurnaround >= threeMonthsFromToday) {
+        blockingArchiveDates += bookingTurnaround
+      }
+    }
+
+    val overlappingVoid = cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateV2(
+      bedspaceId,
+      threeMonthsFromToday,
+    ).maxByOrNull { it.endDate }
+
+    if (overlappingVoid != null) {
+      blockingArchiveDates += overlappingVoid.endDate
+    }
+
+    return if (blockingArchiveDates.isEmpty()) {
+      CasResult.Success(null)
+    } else {
+      CasResult.Success(Cas3ValidationResult(bedspaceId, bedspacesEntity.reference, blockingArchiveDates.max()))
+    }
   }
 
   private fun unarchivePremisesAndSaveDomainEvent(premises: Cas3PremisesEntity, restartDate: LocalDate, transactionId: UUID): Cas3PremisesEntity {
