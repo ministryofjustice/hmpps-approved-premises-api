@@ -6,5 +6,6 @@ data class Cas1NewSpaceBooking(
   val departureDate: java.time.LocalDate,
   val premisesId: java.util.UUID,
   val characteristics: List<Cas1SpaceCharacteristic>? = null,
+  val transferReason: TransferReason? = null,
   val additionalInformation: String? = null,
 )

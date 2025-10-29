@@ -397,6 +397,7 @@ class Cas1ApplicationSeedService(
         migratedManagementInfoFrom = null,
         deliusId = null,
         additionalInformation = null,
+        transferReason = null,
       ),
     )
   }
