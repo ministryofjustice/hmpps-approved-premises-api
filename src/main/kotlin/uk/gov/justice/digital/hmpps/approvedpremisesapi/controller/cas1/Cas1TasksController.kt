@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
@@ -38,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -60,7 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualificat
 @Tag(name = "CAS1 Tasks")
 class Cas1TasksController(
   private val userService: UserService,
-  private val assessmentService: AssessmentService,
+  private val cas1AssessmentService: Cas1AssessmentService,
   private val taskTransformer: TaskTransformer,
   private val offenderService: OffenderService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
@@ -68,7 +66,6 @@ class Cas1TasksController(
   private val userTransformer: UserTransformer,
   private val cas1TaskService: Cas1TaskService,
   private val requestContextService: RequestContextService,
-  private val cas1AssessmentService: Cas1AssessmentService,
 ) {
 
   @Operation(summary = "List all tasks")
@@ -177,8 +174,8 @@ class Cas1TasksController(
 
   private fun getAssessmentTaskInfo(id: UUID, user: UserEntity): TaskInfo {
     val assessment = extractEntityFromCasResult(
-      assessmentService.getAssessmentAndValidate(user, id),
-    ) as ApprovedPremisesAssessmentEntity
+      cas1AssessmentService.getAssessmentAndValidate(user, id),
+    )
 
     val offenderSummaries = getOffenderSummariesForCrns(listOf(assessment.application.crn), user)
     val requiredPermission = if (assessment.createdFromAppeal) {
