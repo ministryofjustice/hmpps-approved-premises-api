@@ -125,45 +125,6 @@ class AssessmentService(
     return assessment
   }
 
-  fun updateAssessment(
-    updatingUser: UserEntity,
-    assessmentId: UUID,
-    data: String?,
-  ): CasResult<AssessmentEntity> {
-    val assessment = when (val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)) {
-      is CasResult.Success -> assessmentResult.value
-      else -> return assessmentResult
-    }
-
-    if (assessment is ApprovedPremisesAssessmentEntity) {
-      val allocatedToUser = assessment.allocatedToUser
-        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
-
-      if (allocatedToUser.id != updatingUser.id) {
-        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
-      }
-    }
-
-    if (assessment.isWithdrawn) {
-      return CasResult.GeneralValidationError("The application has been withdrawn.")
-    }
-
-    if (assessment.submittedAt != null) {
-      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
-    }
-
-    if (assessment.reallocatedAt != null) {
-      return CasResult.GeneralValidationError("The assessment has been reallocated, this assessment is read only")
-    }
-
-    assessment.data = data
-
-    preUpdateAssessment(assessment)
-    val savedAssessment = assessmentRepository.save(assessment)
-
-    return CasResult.Success(savedAssessment)
-  }
-
   /**
    * This function is now only used by CAS1 for reporting integration tests
    * (see Cas1RequestForPlacementReportTest.acceptLatestAssessmentLegacyBehaviour).
