@@ -27,7 +27,7 @@ class Cas2SubjectAccessRequestRepository(
         	ca.noms_number,
         	ca."data",
         	ca."document",
-        	nu."name" as created_by_user,
+          COALESCE(cu."name", nu."name", 'Unknown') AS created_by_user,
         	ca.created_at,
         	ca.submitted_at,
         	ca.referring_prison_code,
@@ -40,8 +40,10 @@ class Cas2SubjectAccessRequestRepository(
           CAST( ca.bail_hearing_date as DATE) 
         from
         	cas_2_applications ca
-        inner join nomis_users nu on
+        left join nomis_users nu on
         	nu.id = ca.created_by_user_id
+        left join cas_2_users cu on 
+          cu.id = ca.created_by_cas2_user_id
         where 
         	(ca.crn = :crn
         		or ca.noms_number = :noms_number ) 
