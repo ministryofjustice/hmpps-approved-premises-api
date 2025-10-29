@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.scheduled.Cas1ExpireUnsubmittedApplicationsScheduledJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.scheduled.Cas1ExpiredApplicationsScheduledJob
@@ -64,6 +65,7 @@ class Cas1ApplicationSeedService(
   private val userService: UserService,
   private val environmentService: EnvironmentService,
   private val assessmentService: AssessmentService,
+  private val cas1AssessmentService: Cas1AssessmentService,
   private val assessmentRepository: AssessmentRepository,
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
   private val cache: Cas1ApplicationSeedServiceCaches,
@@ -269,7 +271,7 @@ class Cas1ApplicationSeedService(
     )
 
     ensureEntityFromCasResultIsSuccess(
-      assessmentService.updateAssessment(
+      cas1AssessmentService.updateAssessment(
         assessmentId = getAssessmentId(application),
         updatingUser = assessor,
         data = ASSESSMENT_DATA_JSON,
