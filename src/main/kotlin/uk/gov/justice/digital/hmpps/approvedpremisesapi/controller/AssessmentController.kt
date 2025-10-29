@@ -168,7 +168,14 @@ class AssessmentController(
     val assessment =
       when (xServiceName) {
         ServiceName.temporaryAccommodation -> {
-          extractEntityFromCasResult(cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment))
+          extractEntityFromCasResult(
+            cas3AssessmentService.updateAssessment(
+              user,
+              assessmentId,
+              updateAssessment.releaseDate,
+              updateAssessment.accommodationRequiredFromDate,
+            ),
+          )
         }
 
         ServiceName.approvedPremises -> throw BadRequestProblem(errorDetail = "This Api endpoint does not support get assessments for CAS1 use PUT /cas1/assessments/{assessmentId} Api endpoint.")
