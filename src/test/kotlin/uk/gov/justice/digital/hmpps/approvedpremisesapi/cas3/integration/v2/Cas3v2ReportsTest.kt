@@ -77,6 +77,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.io.StringReader
 import java.time.LocalDate
@@ -1803,45 +1804,55 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
   inner class GetBedspaceUsageReport {
 
     @Test
-    fun `Get bed usage report returns OK with correct body`() {
+    fun `Get bedspace usage report returns OK with correct body`() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
-          val arrivalDate = LocalDate.parse("2023-04-05")
-          val (premises, bedspace, _) = setupPremisesWIthABedspaceAndABooking(
-            crn = offenderDetails.otherIds.crn,
-            user,
-            startDate = arrivalDate.minusDays(10),
-            arrivalDate,
-            departureDate = LocalDate.parse("2023-04-15"),
-          )
-
-          govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-          val expectedReportRows = listOf(
-            BedUsageReportRow(
-              probationRegion = user.probationRegion.name,
-              pdu = premises.probationDeliveryUnit.name,
-              localAuthority = premises.localAuthorityArea?.name,
-              propertyRef = premises.name,
-              addressLine1 = premises.addressLine1,
-              town = premises.town,
-              postCode = premises.postcode,
-              bedspaceRef = bedspace.reference,
+          val expectedReportRows = ArrayList<BedUsageReportRow>()
+          repeat(2) { index ->
+            val bedspaceReference = if (index == 0) {
+              "ZZZ bedspace"
+            } else {
+              "AAA bedspace"
+            }
+            val arrivalDate = LocalDate.parse("2023-04-05")
+            val (premises, bedspace, _) = setupPremisesWIthABedspaceAndABooking(
               crn = offenderDetails.otherIds.crn,
-              type = BedUsageType.Booking,
-              startDate = LocalDate.parse("2023-04-05"),
-              endDate = LocalDate.parse("2023-04-15"),
-              durationOfBookingDays = 10,
-              bookingStatus = BookingStatus.provisional,
-              voidCategory = null,
-              voidNotes = null,
-              costCentre = null,
-              uniquePropertyRef = premises.id.toShortBase58(),
-              uniqueBedspaceRef = bedspace.id.toShortBase58(),
-            ),
-          )
+              user,
+              startDate = arrivalDate.minusDays(10),
+              bedspaceReference,
+              departureDate = LocalDate.parse("2023-04-15"),
+            )
 
-          val expectedDataFrame = expectedReportRows.toDataFrame()
+            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+            expectedReportRows.add(
+              BedUsageReportRow(
+                probationRegion = user.probationRegion.name,
+                pdu = premises.probationDeliveryUnit.name,
+                localAuthority = premises.localAuthorityArea?.name,
+                propertyRef = premises.name,
+                addressLine1 = premises.addressLine1,
+                town = premises.town,
+                postCode = premises.postcode,
+                bedspaceRef = bedspace.reference,
+                crn = offenderDetails.otherIds.crn,
+                type = BedUsageType.Booking,
+                startDate = LocalDate.parse("2023-04-05"),
+                endDate = LocalDate.parse("2023-04-15"),
+                durationOfBookingDays = 10,
+                bookingStatus = BookingStatus.provisional,
+                voidCategory = null,
+                voidNotes = null,
+                costCentre = null,
+                uniquePropertyRef = premises.id.toShortBase58(),
+                uniqueBedspaceRef = bedspace.id.toShortBase58(),
+              ),
+            )
+          }
+
+          val expectedDataFrame = expectedReportRows
+            .reversed()
+            .toDataFrame()
 
           webTestClient.get()
             .uri("/cas3/reports/bedUsage?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
@@ -2783,7 +2794,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationDeliveryUnit(probationDeliveryUnit)
           }
-          val bedStart = LocalDate.parse("2024-01-01")
           val bedEnd = LocalDate.parse("2024-12-31")
 
           // 4. Bedspace start date after report start date
@@ -2851,7 +2861,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             withProbationDeliveryUnit(probationDeliveryUnit)
           }
           val bedStart = LocalDate.parse("2024-01-01")
-          val bedEnd = LocalDate.parse("2024-12-31")
 
           // 5. Bedspace end date before report end date
           val bed1 = createBedspace(premises, "bed1", bedStart, LocalDate.parse("2024-04-20"))
@@ -3967,7 +3976,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             withProbationRegion(yorkshireRegion!!)
           }
 
-          val premises = cas3PremisesEntityFactory.produceAndPersist {
+          cas3PremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationDeliveryUnit(probationDeliveryUnit)
           }
@@ -4017,7 +4026,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
     crn: String,
     user: UserEntity,
     startDate: LocalDate,
-    arrivalDate: LocalDate = LocalDate.of(2023, 4, 5),
+    bedspaceReference: String = randomStringUpperCase(6),
     departureDate: LocalDate = LocalDate.of(2023, 4, 7),
   ): Triple<Cas3PremisesEntity, Cas3BedspacesEntity, Cas3BookingEntity> {
     val premises = givenACas3Premises(
@@ -4026,6 +4035,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
     )
     val bedspaceStartDate = startDate.minusDays(100)
     val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+      withReference(bedspaceReference)
       withPremises(premises)
       withStartDate(bedspaceStartDate)
       withCreatedDate(bedspaceStartDate)
@@ -4036,7 +4046,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
       withPremises(premises)
       withBedspace(bedspace)
       withCrn(crn)
-      withArrivalDate(arrivalDate)
+      withArrivalDate(LocalDate.of(2023, 4, 5))
       withDepartureDate(departureDate)
     }
     return Triple(premises, bedspace, booking)
