@@ -237,7 +237,7 @@ class AssessmentController(
     val serializedData = objectMapper.writeValueAsString(assessmentRejection.document)
 
     val assessmentAuthResult =
-      assessmentService.rejectAssessment(
+      cas3AssessmentService.rejectAssessment(
         user,
         assessmentId,
         serializedData,
@@ -245,9 +245,6 @@ class AssessmentController(
         assessmentRejection.referralRejectionReasonId,
         assessmentRejection.referralRejectionReasonDetail,
         assessmentRejection.isWithdrawn,
-        assessmentRejection.agreeWithShortNoticeReason,
-        assessmentRejection.agreeWithShortNoticeReasonComments,
-        assessmentRejection.reasonForLateApplication,
       )
 
     extractEntityFromCasResult(assessmentAuthResult)

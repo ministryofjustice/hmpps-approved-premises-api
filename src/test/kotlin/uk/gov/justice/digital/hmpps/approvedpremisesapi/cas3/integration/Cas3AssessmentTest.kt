@@ -9,9 +9,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -1060,6 +1062,149 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             )
 
           assertThat(domainEvents.size).isEqualTo(1)
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class RejectAssessment {
+    @Test
+    fun `Reject assessment without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/cas3/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/rejection")
+        .bodyValue(AssessmentRejection(document = "{}", rejectionRationale = "reasoning"))
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Reject assessment returns 200 and persists decision`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = produceAndPersistApplication(offenderDetails.otherIds.crn, userEntity)
+
+          val assessment = produceAndPersistAssessmentEntity(userEntity, application)
+
+          val referralRejectionReasonId = UUID.randomUUID()
+
+          val referralRejectionReason = referralRejectionReasonEntityFactory.produceAndPersist {
+            withId(referralRejectionReasonId)
+          }
+
+          val referralRejectionReasonDetail = "Other referral rejection reason detail"
+
+          webTestClient.post()
+            .uri("/cas3/assessments/${assessment.id}/rejection")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              AssessmentRejection(
+                document = mapOf("document" to "value"),
+                rejectionRationale = "reasoning",
+                referralRejectionReasonId = referralRejectionReasonId,
+                referralRejectionReasonDetail = referralRejectionReasonDetail,
+                isWithdrawn = true,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(persistedAssessment.submittedAt).isNotNull
+          assertThat(persistedAssessment.completedAt).isNull()
+          assertThat(persistedAssessment.referralRejectionReason).isEqualTo(referralRejectionReason)
+          assertThat(persistedAssessment.referralRejectionReasonDetail).isEqualTo(referralRejectionReasonDetail)
+          assertThat(persistedAssessment.isWithdrawn).isTrue()
+        }
+      }
+    }
+
+    @Test
+    fun `Reject assessment returns 200 and persists decision when a referral rejection reason exists for the assessment`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = produceAndPersistApplication(offenderDetails.otherIds.crn, userEntity)
+
+          val referralRejectionReason1 = referralRejectionReasonEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+          }
+
+          val assessment =
+            produceAndPersistAssessmentEntity(userEntity, application) {
+              withReferralRejectionReason(referralRejectionReason1)
+              withReferralRejectionReasonDetail("Old referral rejection reason detail")
+            }
+
+          val referralRejectionReasonId2 = UUID.randomUUID()
+
+          val referralRejectionReason2 = referralRejectionReasonEntityFactory.produceAndPersist {
+            withId(referralRejectionReasonId2)
+          }
+
+          val referralRejectionReasonDetail = "New referral rejection reason detail"
+
+          webTestClient.post()
+            .uri("/cas3/assessments/${assessment.id}/rejection")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              AssessmentRejection(
+                document = mapOf("document" to "value"),
+                rejectionRationale = "reasoning",
+                referralRejectionReasonId = referralRejectionReasonId2,
+                referralRejectionReasonDetail = referralRejectionReasonDetail,
+                isWithdrawn = true,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(persistedAssessment.submittedAt).isNotNull
+          assertThat(persistedAssessment.completedAt).isNull()
+          assertThat(persistedAssessment.referralRejectionReason).isEqualTo(referralRejectionReason2)
+          assertThat(persistedAssessment.referralRejectionReasonDetail).isEqualTo(referralRejectionReasonDetail)
+          assertThat(persistedAssessment.isWithdrawn).isTrue()
+        }
+      }
+    }
+
+    @Test
+    fun `Reject assessment returns 404 when the referral rejection reason not exists`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = produceAndPersistApplication(offenderDetails.otherIds.crn, userEntity)
+
+          val assessment = produceAndPersistAssessmentEntity(userEntity, application)
+
+          val referralRejectionReasonId = UUID.randomUUID()
+
+          webTestClient.post()
+            .uri("/cas3/assessments/${assessment.id}/rejection")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              AssessmentRejection(
+                document = mapOf("document" to "value"),
+                rejectionRationale = "reasoning",
+                referralRejectionReasonId = referralRejectionReasonId,
+                isWithdrawn = false,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .is5xxServerError
+            .expectBody()
+            .jsonPath("detail")
+            .isEqualTo("No Referral Rejection Reason with an ID of $referralRejectionReasonId could be found")
         }
       }
     }

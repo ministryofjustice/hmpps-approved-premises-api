@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRef
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -27,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
@@ -49,7 +47,6 @@ class AssessmentService(
   private val userAccessService: UserAccessService,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
-  private val referralRejectionReasonRepository: ReferralRejectionReasonRepository,
   private val offenderService: OffenderService,
   private val placementRequestService: Cas1PlacementRequestService,
   private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
@@ -227,81 +224,6 @@ class AssessmentService(
       if (createPlacementRequest) {
         cas1PlacementRequestEmailService.placementRequestSubmitted(application)
       }
-    }
-
-    return CasResult.Success(savedAssessment)
-  }
-
-  @Deprecated("will be removed in the near future, use cas specific version instead")
-  @SuppressWarnings("ThrowsCount")
-  fun rejectAssessment(
-    rejectingUser: UserEntity,
-    assessmentId: UUID,
-    document: String?,
-    rejectionRationale: String,
-    referralRejectionReasonId: UUID? = null,
-    referralRejectionReasonDetail: String? = null,
-    isWithdrawn: Boolean? = null,
-    agreeWithShortNoticeReason: Boolean? = null,
-    agreeWithShortNoticeReasonComments: String? = null,
-    reasonForLateApplication: String? = null,
-  ): CasResult<AssessmentEntity> {
-    val assessment = when (val validation = validateAssessment(rejectingUser, assessmentId)) {
-      is CasResult.Success -> validation.value
-      else -> return validation
-    }
-
-    if (assessment is ApprovedPremisesAssessmentEntity) {
-      when (val dataValidation = validateCas1AssessmentData(assessment)) {
-        is CasResult.Success -> {}
-        is CasResult.Error -> return dataValidation
-      }
-
-      assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
-      assessment.agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments
-      assessment.reasonForLateApplication = reasonForLateApplication
-    }
-
-    assessment.document = document
-    assessment.submittedAt = OffsetDateTime.now(clock)
-    assessment.decision = AssessmentDecision.REJECTED
-    assessment.rejectionRationale = rejectionRationale
-
-    if (assessment is TemporaryAccommodationAssessmentEntity) {
-      val referralRejectionReason = referralRejectionReasonRepository.findByIdOrNull(referralRejectionReasonId ?: error("rejection id must be defined"))
-        ?: throw InternalServerErrorProblem("No Referral Rejection Reason with an ID of $referralRejectionReasonId could be found")
-
-      assessment.completedAt = null
-      assessment.referralRejectionReason = referralRejectionReason
-      assessment.referralRejectionReasonDetail = referralRejectionReasonDetail
-      assessment.isWithdrawn = isWithdrawn!!
-    }
-
-    preUpdateAssessment(assessment)
-    val savedAssessment = assessmentRepository.save(assessment)
-
-    if (savedAssessment is TemporaryAccommodationAssessmentEntity) {
-      savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.REJECTED)
-    }
-
-    val application = savedAssessment.application
-
-    if (application is ApprovedPremisesApplicationEntity) {
-      val offenderDetails =
-        when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, rejectingUser.deliusUsername, true)) {
-          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-          is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
-          is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
-        }
-
-      cas1AssessmentDomainEventService.assessmentRejected(
-        application = application,
-        assessment = assessment,
-        offenderDetails = offenderDetails,
-        rejectingUser = rejectingUser,
-      )
-
-      cas1AssessmentEmailService.assessmentRejected(application)
     }
 
     return CasResult.Success(savedAssessment)
