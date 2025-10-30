@@ -70,6 +70,7 @@ class Cas3BookingService(
   private val extensionRepository: ExtensionRepository,
   private val cas3PremisesService: Cas3PremisesService,
   private val assessmentService: AssessmentService,
+  private val cas3AssessmentService: Cas3AssessmentService,
   private val userAccessService: UserAccessService,
   private val offenderService: OffenderService,
   private val workingDayService: WorkingDayService,
@@ -532,14 +533,10 @@ class Cas3BookingService(
   ) {
     try {
       extractEntityFromCasResult(
-        assessmentService.acceptAssessment(
+        cas3AssessmentService.acceptAssessment(
           user,
           applicationEntity.id,
           applicationEntity.document,
-          null,
-          null,
-          null,
-          "Automatically moved to ready-to-place after booking is cancelled",
         ),
       )
     } catch (exception: Exception) {
