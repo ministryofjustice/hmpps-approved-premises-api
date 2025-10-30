@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
@@ -11,8 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -29,7 +26,6 @@ class PremisesService(
   private val bookingRepository: BookingRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,
-  private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
 ) {
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
@@ -135,42 +131,6 @@ class PremisesService(
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedPremises),
     )
-  }
-
-  private fun tryGetProbationDeliveryUnit(
-    probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    probationRegionId: UUID,
-    onValidationError: (property: String, err: String) -> Unit,
-  ): ProbationDeliveryUnitEntity? {
-    val probationDeliveryUnit = when (probationDeliveryUnitIdentifier) {
-      null -> {
-        onValidationError("$.probationDeliveryUnitId", "empty")
-        null
-      }
-      else -> probationDeliveryUnitIdentifier.fold({ name ->
-        if (name.isBlank()) {
-          onValidationError("$.pdu", "empty")
-        }
-
-        val result = probationDeliveryUnitRepository.findByNameAndProbationRegionId(name, probationRegionId)
-
-        if (result == null) {
-          onValidationError("$.pdu", "doesNotExist")
-        }
-
-        result
-      }, { id ->
-        val result = probationDeliveryUnitRepository.findByIdAndProbationRegionId(id, probationRegionId)
-
-        if (result == null) {
-          onValidationError("$.probationDeliveryUnitId", "doesNotExist")
-        }
-
-        result
-      })
-    }
-
-    return probationDeliveryUnit
   }
 
   fun getBedCount(premises: PremisesEntity): Int = premisesRepository.getBedCount(premises)
