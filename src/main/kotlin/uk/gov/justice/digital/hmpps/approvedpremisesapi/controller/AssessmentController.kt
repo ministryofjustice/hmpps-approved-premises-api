@@ -202,7 +202,7 @@ class AssessmentController(
     val user = userService.getUserForRequest()
 
     val referralHistoryUserNoteResult =
-      assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, newReferralHistoryUserNote.message)
+      cas3AssessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, newReferralHistoryUserNote.message)
 
     return ResponseEntity.ok(
       assessmentReferralHistoryNoteTransformer.transformJpaToApi(
