@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -8,8 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesSummaryResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
@@ -30,6 +36,8 @@ class Cas3v2PremisesService(
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
   private val cas3UserAccessService: Cas3UserAccessService,
+  private val cas3DomainEventService: Cas3DomainEventService,
+  private val objectMapper: ObjectMapper,
 ) {
 
   companion object {
@@ -188,6 +196,46 @@ class Cas3v2PremisesService(
       }
 
     return success(cas3PremisesRepository.save(premises))
+  }
+
+  fun getPremisesArchiveHistory(premisesId: UUID): CasResult<List<Cas3PremisesArchiveAction>> = validatedCasResult {
+    val archiveHistory = cas3DomainEventService.getPremisesActiveDomainEvents(
+      premisesId,
+      listOf(DomainEventType.CAS3_PREMISES_ARCHIVED, DomainEventType.CAS3_PREMISES_UNARCHIVED),
+    )
+      .mapNotNull { domainEventEntity ->
+        when (domainEventEntity.type) {
+          DomainEventType.CAS3_PREMISES_UNARCHIVED -> {
+            val newStartDate = objectMapper.readValue(domainEventEntity.data, CAS3PremisesUnarchiveEvent::class.java).eventDetails.newStartDate
+            if (newStartDate <= LocalDate.now()) {
+              Cas3PremisesArchiveAction(
+                status = Cas3PremisesStatus.online,
+                date = newStartDate,
+              )
+            } else {
+              null
+            }
+          }
+
+          DomainEventType.CAS3_PREMISES_ARCHIVED -> {
+            val endDate =
+              objectMapper.readValue(domainEventEntity.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate
+            if (endDate <= LocalDate.now()) {
+              Cas3PremisesArchiveAction(
+                status = Cas3PremisesStatus.archived,
+                date = endDate,
+              )
+            } else {
+              null
+            }
+          }
+
+          else -> return CasResult.GeneralValidationError("Incorrect domain event type for archive history: ${domainEventEntity.type}, ${domainEventEntity.id}")
+        }
+      }
+      .sortedBy { it.date }
+
+    return CasResult.Success(archiveHistory)
   }
 
   private fun <T> CasResultValidatedScope<T>.getValidatedCharacteristics(premisesCharacteristicIds: List<UUID>): List<Cas3PremisesCharacteristicEntity> {

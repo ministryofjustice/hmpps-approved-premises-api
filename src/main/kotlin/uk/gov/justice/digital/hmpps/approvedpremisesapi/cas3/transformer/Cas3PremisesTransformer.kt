@@ -5,9 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.countArchivedBedspaces
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.countOnlineBedspaces
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.countUpcomingBedspaces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
