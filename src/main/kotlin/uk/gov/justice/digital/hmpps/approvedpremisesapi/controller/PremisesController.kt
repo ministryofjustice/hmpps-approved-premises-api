@@ -136,14 +136,4 @@ class PremisesController(
 
     return ResponseEntity.ok(apiBooking)
   }
-
-  private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
-    is ValidatableActionResult.Success -> result.entity
-    is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
-    is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages.mapValues { ParamDetails(it.value) })
-    is ValidatableActionResult.ConflictError -> throw ConflictProblem(
-      id = result.conflictingEntityId,
-      conflictReason = result.message,
-    )
-  }
 }
