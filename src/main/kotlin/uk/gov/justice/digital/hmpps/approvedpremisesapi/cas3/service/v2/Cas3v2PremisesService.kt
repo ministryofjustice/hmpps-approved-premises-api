@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.validatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
@@ -19,6 +18,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 
 @Service
 class Cas3v2PremisesService(
@@ -195,4 +197,47 @@ class Cas3v2PremisesService(
   }
 
   private fun isUniqueName(reference: String, probationDeliveryUnitId: UUID): Boolean = !cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(reference, probationDeliveryUnitId)
+}
+
+@Suppress("LongParameterList")
+fun <T> CasResultValidatedScope<T>.validatePremises(
+  probationRegion: ProbationRegionEntity?,
+  localAuthorityAreaId: UUID?,
+  localAuthorityArea: LocalAuthorityAreaEntity?,
+  probationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  reference: String,
+  addressLine1: String,
+  postcode: String,
+  turnaroundWorkingDays: Int?,
+  isUniqueName: () -> Boolean,
+) {
+  if (localAuthorityAreaId != null && localAuthorityArea == null) {
+    "$.localAuthorityAreaId" hasValidationError "doesNotExist"
+  }
+
+  if (probationRegion == null) {
+    "$.probationRegionId" hasValidationError "doesNotExist"
+  }
+
+  if (probationDeliveryUnit == null) {
+    "$.probationDeliveryUnitId" hasValidationError "doesNotExist"
+  }
+
+  if (reference.isEmpty()) {
+    "$.reference" hasValidationError "empty"
+  } else if (!isUniqueName()) {
+    "$.reference" hasValidationError "notUnique"
+  }
+
+  if (addressLine1.isEmpty()) {
+    "$.address" hasValidationError "empty"
+  }
+
+  if (postcode.isEmpty()) {
+    "$.postcode" hasValidationError "empty"
+  }
+
+  if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
+    "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
+  }
 }

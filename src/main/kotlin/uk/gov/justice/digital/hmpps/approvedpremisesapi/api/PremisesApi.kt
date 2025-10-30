@@ -74,63 +74,6 @@ interface PremisesApi {
 
   @Operation(
     tags = ["Operations on bookings"],
-    summary = "Posts an arrival to a specified booking for CAS3",
-    operationId = "premisesPremisesIdBookingsBookingIdArrivalsPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Arrival::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/bookings/{bookingId}/arrivals"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdBookingsBookingIdArrivalsPost(@Parameter(description = "ID of the premises the booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the arrival", required = true) @RequestBody body: NewCas3Arrival): ResponseEntity<Arrival> = getDelegate().premisesPremisesIdBookingsBookingIdArrivalsPost(premisesId, bookingId, body)
-
-  @Operation(
-    tags = ["Operations on bookings"],
-    summary = "Posts a cancellation to a specified approved premises booking",
-    operationId = "premisesPremisesIdBookingsBookingIdCancellationsPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cancellation::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/bookings/{bookingId}/cancellations"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdBookingsBookingIdCancellationsPost(@Parameter(description = "ID of the premises the cancellation is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the cancellation", required = true) @RequestBody body: NewCancellation): ResponseEntity<Cancellation> = getDelegate().premisesPremisesIdBookingsBookingIdCancellationsPost(premisesId, bookingId, body)
-
-  @Operation(
-    tags = ["Operations on bookings"],
-    summary = "Posts a confirmation to a specified Temporary Accommodation booking",
-    operationId = "premisesPremisesIdBookingsBookingIdConfirmationsPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Confirmation::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/bookings/{bookingId}/confirmations"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdBookingsBookingIdConfirmationsPost(@Parameter(description = "ID of the premises the confirmation is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the confirmation", required = true) @RequestBody body: NewConfirmation): ResponseEntity<Confirmation> = getDelegate().premisesPremisesIdBookingsBookingIdConfirmationsPost(premisesId, bookingId, body)
-
-  @Operation(
-    tags = ["Operations on bookings"],
     summary = "Posts a change to the dates for a specified approved premises booking",
     operationId = "premisesPremisesIdBookingsBookingIdDateChangesPost",
     description = """""",
@@ -149,44 +92,6 @@ interface PremisesApi {
   fun premisesPremisesIdBookingsBookingIdDateChangesPost(@Parameter(description = "ID of the premises the booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the extension", required = true) @RequestBody body: NewDateChange): ResponseEntity<DateChange> = getDelegate().premisesPremisesIdBookingsBookingIdDateChangesPost(premisesId, bookingId, body)
 
   @Operation(
-    tags = ["Operations on bookings"],
-    summary = "Posts a departure to a specified booking for CAS3",
-    operationId = "premisesPremisesIdBookingsBookingIdDeparturesPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Departure::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/bookings/{bookingId}/departures"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdBookingsBookingIdDeparturesPost(@Parameter(description = "ID of the premises the booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the departure", required = true) @RequestBody body: NewDeparture): ResponseEntity<Departure> = getDelegate().premisesPremisesIdBookingsBookingIdDeparturesPost(premisesId, bookingId, body)
-
-  @Operation(
-    tags = ["Operations on bookings"],
-    summary = "Posts an extension to a specified approved premises booking",
-    operationId = "premisesPremisesIdBookingsBookingIdExtensionsPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Extension::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/bookings/{bookingId}/extensions"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdBookingsBookingIdExtensionsPost(@Parameter(description = "ID of the premises the booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the extension", required = true) @RequestBody body: NewExtension): ResponseEntity<Extension> = getDelegate().premisesPremisesIdBookingsBookingIdExtensionsPost(premisesId, bookingId, body)
-
-  @Operation(
     tags = ["Operations on premises"],
     summary = "Returns a specific booking for an approved premises",
     operationId = "premisesPremisesIdBookingsBookingIdGet",
@@ -203,62 +108,6 @@ interface PremisesApi {
   )
   fun premisesPremisesIdBookingsBookingIdGet(@Parameter(description = "ID of the premises the booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID): ResponseEntity<Booking> = getDelegate().premisesPremisesIdBookingsBookingIdGet(premisesId, bookingId)
 
-  @Operation(
-    tags = ["Operations on bookings"],
-    summary = "Posts a turnaround to a specified Temporary Accommodation booking",
-    operationId = "premisesPremisesIdBookingsBookingIdTurnaroundsPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Turnaround::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-      ApiResponse(responseCode = "409", description = "An existing booking for the given bed has overlapping dates", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/bookings/{bookingId}/turnarounds"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdBookingsBookingIdTurnaroundsPost(@Parameter(description = "ID of the premises the turnaround is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the turnaround", required = true) @RequestBody body: NewTurnaround): ResponseEntity<Turnaround> = getDelegate().premisesPremisesIdBookingsBookingIdTurnaroundsPost(premisesId, bookingId, body)
-
-  @Operation(
-    tags = ["Operations on premises"],
-    summary = "Returns all bookings for CAS3",
-    operationId = "premisesPremisesIdBookingsGet",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Booking::class)))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/premises/{premisesId}/bookings"],
-    produces = ["application/json"],
-  )
-  fun premisesPremisesIdBookingsGet(@Parameter(description = "ID of the premises to get bookings for", required = true) @PathVariable("premisesId") premisesId: java.util.UUID): ResponseEntity<List<Booking>> = getDelegate().premisesPremisesIdBookingsGet(premisesId)
-
-  @Operation(
-    tags = ["Operations on premises"],
-    summary = "Adds a new booking for CAS3",
-    operationId = "premisesPremisesIdBookingsPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Booking::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-      ApiResponse(responseCode = "409", description = "An existing booking for the given bed has overlapping dates", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/bookings"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdBookingsPost(@Parameter(description = "ID of the premises to create a booking for", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "", required = true) @RequestBody body: NewBooking): ResponseEntity<Booking> = getDelegate().premisesPremisesIdBookingsPost(premisesId, body)
 
   @Operation(
     tags = ["Premises"],
@@ -277,95 +126,6 @@ interface PremisesApi {
   )
   fun premisesPremisesIdGet(@Parameter(description = "ID of the premises to return", required = true) @PathVariable("premisesId") premisesId: java.util.UUID): ResponseEntity<Premises> = getDelegate().premisesPremisesIdGet(premisesId)
 
-  @Operation(
-    tags = ["Operations on premises"],
-    summary = "Lists all Lost Beds entries for the Premises",
-    operationId = "premisesPremisesIdLostBedsGet",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = LostBed::class)))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/premises/{premisesId}/lost-beds"],
-    produces = ["application/json"],
-  )
-  fun premisesPremisesIdLostBedsGet(@Parameter(description = "ID of the premises to show lost beds for", required = true) @PathVariable("premisesId") premisesId: java.util.UUID): ResponseEntity<List<LostBed>> = getDelegate().premisesPremisesIdLostBedsGet(premisesId)
-
-  @Operation(
-    tags = ["Operations on bookings"],
-    summary = "Posts a cancellation to a specified lost bed",
-    operationId = "premisesPremisesIdLostBedsLostBedIdCancellationsPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = LostBedCancellation::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or lost bed ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/lost-beds/{lostBedId}/cancellations"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdLostBedsLostBedIdCancellationsPost(@Parameter(description = "ID of the premises the cancellation is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the lost bed", required = true) @PathVariable("lostBedId") lostBedId: java.util.UUID, @Parameter(description = "details of the cancellation", required = true) @RequestBody body: NewLostBedCancellation): ResponseEntity<LostBedCancellation> = getDelegate().premisesPremisesIdLostBedsLostBedIdCancellationsPost(premisesId, lostBedId, body)
-
-  @Operation(
-    tags = ["Operations on premises"],
-    summary = "Returns a specific lost bed for a premises",
-    operationId = "premisesPremisesIdLostBedsLostBedIdGet",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = LostBed::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises or lost bed ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/premises/{premisesId}/lost-beds/{lostBedId}"],
-    produces = ["application/json"],
-  )
-  fun premisesPremisesIdLostBedsLostBedIdGet(@Parameter(description = "ID of the premises the lost bed is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the lost bed", required = true) @PathVariable("lostBedId") lostBedId: java.util.UUID): ResponseEntity<LostBed> = getDelegate().premisesPremisesIdLostBedsLostBedIdGet(premisesId, lostBedId)
-
-  @Operation(
-    tags = ["Operations on premises"],
-    summary = "Updates a lost bed for a premises",
-    operationId = "premisesPremisesIdLostBedsLostBedIdPut",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = LostBed::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.PUT],
-    value = ["/premises/{premisesId}/lost-beds/{lostBedId}"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdLostBedsLostBedIdPut(@Parameter(description = "ID of the premises the lost bed is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the lost bed", required = true) @PathVariable("lostBedId") lostBedId: java.util.UUID, @Parameter(description = "details of the lost bed", required = true) @RequestBody body: UpdateLostBed): ResponseEntity<LostBed> = getDelegate().premisesPremisesIdLostBedsLostBedIdPut(premisesId, lostBedId, body)
-
-  @Operation(
-    tags = ["Operations on premises"],
-    summary = "Posts a lost bed to a specified approved premises",
-    operationId = "premisesPremisesIdLostBedsPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = LostBed::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/lost-beds"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdLostBedsPost(@Parameter(description = "ID of the premises the lost bed is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "details of the lost bed", required = true) @RequestBody body: NewLostBed): ResponseEntity<LostBed> = getDelegate().premisesPremisesIdLostBedsPost(premisesId, body)
 
   @Operation(
     tags = ["Operations on premises"],
@@ -385,22 +145,4 @@ interface PremisesApi {
   )
   fun premisesPremisesIdPut(@Parameter(description = "ID of the premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "Information to update the premises with", required = true) @RequestBody body: UpdatePremises): ResponseEntity<Premises> = getDelegate().premisesPremisesIdPut(premisesId, body)
 
-  @Operation(
-    tags = ["default"],
-    summary = "Updates a room",
-    operationId = "premisesPremisesIdRoomsRoomIdPut",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Room::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or room ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.PUT],
-    value = ["/premises/{premisesId}/rooms/{roomId}"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdRoomsRoomIdPut(@Parameter(description = "ID of the premises the room is in", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the room to update", required = true) @PathVariable("roomId") roomId: java.util.UUID, @Parameter(description = "Information to update the room with", required = true) @RequestBody updateRoom: UpdateRoom): ResponseEntity<Room> = getDelegate().premisesPremisesIdRoomsRoomIdPut(premisesId, roomId, updateRoom)
-}
+ }
