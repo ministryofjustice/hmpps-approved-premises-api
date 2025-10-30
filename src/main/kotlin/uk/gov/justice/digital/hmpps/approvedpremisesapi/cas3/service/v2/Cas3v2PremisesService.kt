@@ -36,7 +36,6 @@ class Cas3v2PremisesService(
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
   private val cas3UserAccessService: Cas3UserAccessService,
-  private val cas3DomainEventService: Cas3DomainEventService,
   private val objectMapper: ObjectMapper,
 ) {
 
@@ -203,7 +202,7 @@ class Cas3v2PremisesService(
   }
 
   fun getPremisesArchiveHistory(premisesId: UUID): CasResult<List<Cas3PremisesArchiveAction>> = validatedCasResult {
-    val archiveHistory = cas3DomainEventService.getPremisesActiveDomainEvents(
+    val archiveHistory = cas3v2DomainEventService.getPremisesActiveDomainEvents(
       premisesId,
       listOf(DomainEventType.CAS3_PREMISES_ARCHIVED, DomainEventType.CAS3_PREMISES_UNARCHIVED),
     )
