@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.events
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
@@ -17,6 +17,6 @@ enum class EventType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): EventType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): EventType = values().first { it.value == value }
   }
 }

@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateSpac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1WithdrawPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2ApplicationsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2NomisUserEmailSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2UpdateAssessmentStatusSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.NomisUsersSeedJob
@@ -38,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3AssignAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3ReferralRejectionSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2NomisUserEmailSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.nio.file.Path
 import java.time.LocalDateTime

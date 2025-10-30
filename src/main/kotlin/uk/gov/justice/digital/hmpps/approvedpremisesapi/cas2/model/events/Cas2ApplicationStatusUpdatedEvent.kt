@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.events
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
@@ -7,10 +7,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * @param eventDetails
  */
-data class Cas2ApplicationSubmittedEvent(
+data class Cas2ApplicationStatusUpdatedEvent(
 
   @Schema(example = "null", required = true, description = "")
-  @get:JsonProperty("eventDetails", required = true) val eventDetails: Cas2ApplicationSubmittedEventDetails,
+  @get:JsonProperty("eventDetails", required = true) val eventDetails: Cas2ApplicationStatusUpdatedEventDetails,
 
   @Schema(example = "364145f9-0af8-488e-9901-b4c46cd9ba37", required = true, description = "The UUID of an event")
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,

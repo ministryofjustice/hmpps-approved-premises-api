@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.events.Cas2Status
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.events.Cas2StatusDetail
 
 class Cas2StatusFactory : Factory<Cas2Status> {
   private var name: Yielded<String> = { "moreInfoRequested" }

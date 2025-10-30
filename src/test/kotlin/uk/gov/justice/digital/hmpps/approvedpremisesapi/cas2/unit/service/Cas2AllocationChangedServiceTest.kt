@@ -14,6 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.AdditionalInformation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.PersonIdentifier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AllocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
@@ -24,10 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prison
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.AdditionalInformation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import java.time.Instant
 import java.time.ZoneId
