@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -67,7 +66,6 @@ class Cas3v2BookingService(
   private val cas3ExtensionRepository: Cas3ExtensionRepository,
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
-  private val assessmentService: AssessmentService,
   private val cas3AssessmentService: Cas3AssessmentService,
   private val featureFlagService: FeatureFlagService,
 ) {
@@ -481,7 +479,7 @@ class Cas3v2BookingService(
     booking: Cas3BookingEntity,
   ) {
     try {
-      extractEntityFromCasResult(assessmentService.closeAssessment(user, assessmentId))
+      extractEntityFromCasResult(cas3AssessmentService.closeAssessment(user, assessmentId))
     } catch (exception: Exception) {
       log.error("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception)
       Sentry.captureException(RuntimeException("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception))
