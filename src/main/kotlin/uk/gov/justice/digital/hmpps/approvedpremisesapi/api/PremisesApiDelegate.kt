@@ -4,60 +4,20 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.context.request.NativeWebRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateChange
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import java.util.Optional
 
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface PremisesApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
-
-  fun premisesPost(
-    body: NewPremises,
-    xServiceName: ServiceName?,
-  ): ResponseEntity<Premises> {
-    getRequest().ifPresent { request ->
-      for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-          ApiUtil.setExampleResponse(request, "application/json", "{  \"characteristics\" : [ {    \"propertyName\" : \"isCatered\",    \"name\" : \"Is this premises catered (rather than self-catered)?\",    \"serviceScope\" : \"approved-premises\",    \"id\" : \"952790c0-21d7-4fd6-a7e1-9018f08d8bb0\",    \"modelScope\" : \"premises\"  }, {    \"propertyName\" : \"isCatered\",    \"name\" : \"Is this premises catered (rather than self-catered)?\",    \"serviceScope\" : \"approved-premises\",    \"id\" : \"952790c0-21d7-4fd6-a7e1-9018f08d8bb0\",    \"modelScope\" : \"premises\"  } ],  \"notes\" : \"some notes about this property\",  \"town\" : \"Braintree\",  \"probationRegion\" : {    \"name\" : \"NPS North East Central Referrals\",    \"id\" : \"952790c0-21d7-4fd6-a7e1-9018f08d8bb0\"  },  \"postcode\" : \"LS1 3AD\",  \"availableBedsForToday\" : 20,  \"apArea\" : {    \"identifier\" : \"LON\",    \"name\" : \"Yorkshire & The Humber\",    \"id\" : \"cd1c2d43-0b0b-4438-b0e3-d4424e61fb6a\"  },  \"localAuthorityArea\" : {    \"identifier\" : \"LEEDS\",    \"name\" : \"Leeds City Council\",    \"id\" : \"6abb5fa3-e93f-4445-887b-30d081688f44\"  },  \"service\" : \"service\",  \"name\" : \"Hope House\",  \"addressLine1\" : \"one something street\",  \"addressLine2\" : \"Blackmore End\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"bedCount\" : 22,  \"status\" : \"pending\"}")
-          break
-        }
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-          ApiUtil.setExampleResponse(request, "application/problem+json", "Custom MIME type example not yet supported: application/problem+json")
-          break
-        }
-      }
-    }
-    return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
-  }
-
 
   fun premisesPremisesIdBookingsBookingIdDateChangesPost(
     premisesId: java.util.UUID,
@@ -137,7 +97,6 @@ interface PremisesApiDelegate {
     }
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
-
 
 
   fun premisesPremisesIdRoomsPost(
