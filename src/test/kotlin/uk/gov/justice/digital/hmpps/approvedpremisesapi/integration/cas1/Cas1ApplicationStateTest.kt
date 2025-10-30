@@ -418,7 +418,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
 
   private fun createApplication(): UUID {
     val result = webTestClient.post()
-      .uri("/applications")
+      .uri("/cas1/applications")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         NewApplication(
