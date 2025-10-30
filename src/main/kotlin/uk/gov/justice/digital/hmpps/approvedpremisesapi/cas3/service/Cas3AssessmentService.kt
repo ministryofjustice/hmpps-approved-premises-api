@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
@@ -13,12 +14,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.findAssessmentById
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -28,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -36,13 +40,15 @@ import java.util.UUID
 class Cas3AssessmentService(
   private val assessmentRepository: AssessmentRepository,
   private val temporaryAccommodationAssessmentRepository: TemporaryAccommodationAssessmentRepository,
+  private val referralRejectionReasonRepository: ReferralRejectionReasonRepository,
+  private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
+  private val lockableAssessmentRepository: LockableAssessmentRepository,
   private val userAccessService: UserAccessService,
   private val cas3DomainEventService: Cas3DomainEventService,
   private val cas3DomainEventBuilder: Cas3DomainEventBuilder,
   private val userService: UserService,
   private val offenderService: OffenderService,
-  private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
-  private val lockableAssessmentRepository: LockableAssessmentRepository,
+  private val clock: Clock,
 ) {
   fun getAssessmentSummariesForUser(
     user: UserEntity,
@@ -158,6 +164,39 @@ class Cas3AssessmentService(
     return CasResult.Success(assessmentRepository.save(assessment))
   }
 
+  fun rejectAssessment(
+    rejectingUser: UserEntity,
+    assessmentId: UUID,
+    document: String?,
+    rejectionRationale: String,
+    referralRejectionReasonId: UUID? = null,
+    referralRejectionReasonDetail: String? = null,
+    isWithdrawn: Boolean? = null,
+  ): CasResult<TemporaryAccommodationAssessmentEntity> {
+    val assessment = when (val validation = validateAssessment(rejectingUser, assessmentId)) {
+      is CasResult.Success -> validation.value
+      else -> return validation
+    }
+
+    assessment.document = document
+    assessment.submittedAt = OffsetDateTime.now(clock)
+    assessment.decision = AssessmentDecision.REJECTED
+    assessment.rejectionRationale = rejectionRationale
+
+    val referralRejectionReason = referralRejectionReasonRepository.findByIdOrNull(referralRejectionReasonId ?: error("rejection id must be defined"))
+      ?: throw InternalServerErrorProblem("No Referral Rejection Reason with an ID of $referralRejectionReasonId could be found")
+
+    assessment.completedAt = null
+    assessment.referralRejectionReason = referralRejectionReason
+    assessment.referralRejectionReasonDetail = referralRejectionReasonDetail
+    assessment.isWithdrawn = isWithdrawn!!
+
+    val savedAssessment = temporaryAccommodationAssessmentRepository.save(assessment)
+    savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.REJECTED)
+
+    return CasResult.Success(savedAssessment)
+  }
+
   fun deallocateAssessment(requestUser: UserEntity, assessmentId: UUID): CasResult<Unit> {
     if (!userAccessService.userCanDeallocateTask(requestUser)) {
       return CasResult.Unauthorised()
@@ -215,6 +254,22 @@ class Cas3AssessmentService(
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.IN_REVIEW)
 
     return CasResult.Success(savedAssessment)
+  }
+
+  private fun validateAssessment(
+    user: UserEntity,
+    assessmentId: UUID,
+  ): CasResult<TemporaryAccommodationAssessmentEntity> {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+      is CasResult.Success -> assessmentResult.value
+      else -> return assessmentResult
+    }
+
+    if (assessment.reallocatedAt != null) {
+      return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
+    }
+
+    return CasResult.Success(assessment)
   }
 
   private fun notBeforeValidationResult(existingDate: LocalDate) = CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
