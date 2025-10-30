@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
@@ -38,7 +37,6 @@ import java.util.UUID
 @Cas3Controller
 class Cas3ApplicationsController(
   private val cas3ApplicationService: Cas3ApplicationService,
-  private val applicationService: ApplicationService,
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
   private val cas3ApplicationTransformer: Cas3ApplicationTransformer,
@@ -127,12 +125,12 @@ class Cas3ApplicationsController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = applicationService.updateTemporaryAccommodationApplication(
+    val applicationResult = cas3ApplicationService.updateApplication(
       applicationId = applicationId,
       data = serializedData,
     )
 
-    val updatedApplication = extractEntityFromCasResult(applicationResult) as TemporaryAccommodationApplicationEntity
+    val updatedApplication = extractEntityFromCasResult(applicationResult)
 
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user, false))
   }

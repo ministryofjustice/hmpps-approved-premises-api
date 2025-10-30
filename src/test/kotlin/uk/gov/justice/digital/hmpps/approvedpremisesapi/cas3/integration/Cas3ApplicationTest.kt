@@ -14,10 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
@@ -703,8 +700,17 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            callCasApiAndAssertResponse(jwt, applicationEntity.id, offenderDetails.otherIds.crn)
-            callCas3ApiAndAssertResponse(jwt, applicationEntity.id, offenderDetails.otherIds.crn)
+            val casApiResult = callUpdateApplicationApi(jwt, applicationEntity.id)
+              .expectStatus()
+              .isOk
+              .returnResult(String::class.java)
+              .responseBody
+              .blockFirst()
+
+            val result = objectMapper.readValue(casApiResult, Cas3Application::class.java)
+
+            assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+            assertThat(result.data.toString()).isEqualTo("""{thingId=345}""")
           }
         }
       }
@@ -732,14 +738,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            callCasApi(jwt, applicationEntity.id)
-              .expectStatus()
-              .isBadRequest
-              .expectBody()
-              .jsonPath("$.status").isEqualTo("400")
-              .jsonPath("$.detail").isEqualTo("This application has already been deleted")
-
-            callCas3Api(jwt, applicationEntity.id)
+            callUpdateApplicationApi(jwt, applicationEntity.id)
               .expectStatus()
               .isBadRequest
               .expectBody()
@@ -750,54 +749,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    private fun callCasApiAndAssertResponse(
-      jwt: String,
-      applicationId: UUID,
-      crn: String,
-    ) {
-      val casApiResult = callCasApi(jwt, applicationId)
-        .expectStatus()
-        .isOk
-        .returnResult(String::class.java)
-        .responseBody
-        .blockFirst()
-
-      val result = objectMapper.readValue(casApiResult, TemporaryAccommodationApplication::class.java)
-
-      assertThat(result.person.crn).isEqualTo(crn)
-      assertThat(result.data.toString()).isEqualTo("""{thingId=345}""")
-    }
-
-    private fun callCasApi(jwt: String, applicationId: UUID) = webTestClient.put()
-      .uri("/applications/$applicationId")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        UpdateTemporaryAccommodationApplication(
-          data = mapOf("thingId" to 345),
-          type = UpdateApplicationType.CAS3,
-        ),
-      )
-      .exchange()
-
-    private fun callCas3ApiAndAssertResponse(
-      jwt: String,
-      applicationId: UUID,
-      crn: String,
-    ) {
-      val casApiResult = callCas3Api(jwt, applicationId)
-        .expectStatus()
-        .isOk
-        .returnResult(String::class.java)
-        .responseBody
-        .blockFirst()
-
-      val result = objectMapper.readValue(casApiResult, Cas3Application::class.java)
-
-      assertThat(result.person.crn).isEqualTo(crn)
-      assertThat(result.data.toString()).isEqualTo("""{thingId=345}""")
-    }
-
-    private fun callCas3Api(jwt: String, applicationId: UUID) = webTestClient.put()
+    private fun callUpdateApplicationApi(jwt: String, applicationId: UUID) = webTestClient.put()
       .uri("/cas3/applications/$applicationId")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
