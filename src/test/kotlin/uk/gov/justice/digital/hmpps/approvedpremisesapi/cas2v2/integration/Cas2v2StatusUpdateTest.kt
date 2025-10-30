@@ -12,11 +12,13 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateDetailRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
@@ -30,18 +32,18 @@ class Cas2v2StatusUpdateTest(
 ) : Cas2v2IntegrationTestBase() {
 
   @SpykBean
-  lateinit var realCas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository
+  lateinit var realCas2StatusUpdateRepository: Cas2StatusUpdateRepository
 
   @SpykBean
-  lateinit var realCas2v2StatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository
+  lateinit var realCas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @AfterEach
   fun afterEach() {
     // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
-    clearMocks(realCas2v2StatusUpdateRepository)
-    clearMocks(realCas2v2StatusUpdateDetailRepository)
+    clearMocks(realCas2StatusUpdateRepository)
+    clearMocks(realCas2StatusUpdateDetailRepository)
   }
 
   @Nested
@@ -83,18 +85,21 @@ class Cas2v2StatusUpdateTest(
 
       givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { applicant, _ ->
-          val application = cas2v2ApplicationEntityFactory.produceAndPersist {
+          val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
-          cas2v2AssessmentEntityFactory.produceAndPersist {
+          cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
             withId(assessmentId)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
-          assertThat(realCas2v2StatusUpdateRepository.count()).isEqualTo(0)
-          assertThat(realCas2v2StatusUpdateDetailRepository.count()).isEqualTo(0)
+          assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)
+          assertThat(realCas2StatusUpdateDetailRepository.count()).isEqualTo(0)
 
           webTestClient.post()
             .uri("/cas2v2/assessments/$assessmentId/status-updates")
@@ -106,9 +111,9 @@ class Cas2v2StatusUpdateTest(
             .expectStatus()
             .isCreated
 
-          assertThat(realCas2v2StatusUpdateRepository.count()).isEqualTo(1)
+          assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(1)
 
-          val persistedStatusUpdate = realCas2v2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
+          val persistedStatusUpdate = realCas2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
           assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
 
           val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
@@ -150,13 +155,16 @@ class Cas2v2StatusUpdateTest(
     fun `Create cas2v2 status update returns 400 when new status NOT valid`() {
       givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { applicant, _ ->
-          val application = cas2v2ApplicationEntityFactory.produceAndPersist {
+          val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
+            withApplicationOrigin(ApplicationOrigin.courtBail)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
-          val assessment = cas2v2AssessmentEntityFactory.produceAndPersist {
+          val assessment = cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           webTestClient.post()
@@ -184,18 +192,20 @@ class Cas2v2StatusUpdateTest(
         try {
           givenACas2v2Assessor { _, jwt ->
             givenACas2v2PomUser { applicant, _ ->
-              val application = cas2v2ApplicationEntityFactory.produceAndPersist {
+              val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withCreatedByUser(applicant)
                 withSubmittedAt(submittedAt)
                 withNomsNumber("123NOMS")
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
-              cas2v2AssessmentEntityFactory.produceAndPersist {
+              cas2AssessmentEntityFactory.produceAndPersist {
                 withId(assessmentId)
                 withApplication(application)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
-              assertThat(realCas2v2StatusUpdateRepository.count()).isEqualTo(0)
+              assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)
 
               val now = OffsetDateTime.now()
               mockkStatic(OffsetDateTime::class)
@@ -214,15 +224,15 @@ class Cas2v2StatusUpdateTest(
                 .expectStatus()
                 .isCreated
 
-              assertThat(realCas2v2StatusUpdateRepository.count()).isEqualTo(1)
-              assertThat(realCas2v2StatusUpdateDetailRepository.count()).isEqualTo(1)
+              assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(1)
+              assertThat(realCas2StatusUpdateDetailRepository.count()).isEqualTo(1)
 
               val persistedStatusUpdate =
-                realCas2v2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
+                realCas2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
               assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
 
               val persistedStatusDetailUpdate =
-                realCas2v2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate.id)
+                realCas2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate.id)
               assertThat(persistedStatusDetailUpdate).isNotNull
 
               val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
