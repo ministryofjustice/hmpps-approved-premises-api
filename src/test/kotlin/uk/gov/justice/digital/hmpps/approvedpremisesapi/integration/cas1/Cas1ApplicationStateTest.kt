@@ -308,7 +308,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val assessment = application.getLatestAssessment()!!
 
     webTestClient.post()
-      .uri("/assessments/${assessment.id}/rejection")
+      .uri("/cas1/assessments/${assessment.id}/rejection")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(AssessmentRejection(document = mapOf("document" to "value"), rejectionRationale = "reasoning"))
       .exchange()
