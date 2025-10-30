@@ -1170,41 +1170,6 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Close assessment without JWT returns 401`() {
-    webTestClient.post()
-      .uri("/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/closure")
-      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `Close assessment returns 200 OK, persists closure timestamp`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-
-        val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity)
-
-        val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
-
-        webTestClient.post()
-          .uri("/assessments/${assessment.id}/closure")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-
-        val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
-        assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-        assertThat(persistedAssessment.completedAt).isNotNull
-      }
-    }
-  }
-
-  @Test
   fun `Create referral history user note returns 200 with correct body`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->

@@ -262,7 +262,7 @@ class AssessmentController(
   )
   fun assessmentsAssessmentIdClosurePost(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
-    val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)
+    val assessmentAuthResult = cas3AssessmentService.closeAssessment(user, assessmentId)
     extractEntityFromCasResult(assessmentAuthResult)
     return ResponseEntity(HttpStatus.OK)
   }

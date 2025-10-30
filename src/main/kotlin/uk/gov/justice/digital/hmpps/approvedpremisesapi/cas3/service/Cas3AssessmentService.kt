@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
@@ -50,6 +51,8 @@ class Cas3AssessmentService(
   private val offenderService: OffenderService,
   private val clock: Clock,
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   fun getAssessmentSummariesForUser(
     user: UserEntity,
     crnOrName: String?,
@@ -217,6 +220,28 @@ class Cas3AssessmentService(
 
     val savedAssessment = temporaryAccommodationAssessmentRepository.save(assessment)
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.REJECTED)
+
+    return CasResult.Success(savedAssessment)
+  }
+
+  fun closeAssessment(
+    user: UserEntity,
+    assessmentId: UUID,
+  ): CasResult<TemporaryAccommodationAssessmentEntity> {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+      is CasResult.Success -> assessmentResult.value
+      else -> return assessmentResult
+    }
+
+    if (assessment.completedAt != null) {
+      log.info("User: ${user.id} attempted to close assessment: $assessmentId. This assessment has already been closed.")
+      return CasResult.Success(assessment)
+    }
+
+    assessment.completedAt = OffsetDateTime.now()
+
+    val savedAssessment = temporaryAccommodationAssessmentRepository.save(assessment)
+    savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.COMPLETED)
 
     return CasResult.Success(savedAssessment)
   }

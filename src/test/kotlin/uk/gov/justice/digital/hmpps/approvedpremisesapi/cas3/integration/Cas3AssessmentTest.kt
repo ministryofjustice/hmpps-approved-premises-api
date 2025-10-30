@@ -1280,6 +1280,44 @@ class Cas3AssessmentTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class CloseAssessment {
+    @Test
+    fun `Close assessment without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/cas3/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/closure")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Close assessment returns 200 OK, persists closure timestamp`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = produceAndPersistApplication(offenderDetails.otherIds.crn, userEntity)
+
+          val assessment =
+            produceAndPersistAssessmentEntity(userEntity, application)
+
+          webTestClient.post()
+            .uri("/cas3/assessments/${assessment.id}/closure")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+          assertThat(persistedAssessment.completedAt).isNotNull
+        }
+      }
+    }
+  }
+
+  @Nested
   inner class DeallocateAssessmentTest {
     @Test
     fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
