@@ -10,16 +10,12 @@ import io.mockk.spyk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -28,23 +24,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -58,15 +49,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -77,13 +64,10 @@ class AssessmentServiceTest {
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
   private val offenderServiceMock = mockk<OffenderService>()
-  private val placementRequestServiceMock = mockk<Cas1PlacementRequestService>()
-  private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
   private val objectMapperMock = spyk<ObjectMapper>()
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
-  private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val cas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val lockableAssessmentRepository = mockk<LockableAssessmentRepository>()
   private val cas1AssessmentService = mockk<Cas1AssessmentService>()
@@ -94,13 +78,10 @@ class AssessmentServiceTest {
     assessmentRepositoryMock,
     assessmentReferralHistoryNoteRepositoryMock,
     offenderServiceMock,
-    placementRequestServiceMock,
-    cas1PlacementRequirementsServiceMock,
     objectMapperMock,
     cas1TaskDeadlineServiceMock,
     cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,
-    cas1PlacementRequestEmailService,
     cas1ApplicationStatusService,
     Clock.systemDefaultZone(),
     lockableAssessmentRepository,
@@ -961,462 +942,6 @@ class AssessmentServiceTest {
       assertThat(result.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
 
       verify { assessmentRepositoryMock.save(match { it.application == application }) }
-    }
-  }
-
-  @Nested
-  inner class AcceptAssessment {
-
-    lateinit var user: UserEntity
-    lateinit var assessmentId: UUID
-
-    private lateinit var assessmentFactory: ApprovedPremisesAssessmentEntityFactory
-    private lateinit var placementRequirements: PlacementRequirements
-
-    @BeforeEach
-    fun setup() {
-      user = UserEntityFactory().withYieldedProbationRegion {
-        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
-      }.produce()
-
-      assessmentId = UUID.randomUUID()
-
-      assessmentFactory = ApprovedPremisesAssessmentEntityFactory()
-        .withId(assessmentId)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
-        .withAllocatedToUser(user)
-        .withData("{\"test\": \"data\"}")
-
-      placementRequirements = PlacementRequirements(
-        type = ApType.normal,
-        location = "AB123",
-        radius = 50,
-        desirableCriteria = listOf(),
-        essentialCriteria = listOf(),
-      )
-    }
-
-    @Test
-    fun `CAS1 unauthorised when no user is allocated to the assessment`() {
-      val assessment = assessmentFactory
-        .withAllocatedToUser(null)
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      every { userServiceMock.getUserForRequest() } returns user
-
-      val result = assessmentService.acceptAssessment(
-        user,
-        assessmentId,
-        "{\"test\": \"data\"}",
-        placementRequirements,
-        null,
-        null,
-        null,
-      )
-
-      assertThatCasResult(result).isGeneralValidationError("An assessment must be allocated to a user to be updated")
-    }
-
-    @Test
-    fun `CAS1 unauthorised when submitted user is not allocated to the assessment`() {
-      val assessment = assessmentFactory
-        .withAllocatedToUser(UserEntityFactory().withDefaults().produce())
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      every { userServiceMock.getUserForRequest() } returns user
-
-      val result = assessmentService.acceptAssessment(
-        user,
-        assessmentId,
-        "{\"test\": \"data\"}",
-        placementRequirements,
-        null,
-        null,
-        null,
-      )
-
-      assertThatCasResult(result).isUnauthorised("The assessment can only be updated by the allocated user")
-    }
-
-    @Test
-    fun `unauthorised when the user does not have permissions to access the assessment`() {
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessmentFactory
-        .withAllocatedToUser(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce(),
-        )
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
-
-      val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
-
-      assertThatCasResult(result).isUnauthorised("Not authorised to view the assessment")
-    }
-
-    @Test
-    fun `general validation error where decision has already been taken`() {
-      val assessment = assessmentFactory
-        .withDecision(AssessmentDecision.ACCEPTED)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
-
-      assertThatCasResult(result).isGeneralValidationError("A decision has already been taken on this assessment")
-    }
-
-    @Test
-    fun `general validation error where assessment has been deallocated`() {
-      val assessment = assessmentFactory
-        .withReallocatedAt(OffsetDateTime.now())
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
-
-      assertThatCasResult(result).isGeneralValidationError("The application has been reallocated, this assessment is read only")
-    }
-
-    @Test
-    fun `unauthorised when user not allowed to view Offender (LAO)`() {
-      val assessment = assessmentFactory.produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
-
-      every {
-        offenderServiceMock.getOffenderByCrn(
-          assessment.application.crn,
-          user.deliusUsername,
-        )
-      } returns AuthorisableActionResult.Unauthorised()
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns PersonSummaryInfoResult.NotFound(
-        assessment.application.crn,
-      )
-
-      val result = assessmentService.acceptAssessment(
-        user,
-        assessmentId,
-        "{\"test\": \"data\"}",
-        placementRequirements,
-        null,
-        null,
-        null,
-      )
-
-      assertThatCasResult(result).isUnauthorised()
-    }
-
-    @Test
-    fun `CAS1 success returns updated assessment, emits domain event, sends email, does not create placement request when no date information provided`() {
-      val assessment = assessmentFactory.produce()
-      val application = assessment.application as ApprovedPremisesApplicationEntity
-
-      val placementRequirementEntity = PlacementRequirementsEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every { cas1ApplicationStatusService.assessmentUpdated(any()) } returns Unit
-      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
-
-      every { userServiceMock.getUserForRequest() } returns user
-
-      every {
-        cas1PlacementRequirementsServiceMock.createPlacementRequirements(
-          assessment,
-          placementRequirements,
-        )
-      } returns placementRequirementEntity
-
-      every { cas1AssessmentDomainEventService.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
-
-      every { cas1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
-
-      val result = assessmentService.acceptAssessment(
-        user,
-        assessmentId,
-        "{\"test\": \"data\"}",
-        placementRequirements,
-        null,
-        null,
-        null,
-      )
-
-      assertThatCasResult(result).isSuccess().with { updatedAssessment ->
-
-        assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-        assertThat(updatedAssessment.submittedAt).isNotNull()
-        assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
-
-        verify(exactly = 0) {
-          placementRequestServiceMock.createPlacementRequest(any(), any(), any(), false, null)
-        }
-
-        verify(exactly = 1) {
-          cas1AssessmentDomainEventService.assessmentAccepted(application, any(), any(), any(), any(), any())
-        }
-        verify(exactly = 1) {
-          cas1AssessmentEmailServiceMock.assessmentAccepted(application)
-        }
-      }
-    }
-
-    @Test
-    fun `CAS1 returns updated assessment, emits domain event, sends emails, creates placement request when requirements provided`() {
-      val assessment = assessmentFactory.produce()
-      val application = assessment.application as ApprovedPremisesApplicationEntity
-
-      val placementRequirementEntity = PlacementRequirementsEntityFactory()
-        .withApplication(application)
-        .withAssessment(assessment)
-        .produce()
-
-      val placementDates = PlacementDates(
-        expectedArrival = LocalDate.now(),
-        duration = 12,
-      )
-
-      val notes = "Some Notes"
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every { cas1ApplicationStatusService.assessmentUpdated(any()) } returns Unit
-      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
-
-      every {
-        cas1PlacementRequirementsServiceMock.createPlacementRequirements(
-          assessment,
-          placementRequirements,
-        )
-      } returns placementRequirementEntity
-
-      every {
-        placementRequestServiceMock.createPlacementRequest(
-          any(),
-          any(),
-          any(),
-          any(),
-          any(),
-        )
-      } returns PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
-        .withAssessment(assessment)
-        .produce()
-
-      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      every { userServiceMock.getUserForRequest() } returns user
-
-      every { cas1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
-
-      every { cas1AssessmentDomainEventService.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
-
-      every { cas1PlacementRequestEmailService.placementRequestSubmitted(any()) } just Runs
-
-      val result = assessmentService.acceptAssessment(
-        user,
-        assessmentId,
-        "{\"test\": \"data\"}",
-        placementRequirements,
-        placementDates,
-        null,
-        notes,
-      )
-
-      assertThatCasResult(result).isSuccess().with { updatedAssessment ->
-        assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-        assertThat(updatedAssessment.submittedAt).isNotNull()
-        assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
-
-        verify(exactly = 1) {
-          placementRequestServiceMock.createPlacementRequest(
-            placementRequirements = placementRequirementEntity,
-            placementDates = placementDates,
-            notes = notes,
-            isParole = false,
-            placementApplicationEntity = null,
-          )
-        }
-
-        verify(exactly = 1) {
-          cas1AssessmentEmailServiceMock.assessmentAccepted(application)
-        }
-
-        verify(exactly = 1) {
-          cas1AssessmentDomainEventService.assessmentAccepted(application, any(), any(), any(), any(), any())
-        }
-
-        verify(exactly = 1) {
-          cas1PlacementRequestEmailService.placementRequestSubmitted(assessment.application as ApprovedPremisesApplicationEntity)
-        }
-      }
-    }
-
-    @Test
-    fun `CAS3 sets completed at timestamp to null`() {
-      val probationRegion = ProbationRegionEntityFactory()
-        .withYieldedApArea { ApAreaEntityFactory().produce() }
-        .produce()
-
-      val user = UserEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withCompletedAt(OffsetDateTime.now())
-        .withDecision(AssessmentDecision.REJECTED)
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
-
-      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
-
-      every {
-        offenderServiceMock.getPersonSummaryInfoResult(
-          assessment.application.crn,
-          user.cas1LaoStrategy(),
-        )
-      } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
-
-      every { cas1AssessmentDomainEventService.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
-
-      every { userServiceMock.getUserForRequest() } returns user
-      every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
-
-      val result =
-        assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", null, null, null, null)
-
-      assertThatCasResult(result).isSuccess().with { updatedAssessment ->
-        updatedAssessment as TemporaryAccommodationAssessmentEntity
-        assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-        assertThat(updatedAssessment.submittedAt).isNotNull()
-        assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
-        assertThat(updatedAssessment.completedAt).isNull()
-        assertAssessmentHasSystemNote(assessment, user, ReferralHistorySystemNoteType.READY_TO_PLACE)
-      }
     }
   }
 }

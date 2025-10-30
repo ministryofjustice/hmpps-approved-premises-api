@@ -13,9 +13,11 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
@@ -25,8 +27,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
@@ -51,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.nonRepeatingRandomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.Instant
 import java.time.LocalDate
@@ -1060,6 +1065,72 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             )
 
           assertThat(domainEvents.size).isEqualTo(1)
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class AcceptAssessment {
+    @Test
+    fun `Accept assessment without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/cas3/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9/acceptance")
+        .bodyValue(
+          Cas3AssessmentAcceptance(
+            document = "{}",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Accept assessment returns 200, persists decision and add system notes`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(
+          probationArea = ProbationArea(
+            code = "N21",
+            description = randomStringMultiCaseWithNumbers(10),
+          ),
+        ),
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+      ) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withProbationRegion(userEntity.probationRegion)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(userEntity)
+            withApplication(application)
+          }
+
+          webTestClient.post()
+            .uri("/cas3/assessments/${assessment.id}/acceptance")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              AssessmentAcceptance(
+                document = mapOf("document" to "value"),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(persistedAssessment.submittedAt).isNotNull
+          assertThat(persistedAssessment.completedAt).isNull()
+
+          val systemNotes = assessmentReferralSystemNoteRepository.findAll().first { it.assessment.id == assessment.id }
+          assertThat(systemNotes).isNotNull
+          assertThat(systemNotes.type).isEqualTo(ReferralHistorySystemNoteType.READY_TO_PLACE)
         }
       }
     }

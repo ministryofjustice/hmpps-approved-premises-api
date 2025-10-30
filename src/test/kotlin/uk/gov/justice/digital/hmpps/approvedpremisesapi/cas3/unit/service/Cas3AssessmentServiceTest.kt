@@ -8,6 +8,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
@@ -40,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAsses
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -52,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.Clock
 import java.time.LocalDate
@@ -530,6 +533,140 @@ class Cas3AssessmentServiceTest {
       ).withReleaseDate(LocalDate.now().plusDays(5))
       .withAccommodationRequiredFromDate(LocalDate.now().plusDays(5))
       .produce()
+  }
+
+  @Nested
+  inner class AcceptAssessment {
+    lateinit var user: UserEntity
+    lateinit var application: TemporaryAccommodationApplicationEntity
+    lateinit var assessmentId: UUID
+
+    @BeforeEach
+    fun setup() {
+      user = UserEntityFactory().withYieldedProbationRegion {
+        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
+      }.produce()
+
+      application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .produce()
+
+      assessmentId = UUID.randomUUID()
+    }
+
+    @Test
+    fun `CAS3 sets completed at timestamp to null`() {
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withCompletedAt(OffsetDateTime.now())
+        .withDecision(AssessmentDecision.REJECTED)
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+      every { userServiceMock.getUserForRequest() } returns user
+
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      every {
+        offenderServiceMock.getPersonSummaryInfoResult(
+          assessment.application.crn,
+          user.cas1LaoStrategy(),
+        )
+      } returns
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+
+      every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
+
+      val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}")
+
+      assertThatCasResult(result).isSuccess().with { updatedAssessment ->
+        assertThat(updatedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+        assertThat(updatedAssessment.submittedAt).isNotNull()
+        assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
+        assertThat(updatedAssessment.completedAt).isNull()
+        assertAssessmentHasSystemNote(assessment, user, ReferralHistorySystemNoteType.READY_TO_PLACE)
+      }
+    }
+
+    @Test
+    fun `unauthorised when the user does not have permissions to access the assessment`() {
+      every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+
+      val result = assessmentService.acceptAssessment(user, assessmentId, "{}")
+
+      assertThatCasResult(result).isUnauthorised("Not authorised to view the assessment")
+    }
+
+    @Test
+    fun `general validation error where assessment has been deallocated`() {
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .withReallocatedAt(OffsetDateTime.now())
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
+      every {
+        offenderServiceMock.getPersonSummaryInfoResult(
+          assessment.application.crn,
+          user.cas1LaoStrategy(),
+        )
+      } returns
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+
+      val result = assessmentService.acceptAssessment(user, assessmentId, "{}")
+
+      assertThatCasResult(result).isGeneralValidationError("The application has been reallocated, this assessment is read only")
+    }
+
+    @Test
+    fun `unauthorised when user not allowed to view Offender (LAO)`() {
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
+
+      every {
+        offenderServiceMock.getOffenderByCrn(
+          assessment.application.crn,
+          user.deliusUsername,
+        )
+      } returns AuthorisableActionResult.Unauthorised()
+
+      every {
+        offenderServiceMock.getPersonSummaryInfoResult(
+          assessment.application.crn,
+          user.cas1LaoStrategy(),
+        )
+      } returns PersonSummaryInfoResult.NotFound(
+        assessment.application.crn,
+      )
+
+      val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}")
+
+      assertThatCasResult(result).isUnauthorised()
+    }
   }
 
   @Nested

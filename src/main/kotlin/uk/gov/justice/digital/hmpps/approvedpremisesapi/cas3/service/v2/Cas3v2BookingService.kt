@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
@@ -67,6 +68,7 @@ class Cas3v2BookingService(
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
+  private val cas3AssessmentService: Cas3AssessmentService,
   private val featureFlagService: FeatureFlagService,
 ) {
   companion object {
@@ -296,14 +298,10 @@ class Cas3v2BookingService(
   ) {
     try {
       extractEntityFromCasResult(
-        assessmentService.acceptAssessment(
+        cas3AssessmentService.acceptAssessment(
           user,
           assessmentEntity.id,
           assessmentEntity.document,
-          null,
-          null,
-          null,
-          "Automatically moved to ready-to-place after booking is cancelled",
         ),
       )
     } catch (exception: Exception) {

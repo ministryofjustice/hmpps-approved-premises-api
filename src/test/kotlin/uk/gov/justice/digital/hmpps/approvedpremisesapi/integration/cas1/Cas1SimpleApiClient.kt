@@ -130,7 +130,7 @@ class Cas1SimpleApiClient {
     body: AssessmentAcceptance,
   ) {
     integrationTestBase.webTestClient.post()
-      .uri("/assessments/$assessmentId/acceptance")
+      .uri("/cas1/assessments/$assessmentId/acceptance")
       .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(body)
       .exchange()
