@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -36,6 +37,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 
 @ExtendWith(MockKExtension::class)
 class Cas3v2PremisesServiceTest {
@@ -57,6 +59,9 @@ class Cas3v2PremisesServiceTest {
 
   @MockK
   lateinit var cas3UserAccessService: Cas3UserAccessService
+
+  @MockK
+  lateinit var objectMapper: ObjectMapper
 
   @InjectMockKs
   lateinit var cas3v2PremisesService: Cas3v2PremisesService
