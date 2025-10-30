@@ -1059,6 +1059,177 @@ class Cas3ApplicationServiceTest {
   }
 
   @Nested
+  inner class UpdateApplication {
+    @Test
+    fun `updateApplication returns NotFound when application doesn't exist`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+
+      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
+      assertThat(
+        cas3ApplicationService.updateApplication(
+          applicationId = applicationId,
+          data = "{}",
+        ) is CasResult.NotFound,
+      ).isTrue
+    }
+
+    @Test
+    fun `updateApplication returns Unauthorised when application doesn't belong to request user`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+      val username = "SOMEPERSON"
+
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withId(applicationId)
+        .withYieldedCreatedByUser {
+          UserEntityFactory()
+            .withProbationRegion(probationRegion)
+            .produce()
+        }
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
+      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+        .withDeliusUsername(username)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+
+      assertThat(
+        cas3ApplicationService.updateApplication(
+          applicationId = applicationId,
+          data = "{}",
+        ) is CasResult.Unauthorised,
+      ).isTrue
+    }
+
+    @Test
+    fun `updateApplication returns GeneralValidationError when application has already been submitted`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+      val username = "SOMEPERSON"
+
+      val user = UserEntityFactory()
+        .withDeliusUsername(username)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withProbationRegion(user.probationRegion)
+        .produce()
+
+      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+
+      val result = cas3ApplicationService.updateApplication(
+        applicationId = applicationId,
+        data = "{}",
+      )
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      result as CasResult.GeneralValidationError
+
+      assertThat(result.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `updateApplication returns GeneralValidationError when application has already been deleted`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+      val username = "SOMEPERSON"
+
+      val user = UserEntityFactory()
+        .withDeliusUsername(username)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withDeletedAt(OffsetDateTime.now().minusDays(7))
+        .withProbationRegion(user.probationRegion)
+        .produce()
+
+      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+
+      val result = cas3ApplicationService.updateApplication(
+        applicationId = applicationId,
+        data = "{}",
+      )
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      result as CasResult.GeneralValidationError
+
+      assertThat(result.message).isEqualTo("This application has already been deleted")
+    }
+
+    @Test
+    fun `updateApplication returns Success with updated Application`() {
+      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+      val username = "SOMEPERSON"
+
+      val user = UserEntityFactory()
+        .withDeliusUsername(username)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val updatedData = """
+      {
+        "aProperty": "value"
+      }
+    """
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .produce()
+
+      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+      val result = cas3ApplicationService.updateApplication(
+        applicationId = applicationId,
+        data = updatedData,
+      )
+
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
+
+      val approvedPremisesApplication = result.value as TemporaryAccommodationApplicationEntity
+
+      assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
+    }
+  }
+
+  @Nested
   inner class SoftDeleteCas3Application {
 
     @Test
