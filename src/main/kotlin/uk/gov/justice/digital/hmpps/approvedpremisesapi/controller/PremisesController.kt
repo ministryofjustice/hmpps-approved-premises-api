@@ -1,15 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
-import arrow.core.Ior
 import jakarta.transaction.Transactional
-import java.time.LocalDate
-import java.util.UUID
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
@@ -26,6 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
+import java.time.LocalDate
+import java.util.UUID
 
 @Service
 class PremisesController(
@@ -149,5 +146,4 @@ class PremisesController(
       conflictReason = result.message,
     )
   }
-
 }

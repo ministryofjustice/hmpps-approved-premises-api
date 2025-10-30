@@ -7,47 +7,22 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.enums.ParameterIn
-import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateChange
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 
 @RestController
 interface PremisesApi {
@@ -90,7 +65,6 @@ interface PremisesApi {
   )
   fun premisesPremisesIdBookingsBookingIdGet(@Parameter(description = "ID of the premises the booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID): ResponseEntity<Booking> = getDelegate().premisesPremisesIdBookingsBookingIdGet(premisesId, bookingId)
 
-
   @Operation(
     tags = ["Premises"],
     summary = "Returns an approved premises",
@@ -107,7 +81,6 @@ interface PremisesApi {
     produces = ["application/json"],
   )
   fun premisesPremisesIdGet(@Parameter(description = "ID of the premises to return", required = true) @PathVariable("premisesId") premisesId: java.util.UUID): ResponseEntity<Premises> = getDelegate().premisesPremisesIdGet(premisesId)
-
 
   @Operation(
     tags = ["Operations on premises"],
@@ -126,5 +99,4 @@ interface PremisesApi {
     consumes = ["application/json"],
   )
   fun premisesPremisesIdPut(@Parameter(description = "ID of the premises", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "Information to update the premises with", required = true) @RequestBody body: UpdatePremises): ResponseEntity<Premises> = getDelegate().premisesPremisesIdPut(premisesId, body)
-
- }
+}
