@@ -6,6 +6,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -82,6 +83,7 @@ class Cas1SpaceBookingCreateServiceTest {
           characteristics = emptyList(),
           transferredFrom = null,
           additionalInformation = null,
+          transferReason = null,
         ),
       )
 
@@ -114,6 +116,7 @@ class Cas1SpaceBookingCreateServiceTest {
           characteristics = emptyList(),
           transferredFrom = null,
           additionalInformation = null,
+          transferReason = null,
         ),
       )
 
@@ -141,6 +144,7 @@ class Cas1SpaceBookingCreateServiceTest {
           characteristics = emptyList(),
           transferredFrom = null,
           additionalInformation = null,
+          transferReason = null,
         ),
       )
 
@@ -168,6 +172,7 @@ class Cas1SpaceBookingCreateServiceTest {
           characteristics = emptyList(),
           transferredFrom = null,
           additionalInformation = null,
+          transferReason = null,
         ),
       )
 
@@ -227,6 +232,7 @@ class Cas1SpaceBookingCreateServiceTest {
           ),
           transferredFrom = transferInfo,
           additionalInformation = "Some reason",
+          transferReason = TransferReason.riskToResident,
         ),
       )
 
@@ -256,6 +262,7 @@ class Cas1SpaceBookingCreateServiceTest {
         assertThat(bookingToCreate.deliusEventNumber).isEqualTo("42")
         assertThat(bookingToCreate.transferType).isEqualTo(TransferType.PLANNED)
         assertThat(bookingToCreate.additionalInformation).isEqualTo("Some reason")
+        assertThat(bookingToCreate.transferReason).isEqualTo(TransferReason.riskToResident)
       }
     }
   }

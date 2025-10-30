@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
@@ -187,6 +188,7 @@ class Cas1SpaceBookingServiceTest {
         characteristics = characteristics,
         transferredFrom = null,
         additionalInformation = "Transfer to another AP",
+        transferReason = null,
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
@@ -253,6 +255,7 @@ class Cas1SpaceBookingServiceTest {
         characteristics = characteristics,
         transferredFrom = null,
         additionalInformation = null,
+        transferReason = null,
       )
 
       val validatedCreateBooking = mockk<ValidatedCreateBooking>()
@@ -266,6 +269,73 @@ class Cas1SpaceBookingServiceTest {
           premisesId = premises.id,
           arrivalDate = LocalDate.now(),
           departureDate = LocalDate.now().plusDays(1),
+        ),
+        createdBy = user,
+        characteristics = characteristics,
+      )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(createdSpaceBooking)
+      }
+    }
+
+    @Test
+    fun `Creates a transfer booking with transfer reason`() {
+      val spaceBookingWithCancellation = Cas1SpaceBookingEntityFactory()
+        .withPremises(premises)
+        .withPlacementRequest(placementRequest)
+        .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withEventNumber("42")
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory().withDefaults().produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withSpaceBookings(mutableListOf(spaceBookingWithCancellation))
+        .withApplication(application)
+        .withPlacementApplication(placementApplication)
+        .produce()
+
+      every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
+      every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
+        LockablePlacementRequestEntity(placementRequest.id)
+
+      val characteristics = listOf(
+        CharacteristicEntityFactory().withName("c1").produce(),
+        CharacteristicEntityFactory().withName("c2").produce(),
+      )
+
+      val details = CreateBookingDetails(
+        premisesId = premises.id,
+        placementRequestId = placementRequest.id,
+        expectedArrivalDate = LocalDate.now(),
+        expectedDepartureDate = LocalDate.now().plusDays(1),
+        createdBy = user,
+        characteristics = characteristics,
+        transferredFrom = null,
+        additionalInformation = null,
+        transferReason = TransferReason.riskToResident,
+      )
+
+      val validatedCreateBooking = mockk<ValidatedCreateBooking>()
+      every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(validatedCreateBooking)
+      val createdSpaceBooking = Cas1SpaceBookingEntityFactory()
+        .withTransferReason(TransferReason.riskToResident)
+        .produce()
+      every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
+
+      val result = service.createNewBooking(
+        placementRequestId = placementRequest.id,
+        newSpaceBooking = Cas1NewSpaceBooking(
+          premisesId = premises.id,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusDays(1),
+          transferReason = TransferReason.riskToResident,
         ),
         createdBy = user,
         characteristics = characteristics,
@@ -1041,6 +1111,7 @@ class Cas1SpaceBookingServiceTest {
           changeRequestId = null,
         ),
         additionalInformation = null,
+        transferReason = null,
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("oh no create validation failed")
@@ -1144,6 +1215,7 @@ class Cas1SpaceBookingServiceTest {
         characteristics = existingSpaceBooking.criteria,
         transferredFrom = transferredFrom,
         additionalInformation = null,
+        transferReason = null,
       )
 
       val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
@@ -1370,6 +1442,7 @@ class Cas1SpaceBookingServiceTest {
           changeRequestId = existingChangeRequest.id,
         ),
         additionalInformation = null,
+        transferReason = null,
       )
 
       val commonCreateValidationError = CasResult.GeneralValidationError<ValidatedCreateBooking>("common create validation failed")
@@ -1414,6 +1487,7 @@ class Cas1SpaceBookingServiceTest {
         characteristics = emptyList(),
         transferredFrom = transferInfo,
         additionalInformation = null,
+        transferReason = null,
       )
 
       val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()
@@ -1478,6 +1552,7 @@ class Cas1SpaceBookingServiceTest {
         characteristics = emptyList(),
         transferredFrom = transferInfo,
         additionalInformation = null,
+        transferReason = null,
       )
 
       val bookingToCreate = Cas1SpaceBookingEntityFactory().produce()

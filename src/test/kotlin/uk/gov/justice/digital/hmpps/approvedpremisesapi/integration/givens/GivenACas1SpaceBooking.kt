@@ -36,7 +36,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   transferredFrom: Cas1SpaceBookingEntity? = null,
   keyWorkerStaffCode: String? = null,
   keyWorkerUser: UserEntity? = null,
-  reason: String? = null,
+  additionalInformation: String? = null,
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
   val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
@@ -71,6 +71,6 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withTransferredFrom(transferredFrom)
     withKeyworkerStaffCode(keyWorkerStaffCode)
     withKeyWorkerUser(keyWorkerUser)
-    withReason(reason)
+    withAdditionalInformation(additionalInformation)
   }
 }

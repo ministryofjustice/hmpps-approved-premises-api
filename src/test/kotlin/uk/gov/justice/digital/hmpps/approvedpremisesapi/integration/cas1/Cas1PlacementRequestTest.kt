@@ -1379,7 +1379,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 canonicalArrivalDate = LocalDate.of(2024, 6, 1),
                 canonicalDepartureDate = LocalDate.of(2024, 6, 15),
                 premises = premises,
-                reason = "Transfer to another AP",
+                additionalInformation = "Transfer to another AP",
               )
 
               val changeRequest = givenACas1ChangeRequest(

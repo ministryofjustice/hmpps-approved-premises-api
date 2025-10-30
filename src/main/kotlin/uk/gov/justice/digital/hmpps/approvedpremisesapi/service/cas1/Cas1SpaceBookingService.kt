@@ -94,6 +94,7 @@ class Cas1SpaceBookingService(
           createdBy = createdBy,
           characteristics = characteristics,
           transferredFrom = null,
+          transferReason = newSpaceBooking.transferReason,
           additionalInformation = newSpaceBooking.additionalInformation,
         ),
       )
@@ -296,6 +297,7 @@ class Cas1SpaceBookingService(
             changeRequestId = null,
           ),
           additionalInformation = null,
+          transferReason = null,
         ),
 
       )
@@ -375,6 +377,7 @@ class Cas1SpaceBookingService(
             changeRequestId = changeRequest.id,
           ),
           additionalInformation = null,
+          transferReason = null,
         ),
       )
     ) {

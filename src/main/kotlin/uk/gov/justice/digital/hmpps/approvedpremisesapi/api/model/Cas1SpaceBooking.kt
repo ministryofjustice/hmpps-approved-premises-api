@@ -35,4 +35,5 @@ data class Cas1SpaceBooking(
   val nonArrival: Cas1SpaceBookingNonArrival? = null,
   val deliusEventNumber: String? = null,
   val additionalInformation: String? = null,
+  val transferReason: TransferReason? = null,
 )

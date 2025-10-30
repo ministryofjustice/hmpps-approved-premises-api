@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
@@ -58,7 +59,8 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var deliusEventNumber: Yielded<String?> = { null }
   private var transferredFrom: Yielded<Cas1SpaceBookingEntity?> = { null }
   private var transferType: Yielded<TransferType?> = { null }
-  private var reason: Yielded<String?> = { null }
+  private var additionalInformation: Yielded<String?> = { null }
+  private var transferReason: Yielded<TransferReason?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -216,8 +218,12 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.transferType = { transferType }
   }
 
-  fun withReason(reason: String?) = apply {
-    this.reason = { reason }
+  fun withAdditionalInformation(additionalInformation: String?) = apply {
+    this.additionalInformation = { additionalInformation }
+  }
+
+  fun withTransferReason(transferReason: TransferReason?) = apply {
+    this.transferReason = { transferReason }
   }
 
   override fun produce() = Cas1SpaceBookingEntity(
@@ -257,6 +263,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     deliusId = null,
     transferredFrom = this.transferredFrom(),
     transferType = this.transferType(),
-    additionalInformation = this.reason(),
+    additionalInformation = this.additionalInformation(),
+    transferReason = this.transferReason(),
   )
 }

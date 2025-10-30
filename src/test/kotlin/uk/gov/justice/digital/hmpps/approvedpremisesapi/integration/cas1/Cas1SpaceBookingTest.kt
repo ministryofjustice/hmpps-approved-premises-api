@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceChara
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -289,6 +290,103 @@ class Cas1SpaceBookingTest {
           assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
           assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(8))
           assertThat(result.additionalInformation).isEqualTo("Transfer to another Hodge House")
+          assertThat(result.createdAt).satisfies(
+            { it.isAfter(Instant.now().minusSeconds(10)) },
+          )
+
+          domainEventAsserter.assertDomainEventOfTypeStored(
+            placementRequest.application.id,
+            DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+          )
+
+          emailAsserter.assertEmailsRequestedCount(3)
+          emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
+          emailAsserter.assertEmailRequested(premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
+          emailAsserter.assertEmailRequested(
+            placementRequest.application.caseManagerUserDetails!!.email!!,
+            Cas1NotifyTemplates.BOOKING_MADE,
+          )
+
+          assertThat(approvedPremisesApplicationRepository.findByIdOrNull(placementRequest.application.id)!!.status)
+            .isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+
+          assertThat(cas1SpaceBookingRepository.findAllByApplication(application)).hasSize(2)
+        }
+      }
+    }
+
+    @Test
+    fun `Booking a transfer space booking returns OK with the correct data, updates app status, emits domain event and emails`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { applicant, jwt ->
+        givenAPlacementRequest(
+          assessmentAllocatedTo = applicant,
+          createdByUser = applicant,
+          caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+            withEmailAddress("caseManager@test.com")
+          },
+        ) { placementRequest, application ->
+          val characteristics = listOf(
+            Cas1SpaceCharacteristic.hasEnSuite,
+            Cas1SpaceCharacteristic.isArsonSuitable,
+          )
+
+          placementRequest.placementRequirements = placementRequirementsFactory.produceAndPersist {
+            withYieldedPostcodeDistrict {
+              postCodeDistrictFactory.produceAndPersist()
+            }
+            withApplication(application as ApprovedPremisesApplicationEntity)
+            withAssessment(placementRequest.assessment)
+            withEssentialCriteria(emptyList())
+            withDesirableCriteria(emptyList())
+          }
+
+          placementRequestRepository.saveAndFlush(placementRequest)
+
+          val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
+
+          apDeliusContextAddSingleCaseSummaryToBulkResponse(
+            CaseSummaryFactory()
+              .withCrn(application.crn)
+              .produce(),
+          )
+
+          givenACas1SpaceBooking(placementRequest = placementRequest)
+
+          val response = webTestClient.post()
+            .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewSpaceBooking(
+                arrivalDate = LocalDate.now().plusDays(1),
+                departureDate = LocalDate.now().plusDays(8),
+                premisesId = premises.id,
+                characteristics = characteristics,
+                additionalInformation = "Transfer to another Hodge House",
+                transferReason = TransferReason.riskToResident,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult(Cas1SpaceBooking::class.java)
+
+          val result = response.responseBody.blockFirst()!!
+
+          assertThat(result.person).isInstanceOf(FullPerson::class.java)
+          assertThat(result.characteristics).containsExactlyInAnyOrderElementsOf(
+            characteristics,
+          )
+          assertThat(result.premises.id).isEqualTo(premises.id)
+          assertThat(result.premises.name).isEqualTo(premises.name)
+          assertThat(result.apArea.id).isEqualTo(premises.probationRegion.apArea!!.id)
+          assertThat(result.apArea.name).isEqualTo(premises.probationRegion.apArea!!.name)
+          assertThat(result.bookedBy!!.id).isEqualTo(applicant.id)
+          assertThat(result.bookedBy!!.name).isEqualTo(applicant.name)
+          assertThat(result.bookedBy!!.deliusUsername).isEqualTo(applicant.deliusUsername)
+          assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
+          assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(8))
+          assertThat(result.additionalInformation).isEqualTo("Transfer to another Hodge House")
+          assertThat(result.transferReason).isEqualTo(TransferReason.riskToResident)
           assertThat(result.createdAt).satisfies(
             { it.isAfter(Instant.now().minusSeconds(10)) },
           )

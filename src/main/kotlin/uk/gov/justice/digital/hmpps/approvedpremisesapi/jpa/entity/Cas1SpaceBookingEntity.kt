@@ -22,6 +22,7 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_CHILD_SEX_OFFENDERS
@@ -572,7 +573,12 @@ data class Cas1SpaceBookingEntity(
    */
   @Enumerated(EnumType.STRING)
   var transferType: TransferType? = null,
+
+  @Enumerated(EnumType.STRING)
+  val transferReason: TransferReason?,
+
   val additionalInformation: String?,
+
   @Version
   var version: Long = 1,
 ) {

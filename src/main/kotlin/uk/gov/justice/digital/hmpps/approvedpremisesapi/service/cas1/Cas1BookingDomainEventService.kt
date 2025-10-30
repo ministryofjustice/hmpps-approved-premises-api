@@ -308,6 +308,7 @@ class Cas1BookingDomainEventService(
             situation = situation,
             characteristics = bookingInfo.characteristics,
             transferredFrom = transferredFrom?.toEventTransferInfo(),
+            transferReason = bookingInfo.transferReason,
           ),
         ),
         metadata = mapOfNonNullValues(
@@ -412,6 +413,7 @@ class Cas1BookingDomainEventService(
     val departureDate: LocalDate,
     val isSpaceBooking: Boolean,
     val characteristics: List<SpaceCharacteristic>? = null,
+    val transferReason: String? = null,
   )
 
   private fun BookingEntity.toBookingInfo() = BookingInfo(
@@ -433,6 +435,7 @@ class Cas1BookingDomainEventService(
     departureDate = canonicalDepartureDate,
     isSpaceBooking = true,
     characteristics = criteria.toSpaceCharacteristics(),
+    transferReason = transferReason?.name,
   )
 
   private fun getNomsNumber(crn: String) = when (val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)) {

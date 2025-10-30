@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -128,6 +129,7 @@ class Cas1SpaceBookingCreateService(
       transferType = details.transferredFrom?.type,
       deliusId = null,
       additionalInformation = details.additionalInformation,
+      transferReason = details.transferReason,
     )
   }
 
@@ -144,6 +146,7 @@ class Cas1SpaceBookingCreateService(
     val createdBy: UserEntity,
     val characteristics: List<CharacteristicEntity>,
     val transferredFrom: TransferInfo?,
+    val transferReason: TransferReason?,
     val additionalInformation: String?,
   )
 }
