@@ -55,24 +55,6 @@ interface PremisesApi {
   fun getDelegate(): PremisesApiDelegate = object : PremisesApiDelegate {}
 
   @Operation(
-    tags = ["Premises"],
-    summary = "Add a new premises",
-    operationId = "premisesPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "201", description = "new premises added", content = [Content(schema = Schema(implementation = Premises::class))]),
-      ApiResponse(responseCode = "400", description = "invalid request", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPost(@Parameter(description = "", required = true) @RequestBody body: NewPremises, @Parameter(description = "If given, persist the service name against this property", `in` = ParameterIn.HEADER, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?): ResponseEntity<Premises> = getDelegate().premisesPost(body, xServiceName)
-
-  @Operation(
     tags = ["Operations on bookings"],
     summary = "Posts a change to the dates for a specified approved premises booking",
     operationId = "premisesPremisesIdBookingsBookingIdDateChangesPost",
