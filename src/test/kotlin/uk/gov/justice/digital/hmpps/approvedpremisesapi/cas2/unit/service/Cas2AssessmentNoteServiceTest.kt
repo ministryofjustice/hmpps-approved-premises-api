@@ -138,7 +138,7 @@ class Cas2AssessmentNoteServiceTest {
           every {
             mockEmailNotificationService.sendCas2Email(
               recipientEmailAddress = assessorEmail,
-              templateId = Cas2NotifyTemplates.cas2NoteAddedForAssessor,
+              templateId = Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_ASSESSOR,
               personalisation = mapOf(
                 "nacroReferenceId" to "OH123",
                 "nacroReferenceIdInSubject" to "(OH123)",
@@ -295,7 +295,7 @@ class Cas2AssessmentNoteServiceTest {
           every {
             mockEmailNotificationService.sendCas2Email(
               recipientEmailAddress = assessorEmail,
-              templateId = Cas2NotifyTemplates.cas2NoteAddedForAssessor,
+              templateId = Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_ASSESSOR,
               personalisation = mapOf(
                 "nacroReferenceId" to "OH123",
                 "nacroReferenceIdInSubject" to "(OH123)",
@@ -483,7 +483,7 @@ class Cas2AssessmentNoteServiceTest {
         every {
           mockEmailNotificationService.sendCas2Email(
             recipientEmailAddress = "email",
-            templateId = Cas2NotifyTemplates.cas2NoteAddedForReferrer,
+            templateId = Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_REFERRER,
             personalisation = mapOf(
               "dateNoteAdded" to noteEntity.createdAt.toLocalDate().toCas2UiFormat(),
               "timeNoteAdded" to noteEntity.createdAt.toCas2UiFormattedHourOfDay(),
@@ -612,7 +612,7 @@ class Cas2AssessmentNoteServiceTest {
           every {
             mockEmailNotificationService.sendCas2Email(
               recipientEmailAddress = assessorEmail,
-              templateId = Cas2NotifyTemplates.cas2NoteAddedForAssessor,
+              templateId = Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_ASSESSOR,
               personalisation = mapOf(
                 "nacroReferenceId" to "OH123",
                 "nacroReferenceIdInSubject" to "(OH123)",

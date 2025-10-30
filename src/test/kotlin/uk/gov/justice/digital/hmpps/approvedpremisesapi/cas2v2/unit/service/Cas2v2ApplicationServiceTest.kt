@@ -866,7 +866,7 @@ class Cas2v2ApplicationServiceTest {
       verify(exactly = 1) {
         mockEmailNotificationService.sendEmail(
           "exampleAssessorInbox@example.com",
-          Cas2NotifyTemplates.cas2ApplicationSubmitted,
+          Cas2NotifyTemplates.CAS2_APPLICATION_SUBMITTED,
           match {
             it["name"] == user.name &&
               it["email"] == user.email &&

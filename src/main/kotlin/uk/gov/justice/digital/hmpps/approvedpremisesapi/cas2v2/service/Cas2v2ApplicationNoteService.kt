@@ -84,9 +84,9 @@ class Cas2v2ApplicationNoteService(
       val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
       val templateId = when (applicationOrigin) {
-        ApplicationOrigin.courtBail -> Cas2NotifyTemplates.cas2v2NoteAddedForReferrerCourtBail
-        ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.cas2v2NoteAddedForReferrerPrisonBail
-        ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.cas2NoteAddedForReferrer
+        ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_REFERRER_COURT_BAIL
+        ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_REFERRER_PRISON_BAIL
+        ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_REFERRER
       }
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = application.createdByUser.email!!,
@@ -114,9 +114,9 @@ class Cas2v2ApplicationNoteService(
     val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
     val templateId = when (applicationOrigin) {
-      ApplicationOrigin.courtBail -> Cas2NotifyTemplates.cas2v2NoteAddedForAssessorCourtBail
-      ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.cas2v2NoteAddedForAssessorPrisonBail
-      ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.cas2NoteAddedForAssessor
+      ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_COURT_BAIL
+      ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_PRISON_BAIL
+      ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_ASSESSOR
     }
 
     emailNotificationService.sendCas2Email(

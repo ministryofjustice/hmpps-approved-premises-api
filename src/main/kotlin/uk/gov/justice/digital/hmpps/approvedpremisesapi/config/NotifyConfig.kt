@@ -56,28 +56,27 @@ object Cas1NotifyTemplates {
   const val TRANSFER_COMPLETE_EMERGENCY_FOR_CRU = "dae982a8-6afe-413e-b23d-12e195c2d947"
 }
 
-@SuppressWarnings("MayBeConst")
 object Cas2NotifyTemplates {
-  val cas2ApplicationSubmitted = "a0823218-91dd-4cf0-9835-4b90024f62c8"
-  val cas2NoteAddedForReferrer = "debe17a2-9f79-4d26-88a0-690dd73e2a5b"
-  val cas2NoteAddedForAssessor = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1"
-  val cas2ApplicationStatusUpdated = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a"
+  const val CAS2_APPLICATION_SUBMITTED = "a0823218-91dd-4cf0-9835-4b90024f62c8"
+  const val CAS2_NOTE_ADDED_FOR_REFERRER = "debe17a2-9f79-4d26-88a0-690dd73e2a5b"
+  const val CAS2_NOTE_ADDED_FOR_ASSESSOR = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1"
+  const val CAS2_APPLICATION_STATUS_UPDATED = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a"
 
-  val cas2v2ApplicationSubmittedCourtBail = "e181a9d5-7ca2-491f-a563-ac9f3fac8777"
-  val cas2v2ApplicationSubmittedPrisonBail = "f0faefb9-f300-4b67-ac0d-4b41c0b3f7bc"
-  val cas2v2ApplicationStatusUpdatedCourtBail = "cec7e570-b3e3-4dd4-9a99-d03c1cc34655"
-  val cas2v2ApplicationStatusUpdatedPrisonBail = "51a71a7a-a427-41bc-8fdd-77a73861880c"
-  val cas2v2NoteAddedForReferrerCourtBail = "6a258c9b-cc0e-402e-af05-e52d94a45298"
-  val cas2v2NoteAddedForReferrerPrisonBail = "b277e84a-c72b-4afa-a388-72a70e588fb2"
-  val cas2v2NoteAddedForAssessorCourtBail = "df58e948-6672-4b0b-b6ab-2940b0c6ef22"
-  val cas2v2NoteAddedForAssessorPrisonBail = "9a37fb66-5215-40f2-8fa4-210e2e27d693"
+  const val CAS2_V2_APPLICATION_SUBMITTED_COURT_BAIL = "e181a9d5-7ca2-491f-a563-ac9f3fac8777"
+  const val CAS2_V2_APPLICATION_SUBMITTED_PRISON_BAIL = "f0faefb9-f300-4b67-ac0d-4b41c0b3f7bc"
+  const val CAS2_V2_APPLICATION_STATUS_UPDATED_COURT_BAIL = "cec7e570-b3e3-4dd4-9a99-d03c1cc34655"
+  const val CAS2_V2_APPLICATION_STATUS_UPDATED_PRISON_BAIL = "51a71a7a-a427-41bc-8fdd-77a73861880c"
+  const val CAS2_V2_NOTE_ADDED_FOR_REFERRER_COURT_BAIL = "6a258c9b-cc0e-402e-af05-e52d94a45298"
+  const val CAS2_V2_NOTE_ADDED_FOR_REFERRER_PRISON_BAIL = "b277e84a-c72b-4afa-a388-72a70e588fb2"
+  const val CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_COURT_BAIL = "df58e948-6672-4b0b-b6ab-2940b0c6ef22"
+  const val CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_PRISON_BAIL = "9a37fb66-5215-40f2-8fa4-210e2e27d693"
 
-  val cas2ToTransferringPomApplicationTransferredToAnotherPrison = "5adb6390-0c95-4458-a8b5-3e61ff780715"
-  val cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison = "6b427e8a-eb21-43a3-89c3-f6a147b20c39"
-  val cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison = "1e5d98e4-efdf-428e-bca9-fd5daadd27aa"
-  val cas2ToReceivingPomApplicationTransferredToAnotherPom = "289d4004-3c95-4c23-b0fa-9187d9da8eaf"
-  val cas2ToNacroApplicationTransferredToAnotherPom = "e36b226e-99f5-4d1f-83d3-12ef9a814a5b"
-  val cas2ToNacroApplicationTransferredToAnotherPrison = "e292b246-0d4e-4636-81f0-933bcf4dadd0"
+  const val CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON = "5adb6390-0c95-4458-a8b5-3e61ff780715"
+  const val CAS2_TO_TRANSFERRING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON = "6b427e8a-eb21-43a3-89c3-f6a147b20c39"
+  const val CAS2_TO_RECEIVING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON = "1e5d98e4-efdf-428e-bca9-fd5daadd27aa"
+  const val CAS2_TO_RECEIVING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_POM = "289d4004-3c95-4c23-b0fa-9187d9da8eaf"
+  const val CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_POM = "e36b226e-99f5-4d1f-83d3-12ef9a814a5b"
+  const val CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON = "e292b246-0d4e-4636-81f0-933bcf4dadd0"
 }
 
 enum class NotifyMode {

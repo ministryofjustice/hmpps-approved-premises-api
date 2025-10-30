@@ -38,7 +38,7 @@ class Cas2EmailService(
       val transferringFromPom = nomisUserRepository.findById(it).getOrElse { error("No Nomis User found for id $it.") }
       emailNotificationService.sendCas2Email(
         transferringFromPom.email!!,
-        Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
+        Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
         mapOf(
           "nomsNumber" to application.nomsNumber,
           "receivingPrisonName" to newOmu.prisonName,
@@ -47,7 +47,7 @@ class Cas2EmailService(
     }
     emailNotificationService.sendCas2Email(
       oldOmu.email,
-      Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
       mapOf(
         "nomsNumber" to application.nomsNumber,
         "receivingPrisonName" to newOmu.prisonName,
@@ -55,7 +55,7 @@ class Cas2EmailService(
     )
     emailNotificationService.sendCas2Email(
       newOmu.email,
-      Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.CAS2_TO_RECEIVING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
       mapOf(
         "nomsNumber" to application.nomsNumber,
         "transferringPrisonName" to oldOmu.prisonName,
@@ -65,7 +65,7 @@ class Cas2EmailService(
     )
     emailNotificationService.sendCas2Email(
       nacroEmail,
-      Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
       mapOf(
         "nomsNumber" to application.nomsNumber,
         "receivingPrisonName" to newOmu.prisonName,
@@ -82,7 +82,7 @@ class Cas2EmailService(
 
     emailNotificationService.sendCas2Email(
       emailAddress,
-      Cas2NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom,
+      Cas2NotifyTemplates.CAS2_TO_RECEIVING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_POM,
       mapOf(
         "nomsNumber" to application.nomsNumber,
         "transferringPrisonName" to oldOmu.prisonName,
@@ -92,7 +92,7 @@ class Cas2EmailService(
     )
     emailNotificationService.sendCas2Email(
       nacroEmail,
-      Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom,
+      Cas2NotifyTemplates.CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_POM,
       mapOf(
         "nomsNumber" to application.nomsNumber,
         "receivingPrisonName" to newOmu.prisonName,

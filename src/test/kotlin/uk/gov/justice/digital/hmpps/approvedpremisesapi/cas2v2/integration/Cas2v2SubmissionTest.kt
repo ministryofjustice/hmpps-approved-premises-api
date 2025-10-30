@@ -889,7 +889,7 @@ class Cas2v2SubmissionTest(
         emailAsserter.assertEmailsRequestedCount(1)
         emailAsserter.assertEmailRequested(
           notifyConfig.emailAddresses.cas2Assessors,
-          Cas2NotifyTemplates.cas2ApplicationSubmitted,
+          Cas2NotifyTemplates.CAS2_APPLICATION_SUBMITTED,
           personalisation = mapOf(
             "name" to submittingUser.name,
             "email" to submittingUser.email!!,

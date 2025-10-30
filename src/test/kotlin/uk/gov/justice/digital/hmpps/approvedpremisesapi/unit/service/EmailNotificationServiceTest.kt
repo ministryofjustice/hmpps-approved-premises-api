@@ -198,7 +198,7 @@ class EmailNotificationServiceTest {
     fun `log the email if logging is enabled, CAS2`() {
       val emailNotificationService = createService(NotifyMode.ENABLED, logEmails = true)
 
-      val templateId = Cas2NotifyTemplates.cas2NoteAddedForAssessor
+      val templateId = Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_ASSESSOR
       val personalisation = mapOf(
         "name" to "Jeff",
         "assessmentUrl" to "aUrlValue",
@@ -215,7 +215,7 @@ class EmailNotificationServiceTest {
       )
 
       loggerExtension.assertContains(
-        "Sending email with template cas2NoteAddedForAssessor (0d646bf0-d40f-4fe7-aa74-dd28b10d04f1) " +
+        "Sending email with template CAS2_NOTE_ADDED_FOR_ASSESSOR (0d646bf0-d40f-4fe7-aa74-dd28b10d04f1) " +
           "to user test@here.com with replyToId theReplyToId. Personalisation is {name=Jeff, assessmentUrl=aUrlValue}",
       )
     }

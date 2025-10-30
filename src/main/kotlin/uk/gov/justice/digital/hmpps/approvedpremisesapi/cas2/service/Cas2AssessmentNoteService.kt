@@ -75,7 +75,7 @@ class Cas2AssessmentNoteService(
     if (email != null) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = email,
-        templateId = Cas2NotifyTemplates.cas2NoteAddedForReferrer,
+        templateId = Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_REFERRER,
         personalisation = mapOf(
           "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
           "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
@@ -96,7 +96,7 @@ class Cas2AssessmentNoteService(
   ) {
     emailNotificationService.sendCas2Email(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
-      templateId = Cas2NotifyTemplates.cas2NoteAddedForAssessor,
+      templateId = Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_ASSESSOR,
       personalisation = mapOf(
         "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(savedNote.application.assessment!!),
         "nacroReferenceIdInSubject" to getSubjectLineReferenceIdOrPlaceholder(savedNote.application.assessment!!),
