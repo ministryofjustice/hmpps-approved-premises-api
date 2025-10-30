@@ -10,37 +10,24 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sortByName
 import java.util.UUID
 
 @Suppress("LongParameterList", "ThrowsCount")
@@ -53,76 +40,7 @@ class AssessmentController(
   private val assessmentTransformer: AssessmentTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val cas3AssessmentService: Cas3AssessmentService,
-  private val cas3AssessmentTransformer: Cas3AssessmentTransformer,
 ) {
-
-  @PaginationHeaders
-  @Operation(
-    tags = ["Assessment data"],
-    summary = "Gets assessments the user is authorised to view",
-    description = """This endpoint is deprecated; please use the CAS-specific endpoint instead""",
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/assessments"],
-    produces = ["application/json"],
-  )
-  fun assessmentsGet(
-    @RequestHeader(name = "X-Service-Name") xServiceName: ServiceName,
-    @RequestParam(defaultValue = "asc") sortDirection: SortDirection,
-    @RequestParam(defaultValue = "arrivalDate") sortBy: AssessmentSortField,
-    @RequestParam statuses: List<AssessmentStatus>?,
-    @RequestParam crnOrName: String?,
-    @RequestParam page: Int?,
-    @RequestParam perPage: Int?,
-  ): ResponseEntity<List<AssessmentSummary>> {
-    val user = userService.getUserForRequest()
-    val domainSummaryStatuses = statuses?.map { cas3AssessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
-
-    val (summaries, metadata) = when (xServiceName) {
-      ServiceName.cas2v2 -> throw UnsupportedOperationException("CAS2v2 not supported")
-      ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
-      ServiceName.temporaryAccommodation -> {
-        val (summaries, metadata) = cas3AssessmentService.getAssessmentSummariesForUser(
-          user,
-          crnOrName,
-          domainSummaryStatuses,
-          PageCriteria(sortBy, sortDirection, page, perPage),
-        )
-        val transformSummaries = when (sortBy) {
-          AssessmentSortField.assessmentDueAt -> throw BadRequestProblem(errorDetail = "Sorting by due date is not supported for CAS3")
-          AssessmentSortField.personName -> transformDomainToApi(summaries, user.cas3LaoStrategy()).sortByName(
-            sortDirection,
-          )
-          else -> transformDomainToApi(summaries, user.cas3LaoStrategy())
-        }
-        Pair(transformSummaries, metadata)
-      }
-
-      else -> throw BadRequestProblem(errorDetail = "This Api endpoint does not support get assessments for CAS1 use /cas1/assessments Api endpoint.")
-    }
-
-    return ResponseEntity.ok()
-      .headers(metadata?.toHeaders())
-      .body(summaries)
-  }
-
-  private fun transformDomainToApi(
-    summaries: List<DomainAssessmentSummary>,
-    laoStrategy: LaoStrategy,
-  ): List<AssessmentSummary> {
-    val crns = summaries.map { it.crn }
-    val personInfoResults = offenderDetailService.getPersonInfoResults(crns.toSet(), laoStrategy)
-
-    return summaries.map {
-      val crn = it.crn
-      assessmentTransformer.transformDomainToApiSummary(
-        it,
-        personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
-      )
-    }
-  }
-
   @Operation(
     tags = ["Assessment data"],
     summary = "Gets a single assessment by its id",
