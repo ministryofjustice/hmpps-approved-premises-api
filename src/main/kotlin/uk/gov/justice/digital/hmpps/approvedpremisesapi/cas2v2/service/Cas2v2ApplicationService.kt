@@ -376,9 +376,9 @@ class Cas2v2ApplicationService(
     val applicationOrigin = application.applicationOrigin.toString()
 
     val templateId = when (applicationOrigin) {
-      ApplicationOrigin.courtBail.toString() -> Cas2NotifyTemplates.cas2v2ApplicationSubmittedCourtBail
-      ApplicationOrigin.prisonBail.toString() -> Cas2NotifyTemplates.cas2v2ApplicationSubmittedPrisonBail
-      else -> Cas2NotifyTemplates.cas2ApplicationSubmitted
+      ApplicationOrigin.courtBail.toString() -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_SUBMITTED_COURT_BAIL
+      ApplicationOrigin.prisonBail.toString() -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_SUBMITTED_PRISON_BAIL
+      else -> Cas2NotifyTemplates.CAS2_APPLICATION_SUBMITTED
     }
 
     emailNotificationService.sendEmail(

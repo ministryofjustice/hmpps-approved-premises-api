@@ -167,7 +167,7 @@ class StatusUpdateServiceTest {
         every {
           mockEmailNotificationService.sendCas2Email(
             recipientEmailAddress = applicant.email!!,
-            templateId = Cas2NotifyTemplates.cas2ApplicationStatusUpdated,
+            templateId = Cas2NotifyTemplates.CAS2_APPLICATION_STATUS_UPDATED,
             personalisation = mapOf(
               "applicationStatus" to cas2StatusUpdateEntity.label,
               "dateStatusChanged" to cas2StatusUpdateEntity.createdAt.toLocalDate().toCas2UiFormat(),
@@ -295,7 +295,7 @@ class StatusUpdateServiceTest {
           every {
             mockEmailNotificationService.sendCas2Email(
               recipientEmailAddress = applicant.email!!,
-              templateId = Cas2NotifyTemplates.cas2ApplicationStatusUpdated,
+              templateId = Cas2NotifyTemplates.CAS2_APPLICATION_STATUS_UPDATED,
               personalisation = mapOf(
                 "applicationStatus" to cas2StatusUpdateEntity.label,
                 "dateStatusChanged" to cas2StatusUpdateEntity.createdAt.toLocalDate().toCas2UiFormat(),

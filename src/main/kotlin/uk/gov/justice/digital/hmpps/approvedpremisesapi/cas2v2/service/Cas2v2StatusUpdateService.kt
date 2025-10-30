@@ -167,9 +167,9 @@ class Cas2v2StatusUpdateService(
       val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
       val templateId = when (applicationOrigin) {
-        ApplicationOrigin.courtBail -> Cas2NotifyTemplates.cas2v2ApplicationStatusUpdatedCourtBail
-        ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.cas2v2ApplicationStatusUpdatedPrisonBail
-        ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.cas2ApplicationStatusUpdated
+        ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_STATUS_UPDATED_COURT_BAIL
+        ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_STATUS_UPDATED_PRISON_BAIL
+        ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_APPLICATION_STATUS_UPDATED
       }
 
       emailNotificationService.sendCas2Email(

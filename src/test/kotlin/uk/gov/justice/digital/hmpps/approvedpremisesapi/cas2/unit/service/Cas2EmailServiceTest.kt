@@ -108,7 +108,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(newUser.email!!),
-        eq(Cas2NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom),
+        eq(Cas2NotifyTemplates.CAS2_TO_RECEIVING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_POM),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -122,7 +122,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(nacroEmail),
-        eq(Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom),
+        eq(Cas2NotifyTemplates.CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_POM),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -150,7 +150,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(newUser.email!!),
-        eq(Cas2NotifyTemplates.cas2ToReceivingPomApplicationTransferredToAnotherPom),
+        eq(Cas2NotifyTemplates.CAS2_TO_RECEIVING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_POM),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -164,7 +164,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(nacroEmail),
-        eq(Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPom),
+        eq(Cas2NotifyTemplates.CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_POM),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -225,7 +225,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(oldUser.email!!),
-        eq(Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -237,7 +237,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(oldOmu.email),
-        eq(Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -249,7 +249,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(newOmu.email),
-        eq(Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.CAS2_TO_RECEIVING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -263,7 +263,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(nacroEmail),
-        eq(Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -291,7 +291,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(oldUser.email!!),
-        eq(Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -303,7 +303,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(oldOmu.email),
-        eq(Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -315,7 +315,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(newOmu.email),
-        eq(Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.CAS2_TO_RECEIVING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -329,7 +329,7 @@ class Cas2EmailServiceTest {
     every {
       emailNotificationService.sendCas2Email(
         eq(nacroEmail),
-        eq(Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison),
+        eq(Cas2NotifyTemplates.CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -347,7 +347,7 @@ class Cas2EmailServiceTest {
   }
 
   @Test
-  fun `do not send cas2ToTransferringPomApplicationTransferredToAnotherPrison email when user id not provided`() {
+  fun `do not send CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON email when user id not provided`() {
     every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns oldOmu
     every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(any()) } returns null
@@ -361,15 +361,15 @@ class Cas2EmailServiceTest {
     verify(exactly = 0) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = any(),
-        templateId = Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
+        templateId = Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
         personalisation = any(),
       )
     }
 
     val shouldBeSentEmails = listOf(
-      Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
-      Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
-      Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
+      Cas2NotifyTemplates.CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
+      Cas2NotifyTemplates.CAS2_TO_RECEIVING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
     )
     shouldBeSentEmails.forEach {
       verify(exactly = 1) {
@@ -383,7 +383,7 @@ class Cas2EmailServiceTest {
   }
 
   @Test
-  fun `should send cas2ToTransferringPomApplicationTransferredToAnotherPrison email when user id is provided`() {
+  fun `should send CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON email when user id is provided`() {
     every { nomisUserRepository.findById(oldUser.id) } returns Optional.of(oldUser)
     every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns oldOmu
     every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
@@ -397,10 +397,10 @@ class Cas2EmailServiceTest {
     )
 
     val shouldBeSentEmails = listOf(
-      Cas2NotifyTemplates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
-      Cas2NotifyTemplates.cas2ToNacroApplicationTransferredToAnotherPrison,
-      Cas2NotifyTemplates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
-      Cas2NotifyTemplates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
+      Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
+      Cas2NotifyTemplates.CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
+      Cas2NotifyTemplates.CAS2_TO_RECEIVING_POM_UNIT_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
+      Cas2NotifyTemplates.CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON,
     )
     shouldBeSentEmails.forEach {
       verify(exactly = 1) {

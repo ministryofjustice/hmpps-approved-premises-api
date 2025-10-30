@@ -25,7 +25,7 @@ class EmailNotificationService(
 
   companion object {
     fun resolveTemplateName(templateId: String) = Cas2NotifyTemplates::class.memberProperties
-      .firstOrNull { it.get(Cas2NotifyTemplates) == templateId }?.name
+      .firstOrNull { it.getter.call() == templateId }?.name
       ?: Cas1NotifyTemplates::class.memberProperties
         .firstOrNull { it.getter.call() == templateId }?.name
   }

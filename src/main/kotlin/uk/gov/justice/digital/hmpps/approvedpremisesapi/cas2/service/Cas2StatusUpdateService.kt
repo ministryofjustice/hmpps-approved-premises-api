@@ -180,7 +180,7 @@ class StatusUpdateService(
     if (email != null) { // BAIL-WIP
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = email,
-        templateId = Cas2NotifyTemplates.cas2ApplicationStatusUpdated,
+        templateId = Cas2NotifyTemplates.CAS2_APPLICATION_STATUS_UPDATED,
         personalisation = mapOf(
           "applicationStatus" to status.label,
           "dateStatusChanged" to status.createdAt.toLocalDate().toCas2UiFormat(),
