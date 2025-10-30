@@ -1075,4 +1075,26 @@ class Cas3AssessmentServiceTest {
       assertThat((result as CasResult.Success).value).isNotNull()
     }
   }
+
+  @Nested
+  inner class CreateAssessmentReferralHistoryNotes {
+    @Test
+    fun `addReferralHistoryUserNote returns not found for non-existent Assessment`() {
+      val assessmentId = UUID.randomUUID()
+
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
+
+      val result = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, "referral history note")
+
+      assertThat(result is CasResult.NotFound).isTrue()
+    }
+  }
 }

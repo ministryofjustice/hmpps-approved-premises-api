@@ -212,25 +212,6 @@ class AssessmentServiceTest {
     assertThat(result.entityType).isEqualTo("AssessmentEntity")
   }
 
-  @Test
-  fun `addReferralHistoryUserNote returns not found for non-existent Assessment`() {
-    val assessmentId = UUID.randomUUID()
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-
-    val result = assessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, "referral history note")
-
-    assertThat(result is CasResult.NotFound).isTrue()
-  }
-
   @Nested
   inner class ReallocateAssessment {
     private val application = ApprovedPremisesApplicationEntityFactory()

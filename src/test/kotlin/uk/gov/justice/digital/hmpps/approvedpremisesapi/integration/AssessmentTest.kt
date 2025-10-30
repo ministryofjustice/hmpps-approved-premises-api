@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
@@ -305,31 +304,6 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("$.releaseDate").isEqualTo(releaseDate.toString())
           .jsonPath("$.accommodationRequiredFromDate").isEqualTo(accommodationDate.toString())
-      }
-    }
-  }
-
-  @Test
-  fun `Create referral history user note returns 200 with correct body`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-
-        val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity)
-
-        val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
-
-        webTestClient.post()
-          .uri("/assessments/${assessment.id}/referral-history-notes")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewReferralHistoryUserNote(
-              message = "Some text",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
       }
     }
   }

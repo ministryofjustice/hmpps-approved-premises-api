@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentReje
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
@@ -1429,6 +1430,34 @@ class Cas3AssessmentTest : IntegrationTestBase() {
               assertThat(note.createdByUser.id).isEqualTo(expectedUser.id)
             }
           }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateAssessmentReferralHistoryNotes {
+    @Test
+    fun `Create referral history user note returns 200 with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val application = produceAndPersistApplication(offenderDetails.otherIds.crn, userEntity)
+
+          val assessment =
+            produceAndPersistAssessmentEntity(userEntity, application)
+
+          webTestClient.post()
+            .uri("/assessments/${assessment.id}/referral-history-notes")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas3ReferralHistoryUserNote(
+                message = "Some text",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
         }
       }
     }

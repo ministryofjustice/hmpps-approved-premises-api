@@ -15,7 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
@@ -27,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -40,6 +43,7 @@ class Cas3AssessmentController(
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
   private val cas3AssessmentTransformer: Cas3AssessmentTransformer,
+  private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
 ) {
   @GetMapping("/assessments")
   @Suppress("LongParameterList")
@@ -184,6 +188,25 @@ class Cas3AssessmentController(
     )
 
     return ResponseEntity(HttpStatus.CREATED)
+  }
+
+  @PostMapping("/assessments/{assessmentId}/referral-history-notes")
+  fun createAssessmentReferralHistoryNotes(
+    @PathVariable assessmentId: UUID,
+    @RequestBody referralHistoryUserNote: Cas3ReferralHistoryUserNote,
+  ): ResponseEntity<ReferralHistoryNote> {
+    val user = userService.getUserForRequest()
+
+    val referralHistoryUserNoteResult =
+      cas3AssessmentService.addAssessmentReferralHistoryUserNote(user, assessmentId, referralHistoryUserNote.message)
+
+    return ResponseEntity.ok(
+      assessmentReferralHistoryNoteTransformer.transformJpaToApi(
+        extractEntityFromCasResult(
+          referralHistoryUserNoteResult,
+        ),
+      ),
+    )
   }
 
   private fun transformDomainToApi(

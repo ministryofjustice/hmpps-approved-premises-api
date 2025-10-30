@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
@@ -258,29 +257,6 @@ class AssessmentService(
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.UNALLOCATED)
 
     return CasResult.Success(savedAssessment)
-  }
-
-  fun addAssessmentReferralHistoryUserNote(
-    user: UserEntity,
-    assessmentId: UUID,
-    text: String,
-  ): CasResult<AssessmentReferralHistoryUserNoteEntity> {
-    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
-      is CasResult.Success -> assessmentResult.value
-      is CasResult.Error -> return assessmentResult.reviseType()
-    }
-
-    val referralHistoryNoteEntity = assessmentReferralHistoryNoteRepository.save(
-      AssessmentReferralHistoryUserNoteEntity(
-        id = UUID.randomUUID(),
-        assessment = assessment,
-        createdAt = OffsetDateTime.now(),
-        message = text,
-        createdByUser = user,
-      ),
-    )
-
-    return CasResult.Success(referralHistoryNoteEntity)
   }
 
   private fun AssessmentEntity.addSystemNote(user: UserEntity, type: ReferralHistorySystemNoteType) {
