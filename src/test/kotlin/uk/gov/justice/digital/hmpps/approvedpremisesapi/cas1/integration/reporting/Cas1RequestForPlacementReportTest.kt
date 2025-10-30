@@ -964,15 +964,34 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   ) {
     clock.setNow(withdrawalDate)
 
-    val placementRequestId = getApplication(applicationId).placementRequests.first { it.isForLegacyInitialRequestForPlacement() }.id
+    val app = getApplication(applicationId)
+    val legacyPlacementRequest = app.placementRequests.firstOrNull { it.isForLegacyInitialRequestForPlacement() }
 
-    cas1SimpleApiClient.placementRequestWithdraw(
-      this,
-      placementRequestId,
-      WithdrawPlacementRequest(
-        reason,
-      ),
-    )
+    if (legacyPlacementRequest != null) {
+      cas1SimpleApiClient.placementRequestWithdraw(
+        this,
+        legacyPlacementRequest.id,
+        WithdrawPlacementRequest(
+          reason,
+        ),
+      )
+    } else {
+      /**
+       * Fallback withdrawal mechanism for missing legacy initial requests for placement.
+       *
+       * In cases where the legacy initial request for a placement entity no longer exists,
+       * this code withdraws the automatically created placement application instead.
+       * This ensures the withdrawal is still reflected correctly in the report data.
+       */
+      val placementApplicationId = getPlacementApplication(app).id
+      cas1SimpleApiClient.placementApplicationWithdraw(
+        this,
+        placementApplicationId,
+        WithdrawPlacementApplication(
+          reason,
+        ),
+      )
+    }
   }
 
   private fun getPlacementApplication(application: ApplicationEntity) = placementApplicationRepository.findByApplication(application).first { it.reallocatedAt == null }
