@@ -164,6 +164,30 @@ class Cas3AssessmentService(
     return CasResult.Success(assessmentRepository.save(assessment))
   }
 
+  @SuppressWarnings("ThrowsCount")
+  fun acceptAssessment(
+    acceptingUser: UserEntity,
+    assessmentId: UUID,
+    document: String?,
+  ): CasResult<TemporaryAccommodationAssessmentEntity> {
+    val acceptedAt = OffsetDateTime.now(clock)
+
+    val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
+      is CasResult.Success -> validation.value
+      else -> return validation
+    }
+
+    assessment.document = document
+    assessment.submittedAt = acceptedAt
+    assessment.decision = AssessmentDecision.ACCEPTED
+    assessment.completedAt = null
+
+    val savedAssessment = assessmentRepository.save(assessment)
+    savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.READY_TO_PLACE)
+
+    return CasResult.Success(savedAssessment)
+  }
+
   fun rejectAssessment(
     rejectingUser: UserEntity,
     assessmentId: UUID,
