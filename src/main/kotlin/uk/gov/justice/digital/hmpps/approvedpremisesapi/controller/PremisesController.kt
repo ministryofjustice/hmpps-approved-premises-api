@@ -93,49 +93,6 @@ class PremisesController(
     )
   }
 
-  override fun premisesPost(body: NewPremises, xServiceName: ServiceName?): ResponseEntity<Premises> {
-    val serviceName = if (xServiceName == ServiceName.temporaryAccommodation) {
-      throw BadRequestProblem(errorDetail = "This Api endpoint does not support creating premises of type Temporary Accommodation use /cas3/premises Api endpoint.")
-    } else {
-      xServiceName ?: ServiceName.approvedPremises
-    }
-
-    if (!userAccessService.currentUserCanAccessRegion(serviceName, body.probationRegionId)) {
-      throw ForbiddenProblem()
-    }
-
-    val premises = extractResultEntityOrThrow(
-      premisesService.createNewPremises(
-        addressLine1 = body.addressLine1,
-        addressLine2 = body.addressLine2,
-        town = body.town,
-        postcode = body.postcode,
-        latitude = null,
-        longitude = null,
-        service = serviceName.value,
-        localAuthorityAreaId = body.localAuthorityAreaId,
-        probationRegionId = body.probationRegionId,
-        name = body.name,
-        notes = body.notes,
-        characteristicIds = body.characteristicIds,
-        status = body.status,
-        probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-        turnaroundWorkingDays = body.turnaroundWorkingDayCount,
-      ),
-    )
-
-    val totalBeds = premisesService.getBedCount(premises)
-
-    return ResponseEntity(
-      premisesTransformer.transformJpaToApi(
-        premises,
-        totalBeds = totalBeds,
-        availableBedsForToday = totalBeds,
-      ),
-      HttpStatus.CREATED,
-    )
-  }
-
   override fun premisesPremisesIdGet(premisesId: UUID): ResponseEntity<Premises> {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
