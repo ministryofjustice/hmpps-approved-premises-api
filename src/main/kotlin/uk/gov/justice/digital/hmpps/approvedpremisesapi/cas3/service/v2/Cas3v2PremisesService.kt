@@ -31,6 +31,18 @@ class Cas3v2PremisesService(
   private val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
   private val cas3UserAccessService: Cas3UserAccessService,
 ) {
+
+  companion object {
+    const val MAX_LENGTH_BEDSPACE_REFERENCE: Long = 3
+    const val MAX_DAYS_UNARCHIVE_PREMISES: Long = 7
+    const val MAX_DAYS_ARCHIVE_PREMISES_IN_PAST: Long = 7
+    const val MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE: Long = 3
+    const val MAX_DAYS_CREATE_BEDSPACE: Long = 7
+    const val MAX_DAYS_UNARCHIVE_BEDSPACE: Long = 7
+    const val MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST: Long = 7
+    const val MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE: Long = 3
+  }
+
   fun getValidatedPremises(premisesId: UUID): CasResult<Cas3PremisesEntity> {
     val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
     if (premises == null) return CasResult.NotFound("Cas3Premises", premisesId.toString())
