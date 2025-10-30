@@ -37,7 +37,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 
 @ExtendWith(MockKExtension::class)
 class Cas3v2PremisesServiceTest {
