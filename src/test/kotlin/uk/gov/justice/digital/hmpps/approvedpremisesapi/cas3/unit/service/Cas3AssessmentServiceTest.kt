@@ -361,7 +361,7 @@ class Cas3AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findById(assessmentId) } returns (Optional.empty())
 
-      val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment) as CasResult.NotFound
+      val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment.releaseDate, updateAssessment.accommodationRequiredFromDate) as CasResult.NotFound
       assertAll(
         {
           assertThat(result.id).isEqualTo(assessmentId.toString())
@@ -390,7 +390,8 @@ class Cas3AssessmentServiceTest {
         assessmentService.updateAssessment(
           user,
           assessmentId,
-          updateAssessment,
+          updateAssessment.releaseDate,
+          updateAssessment.releaseDate,
         )
 
       assertThat(result is CasResult.Unauthorised).isTrue
@@ -415,7 +416,8 @@ class Cas3AssessmentServiceTest {
       val result = assessmentService.updateAssessment(
         user,
         assessmentId,
-        updateAssessment,
+        updateAssessment.releaseDate,
+        updateAssessment.accommodationRequiredFromDate,
       ) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
       assertThat(result.message).isEqualTo("Cannot update both dates")
       verify { cas3DomainEventServiceMock wasNot called }
@@ -440,7 +442,8 @@ class Cas3AssessmentServiceTest {
       val result = assessmentService.updateAssessment(
         user,
         assessmentId,
-        updateAssessment,
+        updateAssessment.releaseDate,
+        updateAssessment.accommodationRequiredFromDate,
       ) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
       assertThat(result.message).isEqualTo("Accommodation required from date cannot be before release date: ${assessment.releaseDate}")
       verify { cas3DomainEventServiceMock wasNot called }
@@ -463,7 +466,8 @@ class Cas3AssessmentServiceTest {
       val result = assessmentService.updateAssessment(
         user,
         assessmentId,
-        updateAssessment,
+        updateAssessment.releaseDate,
+        updateAssessment.accommodationRequiredFromDate,
       ) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
       assertThat(result.message).isEqualTo("Release date cannot be after accommodation required from date: ${assessment.accommodationRequiredFromDate}")
       verify { cas3DomainEventServiceMock wasNot called }
@@ -500,7 +504,7 @@ class Cas3AssessmentServiceTest {
       every { cas3DomainEventBuilderMock.buildAssessmentUpdatedDomainEvent(any(), any()) } answers { callOriginal() }
       every { cas3DomainEventServiceMock.saveAssessmentUpdatedEvent(any()) } just Runs
 
-      val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment)
+      val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment.releaseDate, updateAssessment.accommodationRequiredFromDate)
       assertThat(result is CasResult.Success).isTrue
       val entity = (result as CasResult.Success).value
       assertThat(entity).isNotNull()

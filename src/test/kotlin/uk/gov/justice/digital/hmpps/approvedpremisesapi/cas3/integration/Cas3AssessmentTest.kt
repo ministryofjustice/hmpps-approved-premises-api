@@ -16,10 +16,10 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
@@ -998,8 +998,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .header("X-service-name", "temporary-accommodation")
             .bodyValue(
-              UpdateAssessment(
-                data = emptyMap(),
+              Cas3UpdateAssessment(
                 releaseDate = newReleaseDate,
               ),
             )
@@ -1043,8 +1042,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .header("X-service-name", "temporary-accommodation")
             .bodyValue(
-              UpdateAssessment(
-                data = emptyMap(),
+              Cas3UpdateAssessment(
                 accommodationRequiredFromDate = newAccommodationDate,
               ),
             )

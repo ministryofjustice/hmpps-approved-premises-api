@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -102,7 +101,8 @@ class Cas3AssessmentService(
   fun updateAssessment(
     user: UserEntity,
     assessmentId: UUID,
-    updateAssessment: UpdateAssessment,
+    releaseDate: LocalDate?,
+    accommodationRequiredFromDate: LocalDate?,
   ): CasResult<TemporaryAccommodationAssessmentEntity> {
     val assessment: TemporaryAccommodationAssessmentEntity = (
       assessmentRepository.findAssessmentById(assessmentId)
@@ -113,11 +113,11 @@ class Cas3AssessmentService(
       return CasResult.Unauthorised()
     }
 
-    if (updateAssessment.releaseDate != null && updateAssessment.accommodationRequiredFromDate != null) {
+    if (releaseDate != null && accommodationRequiredFromDate != null) {
       return CasResult.GeneralValidationError("Cannot update both dates")
     }
 
-    updateAssessment.releaseDate?.let { newReleaseDate ->
+    releaseDate?.let { newReleaseDate ->
       val currentAccommodationReqDate = assessment.currentAccommodationRequiredFromDate()
 
       if (newReleaseDate.isAfter(currentAccommodationReqDate)) {
@@ -139,7 +139,7 @@ class Cas3AssessmentService(
       assessment.releaseDate = newReleaseDate
     }
 
-    updateAssessment.accommodationRequiredFromDate?.let { newAccommodationRequiredFromDate ->
+    accommodationRequiredFromDate?.let { newAccommodationRequiredFromDate ->
       val currentReleaseDate = assessment.currentReleaseDate()
 
       if (newAccommodationRequiredFromDate.isBefore(currentReleaseDate)) {

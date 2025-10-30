@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
@@ -88,11 +88,18 @@ class Cas3AssessmentController(
   @Transactional
   fun updateAssessment(
     @PathVariable assessmentId: UUID,
-    @RequestBody updateAssessment: UpdateAssessment,
+    @RequestBody updateAssessment: Cas3UpdateAssessment,
   ): ResponseEntity<Cas3Assessment> {
     val user = userService.getUserForRequest()
 
-    val assessment = extractEntityFromCasResult(cas3AssessmentService.updateAssessment(user, assessmentId, updateAssessment))
+    val assessment = extractEntityFromCasResult(
+      cas3AssessmentService.updateAssessment(
+        user,
+        assessmentId,
+        updateAssessment.releaseDate,
+        updateAssessment.accommodationRequiredFromDate,
+      ),
+    )
 
     val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
 
