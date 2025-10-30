@@ -156,6 +156,14 @@ class Cas3AssessmentController(
     return ResponseEntity(HttpStatus.OK)
   }
 
+  @PostMapping("/assessments/{assessmentId}/closure")
+  fun closeAssessment(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+    val assessmentAuthResult = cas3AssessmentService.closeAssessment(user, assessmentId)
+    extractEntityFromCasResult(assessmentAuthResult)
+    return ResponseEntity(HttpStatus.OK)
+  }
+
   @DeleteMapping("/assessments/{assessmentId}/allocations")
   @Transactional
   fun deallocateAssessment(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {

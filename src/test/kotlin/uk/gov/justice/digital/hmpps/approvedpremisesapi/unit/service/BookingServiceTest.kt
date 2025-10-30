@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -44,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
@@ -68,7 +68,7 @@ class BookingServiceTest {
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
   private val mockUserService = mockk<UserService>()
   private val mockUserAccessService = mockk<UserAccessService>()
-  private val mockAssessmentService = mockk<AssessmentService>()
+  private val mockCas3AssessmentService = mockk<Cas3AssessmentService>()
 
   fun createBookingService(): BookingService = BookingService(
     offenderDetailService = mockOffenderDetailService,
@@ -295,7 +295,7 @@ class BookingServiceTest {
       mockBookingRepository.save(bookingEntity)
     }
     verify(exactly = 0) {
-      mockAssessmentService.closeAssessment(user, any())
+      mockCas3AssessmentService.closeAssessment(user, any())
     }
     verify(exactly = 0) {
       mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -49,8 +48,6 @@ class AssessmentService(
   private val lockableAssessmentRepository: LockableAssessmentRepository,
   private val cas1AssessmentService: Cas1AssessmentService,
 ) {
-  private val log = LoggerFactory.getLogger(this::class.java)
-
   fun getAssessmentAndValidate(
     user: UserEntity,
     assessmentId: UUID,
@@ -109,32 +106,6 @@ class AssessmentService(
     assessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.SUBMITTED)
 
     return assessment
-  }
-
-  fun closeAssessment(
-    user: UserEntity,
-    assessmentId: UUID,
-  ): CasResult<AssessmentEntity> {
-    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
-      is CasResult.Success -> assessmentResult.value
-      else -> return assessmentResult
-    }
-
-    if (assessment !is TemporaryAccommodationAssessmentEntity) {
-      throw RuntimeException("Only CAS3 is currently supported")
-    }
-
-    if (assessment.completedAt != null) {
-      log.info("User: ${user.id} attempted to close assessment: $assessmentId. This assessment has already been closed.")
-      return CasResult.Success(assessment)
-    }
-
-    assessment.completedAt = OffsetDateTime.now()
-
-    val savedAssessment = assessmentRepository.save(assessment)
-    savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.COMPLETED)
-
-    return CasResult.Success(savedAssessment)
   }
 
   fun reallocateAssessment(

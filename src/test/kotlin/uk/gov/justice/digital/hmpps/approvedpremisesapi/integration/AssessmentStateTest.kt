@@ -106,7 +106,7 @@ class AssessmentStateTest : IntegrationTestBase() {
 
   private fun TemporaryAccommodationAssessmentEntity.assertApiStatus(status: TemporaryAccommodationAssessmentStatus, jwt: String) {
     webTestClient.get()
-      .uri("/assessments/${this.id}")
+      .uri("/cas3/assessments/${this.id}")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -128,7 +128,7 @@ class AssessmentStateTest : IntegrationTestBase() {
 
   private fun TemporaryAccommodationAssessmentEntity.markReadyToPlace(jwt: String) {
     webTestClient.post()
-      .uri("/assessments/${this.id}/acceptance")
+      .uri("/cas3/assessments/${this.id}/acceptance")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(AssessmentAcceptance(document = {}))
@@ -139,7 +139,7 @@ class AssessmentStateTest : IntegrationTestBase() {
 
   private fun TemporaryAccommodationAssessmentEntity.markClosed(jwt: String) {
     webTestClient.post()
-      .uri("/assessments/${this.id}/closure")
+      .uri("/cas3/assessments/${this.id}/closure")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .exchange()
@@ -167,7 +167,7 @@ class AssessmentStateTest : IntegrationTestBase() {
       }
 
     webTestClient.post()
-      .uri("/assessments/${this.id}/rejection")
+      .uri("/cas3/assessments/${this.id}/rejection")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
       .bodyValue(AssessmentRejection(document = {}, rejectionRationale = "Some reason or another", referralRejectionReasonId, null, true))

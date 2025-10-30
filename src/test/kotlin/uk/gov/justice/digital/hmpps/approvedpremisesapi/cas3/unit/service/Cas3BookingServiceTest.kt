@@ -75,7 +75,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -112,7 +111,6 @@ class Cas3BookingServiceTest {
   private val mockCas3TurnaroundRepository = mockk<Cas3TurnaroundRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
-  private val mockAssessmentService = mockk<AssessmentService>()
   private val mockCas3AssessmentService = mockk<Cas3AssessmentService>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
@@ -131,7 +129,6 @@ class Cas3BookingServiceTest {
     cas3TurnaroundRepository = mockCas3TurnaroundRepository,
     extensionRepository = mockExtensionRepository,
     cas3PremisesService = mockCas3PremisesService,
-    assessmentService = mockAssessmentService,
     cas3AssessmentService = mockCas3AssessmentService,
     userAccessService = mockUserAccessService,
     offenderService = mockOffenderService,
@@ -1446,7 +1443,7 @@ class Cas3BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
       verify(exactly = 0) {
-        mockAssessmentService.closeAssessment(user, any())
+        mockCas3AssessmentService.closeAssessment(user, any())
       }
       verify(exactly = 0) {
         mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(any())
@@ -1471,7 +1468,7 @@ class Cas3BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(BookingEntity::class), user) } just Runs
       every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
-      every { mockAssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Success(assessment)
+      every { mockCas3AssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Success(assessment)
       mockkStatic(Sentry::class)
 
       val result = cas3BookingService.createConfirmation(
@@ -1495,7 +1492,7 @@ class Cas3BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.closeAssessment(user, assessment.id)
+        mockCas3AssessmentService.closeAssessment(user, assessment.id)
       }
       verify(exactly = 1) {
         mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
@@ -1542,7 +1539,7 @@ class Cas3BookingServiceTest {
         mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
       }
       verify(exactly = 0) {
-        mockAssessmentService.closeAssessment(user, any())
+        mockCas3AssessmentService.closeAssessment(user, any())
       }
     }
 
@@ -1563,7 +1560,7 @@ class Cas3BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(BookingEntity::class), user) } just Runs
       every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
-      every { mockAssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Unauthorised()
+      every { mockCas3AssessmentService.closeAssessment(user, assessment.id) } returns CasResult.Unauthorised()
       mockkStatic(Sentry::class)
       every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
 
@@ -1588,7 +1585,7 @@ class Cas3BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
       verify(exactly = 1) {
-        mockAssessmentService.closeAssessment(user, assessment.id)
+        mockCas3AssessmentService.closeAssessment(user, assessment.id)
       }
       verify(exactly = 1) {
         mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id)
