@@ -21,50 +21,6 @@ import java.util.UUID
 import kotlin.random.Random
 
 class PremisesTest {
-  @Nested
-  inner class CreatePremises : InitialiseDatabasePerClassTestBase() {
-    private lateinit var user: UserEntity
-    private lateinit var probationDeliveryUnit: ProbationDeliveryUnitEntity
-    private lateinit var jwt: String
-
-    @BeforeAll
-    fun setup() {
-      val userArgs = givenAUser()
-
-      user = userArgs.first
-      jwt = userArgs.second
-      probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-        withProbationRegion(user.probationRegion)
-      }
-    }
-
-    @Test
-    fun `Trying to create a new premises without a service returns 400`() {
-      webTestClient.post()
-        .uri("/premises?service=temporary-accommodation")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewPremises(
-            name = "arbitrary_test_name",
-            postcode = "AB123CD",
-            addressLine1 = "FIRST LINE OF THE ADDRESS",
-            addressLine2 = "Some district",
-            town = "Somewhere",
-            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-            probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
-            notes = "some notes",
-            characteristicIds = mutableListOf(),
-            status = PropertyStatus.active,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .is4xxClientError
-        .expectBody()
-        .jsonPath("title").isEqualTo("Bad Request")
-        .jsonPath("invalid-params[0].errorType").isEqualTo("onlyCas3Supported")
-    }
-  }
 
   @Nested
   inner class GetPremisesById : IntegrationTestBase() {

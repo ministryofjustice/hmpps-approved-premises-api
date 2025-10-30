@@ -44,29 +44,6 @@ interface PremisesApiDelegate {
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
   /**
-   * @see PremisesApi#premisesPost
-   */
-  fun premisesPost(
-    body: NewPremises,
-    xServiceName: ServiceName?,
-  ): ResponseEntity<Premises> {
-    getRequest().ifPresent { request ->
-      for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-          ApiUtil.setExampleResponse(request, "application/json", "{  \"characteristics\" : [ {    \"propertyName\" : \"isCatered\",    \"name\" : \"Is this premises catered (rather than self-catered)?\",    \"serviceScope\" : \"approved-premises\",    \"id\" : \"952790c0-21d7-4fd6-a7e1-9018f08d8bb0\",    \"modelScope\" : \"premises\"  }, {    \"propertyName\" : \"isCatered\",    \"name\" : \"Is this premises catered (rather than self-catered)?\",    \"serviceScope\" : \"approved-premises\",    \"id\" : \"952790c0-21d7-4fd6-a7e1-9018f08d8bb0\",    \"modelScope\" : \"premises\"  } ],  \"notes\" : \"some notes about this property\",  \"town\" : \"Braintree\",  \"probationRegion\" : {    \"name\" : \"NPS North East Central Referrals\",    \"id\" : \"952790c0-21d7-4fd6-a7e1-9018f08d8bb0\"  },  \"postcode\" : \"LS1 3AD\",  \"availableBedsForToday\" : 20,  \"apArea\" : {    \"identifier\" : \"LON\",    \"name\" : \"Yorkshire & The Humber\",    \"id\" : \"cd1c2d43-0b0b-4438-b0e3-d4424e61fb6a\"  },  \"localAuthorityArea\" : {    \"identifier\" : \"LEEDS\",    \"name\" : \"Leeds City Council\",    \"id\" : \"6abb5fa3-e93f-4445-887b-30d081688f44\"  },  \"service\" : \"service\",  \"name\" : \"Hope House\",  \"addressLine1\" : \"one something street\",  \"addressLine2\" : \"Blackmore End\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"bedCount\" : 22,  \"status\" : \"pending\"}")
-          break
-        }
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-          ApiUtil.setExampleResponse(request, "application/problem+json", "Custom MIME type example not yet supported: application/problem+json")
-          break
-        }
-      }
-    }
-    return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
-  }
-
-
-  /**
    * @see PremisesApi#premisesPremisesIdBookingsBookingIdDateChangesPost
    */
   fun premisesPremisesIdBookingsBookingIdDateChangesPost(
