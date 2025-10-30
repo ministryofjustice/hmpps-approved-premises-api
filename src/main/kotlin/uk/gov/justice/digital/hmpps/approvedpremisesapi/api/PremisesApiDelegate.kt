@@ -4,34 +4,14 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.context.request.NativeWebRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateChange
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewLostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import java.util.Optional
 
 /**
@@ -92,7 +72,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-
   /**
    * @see PremisesApi#premisesPremisesIdGet
    */
@@ -133,8 +112,6 @@ interface PremisesApiDelegate {
     }
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
-
-
 
   /**
    * @see PremisesApi#premisesPremisesIdRoomsPost
