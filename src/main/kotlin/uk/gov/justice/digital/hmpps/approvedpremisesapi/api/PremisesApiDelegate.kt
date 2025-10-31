@@ -24,33 +24,6 @@ interface PremisesApiDelegate {
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
   /**
-   * @see PremisesApi#premisesPremisesIdBookingsBookingIdDateChangesPost
-   */
-  fun premisesPremisesIdBookingsBookingIdDateChangesPost(
-    premisesId: java.util.UUID,
-    bookingId: java.util.UUID,
-    body: NewDateChange,
-  ): ResponseEntity<DateChange> {
-    getRequest().ifPresent { request ->
-      for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-          ApiUtil.setExampleResponse(request, "application/json", "{  \"createdAt\" : \"2000-01-23T04:56:07.000+00:00\",  \"newArrivalDate\" : \"2000-01-23\",  \"previousDepartureDate\" : \"2000-01-23\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"previousArrivalDate\" : \"2000-01-23\",  \"newDepartureDate\" : \"2000-01-23\",  \"bookingId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\"}")
-          break
-        }
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-          ApiUtil.setExampleResponse(request, "application/problem+json", "Custom MIME type example not yet supported: application/problem+json")
-          break
-        }
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-          ApiUtil.setExampleResponse(request, "application/json", "{  \"instance\" : \"f7493e12-546d-42c3-b838-06c12671ab5b\",  \"detail\" : \"You provided invalid request parameters\",  \"type\" : \"https://example.net/validation-error\",  \"title\" : \"Invalid request parameters\",  \"status\" : 400}")
-          break
-        }
-      }
-    }
-    return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
-  }
-
-  /**
    * @see PremisesApi#premisesPremisesIdBookingsBookingIdGet
    */
   fun premisesPremisesIdBookingsBookingIdGet(
