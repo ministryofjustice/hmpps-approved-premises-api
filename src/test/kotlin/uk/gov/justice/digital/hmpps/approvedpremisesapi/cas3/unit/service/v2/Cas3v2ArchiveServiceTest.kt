@@ -1598,7 +1598,7 @@ class Cas3v2ArchiveServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.Cas3PremisesServiceTest#endDateProvider")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2.Cas3v2ArchiveServiceTest#endDateProvider")
     fun `cancelScheduledArchiveBedspace returns FieldValidationError when bedspace is already archived`(endDate: LocalDate) {
       val premises = createPremisesEntity()
       val archivedBedspace = createBedspace(premises, startDate = LocalDate.now().minusDays(10), endDate = endDate)
