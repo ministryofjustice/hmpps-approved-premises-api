@@ -14,35 +14,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import java.util.Optional
 
+/**
+ * A delegate to be called by the {@link PremisesApiController}}.
+ * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
+ */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface PremisesApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  fun premisesPremisesIdBookingsBookingIdDateChangesPost(
-    premisesId: java.util.UUID,
-    bookingId: java.util.UUID,
-    body: NewDateChange,
-  ): ResponseEntity<DateChange> {
-    getRequest().ifPresent { request ->
-      for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-          ApiUtil.setExampleResponse(request, "application/json", "{  \"createdAt\" : \"2000-01-23T04:56:07.000+00:00\",  \"newArrivalDate\" : \"2000-01-23\",  \"previousDepartureDate\" : \"2000-01-23\",  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"previousArrivalDate\" : \"2000-01-23\",  \"newDepartureDate\" : \"2000-01-23\",  \"bookingId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\"}")
-          break
-        }
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
-          ApiUtil.setExampleResponse(request, "application/problem+json", "Custom MIME type example not yet supported: application/problem+json")
-          break
-        }
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-          ApiUtil.setExampleResponse(request, "application/json", "{  \"instance\" : \"f7493e12-546d-42c3-b838-06c12671ab5b\",  \"detail\" : \"You provided invalid request parameters\",  \"type\" : \"https://example.net/validation-error\",  \"title\" : \"Invalid request parameters\",  \"status\" : 400}")
-          break
-        }
-      }
-    }
-    return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
-  }
-
+  /**
+   * @see PremisesApi#premisesPremisesIdBookingsBookingIdGet
+   */
   fun premisesPremisesIdBookingsBookingIdGet(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
@@ -62,7 +45,9 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-
+  /**
+   * @see PremisesApi#premisesPremisesIdGet
+   */
   fun premisesPremisesIdGet(premisesId: java.util.UUID): ResponseEntity<Premises> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -79,6 +64,9 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
+  /**
+   * @see PremisesApi#premisesPremisesIdPut
+   */
   fun premisesPremisesIdPut(
     premisesId: java.util.UUID,
     body: UpdatePremises,
@@ -98,7 +86,9 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-
+  /**
+   * @see PremisesApi#premisesPremisesIdRoomsPost
+   */
   fun premisesPremisesIdRoomsPost(
     premisesId: java.util.UUID,
     newRoom: NewRoom,
@@ -122,6 +112,9 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
+  /**
+   * @see PremisesApi#premisesPremisesIdRoomsRoomIdGet
+   */
   fun premisesPremisesIdRoomsRoomIdGet(
     premisesId: java.util.UUID,
     roomId: java.util.UUID,
@@ -141,6 +134,9 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
+  /**
+   * @see PremisesApi#premisesPremisesIdRoomsRoomIdPut
+   */
   fun premisesPremisesIdRoomsRoomIdPut(
     premisesId: java.util.UUID,
     roomId: java.util.UUID,
