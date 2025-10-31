@@ -30,25 +30,6 @@ interface PremisesApi {
   fun getDelegate(): PremisesApiDelegate = object : PremisesApiDelegate {}
 
   @Operation(
-    tags = ["Operations on bookings"],
-    summary = "Posts a change to the dates for a specified approved premises booking",
-    operationId = "premisesPremisesIdBookingsBookingIdDateChangesPost",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = DateChange::class))]),
-      ApiResponse(responseCode = "400", description = "invalid params", content = [Content(schema = Schema(implementation = ValidationError::class))]),
-      ApiResponse(responseCode = "404", description = "invalid premises ID or booking ID", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/premises/{premisesId}/bookings/{bookingId}/date-changes"],
-    produces = ["application/json", "application/problem+json"],
-    consumes = ["application/json"],
-  )
-  fun premisesPremisesIdBookingsBookingIdDateChangesPost(@Parameter(description = "ID of the premises the booking is related to", required = true) @PathVariable("premisesId") premisesId: java.util.UUID, @Parameter(description = "ID of the booking", required = true) @PathVariable("bookingId") bookingId: java.util.UUID, @Parameter(description = "details of the extension", required = true) @RequestBody body: NewDateChange): ResponseEntity<DateChange> = getDelegate().premisesPremisesIdBookingsBookingIdDateChangesPost(premisesId, bookingId, body)
-
-  @Operation(
     tags = ["Operations on premises"],
     summary = "Returns a specific booking for an approved premises",
     operationId = "premisesPremisesIdBookingsBookingIdGet",
