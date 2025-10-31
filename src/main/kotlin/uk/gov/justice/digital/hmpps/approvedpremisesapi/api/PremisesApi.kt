@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateChange
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
