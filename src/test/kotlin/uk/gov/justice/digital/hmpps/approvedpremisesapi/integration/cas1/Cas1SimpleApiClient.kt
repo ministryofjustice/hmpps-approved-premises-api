@@ -161,7 +161,7 @@ class Cas1SimpleApiClient {
     val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
-      .uri("/tasks/assessment/$assessmentId/allocations")
+      .uri("/cas1/tasks/assessment/$assessmentId/allocations")
       .header("Authorization", "Bearer $managerJwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .bodyValue(
@@ -289,7 +289,7 @@ class Cas1SimpleApiClient {
     val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
     integrationTestBase.webTestClient.post()
-      .uri("/tasks/placement-application/$placementApplicationId/allocations")
+      .uri("/cas1/tasks/placement-application/$placementApplicationId/allocations")
       .header("Authorization", "Bearer $managerJwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .bodyValue(body)

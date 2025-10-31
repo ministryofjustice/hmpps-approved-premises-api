@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
+import java.util.UUID
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
@@ -34,9 +36,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sortCas3AssessmentsByName
-import java.util.UUID
 
 @Cas3Controller
+@RequestMapping(value = ["\${api.base-path:}/cas3", "\${api.base-path:}"])
 class Cas3AssessmentController(
   private val objectMapper: ObjectMapper,
   private val cas3AssessmentService: Cas3AssessmentService,
@@ -168,7 +170,7 @@ class Cas3AssessmentController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  @DeleteMapping("/assessments/{assessmentId}/allocations")
+  @DeleteMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations", "/assessments/{assessmentId}/allocations"])
   @Transactional
   fun deallocateAssessment(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
@@ -178,7 +180,7 @@ class Cas3AssessmentController(
     return ResponseEntity(Unit, HttpStatus.NO_CONTENT)
   }
 
-  @PostMapping("/assessments/{assessmentId}/reallocateToMe")
+  @PostMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations","/assessments/{assessmentId}/reallocateToMe"])
   @Transactional
   fun reallocateAssessmentToMe(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
