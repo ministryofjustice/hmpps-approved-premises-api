@@ -246,18 +246,13 @@ class Cas1TasksController(
   ): ResponseEntity<Reallocation> {
     val user = userService.getUserForRequest()
 
-    if (requestContextService.getServiceForRequest() == ServiceName.approvedPremises && !user.hasPermission(UserPermission.CAS1_TASK_ALLOCATE)) {
+    if (xServiceName != ServiceName.approvedPremises || !user.hasPermission(UserPermission.CAS1_TASK_ALLOCATE)) {
       throw ForbiddenProblem()
     }
 
     val type = toTaskType(taskType)
 
-    val userId = when {
-      xServiceName == ServiceName.temporaryAccommodation -> user.id
-      else -> {
-        body?.userId ?: throw BadRequestProblem(invalidParams = mapOf("$.userId" to ParamDetails("empty")))
-      }
-    }
+    val userId = body?.userId ?: throw BadRequestProblem(invalidParams = mapOf("$.userId" to ParamDetails("empty")))
 
     val reallocatedTask = extractEntityFromCasResult(
       cas1TaskService.reallocateTask(
