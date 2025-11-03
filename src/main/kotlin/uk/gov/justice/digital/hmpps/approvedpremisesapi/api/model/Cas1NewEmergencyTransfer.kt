@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas1NewEmergencyTransfer(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("destinationPremisesId", required = true) val destinationPremisesId: java.util.UUID,
 
   @Schema(example = "null", required = true, description = "The expected arrival date for the new space booking. The existing space booking will be updated to end on this date")

@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class ExternalUser(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "CAS2_ASSESSOR_USER", required = true, description = "")

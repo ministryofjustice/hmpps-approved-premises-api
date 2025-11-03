@@ -15,19 +15,15 @@ data class BookingChanged(
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of booking for an AP place")
   @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
   @Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
   @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("changedAt", required = true) val changedAt: java.time.Instant,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("changedBy", required = true) val changedBy: StaffMember,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("premises", required = true) val premises: Premises,
 
   @Schema(example = "Mon Jan 30 00:00:00 GMT 2023", required = true, description = "")
@@ -42,10 +38,8 @@ data class BookingChanged(
   @Schema(example = "Mon Jan 30 00:00:00 GMT 2023", description = "Only set if the expected departure on has changed")
   @get:JsonProperty("previousDepartureOn") val previousDepartureOn: java.time.LocalDate? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("characteristics") val characteristics: List<SpaceCharacteristic>? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("previousCharacteristics") val previousCharacteristics: List<SpaceCharacteristic>? = null,
 
   val transferredTo: EventTransferInfo? = null,

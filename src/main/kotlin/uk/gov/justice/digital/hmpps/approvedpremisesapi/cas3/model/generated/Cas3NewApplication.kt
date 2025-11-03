@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas3NewApplication(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("crn", required = true) val crn: String,
 
   @Schema(example = "1502724704", description = "")

@@ -18,7 +18,6 @@ import java.util.UUID
  */
 data class Cas2StatusUpdate(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: UUID,
 
   @Schema(example = "moreInfoRequested", required = true, description = "")
@@ -30,12 +29,9 @@ data class Cas2StatusUpdate(
   @Schema(example = "More information about the application has been requested from the POM (Prison Offender Manager).", required = true, description = "")
   @get:JsonProperty("description", required = true) val description: String,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("updatedBy") val updatedBy: ExternalUser? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("updatedAt") val updatedAt: Instant? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("statusUpdateDetails") val statusUpdateDetails: List<Cas2StatusUpdateDetail>? = null,
 )

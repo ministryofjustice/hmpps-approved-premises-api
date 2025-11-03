@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas1PremiseCapacityForDay(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("date", required = true) val date: java.time.LocalDate,
 
   @Schema(example = "null", required = true, description = "total bed count including temporarily unavailable beds (e.g. out of service beds). this does not consider bookings.")
@@ -25,6 +24,5 @@ data class Cas1PremiseCapacityForDay(
   @Schema(example = "null", required = true, description = "total number of bookings in the premise on that day")
   @get:JsonProperty("bookingCount", required = true) val bookingCount: kotlin.Int,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("characteristicAvailability", required = true) val characteristicAvailability: kotlin.collections.List<Cas1PremiseCharacteristicAvailability>,
 )

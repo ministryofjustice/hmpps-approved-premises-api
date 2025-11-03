@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class UpdatedClarificationNote(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("response", required = true) val response: kotlin.String,
 
   @Schema(example = "Thu Jul 28 01:00:00 BST 2022", required = true, description = "")

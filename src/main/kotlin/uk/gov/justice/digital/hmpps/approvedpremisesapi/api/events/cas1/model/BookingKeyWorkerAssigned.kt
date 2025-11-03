@@ -28,16 +28,13 @@ data class BookingKeyWorkerAssigned(
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of booking for an AP place")
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("keyWorker", required = true) val keyWorker: StaffMember,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
   @Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
   @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("premises", required = true) val premises: Premises,
 
   @Schema(example = "Sun Feb 12 00:00:00 GMT 2023", required = true, description = "")
@@ -46,9 +43,7 @@ data class BookingKeyWorkerAssigned(
   @Schema(example = "Sun Feb 12 00:00:00 GMT 2023", required = true, description = "")
   @get:JsonProperty("departureDate", required = true) val departureDate: java.time.LocalDate,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("assignedKeyWorkerName", required = true) val assignedKeyWorkerName: kotlin.String,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("previousKeyWorkerName") val previousKeyWorkerName: kotlin.String? = null,
 ) : Cas1DomainEventPayload

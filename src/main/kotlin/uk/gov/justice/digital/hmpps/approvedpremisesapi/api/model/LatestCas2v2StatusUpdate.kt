@@ -11,7 +11,6 @@ import java.util.UUID
  */
 data class LatestCas2v2StatusUpdate(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("statusId", required = true) val statusId: UUID,
 
   @Schema(example = "More information requested", required = true, description = "")

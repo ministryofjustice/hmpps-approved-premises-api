@@ -12,10 +12,8 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Bed(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 
   @Schema(example = "NEABC04", description = "")

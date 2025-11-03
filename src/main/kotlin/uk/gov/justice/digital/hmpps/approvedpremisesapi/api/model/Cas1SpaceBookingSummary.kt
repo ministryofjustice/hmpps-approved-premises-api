@@ -5,13 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class Cas1SpaceBookingSummary(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("person", required = true) val person: PersonSummary,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("premises", required = true) val premises: NamedId,
 
   @Schema(example = "null", required = true, description = "actual arrival date or, if not known, the expected arrival date")
@@ -29,10 +26,8 @@ data class Cas1SpaceBookingSummary(
   @Schema(example = "null", required = true, description = "Room and premise characteristics")
   @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic> = arrayListOf(),
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("isCancelled", required = true) val isCancelled: kotlin.Boolean,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("openChangeRequestTypes", required = true) val openChangeRequestTypes: kotlin.collections.List<Cas1ChangeRequestType>,
 
   @Schema(example = "null", description = "actual arrival date if known")
@@ -41,16 +36,13 @@ data class Cas1SpaceBookingSummary(
   @Schema(example = "null", description = "actual departure date if known")
   @get:JsonProperty("actualDepartureDate") val actualDepartureDate: java.time.LocalDate? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("isNonArrival") val isNonArrival: kotlin.Boolean? = null,
 
   @Schema(example = "null", description = "Risk rating tier level of corresponding application")
   @get:JsonProperty("tier") val tier: kotlin.String? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("keyWorkerAllocation") val keyWorkerAllocation: Cas1KeyWorkerAllocation? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("deliusEventNumber") val deliusEventNumber: kotlin.String? = null,
 
   @Schema(example = "null", description = "Use 'openChangeRequestTypes'")

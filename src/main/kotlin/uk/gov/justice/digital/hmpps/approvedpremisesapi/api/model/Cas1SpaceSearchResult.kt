@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas1SpaceSearchResult(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("premises", required = true) val premises: Cas1PremisesSearchResultSummary,
 
   @Schema(example = "2.1", required = true, description = "")

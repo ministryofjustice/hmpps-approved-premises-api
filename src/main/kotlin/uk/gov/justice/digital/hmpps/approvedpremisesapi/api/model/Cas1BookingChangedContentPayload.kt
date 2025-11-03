@@ -17,16 +17,12 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas1BookingChangedContentPayload(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("premises", required = true) val premises: NamedId,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("expectedArrival", required = true) val expectedArrival: java.time.LocalDate,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("expectedDeparture", required = true) val expectedDeparture: java.time.LocalDate,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("type", required = true) override val type: Cas1TimelineEventType,
 
   @Schema(example = "null", description = "Only populated if the new value is different, and where schema version = 2")
@@ -35,7 +31,6 @@ data class Cas1BookingChangedContentPayload(
   @Schema(example = "null", description = "Only populated if the new value is different, and where schema version = 2")
   @get:JsonProperty("previousExpectedDeparture") val previousExpectedDeparture: java.time.LocalDate? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("characteristics") val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic>? = null,
 
   @Schema(example = "null", description = "Only populated if the new value is different, and where schema version = 2")
@@ -45,6 +40,5 @@ data class Cas1BookingChangedContentPayload(
   @Deprecated(message = "")
   @get:JsonProperty("schemaVersion") val schemaVersion: kotlin.Int? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("transferredTo") val transferredTo: Cas1TimelineEventTransferInfo? = null,
 ) : Cas1TimelineEventContentPayload

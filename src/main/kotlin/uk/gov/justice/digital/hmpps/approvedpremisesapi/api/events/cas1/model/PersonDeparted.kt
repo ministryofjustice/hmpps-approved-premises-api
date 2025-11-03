@@ -19,7 +19,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class PersonDeparted(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
   @Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
@@ -34,13 +33,10 @@ data class PersonDeparted(
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of booking for an AP place")
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("recordedBy", required = true) val recordedBy: StaffMember,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("premises", required = true) val premises: Premises,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("departedAt", required = true) val departedAt: java.time.Instant,
 
   @Schema(example = "Arrested, remanded in custody, or sentenced", required = true, description = "")
@@ -49,6 +45,5 @@ data class PersonDeparted(
   @Schema(example = "Q", required = true, description = "")
   @get:JsonProperty("legacyReasonCode", required = true) val legacyReasonCode: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("destination", required = true) val destination: PersonDepartedDestination,
 ) : Cas1DomainEventPayload

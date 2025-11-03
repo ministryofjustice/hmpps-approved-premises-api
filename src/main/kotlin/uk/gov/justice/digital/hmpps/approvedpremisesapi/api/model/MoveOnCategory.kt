@@ -12,15 +12,12 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class MoveOnCategory(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "Housing Association - Rented", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("serviceScope", required = true) val serviceScope: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("isActive", required = true) val isActive: kotlin.Boolean,
 )

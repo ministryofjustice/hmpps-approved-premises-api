@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
@@ -11,12 +10,9 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class CAS3DraftReferralDeletedEventDetails(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("crn", required = true) val crn: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("deletedBy", required = true) val deletedBy: java.util.UUID,
 )

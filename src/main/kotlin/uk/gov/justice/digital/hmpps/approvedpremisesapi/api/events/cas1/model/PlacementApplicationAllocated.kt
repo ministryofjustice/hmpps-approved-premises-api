@@ -25,18 +25,13 @@ data class PlacementApplicationAllocated(
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of a placement application")
   @get:JsonProperty("placementApplicationId", required = true) val placementApplicationId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("allocatedAt", required = true) val allocatedAt: java.time.Instant,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("placementDates", required = true) val placementDates: kotlin.collections.List<DatePeriod>,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("allocatedTo") val allocatedTo: StaffMember? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("allocatedBy") val allocatedBy: StaffMember? = null,
 ) : Cas1DomainEventPayload

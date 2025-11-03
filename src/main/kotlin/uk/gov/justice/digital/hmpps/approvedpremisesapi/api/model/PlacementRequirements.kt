@@ -13,18 +13,14 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class PlacementRequirements(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("type", required = true) val type: ApType,
 
   @Schema(example = "B74", required = true, description = "Postcode outcode")
   @get:JsonProperty("location", required = true) val location: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("radius", required = true) val radius: kotlin.Int,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("essentialCriteria", required = true) val essentialCriteria: kotlin.collections.List<PlacementCriteria>,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("desirableCriteria", required = true) val desirableCriteria: kotlin.collections.List<PlacementCriteria>,
 )

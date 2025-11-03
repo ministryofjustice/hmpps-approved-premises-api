@@ -28,15 +28,11 @@ data class AssessmentAllocated(
   @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
   @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("allocatedAt", required = true) val allocatedAt: java.time.Instant,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("allocatedTo") val allocatedTo: StaffMember? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("allocatedBy") val allocatedBy: StaffMember? = null,
 ) : Cas1DomainEventPayload

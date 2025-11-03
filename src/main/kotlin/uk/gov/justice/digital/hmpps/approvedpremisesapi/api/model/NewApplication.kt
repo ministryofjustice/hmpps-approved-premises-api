@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class NewApplication(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("crn", required = true) val crn: kotlin.String,
 
   @Schema(example = "1502724704", description = "")
@@ -25,6 +24,5 @@ data class NewApplication(
   @Schema(example = "M1502750438", description = "")
   @get:JsonProperty("offenceId") val offenceId: kotlin.String? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("applicationOrigin") val applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew,
 )

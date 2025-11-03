@@ -29,6 +29,5 @@ data class ValidationError(
   @Schema(example = "f7493e12-546d-42c3-b838-06c12671ab5b", description = "")
   @get:JsonProperty("instance") val instance: kotlin.String? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("invalid-params") val invalidParams: kotlin.collections.List<InvalidParam>? = null,
 )

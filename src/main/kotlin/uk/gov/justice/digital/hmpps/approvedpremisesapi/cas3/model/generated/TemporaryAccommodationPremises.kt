@@ -18,13 +18,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
  */
 data class TemporaryAccommodationPremises(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("pdu", required = true) val pdu: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("service", required = true) override val service: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 
   @Schema(example = "Hope House", required = true, description = "")
@@ -42,16 +39,12 @@ data class TemporaryAccommodationPremises(
   @Schema(example = "20", required = true, description = "")
   @get:JsonProperty("availableBedsForToday", required = true) override val availableBedsForToday: kotlin.Int,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("probationRegion", required = true) override val probationRegion: ProbationRegion,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("apArea", required = true) override val apArea: ApArea,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("status", required = true) override val status: PropertyStatus,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("probationDeliveryUnit") val probationDeliveryUnit: ProbationDeliveryUnit? = null,
 
   @Schema(example = "2", description = "")
@@ -66,9 +59,7 @@ data class TemporaryAccommodationPremises(
   @Schema(example = "some notes about this property", description = "")
   @get:JsonProperty("notes") override val notes: kotlin.String? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("localAuthorityArea") override val localAuthorityArea: LocalAuthorityArea? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("characteristics") override val characteristics: kotlin.collections.List<Characteristic>? = null,
 ) : Premises

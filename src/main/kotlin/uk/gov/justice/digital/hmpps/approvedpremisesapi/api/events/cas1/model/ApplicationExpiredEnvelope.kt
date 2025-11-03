@@ -16,12 +16,9 @@ data class ApplicationExpiredEnvelope(
   @Schema(example = "364145f9-0af8-488e-9901-b4c46cd9ba37", required = true, description = "The UUID of an event")
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("timestamp", required = true) override val timestamp: java.time.Instant,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventType", required = true) override val eventType: EventType,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: ApplicationExpired,
 ) : Cas1DomainEventEnvelopeInterface<ApplicationExpired>

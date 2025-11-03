@@ -25,6 +25,5 @@ data class Cas1SpaceSearchParameters(
   @Schema(example = "SE5", required = true, description = "The 'target' location, in the form of a postcode district")
   @get:JsonProperty("targetPostcodeDistrict", required = true) val targetPostcodeDistrict: kotlin.String,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("spaceCharacteristics") val spaceCharacteristics: kotlin.collections.List<Cas1SpaceCharacteristic>? = null,
 )
