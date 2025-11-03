@@ -5,6 +5,16 @@ on:
     branches:
       - main
   workflow_call:
+  workflow_dispatch:
+    inputs:
+      runner-name:
+        description: 'Runner to use:'
+        type: choice
+        required: true
+        options:
+          - ubuntu-latest
+          - self-hosted
+        default: ubuntu-latest
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -13,7 +23,7 @@ concurrency:
 jobs:
   gradle_build:
     name: Gradle Build
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner-name || 'ubuntu-latest'}}
     env:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
@@ -41,7 +51,7 @@ jobs:
 
   ktlint-check:
     name: KtLintCheck
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner-name || 'ubuntu-latest'}}
     needs: gradle_build
     env:
       _JAVA_OPTIONS: "-Xmx3g"
@@ -60,7 +70,7 @@ jobs:
 
   detekt:
     name: detekt
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner-name || 'ubuntu-latest'}}
     needs: gradle_build
     env:
       _JAVA_OPTIONS: "-Xmx3g"
@@ -79,7 +89,7 @@ jobs:
 
   unit_test:
     name: Unit tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner-name || 'ubuntu-latest'}}
     needs: gradle_build
     env:
       _JAVA_OPTIONS: "-Xmx3g"
@@ -129,7 +139,7 @@ jobs:
 
   integration_test:
     name: Integration Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner-name || 'ubuntu-latest'}}
     needs: gradle_build
     strategy:
       fail-fast: false
