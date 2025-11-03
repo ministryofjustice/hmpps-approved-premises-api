@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -309,6 +310,7 @@ class Cas1BookingDomainEventService(
             characteristics = bookingInfo.characteristics,
             transferredFrom = transferredFrom?.toEventTransferInfo(),
             transferReason = bookingInfo.transferReason,
+            additionalInformation = bookingInfo.additionalInformation,
           ),
         ),
         metadata = mapOfNonNullValues(
@@ -413,7 +415,8 @@ class Cas1BookingDomainEventService(
     val departureDate: LocalDate,
     val isSpaceBooking: Boolean,
     val characteristics: List<SpaceCharacteristic>? = null,
-    val transferReason: String? = null,
+    val transferReason: TransferReason? = null,
+    val additionalInformation: String? = null,
   )
 
   private fun BookingEntity.toBookingInfo() = BookingInfo(
@@ -435,7 +438,7 @@ class Cas1BookingDomainEventService(
     departureDate = canonicalDepartureDate,
     isSpaceBooking = true,
     characteristics = criteria.toSpaceCharacteristics(),
-    transferReason = transferReason?.name,
+    transferReason = transferReason,
   )
 
   private fun getNomsNumber(crn: String) = when (val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)) {

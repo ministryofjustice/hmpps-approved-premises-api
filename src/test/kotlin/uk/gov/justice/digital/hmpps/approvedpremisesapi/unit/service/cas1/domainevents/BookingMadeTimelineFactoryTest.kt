@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventTransferType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventBookingSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
@@ -61,7 +62,10 @@ class BookingMadeTimelineFactoryTest {
             .withChangeRequestId(transferredFromChangeRequestId)
             .produce(),
         )
+        .withTransferReason(TransferReason.riskToResident)
+        .withAdditionalInformation("Additional information for the transfer booking")
         .produce(),
+
     )
 
     val result = service.produce(id)
@@ -86,5 +90,7 @@ class BookingMadeTimelineFactoryTest {
     assertThat(transferredFrom.booking.arrivalDate).isEqualTo(LocalDate.of(2024, 4, 1))
     assertThat(transferredFrom.booking.departureDate).isEqualTo(LocalDate.of(2024, 5, 1))
     assertThat(transferredFrom.booking.premises.name).isEqualTo("From Premises Name")
+    assertThat(payload.booking.transferReason).isEqualTo(TransferReason.riskToResident)
+    assertThat(payload.booking.additionalInformation).isEqualTo("Additional information for the transfer booking")
   }
 }

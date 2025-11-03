@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
+import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 data class BookingMade(
@@ -14,17 +17,17 @@ data class BookingMade(
 
   val deliusEventNumber: String,
 
-  val createdAt: java.time.Instant,
+  val createdAt: Instant,
 
   val bookedBy: BookingMadeBookedBy,
 
   val premises: Premises,
 
-  val arrivalOn: java.time.LocalDate,
+  val arrivalOn: LocalDate,
 
-  val departureOn: java.time.LocalDate,
+  val departureOn: LocalDate,
 
-  val applicationSubmittedOn: java.time.Instant? = null,
+  val applicationSubmittedOn: Instant? = null,
 
   val releaseType: String? = null,
 
@@ -34,9 +37,11 @@ data class BookingMade(
 
   val characteristics: List<SpaceCharacteristic>? = null,
 
-  val transferReason: String? = null,
+  val transferReason: TransferReason? = null,
 
   val transferredFrom: EventTransferInfo? = null,
+
+  val additionalInformation: String? = null,
 ) : Cas1DomainEventPayload
 
 data class EventTransferInfo(

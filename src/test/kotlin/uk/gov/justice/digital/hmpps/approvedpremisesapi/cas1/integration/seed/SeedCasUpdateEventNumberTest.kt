@@ -243,6 +243,8 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
             releaseType = "releaseType",
             sentenceType = "sentenceType",
             situation = "situation",
+            transferReason = null,
+            additionalInformation = null,
           ),
         ),
       ),
