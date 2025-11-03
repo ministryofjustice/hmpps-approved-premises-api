@@ -170,17 +170,20 @@ class Cas3AssessmentController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  @DeleteMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations", "/assessments/{assessmentId}/allocations"])
+  @DeleteMapping(value = ["/assessments/{assessmentId}/allocations"])
   @Transactional
   fun deallocateAssessment(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
-
     ensureEntityFromCasResultIsSuccess(cas3AssessmentService.deallocateAssessment(user, assessmentId))
-
     return ResponseEntity(Unit, HttpStatus.NO_CONTENT)
   }
 
-  @PostMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations", "/assessments/{assessmentId}/reallocateToMe"])
+  @Deprecated(message = "use /cas3/assessments/{assessmentId}/allocations")
+  @DeleteMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations"])
+  @Transactional
+  fun deallocateAssessmentOld(@PathVariable assessmentId: UUID): ResponseEntity<Unit> = deallocateAssessment(assessmentId)
+
+  @PostMapping(value = [ "/assessments/{assessmentId}/reallocateToMe"])
   @Transactional
   fun reallocateAssessmentToMe(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
@@ -191,6 +194,11 @@ class Cas3AssessmentController(
 
     return ResponseEntity(HttpStatus.CREATED)
   }
+
+  @Deprecated(message = "use /cas3/assessments/{assessmentId}/reallocateToMe")
+  @PostMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations"])
+  @Transactional
+  fun reallocateAssessmentToMeOld(@PathVariable assessmentId: UUID): ResponseEntity<Unit> = reallocateAssessmentToMe(assessmentId)
 
   @PostMapping("/assessments/{assessmentId}/referral-history-notes")
   fun createAssessmentReferralHistoryNotes(

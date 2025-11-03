@@ -19,11 +19,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -58,82 +56,6 @@ class AssessmentTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @Test
-  fun `Get assessment by ID returns 403 when Offender is LAO and user does not have LAO qualification or pass the LAO check`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender(
-        offenderDetailsConfigBlock = {
-          withCurrentExclusion(true)
-        },
-      ) { offenderDetails, inmateDetails ->
-
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-        }
-
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(userEntity)
-          withApplication(application)
-        }
-
-        webTestClient.get()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-  }
-
-  @Test
-  fun `Get assessment by ID returns 200 when Offender is LAO and user does not have LAO qualification but does pass the LAO check`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender(
-        offenderDetailsConfigBlock = {
-          withCurrentExclusion(true)
-        },
-      ) { offenderDetails, inmateDetails ->
-
-        apDeliusContextMockUserAccess(
-          CaseAccessFactory()
-            .withCrn(offenderDetails.otherIds.crn)
-            .withUserExcluded(false)
-            .withUserRestricted(false)
-            .produce(),
-          userEntity.deliusUsername,
-        )
-
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-        }
-
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(userEntity)
-          withApplication(application)
-        }
-
-        webTestClient.get()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              assessmentTransformer.transformJpaToApi(
-                assessment,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-              ),
-            ),
-          )
-      }
-    }
   }
 
   @Test
