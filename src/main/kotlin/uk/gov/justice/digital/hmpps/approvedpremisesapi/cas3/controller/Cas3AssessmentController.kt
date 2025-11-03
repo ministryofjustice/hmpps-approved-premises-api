@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
-import java.util.UUID
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -36,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sortCas3AssessmentsByName
+import java.util.UUID
 
 @Cas3Controller
 @RequestMapping(value = ["\${api.base-path:}/cas3", "\${api.base-path:}"])
@@ -180,7 +180,7 @@ class Cas3AssessmentController(
     return ResponseEntity(Unit, HttpStatus.NO_CONTENT)
   }
 
-  @PostMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations","/assessments/{assessmentId}/reallocateToMe"])
+  @PostMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations", "/assessments/{assessmentId}/reallocateToMe"])
   @Transactional
   fun reallocateAssessmentToMe(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
