@@ -33,6 +33,8 @@ class BookingMadeTimelineFactory(val domainEventService: Cas1DomainEventService)
           ),
           arrivalDate = eventDetails.arrivalOn,
           departureDate = eventDetails.departureOn,
+          transferReason = eventDetails.transferReason,
+          additionalInformation = eventDetails.additionalInformation,
         ),
         eventNumber = eventDetails.deliusEventNumber,
         transferredFrom = eventDetails.transferredFrom?.toTimelineTransferInfo(),

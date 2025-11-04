@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
 import java.time.LocalDate
@@ -24,6 +25,8 @@ class BookingMadeFactory : Factory<BookingMade> {
   private var arrivalOn: Yielded<LocalDate> = { LocalDate.now() }
   private var departureOn: Yielded<LocalDate> = { LocalDate.now() }
   private var transferredFrom: Yielded<EventTransferInfo?> = { null }
+  private var additionalInformation: Yielded<String?> = { null }
+  private var transferReason: Yielded<TransferReason?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -69,17 +72,27 @@ class BookingMadeFactory : Factory<BookingMade> {
     this.transferredFrom = { transferredFrom }
   }
 
+  fun withTransferReason(transferReason: TransferReason?) = apply {
+    this.transferReason = { transferReason }
+  }
+
+  fun withAdditionalInformation(additionalInformation: String?) = apply {
+    this.additionalInformation = { additionalInformation }
+  }
+
   override fun produce() = BookingMade(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
+    bookingId = this.bookingId(),
     personReference = this.personReference(),
     deliusEventNumber = this.deliusEventNumber(),
-    bookingId = this.bookingId(),
     createdAt = this.createdAt(),
     bookedBy = this.bookedBy(),
     premises = this.premises(),
     arrivalOn = this.arrivalOn(),
     departureOn = this.departureOn(),
     transferredFrom = this.transferredFrom(),
+    transferReason = this.transferReason(),
+    additionalInformation = this.additionalInformation(),
   )
 }
