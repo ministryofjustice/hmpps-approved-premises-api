@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import java.time.LocalDate
@@ -16,13 +15,13 @@ import java.util.UUID
  */
 data class FutureBooking(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("person", required = true) val person: Person,
+  val person: Person,
 
-  @get:JsonProperty("arrivalDate", required = true) val arrivalDate: LocalDate,
+  val arrivalDate: LocalDate,
 
-  @get:JsonProperty("departureDate", required = true) val departureDate: LocalDate,
+  val departureDate: LocalDate,
 
-  @get:JsonProperty("bed") val bed: Bed? = null,
+  val bed: Bed? = null,
 )

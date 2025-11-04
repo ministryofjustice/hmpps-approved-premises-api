@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceSummary
@@ -37,57 +36,57 @@ import java.util.UUID
  */
 data class Cas3Booking(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("person", required = true) val person: Person,
+  val person: Person,
 
-  @get:JsonProperty("arrivalDate", required = true) val arrivalDate: LocalDate,
+  val arrivalDate: LocalDate,
 
-  @get:JsonProperty("originalArrivalDate", required = true) val originalArrivalDate: LocalDate,
+  val originalArrivalDate: LocalDate,
 
-  @get:JsonProperty("departureDate", required = true) val departureDate: LocalDate,
+  val departureDate: LocalDate,
 
-  @get:JsonProperty("originalDepartureDate", required = true) val originalDepartureDate: LocalDate,
+  val originalDepartureDate: LocalDate,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("bedspace", required = true) val bedspace: Cas3BedspaceSummary,
+  val bedspace: Cas3BedspaceSummary,
 
-  @get:JsonProperty("status", required = true) val status: Cas3BookingStatus,
+  val status: Cas3BookingStatus,
 
-  @get:JsonProperty("extensions", required = true) val extensions: List<Cas3Extension>,
+  val extensions: List<Cas3Extension>,
 
   @Schema(example = "null", required = true, description = "The full history of the departure")
-  @get:JsonProperty("departures", required = true) val departures: List<Cas3Departure>,
+  val departures: List<Cas3Departure>,
 
   @Schema(example = "null", required = true, description = "The full history of the cancellation")
-  @get:JsonProperty("cancellations", required = true) val cancellations: List<Cas3Cancellation>,
+  val cancellations: List<Cas3Cancellation>,
 
-  @get:JsonProperty("premises", required = true) val premises: Cas3BookingPremisesSummary,
+  val premises: Cas3BookingPremisesSummary,
 
-  @get:JsonProperty("arrival") val arrival: Cas3Arrival? = null,
+  val arrival: Cas3Arrival? = null,
 
   @Schema(example = "null", description = "The latest version of the departure, if it exists")
-  @get:JsonProperty("departure") val departure: Cas3Departure? = null,
+  val departure: Cas3Departure? = null,
 
-  @get:JsonProperty("nonArrival") val nonArrival: Cas3NonArrival? = null,
+  val nonArrival: Cas3NonArrival? = null,
 
   @Schema(example = "null", description = "The latest version of the cancellation, if it exists")
-  @get:JsonProperty("cancellation") val cancellation: Cas3Cancellation? = null,
+  val cancellation: Cas3Cancellation? = null,
 
-  @get:JsonProperty("confirmation") val confirmation: Cas3Confirmation? = null,
+  val confirmation: Cas3Confirmation? = null,
 
   @Schema(example = "null", description = "The latest version of the turnaround, if it exists")
-  @get:JsonProperty("turnaround") val turnaround: Cas3Turnaround? = null,
+  val turnaround: Cas3Turnaround? = null,
 
   @Schema(example = "null", description = "The full history of turnarounds")
-  @get:JsonProperty("turnarounds") val turnarounds: List<Cas3Turnaround>? = null,
+  val turnarounds: List<Cas3Turnaround>? = null,
 
-  @get:JsonProperty("turnaroundStartDate") val turnaroundStartDate: LocalDate? = null,
+  val turnaroundStartDate: LocalDate? = null,
 
-  @get:JsonProperty("effectiveEndDate") val effectiveEndDate: LocalDate? = null,
+  val effectiveEndDate: LocalDate? = null,
 
-  @get:JsonProperty("applicationId") val applicationId: UUID? = null,
+  val applicationId: UUID? = null,
 
-  @get:JsonProperty("assessmentId") val assessmentId: UUID? = null,
+  val assessmentId: UUID? = null,
 )

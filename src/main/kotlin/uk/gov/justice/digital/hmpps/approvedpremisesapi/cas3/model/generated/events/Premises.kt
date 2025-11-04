@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 /**
  *
  * @param addressLine1
@@ -12,13 +10,13 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class Premises(
 
-  @get:JsonProperty("addressLine1", required = true) val addressLine1: kotlin.String,
+  val addressLine1: kotlin.String,
 
-  @get:JsonProperty("postcode", required = true) val postcode: kotlin.String,
+  val postcode: kotlin.String,
 
-  @get:JsonProperty("region", required = true) val region: kotlin.String,
+  val region: kotlin.String,
 
-  @get:JsonProperty("addressLine2") val addressLine2: kotlin.String? = null,
+  val addressLine2: kotlin.String? = null,
 
-  @get:JsonProperty("town") val town: kotlin.String? = null,
+  val town: kotlin.String? = null,
 )

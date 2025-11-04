@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
@@ -18,48 +17,48 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
  */
 data class TemporaryAccommodationPremises(
 
-  @get:JsonProperty("pdu", required = true) val pdu: kotlin.String,
+  val pdu: kotlin.String,
 
-  @get:JsonProperty("service", required = true) override val service: kotlin.String,
+  override val service: kotlin.String,
 
-  @get:JsonProperty("id", required = true) override val id: java.util.UUID,
+  override val id: java.util.UUID,
 
   @Schema(example = "Hope House", required = true, description = "")
-  @get:JsonProperty("name", required = true) override val name: kotlin.String,
+  override val name: kotlin.String,
 
   @Schema(example = "one something street", required = true, description = "")
-  @get:JsonProperty("addressLine1", required = true) override val addressLine1: kotlin.String,
+  override val addressLine1: kotlin.String,
 
   @Schema(example = "LS1 3AD", required = true, description = "")
-  @get:JsonProperty("postcode", required = true) override val postcode: kotlin.String,
+  override val postcode: kotlin.String,
 
   @Schema(example = "22", required = true, description = "")
-  @get:JsonProperty("bedCount", required = true) override val bedCount: kotlin.Int,
+  override val bedCount: kotlin.Int,
 
   @Schema(example = "20", required = true, description = "")
-  @get:JsonProperty("availableBedsForToday", required = true) override val availableBedsForToday: kotlin.Int,
+  override val availableBedsForToday: kotlin.Int,
 
-  @get:JsonProperty("probationRegion", required = true) override val probationRegion: ProbationRegion,
+  override val probationRegion: ProbationRegion,
 
-  @get:JsonProperty("apArea", required = true) override val apArea: ApArea,
+  override val apArea: ApArea,
 
-  @get:JsonProperty("status", required = true) override val status: PropertyStatus,
+  override val status: PropertyStatus,
 
-  @get:JsonProperty("probationDeliveryUnit") val probationDeliveryUnit: ProbationDeliveryUnit? = null,
+  val probationDeliveryUnit: ProbationDeliveryUnit? = null,
 
   @Schema(example = "2", description = "")
-  @get:JsonProperty("turnaroundWorkingDayCount") val turnaroundWorkingDayCount: kotlin.Int? = null,
+  val turnaroundWorkingDayCount: kotlin.Int? = null,
 
   @Schema(example = "Blackmore End", description = "")
-  @get:JsonProperty("addressLine2") override val addressLine2: kotlin.String? = null,
+  override val addressLine2: kotlin.String? = null,
 
   @Schema(example = "Braintree", description = "")
-  @get:JsonProperty("town") override val town: kotlin.String? = null,
+  override val town: kotlin.String? = null,
 
   @Schema(example = "some notes about this property", description = "")
-  @get:JsonProperty("notes") override val notes: kotlin.String? = null,
+  override val notes: kotlin.String? = null,
 
-  @get:JsonProperty("localAuthorityArea") override val localAuthorityArea: LocalAuthorityArea? = null,
+  override val localAuthorityArea: LocalAuthorityArea? = null,
 
-  @get:JsonProperty("characteristics") override val characteristics: kotlin.collections.List<Characteristic>? = null,
+  override val characteristics: kotlin.collections.List<Characteristic>? = null,
 ) : Premises

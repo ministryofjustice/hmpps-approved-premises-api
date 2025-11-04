@@ -1,16 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class BookingSearchResultBookingSummary(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
-  @get:JsonProperty("status", required = true) val status: BookingStatus,
+  val status: BookingStatus,
 
-  @get:JsonProperty("startDate", required = true) val startDate: java.time.LocalDate,
+  val startDate: java.time.LocalDate,
 
-  @get:JsonProperty("endDate", required = true) val endDate: java.time.LocalDate,
+  val endDate: java.time.LocalDate,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
+  val createdAt: java.time.Instant,
 )

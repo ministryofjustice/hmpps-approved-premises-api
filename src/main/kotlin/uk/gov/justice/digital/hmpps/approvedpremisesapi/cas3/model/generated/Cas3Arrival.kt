@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -16,15 +15,15 @@ import java.util.UUID
  */
 data class Cas3Arrival(
 
-  @get:JsonProperty("expectedDepartureDate", required = true) val expectedDepartureDate: LocalDate,
+  val expectedDepartureDate: LocalDate,
 
-  @get:JsonProperty("arrivalDate", required = true) val arrivalDate: LocalDate,
+  val arrivalDate: LocalDate,
 
-  @get:JsonProperty("arrivalTime", required = true) val arrivalTime: String,
+  val arrivalTime: String,
 
-  @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
+  val bookingId: UUID,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("notes") val notes: String? = null,
+  val notes: String? = null,
 )

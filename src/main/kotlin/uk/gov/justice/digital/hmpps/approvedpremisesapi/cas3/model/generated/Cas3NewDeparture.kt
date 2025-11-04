@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
 import java.util.UUID
 
@@ -13,11 +12,11 @@ import java.util.UUID
  */
 data class Cas3NewDeparture(
 
-  @get:JsonProperty("dateTime", required = true) val dateTime: Instant,
+  val dateTime: Instant,
 
-  @get:JsonProperty("reasonId", required = true) val reasonId: UUID,
+  val reasonId: UUID,
 
-  @get:JsonProperty("moveOnCategoryId", required = true) val moveOnCategoryId: UUID,
+  val moveOnCategoryId: UUID,
 
-  @get:JsonProperty("notes") val notes: String? = null,
+  val notes: String? = null,
 )

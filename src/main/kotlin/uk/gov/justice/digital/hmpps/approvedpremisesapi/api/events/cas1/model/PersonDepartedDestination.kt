@@ -1,12 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class PersonDepartedDestination(
 
-  @get:JsonProperty("moveOnCategory", required = true) val moveOnCategory: MoveOnCategory,
+  val moveOnCategory: MoveOnCategory,
 
-  @get:JsonProperty("premises") val premises: DestinationPremises? = null,
+  val premises: DestinationPremises? = null,
 
-  @get:JsonProperty("destinationProvider") val destinationProvider: DestinationProvider? = null,
+  val destinationProvider: DestinationProvider? = null,
 )

@@ -1,16 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class BookingSearchResult(
 
-  @get:JsonProperty("person", required = true) val person: BookingSearchResultPersonSummary,
+  val person: BookingSearchResultPersonSummary,
 
-  @get:JsonProperty("booking", required = true) val booking: BookingSearchResultBookingSummary,
+  val booking: BookingSearchResultBookingSummary,
 
-  @get:JsonProperty("premises", required = true) val premises: BookingSearchResultPremisesSummary,
+  val premises: BookingSearchResultPremisesSummary,
 
-  @get:JsonProperty("room", required = true) val room: BookingSearchResultRoomSummary,
+  val room: BookingSearchResultRoomSummary,
 
-  @get:JsonProperty("bed", required = true) val bed: BookingSearchResultBedSummary,
+  val bed: BookingSearchResultBedSummary,
 )

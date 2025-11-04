@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
@@ -32,41 +31,41 @@ import java.util.UUID
  */
 data class Cas2ApplicationSummary(
 
-  @get:JsonProperty("type", required = true) val type: String,
+  val type: String,
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("createdByUserId", required = true) val createdByUserId: UUID,
+  val createdByUserId: UUID,
 
-  @get:JsonProperty("status", required = true) val status: ApplicationStatus,
+  val status: ApplicationStatus,
 
-  @get:JsonProperty("personName", required = true) val personName: String,
+  val personName: String,
 
-  @get:JsonProperty("crn", required = true) val crn: String,
+  val crn: String,
 
-  @get:JsonProperty("nomsNumber", required = true) val nomsNumber: String,
+  val nomsNumber: String,
 
-  @get:JsonProperty("allocatedPomUserId", required = true) val allocatedPomUserId: UUID,
+  val allocatedPomUserId: UUID,
 
-  @get:JsonProperty("allocatedPomName", required = true) val allocatedPomName: String,
+  val allocatedPomName: String,
 
-  @get:JsonProperty("assignmentDate", required = true) val assignmentDate: LocalDate,
+  val assignmentDate: LocalDate,
 
-  @get:JsonProperty("submittedAt") val submittedAt: Instant? = null,
+  val submittedAt: Instant? = null,
 
-  @get:JsonProperty("createdByUserName") val createdByUserName: String? = null,
+  val createdByUserName: String? = null,
 
-  @get:JsonProperty("latestStatusUpdate") val latestStatusUpdate: LatestCas2StatusUpdate? = null,
+  val latestStatusUpdate: LatestCas2StatusUpdate? = null,
 
-  @get:JsonProperty("risks") val risks: PersonRisks? = null,
+  val risks: PersonRisks? = null,
 
-  @get:JsonProperty("hdcEligibilityDate") val hdcEligibilityDate: LocalDate? = null,
+  val hdcEligibilityDate: LocalDate? = null,
 
-  @get:JsonProperty("currentPrisonName") val currentPrisonName: String? = null,
+  val currentPrisonName: String? = null,
 
-  @get:JsonProperty("applicationOrigin") val applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew,
+  val applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew,
 
-  @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+  val bailHearingDate: LocalDate? = null,
 )

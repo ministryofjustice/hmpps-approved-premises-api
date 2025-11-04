@@ -1,27 +1,26 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
 data class Cas2v2SubmittedApplicationSummary(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("createdByUserId", required = true) val createdByUserId: UUID,
+  val createdByUserId: UUID,
 
-  @get:JsonProperty("crn", required = true) val crn: String,
+  val crn: String,
 
-  @get:JsonProperty("personName", required = true) val personName: String,
+  val personName: String,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("nomsNumber") val nomsNumber: String? = null,
+  val nomsNumber: String? = null,
 
-  @get:JsonProperty("submittedAt") val submittedAt: Instant? = null,
+  val submittedAt: Instant? = null,
 
-  @get:JsonProperty("applicationOrigin") val applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew,
+  val applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew,
 
-  @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+  val bailHearingDate: LocalDate? = null,
 )

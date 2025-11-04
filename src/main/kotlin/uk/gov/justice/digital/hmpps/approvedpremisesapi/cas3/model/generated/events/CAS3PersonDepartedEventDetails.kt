@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 /**
  *
  * @param personReference
@@ -19,27 +17,27 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class CAS3PersonDepartedEventDetails(
 
-  @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
+  val personReference: PersonReference,
 
-  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: kotlin.String,
+  val deliusEventNumber: kotlin.String,
 
-  @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
+  val bookingId: java.util.UUID,
 
-  @get:JsonProperty("bookingUrl", required = true) val bookingUrl: java.net.URI,
+  val bookingUrl: java.net.URI,
 
-  @get:JsonProperty("premises", required = true) val premises: Premises,
+  val premises: Premises,
 
-  @get:JsonProperty("departedAt", required = true) val departedAt: java.time.Instant,
+  val departedAt: java.time.Instant,
 
-  @get:JsonProperty("reason", required = true) val reason: kotlin.String,
+  val reason: kotlin.String,
 
-  @get:JsonProperty("notes", required = true) val notes: kotlin.String,
+  val notes: kotlin.String,
 
-  @get:JsonProperty("applicationId") val applicationId: java.util.UUID? = null,
+  val applicationId: java.util.UUID? = null,
 
-  @get:JsonProperty("applicationUrl") val applicationUrl: java.net.URI? = null,
+  val applicationUrl: java.net.URI? = null,
 
-  @get:JsonProperty("reasonDetail") val reasonDetail: kotlin.String? = null,
+  val reasonDetail: kotlin.String? = null,
 
-  @get:JsonProperty("recordedBy") val recordedBy: StaffMember? = null,
+  val recordedBy: StaffMember? = null,
 )

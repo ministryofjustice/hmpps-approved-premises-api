@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -12,14 +11,14 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas3NewApplication(
 
-  @get:JsonProperty("crn", required = true) val crn: String,
+  val crn: String,
 
   @Schema(example = "1502724704", description = "")
-  @get:JsonProperty("convictionId") val convictionId: Long? = null,
+  val convictionId: Long? = null,
 
   @Schema(example = "7", description = "")
-  @get:JsonProperty("deliusEventNumber") val deliusEventNumber: String? = null,
+  val deliusEventNumber: String? = null,
 
   @Schema(example = "M1502750438", description = "")
-  @get:JsonProperty("offenceId") val offenceId: String? = null,
+  val offenceId: String? = null,
 )

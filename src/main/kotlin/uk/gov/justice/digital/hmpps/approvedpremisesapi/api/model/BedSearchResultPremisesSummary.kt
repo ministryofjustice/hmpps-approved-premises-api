@@ -1,31 +1,30 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class BedSearchResultPremisesSummary(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  val name: kotlin.String,
 
-  @get:JsonProperty("addressLine1", required = true) val addressLine1: kotlin.String,
+  val addressLine1: kotlin.String,
 
-  @get:JsonProperty("postcode", required = true) val postcode: kotlin.String,
+  val postcode: kotlin.String,
 
-  @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<CharacteristicPair>,
+  val characteristics: kotlin.collections.List<CharacteristicPair>,
 
   @Schema(example = "null", required = true, description = "the total number of Beds in the Premises")
-  @get:JsonProperty("bedCount", required = true) val bedCount: kotlin.Int,
+  val bedCount: kotlin.Int,
 
-  @get:JsonProperty("addressLine2") val addressLine2: kotlin.String? = null,
+  val addressLine2: kotlin.String? = null,
 
-  @get:JsonProperty("town") val town: kotlin.String? = null,
+  val town: kotlin.String? = null,
 
-  @get:JsonProperty("probationDeliveryUnitName") val probationDeliveryUnitName: kotlin.String? = null,
+  val probationDeliveryUnitName: kotlin.String? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  val notes: kotlin.String? = null,
 
   @Schema(example = "null", description = "the total number of booked Beds in the Premises")
-  @get:JsonProperty("bookedBedCount") val bookedBedCount: kotlin.Int? = null,
+  val bookedBedCount: kotlin.Int? = null,
 )
