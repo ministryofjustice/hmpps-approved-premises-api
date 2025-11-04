@@ -245,6 +245,7 @@ class ApplicationsTransformer(
       caseManagerUserDetails = applicationEntity.caseManagerUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
       apType = applicationEntity.apType.asApiType(),
       licenceExpiryDate = applicationEntity.licenceExpiryDate,
+      createdByUserName = applicationEntity.createdByUser.name,
     )
   }
 
