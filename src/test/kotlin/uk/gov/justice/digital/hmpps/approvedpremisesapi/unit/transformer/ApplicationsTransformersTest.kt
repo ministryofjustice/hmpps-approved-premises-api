@@ -314,6 +314,7 @@ class ApplicationsTransformersTest {
 
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
+    assertThat(result.createdByUserName).isEqualTo(user.name)
     assertThat(result.status).isEqualTo(apiStatus)
     assertThat(result.apArea).isNull()
     assertThat(result.applicantUserDetails!!.name).isEqualTo("applicant")
