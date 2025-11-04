@@ -14,7 +14,6 @@ import java.util.UUID
  */
 data class Cas3NewBedspace(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("reference", required = true) val reference: String,
 
   @Schema(
@@ -24,9 +23,7 @@ data class Cas3NewBedspace(
   )
   @get:JsonProperty("startDate", required = true) val startDate: LocalDate,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("characteristicIds", required = true) val characteristicIds: List<UUID>,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("notes") val notes: String? = null,
 )

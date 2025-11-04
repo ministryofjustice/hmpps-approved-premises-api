@@ -16,13 +16,11 @@ import java.util.UUID
  */
 data class SubmitCas2Application(
 
-  @Schema(example = "null", required = true, description = "Any object")
   @get:JsonProperty("translatedDocument", required = true) val translatedDocument: Any,
 
   @Schema(example = "null", required = true, description = "Id of the application being submitted")
   @get:JsonProperty("applicationId", required = true) val applicationId: UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("telephoneNumber", required = true) val telephoneNumber: String,
 
   @Schema(example = "Leeds | Bradford", description = "First and second preferences for where the accommodation should be located, pipe-separated")

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
@@ -16,27 +15,19 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class CAS3BookingConfirmedEventDetails(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("bookingUrl", required = true) val bookingUrl: java.net.URI,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("expectedArrivedAt", required = true) val expectedArrivedAt: java.time.Instant,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("notes", required = true) val notes: kotlin.String,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("applicationId") val applicationId: java.util.UUID? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("applicationUrl") val applicationUrl: java.net.URI? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("confirmedBy") val confirmedBy: StaffMember? = null,
 )

@@ -21,6 +21,5 @@ data class Cas2Status(
   @Schema(example = "More information about the application has been requested from the POM (Prison Offender Manager).", required = true, description = "")
   @get:JsonProperty("description", required = true) val description: kotlin.String,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("statusDetails") val statusDetails: kotlin.collections.List<Cas2StatusDetail>? = null,
 )

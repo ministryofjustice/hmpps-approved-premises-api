@@ -29,6 +29,5 @@ data class Cas3BedspaceSearchResults(
   @Schema(example = "null", required = true, description = "How many Beds are in the results")
   @get:JsonProperty("resultsBedCount", required = true) val resultsBedCount: Int,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("results", required = true) val results: List<Cas3BedspaceSearchResult>,
 )

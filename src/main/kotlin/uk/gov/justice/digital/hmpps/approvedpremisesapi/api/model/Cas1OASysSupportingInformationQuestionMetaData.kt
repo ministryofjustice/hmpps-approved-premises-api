@@ -16,7 +16,6 @@ data class Cas1OASysSupportingInformationQuestionMetaData(
   @Schema(example = "10", required = true, description = "The OAsys section that this question relates to")
   @get:JsonProperty("section", required = true) val section: kotlin.Int,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("sectionLabel", required = true) val sectionLabel: kotlin.String,
 
   @Schema(example = "null", required = true, description = "If the user can optionally elect to include this question in an application. If not optional, it will always be returned by calls to '/cas1/people/{crn}/oasys/answers'")

@@ -12,10 +12,8 @@ data class ApprovedPremises(
   @Schema(example = "NEHOPE1", required = true, description = "")
   @get:JsonProperty("apCode", required = true) val apCode: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("service", required = true) override val service: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 
   @Schema(example = "Hope House", required = true, description = "")
@@ -33,16 +31,12 @@ data class ApprovedPremises(
   @Schema(example = "20", required = true, description = "")
   @get:JsonProperty("availableBedsForToday", required = true) override val availableBedsForToday: kotlin.Int,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("probationRegion", required = true) override val probationRegion: ProbationRegion,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("apArea", required = true) override val apArea: ApArea,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("localAuthorityArea", required = true) override val localAuthorityArea: LocalAuthorityArea,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("status", required = true) override val status: PropertyStatus,
 
   @Schema(example = "Blackmore End", description = "")
@@ -54,6 +48,5 @@ data class ApprovedPremises(
   @Schema(example = "some notes about this property", description = "")
   @get:JsonProperty("notes") override val notes: kotlin.String? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("characteristics") override val characteristics: kotlin.collections.List<Characteristic>? = null,
 ) : Premises

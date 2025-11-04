@@ -19,7 +19,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class PersonNotArrived(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
   @Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
@@ -34,13 +33,11 @@ data class PersonNotArrived(
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of booking for an AP place")
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("premises", required = true) val premises: Premises,
 
   @Schema(example = "Tue Nov 29 00:00:00 GMT 2022", required = true, description = "")
   @get:JsonProperty("expectedArrivalOn", required = true) val expectedArrivalOn: java.time.LocalDate,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("recordedBy", required = true) val recordedBy: StaffMember,
 
   @Schema(example = "Arrested, remanded in custody, or sentenced", required = true, description = "")

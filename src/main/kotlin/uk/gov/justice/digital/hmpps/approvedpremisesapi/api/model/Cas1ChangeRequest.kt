@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
@@ -18,33 +17,23 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas1ChangeRequest(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("type", required = true) val type: Cas1ChangeRequestType,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("requestReason", required = true) val requestReason: NamedId,
 
-  @Schema(example = "null", required = true, description = "Any object")
   @get:JsonProperty("requestJson", required = true) val requestJson: kotlin.Any,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("spaceBookingId", required = true) val spaceBookingId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("updatedAt", required = true) val updatedAt: java.time.Instant,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("decision") val decision: Cas1ChangeRequestDecision? = null,
 
-  @Schema(example = "null", description = "Any object")
   @get:JsonProperty("decisionJson") val decisionJson: kotlin.Any? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("rejectionReason") val rejectionReason: NamedId? = null,
 )

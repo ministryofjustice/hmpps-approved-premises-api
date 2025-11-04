@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
@@ -11,12 +10,9 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class CAS3AssessmentUpdatedField(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("fieldName", required = true) val fieldName: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("updatedFrom", required = true) val updatedFrom: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("updatedTo", required = true) val updatedTo: kotlin.String,
 )

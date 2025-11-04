@@ -13,6 +13,5 @@ data class InvalidParam(
   @Schema(example = "arrivalDate", description = "")
   @get:JsonProperty("propertyName") val propertyName: kotlin.String? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("errorType") val errorType: kotlin.String? = null,
 )

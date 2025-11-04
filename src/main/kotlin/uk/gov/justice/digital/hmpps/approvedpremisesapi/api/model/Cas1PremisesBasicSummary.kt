@@ -16,25 +16,21 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas1PremisesBasicSummary(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "Hope House", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("apArea", required = true) val apArea: NamedId,
 
   @Schema(example = "22", required = true, description = "")
   @get:JsonProperty("bedCount", required = true) val bedCount: kotlin.Int,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("supportsSpaceBookings", required = true) val supportsSpaceBookings: kotlin.Boolean,
 
   @Schema(example = "null", required = true, description = "Full address, excluding postcode")
   @get:JsonProperty("fullAddress", required = true) val fullAddress: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("postcode", required = true) val postcode: kotlin.String,
 
   @Schema(example = "NEHOPE1", description = "")

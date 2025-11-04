@@ -11,12 +11,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class NonArrivalReason(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "Recall", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("isActive", required = true) val isActive: kotlin.Boolean,
 )

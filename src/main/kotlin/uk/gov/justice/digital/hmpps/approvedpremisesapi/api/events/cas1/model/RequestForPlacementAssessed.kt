@@ -27,10 +27,8 @@ data class RequestForPlacementAssessed(
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of a placement application")
   @get:JsonProperty("placementApplicationId", required = true) val placementApplicationId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("assessedBy", required = true) val assessedBy: StaffMember,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("decision", required = true) val decision: RequestForPlacementAssessed.Decision,
 
   @Schema(example = "Mon Jan 30 00:00:00 GMT 2023", required = true, description = "")

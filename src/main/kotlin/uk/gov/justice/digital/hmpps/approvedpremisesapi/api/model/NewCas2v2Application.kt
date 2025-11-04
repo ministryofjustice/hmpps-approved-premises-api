@@ -15,10 +15,8 @@ import java.time.LocalDate
  */
 data class NewCas2v2Application(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("crn", required = true) val crn: String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("applicationOrigin", required = true) val applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
 
   @Schema(example = "1502724704", description = "")
@@ -30,6 +28,5 @@ data class NewCas2v2Application(
   @Schema(example = "M1502750438", description = "")
   @get:JsonProperty("offenceId") val offenceId: String? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
 )

@@ -24,10 +24,8 @@ data class Cas2StaffMember(
   @Schema(example = "SMITHJ_GEN", description = "")
   @get:JsonProperty("username") val username: kotlin.String? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("cas2StaffIdentifier") val cas2StaffIdentifier: kotlin.String? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("usertype") val usertype: Cas2StaffMember.Usertype? = null,
 ) {
 

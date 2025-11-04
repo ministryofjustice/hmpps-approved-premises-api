@@ -29,16 +29,12 @@ data class FurtherInformationRequested(
   @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
   @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("requestedAt", required = true) val requestedAt: java.time.Instant,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("requester", required = true) val requester: StaffMember,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("recipient", required = true) val recipient: StaffMember,
 
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")

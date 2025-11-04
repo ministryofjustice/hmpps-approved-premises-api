@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
@@ -11,12 +10,9 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class CAS3ReferralSubmittedEventDetails(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("applicationUrl", required = true) val applicationUrl: java.net.URI,
 )

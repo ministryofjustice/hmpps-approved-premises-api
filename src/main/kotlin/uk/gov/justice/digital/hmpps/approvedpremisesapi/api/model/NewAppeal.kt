@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
@@ -12,15 +11,11 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class NewAppeal(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("appealDate", required = true) val appealDate: java.time.LocalDate,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("appealDetail", required = true) val appealDetail: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("decision", required = true) val decision: AppealDecision,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("decisionDetail", required = true) val decisionDetail: kotlin.String,
 )

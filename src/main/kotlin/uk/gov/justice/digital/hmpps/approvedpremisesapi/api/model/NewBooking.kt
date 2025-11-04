@@ -25,18 +25,13 @@ data class NewBooking(
   @Schema(example = "Fri Sep 30 01:00:00 BST 2022", required = true, description = "")
   @get:JsonProperty("departureDate", required = true) val departureDate: java.time.LocalDate,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("serviceName", required = true) val serviceName: ServiceName,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("bedId") val bedId: java.util.UUID? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("enableTurnarounds") val enableTurnarounds: kotlin.Boolean? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("assessmentId") val assessmentId: java.util.UUID? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("eventNumber") val eventNumber: kotlin.String? = null,
 )

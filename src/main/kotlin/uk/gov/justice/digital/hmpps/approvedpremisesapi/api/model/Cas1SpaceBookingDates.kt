@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas1SpaceBookingDates(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "null", required = true, description = "actual arrival date or, if not known, the expected arrival date")

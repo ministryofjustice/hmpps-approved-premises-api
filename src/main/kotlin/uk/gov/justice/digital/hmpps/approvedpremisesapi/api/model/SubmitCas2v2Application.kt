@@ -18,16 +18,13 @@ import java.util.UUID
  */
 data class SubmitCas2v2Application(
 
-  @Schema(example = "null", required = true, description = "Any object")
   @get:JsonProperty("translatedDocument", required = true) val translatedDocument: Any,
 
   @Schema(example = "null", required = true, description = "Id of the application being submitted")
   @get:JsonProperty("applicationId", required = true) val applicationId: UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("telephoneNumber", required = true) val telephoneNumber: String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("applicationOrigin", required = true) val applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
 
   @Schema(example = "Leeds | Bradford", description = "First and second preferences for where the accommodation should be located, pipe-separated")
@@ -39,6 +36,5 @@ data class SubmitCas2v2Application(
   @Schema(example = "Sun Apr 30 01:00:00 BST 2023", description = "")
   @get:JsonProperty("conditionalReleaseDate") val conditionalReleaseDate: LocalDate? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
 )

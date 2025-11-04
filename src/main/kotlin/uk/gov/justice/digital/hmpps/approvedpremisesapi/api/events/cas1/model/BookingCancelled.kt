@@ -6,7 +6,6 @@ import java.util.UUID
 
 data class BookingCancelled(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
   @Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
@@ -21,22 +20,17 @@ data class BookingCancelled(
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of booking for an AP place")
   @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("premises", required = true) val premises: Premises,
 
   @Schema(example = "null", required = true, description = "cancelledAtDate should be used instead")
   @get:JsonProperty("cancelledAt", required = true) val cancelledAt: java.time.Instant,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("cancelledAtDate", required = true) val cancelledAtDate: java.time.LocalDate,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("cancelledBy", required = true) val cancelledBy: StaffMember,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("cancellationReason", required = true) val cancellationReason: String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("cancellationRecordedAt", required = true) val cancellationRecordedAt: java.time.Instant,
 
   val appealChangeRequestId: UUID? = null,

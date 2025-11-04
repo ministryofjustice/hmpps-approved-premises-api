@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class NewPlacementRequestBookingConfirmation(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("premisesName", required = true) val premisesName: kotlin.String,
 
   @Schema(example = "Thu Jul 28 01:00:00 BST 2022", required = true, description = "")

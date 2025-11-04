@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class DestinationPremises(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "New Place", required = true, description = "")
@@ -25,6 +24,5 @@ data class DestinationPremises(
   @Schema(example = "Q061", required = true, description = "")
   @get:JsonProperty("legacyApCode", required = true) val legacyApCode: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("probationArea", required = true) val probationArea: ProbationArea,
 )

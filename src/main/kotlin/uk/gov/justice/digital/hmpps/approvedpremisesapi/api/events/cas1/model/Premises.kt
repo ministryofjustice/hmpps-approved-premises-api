@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Premises(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "Hope House", required = true, description = "")
@@ -25,6 +24,5 @@ data class Premises(
   @Schema(example = "Q057", required = true, description = "The 'Q code' used in Delius to identify an Approved Premises")
   @get:JsonProperty("legacyApCode", required = true) val legacyApCode: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("localAuthorityAreaName", required = true) val localAuthorityAreaName: kotlin.String,
 )

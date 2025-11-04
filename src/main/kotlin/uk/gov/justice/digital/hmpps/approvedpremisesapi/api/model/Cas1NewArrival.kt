@@ -15,7 +15,6 @@ data class Cas1NewArrival(
   @Deprecated(message = "")
   @get:JsonProperty("arrivalDateTime") val arrivalDateTime: java.time.Instant? = null,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("arrivalDate") val arrivalDate: java.time.LocalDate? = null,
 
   @Schema(example = "23:15", description = "")

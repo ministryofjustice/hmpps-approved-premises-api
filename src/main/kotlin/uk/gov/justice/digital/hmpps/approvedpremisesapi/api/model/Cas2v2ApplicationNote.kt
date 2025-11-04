@@ -21,12 +21,9 @@ data class Cas2v2ApplicationNote(
   @Schema(example = "Roger Smith", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("body", required = true) val body: String,
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
 
-  @Schema(example = "null", description = "")
   @get:JsonProperty("id") val id: UUID? = null,
 )

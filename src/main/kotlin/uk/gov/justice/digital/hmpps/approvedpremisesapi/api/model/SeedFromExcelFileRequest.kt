@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class SeedFromExcelFileRequest(
 
-  @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("seedType", required = true) val seedType: SeedFromExcelFileType,
 
   @Schema(example = "null", required = true, description = "File within the pre-configured seed directory")
