@@ -2,20 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param name
- * @param addressLine1
- * @param postcode
- * @param characteristics
- * @param bedCount the total number of Beds in the Premises
- * @param addressLine2
- * @param town
- * @param probationDeliveryUnitName
- * @param notes
- * @param bookedBedCount the total number of booked Beds in the Premises
- */
 data class BedSearchResultPremisesSummary(
 
   val id: java.util.UUID,

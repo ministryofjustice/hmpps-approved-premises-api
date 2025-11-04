@@ -1,14 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param createdAt
- * @param isOfflineApplication
- * @param timelineEvents
- * @param status
- * @param createdBy
- */
 data class Cas1ApplicationTimeline(
 
   val id: java.util.UUID,

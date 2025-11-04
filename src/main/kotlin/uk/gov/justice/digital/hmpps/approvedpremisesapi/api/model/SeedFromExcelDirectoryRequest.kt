@@ -2,11 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param seedType
- * @param directoryName Directory within the pre-configured seed directory
- */
 data class SeedFromExcelDirectoryRequest(
 
   val seedType: SeedFromExcelFileType,

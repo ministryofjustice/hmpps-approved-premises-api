@@ -4,17 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param applicationId The UUID of an application for an AP place
- * @param applicationUrl The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings
- * @param placementApplicationId The UUID of a placement application
- * @param assessedBy
- * @param decision
- * @param expectedArrival
- * @param duration
- * @param decisionSummary
- */
 data class RequestForPlacementAssessed(
 
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
@@ -40,10 +29,6 @@ data class RequestForPlacementAssessed(
   val decisionSummary: kotlin.String? = null,
 ) : Cas1DomainEventPayload {
 
-  /**
-   *
-   * Values: accepted,rejected
-   */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Decision(@get:JsonValue val value: kotlin.String) {
 

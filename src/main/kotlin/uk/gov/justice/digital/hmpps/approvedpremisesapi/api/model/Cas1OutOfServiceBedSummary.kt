@@ -2,16 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param bedId
- * @param startDate
- * @param endDate This date is inclusive. The bed will be unavailable for the whole of the day
- * @param reason
- * @param characteristics
- * @param roomName
- */
 data class Cas1OutOfServiceBedSummary(
 
   val id: java.util.UUID,

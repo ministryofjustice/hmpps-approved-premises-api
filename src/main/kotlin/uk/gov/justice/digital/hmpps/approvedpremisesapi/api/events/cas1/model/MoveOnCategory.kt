@@ -2,12 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param description
- * @param legacyMoveOnCategoryCode
- * @param id
- */
 data class MoveOnCategory(
 
   @Schema(example = "B&B / Temp / Short-Term Housing", required = true, description = "")

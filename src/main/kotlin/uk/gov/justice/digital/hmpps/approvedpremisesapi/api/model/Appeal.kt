@@ -1,17 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param appealDate
- * @param appealDetail
- * @param decision
- * @param decisionDetail
- * @param createdAt
- * @param applicationId
- * @param createdByUser
- * @param assessmentId
- */
 data class Appeal(
 
   val id: java.util.UUID,

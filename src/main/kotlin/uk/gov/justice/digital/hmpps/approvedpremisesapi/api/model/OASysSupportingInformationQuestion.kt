@@ -1,14 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param label
- * @param questionNumber
- * @param sectionNumber
- * @param linkedToHarm
- * @param linkedToReOffending
- * @param answer
- */
 data class OASysSupportingInformationQuestion(
 
   val label: kotlin.String,

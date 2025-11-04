@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param name
- * @param characteristicIds
- * @param notes
- * @param bedEndDate End date of the bed availability, open for availability if not specified.
- */
 data class NewRoom(
 
   val name: kotlin.String,

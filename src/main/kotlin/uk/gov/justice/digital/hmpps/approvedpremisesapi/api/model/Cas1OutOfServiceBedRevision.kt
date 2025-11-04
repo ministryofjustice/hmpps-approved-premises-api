@@ -1,17 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param updatedAt
- * @param revisionType
- * @param updatedBy
- * @param startDate
- * @param endDate
- * @param reason
- * @param referenceNumber
- * @param notes
- */
 data class Cas1OutOfServiceBedRevision(
 
   val id: java.util.UUID,

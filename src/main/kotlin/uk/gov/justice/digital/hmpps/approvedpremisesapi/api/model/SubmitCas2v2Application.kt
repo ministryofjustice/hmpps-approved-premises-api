@@ -4,17 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 import java.util.UUID
 
-/**
- *
- * @param translatedDocument Any object
- * @param applicationId Id of the application being submitted
- * @param telephoneNumber
- * @param applicationOrigin
- * @param preferredAreas First and second preferences for where the accommodation should be located, pipe-separated
- * @param hdcEligibilityDate
- * @param conditionalReleaseDate
- * @param bailHearingDate
- */
 data class SubmitCas2v2Application(
 
   val translatedDocument: Any,

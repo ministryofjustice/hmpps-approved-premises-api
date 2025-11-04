@@ -2,16 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- * This should be changed to embed the user as a property of this type, instead of 'extending' User. Currently this causes unmarshalling issues in integration tests, if using Jackson, due to discriminators not being logically correct
- * @param numTasksPending
- * @param numTasksCompleted7Days
- * @param numTasksCompleted30Days
- * @param qualifications
- * @param roles
- * @param apArea This is deprecated. Used cruManagementArea instead as this is used to group task management
- * @param cruManagementArea
- */
 data class UserWithWorkload(
 
   override val service: kotlin.String,

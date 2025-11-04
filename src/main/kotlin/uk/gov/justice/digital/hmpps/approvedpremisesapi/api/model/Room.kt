@@ -2,15 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param name
- * @param characteristics
- * @param code
- * @param notes
- * @param beds
- */
 data class Room(
 
   val id: java.util.UUID,

@@ -2,26 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param arrivalDate
- * @param probationDeliveryUnitId
- * @param summaryData Any object
- * @param isRegisteredSexOffender
- * @param needsAccessibleProperty
- * @param hasHistoryOfArson
- * @param isDutyToReferSubmitted
- * @param dutyToReferSubmissionDate
- * @param dutyToReferOutcome
- * @param isApplicationEligible
- * @param eligibilityReason
- * @param dutyToReferLocalAuthorityAreaName
- * @param personReleaseDate
- * @param isHistoryOfSexualOffence
- * @param isConcerningSexualBehaviour
- * @param isConcerningArsonBehaviour
- * @param prisonReleaseTypes
- */
 data class SubmitTemporaryAccommodationApplication(
 
   val arrivalDate: java.time.LocalDate,

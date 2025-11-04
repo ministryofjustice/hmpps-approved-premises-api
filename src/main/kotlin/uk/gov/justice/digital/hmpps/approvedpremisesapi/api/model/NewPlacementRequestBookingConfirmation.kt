@@ -2,12 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param premisesName
- * @param arrivalDate
- * @param departureDate
- */
 data class NewPlacementRequestBookingConfirmation(
 
   val premisesName: kotlin.String,

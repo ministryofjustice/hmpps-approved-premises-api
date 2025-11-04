@@ -2,17 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param crn
- * @param arrivalDate
- * @param departureDate
- * @param serviceName
- * @param bedId
- * @param enableTurnarounds
- * @param assessmentId
- * @param eventNumber
- */
 data class NewBooking(
 
   @Schema(example = "A123456", required = true, description = "")

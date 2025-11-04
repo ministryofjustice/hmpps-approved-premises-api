@@ -3,20 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
- *
- * @param id
- * @param person
- * @param placementRequestStatus
- * @param isParole
- * @param requestedPlacementDuration
- * @param requestedPlacementArrivalDate
- * @param personTier
- * @param applicationId
- * @param applicationSubmittedDate
- * @param firstBookingPremisesName
- * @param firstBookingArrivalDate
- */
 data class Cas1PlacementRequestSummary(
 
   val id: java.util.UUID,
@@ -42,10 +28,6 @@ data class Cas1PlacementRequestSummary(
   val firstBookingArrivalDate: java.time.LocalDate? = null,
 ) {
 
-  /**
-   *
-   * Values: matched,unableToMatch,notMatched
-   */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class PlacementRequestStatus(@get:JsonValue val value: kotlin.String) {
 

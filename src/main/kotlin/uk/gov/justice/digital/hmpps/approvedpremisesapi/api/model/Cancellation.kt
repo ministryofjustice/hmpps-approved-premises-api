@@ -1,16 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param bookingId
- * @param date
- * @param reason
- * @param createdAt
- * @param premisesName
- * @param id
- * @param notes
- * @param otherReason
- */
 data class Cancellation(
 
   val bookingId: java.util.UUID,

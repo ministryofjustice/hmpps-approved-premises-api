@@ -2,15 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param type
- * @param title
- * @param status
- * @param detail
- * @param instance
- * @param invalidParams
- */
 data class ValidationError(
 
   @Schema(example = "https://example.net/validation-error", description = "")

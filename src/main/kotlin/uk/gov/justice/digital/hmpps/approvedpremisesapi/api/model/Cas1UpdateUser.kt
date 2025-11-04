@@ -1,11 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param roles
- * @param qualifications
- * @param cruManagementAreaOverrideId
- */
 data class Cas1UpdateUser(
 
   val roles: kotlin.collections.List<ApprovedPremisesUserRole>,

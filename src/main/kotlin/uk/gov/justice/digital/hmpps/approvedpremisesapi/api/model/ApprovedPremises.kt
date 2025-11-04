@@ -2,10 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param apCode
- */
 data class ApprovedPremises(
 
   @Schema(example = "NEHOPE1", required = true, description = "")

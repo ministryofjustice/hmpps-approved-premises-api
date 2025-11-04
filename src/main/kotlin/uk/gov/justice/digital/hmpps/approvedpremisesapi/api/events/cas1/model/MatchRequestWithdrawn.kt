@@ -2,19 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param applicationId The UUID of an application for an AP place
- * @param applicationUrl The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings
- * @param personReference
- * @param deliusEventNumber Used in Delius to identify the 'event' via the first active conviction's 'index'
- * @param withdrawnAt
- * @param withdrawnBy
- * @param withdrawalReason
- * @param datePeriod
- * @param matchRequestId The UUID of a placement application
- * @param requestIsForApplicationsArrivalDate Indicate if this match request was created for the arrival date specified when the application was initially submitted
- */
 data class MatchRequestWithdrawn(
 
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")

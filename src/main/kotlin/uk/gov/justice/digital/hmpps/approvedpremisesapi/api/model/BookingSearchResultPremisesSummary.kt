@@ -1,14 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param name
- * @param addressLine1
- * @param postcode
- * @param addressLine2
- * @param town
- */
 data class BookingSearchResultPremisesSummary(
 
   val id: java.util.UUID,

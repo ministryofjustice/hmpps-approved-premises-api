@@ -1,15 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param expectedDepartureDate
- * @param arrivalDate
- * @param arrivalTime
- * @param bookingId
- * @param createdAt
- * @param notes
- * @param keyWorkerStaffCode
- */
 data class Arrival(
 
   val expectedDepartureDate: java.time.LocalDate,

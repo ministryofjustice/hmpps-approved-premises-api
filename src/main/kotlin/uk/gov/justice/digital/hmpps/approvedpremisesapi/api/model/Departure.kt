@@ -1,16 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param bookingId
- * @param dateTime
- * @param reason
- * @param moveOnCategory
- * @param createdAt
- * @param notes
- * @param destinationProvider
- */
 data class Departure(
 
   val id: java.util.UUID,

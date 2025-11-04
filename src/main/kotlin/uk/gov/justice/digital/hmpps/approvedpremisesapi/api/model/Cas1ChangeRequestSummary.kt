@@ -1,16 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param person
- * @param type
- * @param createdAt
- * @param expectedArrivalDate
- * @param placementRequestId
- * @param tier
- * @param actualArrivalDate
- */
 data class Cas1ChangeRequestSummary(
 
   val id: java.util.UUID,

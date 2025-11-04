@@ -2,10 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import java.time.LocalDate
 
-/**
- *
- * @param bailHearingDate
- */
 data class UpdateCas2v2Application(
 
   override val type: UpdateApplicationType,

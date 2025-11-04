@@ -2,17 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param document Any object
- * @param rejectionRationale
- * @param referralRejectionReasonId Only used by CAS3
- * @param referralRejectionReasonDetail Only used by CAS3
- * @param isWithdrawn
- * @param agreeWithShortNoticeReason
- * @param agreeWithShortNoticeReasonComments
- * @param reasonForLateApplication
- */
 data class AssessmentRejection(
 
   val document: kotlin.Any,

@@ -1,11 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param type
- * @param booking
- * @param changeRequestId
- */
 data class Cas1TimelineEventTransferInfo(
 
   val type: Cas1TimelineEventTransferType,

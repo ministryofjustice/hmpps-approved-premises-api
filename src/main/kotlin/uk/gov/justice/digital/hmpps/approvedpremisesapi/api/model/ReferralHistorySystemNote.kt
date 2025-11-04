@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
- *
- * @param category
- */
 data class ReferralHistorySystemNote(
 
   val category: ReferralHistorySystemNote.Category,
@@ -24,10 +20,6 @@ data class ReferralHistorySystemNote(
   override val messageDetails: ReferralHistoryNoteMessageDetails? = null,
 ) : ReferralHistoryNote {
 
-  /**
-   *
-   * Values: submitted,unallocated,inReview,readyToPlace,rejected,completed
-   */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Category(@get:JsonValue val value: kotlin.String) {
 

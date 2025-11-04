@@ -2,14 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param name
- * @param apCode
- * @param legacyApCode The 'Q code' used in Delius to identify an Approved Premises
- * @param localAuthorityAreaName
- */
 data class Premises(
 
   val id: java.util.UUID,

@@ -2,15 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param reportedAt
- * @param establishment
- * @param offenceDescription
- * @param hearingHeld
- * @param finding
- */
 data class Adjudication(
 
   val id: kotlin.Long,

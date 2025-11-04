@@ -1,13 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param bookingId
- * @param dateTime
- * @param createdAt
- * @param notes
- */
 data class Confirmation(
 
   val id: java.util.UUID,

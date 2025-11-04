@@ -1,10 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- * Please use the Cas1AssessmentSummary endpoint instead
- * @param status
- * @param dueAt
- */
 data class ApprovedPremisesAssessmentSummary(
 
   val status: ApprovedPremisesAssessmentStatus,

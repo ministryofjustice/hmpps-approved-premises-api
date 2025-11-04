@@ -2,15 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param reasonId
- * @param departureDateTime use seperate date/time fields
- * @param departureDate
- * @param departureTime
- * @param moveOnCategoryId
- * @param notes
- */
 data class Cas1NewDeparture(
 
   val reasonId: java.util.UUID,

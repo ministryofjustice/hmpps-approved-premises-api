@@ -3,15 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
-/**
- *
- * @param crn
- * @param applicationOrigin
- * @param convictionId
- * @param deliusEventNumber
- * @param offenceId
- * @param bailHearingDate
- */
 data class NewCas2v2Application(
 
   val crn: String,

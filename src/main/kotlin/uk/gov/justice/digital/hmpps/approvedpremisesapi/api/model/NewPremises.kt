@@ -2,22 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param name
- * @param addressLine1
- * @param postcode
- * @param probationRegionId
- * @param characteristicIds
- * @param status
- * @param addressLine2
- * @param town
- * @param notes
- * @param localAuthorityAreaId
- * @param pdu
- * @param probationDeliveryUnitId
- * @param turnaroundWorkingDayCount
- */
 data class NewPremises(
 
   val name: kotlin.String,

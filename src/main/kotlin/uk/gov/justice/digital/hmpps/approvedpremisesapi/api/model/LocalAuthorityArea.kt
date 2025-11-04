@@ -2,12 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param identifier
- * @param name
- */
 data class LocalAuthorityArea(
 
   @Schema(example = "6abb5fa3-e93f-4445-887b-30d081688f44", required = true, description = "")

@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import java.util.UUID
 
-/**
- *
- * @param id
- * @param nacroReferralId
- * @param assessorName
- * @param statusUpdates
- */
 data class Cas2v2Assessment(
 
   val id: UUID,

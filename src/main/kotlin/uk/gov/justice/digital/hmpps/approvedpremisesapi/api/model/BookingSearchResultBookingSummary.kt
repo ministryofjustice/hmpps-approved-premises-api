@@ -1,13 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param status
- * @param startDate
- * @param endDate
- * @param createdAt
- */
 data class BookingSearchResultBookingSummary(
 
   val id: java.util.UUID,

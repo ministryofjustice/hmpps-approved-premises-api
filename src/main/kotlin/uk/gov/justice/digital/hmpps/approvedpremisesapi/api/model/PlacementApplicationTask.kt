@@ -2,15 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param tier
- * @param releaseType
- * @param placementType
- * @param dates
- * @param placementDates Placement apps only have one set of placement dates, use 'dates' instead
- * @param outcome
- */
 data class PlacementApplicationTask(
 
   val tier: RiskTierEnvelope,

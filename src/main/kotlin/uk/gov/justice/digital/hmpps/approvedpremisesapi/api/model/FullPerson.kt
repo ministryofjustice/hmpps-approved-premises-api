@@ -1,20 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param name
- * @param dateOfBirth
- * @param sex
- * @param status
- * @param nomsNumber
- * @param pncNumber
- * @param ethnicity
- * @param nationality
- * @param religionOrBelief
- * @param genderIdentity
- * @param prisonName
- * @param isRestricted
- */
 data class FullPerson(
 
   val name: kotlin.String,

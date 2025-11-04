@@ -5,12 +5,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 
-/**
- *
- * @param type
- * @param translatedDocument Any object
- */
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 @JsonSubTypes(
   JsonSubTypes.Type(value = SubmitApprovedPremisesApplication::class, name = "CAS1"),

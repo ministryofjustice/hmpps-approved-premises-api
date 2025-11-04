@@ -2,14 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param name
- * @param nomisUsername
- * @param isActive
- * @param email
- */
 data class NomisUser(
 
   val id: java.util.UUID,

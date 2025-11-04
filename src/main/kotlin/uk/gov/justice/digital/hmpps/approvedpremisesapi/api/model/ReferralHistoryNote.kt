@@ -4,16 +4,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param createdAt
- * @param createdByUserName
- * @param type
- * @param message
- * @param messageDetails
- */
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 @JsonSubTypes(
   JsonSubTypes.Type(value = ReferralHistoryDomainEventNote::class, name = "domainEvent"),

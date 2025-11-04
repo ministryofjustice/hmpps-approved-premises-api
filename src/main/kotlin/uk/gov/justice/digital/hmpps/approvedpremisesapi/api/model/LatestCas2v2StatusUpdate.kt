@@ -3,11 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
-/**
- *
- * @param statusId
- * @param label
- */
 data class LatestCas2v2StatusUpdate(
 
   val statusId: UUID,

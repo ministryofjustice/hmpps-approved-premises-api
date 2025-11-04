@@ -1,14 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param bookingId
- * @param date
- * @param reason
- * @param createdAt
- * @param notes
- */
 data class Nonarrival(
 
   val id: java.util.UUID,

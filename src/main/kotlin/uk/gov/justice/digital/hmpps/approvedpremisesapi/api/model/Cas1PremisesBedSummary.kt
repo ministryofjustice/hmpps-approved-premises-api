@@ -1,12 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param roomName
- * @param bedName
- * @param characteristics
- */
 data class Cas1PremisesBedSummary(
 
   val id: java.util.UUID,

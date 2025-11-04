@@ -1,12 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param appealDate
- * @param appealDetail
- * @param decision
- * @param decisionDetail
- */
 data class NewAppeal(
 
   val appealDate: java.time.LocalDate,

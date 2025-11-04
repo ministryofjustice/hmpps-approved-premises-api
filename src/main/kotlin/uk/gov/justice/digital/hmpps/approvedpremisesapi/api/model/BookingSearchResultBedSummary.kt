@@ -1,10 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param name
- */
 data class BookingSearchResultBedSummary(
 
   val id: java.util.UUID,

@@ -1,13 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param application
- * @param createdFromAppeal
- * @param allocatedToStaffMember
- * @param status
- * @param document Any object
- */
 data class ApprovedPremisesAssessment(
 
   val application: ApprovedPremisesApplication,

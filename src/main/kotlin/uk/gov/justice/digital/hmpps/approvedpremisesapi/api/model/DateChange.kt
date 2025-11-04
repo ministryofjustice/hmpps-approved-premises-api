@@ -1,15 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param bookingId
- * @param previousArrivalDate
- * @param newArrivalDate
- * @param previousDepartureDate
- * @param newDepartureDate
- * @param createdAt
- */
 data class DateChange(
 
   val id: java.util.UUID,

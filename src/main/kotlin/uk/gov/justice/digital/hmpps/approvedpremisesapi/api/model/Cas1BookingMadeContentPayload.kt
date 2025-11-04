@@ -1,11 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param booking
- * @param eventNumber
- * @param transferredFrom
- */
 data class Cas1BookingMadeContentPayload(
 
   val booking: Cas1TimelineEventPayloadBookingSummary,

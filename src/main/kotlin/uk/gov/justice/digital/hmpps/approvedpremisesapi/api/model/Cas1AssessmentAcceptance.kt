@@ -1,16 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param document Any object
- * @param requirements
- * @param placementDates
- * @param apType
- * @param notes
- * @param agreeWithShortNoticeReason
- * @param agreeWithShortNoticeReasonComments
- * @param reasonForLateApplication
- */
 data class Cas1AssessmentAcceptance(
 
   val document: kotlin.Any,

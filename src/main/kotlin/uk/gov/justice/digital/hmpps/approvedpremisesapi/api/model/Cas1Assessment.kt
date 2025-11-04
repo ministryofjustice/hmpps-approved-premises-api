@@ -1,23 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param id
- * @param schemaVersion
- * @param outdatedSchema
- * @param createdAt
- * @param clarificationNotes
- * @param application
- * @param createdFromAppeal
- * @param allocatedAt
- * @param submittedAt
- * @param decision
- * @param rejectionRationale
- * @param &#x60;data&#x60; Any object
- * @param allocatedToStaffMember
- * @param status
- * @param document Any object
- */
 data class Cas1Assessment(
 
   val id: java.util.UUID,

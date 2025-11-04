@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: duration,expectedArrival,createdAt,applicationSubmittedAt,requestType,personName,personRisksTier
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementRequestSortField(@get:JsonValue val value: kotlin.String) {
 

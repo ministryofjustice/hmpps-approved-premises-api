@@ -1,21 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param addressLine1
- * @param postcode
- * @param probationRegionId
- * @param characteristicIds
- * @param status
- * @param addressLine2
- * @param town
- * @param notes
- * @param localAuthorityAreaId
- * @param pdu
- * @param probationDeliveryUnitId
- * @param turnaroundWorkingDayCount
- * @param name
- */
 data class UpdatePremises(
 
   val addressLine1: kotlin.String,

@@ -2,14 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param crn
- * @param convictionId
- * @param deliusEventNumber
- * @param offenceId
- * @param applicationOrigin
- */
 data class NewApplication(
 
   val crn: kotlin.String,

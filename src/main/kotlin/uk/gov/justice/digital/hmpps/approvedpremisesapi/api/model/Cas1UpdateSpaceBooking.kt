@@ -2,12 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param arrivalDate Only provided if the arrival date has changed
- * @param departureDate Only provided if the departure date has changed
- * @param characteristics Only provided if characteristics have changed
- */
 data class Cas1UpdateSpaceBooking(
 
   @Schema(example = "Thu Jul 28 01:00:00 BST 2022", description = "Only provided if the arrival date has changed")

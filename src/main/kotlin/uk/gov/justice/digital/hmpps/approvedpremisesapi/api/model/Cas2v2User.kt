@@ -5,15 +5,6 @@ import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
-/**
- *
- * @param id
- * @param name
- * @param username
- * @param authSource
- * @param isActive
- * @param email
- */
 data class Cas2v2User(
 
   val id: UUID,
@@ -33,10 +24,6 @@ data class Cas2v2User(
   val email: String? = null,
 ) {
 
-  /**
-   *
-   * Values: nomis,delius,auth
-   */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class AuthSource(@get:JsonValue val value: String) {
 

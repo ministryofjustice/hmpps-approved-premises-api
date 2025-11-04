@@ -2,14 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param deliusEventNumber
- * @param offenceDescription
- * @param offenceId
- * @param convictionId
- * @param offenceDate
- */
 data class ActiveOffence(
 
   @Schema(example = "7", required = true, description = "")

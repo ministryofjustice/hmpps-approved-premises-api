@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- */
 class ReferralHistoryUserNote(
 
   override val id: java.util.UUID,

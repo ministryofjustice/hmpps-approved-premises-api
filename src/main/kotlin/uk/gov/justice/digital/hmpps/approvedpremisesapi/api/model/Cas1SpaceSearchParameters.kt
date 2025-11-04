@@ -2,14 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param applicationId The id of the application the space search is for
- * @param startDate The date the space is required from
- * @param durationInDays The number of days the space is needed, from the start date
- * @param targetPostcodeDistrict The 'target' location, in the form of a postcode district
- * @param spaceCharacteristics
- */
 data class Cas1SpaceSearchParameters(
 
   @Schema(example = "null", required = true, description = "The id of the application the space search is for")

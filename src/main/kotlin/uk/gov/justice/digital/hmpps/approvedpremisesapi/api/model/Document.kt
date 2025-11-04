@@ -1,15 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- * Meta Info about a file relating to an Offender
- * @param id
- * @param level
- * @param fileName
- * @param createdAt
- * @param typeCode
- * @param typeDescription
- * @param description
- */
 data class Document(
 
   val id: kotlin.String,

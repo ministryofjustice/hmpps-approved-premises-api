@@ -5,21 +5,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-/**
- *
- * @param createdBy
- * @param schemaVersion
- * @param outdatedSchema
- * @param status
- * @param applicationOrigin
- * @param &#x60;data&#x60; Any object
- * @param document Any object
- * @param submittedAt
- * @param telephoneNumber
- * @param assessment
- * @param timelineEvents
- * @param bailHearingDate
- */
 data class Cas2v2Application(
 
   val createdBy: Cas2v2User,

@@ -5,19 +5,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentSummary
 
-/**
- *
- * @param type
- * @param id
- * @param applicationId
- * @param createdAt
- * @param person
- * @param arrivalDate
- * @param dateOfInfoRequest
- * @param decision
- * @param risks
- */
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 @JsonSubTypes(
   JsonSubTypes.Type(value = ApprovedPremisesAssessmentSummary::class, name = "CAS1"),

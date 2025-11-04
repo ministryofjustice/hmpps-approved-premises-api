@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param name
- * @param isActive
- * @param serviceScope
- */
 data class LostBedReason(
 
   val id: java.util.UUID,

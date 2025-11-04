@@ -4,18 +4,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-/**
- *
- * @param id
- * @param createdByUserId
- * @param crn
- * @param personName
- * @param createdAt
- * @param nomsNumber
- * @param submittedAt
- * @param applicationOrigin
- * @param bailHearingDate
- */
 data class Cas2v2SubmittedApplicationSummary(
 
   val id: UUID,

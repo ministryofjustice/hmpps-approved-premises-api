@@ -2,19 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param applicationId The UUID of an application for an AP place
- * @param applicationUrl The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings
- * @param personReference
- * @param deliusEventNumber Used in Delius to identify the 'event' via the first active conviction's 'index'
- * @param requestForPlacementId The UUID of a request for placement. Currently a proxy for PlacementApplicationId
- * @param createdAt
- * @param expectedArrival
- * @param duration
- * @param requestForPlacementType
- * @param createdBy
- */
 data class RequestForPlacementCreated(
 
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")

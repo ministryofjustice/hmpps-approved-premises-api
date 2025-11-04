@@ -1,12 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param changeRequestId
- * @param booking
- * @param reason
- * @param changeRequestType
- */
 data class Cas1PlacementChangeRequestCreatedPayload(
 
   val changeRequestId: java.util.UUID,

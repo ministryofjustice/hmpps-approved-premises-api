@@ -1,11 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param &#x60;data&#x60;
- * @param releaseDate
- * @param accommodationRequiredFromDate
- */
 data class UpdateAssessment(
 
   val `data`: kotlin.collections.Map<kotlin.String, kotlin.Any>,

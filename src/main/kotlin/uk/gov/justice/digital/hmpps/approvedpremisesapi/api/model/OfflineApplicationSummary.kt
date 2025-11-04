@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- */
 class OfflineApplicationSummary(
 
   override val type: kotlin.String,

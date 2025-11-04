@@ -1,12 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-/**
- *
- * @param reason
- * @param parentReason
- * @param moveOnCategory
- * @param notes
- */
 data class Cas1SpaceBookingDeparture(
 
   val reason: NamedId,

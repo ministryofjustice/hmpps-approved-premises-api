@@ -4,25 +4,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param taskType
- * @param id
- * @param applicationId
- * @param personSummary
- * @param personName Superseded by personSummary which provides 'name' as well as 'personType' and 'crn'.
- * @param crn
- * @param dueDate The Due date of the task - this is deprecated in favour of the `dueAt` field
- * @param dueAt
- * @param status
- * @param apType
- * @param expectedArrivalDate
- * @param allocatedToStaffMember
- * @param apArea
- * @param probationDeliveryUnit
- * @param outcomeRecordedAt
- */
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "taskType", visible = true)
 @JsonSubTypes(
   JsonSubTypes.Type(value = AssessmentTask::class, name = "Assessment"),

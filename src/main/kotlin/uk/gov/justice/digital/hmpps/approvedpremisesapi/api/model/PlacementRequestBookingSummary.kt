@@ -16,10 +16,6 @@ data class PlacementRequestBookingSummary(
   val reason: String? = null,
 ) {
 
-  /**
-   *
-   * Values: space,legacy
-   */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Type(@get:JsonValue val value: kotlin.String) {
 

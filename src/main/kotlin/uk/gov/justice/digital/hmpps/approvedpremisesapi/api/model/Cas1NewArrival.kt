@@ -2,12 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param arrivalDateTime This is deprecated. Instead use arrivalDate and arrivalTime
- * @param arrivalDate
- * @param arrivalTime
- */
 data class Cas1NewArrival(
 
   @Schema(example = "null", description = "This is deprecated. Instead use arrivalDate and arrivalTime")
