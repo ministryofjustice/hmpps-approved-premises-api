@@ -16,21 +16,21 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class CAS3BookingCancelledEventDetails(
 
-  @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
+  val personReference: PersonReference,
 
-  @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
+  val bookingId: java.util.UUID,
 
-  @get:JsonProperty("bookingUrl", required = true) val bookingUrl: java.net.URI,
+  val bookingUrl: java.net.URI,
 
-  @get:JsonProperty("cancellationReason", required = true) val cancellationReason: kotlin.String,
+  val cancellationReason: kotlin.String,
 
-  @get:JsonProperty("applicationId") val applicationId: java.util.UUID? = null,
+  val applicationId: java.util.UUID? = null,
 
-  @get:JsonProperty("applicationUrl") val applicationUrl: java.net.URI? = null,
+  val applicationUrl: java.net.URI? = null,
 
-  @get:JsonProperty("cancelledAt") val cancelledAt: java.time.LocalDate? = null,
+  val cancelledAt: java.time.LocalDate? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  val notes: kotlin.String? = null,
 
-  @get:JsonProperty("cancelledBy") val cancelledBy: StaffMember? = null,
+  val cancelledBy: StaffMember? = null,
 )

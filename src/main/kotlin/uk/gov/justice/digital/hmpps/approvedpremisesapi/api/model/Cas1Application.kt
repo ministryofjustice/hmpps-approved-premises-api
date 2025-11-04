@@ -33,58 +33,58 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class Cas1Application(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
-  @get:JsonProperty("person", required = true) val person: Person,
+  val person: Person,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
+  val createdAt: java.time.Instant,
 
-  @get:JsonProperty("createdByUserId", required = true) val createdByUserId: java.util.UUID,
+  val createdByUserId: java.util.UUID,
 
-  @get:JsonProperty("status", required = true) val status: ApprovedPremisesApplicationStatus,
+  val status: ApprovedPremisesApplicationStatus,
 
-  @get:JsonProperty("isWomensApplication") val isWomensApplication: kotlin.Boolean? = null,
-
-  @Schema(example = "null", description = "Use apType")
-  @Deprecated(message = "")
-  @get:JsonProperty("isPipeApplication") val isPipeApplication: kotlin.Boolean? = null,
-
-  @get:JsonProperty("isEmergencyApplication") val isEmergencyApplication: kotlin.Boolean? = null,
+  val isWomensApplication: kotlin.Boolean? = null,
 
   @Schema(example = "null", description = "Use apType")
   @Deprecated(message = "")
-  @get:JsonProperty("isEsapApplication") val isEsapApplication: kotlin.Boolean? = null,
+  val isPipeApplication: kotlin.Boolean? = null,
 
-  @get:JsonProperty("apType") val apType: ApType? = null,
+  val isEmergencyApplication: kotlin.Boolean? = null,
 
-  @get:JsonProperty("arrivalDate") val arrivalDate: java.time.Instant? = null,
+  @Schema(example = "null", description = "Use apType")
+  @Deprecated(message = "")
+  val isEsapApplication: kotlin.Boolean? = null,
 
-  @get:JsonProperty("risks") val risks: PersonRisks? = null,
+  val apType: ApType? = null,
 
-  @get:JsonProperty("data") val `data`: kotlin.Any? = null,
+  val arrivalDate: java.time.Instant? = null,
 
-  @get:JsonProperty("document") val document: kotlin.Any? = null,
+  val risks: PersonRisks? = null,
 
-  @get:JsonProperty("assessmentId") val assessmentId: java.util.UUID? = null,
+  val `data`: kotlin.Any? = null,
 
-  @get:JsonProperty("assessmentDecision") val assessmentDecision: AssessmentDecision? = null,
+  val document: kotlin.Any? = null,
 
-  @get:JsonProperty("assessmentDecisionDate") val assessmentDecisionDate: java.time.LocalDate? = null,
+  val assessmentId: java.util.UUID? = null,
 
-  @get:JsonProperty("submittedAt") val submittedAt: java.time.Instant? = null,
+  val assessmentDecision: AssessmentDecision? = null,
 
-  @get:JsonProperty("personStatusOnSubmission") val personStatusOnSubmission: PersonStatus? = null,
+  val assessmentDecisionDate: java.time.LocalDate? = null,
 
-  @get:JsonProperty("apArea") val apArea: ApArea? = null,
+  val submittedAt: java.time.Instant? = null,
 
-  @get:JsonProperty("cruManagementArea") val cruManagementArea: Cas1CruManagementArea? = null,
+  val personStatusOnSubmission: PersonStatus? = null,
 
-  @get:JsonProperty("applicantUserDetails") val applicantUserDetails: Cas1ApplicationUserDetails? = null,
+  val apArea: ApArea? = null,
+
+  val cruManagementArea: Cas1CruManagementArea? = null,
+
+  val applicantUserDetails: Cas1ApplicationUserDetails? = null,
 
   @Schema(example = "null", description = "If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details")
-  @get:JsonProperty("caseManagerIsNotApplicant") val caseManagerIsNotApplicant: kotlin.Boolean? = null,
+  val caseManagerIsNotApplicant: kotlin.Boolean? = null,
 
-  @get:JsonProperty("caseManagerUserDetails") val caseManagerUserDetails: Cas1ApplicationUserDetails? = null,
+  val caseManagerUserDetails: Cas1ApplicationUserDetails? = null,
 
-  @get:JsonProperty("licenceExpiryDate") val licenceExpiryDate: java.time.LocalDate? = null,
+  val licenceExpiryDate: java.time.LocalDate? = null,
 )

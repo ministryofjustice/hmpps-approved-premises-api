@@ -8,5 +8,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class NewApplicationTimelineNote(
 
-  @get:JsonProperty("note", required = true) val note: kotlin.String,
+  val note: kotlin.String,
 )

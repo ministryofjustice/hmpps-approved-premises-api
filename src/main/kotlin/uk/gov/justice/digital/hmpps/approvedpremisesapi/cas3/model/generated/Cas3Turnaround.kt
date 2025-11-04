@@ -13,11 +13,11 @@ import java.util.UUID
  */
 data class Cas3Turnaround(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
+  val bookingId: UUID,
 
-  @get:JsonProperty("workingDays", required = true) val workingDays: Int,
+  val workingDays: Int,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 )

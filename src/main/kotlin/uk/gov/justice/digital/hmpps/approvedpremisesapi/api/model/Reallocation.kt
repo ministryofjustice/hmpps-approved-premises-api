@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class Reallocation(
 
-  @get:JsonProperty("user", required = true) val user: ApprovedPremisesUser,
+  val user: ApprovedPremisesUser,
 
-  @get:JsonProperty("taskType", required = true) val taskType: TaskType,
+  val taskType: TaskType,
 )

@@ -10,9 +10,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class UpdateAssessment(
 
-  @get:JsonProperty("data", required = true) val `data`: kotlin.collections.Map<kotlin.String, kotlin.Any>,
+  val `data`: kotlin.collections.Map<kotlin.String, kotlin.Any>,
 
-  @get:JsonProperty("releaseDate") val releaseDate: java.time.LocalDate? = null,
+  val releaseDate: java.time.LocalDate? = null,
 
-  @get:JsonProperty("accommodationRequiredFromDate") val accommodationRequiredFromDate: java.time.LocalDate? = null,
+  val accommodationRequiredFromDate: java.time.LocalDate? = null,
 )

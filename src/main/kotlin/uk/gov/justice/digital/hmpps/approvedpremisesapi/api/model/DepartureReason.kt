@@ -13,14 +13,14 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class DepartureReason(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
   @Schema(example = "Admitted to Hospital", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  val name: kotlin.String,
 
-  @get:JsonProperty("serviceScope", required = true) val serviceScope: kotlin.String,
+  val serviceScope: kotlin.String,
 
-  @get:JsonProperty("isActive", required = true) val isActive: kotlin.Boolean,
+  val isActive: kotlin.Boolean,
 
-  @get:JsonProperty("parentReasonId") val parentReasonId: java.util.UUID? = null,
+  val parentReasonId: java.util.UUID? = null,
 )

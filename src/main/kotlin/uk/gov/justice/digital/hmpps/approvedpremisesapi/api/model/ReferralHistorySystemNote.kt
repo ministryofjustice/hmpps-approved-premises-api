@@ -10,19 +10,19 @@ import com.fasterxml.jackson.annotation.JsonValue
  */
 data class ReferralHistorySystemNote(
 
-  @get:JsonProperty("category", required = true) val category: ReferralHistorySystemNote.Category,
+  val category: ReferralHistorySystemNote.Category,
 
-  @get:JsonProperty("id", required = true) override val id: java.util.UUID,
+  override val id: java.util.UUID,
 
-  @get:JsonProperty("createdAt", required = true) override val createdAt: java.time.Instant,
+  override val createdAt: java.time.Instant,
 
-  @get:JsonProperty("createdByUserName", required = true) override val createdByUserName: kotlin.String,
+  override val createdByUserName: kotlin.String,
 
-  @get:JsonProperty("type", required = true) override val type: kotlin.String,
+  override val type: kotlin.String,
 
-  @get:JsonProperty("message") override val message: kotlin.String? = null,
+  override val message: kotlin.String? = null,
 
-  @get:JsonProperty("messageDetails") override val messageDetails: ReferralHistoryNoteMessageDetails? = null,
+  override val messageDetails: ReferralHistoryNoteMessageDetails? = null,
 ) : ReferralHistoryNote {
 
   /**

@@ -28,43 +28,43 @@ import java.util.UUID
  */
 data class Cas3SubmitApplication(
 
-  @get:JsonProperty("arrivalDate", required = true) val arrivalDate: LocalDate,
+  val arrivalDate: LocalDate,
 
-  @get:JsonProperty("probationDeliveryUnitId", required = true) val probationDeliveryUnitId: UUID,
+  val probationDeliveryUnitId: UUID,
 
-  @get:JsonProperty("summaryData", required = true) val summaryData: Any,
+  val summaryData: Any,
 
-  @get:JsonProperty("isRegisteredSexOffender") val isRegisteredSexOffender: Boolean? = null,
+  val isRegisteredSexOffender: Boolean? = null,
 
-  @get:JsonProperty("needsAccessibleProperty") val needsAccessibleProperty: Boolean? = null,
+  val needsAccessibleProperty: Boolean? = null,
 
-  @get:JsonProperty("hasHistoryOfArson") val hasHistoryOfArson: Boolean? = null,
+  val hasHistoryOfArson: Boolean? = null,
 
-  @get:JsonProperty("isDutyToReferSubmitted") val isDutyToReferSubmitted: Boolean? = null,
+  val isDutyToReferSubmitted: Boolean? = null,
 
-  @get:JsonProperty("dutyToReferSubmissionDate") val dutyToReferSubmissionDate: LocalDate? = null,
+  val dutyToReferSubmissionDate: LocalDate? = null,
 
   @Schema(example = "Pending", description = "")
-  @get:JsonProperty("dutyToReferOutcome") val dutyToReferOutcome: String? = null,
+  val dutyToReferOutcome: String? = null,
 
-  @get:JsonProperty("isApplicationEligible") val isApplicationEligible: Boolean? = null,
+  val isApplicationEligible: Boolean? = null,
 
-  @get:JsonProperty("eligibilityReason") val eligibilityReason: String? = null,
+  val eligibilityReason: String? = null,
 
-  @get:JsonProperty("dutyToReferLocalAuthorityAreaName") val dutyToReferLocalAuthorityAreaName: String? = null,
+  val dutyToReferLocalAuthorityAreaName: String? = null,
 
   @Schema(example = "Wed Feb 21 00:00:00 GMT 2024", description = "")
-  @get:JsonProperty("personReleaseDate") val personReleaseDate: LocalDate? = null,
+  val personReleaseDate: LocalDate? = null,
 
-  @get:JsonProperty("isHistoryOfSexualOffence") val isHistoryOfSexualOffence: Boolean? = null,
+  val isHistoryOfSexualOffence: Boolean? = null,
 
-  @get:JsonProperty("isConcerningSexualBehaviour") val isConcerningSexualBehaviour: Boolean? = null,
+  val isConcerningSexualBehaviour: Boolean? = null,
 
-  @get:JsonProperty("isConcerningArsonBehaviour") val isConcerningArsonBehaviour: Boolean? = null,
+  val isConcerningArsonBehaviour: Boolean? = null,
 
-  @get:JsonProperty("prisonReleaseTypes") val prisonReleaseTypes: List<String>? = null,
+  val prisonReleaseTypes: List<String>? = null,
 
-  @get:JsonProperty("translatedDocument") val translatedDocument: Any? = null,
+  val translatedDocument: Any? = null,
 
   val outOfRegionPduId: UUID? = null,
 

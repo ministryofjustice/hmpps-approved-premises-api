@@ -10,7 +10,7 @@ import java.util.UUID
  */
 data class BedspaceFilters(
 
-  @get:JsonProperty("includedCharacteristicIds") val includedCharacteristicIds: List<UUID>? = null,
+  val includedCharacteristicIds: List<UUID>? = null,
 
-  @get:JsonProperty("excludedCharacteristicIds") val excludedCharacteristicIds: List<UUID>? = null,
+  val excludedCharacteristicIds: List<UUID>? = null,
 )

@@ -8,5 +8,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class NewTurnaround(
 
-  @get:JsonProperty("workingDays", required = true) val workingDays: kotlin.Int,
+  val workingDays: kotlin.Int,
 )

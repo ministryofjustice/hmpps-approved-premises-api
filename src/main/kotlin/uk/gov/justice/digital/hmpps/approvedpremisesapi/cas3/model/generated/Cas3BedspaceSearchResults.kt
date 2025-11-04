@@ -17,17 +17,17 @@ data class Cas3BedspaceSearchResults(
     required = true,
     description = "How many distinct Rooms the Beds in the results belong to",
   )
-  @get:JsonProperty("resultsRoomCount", required = true) val resultsRoomCount: Int,
+  val resultsRoomCount: Int,
 
   @Schema(
     example = "null",
     required = true,
     description = "How many distinct Premises the Beds in the results belong to",
   )
-  @get:JsonProperty("resultsPremisesCount", required = true) val resultsPremisesCount: Int,
+  val resultsPremisesCount: Int,
 
   @Schema(example = "null", required = true, description = "How many Beds are in the results")
-  @get:JsonProperty("resultsBedCount", required = true) val resultsBedCount: Int,
+  val resultsBedCount: Int,
 
-  @get:JsonProperty("results", required = true) val results: List<Cas3BedspaceSearchResult>,
+  val results: List<Cas3BedspaceSearchResult>,
 )

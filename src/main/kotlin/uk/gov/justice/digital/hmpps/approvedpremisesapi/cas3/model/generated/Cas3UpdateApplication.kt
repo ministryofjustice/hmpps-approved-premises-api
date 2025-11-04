@@ -8,5 +8,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class Cas3UpdateApplication(
 
-  @get:JsonProperty("data", required = true) val `data`: Map<String, Any>,
+  val `data`: Map<String, Any>,
 )

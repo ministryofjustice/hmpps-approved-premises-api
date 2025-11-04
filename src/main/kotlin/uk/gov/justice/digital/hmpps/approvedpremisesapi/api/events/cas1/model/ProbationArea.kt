@@ -11,8 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class ProbationArea(
 
   @Schema(example = "N02", required = true, description = "")
-  @get:JsonProperty("code", required = true) val code: kotlin.String,
+  val code: kotlin.String,
 
   @Schema(example = "NPS North East", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  val name: kotlin.String,
 )

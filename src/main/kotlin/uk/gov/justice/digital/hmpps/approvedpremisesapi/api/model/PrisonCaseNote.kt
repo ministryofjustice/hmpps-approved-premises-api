@@ -15,19 +15,19 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class PrisonCaseNote(
 
-  @get:JsonProperty("id", required = true) val id: kotlin.String,
+  val id: kotlin.String,
 
-  @get:JsonProperty("sensitive", required = true) val sensitive: kotlin.Boolean,
+  val sensitive: kotlin.Boolean,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
+  val createdAt: java.time.Instant,
 
-  @get:JsonProperty("occurredAt", required = true) val occurredAt: java.time.Instant,
+  val occurredAt: java.time.Instant,
 
-  @get:JsonProperty("authorName", required = true) val authorName: kotlin.String,
+  val authorName: kotlin.String,
 
-  @get:JsonProperty("type", required = true) val type: kotlin.String,
+  val type: kotlin.String,
 
-  @get:JsonProperty("subType", required = true) val subType: kotlin.String,
+  val subType: kotlin.String,
 
-  @get:JsonProperty("note", required = true) val note: kotlin.String,
+  val note: kotlin.String,
 )

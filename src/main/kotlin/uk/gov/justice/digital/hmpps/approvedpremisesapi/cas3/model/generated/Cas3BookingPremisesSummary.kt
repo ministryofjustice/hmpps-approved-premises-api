@@ -10,7 +10,7 @@ import java.util.UUID
  */
 data class Cas3BookingPremisesSummary(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("name", required = true) val name: String,
+  val name: String,
 )

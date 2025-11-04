@@ -11,11 +11,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class BedSummary(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  val name: kotlin.String,
 
-  @get:JsonProperty("roomName", required = true) val roomName: kotlin.String,
+  val roomName: kotlin.String,
 
-  @get:JsonProperty("status", required = true) val status: BedStatus,
+  val status: BedStatus,
 )

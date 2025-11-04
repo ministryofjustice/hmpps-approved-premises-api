@@ -12,12 +12,12 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class NewRoom(
 
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  val name: kotlin.String,
 
-  @get:JsonProperty("characteristicIds", required = true) val characteristicIds: kotlin.collections.List<java.util.UUID>,
+  val characteristicIds: kotlin.collections.List<java.util.UUID>,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  val notes: kotlin.String? = null,
 
   @Schema(example = "Sat Mar 30 00:00:00 GMT 2024", description = "End date of the bed availability, open for availability if not specified.")
-  @get:JsonProperty("bedEndDate") val bedEndDate: java.time.LocalDate? = null,
+  val bedEndDate: java.time.LocalDate? = null,
 )

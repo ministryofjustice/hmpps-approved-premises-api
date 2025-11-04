@@ -9,9 +9,9 @@ import java.time.LocalDate
  */
 data class UpdateCas2v2Application(
 
-  @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
+  override val type: UpdateApplicationType,
 
-  @get:JsonProperty("data", required = true) override val `data`: Map<String, Any>,
+  override val `data`: Map<String, Any>,
 
-  @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+  val bailHearingDate: LocalDate? = null,
 ) : UpdateApplication

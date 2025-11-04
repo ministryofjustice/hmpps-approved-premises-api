@@ -11,11 +11,11 @@ import com.fasterxml.jackson.annotation.JsonValue
  */
 data class ProfileResponse(
 
-  @get:JsonProperty("deliusUsername", required = true) val deliusUsername: kotlin.String,
+  val deliusUsername: kotlin.String,
 
-  @get:JsonProperty("loadError") val loadError: ProfileResponse.LoadError? = null,
+  val loadError: ProfileResponse.LoadError? = null,
 
-  @get:JsonProperty("user") val user: User? = null,
+  val user: User? = null,
 ) {
 
   /**

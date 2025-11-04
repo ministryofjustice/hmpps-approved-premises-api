@@ -11,11 +11,11 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class NewPlacementRequestBookingConfirmation(
 
-  @get:JsonProperty("premisesName", required = true) val premisesName: kotlin.String,
+  val premisesName: kotlin.String,
 
   @Schema(example = "Thu Jul 28 01:00:00 BST 2022", required = true, description = "")
-  @get:JsonProperty("arrivalDate", required = true) val arrivalDate: java.time.LocalDate,
+  val arrivalDate: java.time.LocalDate,
 
   @Schema(example = "Fri Sep 30 01:00:00 BST 2022", required = true, description = "")
-  @get:JsonProperty("departureDate", required = true) val departureDate: java.time.LocalDate,
+  val departureDate: java.time.LocalDate,
 )

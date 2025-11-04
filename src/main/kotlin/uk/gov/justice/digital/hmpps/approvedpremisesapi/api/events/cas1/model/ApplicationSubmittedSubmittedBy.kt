@@ -12,13 +12,13 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class ApplicationSubmittedSubmittedBy(
 
-  @get:JsonProperty("staffMember", required = true) val staffMember: StaffMember,
+  val staffMember: StaffMember,
 
-  @get:JsonProperty("probationArea", required = true) val probationArea: ProbationArea,
+  val probationArea: ProbationArea,
 
-  @get:JsonProperty("team", required = true) val team: Team,
+  val team: Team,
 
-  @get:JsonProperty("ldu", required = true) val ldu: Ldu,
+  val ldu: Ldu,
 
-  @get:JsonProperty("region", required = true) val region: Region,
+  val region: Region,
 )

@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
  */
 data class Cas3OASysGroup(
 
-  @get:JsonProperty("assessmentMetadata", required = true) val assessmentMetadata: Cas3OASysAssessmentMetadata,
+  val assessmentMetadata: Cas3OASysAssessmentMetadata,
 
-  @get:JsonProperty("answers", required = true) val answers: List<OASysQuestion>,
+  val answers: List<OASysQuestion>,
 )

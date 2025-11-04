@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class DatePeriod(
 
-  @get:JsonProperty("startDate", required = true) val startDate: java.time.LocalDate,
+  val startDate: java.time.LocalDate,
 
-  @get:JsonProperty("endDate", required = true) val endDate: java.time.LocalDate,
+  val endDate: java.time.LocalDate,
 )

@@ -13,14 +13,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class StaffMember(
 
   @Schema(example = "N54A999", required = true, description = "")
-  @get:JsonProperty("staffCode", required = true) val staffCode: kotlin.String,
+  val staffCode: kotlin.String,
 
   @Schema(example = "John", required = true, description = "")
-  @get:JsonProperty("forenames", required = true) val forenames: kotlin.String,
+  val forenames: kotlin.String,
 
   @Schema(example = "Smith", required = true, description = "")
-  @get:JsonProperty("surname", required = true) val surname: kotlin.String,
+  val surname: kotlin.String,
 
   @Schema(example = "JohnSmithNPS", description = "")
-  @get:JsonProperty("username") val username: kotlin.String? = null,
+  val username: kotlin.String? = null,
 )

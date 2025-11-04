@@ -12,11 +12,11 @@ import java.util.UUID
  */
 data class Cas2v2ApplicationStatusDetail(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
   @Schema(example = "changeOfCircumstances", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: String,
+  val name: String,
 
   @Schema(example = "Change of Circumstances", required = true, description = "")
-  @get:JsonProperty("label", required = true) val label: String,
+  val label: String,
 )

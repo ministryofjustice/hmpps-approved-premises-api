@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class PlacementDates(
 
-  @get:JsonProperty("expectedArrival", required = true) val expectedArrival: java.time.LocalDate,
+  val expectedArrival: java.time.LocalDate,
 
-  @get:JsonProperty("duration", required = true) val duration: kotlin.Int,
+  val duration: kotlin.Int,
 )

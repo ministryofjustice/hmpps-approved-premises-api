@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class BookingMadeBookedBy(
 
-  @get:JsonProperty("staffMember") val staffMember: StaffMember? = null,
+  val staffMember: StaffMember? = null,
 
-  @get:JsonProperty("cru") val cru: Cru? = null,
+  val cru: Cru? = null,
 )

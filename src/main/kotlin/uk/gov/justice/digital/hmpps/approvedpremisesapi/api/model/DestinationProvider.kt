@@ -11,10 +11,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class DestinationProvider(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
   @Schema(example = "Ext - North East Region", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  val name: kotlin.String,
 
-  @get:JsonProperty("isActive", required = true) val isActive: kotlin.Boolean,
+  val isActive: kotlin.Boolean,
 )

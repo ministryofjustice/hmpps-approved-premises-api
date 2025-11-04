@@ -29,33 +29,33 @@ import java.util.UUID
  */
 data class Cas2SubmittedApplication(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("person", required = true) val person: Person,
+  val person: Person,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("timelineEvents", required = true) val timelineEvents: List<Cas2TimelineEvent>,
+  val timelineEvents: List<Cas2TimelineEvent>,
 
-  @get:JsonProperty("assessment", required = true) val assessment: Cas2Assessment,
+  val assessment: Cas2Assessment,
 
-  @get:JsonProperty("isTransferredApplication", required = true) val isTransferredApplication: Boolean,
+  val isTransferredApplication: Boolean,
 
-  @get:JsonProperty("submittedBy") val submittedBy: NomisUser? = null,
+  val submittedBy: NomisUser? = null,
 
-  @get:JsonProperty("document") val document: Any? = null,
+  val document: Any? = null,
 
-  @get:JsonProperty("submittedAt") val submittedAt: Instant? = null,
+  val submittedAt: Instant? = null,
 
-  @get:JsonProperty("telephoneNumber") val telephoneNumber: String? = null,
+  val telephoneNumber: String? = null,
 
-  @get:JsonProperty("allocatedPomName") val allocatedPomName: String? = null,
+  val allocatedPomName: String? = null,
 
-  @get:JsonProperty("currentPrisonName") val currentPrisonName: String? = null,
+  val currentPrisonName: String? = null,
 
-  @get:JsonProperty("allocatedPomEmailAddress") val allocatedPomEmailAddress: String? = null,
+  val allocatedPomEmailAddress: String? = null,
 
-  @get:JsonProperty("omuEmailAddress") val omuEmailAddress: String? = null,
+  val omuEmailAddress: String? = null,
 
-  @get:JsonProperty("assignmentDate") val assignmentDate: LocalDate? = null,
+  val assignmentDate: LocalDate? = null,
 )

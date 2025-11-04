@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 class UnknownPersonSummary(
 
-  @get:JsonProperty("crn", required = true) override val crn: kotlin.String,
+  override val crn: kotlin.String,
 
-  @get:JsonProperty("personType", required = true) override val personType: PersonSummaryDiscriminator,
+  override val personType: PersonSummaryDiscriminator,
 ) : PersonSummary

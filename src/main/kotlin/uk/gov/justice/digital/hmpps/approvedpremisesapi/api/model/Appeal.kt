@@ -16,21 +16,21 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class Appeal(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
-  @get:JsonProperty("appealDate", required = true) val appealDate: java.time.LocalDate,
+  val appealDate: java.time.LocalDate,
 
-  @get:JsonProperty("appealDetail", required = true) val appealDetail: kotlin.String,
+  val appealDetail: kotlin.String,
 
-  @get:JsonProperty("decision", required = true) val decision: AppealDecision,
+  val decision: AppealDecision,
 
-  @get:JsonProperty("decisionDetail", required = true) val decisionDetail: kotlin.String,
+  val decisionDetail: kotlin.String,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
+  val createdAt: java.time.Instant,
 
-  @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
+  val applicationId: java.util.UUID,
 
-  @get:JsonProperty("createdByUser", required = true) val createdByUser: User,
+  val createdByUser: User,
 
-  @get:JsonProperty("assessmentId") val assessmentId: java.util.UUID? = null,
+  val assessmentId: java.util.UUID? = null,
 )

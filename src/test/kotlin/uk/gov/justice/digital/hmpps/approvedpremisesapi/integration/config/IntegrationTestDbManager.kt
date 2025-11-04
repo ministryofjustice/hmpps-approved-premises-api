@@ -10,7 +10,6 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.DriverManagerDataSource
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isPerClass
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 
 /**
  * When tests are first ran against a new postgres instance, an 'it_template' instance is created,
@@ -40,10 +39,10 @@ object IntegrationTestDbManager {
    * to the context
    */
   fun initialiseDatabase(): Map<String, String> {
-    val databasePostfix = "${System.currentTimeMillis()}_${randomStringLowerCase(4)}"
+    //  val databasePostfix = "${System.currentTimeMillis()}_${randomStringLowerCase(4)}"
 
-    val databaseName = "it_$databasePostfix"
-    val templateDatabaseName = "it_template_$databasePostfix"
+    val databaseName = "it_database"
+    val templateDatabaseName = "it_template"
 
     val databaseUrl = "jdbc:postgresql://localhost:$postgresPort/$databaseName"
     ensureTemplateDatabaseExists(templateDatabaseName)

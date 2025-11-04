@@ -8,5 +8,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class Cas1NewOutOfServiceBedCancellation(
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  val notes: kotlin.String? = null,
 )

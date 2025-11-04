@@ -14,16 +14,16 @@ import java.util.UUID
  */
 data class Cas3NewBedspace(
 
-  @get:JsonProperty("reference", required = true) val reference: String,
+  val reference: String,
 
   @Schema(
     example = "Sat Mar 30 00:00:00 GMT 2024",
     required = true,
     description = "Start date of the bedspace availability.",
   )
-  @get:JsonProperty("startDate", required = true) val startDate: LocalDate,
+  val startDate: LocalDate,
 
-  @get:JsonProperty("characteristicIds", required = true) val characteristicIds: List<UUID>,
+  val characteristicIds: List<UUID>,
 
-  @get:JsonProperty("notes") val notes: String? = null,
+  val notes: String? = null,
 )

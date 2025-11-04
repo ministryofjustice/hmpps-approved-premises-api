@@ -14,13 +14,13 @@ import java.util.UUID
  */
 data class Cas3Confirmation(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
+  val bookingId: UUID,
 
-  @get:JsonProperty("dateTime", required = true) val dateTime: Instant,
+  val dateTime: Instant,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("notes") val notes: String? = null,
+  val notes: String? = null,
 )

@@ -11,9 +11,9 @@ import java.util.UUID
  */
 data class Cas3UpdateBedspace(
 
-  @get:JsonProperty("reference", required = true) val reference: String,
+  val reference: String,
 
-  @get:JsonProperty("characteristicIds", required = true) val characteristicIds: List<UUID>,
+  val characteristicIds: List<UUID>,
 
-  @get:JsonProperty("notes") val notes: String? = null,
+  val notes: String? = null,
 )

@@ -20,19 +20,19 @@ import java.util.UUID
  */
 data class Cas3BookingBody(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("person", required = true) val person: Person,
+  val person: Person,
 
-  @get:JsonProperty("arrivalDate", required = true) val arrivalDate: LocalDate,
+  val arrivalDate: LocalDate,
 
-  @get:JsonProperty("originalArrivalDate", required = true) val originalArrivalDate: LocalDate,
+  val originalArrivalDate: LocalDate,
 
-  @get:JsonProperty("departureDate", required = true) val departureDate: LocalDate,
+  val departureDate: LocalDate,
 
-  @get:JsonProperty("originalDepartureDate", required = true) val originalDepartureDate: LocalDate,
+  val originalDepartureDate: LocalDate,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("bedspace", required = true) val bedspace: Cas3Bedspace,
+  val bedspace: Cas3Bedspace,
 )

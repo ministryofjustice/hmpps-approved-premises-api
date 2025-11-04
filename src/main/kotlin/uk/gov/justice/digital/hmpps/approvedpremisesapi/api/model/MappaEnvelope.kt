@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class MappaEnvelope(
 
-  @get:JsonProperty("status", required = true) val status: RiskEnvelopeStatus,
+  val status: RiskEnvelopeStatus,
 
-  @get:JsonProperty("value") val `value`: Mappa? = null,
+  val `value`: Mappa? = null,
 )

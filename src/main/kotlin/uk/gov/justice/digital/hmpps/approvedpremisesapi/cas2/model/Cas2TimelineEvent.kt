@@ -14,13 +14,13 @@ import java.time.Instant
  */
 data class Cas2TimelineEvent(
 
-  @get:JsonProperty("type", required = true) val type: TimelineEventType,
+  val type: TimelineEventType,
 
-  @get:JsonProperty("occurredAt", required = true) val occurredAt: Instant,
+  val occurredAt: Instant,
 
-  @get:JsonProperty("label", required = true) val label: String,
+  val label: String,
 
-  @get:JsonProperty("body") val body: String? = null,
+  val body: String? = null,
 
-  @get:JsonProperty("createdByName") val createdByName: String? = null,
+  val createdByName: String? = null,
 )

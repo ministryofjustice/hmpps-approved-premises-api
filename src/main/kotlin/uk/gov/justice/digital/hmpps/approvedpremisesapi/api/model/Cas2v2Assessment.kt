@@ -12,11 +12,11 @@ import java.util.UUID
  */
 data class Cas2v2Assessment(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("nacroReferralId") val nacroReferralId: String? = null,
+  val nacroReferralId: String? = null,
 
-  @get:JsonProperty("assessorName") val assessorName: String? = null,
+  val assessorName: String? = null,
 
-  @get:JsonProperty("statusUpdates") val statusUpdates: List<Cas2v2StatusUpdate>? = null,
+  val statusUpdates: List<Cas2v2StatusUpdate>? = null,
 )

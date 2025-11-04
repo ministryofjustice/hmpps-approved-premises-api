@@ -10,9 +10,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class Cas1OutOfServiceBedCancellation(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
+  val createdAt: java.time.Instant,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  val notes: kotlin.String? = null,
 )

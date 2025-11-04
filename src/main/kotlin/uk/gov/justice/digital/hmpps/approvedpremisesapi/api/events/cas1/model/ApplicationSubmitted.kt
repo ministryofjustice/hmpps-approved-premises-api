@@ -27,7 +27,7 @@ data class ApplicationSubmitted(
   @Schema(example = "LS2")
   val targetLocation: String,
 
-  @get:JsonProperty("submittedAt", required = true) val submittedAt: java.time.Instant,
+  val submittedAt: java.time.Instant,
 
   val submittedBy: ApplicationSubmittedSubmittedBy,
 
@@ -38,7 +38,7 @@ data class ApplicationSubmitted(
   val sentenceLengthInMonths: Int? = null,
 
   @Schema(example = "AB43782")
-  @get:JsonProperty("offenceId") val offenceId: String? = null,
+  val offenceId: String? = null,
 ) : Cas1DomainEventPayload {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")

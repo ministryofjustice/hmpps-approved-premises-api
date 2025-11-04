@@ -10,9 +10,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class CAS3ReferralSubmittedEventDetails(
 
-  @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
+  val personReference: PersonReference,
 
-  @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
+  val applicationId: java.util.UUID,
 
-  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: java.net.URI,
+  val applicationUrl: java.net.URI,
 )

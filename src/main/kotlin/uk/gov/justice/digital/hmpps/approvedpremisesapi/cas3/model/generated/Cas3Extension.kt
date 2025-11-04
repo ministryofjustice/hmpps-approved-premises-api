@@ -16,15 +16,15 @@ import java.util.UUID
  */
 data class Cas3Extension(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
+  val bookingId: UUID,
 
-  @get:JsonProperty("previousDepartureDate", required = true) val previousDepartureDate: LocalDate,
+  val previousDepartureDate: LocalDate,
 
-  @get:JsonProperty("newDepartureDate", required = true) val newDepartureDate: LocalDate,
+  val newDepartureDate: LocalDate,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("notes") val notes: String? = null,
+  val notes: String? = null,
 )

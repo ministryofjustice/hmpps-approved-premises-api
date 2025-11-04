@@ -8,5 +8,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class NewCas2v2ApplicationNote(
 
-  @get:JsonProperty("note", required = true) val note: String,
+  val note: String,
 )

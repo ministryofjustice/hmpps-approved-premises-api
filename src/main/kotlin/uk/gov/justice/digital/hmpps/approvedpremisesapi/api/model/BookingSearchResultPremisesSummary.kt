@@ -13,15 +13,15 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class BookingSearchResultPremisesSummary(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  val name: kotlin.String,
 
-  @get:JsonProperty("addressLine1", required = true) val addressLine1: kotlin.String,
+  val addressLine1: kotlin.String,
 
-  @get:JsonProperty("postcode", required = true) val postcode: kotlin.String,
+  val postcode: kotlin.String,
 
-  @get:JsonProperty("addressLine2") val addressLine2: kotlin.String? = null,
+  val addressLine2: kotlin.String? = null,
 
-  @get:JsonProperty("town") val town: kotlin.String? = null,
+  val town: kotlin.String? = null,
 )

@@ -8,5 +8,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class MigrationJobRequest(
 
-  @get:JsonProperty("jobType", required = true) val jobType: MigrationJobType,
+  val jobType: MigrationJobType,
 )

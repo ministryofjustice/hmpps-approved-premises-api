@@ -18,21 +18,21 @@ import java.util.UUID
  */
 data class Cas3BedspaceSearchResultOverlap(
 
-  @get:JsonProperty("name", required = true) val name: String,
+  val name: String,
 
-  @get:JsonProperty("crn", required = true) val crn: String,
+  val crn: String,
 
-  @get:JsonProperty("personType", required = true) val personType: PersonType,
+  val personType: PersonType,
 
-  @get:JsonProperty("days", required = true) val days: Int,
+  val days: Int,
 
-  @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
+  val bookingId: UUID,
 
-  @get:JsonProperty("roomId", required = true) val roomId: UUID,
+  val roomId: UUID,
 
-  @get:JsonProperty("isSexualRisk", required = true) val isSexualRisk: Boolean,
+  val isSexualRisk: Boolean,
 
-  @get:JsonProperty("sex") val sex: String? = null,
+  val sex: String? = null,
 
-  @get:JsonProperty("assessmentId") val assessmentId: UUID? = null,
+  val assessmentId: UUID? = null,
 )

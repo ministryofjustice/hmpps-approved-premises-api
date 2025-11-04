@@ -11,11 +11,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class NewAppeal(
 
-  @get:JsonProperty("appealDate", required = true) val appealDate: java.time.LocalDate,
+  val appealDate: java.time.LocalDate,
 
-  @get:JsonProperty("appealDetail", required = true) val appealDetail: kotlin.String,
+  val appealDetail: kotlin.String,
 
-  @get:JsonProperty("decision", required = true) val decision: AppealDecision,
+  val decision: AppealDecision,
 
-  @get:JsonProperty("decisionDetail", required = true) val decisionDetail: kotlin.String,
+  val decisionDetail: kotlin.String,
 )

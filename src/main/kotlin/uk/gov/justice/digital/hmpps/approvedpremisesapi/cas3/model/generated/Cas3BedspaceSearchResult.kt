@@ -14,11 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResul
  */
 data class Cas3BedspaceSearchResult(
 
-  @get:JsonProperty("premises", required = true) val premises: BedSearchResultPremisesSummary,
+  val premises: BedSearchResultPremisesSummary,
 
-  @get:JsonProperty("room", required = true) val room: BedSearchResultRoomSummary,
+  val room: BedSearchResultRoomSummary,
 
-  @get:JsonProperty("bed", required = true) val bed: BedSearchResultBedSummary,
+  val bed: BedSearchResultBedSummary,
 
-  @get:JsonProperty("overlaps", required = true) val overlaps: List<Cas3BedspaceSearchResultOverlap>,
+  val overlaps: List<Cas3BedspaceSearchResultOverlap>,
 )

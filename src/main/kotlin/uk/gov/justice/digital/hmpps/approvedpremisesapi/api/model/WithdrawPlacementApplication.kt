@@ -8,5 +8,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class WithdrawPlacementApplication(
 
-  @get:JsonProperty("reason", required = true) val reason: WithdrawPlacementRequestReason,
+  val reason: WithdrawPlacementRequestReason,
 )

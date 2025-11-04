@@ -17,15 +17,15 @@ import java.util.UUID
  */
 data class Cas3NonArrival(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("bookingId", required = true) val bookingId: UUID,
+  val bookingId: UUID,
 
-  @get:JsonProperty("date", required = true) val date: LocalDate,
+  val date: LocalDate,
 
-  @get:JsonProperty("reason", required = true) val reason: NonArrivalReason,
+  val reason: NonArrivalReason,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("notes") val notes: String? = null,
+  val notes: String? = null,
 )

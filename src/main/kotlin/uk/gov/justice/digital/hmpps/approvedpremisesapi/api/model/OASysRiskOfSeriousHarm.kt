@@ -14,13 +14,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class OASysRiskOfSeriousHarm(
 
   @Schema(example = "138985987", required = true, description = "The ID of assessment being used. This should always be the latest Layer 3 assessment, regardless of state.")
-  @get:JsonProperty("assessmentId", required = true) val assessmentId: kotlin.Long,
+  val assessmentId: kotlin.Long,
 
-  @get:JsonProperty("assessmentState", required = true) val assessmentState: OASysAssessmentState,
+  val assessmentState: OASysAssessmentState,
 
-  @get:JsonProperty("dateStarted", required = true) val dateStarted: java.time.Instant,
+  val dateStarted: java.time.Instant,
 
-  @get:JsonProperty("rosh", required = true) val rosh: kotlin.collections.List<OASysQuestion>,
+  val rosh: kotlin.collections.List<OASysQuestion>,
 
-  @get:JsonProperty("dateCompleted") val dateCompleted: java.time.Instant? = null,
+  val dateCompleted: java.time.Instant? = null,
 )

@@ -6,8 +6,8 @@ import java.util.UUID
 
 data class Cas1DomainEventCodedId(
   @Schema(required = true)
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
   @Schema(required = true)
-  @get:JsonProperty("code", required = true) val code: String,
+  val code: String,
 )

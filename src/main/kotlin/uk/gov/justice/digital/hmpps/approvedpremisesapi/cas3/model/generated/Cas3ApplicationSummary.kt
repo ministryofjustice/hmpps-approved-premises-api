@@ -19,17 +19,17 @@ import java.util.UUID
  */
 data class Cas3ApplicationSummary(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("person", required = true) val person: Person,
+  val person: Person,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("createdByUserId", required = true) val createdByUserId: UUID,
+  val createdByUserId: UUID,
 
-  @get:JsonProperty("status", required = true) val status: ApplicationStatus,
+  val status: ApplicationStatus,
 
-  @get:JsonProperty("submittedAt") val submittedAt: Instant? = null,
+  val submittedAt: Instant? = null,
 
-  @get:JsonProperty("risks") val risks: PersonRisks? = null,
+  val risks: PersonRisks? = null,
 )

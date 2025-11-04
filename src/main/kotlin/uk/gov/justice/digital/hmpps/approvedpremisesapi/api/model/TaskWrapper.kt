@@ -10,8 +10,8 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 data class TaskWrapper(
 
-  @get:JsonProperty("task", required = true) val task: Task,
+  val task: Task,
 
   @Schema(example = "null", required = true, description = "Users to whom this task can be allocated")
-  @get:JsonProperty("users", required = true) val users: kotlin.collections.List<UserWithWorkload>,
+  val users: kotlin.collections.List<UserWithWorkload>,
 )

@@ -16,17 +16,17 @@ import java.util.UUID
  */
 data class Cas2SubmittedApplicationSummary(
 
-  @get:JsonProperty("id", required = true) val id: UUID,
+  val id: UUID,
 
-  @get:JsonProperty("createdByUserId", required = true) val createdByUserId: UUID,
+  val createdByUserId: UUID,
 
-  @get:JsonProperty("crn", required = true) val crn: String,
+  val crn: String,
 
-  @get:JsonProperty("nomsNumber", required = true) val nomsNumber: String,
+  val nomsNumber: String,
 
-  @get:JsonProperty("personName", required = true) val personName: String,
+  val personName: String,
 
-  @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
+  val createdAt: Instant,
 
-  @get:JsonProperty("submittedAt") val submittedAt: Instant? = null,
+  val submittedAt: Instant? = null,
 )
