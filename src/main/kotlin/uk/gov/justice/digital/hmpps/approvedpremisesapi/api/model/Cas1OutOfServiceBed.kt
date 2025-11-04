@@ -3,25 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param createdAt
- * @param startDate
- * @param endDate This date is inclusive. The bed will be unavailable for the whole of the day
- * @param bed
- * @param room
- * @param premises
- * @param apArea
- * @param reason
- * @param daysLostCount
- * @param temporality
- * @param status
- * @param revisionHistory
- * @param referenceNumber
- * @param notes
- * @param cancellation
- */
 data class Cas1OutOfServiceBed(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

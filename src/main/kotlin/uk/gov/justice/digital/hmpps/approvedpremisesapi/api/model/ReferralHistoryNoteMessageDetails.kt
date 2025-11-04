@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param rejectionReason
- * @param rejectionReasonDetails
- * @param isWithdrawn
- * @param domainEvent Any object
- */
 data class ReferralHistoryNoteMessageDetails(
 
   @get:JsonProperty("rejectionReason") val rejectionReason: kotlin.String? = null,

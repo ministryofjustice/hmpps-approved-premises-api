@@ -12,18 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link ChangeRequestsCas1Controller}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface ChangeRequestsCas1Delegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see ChangeRequestsCas1#createPlacementAppeal
-   */
   fun createPlacementAppeal(
     placementRequestId: java.util.UUID,
     cas1NewChangeRequest: Cas1NewChangeRequest,
@@ -39,9 +32,6 @@ interface ChangeRequestsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ChangeRequestsCas1#createPlacementExtension
-   */
   fun createPlacementExtension(
     placementRequestId: java.util.UUID,
     cas1NewChangeRequest: Cas1NewChangeRequest,
@@ -57,9 +47,6 @@ interface ChangeRequestsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ChangeRequestsCas1#createPlannedTransfer
-   */
   fun createPlannedTransfer(
     placementRequestId: java.util.UUID,
     cas1NewChangeRequest: Cas1NewChangeRequest,
@@ -75,9 +62,6 @@ interface ChangeRequestsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ChangeRequestsCas1#findOpen
-   */
   fun findOpen(
     page: kotlin.Int?,
     cruManagementAreaId: java.util.UUID?,
@@ -95,9 +79,6 @@ interface ChangeRequestsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ChangeRequestsCas1#get
-   */
   fun get(
     placementRequestId: java.util.UUID,
     changeRequestId: java.util.UUID,
@@ -113,9 +94,6 @@ interface ChangeRequestsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ChangeRequestsCas1#reject
-   */
   fun reject(
     placementRequestId: java.util.UUID,
     changeRequestId: java.util.UUID,

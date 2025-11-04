@@ -4,13 +4,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id The UUID of an event
- * @param timestamp
- * @param eventType
- */
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "eventType", visible = true)
 @JsonSubTypes(
   JsonSubTypes.Type(value = Cas2ApplicationStatusUpdatedEvent::class, name = "applications.cas2.application.status-updated"),

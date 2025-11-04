@@ -2,19 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param id
- * @param type
- * @param createdAt
- * @param requestReason
- * @param requestJson Any object
- * @param spaceBookingId
- * @param updatedAt
- * @param decision
- * @param decisionJson Any object
- * @param rejectionReason
- */
 data class Cas1ChangeRequest(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

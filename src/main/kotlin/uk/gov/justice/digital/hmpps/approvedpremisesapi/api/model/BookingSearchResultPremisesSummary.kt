@@ -2,15 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param id
- * @param name
- * @param addressLine1
- * @param postcode
- * @param addressLine2
- * @param town
- */
 data class BookingSearchResultPremisesSummary(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

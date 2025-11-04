@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-* The type of an event
-* Values: applicationSubmitted,applicationStatusUpdated
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class EventType(@get:JsonValue val value: kotlin.String) {
 

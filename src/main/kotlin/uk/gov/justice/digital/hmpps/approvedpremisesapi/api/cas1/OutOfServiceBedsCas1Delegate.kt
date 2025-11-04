@@ -14,18 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link OutOfServiceBedsCas1Controller}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface OutOfServiceBedsCas1Delegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see OutOfServiceBedsCas1#cancelOutOfServiceBed
-   */
   fun cancelOutOfServiceBed(
     premisesId: java.util.UUID,
     outOfServiceBedId: java.util.UUID,
@@ -50,9 +43,6 @@ interface OutOfServiceBedsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see OutOfServiceBedsCas1#createOutOfServiceBed
-   */
   fun createOutOfServiceBed(
     premisesId: java.util.UUID,
     body: Cas1NewOutOfServiceBed,
@@ -76,9 +66,6 @@ interface OutOfServiceBedsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see OutOfServiceBedsCas1#getOutOfServiceBed
-   */
   fun getOutOfServiceBed(
     premisesId: java.util.UUID,
     outOfServiceBedId: java.util.UUID,
@@ -98,9 +85,6 @@ interface OutOfServiceBedsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see OutOfServiceBedsCas1#getOutOfServiceBeds
-   */
   fun getOutOfServiceBeds(
     temporality: kotlin.collections.List<Temporality>?,
     premisesId: java.util.UUID?,
@@ -121,9 +105,6 @@ interface OutOfServiceBedsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see OutOfServiceBedsCas1#getOutOfServiceBedsForPremises
-   */
   fun getOutOfServiceBedsForPremises(premisesId: java.util.UUID): ResponseEntity<List<Cas1OutOfServiceBed>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -136,9 +117,6 @@ interface OutOfServiceBedsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see OutOfServiceBedsCas1#updateOutOfServiceBed
-   */
   fun updateOutOfServiceBed(
     premisesId: java.util.UUID,
     outOfServiceBedId: java.util.UUID,

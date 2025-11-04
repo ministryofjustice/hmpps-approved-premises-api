@@ -3,22 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param name
- * @param addressLine1
- * @param postcode
- * @param probationRegionId
- * @param characteristicIds
- * @param status
- * @param addressLine2
- * @param town
- * @param notes
- * @param localAuthorityAreaId
- * @param pdu
- * @param probationDeliveryUnitId
- * @param turnaroundWorkingDayCount
- */
 data class NewPremises(
 
   @get:JsonProperty("name", required = true) val name: kotlin.String,

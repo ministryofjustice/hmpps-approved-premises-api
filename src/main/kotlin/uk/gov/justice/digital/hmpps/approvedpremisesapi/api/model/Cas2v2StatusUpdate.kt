@@ -5,16 +5,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 import java.util.UUID
 
-/**
- *
- * @param id
- * @param name
- * @param label
- * @param description
- * @param updatedBy
- * @param updatedAt
- * @param statusUpdateDetails
- */
 data class Cas2v2StatusUpdate(
 
   @get:JsonProperty("id", required = true) val id: UUID,

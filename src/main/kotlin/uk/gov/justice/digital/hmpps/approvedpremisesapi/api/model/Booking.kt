@@ -3,35 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param person
- * @param arrivalDate
- * @param originalArrivalDate
- * @param departureDate
- * @param originalDepartureDate
- * @param createdAt
- * @param serviceName
- * @param status
- * @param extensions
- * @param departures The full history of the departure
- * @param cancellations The full history of the cancellation
- * @param premises
- * @param keyWorker KeyWorker is a legacy field only used by CAS1. It is not longer being captured or populated
- * @param bed
- * @param arrival
- * @param departure The latest version of the departure, if it exists
- * @param nonArrival
- * @param cancellation The latest version of the cancellation, if it exists
- * @param confirmation
- * @param turnaround The latest version of the turnaround, if it exists
- * @param turnarounds The full history of turnarounds
- * @param turnaroundStartDate
- * @param effectiveEndDate
- * @param applicationId
- * @param assessmentId
- */
 data class Booking(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

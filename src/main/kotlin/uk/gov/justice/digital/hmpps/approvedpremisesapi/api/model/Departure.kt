@@ -2,17 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param id
- * @param bookingId
- * @param dateTime
- * @param reason
- * @param moveOnCategory
- * @param createdAt
- * @param notes
- * @param destinationProvider
- */
 data class Departure(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

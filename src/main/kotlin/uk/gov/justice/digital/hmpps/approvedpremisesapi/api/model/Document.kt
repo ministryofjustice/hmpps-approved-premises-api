@@ -2,16 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- * Meta Info about a file relating to an Offender
- * @param id
- * @param level
- * @param fileName
- * @param createdAt
- * @param typeCode
- * @param typeDescription
- * @param description
- */
 data class Document(
 
   @get:JsonProperty("id", required = true) val id: kotlin.String,

@@ -9,18 +9,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link OAsysCas1Controller}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface OAsysCas1Delegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see OAsysCas1#answers
-   */
   fun answers(
     crn: kotlin.String,
     group: Cas1OASysGroupName,
@@ -41,9 +34,6 @@ interface OAsysCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see OAsysCas1#metadata
-   */
   fun metadata(crn: kotlin.String): ResponseEntity<Cas1OASysMetadata> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

@@ -3,12 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param premisesName
- * @param arrivalDate
- * @param departureDate
- */
 data class NewPlacementRequestBookingConfirmation(
 
   @get:JsonProperty("premisesName", required = true) val premisesName: kotlin.String,

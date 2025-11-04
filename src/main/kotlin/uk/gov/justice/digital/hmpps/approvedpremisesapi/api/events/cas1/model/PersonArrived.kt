@@ -3,21 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param personReference
- * @param deliusEventNumber Used in Delius to identify the 'event' via the first active conviction's 'index'
- * @param applicationId The UUID of an application for an AP place
- * @param applicationUrl The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings
- * @param applicationSubmittedOn
- * @param bookingId The UUID of booking for an AP place
- * @param premises
- * @param recordedBy
- * @param arrivedAt
- * @param expectedDepartureOn
- * @param previousExpectedDepartureOn
- * @param notes
- */
 data class PersonArrived(
 
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,

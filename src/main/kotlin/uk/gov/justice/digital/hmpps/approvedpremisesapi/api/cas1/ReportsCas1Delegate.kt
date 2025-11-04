@@ -7,18 +7,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link ReportsCas1Controller}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface ReportsCas1Delegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see ReportsCas1#getReportByName
-   */
   fun getReportByName(
     xServiceName: ServiceName,
     reportName: Cas1ReportName,

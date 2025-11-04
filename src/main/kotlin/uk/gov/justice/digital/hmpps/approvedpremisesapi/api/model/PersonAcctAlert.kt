@@ -2,15 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param alertId
- * @param dateCreated
- * @param comment
- * @param description
- * @param dateExpires
- * @param alertTypeDescription
- */
 data class PersonAcctAlert(
 
   @get:JsonProperty("alertId", required = true) val alertId: kotlin.Long,

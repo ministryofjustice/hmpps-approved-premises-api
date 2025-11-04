@@ -2,12 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param type
- * @param booking
- * @param changeRequestId
- */
 data class Cas1TimelineEventTransferInfo(
 
   @get:JsonProperty("type", required = true) val type: Cas1TimelineEventTransferType,

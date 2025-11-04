@@ -3,11 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param response
- * @param responseReceivedOn
- */
 data class Cas1UpdatedClarificationNote(
 
   @get:JsonProperty("response", required = true) val response: kotlin.String,

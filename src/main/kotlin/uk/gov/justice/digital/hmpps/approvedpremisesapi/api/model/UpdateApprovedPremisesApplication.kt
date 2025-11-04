@@ -3,17 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param isInapplicable
- * @param isWomensApplication
- * @param isEmergencyApplication noticeType should be used to indicate if an emergency application
- * @param apType
- * @param targetLocation
- * @param releaseType
- * @param arrivalDate
- * @param noticeType
- */
 data class UpdateApprovedPremisesApplication(
 
   @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,

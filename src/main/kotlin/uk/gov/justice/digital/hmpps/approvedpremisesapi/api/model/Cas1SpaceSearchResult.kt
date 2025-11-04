@@ -3,11 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param premises
- * @param distanceInMiles
- */
 data class Cas1SpaceSearchResult(
 
   @get:JsonProperty("premises", required = true) val premises: Cas1PremisesSearchResultSummary,

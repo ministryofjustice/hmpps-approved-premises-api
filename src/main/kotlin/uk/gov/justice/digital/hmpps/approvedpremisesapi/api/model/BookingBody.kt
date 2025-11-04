@@ -2,19 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param id
- * @param person
- * @param arrivalDate
- * @param originalArrivalDate
- * @param departureDate
- * @param originalDepartureDate
- * @param createdAt
- * @param serviceName
- * @param keyWorker KeyWorker is a legacy field only used by CAS1. It is not longer being captured or populated
- * @param bed
- */
 data class BookingBody(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

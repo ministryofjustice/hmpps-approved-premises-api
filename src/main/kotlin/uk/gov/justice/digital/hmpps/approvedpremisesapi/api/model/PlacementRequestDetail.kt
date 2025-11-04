@@ -3,37 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param type
- * @param location Postcode outcode
- * @param radius
- * @param essentialCriteria
- * @param desirableCriteria
- * @param expectedArrival
- * @param duration
- * @param id
- * @param person
- * @param risks
- * @param applicationId
- * @param assessmentId
- * @param releaseType
- * @param status
- * @param assessmentDecision
- * @param assessmentDate
- * @param applicationDate
- * @param assessor
- * @param isParole
- * @param isWithdrawn
- * @param cancellations Not used by UI. Space Booking cancellations to be provided if cancellations are required in future.
- * @param application
- * @param spaceBookings The space bookings associated with this placement request
- * @param notes Notes from the assessor for the CRU Manager
- * @param booking
- * @param requestType
- * @param withdrawalReason
- * @param legacyBooking
- */
 data class PlacementRequestDetail(
 
   @get:JsonProperty("type", required = true) val type: ApType,

@@ -4,13 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
-/**
- *
- * @param id The UUID of an event
- * @param timestamp
- * @param eventType
- * @param eventDetails
- */
 data class BookingNotMadeEnvelope(
   @Schema(example = "364145f9-0af8-488e-9901-b4c46cd9ba37", required = true, description = "The UUID of an event")
   @get:JsonProperty("id", required = true) override val id: UUID,

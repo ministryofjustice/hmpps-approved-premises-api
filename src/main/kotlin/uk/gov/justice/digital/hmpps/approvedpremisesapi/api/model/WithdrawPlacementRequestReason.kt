@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: duplicatePlacementRequest,alternativeProvisionIdentified,changeInCircumstances,changeInReleaseDecision,noCapacityDueToLostBed,noCapacityDueToPlacementPrioritisation,noCapacity,errorInPlacementRequest,withdrawnByPP,relatedApplicationWithdrawn,relatedPlacementRequestWithdrawn,relatedPlacementApplicationWithdrawn
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class WithdrawPlacementRequestReason(@get:JsonValue val value: kotlin.String) {
 

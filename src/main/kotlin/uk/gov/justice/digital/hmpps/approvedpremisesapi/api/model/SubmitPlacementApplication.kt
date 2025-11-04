@@ -3,12 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 
-/**
- *
- * @param translatedDocument Any object
- * @param placementType
- * @param placementDates
- */
 data class SubmitPlacementApplication(
 
   @Schema(required = true)

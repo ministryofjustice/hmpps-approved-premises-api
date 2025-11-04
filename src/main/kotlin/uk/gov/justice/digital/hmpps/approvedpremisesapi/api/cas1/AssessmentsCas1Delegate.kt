@@ -17,26 +17,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdatedCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link AssessmentsCas1Controller}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface AssessmentsCas1Delegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see AssessmentsCas1#acceptAssessment
-   */
   fun acceptAssessment(
     assessmentId: java.util.UUID,
     cas1AssessmentAcceptance: Cas1AssessmentAcceptance,
   ): ResponseEntity<Unit> = ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
 
-  /**
-   * @see AssessmentsCas1#addClarificationNoteToAssessment
-   */
   fun addClarificationNoteToAssessment(
     assessmentId: java.util.UUID,
     cas1NewClarificationNote: Cas1NewClarificationNote,
@@ -52,9 +42,6 @@ interface AssessmentsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see AssessmentsCas1#getAssessment
-   */
   fun getAssessment(assessmentId: java.util.UUID): ResponseEntity<Cas1Assessment> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -67,9 +54,6 @@ interface AssessmentsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see AssessmentsCas1#getAssessmentsForUser
-   */
   fun getAssessmentsForUser(
     sortDirection: SortDirection?,
     sortBy: Cas1AssessmentSortField?,
@@ -89,17 +73,11 @@ interface AssessmentsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see AssessmentsCas1#rejectAssessment
-   */
   fun rejectAssessment(
     assessmentId: java.util.UUID,
     cas1AssessmentRejection: Cas1AssessmentRejection,
   ): ResponseEntity<Unit> = ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
 
-  /**
-   * @see AssessmentsCas1#updateAssessment
-   */
   fun updateAssessment(
     assessmentId: java.util.UUID,
     cas1UpdateAssessment: Cas1UpdateAssessment,
@@ -115,9 +93,6 @@ interface AssessmentsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see AssessmentsCas1#updateAssessmentClarificationNote
-   */
   fun updateAssessmentClarificationNote(
     assessmentId: java.util.UUID,
     noteId: java.util.UUID,

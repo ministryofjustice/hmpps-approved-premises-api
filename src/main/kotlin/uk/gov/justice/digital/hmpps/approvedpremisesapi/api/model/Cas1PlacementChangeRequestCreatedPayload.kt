@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param changeRequestId
- * @param booking
- * @param reason
- * @param changeRequestType
- */
 data class Cas1PlacementChangeRequestCreatedPayload(
 
   @get:JsonProperty("changeRequestId", required = true) val changeRequestId: java.util.UUID,

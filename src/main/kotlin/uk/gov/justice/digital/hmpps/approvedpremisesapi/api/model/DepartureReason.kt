@@ -3,14 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param name
- * @param serviceScope
- * @param isActive
- * @param parentReasonId
- */
 data class DepartureReason(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

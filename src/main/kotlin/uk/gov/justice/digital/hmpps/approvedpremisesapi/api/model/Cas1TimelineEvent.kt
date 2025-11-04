@@ -3,18 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param type
- * @param id
- * @param occurredAt
- * @param content Timeline description. If a value is provided for 'payload', that should be instead be used to build a description
- * @param createdBySummary
- * @param payload
- * @param associatedUrls
- * @param triggerSource
- * @param schemaVersion
- */
 data class Cas1TimelineEvent(
 
   @get:JsonProperty("type", required = true) val type: Cas1TimelineEventType,

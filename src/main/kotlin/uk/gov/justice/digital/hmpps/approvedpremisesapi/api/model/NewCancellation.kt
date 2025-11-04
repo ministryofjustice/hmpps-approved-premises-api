@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param date
- * @param reason
- * @param notes
- * @param otherReason
- */
 data class NewCancellation(
 
   @get:JsonProperty("date", required = true) val date: java.time.LocalDate,

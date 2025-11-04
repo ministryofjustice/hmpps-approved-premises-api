@@ -3,13 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param arrivalDate
- * @param departureDate
- * @param bedId
- * @param premisesId
- */
 data class NewPlacementRequestBooking(
 
   @Schema(example = "Thu Jul 28 01:00:00 BST 2022", required = true, description = "")

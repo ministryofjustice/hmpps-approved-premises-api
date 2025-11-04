@@ -12,18 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link PlacementApplicationsCas1Controller}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface PlacementApplicationsCas1Delegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see PlacementApplicationsCas1#placementApplicationsIdDecisionPost
-   */
   fun placementApplicationsIdDecisionPost(
     id: java.util.UUID,
     placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
@@ -43,9 +36,6 @@ interface PlacementApplicationsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PlacementApplicationsCas1#placementApplicationsIdGet
-   */
   fun placementApplicationsIdGet(id: java.util.UUID): ResponseEntity<PlacementApplication> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -58,9 +48,6 @@ interface PlacementApplicationsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PlacementApplicationsCas1#placementApplicationsIdPut
-   */
   fun placementApplicationsIdPut(
     id: java.util.UUID,
     updatePlacementApplication: UpdatePlacementApplication,
@@ -76,9 +63,6 @@ interface PlacementApplicationsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PlacementApplicationsCas1#placementApplicationsIdSubmissionPost
-   */
   fun placementApplicationsIdSubmissionPost(
     id: java.util.UUID,
     submitPlacementApplication: SubmitPlacementApplication,
@@ -98,9 +82,6 @@ interface PlacementApplicationsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PlacementApplicationsCas1#placementApplicationsIdWithdrawPost
-   */
   fun placementApplicationsIdWithdrawPost(
     id: java.util.UUID,
     withdrawPlacementApplication: WithdrawPlacementApplication?,
@@ -120,9 +101,6 @@ interface PlacementApplicationsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PlacementApplicationsCas1#placementApplicationsPost
-   */
   fun placementApplicationsPost(newPlacementApplication: NewPlacementApplication): ResponseEntity<PlacementApplication> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

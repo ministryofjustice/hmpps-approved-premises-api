@@ -2,9 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- */
 class ReferralHistoryUserNote(
 
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,

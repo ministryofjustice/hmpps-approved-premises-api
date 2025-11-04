@@ -3,14 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param type
- * @param location Postcode outcode
- * @param radius
- * @param essentialCriteria
- * @param desirableCriteria
- */
 data class PlacementRequirements(
 
   @get:JsonProperty("type", required = true) val type: ApType,

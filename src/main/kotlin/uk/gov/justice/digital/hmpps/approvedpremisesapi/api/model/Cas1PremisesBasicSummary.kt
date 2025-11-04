@@ -3,17 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param name
- * @param apArea
- * @param bedCount
- * @param supportsSpaceBookings
- * @param fullAddress Full address, excluding postcode
- * @param postcode
- * @param apCode
- */
 data class Cas1PremisesBasicSummary(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

@@ -2,19 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param id
- * @param applicationId
- * @param createdAt
- * @param person
- * @param status
- * @param dueAt
- * @param arrivalDate
- * @param dateOfInfoRequest
- * @param decision
- * @param risks
- */
 data class Cas1AssessmentSummary(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

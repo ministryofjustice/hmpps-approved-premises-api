@@ -4,10 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
- *
- * @param category
- */
 data class ReferralHistorySystemNote(
 
   @get:JsonProperty("category", required = true) val category: ReferralHistorySystemNote.Category,
@@ -25,10 +21,6 @@ data class ReferralHistorySystemNote(
   @get:JsonProperty("messageDetails") override val messageDetails: ReferralHistoryNoteMessageDetails? = null,
 ) : ReferralHistoryNote {
 
-  /**
-   *
-   * Values: submitted,unallocated,inReview,readyToPlace,rejected,completed
-   */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Category(@get:JsonValue val value: kotlin.String) {
 

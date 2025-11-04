@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 
-/**
- *
- * @param bailHearingDate
- */
 data class UpdateCas2v2Application(
 
   @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,

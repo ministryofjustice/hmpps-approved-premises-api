@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: APPEAL_CREATE,PLANNED_TRANSFER_REQUEST,EMERGENCY_TRANSFER_CREATE,SHORTEN
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1SpaceBookingAction(@get:JsonValue val value: kotlin.String) {
 

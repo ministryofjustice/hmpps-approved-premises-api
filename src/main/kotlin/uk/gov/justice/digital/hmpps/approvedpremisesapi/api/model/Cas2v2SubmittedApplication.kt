@@ -6,22 +6,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-/**
- *
- * @param id
- * @param person
- * @param createdAt
- * @param schemaVersion
- * @param outdatedSchema
- * @param timelineEvents
- * @param assessment
- * @param submittedBy
- * @param document Any object
- * @param submittedAt
- * @param telephoneNumber
- * @param applicationOrigin
- * @param bailHearingDate
- */
 data class Cas2v2SubmittedApplication(
 
   @get:JsonProperty("id", required = true) val id: UUID,

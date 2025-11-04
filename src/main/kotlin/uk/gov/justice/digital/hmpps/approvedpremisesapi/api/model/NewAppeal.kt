@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param appealDate
- * @param appealDetail
- * @param decision
- * @param decisionDetail
- */
 data class NewAppeal(
 
   @get:JsonProperty("appealDate", required = true) val appealDate: java.time.LocalDate,
