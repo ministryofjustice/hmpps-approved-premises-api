@@ -2,17 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param bookingId
- * @param date
- * @param reason
- * @param createdAt
- * @param premisesName
- * @param id
- * @param notes
- * @param otherReason
- */
 data class Cancellation(
 
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,

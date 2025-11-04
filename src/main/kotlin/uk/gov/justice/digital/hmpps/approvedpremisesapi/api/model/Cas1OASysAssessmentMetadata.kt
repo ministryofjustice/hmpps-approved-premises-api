@@ -2,12 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param hasApplicableAssessment
- * @param dateStarted
- * @param dateCompleted
- */
 data class Cas1OASysAssessmentMetadata(
 
   @get:JsonProperty("hasApplicableAssessment", required = true) val hasApplicableAssessment: kotlin.Boolean,

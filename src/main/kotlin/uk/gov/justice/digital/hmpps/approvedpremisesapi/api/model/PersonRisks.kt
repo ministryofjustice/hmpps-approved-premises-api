@@ -2,14 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param crn
- * @param roshRisks
- * @param tier
- * @param flags
- * @param mappa
- */
 data class PersonRisks(
 
   @get:JsonProperty("crn", required = true) val crn: kotlin.String,

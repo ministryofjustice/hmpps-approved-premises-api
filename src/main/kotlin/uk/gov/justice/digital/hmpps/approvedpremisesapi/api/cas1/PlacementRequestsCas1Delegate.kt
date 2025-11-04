@@ -14,18 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link PlacementRequestsCas1Controller}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface PlacementRequestsCas1Delegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see PlacementRequestsCas1#getPlacementRequest
-   */
   fun getPlacementRequest(id: java.util.UUID): ResponseEntity<Cas1PlacementRequestDetail> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -38,9 +31,6 @@ interface PlacementRequestsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PlacementRequestsCas1#search
-   */
   fun search(
     status: PlacementRequestStatus?,
     crnOrName: kotlin.String?,
@@ -64,9 +54,6 @@ interface PlacementRequestsCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PlacementRequestsCas1#withdrawPlacementRequest
-   */
   fun withdrawPlacementRequest(
     id: java.util.UUID,
     body: Cas1WithdrawPlacementRequest?,

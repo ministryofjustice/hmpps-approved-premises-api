@@ -3,20 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param applicationId
- * @param applicationUrl
- * @param personReference
- * @param submittedAt
- * @param submittedBy
- * @param applicationOrigin
- * @param bailHearingDate
- * @param referringPrisonCode
- * @param preferredAreas
- * @param hdcEligibilityDate
- * @param conditionalReleaseDate
- */
 data class Cas2ApplicationSubmittedEventDetails(
 
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,

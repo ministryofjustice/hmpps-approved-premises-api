@@ -3,14 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param name
- * @param nomisUsername
- * @param isActive
- * @param email
- */
 data class NomisUser(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

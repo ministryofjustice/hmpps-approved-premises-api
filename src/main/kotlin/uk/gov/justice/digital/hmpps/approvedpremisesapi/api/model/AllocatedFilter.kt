@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: allocated,unallocated
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class AllocatedFilter(@get:JsonValue val value: kotlin.String) {
 

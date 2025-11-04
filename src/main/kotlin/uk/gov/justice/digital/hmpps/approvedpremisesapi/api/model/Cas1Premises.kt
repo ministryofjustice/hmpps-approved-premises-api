@@ -3,21 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 
-/**
- *
- * @param id
- * @param name
- * @param apCode
- * @param fullAddress Full address, excluding postcode
- * @param postcode
- * @param apArea
- * @param bedCount The total number of beds in this premises
- * @param availableBeds The total number of beds available at this moment in time
- * @param outOfServiceBeds The total number of out of service beds at this moment in time
- * @param supportsSpaceBookings
- * @param overbookingSummary over-bookings for the next 12 weeks
- * @param managerDetails
- */
 data class Cas1Premises(
 
   val id: java.util.UUID,

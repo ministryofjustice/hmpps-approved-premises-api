@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: cas3PersonArrived,cas3PersonDeparted,applicationTimelineNote,cas2ApplicationSubmitted,cas2Note,cas2StatusUpdate,cas2PrisonTransfer,cas2NewPomAssigned
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class TimelineEventType(@get:JsonValue val value: kotlin.String) {
 

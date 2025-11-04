@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-* All of the characteristics of both premises and rooms
-* Values: acceptsChildSexOffenders,acceptsHateCrimeOffenders,acceptsNonSexualChildOffenders,acceptsSexOffenders,additionalRestrictions,hasArsonInsuranceConditions,hasBrailleSignage,hasCallForAssistance,hasCrib7Bedding,hasEnSuite,hasFixedMobilityAids,hasHearingLoop,hasLift,hasNearbySprinkler,hasSmokeDetector,hasStepFreeAccess,hasStepFreeAccessToCommunalAreas,hasTactileFlooring,hasTurningSpace,hasWheelChairAccessibleBathrooms,hasWideAccessToCommunalAreas,hasWideDoor,hasWideStepFreeAccess,isArsonDesignated,isArsonSuitable,isCatered,isESAP,isFullyFm,isGroundFloor,isGroundFloorNrOffice,isIAP,isMHAPElliottHouse,isMHAPStJosephs,isPIPE,isRecoveryFocussed,isSemiSpecialistMentalHealth,isSingle,isStepFreeDesignated,isSuitableForVulnerable,isSuitedForSexOffenders,isTopFloorVulnerable,isWheelchairAccessible,isWheelchairDesignated,arsonOffences
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1SpaceCharacteristic(@get:JsonValue val value: kotlin.String) {
 

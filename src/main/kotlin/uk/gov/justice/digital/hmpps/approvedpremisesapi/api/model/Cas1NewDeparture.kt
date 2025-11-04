@@ -3,15 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param reasonId
- * @param departureDateTime use seperate date/time fields
- * @param departureDate
- * @param departureTime
- * @param moveOnCategoryId
- * @param notes
- */
 data class Cas1NewDeparture(
 
   @get:JsonProperty("reasonId", required = true) val reasonId: java.util.UUID,

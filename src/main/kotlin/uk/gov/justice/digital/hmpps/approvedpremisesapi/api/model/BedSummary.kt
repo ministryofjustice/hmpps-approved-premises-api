@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param id
- * @param name
- * @param roomName
- * @param status
- */
 data class BedSummary(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

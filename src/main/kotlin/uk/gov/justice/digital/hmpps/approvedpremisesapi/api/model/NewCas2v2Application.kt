@@ -4,15 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
-/**
- *
- * @param crn
- * @param applicationOrigin
- * @param convictionId
- * @param deliusEventNumber
- * @param offenceId
- * @param bailHearingDate
- */
 data class NewCas2v2Application(
 
   @get:JsonProperty("crn", required = true) val crn: String,

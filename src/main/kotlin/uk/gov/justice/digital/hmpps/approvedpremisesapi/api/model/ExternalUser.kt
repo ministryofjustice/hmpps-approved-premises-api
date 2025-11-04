@@ -3,14 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param username
- * @param name
- * @param email
- * @param origin
- */
 data class ExternalUser(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

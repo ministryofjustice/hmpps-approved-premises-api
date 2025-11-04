@@ -2,14 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param document Any object
- * @param rejectionRationale
- * @param agreeWithShortNoticeReason
- * @param agreeWithShortNoticeReasonComments
- * @param reasonForLateApplication
- */
 data class Cas1AssessmentRejection(
 
   @get:JsonProperty("document", required = true) val document: kotlin.Any,

@@ -2,9 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- */
 class OfflineApplicationSummary(
 
   @get:JsonProperty("type", required = true) override val type: kotlin.String,

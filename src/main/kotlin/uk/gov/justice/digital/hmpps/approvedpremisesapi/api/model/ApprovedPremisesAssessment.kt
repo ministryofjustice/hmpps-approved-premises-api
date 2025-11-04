@@ -2,14 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param application
- * @param createdFromAppeal
- * @param allocatedToStaffMember
- * @param status
- * @param document Any object
- */
 data class ApprovedPremisesAssessment(
 
   @get:JsonProperty("application", required = true) val application: ApprovedPremisesApplication,

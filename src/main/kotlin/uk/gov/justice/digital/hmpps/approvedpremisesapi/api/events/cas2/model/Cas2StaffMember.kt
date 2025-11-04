@@ -5,14 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- * A member of prison or CAS2 staff
- * @param staffIdentifier
- * @param name
- * @param username
- * @param cas2StaffIdentifier
- * @param usertype
- */
 data class Cas2StaffMember(
 
   @Schema(example = "1501234567", required = true, description = "")
@@ -29,10 +21,6 @@ data class Cas2StaffMember(
   @get:JsonProperty("usertype") val usertype: Cas2StaffMember.Usertype? = null,
 ) {
 
-  /**
-   *
-   * Values: nomis,delius
-   */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class Usertype(@get:JsonValue val value: kotlin.String) {
 

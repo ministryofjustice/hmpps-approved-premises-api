@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: applicationsV2,applicationsV2WithPii,dailyMetrics,outOfServiceBeds,outOfServiceBedsWithPii,placementMatchingOutcomesV2,placementMatchingOutcomesV2WithPii,requestsForPlacement,requestsForPlacementWithPii,placements,placementsWithPii,overduePlacements
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class Cas1ReportName(@get:JsonValue val value: kotlin.String) {
 

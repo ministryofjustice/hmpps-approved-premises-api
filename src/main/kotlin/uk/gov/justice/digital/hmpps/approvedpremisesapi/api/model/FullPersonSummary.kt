@@ -2,11 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param name
- * @param isRestricted
- */
 data class FullPersonSummary(
 
   @get:JsonProperty("name", required = true) val name: kotlin.String,

@@ -3,14 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param date
- * @param totalBedCount total bed count including temporarily unavailable beds (e.g. out of service beds). this does not consider bookings.
- * @param availableBedCount total bed count excluding temporarily unavailable beds (e.g. out of service beds). this does not consider bookings.
- * @param bookingCount total number of bookings in the premise on that day
- * @param characteristicAvailability
- */
 data class Cas1PremiseCapacityForDay(
 
   @get:JsonProperty("date", required = true) val date: java.time.LocalDate,

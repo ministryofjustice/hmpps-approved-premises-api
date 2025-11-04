@@ -3,13 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id The UUID of an event
- * @param timestamp
- * @param eventType
- * @param eventDetails
- */
 @Deprecated("The generic [Cas1DomainEventEnvelope] should be used instead of type-specific envelopes")
 data class BookingCancelledEnvelope(
 

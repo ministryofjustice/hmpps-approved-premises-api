@@ -5,12 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param applicationId The UUID of an application for an AP place
- * @param previousStatus
- * @param updatedStatus
- */
 data class ApplicationExpired(
 
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")

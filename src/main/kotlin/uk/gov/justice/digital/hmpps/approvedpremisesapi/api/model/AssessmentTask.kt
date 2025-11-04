@@ -3,11 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param createdFromAppeal
- * @param outcome
- */
 data class AssessmentTask(
 
   @get:JsonProperty("createdFromAppeal", required = true) val createdFromAppeal: kotlin.Boolean,

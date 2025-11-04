@@ -2,11 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param expectedArrival
- * @param duration
- */
 data class PlacementDates(
 
   @get:JsonProperty("expectedArrival", required = true) val expectedArrival: java.time.LocalDate,

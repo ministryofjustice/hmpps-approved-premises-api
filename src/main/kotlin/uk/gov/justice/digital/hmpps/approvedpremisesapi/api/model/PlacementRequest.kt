@@ -2,9 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- * This type is too broad for use in search results, and as such we're moving towards using Cas1PlacementRequestSummary instead for that purpose.
- */
 data class PlacementRequest(
 
   val type: ApType,

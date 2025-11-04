@@ -4,12 +4,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param crn
- * @param personType
- */
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "personType", visible = true)
 @JsonSubTypes(
   JsonSubTypes.Type(value = FullPersonSummary::class, name = "FullPersonSummary"),

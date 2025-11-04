@@ -2,15 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param id
- * @param createdAt
- * @param createdByStaffMemberId
- * @param query
- * @param responseReceivedOn
- * @param response
- */
 data class ClarificationNote(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

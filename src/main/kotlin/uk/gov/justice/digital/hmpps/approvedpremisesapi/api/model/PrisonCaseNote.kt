@@ -2,17 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param id
- * @param sensitive
- * @param createdAt
- * @param occurredAt
- * @param authorName
- * @param type
- * @param subType
- * @param note
- */
 data class PrisonCaseNote(
 
   @get:JsonProperty("id", required = true) val id: kotlin.String,

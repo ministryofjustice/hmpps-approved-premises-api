@@ -3,34 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- *
- * @param id
- * @param person
- * @param createdAt
- * @param createdByUserId
- * @param status
- * @param isWomensApplication
- * @param isPipeApplication Use apType
- * @param isEmergencyApplication
- * @param isEsapApplication Use apType
- * @param apType
- * @param arrivalDate
- * @param risks
- * @param &#x60;data&#x60; Any object
- * @param document Any object
- * @param assessmentId
- * @param assessmentDecision
- * @param assessmentDecisionDate
- * @param submittedAt
- * @param personStatusOnSubmission
- * @param apArea
- * @param cruManagementArea
- * @param applicantUserDetails
- * @param caseManagerIsNotApplicant If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details
- * @param caseManagerUserDetails
- * @param licenceExpiryDate
- */
 data class Cas1Application(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,

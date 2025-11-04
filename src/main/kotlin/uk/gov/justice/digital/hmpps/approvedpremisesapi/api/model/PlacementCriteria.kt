@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
-*
-* Values: isPIPE,isESAP,isMHAPStJosephs,isMHAPElliottHouse,isSemiSpecialistMentalHealth,isRecoveryFocussed,hasBrailleSignage,hasTactileFlooring,hasHearingLoop,isStepFreeDesignated,isArsonDesignated,isWheelchairDesignated,isSingle,isCatered,isSuitedForSexOffenders,isSuitableForVulnerable,acceptsSexOffenders,acceptsHateCrimeOffenders,acceptsChildSexOffenders,acceptsNonSexualChildOffenders,isArsonSuitable,isGroundFloor,hasEnSuite,arsonOffences
-*/
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class PlacementCriteria(@get:JsonValue val value: kotlin.String) {
 

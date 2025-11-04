@@ -2,12 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param booking
- * @param eventNumber
- * @param transferredFrom
- */
 data class Cas1BookingMadeContentPayload(
 
   @get:JsonProperty("booking", required = true) val booking: Cas1TimelineEventPayloadBookingSummary,

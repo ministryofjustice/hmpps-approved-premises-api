@@ -2,15 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- *
- * @param startDate
- * @param endDate
- * @param reason
- * @param bedId
- * @param referenceNumber
- * @param notes
- */
 data class Cas1NewOutOfServiceBed(
 
   @get:JsonProperty("startDate", required = true) val startDate: java.time.LocalDate,

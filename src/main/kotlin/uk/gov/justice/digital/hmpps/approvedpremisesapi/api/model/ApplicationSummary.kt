@@ -6,15 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplicationSummary
 
-/**
- *
- * @param type
- * @param id
- * @param person
- * @param createdAt
- * @param submittedAt
- */
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 @JsonSubTypes(
   JsonSubTypes.Type(value = ApprovedPremisesApplicationSummary::class, name = "CAS1"),

@@ -4,20 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
 
-/**
- *
- * @param id
- * @param person
- * @param placementRequestStatus
- * @param isParole
- * @param requestedPlacementDuration
- * @param requestedPlacementArrivalDate
- * @param personTier
- * @param applicationId
- * @param applicationSubmittedDate
- * @param firstBookingPremisesName
- * @param firstBookingArrivalDate
- */
 data class Cas1PlacementRequestSummary(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
@@ -43,10 +29,6 @@ data class Cas1PlacementRequestSummary(
   @get:JsonProperty("firstBookingArrivalDate") val firstBookingArrivalDate: java.time.LocalDate? = null,
 ) {
 
-  /**
-   *
-   * Values: matched,unableToMatch,notMatched
-   */
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
   enum class PlacementRequestStatus(@get:JsonValue val value: kotlin.String) {
 

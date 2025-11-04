@@ -5,14 +5,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 import java.util.UUID
 
-/**
- * Notes added to a Cas2v2Application
- * @param email
- * @param name
- * @param body
- * @param createdAt
- * @param id
- */
 data class Cas2v2ApplicationNote(
 
   @Schema(example = "roger@example.com", required = true, description = "")
