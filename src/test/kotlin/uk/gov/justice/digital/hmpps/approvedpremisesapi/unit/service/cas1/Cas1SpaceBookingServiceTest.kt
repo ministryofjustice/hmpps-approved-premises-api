@@ -318,7 +318,7 @@ class Cas1SpaceBookingServiceTest {
         createdBy = user,
         characteristics = characteristics,
         transferredFrom = null,
-        additionalInformation = null,
+        additionalInformation = "Transfer to another AP",
         transferReason = TransferReason.riskToResident,
       )
 
@@ -326,6 +326,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1SpaceBookingCreateService.validate(details) } returns CasResult.Success(validatedCreateBooking)
       val createdSpaceBooking = Cas1SpaceBookingEntityFactory()
         .withTransferReason(TransferReason.riskToResident)
+        .withAdditionalInformation("Transfer to another AP")
         .produce()
       every { cas1SpaceBookingCreateService.create(validatedCreateBooking) } returns createdSpaceBooking
 
@@ -336,6 +337,7 @@ class Cas1SpaceBookingServiceTest {
           arrivalDate = LocalDate.now(),
           departureDate = LocalDate.now().plusDays(1),
           transferReason = TransferReason.riskToResident,
+          additionalInformation = "Transfer to another AP",
         ),
         createdBy = user,
         characteristics = characteristics,
