@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
@@ -409,6 +410,8 @@ class Cas1SpaceBookingTransformerTest {
             CharacteristicEntityFactory().withPropertyName("isCatered").produce(),
           )
           .withNonArrivalConfirmedAt(Instant.now())
+          .withTransferReason(TransferReason.riskToResident)
+          .withAdditionalInformation("some additional information")
           .withApplication(
             ApprovedPremisesApplicationEntityFactory()
               .withDefaults()
@@ -463,6 +466,8 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.appealRequested).isFalse()
       assertThat(result.openChangeRequestTypes).containsExactly(Cas1ChangeRequestType.PLACEMENT_APPEAL)
       assertThat(result.createdAt).isEqualTo(createdAt.toInstant())
+      assertThat(result.transferReason).isEqualTo(TransferReason.riskToResident)
+      assertThat(result.additionalInformation).isEqualTo("some additional information")
     }
   }
 
