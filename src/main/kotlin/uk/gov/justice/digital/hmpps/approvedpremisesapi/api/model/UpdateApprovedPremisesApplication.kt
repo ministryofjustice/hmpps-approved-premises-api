@@ -13,7 +13,7 @@ data class UpdateApprovedPremisesApplication(
 
   @get:JsonProperty("isWomensApplication") val isWomensApplication: kotlin.Boolean? = null,
 
-  @Schema(example = "null", description = "noticeType should be used to indicate if an emergency application")
+  @field:Schema(example = "null", description = "noticeType should be used to indicate if an emergency application")
   @Deprecated(message = "")
   @get:JsonProperty("isEmergencyApplication") val isEmergencyApplication: kotlin.Boolean? = null,
 

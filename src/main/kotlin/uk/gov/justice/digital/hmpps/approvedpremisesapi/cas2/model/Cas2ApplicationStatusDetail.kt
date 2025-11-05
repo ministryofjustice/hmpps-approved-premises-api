@@ -14,9 +14,9 @@ data class Cas2ApplicationStatusDetail(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
-  @Schema(example = "changeOfCircumstances", required = true, description = "")
+  @field:Schema(example = "changeOfCircumstances", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: String,
 
-  @Schema(example = "Change of Circumstances", required = true, description = "")
+  @field:Schema(example = "Change of Circumstances", required = true, description = "")
   @get:JsonProperty("label", required = true) val label: String,
 )

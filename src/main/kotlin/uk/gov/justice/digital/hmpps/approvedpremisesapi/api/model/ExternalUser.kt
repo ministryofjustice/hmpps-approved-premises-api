@@ -7,15 +7,15 @@ data class ExternalUser(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @Schema(example = "CAS2_ASSESSOR_USER", required = true, description = "")
+  @field:Schema(example = "CAS2_ASSESSOR_USER", required = true, description = "")
   @get:JsonProperty("username", required = true) val username: kotlin.String,
 
-  @Schema(example = "Roger Smith", required = true, description = "")
+  @field:Schema(example = "Roger Smith", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 
-  @Schema(example = "roger@external.example.com", required = true, description = "")
+  @field:Schema(example = "roger@external.example.com", required = true, description = "")
   @get:JsonProperty("email", required = true) val email: kotlin.String,
 
-  @Schema(example = "NACRO", description = "")
+  @field:Schema(example = "NACRO", description = "")
   @get:JsonProperty("origin") val origin: kotlin.String? = null,
 )

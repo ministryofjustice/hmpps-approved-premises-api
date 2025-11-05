@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
 data class BookingNotMadeEnvelope(
-  @Schema(example = "364145f9-0af8-488e-9901-b4c46cd9ba37", required = true, description = "The UUID of an event")
+  @field:Schema(example = "364145f9-0af8-488e-9901-b4c46cd9ba37", required = true, description = "The UUID of an event")
   @get:JsonProperty("id", required = true) override val id: UUID,
 
   @get:JsonProperty("timestamp", required = true) override val timestamp: java.time.Instant,

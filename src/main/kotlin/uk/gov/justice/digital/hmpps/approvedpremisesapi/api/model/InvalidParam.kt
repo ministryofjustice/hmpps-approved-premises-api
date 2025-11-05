@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class InvalidParam(
 
-  @Schema(example = "arrivalDate", description = "")
+  @field:Schema(example = "arrivalDate", description = "")
   @get:JsonProperty("propertyName") val propertyName: kotlin.String? = null,
 
   @get:JsonProperty("errorType") val errorType: kotlin.String? = null,

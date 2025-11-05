@@ -9,13 +9,13 @@ data class Cas2v2StatusUpdate(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
-  @Schema(example = "moreInfoRequested", required = true, description = "")
+  @field:Schema(example = "moreInfoRequested", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: String,
 
-  @Schema(example = "More information requested", required = true, description = "")
+  @field:Schema(example = "More information requested", required = true, description = "")
   @get:JsonProperty("label", required = true) val label: String,
 
-  @Schema(example = "More information about the application has been requested from the HMPPS user.", required = true, description = "")
+  @field:Schema(example = "More information about the application has been requested from the HMPPS user.", required = true, description = "")
   @get:JsonProperty("description", required = true) val description: String,
 
   @get:JsonProperty("updatedBy") val updatedBy: Cas2v2User? = null,

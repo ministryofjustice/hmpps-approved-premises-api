@@ -11,10 +11,10 @@ data class ApprovedPremisesUser(
 
   @get:JsonProperty("apArea", required = true) val apArea: ApArea,
 
-  @Schema(example = "null", required = true, description = "CRU Management Area to use. This will be the same as cruManagementAreaDefault unless cruManagementAreaOverride is defined")
+  @field:Schema(example = "null", required = true, description = "CRU Management Area to use. This will be the same as cruManagementAreaDefault unless cruManagementAreaOverride is defined")
   @get:JsonProperty("cruManagementArea", required = true) val cruManagementArea: NamedId,
 
-  @Schema(example = "null", required = true, description = "The CRU Management Area used if no override is defined. This is provided to support the user configuration page.")
+  @field:Schema(example = "null", required = true, description = "The CRU Management Area used if no override is defined. This is provided to support the user configuration page.")
   @get:JsonProperty("cruManagementAreaDefault", required = true) val cruManagementAreaDefault: NamedId,
 
   @get:JsonProperty("service", required = true) override val service: kotlin.String,
@@ -29,7 +29,7 @@ data class ApprovedPremisesUser(
 
   @get:JsonProperty("permissions") val permissions: kotlin.collections.List<ApprovedPremisesUserPermission>? = null,
 
-  @Schema(example = "null", description = "The CRU Management Area manually set on this user. This is provided to support the user configuration page.")
+  @field:Schema(example = "null", description = "The CRU Management Area manually set on this user. This is provided to support the user configuration page.")
   @get:JsonProperty("cruManagementAreaOverride") val cruManagementAreaOverride: NamedId? = null,
 
   @get:JsonProperty("version") val version: kotlin.Int? = null,

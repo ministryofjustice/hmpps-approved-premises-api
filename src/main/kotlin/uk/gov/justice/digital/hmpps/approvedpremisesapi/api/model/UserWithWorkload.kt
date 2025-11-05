@@ -23,7 +23,7 @@ data class UserWithWorkload(
 
   @get:JsonProperty("qualifications") val qualifications: kotlin.collections.List<UserQualification>? = null,
 
-  @Schema(example = "null", description = "This is deprecated. Used cruManagementArea instead as this is used to group task management")
+  @field:Schema(example = "null", description = "This is deprecated. Used cruManagementArea instead as this is used to group task management")
   @Deprecated(message = "")
   @get:JsonProperty("apArea") val apArea: ApArea? = null,
 

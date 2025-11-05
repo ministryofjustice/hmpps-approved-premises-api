@@ -6,7 +6,7 @@ data class PlacementRequest(
 
   val type: ApType,
 
-  @Schema(example = "B74", required = true, description = "Postcode outcode")
+  @field:Schema(example = "B74", required = true, description = "Postcode outcode")
   val location: kotlin.String,
 
   val radius: kotlin.Int,
@@ -43,7 +43,7 @@ data class PlacementRequest(
 
   val isWithdrawn: kotlin.Boolean,
 
-  @Schema(example = "null", description = "Notes from the assessor for the CRU Manager")
+  @field:Schema(example = "null", description = "Notes from the assessor for the CRU Manager")
   val notes: kotlin.String? = null,
 
   val booking: PlacementRequestBookingSummary? = null,

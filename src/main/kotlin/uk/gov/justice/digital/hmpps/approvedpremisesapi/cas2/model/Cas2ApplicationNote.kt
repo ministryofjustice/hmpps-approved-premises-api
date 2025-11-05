@@ -15,10 +15,10 @@ import java.util.UUID
  */
 data class Cas2ApplicationNote(
 
-  @Schema(example = "roger@example.com", required = true, description = "")
+  @field:Schema(example = "roger@example.com", required = true, description = "")
   @get:JsonProperty("email", required = true) val email: String,
 
-  @Schema(example = "Roger Smith", required = true, description = "")
+  @field:Schema(example = "Roger Smith", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: String,
 
   @get:JsonProperty("body", required = true) val body: String,

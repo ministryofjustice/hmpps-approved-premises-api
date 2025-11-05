@@ -5,13 +5,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class Cas2Status(
 
-  @Schema(example = "moreInfoRequested", required = true, description = "")
+  @field:Schema(example = "moreInfoRequested", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 
-  @Schema(example = "More information requested", required = true, description = "")
+  @field:Schema(example = "More information requested", required = true, description = "")
   @get:JsonProperty("label", required = true) val label: kotlin.String,
 
-  @Schema(example = "More information about the application has been requested from the POM (Prison Offender Manager).", required = true, description = "")
+  @field:Schema(example = "More information about the application has been requested from the POM (Prison Offender Manager).", required = true, description = "")
   @get:JsonProperty("description", required = true) val description: kotlin.String,
 
   @get:JsonProperty("statusDetails") val statusDetails: kotlin.collections.List<Cas2StatusDetail>? = null,

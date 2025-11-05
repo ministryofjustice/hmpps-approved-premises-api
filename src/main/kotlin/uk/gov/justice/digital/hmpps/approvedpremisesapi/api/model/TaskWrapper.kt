@@ -7,6 +7,6 @@ data class TaskWrapper(
 
   @get:JsonProperty("task", required = true) val task: Task,
 
-  @Schema(example = "null", required = true, description = "Users to whom this task can be allocated")
+  @field:Schema(example = "null", required = true, description = "Users to whom this task can be allocated")
   @get:JsonProperty("users", required = true) val users: kotlin.collections.List<UserWithWorkload>,
 )

@@ -7,7 +7,7 @@ data class LostBedReason(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @Schema(example = "Double Room with Single Occupancy - Other (Non-FM)", required = true, description = "")
+  @field:Schema(example = "Double Room with Single Occupancy - Other (Non-FM)", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 
   @get:JsonProperty("isActive", required = true) val isActive: kotlin.Boolean,

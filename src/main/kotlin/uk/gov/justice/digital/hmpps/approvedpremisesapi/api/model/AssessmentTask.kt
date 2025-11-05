@@ -9,20 +9,20 @@ data class AssessmentTask(
 
   @get:JsonProperty("taskType", required = true) override val taskType: TaskType,
 
-  @Schema(example = "6abb5fa3-e93f-4445-887b-30d081688f44", required = true, description = "")
+  @field:Schema(example = "6abb5fa3-e93f-4445-887b-30d081688f44", required = true, description = "")
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 
-  @Schema(example = "6abb5fa3-e93f-4445-887b-30d081688f44", required = true, description = "")
+  @field:Schema(example = "6abb5fa3-e93f-4445-887b-30d081688f44", required = true, description = "")
   @get:JsonProperty("applicationId", required = true) override val applicationId: java.util.UUID,
 
   @get:JsonProperty("personSummary", required = true) override val personSummary: PersonSummary,
 
-  @Schema(example = "null", required = true, description = "Superseded by personSummary which provides 'name' as well as 'personType' and 'crn'.")
+  @field:Schema(example = "null", required = true, description = "Superseded by personSummary which provides 'name' as well as 'personType' and 'crn'.")
   @get:JsonProperty("personName", required = true) override val personName: kotlin.String,
 
   @get:JsonProperty("crn", required = true) override val crn: kotlin.String,
 
-  @Schema(example = "null", required = true, description = "The Due date of the task - this is deprecated in favour of the `dueAt` field")
+  @field:Schema(example = "null", required = true, description = "The Due date of the task - this is deprecated in favour of the `dueAt` field")
   @get:JsonProperty("dueDate", required = true) override val dueDate: java.time.LocalDate,
 
   @get:JsonProperty("dueAt", required = true) override val dueAt: java.time.Instant,

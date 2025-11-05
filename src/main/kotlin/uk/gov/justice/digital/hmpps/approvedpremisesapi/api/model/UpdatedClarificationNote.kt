@@ -7,6 +7,6 @@ data class UpdatedClarificationNote(
 
   @get:JsonProperty("response", required = true) val response: kotlin.String,
 
-  @Schema(example = "Thu Jul 28 01:00:00 BST 2022", required = true, description = "")
+  @field:Schema(example = "Thu Jul 28 01:00:00 BST 2022", required = true, description = "")
   @get:JsonProperty("responseReceivedOn", required = true) val responseReceivedOn: java.time.LocalDate,
 )

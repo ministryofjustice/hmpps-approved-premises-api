@@ -7,42 +7,42 @@ data class Cas1Premises(
 
   val id: java.util.UUID,
 
-  @Schema(example = "Hope House")
+  @field:Schema(example = "Hope House")
   val name: kotlin.String,
 
-  @Schema(example = "NEHOPE1")
+  @field:Schema(example = "NEHOPE1")
   val apCode: kotlin.String,
 
-  @Schema(description = "Full address, excluding postcode")
+  @field:Schema(description = "Full address, excluding postcode")
   val fullAddress: kotlin.String,
 
-  @Schema(example = "LS1 3AD")
+  @field:Schema(example = "LS1 3AD")
   val postcode: kotlin.String,
 
   val apArea: ApArea,
 
-  @Schema(example = "22", description = "The total number of beds in this premises")
+  @field:Schema(example = "22", description = "The total number of beds in this premises")
   val bedCount: kotlin.Int,
 
-  @Schema(example = "20", description = "The total number of beds available at this moment in time")
+  @field:Schema(example = "20", description = "The total number of beds available at this moment in time")
   val availableBeds: kotlin.Int,
 
-  @Schema(example = "2", description = "The total number of out of service beds at this moment in time")
+  @field:Schema(example = "2", description = "The total number of out of service beds at this moment in time")
   val outOfServiceBeds: kotlin.Int,
 
   val supportsSpaceBookings: kotlin.Boolean,
 
   val managerDetails: kotlin.String? = null,
 
-  @Schema(
+  @field:Schema(
     example = "No hate based offences",
     description = "A list of restrictions that apply specifically to this approved premises.",
   )
   val localRestrictions: List<Cas1PremisesLocalRestrictionSummary>? = emptyList(),
 
-  @Schema(description = "Room and premise characteristics")
+  @field:Schema(description = "Room and premise characteristics")
   val characteristics: List<Cas1SpaceCharacteristic>,
 
-  @Schema(description = "This is deprecated and only returns an empty list", deprecated = true)
+  @field:Schema(description = "This is deprecated and only returns an empty list", deprecated = true)
   val overbookingSummary: List<Cas1OverbookingRange> = emptyList(),
 )

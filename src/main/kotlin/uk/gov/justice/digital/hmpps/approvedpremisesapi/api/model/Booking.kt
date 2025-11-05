@@ -25,10 +25,10 @@ data class Booking(
 
   @get:JsonProperty("extensions", required = true) val extensions: kotlin.collections.List<Extension>,
 
-  @Schema(example = "null", required = true, description = "The full history of the departure")
+  @field:Schema(example = "null", required = true, description = "The full history of the departure")
   @get:JsonProperty("departures", required = true) val departures: kotlin.collections.List<Departure>,
 
-  @Schema(example = "null", required = true, description = "The full history of the cancellation")
+  @field:Schema(example = "null", required = true, description = "The full history of the cancellation")
   @get:JsonProperty("cancellations", required = true) val cancellations: kotlin.collections.List<Cancellation>,
 
   @get:JsonProperty("premises", required = true) val premises: BookingPremisesSummary,
@@ -37,20 +37,20 @@ data class Booking(
 
   @get:JsonProperty("arrival") val arrival: Arrival? = null,
 
-  @Schema(example = "null", description = "The latest version of the departure, if it exists")
+  @field:Schema(example = "null", description = "The latest version of the departure, if it exists")
   @get:JsonProperty("departure") val departure: Departure? = null,
 
   @get:JsonProperty("nonArrival") val nonArrival: Nonarrival? = null,
 
-  @Schema(example = "null", description = "The latest version of the cancellation, if it exists")
+  @field:Schema(example = "null", description = "The latest version of the cancellation, if it exists")
   @get:JsonProperty("cancellation") val cancellation: Cancellation? = null,
 
   @get:JsonProperty("confirmation") val confirmation: Confirmation? = null,
 
-  @Schema(example = "null", description = "The latest version of the turnaround, if it exists")
+  @field:Schema(example = "null", description = "The latest version of the turnaround, if it exists")
   @get:JsonProperty("turnaround") val turnaround: Turnaround? = null,
 
-  @Schema(example = "null", description = "The full history of turnarounds")
+  @field:Schema(example = "null", description = "The full history of turnarounds")
   @get:JsonProperty("turnarounds") val turnarounds: kotlin.collections.List<Turnaround>? = null,
 
   @get:JsonProperty("turnaroundStartDate") val turnaroundStartDate: java.time.LocalDate? = null,

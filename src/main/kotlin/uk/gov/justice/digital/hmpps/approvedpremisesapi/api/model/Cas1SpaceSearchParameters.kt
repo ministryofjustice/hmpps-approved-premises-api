@@ -5,16 +5,16 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class Cas1SpaceSearchParameters(
 
-  @Schema(example = "null", required = true, description = "The id of the application the space search is for")
+  @field:Schema(example = "null", required = true, description = "The id of the application the space search is for")
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
-  @Schema(example = "null", required = true, description = "The date the space is required from")
+  @field:Schema(example = "null", required = true, description = "The date the space is required from")
   @get:JsonProperty("startDate", required = true) val startDate: java.time.LocalDate,
 
-  @Schema(example = "84", required = true, description = "The number of days the space is needed, from the start date")
+  @field:Schema(example = "84", required = true, description = "The number of days the space is needed, from the start date")
   @get:JsonProperty("durationInDays", required = true) val durationInDays: kotlin.Int,
 
-  @Schema(example = "SE5", required = true, description = "The 'target' location, in the form of a postcode district")
+  @field:Schema(example = "SE5", required = true, description = "The 'target' location, in the form of a postcode district")
   @get:JsonProperty("targetPostcodeDistrict", required = true) val targetPostcodeDistrict: kotlin.String,
 
   @get:JsonProperty("spaceCharacteristics") val spaceCharacteristics: kotlin.collections.List<Cas1SpaceCharacteristic>? = null,

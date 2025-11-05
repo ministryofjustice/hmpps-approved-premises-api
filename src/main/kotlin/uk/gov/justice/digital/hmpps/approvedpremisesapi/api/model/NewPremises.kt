@@ -21,7 +21,7 @@ data class NewPremises(
 
   @get:JsonProperty("town") val town: kotlin.String? = null,
 
-  @Schema(example = "some notes about this property", description = "")
+  @field:Schema(example = "some notes about this property", description = "")
   @get:JsonProperty("notes") val notes: kotlin.String? = null,
 
   @get:JsonProperty("localAuthorityAreaId") val localAuthorityAreaId: java.util.UUID? = null,

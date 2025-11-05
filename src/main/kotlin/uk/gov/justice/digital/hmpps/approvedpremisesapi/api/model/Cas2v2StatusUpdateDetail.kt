@@ -8,9 +8,9 @@ data class Cas2v2StatusUpdateDetail(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
-  @Schema(example = "moreInfoRequested", required = true, description = "")
+  @field:Schema(example = "moreInfoRequested", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: String,
 
-  @Schema(example = "More information requested", required = true, description = "")
+  @field:Schema(example = "More information requested", required = true, description = "")
   @get:JsonProperty("label", required = true) val label: String,
 )

@@ -9,10 +9,10 @@ data class AssessmentRejection(
 
   @get:JsonProperty("rejectionRationale", required = true) val rejectionRationale: kotlin.String,
 
-  @Schema(example = "null", description = "Only used by CAS3")
+  @field:Schema(example = "null", description = "Only used by CAS3")
   @get:JsonProperty("referralRejectionReasonId") val referralRejectionReasonId: java.util.UUID? = null,
 
-  @Schema(example = "null", description = "Only used by CAS3")
+  @field:Schema(example = "null", description = "Only used by CAS3")
   @get:JsonProperty("referralRejectionReasonDetail") val referralRejectionReasonDetail: kotlin.String? = null,
 
   @get:JsonProperty("isWithdrawn") val isWithdrawn: kotlin.Boolean? = null,

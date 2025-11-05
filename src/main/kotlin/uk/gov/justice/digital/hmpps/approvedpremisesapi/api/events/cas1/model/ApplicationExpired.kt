@@ -7,17 +7,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class ApplicationExpired(
 
-  @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
+  @field:Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
   @get:JsonProperty("previousStatus", required = true) val previousStatus: kotlin.String,
 
   @get:JsonProperty("updatedStatus", required = true) val updatedStatus: kotlin.String,
 
-  @Schema(example = "null", required = false, description = "The status of the application before expiry")
+  @field:Schema(example = "null", required = false, description = "The status of the application before expiry")
   @get:JsonProperty("statusBeforeExpiry") val statusBeforeExpiry: kotlin.String? = null,
 
-  @Schema(example = "null", required = false, description = "The reason for the application's expiry")
+  @field:Schema(example = "null", required = false, description = "The reason for the application's expiry")
   @get:JsonProperty("expiryReason") val expiryReason: ApplicationExpired.ExpiryReason = ExpiryReason.unsubmittedApplicationExpired,
 ) : Cas1DomainEventPayload {
 

@@ -7,7 +7,7 @@ data class PlacementRequirements(
 
   @get:JsonProperty("type", required = true) val type: ApType,
 
-  @Schema(example = "B74", required = true, description = "Postcode outcode")
+  @field:Schema(example = "B74", required = true, description = "Postcode outcode")
   @get:JsonProperty("location", required = true) val location: kotlin.String,
 
   @get:JsonProperty("radius", required = true) val radius: kotlin.Int,

@@ -9,9 +9,9 @@ data class Bed(
 
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 
-  @Schema(example = "NEABC04", description = "")
+  @field:Schema(example = "NEABC04", description = "")
   @get:JsonProperty("code") val code: kotlin.String? = null,
 
-  @Schema(example = "Sat Mar 30 00:00:00 GMT 2024", description = "End date of the bed availability, open for availability if not specified")
+  @field:Schema(example = "Sat Mar 30 00:00:00 GMT 2024", description = "End date of the bed availability, open for availability if not specified")
   @get:JsonProperty("bedEndDate") val bedEndDate: java.time.LocalDate? = null,
 )

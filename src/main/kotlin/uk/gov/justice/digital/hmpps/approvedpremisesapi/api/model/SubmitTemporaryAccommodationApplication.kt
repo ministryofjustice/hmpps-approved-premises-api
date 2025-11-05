@@ -23,7 +23,7 @@ data class SubmitTemporaryAccommodationApplication(
 
   @get:JsonProperty("dutyToReferSubmissionDate") val dutyToReferSubmissionDate: java.time.LocalDate? = null,
 
-  @Schema(example = "Pending", description = "")
+  @field:Schema(example = "Pending", description = "")
   @get:JsonProperty("dutyToReferOutcome") val dutyToReferOutcome: kotlin.String? = null,
 
   @get:JsonProperty("isApplicationEligible") val isApplicationEligible: kotlin.Boolean? = null,
@@ -32,7 +32,7 @@ data class SubmitTemporaryAccommodationApplication(
 
   @get:JsonProperty("dutyToReferLocalAuthorityAreaName") val dutyToReferLocalAuthorityAreaName: kotlin.String? = null,
 
-  @Schema(example = "Wed Feb 21 00:00:00 GMT 2024", description = "")
+  @field:Schema(example = "Wed Feb 21 00:00:00 GMT 2024", description = "")
   @get:JsonProperty("personReleaseDate") val personReleaseDate: java.time.LocalDate? = null,
 
   @get:JsonProperty("isHistoryOfSexualOffence") val isHistoryOfSexualOffence: kotlin.Boolean? = null,

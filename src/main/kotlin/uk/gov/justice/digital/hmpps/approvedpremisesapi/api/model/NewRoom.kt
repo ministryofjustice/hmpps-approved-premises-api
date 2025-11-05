@@ -11,6 +11,6 @@ data class NewRoom(
 
   @get:JsonProperty("notes") val notes: kotlin.String? = null,
 
-  @Schema(example = "Sat Mar 30 00:00:00 GMT 2024", description = "End date of the bed availability, open for availability if not specified.")
+  @field:Schema(example = "Sat Mar 30 00:00:00 GMT 2024", description = "End date of the bed availability, open for availability if not specified.")
   @get:JsonProperty("bedEndDate") val bedEndDate: java.time.LocalDate? = null,
 )

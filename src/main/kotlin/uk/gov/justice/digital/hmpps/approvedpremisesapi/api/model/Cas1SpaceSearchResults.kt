@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class Cas1SpaceSearchResults(
 
-  @Schema(example = "4", required = true, description = "")
+  @field:Schema(example = "4", required = true, description = "")
   @get:JsonProperty("resultsCount", required = true) val resultsCount: kotlin.Int,
 
   @get:JsonProperty("results", required = true) val results: kotlin.collections.List<Cas1SpaceSearchResult>,

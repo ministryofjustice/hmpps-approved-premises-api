@@ -7,7 +7,7 @@ data class PlacementRequestDetail(
 
   @get:JsonProperty("type", required = true) val type: ApType,
 
-  @Schema(example = "B74", required = true, description = "Postcode outcode")
+  @field:Schema(example = "B74", required = true, description = "Postcode outcode")
   @get:JsonProperty("location", required = true) val location: kotlin.String,
 
   @get:JsonProperty("radius", required = true) val radius: kotlin.Int,
@@ -46,15 +46,15 @@ data class PlacementRequestDetail(
 
   @get:JsonProperty("isWithdrawn", required = true) val isWithdrawn: kotlin.Boolean,
 
-  @Schema(example = "null", required = true, description = "Not used by UI. Space Booking cancellations to be provided if cancellations are required in future.")
+  @field:Schema(example = "null", required = true, description = "Not used by UI. Space Booking cancellations to be provided if cancellations are required in future.")
   @get:JsonProperty("cancellations", required = true) val cancellations: kotlin.collections.List<Cancellation>,
 
   @get:JsonProperty("application", required = true) val application: Application,
 
-  @Schema(example = "null", required = true, description = "The space bookings associated with this placement request")
+  @field:Schema(example = "null", required = true, description = "The space bookings associated with this placement request")
   @get:JsonProperty("spaceBookings", required = true) val spaceBookings: kotlin.collections.List<Cas1SpaceBookingSummary>,
 
-  @Schema(example = "null", description = "Notes from the assessor for the CRU Manager")
+  @field:Schema(example = "null", description = "Notes from the assessor for the CRU Manager")
   @get:JsonProperty("notes") val notes: kotlin.String? = null,
 
   @get:JsonProperty("booking") val booking: PlacementRequestBookingSummary? = null,

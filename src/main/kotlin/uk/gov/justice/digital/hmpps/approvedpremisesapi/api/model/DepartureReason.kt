@@ -7,7 +7,7 @@ data class DepartureReason(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @Schema(example = "Admitted to Hospital", required = true, description = "")
+  @field:Schema(example = "Admitted to Hospital", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 
   @get:JsonProperty("serviceScope", required = true) val serviceScope: kotlin.String,

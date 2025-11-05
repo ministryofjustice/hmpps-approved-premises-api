@@ -9,7 +9,7 @@ import java.util.UUID
 data class Cas1PlacementRequestDetail(
 
   val type: ApType,
-  @Schema(example = "B74", required = true, description = "Postcode outcode")
+  @field:Schema(example = "B74", required = true, description = "Postcode outcode")
   val location: String,
   val radius: Int,
   val essentialCriteria: List<PlacementCriteria>,
@@ -31,15 +31,15 @@ data class Cas1PlacementRequestDetail(
   @Deprecated("Use spaceBookings instead")
   val booking: PlacementRequestBookingSummary? = null,
   val openChangeRequests: List<Cas1ChangeRequestSummary>,
-  @Schema(description = "Notes from the assessor for the CRU Manager")
+  @field:Schema(description = "Notes from the assessor for the CRU Manager")
   val notes: String? = null,
   val requestType: PlacementRequestRequestType? = null,
   val withdrawalReason: WithdrawPlacementRequestReason? = null,
   val legacyBooking: PlacementRequestBookingSummary? = null,
   val requestedPlacementPeriod: Cas1RequestedPlacementPeriod,
   val authorisedPlacementPeriod: Cas1RequestedPlacementPeriod,
-  @Schema(deprecated = true, description = "Use Cas1RequestedPlacementPeriod instead")
+  @field:Schema(deprecated = true, description = "Use Cas1RequestedPlacementPeriod instead")
   val expectedArrival: LocalDate,
-  @Schema(deprecated = true, description = "Use Cas1RequestedPlacementPeriod instead")
+  @field:Schema(deprecated = true, description = "Use Cas1RequestedPlacementPeriod instead")
   val duration: Int,
 )

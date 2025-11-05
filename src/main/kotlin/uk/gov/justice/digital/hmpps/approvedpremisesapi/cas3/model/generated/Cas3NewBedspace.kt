@@ -16,7 +16,7 @@ data class Cas3NewBedspace(
 
   @get:JsonProperty("reference", required = true) val reference: String,
 
-  @Schema(
+  @field:Schema(
     example = "Sat Mar 30 00:00:00 GMT 2024",
     required = true,
     description = "Start date of the bedspace availability.",

@@ -430,11 +430,11 @@ class Cas1PremisesController(
 
 data class Cas1NationalOccupancyParameters(
   val fromDate: LocalDate,
-  @Schema(description = "Can be empty")
+  @field:Schema(description = "Can be empty")
   val cruManagementAreaIds: Set<UUID>,
-  @Schema(description = "Can be empty")
+  @field:Schema(description = "Can be empty")
   val premisesCharacteristics: Set<Cas1SpaceCharacteristic>,
-  @Schema(description = "Can be empty")
+  @field:Schema(description = "Can be empty")
   val roomCharacteristics: Set<Cas1SpaceCharacteristic>,
   val postcodeArea: String?,
 )
@@ -453,22 +453,22 @@ data class Cas1NationalOccupancyPremises(
 
 data class Cas1PremiseCapacitySummary(
   val date: LocalDate,
-  @Schema(description = "The room characteristic this value relates to. If null, this value is based upon bookings vs total beds")
+  @field:Schema(description = "The room characteristic this value relates to. If null, this value is based upon bookings vs total beds")
   val forRoomCharacteristic: Cas1SpaceCharacteristic?,
   val inServiceBedCount: Int,
   val vacantBedCount: Int,
 )
 
 data class Cas1PremisesNewLocalRestriction(
-  @Schema(description = "restriction to a premises")
+  @field:Schema(description = "restriction to a premises")
   val description: String,
 )
 
 data class Cas1PremisesLocalRestrictionSummary(
-  @Schema(description = "restriction id")
+  @field:Schema(description = "restriction id")
   val id: UUID,
-  @Schema(description = "restriction description")
+  @field:Schema(description = "restriction description")
   val description: String,
-  @Schema(description = "restriction added date")
+  @field:Schema(description = "restriction added date")
   val createdAt: LocalDate,
 )

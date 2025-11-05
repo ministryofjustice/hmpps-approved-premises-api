@@ -9,6 +9,6 @@ data class Withdrawable(
 
   @get:JsonProperty("type", required = true) val type: WithdrawableType,
 
-  @Schema(example = "null", required = true, description = "0, 1 or more dates can be specified depending upon the WithdrawableType")
+  @field:Schema(example = "null", required = true, description = "0, 1 or more dates can be specified depending upon the WithdrawableType")
   @get:JsonProperty("dates", required = true) val dates: kotlin.collections.List<DatePeriod>,
 )

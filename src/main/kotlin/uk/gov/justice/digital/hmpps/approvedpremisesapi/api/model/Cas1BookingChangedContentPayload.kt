@@ -13,18 +13,18 @@ data class Cas1BookingChangedContentPayload(
 
   @get:JsonProperty("type", required = true) override val type: Cas1TimelineEventType,
 
-  @Schema(example = "null", description = "Only populated if the new value is different, and where schema version = 2")
+  @field:Schema(example = "null", description = "Only populated if the new value is different, and where schema version = 2")
   @get:JsonProperty("previousExpectedArrival") val previousExpectedArrival: java.time.LocalDate? = null,
 
-  @Schema(example = "null", description = "Only populated if the new value is different, and where schema version = 2")
+  @field:Schema(example = "null", description = "Only populated if the new value is different, and where schema version = 2")
   @get:JsonProperty("previousExpectedDeparture") val previousExpectedDeparture: java.time.LocalDate? = null,
 
   @get:JsonProperty("characteristics") val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic>? = null,
 
-  @Schema(example = "null", description = "Only populated if the new value is different, and where schema version = 2")
+  @field:Schema(example = "null", description = "Only populated if the new value is different, and where schema version = 2")
   @get:JsonProperty("previousCharacteristics") val previousCharacteristics: kotlin.collections.List<Cas1SpaceCharacteristic>? = null,
 
-  @Schema(example = "null", description = "This is deprecated, use the schema version information on the enclosing Cas1TimelineEvent")
+  @field:Schema(example = "null", description = "This is deprecated, use the schema version information on the enclosing Cas1TimelineEvent")
   @Deprecated(message = "")
   @get:JsonProperty("schemaVersion") val schemaVersion: kotlin.Int? = null,
 

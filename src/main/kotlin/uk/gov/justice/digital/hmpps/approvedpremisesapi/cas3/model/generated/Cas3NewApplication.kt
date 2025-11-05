@@ -14,12 +14,12 @@ data class Cas3NewApplication(
 
   @get:JsonProperty("crn", required = true) val crn: String,
 
-  @Schema(example = "1502724704", description = "")
+  @field:Schema(example = "1502724704", description = "")
   @get:JsonProperty("convictionId") val convictionId: Long? = null,
 
-  @Schema(example = "7", description = "")
+  @field:Schema(example = "7", description = "")
   @get:JsonProperty("deliusEventNumber") val deliusEventNumber: String? = null,
 
-  @Schema(example = "M1502750438", description = "")
+  @field:Schema(example = "M1502750438", description = "")
   @get:JsonProperty("offenceId") val offenceId: String? = null,
 )

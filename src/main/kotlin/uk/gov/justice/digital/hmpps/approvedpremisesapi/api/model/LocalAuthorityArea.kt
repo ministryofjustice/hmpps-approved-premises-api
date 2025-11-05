@@ -5,12 +5,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class LocalAuthorityArea(
 
-  @Schema(example = "6abb5fa3-e93f-4445-887b-30d081688f44", required = true, description = "")
+  @field:Schema(example = "6abb5fa3-e93f-4445-887b-30d081688f44", required = true, description = "")
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @Schema(example = "LEEDS", required = true, description = "")
+  @field:Schema(example = "LEEDS", required = true, description = "")
   @get:JsonProperty("identifier", required = true) val identifier: kotlin.String,
 
-  @Schema(example = "Leeds City Council", required = true, description = "")
+  @field:Schema(example = "Leeds City Council", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: kotlin.String,
 )

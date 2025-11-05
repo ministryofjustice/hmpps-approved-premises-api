@@ -5,21 +5,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class AssessmentAppealed(
 
-  @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
+  @field:Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
-  @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
+  @field:Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
   @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
 
-  @Schema(example = "dd450bbc-162d-4380-a103-9f261943b98f", required = true, description = "The UUID of an appeal for an application")
+  @field:Schema(example = "dd450bbc-162d-4380-a103-9f261943b98f", required = true, description = "The UUID of an appeal for an application")
   @get:JsonProperty("appealId", required = true) val appealId: java.util.UUID,
 
-  @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713/appeals/dd450bbc-162d-4380-a103-9f261943b98f", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an appeal and related resources")
+  @field:Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713/appeals/dd450bbc-162d-4380-a103-9f261943b98f", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an appeal and related resources")
   @get:JsonProperty("appealUrl", required = true) val appealUrl: kotlin.String,
 
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
-  @Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
+  @field:Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
   @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: kotlin.String,
 
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,

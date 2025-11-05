@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class PersonReference(
 
-  @Schema(example = "C123456", required = true, description = "")
+  @field:Schema(example = "C123456", required = true, description = "")
   @get:JsonProperty("crn", required = true) val crn: kotlin.String,
 
-  @Schema(example = "A1234ZX", required = true, description = "")
+  @field:Schema(example = "A1234ZX", required = true, description = "")
   @get:JsonProperty("noms", required = true) val noms: kotlin.String,
 )

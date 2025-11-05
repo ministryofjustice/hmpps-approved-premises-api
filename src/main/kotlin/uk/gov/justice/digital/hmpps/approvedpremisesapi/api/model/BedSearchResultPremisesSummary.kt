@@ -15,7 +15,7 @@ data class BedSearchResultPremisesSummary(
 
   @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<CharacteristicPair>,
 
-  @Schema(example = "null", required = true, description = "the total number of Beds in the Premises")
+  @field:Schema(example = "null", required = true, description = "the total number of Beds in the Premises")
   @get:JsonProperty("bedCount", required = true) val bedCount: kotlin.Int,
 
   @get:JsonProperty("addressLine2") val addressLine2: kotlin.String? = null,
@@ -26,6 +26,6 @@ data class BedSearchResultPremisesSummary(
 
   @get:JsonProperty("notes") val notes: kotlin.String? = null,
 
-  @Schema(example = "null", description = "the total number of booked Beds in the Premises")
+  @field:Schema(example = "null", description = "the total number of booked Beds in the Premises")
   @get:JsonProperty("bookedBedCount") val bookedBedCount: kotlin.Int? = null,
 )

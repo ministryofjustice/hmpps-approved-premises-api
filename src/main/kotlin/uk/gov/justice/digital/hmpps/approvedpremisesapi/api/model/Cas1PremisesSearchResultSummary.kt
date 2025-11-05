@@ -6,16 +6,16 @@ data class Cas1PremisesSearchResultSummary(
 
   val id: java.util.UUID,
   val apType: ApType,
-  @Schema(example = "Hope House")
+  @field:Schema(example = "Hope House")
   val name: String,
-  @Schema(description = "Full address, excluding postcode")
+  @field:Schema(description = "Full address, excluding postcode")
   val fullAddress: String,
   val apArea: NamedId,
-  @Schema(description = "Room and premise characteristics")
+  @field:Schema(description = "Room and premise characteristics")
   val characteristics: List<Cas1SpaceCharacteristic>,
-  @Schema(example = "LS1 3AD")
+  @field:Schema(example = "LS1 3AD")
   val postcode: String? = null,
-  @Schema(
+  @field:Schema(
     example = "No hate based offences",
     description = "A list of restrictions that apply specifically to this approved premises.",
   )

@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class OASysRiskOfSeriousHarm(
 
-  @Schema(example = "138985987", required = true, description = "The ID of assessment being used. This should always be the latest Layer 3 assessment, regardless of state.")
+  @field:Schema(example = "138985987", required = true, description = "The ID of assessment being used. This should always be the latest Layer 3 assessment, regardless of state.")
   @get:JsonProperty("assessmentId", required = true) val assessmentId: kotlin.Long,
 
   @get:JsonProperty("assessmentState", required = true) val assessmentState: OASysAssessmentState,

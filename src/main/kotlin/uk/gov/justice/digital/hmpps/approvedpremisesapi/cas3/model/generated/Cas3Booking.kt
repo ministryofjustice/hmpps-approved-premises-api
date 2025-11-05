@@ -57,30 +57,30 @@ data class Cas3Booking(
 
   @get:JsonProperty("extensions", required = true) val extensions: List<Cas3Extension>,
 
-  @Schema(example = "null", required = true, description = "The full history of the departure")
+  @field:Schema(example = "null", required = true, description = "The full history of the departure")
   @get:JsonProperty("departures", required = true) val departures: List<Cas3Departure>,
 
-  @Schema(example = "null", required = true, description = "The full history of the cancellation")
+  @field:Schema(example = "null", required = true, description = "The full history of the cancellation")
   @get:JsonProperty("cancellations", required = true) val cancellations: List<Cas3Cancellation>,
 
   @get:JsonProperty("premises", required = true) val premises: Cas3BookingPremisesSummary,
 
   @get:JsonProperty("arrival") val arrival: Cas3Arrival? = null,
 
-  @Schema(example = "null", description = "The latest version of the departure, if it exists")
+  @field:Schema(example = "null", description = "The latest version of the departure, if it exists")
   @get:JsonProperty("departure") val departure: Cas3Departure? = null,
 
   @get:JsonProperty("nonArrival") val nonArrival: Cas3NonArrival? = null,
 
-  @Schema(example = "null", description = "The latest version of the cancellation, if it exists")
+  @field:Schema(example = "null", description = "The latest version of the cancellation, if it exists")
   @get:JsonProperty("cancellation") val cancellation: Cas3Cancellation? = null,
 
   @get:JsonProperty("confirmation") val confirmation: Cas3Confirmation? = null,
 
-  @Schema(example = "null", description = "The latest version of the turnaround, if it exists")
+  @field:Schema(example = "null", description = "The latest version of the turnaround, if it exists")
   @get:JsonProperty("turnaround") val turnaround: Cas3Turnaround? = null,
 
-  @Schema(example = "null", description = "The full history of turnarounds")
+  @field:Schema(example = "null", description = "The full history of turnarounds")
   @get:JsonProperty("turnarounds") val turnarounds: List<Cas3Turnaround>? = null,
 
   @get:JsonProperty("turnaroundStartDate") val turnaroundStartDate: LocalDate? = null,

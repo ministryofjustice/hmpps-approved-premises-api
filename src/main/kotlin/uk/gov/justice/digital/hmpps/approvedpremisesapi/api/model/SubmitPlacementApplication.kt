@@ -5,13 +5,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPl
 
 data class SubmitPlacementApplication(
 
-  @Schema(required = true)
+  @field:Schema(required = true)
   val translatedDocument: Any,
 
-  @Schema(deprecated = true, description = "Please use release type instead")
+  @field:Schema(deprecated = true, description = "Please use release type instead")
   val placementType: PlacementType?,
 
-  @Schema(deprecated = true, description = "Please use requestedPlacementPeriods instead")
+  @field:Schema(deprecated = true, description = "Please use requestedPlacementPeriods instead")
   val placementDates: List<PlacementDates>?,
 
   val requestedPlacementPeriods: List<Cas1RequestedPlacementPeriod>?,

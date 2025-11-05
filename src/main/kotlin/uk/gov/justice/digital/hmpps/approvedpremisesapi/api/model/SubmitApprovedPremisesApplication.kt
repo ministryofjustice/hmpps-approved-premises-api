@@ -9,15 +9,15 @@ data class SubmitApprovedPremisesApplication(
   val sentenceType: SentenceTypeOption,
   override val type: String,
   val isWomensApplication: Boolean? = null,
-  @Schema(description = "noticeType should be used to indicate if this an emergency application")
+  @field:Schema(description = "noticeType should be used to indicate if this an emergency application")
   @Deprecated(message = "noticeType should be used to indicate if this an emergency application")
   val isEmergencyApplication: Boolean? = null,
   val situation: SituationOption? = null,
-  @Schema(description = "If the applicant has requested a placement, this is the requested arrival date")
+  @field:Schema(description = "If the applicant has requested a placement, this is the requested arrival date")
   val arrivalDate: java.time.LocalDate? = null,
-  @Schema(description = "If the applicant has requested a placement, this is the requested duration in days")
+  @field:Schema(description = "If the applicant has requested a placement, this is the requested duration in days")
   val duration: Int? = null,
-  @Schema(description = "If the user's ap area id is incorrect, they can optionally override it for the application")
+  @field:Schema(description = "If the user's ap area id is incorrect, they can optionally override it for the application")
   val apAreaId: java.util.UUID? = null,
   val applicantUserDetails: Cas1ApplicationUserDetails? = null,
   val caseManagerIsNotApplicant: Boolean? = null,

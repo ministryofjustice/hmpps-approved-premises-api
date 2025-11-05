@@ -11,7 +11,7 @@ data class Room(
 
   @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<Characteristic>,
 
-  @Schema(example = "NEABC-4", description = "")
+  @field:Schema(example = "NEABC-4", description = "")
   @get:JsonProperty("code") val code: kotlin.String? = null,
 
   @get:JsonProperty("notes") val notes: kotlin.String? = null,

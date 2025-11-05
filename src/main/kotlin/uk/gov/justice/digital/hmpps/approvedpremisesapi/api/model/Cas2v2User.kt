@@ -10,18 +10,18 @@ data class Cas2v2User(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
-  @Schema(example = "Roger Smith", required = true, description = "")
+  @field:Schema(example = "Roger Smith", required = true, description = "")
   @get:JsonProperty("name", required = true) val name: String,
 
-  @Schema(example = "SMITHR_GEN", required = true, description = "")
+  @field:Schema(example = "SMITHR_GEN", required = true, description = "")
   @get:JsonProperty("username", required = true) val username: String,
 
   @get:JsonProperty("authSource", required = true) val authSource: AuthSource,
 
-  @Schema(example = "true", required = true, description = "")
+  @field:Schema(example = "true", required = true, description = "")
   @get:JsonProperty("isActive", required = true) val isActive: Boolean,
 
-  @Schema(example = "Roger.Smith@justice.gov.uk", description = "")
+  @field:Schema(example = "Roger.Smith@justice.gov.uk", description = "")
   @get:JsonProperty("email") val email: String? = null,
 ) {
 

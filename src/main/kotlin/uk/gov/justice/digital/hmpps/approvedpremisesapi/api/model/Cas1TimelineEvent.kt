@@ -11,7 +11,7 @@ data class Cas1TimelineEvent(
 
   @get:JsonProperty("occurredAt", required = true) val occurredAt: java.time.Instant,
 
-  @Schema(example = "null", description = "Timeline description. If a value is provided for 'payload', that should be instead be used to build a description")
+  @field:Schema(example = "null", description = "Timeline description. If a value is provided for 'payload', that should be instead be used to build a description")
   @get:JsonProperty("content") val content: kotlin.String? = null,
 
   @get:JsonProperty("createdBySummary") val createdBySummary: UserSummary? = null,

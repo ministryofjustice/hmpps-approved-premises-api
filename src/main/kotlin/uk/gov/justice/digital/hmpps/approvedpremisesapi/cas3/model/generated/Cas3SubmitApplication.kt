@@ -44,7 +44,7 @@ data class Cas3SubmitApplication(
 
   @get:JsonProperty("dutyToReferSubmissionDate") val dutyToReferSubmissionDate: LocalDate? = null,
 
-  @Schema(example = "Pending", description = "")
+  @field:Schema(example = "Pending", description = "")
   @get:JsonProperty("dutyToReferOutcome") val dutyToReferOutcome: String? = null,
 
   @get:JsonProperty("isApplicationEligible") val isApplicationEligible: Boolean? = null,
@@ -53,7 +53,7 @@ data class Cas3SubmitApplication(
 
   @get:JsonProperty("dutyToReferLocalAuthorityAreaName") val dutyToReferLocalAuthorityAreaName: String? = null,
 
-  @Schema(example = "Wed Feb 21 00:00:00 GMT 2024", description = "")
+  @field:Schema(example = "Wed Feb 21 00:00:00 GMT 2024", description = "")
   @get:JsonProperty("personReleaseDate") val personReleaseDate: LocalDate? = null,
 
   @get:JsonProperty("isHistoryOfSexualOffence") val isHistoryOfSexualOffence: Boolean? = null,
