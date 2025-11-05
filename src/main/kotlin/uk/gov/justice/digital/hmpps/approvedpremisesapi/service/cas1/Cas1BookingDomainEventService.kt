@@ -439,6 +439,7 @@ class Cas1BookingDomainEventService(
     isSpaceBooking = true,
     characteristics = criteria.toSpaceCharacteristics(),
     transferReason = transferReason,
+    additionalInformation = additionalInformation,
   )
 
   private fun getNomsNumber(crn: String) = when (val personSummaryInfoResult = offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.NeverRestricted)) {
