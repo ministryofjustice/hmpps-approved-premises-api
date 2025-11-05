@@ -44,7 +44,7 @@ class Cas1ApplicationDomainEventService(
   private val offenderRisksService: OffenderRisksService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val domainEventTransformer: DomainEventTransformer,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   private val clock: Clock,
 ) {
 

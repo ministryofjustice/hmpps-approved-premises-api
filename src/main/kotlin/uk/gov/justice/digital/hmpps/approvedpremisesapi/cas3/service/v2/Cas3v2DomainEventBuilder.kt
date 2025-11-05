@@ -45,8 +45,8 @@ import java.util.UUID
 @Suppress("TooManyFunctions")
 @Component
 class Cas3v2DomainEventBuilder(
-  @Value("\${url-templates.api.cas3.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.booking}") private val bookingUrlTemplate: String,
+  @param:Value("\${url-templates.api.cas3.application}") private val applicationUrlTemplate: String,
+  @param:Value("\${url-templates.api.cas3.booking}") private val bookingUrlTemplate: String,
 ) {
 
   fun getBookingConfirmedDomainEvent(

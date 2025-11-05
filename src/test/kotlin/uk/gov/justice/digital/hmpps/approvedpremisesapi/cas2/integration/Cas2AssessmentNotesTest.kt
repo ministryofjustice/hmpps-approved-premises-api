@@ -24,8 +24,8 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas2AssessmentNotesTest(
-  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) : IntegrationTestBase() {
 
   @SpykBean

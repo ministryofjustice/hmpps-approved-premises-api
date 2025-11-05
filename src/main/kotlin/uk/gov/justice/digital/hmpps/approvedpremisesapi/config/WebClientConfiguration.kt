@@ -27,8 +27,8 @@ data class WebClientConfig(
 @SuppressWarnings("LongParameterList")
 @Configuration
 class WebClientConfiguration(
-  @Value("\${services.default.timeout-ms}") private val defaultUpstreamTimeoutMs: Long,
-  @Value("\${services.default.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
+  @param:Value("\${services.default.timeout-ms}") private val defaultUpstreamTimeoutMs: Long,
+  @param:Value("\${services.default.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)

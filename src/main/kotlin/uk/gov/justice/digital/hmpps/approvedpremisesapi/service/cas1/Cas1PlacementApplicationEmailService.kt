@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 @Service
 class Cas1PlacementApplicationEmailService(
   private val emailNotifier: Cas1EmailNotifier,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
 ) {
 
   fun placementApplicationSubmitted(placementApplication: PlacementApplicationEntity) {

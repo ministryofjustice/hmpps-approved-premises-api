@@ -26,7 +26,7 @@ class Cas3v2BookingSearchService(
   private val cas3BookingRepository: Cas3v2BookingRepository,
   private val offenderService: OffenderService,
   private val userService: UserService,
-  @Value("\${pagination.cas3.booking-search-page-size}") private val cas3BookingSearchPageSize: Int,
+  @param:Value("\${pagination.cas3.booking-search-page-size}") private val cas3BookingSearchPageSize: Int,
 ) {
 
   fun findBookings(

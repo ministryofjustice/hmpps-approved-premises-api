@@ -50,8 +50,8 @@ class Cas2ApplicationService(
   private val assessmentService: Cas2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
-  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
   fun getApplicationSummaries(

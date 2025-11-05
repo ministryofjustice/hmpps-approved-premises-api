@@ -17,10 +17,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 @Service
 class Cas1ChangeRequestEmailService(
   private val emailNotifier: Cas1EmailNotifier,
-  @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.cas1.cru-open-change-requests}") private val cruOpenChangeRequestsUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.cas1.cru-dashboard}") private val cruDashboardUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.cas1.space-booking-timeline}") private val spaceBookingTimelineUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.cas1.cru-open-change-requests}") private val cruOpenChangeRequestsUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.cas1.cru-dashboard}") private val cruDashboardUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.cas1.space-booking-timeline}") private val spaceBookingTimelineUrlTemplate: UrlTemplate,
 ) {
 
   @EventListener

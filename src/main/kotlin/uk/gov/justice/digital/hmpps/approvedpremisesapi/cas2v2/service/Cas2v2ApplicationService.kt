@@ -54,8 +54,8 @@ class Cas2v2ApplicationService(
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
   private val sentryService: SentryService,
-  @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
   fun getCas2v2Applications(

@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 @Service
 class Cas1AppealEmailService(
   private val emailNotifier: Cas1EmailNotifier,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
   fun appealSuccess(application: ApprovedPremisesApplicationEntity, appeal: AppealEntity) {
     appealSuccessRecipients(application, appeal).forEach { emailAddress ->

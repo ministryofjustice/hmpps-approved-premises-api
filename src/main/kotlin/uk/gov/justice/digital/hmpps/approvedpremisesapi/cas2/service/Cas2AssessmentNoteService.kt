@@ -33,8 +33,8 @@ class Cas2AssessmentNoteService(
   private val userAccessService: Cas2UserAccessService,
   private val notifyConfig: NotifyConfig,
   private val cas2EmailService: Cas2EmailService,
-  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)

@@ -14,10 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
 @Component
 class Cas1ApplicationTimelineTransformer(
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.cas1.space-booking}") private val cas1SpaceBookingUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.application-appeal}") private val appealUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.cas1.space-booking}") private val cas1SpaceBookingUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application-appeal}") private val appealUrlTemplate: UrlTemplate,
   private val cas1DomainEventDescriber: Cas1DomainEventDescriber,
   private val userTransformer: UserTransformer,
 ) {

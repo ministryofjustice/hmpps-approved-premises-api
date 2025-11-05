@@ -52,7 +52,7 @@ import kotlin.reflect.KClass
 
 @Service("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.DomainEventServiceConfig")
 class Cas3DomainEventServiceConfig(
-  @Value("\${domain-events.cas3.emit-enabled}") val domainEventsWithEmitEnabled: List<EventType>,
+  @param:Value("\${domain-events.cas3.emit-enabled}") val domainEventsWithEmitEnabled: List<EventType>,
 ) {
   fun emitForEvent(eventType: EventType) = domainEventsWithEmitEnabled.contains(eventType)
 }

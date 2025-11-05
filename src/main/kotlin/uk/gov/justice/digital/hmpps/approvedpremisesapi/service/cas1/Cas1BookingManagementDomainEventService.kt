@@ -37,7 +37,7 @@ import java.util.UUID
 
 @Service
 class Cas1SpaceBookingManagementDomainEventServiceConfig(
-  @Value("\${url-templates.frontend.application}") val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") val applicationUrlTemplate: UrlTemplate,
 )
 
 @Service

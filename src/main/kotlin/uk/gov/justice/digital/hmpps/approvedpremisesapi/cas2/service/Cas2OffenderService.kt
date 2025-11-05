@@ -46,7 +46,7 @@ class Cas2OffenderService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
-  @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
+  @param:Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)

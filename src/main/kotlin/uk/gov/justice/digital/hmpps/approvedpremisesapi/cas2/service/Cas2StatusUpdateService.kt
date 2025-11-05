@@ -52,8 +52,8 @@ class StatusUpdateService(
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
   private val statusTransformer: ApplicationStatusTransformer,
   private val cas2EmailService: Cas2EmailService,
-  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationOverviewUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)

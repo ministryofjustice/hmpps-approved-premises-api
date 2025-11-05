@@ -17,9 +17,9 @@ class Cas2EmailService(
   private val nomisUserRepository: NomisUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
-  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
-  @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
+  @param:Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
+  @param:Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
+  @param:Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
   fun sendLocationChangedEmails(
     application: Cas2ApplicationEntity,

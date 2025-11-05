@@ -46,7 +46,7 @@ class Cas1PlacementRequestService(
   private val placementRequirementsRepository: PlacementRequirementsRepository,
   private val cancellationRepository: CancellationRepository,
   private val userAccessService: Cas1UserAccessService,
-  @Lazy private val applicationService: ApplicationService,
+  @param:Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,

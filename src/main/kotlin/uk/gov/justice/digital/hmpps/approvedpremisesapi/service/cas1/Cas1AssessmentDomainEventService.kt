@@ -37,8 +37,8 @@ class Cas1AssessmentDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val clock: Clock,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
 ) {
 
   fun assessmentAllocated(assessment: AssessmentEntity, allocatedToUser: UserEntity, allocatingUser: UserEntity?) {

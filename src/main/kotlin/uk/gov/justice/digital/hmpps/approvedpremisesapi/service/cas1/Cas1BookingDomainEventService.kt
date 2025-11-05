@@ -51,7 +51,7 @@ class Cas1BookingDomainEventService(
   val domainEventService: Cas1DomainEventService,
   val offenderService: OffenderService,
   val apDeliusContextApiClient: ApDeliusContextApiClient,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
 
   fun spaceBookingMade(cas1BookingCreatedEvent: Cas1BookingCreatedEvent) {

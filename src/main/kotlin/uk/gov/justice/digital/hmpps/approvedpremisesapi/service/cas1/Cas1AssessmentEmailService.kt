@@ -18,9 +18,9 @@ import java.util.UUID
 class Cas1AssessmentEmailService(
   private val emailNotifier: Cas1EmailNotifier,
   private val workingDayService: WorkingDayService,
-  @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
 ) {
 
   fun assessmentAllocated(

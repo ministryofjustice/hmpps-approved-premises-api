@@ -35,7 +35,7 @@ class Cas1PlacementApplicationDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val domainEventTransformer: DomainEventTransformer,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   val clock: Clock,
 ) {
 

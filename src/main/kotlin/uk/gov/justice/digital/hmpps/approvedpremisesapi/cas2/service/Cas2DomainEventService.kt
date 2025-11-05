@@ -34,7 +34,7 @@ class Cas2DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
-  @Value("\${domain-events.cas2.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
+  @param:Value("\${domain-events.cas2.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   private val domainEventUrlConfig: DomainEventUrlConfig,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)

@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class WebClientCache(
   private val objectMapper: ObjectMapper,
   private val redisTemplate: RedisTemplate<String, String>,
-  @Value("\${preemptive-cache-key-prefix}") private val preemptiveCacheKeyPrefix: String,
+  @param:Value("\${preemptive-cache-key-prefix}") private val preemptiveCacheKeyPrefix: String,
   private val sentryService: SentryService,
   private val clock: Clock,
 ) {

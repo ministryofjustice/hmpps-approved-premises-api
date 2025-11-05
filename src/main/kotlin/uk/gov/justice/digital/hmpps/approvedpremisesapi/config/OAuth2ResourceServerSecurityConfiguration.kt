@@ -189,7 +189,7 @@ class AuthAwareAuthenticationToken(
 
 @Configuration
 class AuthorizedClientServiceConfiguration(
-  @Value("\${log-client-credentials-jwt-info}") private val logClintCredentialsJwtInfo: Boolean,
+  @param:Value("\${log-client-credentials-jwt-info}") private val logClintCredentialsJwtInfo: Boolean,
   private val clientRegistrationRepository: ClientRegistrationRepository,
   private val objectMapper: ObjectMapper,
 ) {

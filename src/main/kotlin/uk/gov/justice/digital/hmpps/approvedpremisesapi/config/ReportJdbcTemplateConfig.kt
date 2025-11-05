@@ -10,7 +10,7 @@ import javax.sql.DataSource
 
 @Configuration
 class ReportJdbcTemplateConfig(
-  @Value("\${reports.jdbc-fetch-size}") val fetchSize: Int,
+  @param:Value("\${reports.jdbc-fetch-size}") val fetchSize: Int,
 ) {
   @Bean
   fun reportJdbcTemplate(datasource: DataSource): ReportJdbcTemplate {

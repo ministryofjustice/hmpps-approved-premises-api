@@ -14,9 +14,9 @@ object Constants {
 @Service
 class Cas1BookingEmailService(
   private val emailNotifier: Cas1EmailNotifier,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.cas1.space-booking}") private val spaceBookingUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.cas1.space-booking}") private val spaceBookingUrlTemplate: UrlTemplate,
 ) {
 
   fun spaceBookingMade(

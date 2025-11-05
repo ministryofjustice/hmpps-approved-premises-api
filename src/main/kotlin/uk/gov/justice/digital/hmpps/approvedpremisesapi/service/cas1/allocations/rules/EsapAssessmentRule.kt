@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations
 @SuppressWarnings("MagicNumber")
 @Component
 class EsapAssessmentRule(
-  @Value("\${user-allocations.rules.esap-assessments.allocate-to-user}")
+  @param:Value("\${user-allocations.rules.esap-assessments.allocate-to-user}")
   private val allocateToUser: String,
 ) : UserAllocatorRule {
   override val name: String

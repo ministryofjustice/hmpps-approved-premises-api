@@ -25,10 +25,10 @@ import java.util.UUID
  **/
 @Component
 class Cas1WithdrawableTreeBuilder(
-  @Lazy private val placementRequestService: Cas1PlacementRequestService,
-  @Lazy private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
-  @Lazy private val cas1ApplicationService: Cas1ApplicationService,
-  @Lazy private val cas1SpaceBookingService: Cas1SpaceBookingService,
+  @param:Lazy private val placementRequestService: Cas1PlacementRequestService,
+  @param:Lazy private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
+  @param:Lazy private val cas1ApplicationService: Cas1ApplicationService,
+  @param:Lazy private val cas1SpaceBookingService: Cas1SpaceBookingService,
 ) {
   fun treeForApp(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableTree {
     val children = mutableListOf<WithdrawableTreeNode>()

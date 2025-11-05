@@ -33,7 +33,7 @@ class InmateDetailsCacheRefreshService(
   private val applicationRepository: ApplicationRepository,
   private val prisonsApiClient: PrisonsApiClient,
   private val cacheRefreshExclusionsInmateDetailsRepository: CacheRefreshExclusionsInmateDetailsRepository,
-  @Value("\${refresh-inmate-details-cache.logging-enabled}") private val loggingEnabled: Boolean,
+  @param:Value("\${refresh-inmate-details-cache.logging-enabled}") private val loggingEnabled: Boolean,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)

@@ -75,7 +75,7 @@ class Cas1DomainEventService(
   private val domainEventRepository: DomainEventRepository,
   val domainEventWorker: ConfiguredDomainEventWorker,
   private val userService: UserService,
-  @Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
+  @param:Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   private val domainEventUrlConfig: DomainEventUrlConfig,
   private val cas1DomainEventMigrationService: Cas1DomainEventMigrationService,
   private val sentryService: SentryService,

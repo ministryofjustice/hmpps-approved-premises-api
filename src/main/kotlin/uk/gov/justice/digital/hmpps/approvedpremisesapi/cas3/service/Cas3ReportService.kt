@@ -69,7 +69,7 @@ class Cas3ReportService(
   private val bedspaceOccupancyReportRepository: BedspaceOccupancyReportRepository,
   private val cas3FutureBookingsReportRepository: Cas3FutureBookingsReportRepository,
   private val cas3BookingGapReportRepository: Cas3BookingGapReportRepository,
-  @Value("\${cas3-report.crn-search-limit:500}") private val numberOfCrn: Int,
+  @param:Value("\${cas3-report.crn-search-limit:500}") private val numberOfCrn: Int,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)

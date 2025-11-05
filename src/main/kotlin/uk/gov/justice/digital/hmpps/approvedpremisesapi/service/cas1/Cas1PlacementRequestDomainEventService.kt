@@ -18,7 +18,7 @@ import java.util.UUID
 class Cas1PlacementRequestDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val domainEventTransformer: DomainEventTransformer,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @param:Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   val clock: Clock,
 ) {
 
