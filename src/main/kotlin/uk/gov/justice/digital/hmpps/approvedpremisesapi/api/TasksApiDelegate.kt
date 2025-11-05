@@ -16,18 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link TasksApiController}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface TasksApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see TasksApi#tasksGet
-   */
   fun tasksGet(
     type: TaskType?,
     types: kotlin.collections.List<TaskType>?,
@@ -54,9 +47,6 @@ interface TasksApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see TasksApi#tasksTaskTypeIdAllocationsDelete
-   */
   fun tasksTaskTypeIdAllocationsDelete(
     id: java.util.UUID,
     taskType: kotlin.String,
@@ -72,9 +62,6 @@ interface TasksApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see TasksApi#tasksTaskTypeIdAllocationsPost
-   */
   fun tasksTaskTypeIdAllocationsPost(
     id: java.util.UUID,
     taskType: kotlin.String,
@@ -96,9 +83,6 @@ interface TasksApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see TasksApi#tasksTaskTypeIdGet
-   */
   fun tasksTaskTypeIdGet(
     id: java.util.UUID,
     taskType: kotlin.String,

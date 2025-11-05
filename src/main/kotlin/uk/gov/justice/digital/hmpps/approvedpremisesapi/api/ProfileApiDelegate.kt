@@ -8,18 +8,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileRespons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link ProfileApiController}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface ProfileApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see ProfileApi#profileV2Get
-   */
   fun profileV2Get(
     xServiceName: ServiceName,
     readOnly: kotlin.Boolean?,
