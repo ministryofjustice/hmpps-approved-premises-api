@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
@@ -37,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sortCas3Assessments
 import java.util.UUID
 
 @Cas3Controller
+@RequestMapping(value = ["\${api.base-path:}/cas3", "\${api.base-path:}"])
 class Cas3AssessmentController(
   private val objectMapper: ObjectMapper,
   private val cas3AssessmentService: Cas3AssessmentService,
@@ -168,17 +170,20 @@ class Cas3AssessmentController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  @DeleteMapping("/assessments/{assessmentId}/allocations")
+  @DeleteMapping(value = ["/assessments/{assessmentId}/allocations"])
   @Transactional
   fun deallocateAssessment(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
-
     ensureEntityFromCasResultIsSuccess(cas3AssessmentService.deallocateAssessment(user, assessmentId))
-
     return ResponseEntity(Unit, HttpStatus.NO_CONTENT)
   }
 
-  @PostMapping("/assessments/{assessmentId}/reallocateToMe")
+  @Deprecated(message = "use /cas3/assessments/{assessmentId}/allocations")
+  @DeleteMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations"])
+  @Transactional
+  fun deallocateAssessmentOld(@PathVariable assessmentId: UUID): ResponseEntity<Unit> = deallocateAssessment(assessmentId)
+
+  @PostMapping(value = [ "/assessments/{assessmentId}/reallocateToMe"])
   @Transactional
   fun reallocateAssessmentToMe(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
@@ -189,6 +194,11 @@ class Cas3AssessmentController(
 
     return ResponseEntity(HttpStatus.CREATED)
   }
+
+  @Deprecated(message = "use /cas3/assessments/{assessmentId}/reallocateToMe")
+  @PostMapping(value = ["/tasks/{taskType}/{assessmentId}/allocations"])
+  @Transactional
+  fun reallocateAssessmentToMeOld(@PathVariable assessmentId: UUID): ResponseEntity<Unit> = reallocateAssessmentToMe(assessmentId)
 
   @PostMapping("/assessments/{assessmentId}/referral-history-notes")
   fun createAssessmentReferralHistoryNotes(
