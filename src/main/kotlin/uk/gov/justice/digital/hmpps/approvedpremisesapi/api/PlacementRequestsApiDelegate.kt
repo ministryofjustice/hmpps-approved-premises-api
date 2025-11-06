@@ -10,18 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link PlacementRequestsApiController}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface PlacementRequestsApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see PlacementRequestsApi#placementRequestsIdBookingPost
-   */
   fun placementRequestsIdBookingPost(
     id: java.util.UUID,
     newPlacementRequestBooking: NewPlacementRequestBooking,
@@ -37,9 +30,6 @@ interface PlacementRequestsApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PlacementRequestsApi#placementRequestsIdBookingNotMadePost
-   */
   fun placementRequestsIdBookingNotMadePost(
     id: java.util.UUID,
     newBookingNotMade: NewBookingNotMade,

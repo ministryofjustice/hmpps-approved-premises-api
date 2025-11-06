@@ -19,18 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralReject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link ReferenceDataApiController}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface ReferenceDataApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see ReferenceDataApi#referenceDataApAreasGet
-   */
   fun referenceDataApAreasGet(): ResponseEntity<List<ApArea>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -43,9 +36,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataCancellationReasonsGet
-   */
   fun referenceDataCancellationReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<CancellationReason>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -58,9 +48,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataCharacteristicsGet
-   */
   fun referenceDataCharacteristicsGet(
     xServiceName: ServiceName?,
     modelScope: kotlin.String?,
@@ -76,9 +63,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataDepartureReasonsGet
-   */
   fun referenceDataDepartureReasonsGet(
     xServiceName: ServiceName?,
     includeInactive: kotlin.Boolean?,
@@ -94,9 +78,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataDestinationProvidersGet
-   */
   fun referenceDataDestinationProvidersGet(): ResponseEntity<List<DestinationProvider>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -109,9 +90,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataLocalAuthorityAreasGet
-   */
   fun referenceDataLocalAuthorityAreasGet(): ResponseEntity<List<LocalAuthorityArea>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -124,9 +102,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataLostBedReasonsGet
-   */
   fun referenceDataLostBedReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<LostBedReason>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -139,9 +114,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataMoveOnCategoriesGet
-   */
   fun referenceDataMoveOnCategoriesGet(
     xServiceName: ServiceName?,
     includeInactive: kotlin.Boolean?,
@@ -157,9 +129,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataNonArrivalReasonsGet
-   */
   fun referenceDataNonArrivalReasonsGet(): ResponseEntity<List<NonArrivalReason>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -172,9 +141,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataProbationDeliveryUnitsGet
-   */
   fun referenceDataProbationDeliveryUnitsGet(probationRegionId: java.util.UUID?): ResponseEntity<List<ProbationDeliveryUnit>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -187,9 +153,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataProbationRegionsGet
-   */
   fun referenceDataProbationRegionsGet(): ResponseEntity<List<ProbationRegion>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -202,9 +165,6 @@ interface ReferenceDataApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see ReferenceDataApi#referenceDataReferralRejectionReasonsGet
-   */
   fun referenceDataReferralRejectionReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<ReferralRejectionReason>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

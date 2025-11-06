@@ -10,18 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link BookingsApiController}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface BookingsApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see BookingsApi#bookingsSearchGet
-   */
   fun bookingsSearchGet(
     status: BookingStatus?,
     sortOrder: SortOrder?,

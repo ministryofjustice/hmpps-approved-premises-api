@@ -13,18 +13,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link PeopleApiController}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface PeopleApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see PeopleApi#peopleCrnAcctAlertsGet
-   */
   fun peopleCrnAcctAlertsGet(crn: kotlin.String): ResponseEntity<List<PersonAcctAlert>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -41,9 +34,6 @@ interface PeopleApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PeopleApi#peopleCrnAdjudicationsGet
-   */
   fun peopleCrnAdjudicationsGet(
     crn: kotlin.String,
     xServiceName: ServiceName,
@@ -63,9 +53,6 @@ interface PeopleApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PeopleApi#peopleCrnOasysSectionsGet
-   */
   fun peopleCrnOasysSectionsGet(
     crn: kotlin.String,
     selectedSections: kotlin.collections.List<kotlin.Int>?,
@@ -85,9 +72,6 @@ interface PeopleApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PeopleApi#peopleCrnOffencesGet
-   */
   fun peopleCrnOffencesGet(crn: kotlin.String): ResponseEntity<List<ActiveOffence>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -104,9 +88,6 @@ interface PeopleApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PeopleApi#peopleCrnPrisonCaseNotesGet
-   */
   fun peopleCrnPrisonCaseNotesGet(
     crn: kotlin.String,
     xServiceName: ServiceName,
@@ -126,9 +107,6 @@ interface PeopleApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PeopleApi#peopleSearchGet
-   */
   fun peopleSearchGet(crn: kotlin.String): ResponseEntity<Person> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

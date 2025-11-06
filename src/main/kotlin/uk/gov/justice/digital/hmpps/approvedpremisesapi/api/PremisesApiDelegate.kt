@@ -34,18 +34,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import java.util.Optional
 
-/**
- * A delegate to be called by the {@link PremisesApiController}}.
- * Implement this interface with a {@link org.springframework.stereotype.Service} annotated class.
- */
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")
 interface PremisesApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  /**
-   * @see PremisesApi#premisesPost
-   */
   fun premisesPost(
     body: NewPremises,
     xServiceName: ServiceName?,
@@ -65,9 +58,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsBookingIdArrivalsPost
-   */
   fun premisesPremisesIdBookingsBookingIdArrivalsPost(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
@@ -92,9 +82,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsBookingIdCancellationsPost
-   */
   fun premisesPremisesIdBookingsBookingIdCancellationsPost(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
@@ -119,9 +106,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsBookingIdConfirmationsPost
-   */
   fun premisesPremisesIdBookingsBookingIdConfirmationsPost(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
@@ -146,9 +130,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsBookingIdDateChangesPost
-   */
   fun premisesPremisesIdBookingsBookingIdDateChangesPost(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
@@ -173,9 +154,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsBookingIdDeparturesPost
-   */
   fun premisesPremisesIdBookingsBookingIdDeparturesPost(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
@@ -200,9 +178,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsBookingIdExtensionsPost
-   */
   fun premisesPremisesIdBookingsBookingIdExtensionsPost(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
@@ -227,9 +202,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsBookingIdGet
-   */
   fun premisesPremisesIdBookingsBookingIdGet(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
@@ -249,9 +221,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsBookingIdTurnaroundsPost
-   */
   fun premisesPremisesIdBookingsBookingIdTurnaroundsPost(
     premisesId: java.util.UUID,
     bookingId: java.util.UUID,
@@ -280,9 +249,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsGet
-   */
   fun premisesPremisesIdBookingsGet(premisesId: java.util.UUID): ResponseEntity<List<Booking>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -299,9 +265,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdBookingsPost
-   */
   fun premisesPremisesIdBookingsPost(
     premisesId: java.util.UUID,
     body: NewBooking,
@@ -329,9 +292,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdGet
-   */
   fun premisesPremisesIdGet(premisesId: java.util.UUID): ResponseEntity<Premises> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -348,9 +308,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdLostBedsGet
-   */
   fun premisesPremisesIdLostBedsGet(premisesId: java.util.UUID): ResponseEntity<List<LostBed>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -363,9 +320,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdLostBedsLostBedIdCancellationsPost
-   */
   fun premisesPremisesIdLostBedsLostBedIdCancellationsPost(
     premisesId: java.util.UUID,
     lostBedId: java.util.UUID,
@@ -390,9 +344,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdLostBedsLostBedIdGet
-   */
   fun premisesPremisesIdLostBedsLostBedIdGet(
     premisesId: java.util.UUID,
     lostBedId: java.util.UUID,
@@ -412,9 +363,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdLostBedsLostBedIdPut
-   */
   fun premisesPremisesIdLostBedsLostBedIdPut(
     premisesId: java.util.UUID,
     lostBedId: java.util.UUID,
@@ -439,9 +387,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdLostBedsPost
-   */
   fun premisesPremisesIdLostBedsPost(
     premisesId: java.util.UUID,
     body: NewLostBed,
@@ -465,9 +410,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdPut
-   */
   fun premisesPremisesIdPut(
     premisesId: java.util.UUID,
     body: UpdatePremises,
@@ -487,9 +429,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdRoomsGet
-   */
   fun premisesPremisesIdRoomsGet(premisesId: java.util.UUID): ResponseEntity<List<Room>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -502,9 +441,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdRoomsPost
-   */
   fun premisesPremisesIdRoomsPost(
     premisesId: java.util.UUID,
     newRoom: NewRoom,
@@ -528,9 +464,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdRoomsRoomIdGet
-   */
   fun premisesPremisesIdRoomsRoomIdGet(
     premisesId: java.util.UUID,
     roomId: java.util.UUID,
@@ -550,9 +483,6 @@ interface PremisesApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  /**
-   * @see PremisesApi#premisesPremisesIdRoomsRoomIdPut
-   */
   fun premisesPremisesIdRoomsRoomIdPut(
     premisesId: java.util.UUID,
     roomId: java.util.UUID,
