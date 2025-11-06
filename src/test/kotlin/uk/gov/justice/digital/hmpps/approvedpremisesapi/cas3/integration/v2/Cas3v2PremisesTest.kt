@@ -272,6 +272,61 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Update premises is idempotent`() {
+      givenAUser { user, jwt ->
+        val premises = givenACas3Premises(user.probationRegion)
+
+        val result = doPutRequest(
+          jwt,
+          premisesId = premises.id,
+          cas3Premises = Cas3UpdatePremises(
+            reference = premises.name,
+            addressLine1 = premises.addressLine1,
+            addressLine2 = premises.addressLine2,
+            postcode = premises.postcode,
+            town = premises.town,
+            notes = premises.notes,
+            probationRegionId = premises.probationDeliveryUnit.probationRegion.id,
+            probationDeliveryUnitId = premises.probationDeliveryUnit.id,
+            localAuthorityAreaId = premises.localAuthorityArea?.id,
+            characteristicIds = premises.characteristics.map { it.id },
+            turnaroundWorkingDayCount = null,
+            turnaroundWorkingDays = premises.turnaroundWorkingDays,
+          ),
+        )
+          .expectStatus()
+          .isOk()
+          .bodyAsObject<Cas3Premises>()
+
+        assertAll({
+          assertThat(result.id).isEqualTo(premises.id)
+          assertThat(result.reference).isEqualTo(premises.name)
+          assertThat(result.addressLine1).isEqualTo(premises.addressLine1)
+          assertThat(result.addressLine2).isEqualTo(premises.addressLine2)
+          assertThat(result.town).isEqualTo(premises.town)
+          assertThat(result.postcode).isEqualTo(premises.postcode)
+          assertThat(result.localAuthorityArea?.id).isEqualTo(premises.localAuthorityArea?.id)
+          assertThat(result.probationRegion.id).isEqualTo(premises.probationDeliveryUnit.probationRegion.id)
+          assertThat(result.probationDeliveryUnit.id).isEqualTo(premises.probationDeliveryUnit.id)
+          assertThat(result.status).isEqualTo(premises.status)
+          assertThat(result.totalOnlineBedspaces).isEqualTo(0)
+          assertThat(result.totalUpcomingBedspaces).isEqualTo(0)
+          assertThat(result.totalArchivedBedspaces).isEqualTo(0)
+          assertThat(result.characteristics).isNull()
+          assertThat(result.premisesCharacteristics?.map { it.id }).isEqualTo(premises.characteristics.map { it.id })
+          assertThat(result.startDate).isEqualTo(premises.startDate)
+          assertThat(result.endDate).isEqualTo(premises.endDate)
+          assertThat(result.notes).isEqualTo(premises.notes)
+          assertThat(result.turnaroundWorkingDays).isEqualTo(premises.turnaroundWorkingDays)
+        })
+        val entity = cas3PremisesRepository.findById(premises.id).get()
+        assertThat(result).isEqualTo(
+          cas3PremisesTransformer.toCas3Premises(entity),
+        )
+      }
+    }
+
+    @Test
     fun `Update premises returns 403 Forbidden when user access is not allowed as they are out of region`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val (_, anotherJwt) = givenAUser(

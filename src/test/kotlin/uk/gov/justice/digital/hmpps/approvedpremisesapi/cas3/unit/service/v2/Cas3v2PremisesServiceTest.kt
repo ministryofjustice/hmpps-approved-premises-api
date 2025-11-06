@@ -109,6 +109,7 @@ class Cas3v2PremisesServiceTest {
     fun setup() {
       every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
       every { cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(any(), any()) } returns false
+      every { cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitIdAndIdNot(any(), any(), any()) } returns false
       every { localAuthorityAreaRepository.findByIdOrNull(laa.id) } returns laa
       every { probationDeliveryUnitRepository.findByIdAndProbationRegionId(pdu.id, probationRegion.id) } returns pdu
       every { cas3PremisesCharacteristicRepository.findActiveCharacteristicsByIdIn(listOf(cas3PremisesCharacteristic.id)) } returns mutableListOf(
@@ -169,7 +170,7 @@ class Cas3v2PremisesServiceTest {
         probationDeliveryUnitRepository.findByIdAndProbationRegionId(pdu.id, pdu.probationRegion.id)
       }
       verify(exactly = 1) {
-        cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(updatedName, pdu.id)
+        cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitIdAndIdNot(updatedName, probationDeliveryUnitId = pdu.id, id = premises.id)
       }
     }
 
@@ -239,9 +240,10 @@ class Cas3v2PremisesServiceTest {
     fun `has validation error when reference is not unique`() {
       val notUniqueName = "notUnique"
       every {
-        cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(
+        cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitIdAndIdNot(
           notUniqueName,
-          pdu.id,
+          probationDeliveryUnitId = pdu.id,
+          id = premises.id,
         )
       } returns true
 

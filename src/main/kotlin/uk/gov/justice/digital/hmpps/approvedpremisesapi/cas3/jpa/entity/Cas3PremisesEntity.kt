@@ -94,6 +94,12 @@ interface Cas3PremisesRepository : JpaRepository<Cas3PremisesEntity, UUID> {
     probationDeliveryUnitId: UUID,
   ): Boolean
 
+  fun existsByNameIgnoreCaseAndProbationDeliveryUnitIdAndIdNot(
+    name: String,
+    probationDeliveryUnitId: UUID,
+    id: UUID,
+  ): Boolean
+
   @Query(
     """
 SELECT
