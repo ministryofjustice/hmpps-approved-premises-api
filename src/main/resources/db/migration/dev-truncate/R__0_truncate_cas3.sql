@@ -1,8 +1,10 @@
 -- ${flyway:timestamp}
 TRUNCATE TABLE premises CASCADE;
+TRUNCATE TABLE cas3_premises CASCADE;
 
 TRUNCATE TABLE applications CASCADE;
 TRUNCATE table assessments CASCADE;
 
 TRUNCATE TABLE rooms CASCADE;
 TRUNCATE TABLE beds CASCADE;
+TRUNCATE TABLE cas3_bedspaces CASCADE;
