@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -37,6 +38,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   keyWorkerStaffCode: String? = null,
   keyWorkerUser: UserEntity? = null,
   additionalInformation: String? = null,
+  transferReason: TransferReason? = null,
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
   val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
@@ -71,6 +73,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withTransferredFrom(transferredFrom)
     withKeyworkerStaffCode(keyWorkerStaffCode)
     withKeyWorkerUser(keyWorkerUser)
+    withTransferReason(transferReason)
     withAdditionalInformation(additionalInformation)
   }
 }

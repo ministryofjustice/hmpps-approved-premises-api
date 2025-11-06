@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
@@ -1256,6 +1257,17 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 premises = givenAnApprovedPremises(),
               )
 
+              givenACas1SpaceBooking(
+                crn = application.crn,
+                application = application,
+                placementRequest = placementRequest,
+                canonicalArrivalDate = LocalDate.of(2024, 6, 10),
+                canonicalDepartureDate = LocalDate.of(2024, 6, 25),
+                premises = givenAnApprovedPremises(),
+                transferReason = TransferReason.conflictWithStaff,
+                additionalInformation = "Some additional information",
+              )
+
               val changeRequest = givenACas1ChangeRequest(
                 type = ChangeRequestType.PLACEMENT_APPEAL,
                 spaceBooking = spaceBooking,
@@ -1298,11 +1310,13 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               assertThat(response.assessor).isEqualTo(cas1PlacementRequestDetail.assessor)
               assertThat(response.isWithdrawn).isEqualTo(cas1PlacementRequestDetail.isWithdrawn)
               assertThat(response.spaceBookings).isEqualTo(cas1PlacementRequestDetail.spaceBookings)
-              assertThat(response.spaceBookings).size().isEqualTo(2)
-              assertThat(response.spaceBookings[0].createdAt).isNotNull()
-              assertThat(response.spaceBookings[0].canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 8))
+              assertThat(response.spaceBookings).size().isEqualTo(3)
+              assertThat(response.spaceBookings[0].transferReason).isEqualTo(TransferReason.conflictWithStaff)
+              assertThat(response.spaceBookings[0].additionalInformation).isEqualTo("Some additional information")
               assertThat(response.spaceBookings[1].createdAt).isNotNull()
-              assertThat(response.spaceBookings[1].canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
+              assertThat(response.spaceBookings[1].canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 8))
+              assertThat(response.spaceBookings[2].createdAt).isNotNull()
+              assertThat(response.spaceBookings[2].canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
               assertThat(response.openChangeRequests).isEqualTo(cas1PlacementRequestDetail.openChangeRequests)
               assertThat(response.notes).isEqualTo(cas1PlacementRequestDetail.notes)
               assertThat(response.requestType).isEqualTo(cas1PlacementRequestDetail.requestType)

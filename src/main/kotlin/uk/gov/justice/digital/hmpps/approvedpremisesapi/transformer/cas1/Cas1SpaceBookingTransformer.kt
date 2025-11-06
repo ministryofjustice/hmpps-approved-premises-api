@@ -213,6 +213,8 @@ class Cas1SpaceBookingTransformer(
       appealRequested = false,
       openChangeRequestTypes = openChangeRequestsForBooking.map { it.type.toApiType() },
       createdAt = spaceBooking.createdAt.toInstant(),
+      transferReason = spaceBooking.transferReason,
+      additionalInformation = spaceBooking.additionalInformation,
     )
   }
 
