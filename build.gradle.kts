@@ -93,6 +93,8 @@ java {
   toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
+kotlin.compilerOptions.freeCompilerArgs.add("-Xannotation-default-target=param-property")
+
 // The `buildDir` built-in property has been deprecated in favour of `layout.buildDirectory`
 // This is used in multiple places, so for convenience `buildDir` is redefined here.
 val buildDir = layout.buildDirectory.asFile.get()
