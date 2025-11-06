@@ -99,6 +99,34 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
           .isForbidden
       }
     }
+
+    @Test
+    fun `Get Void Bedspace returns cancelled void bedspace`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = givenACas3Premises(user.probationRegion)
+        val voidBedspace = createVoidBedspaces(premises).first()
+        voidBedspace.cancellationDate = OffsetDateTime.now().minusDays(1)
+        cas3VoidBedspacesRepository.save(voidBedspace)
+
+        val result = doGetRequest(jwt, premises.id, voidBedspace.bedspace!!.id, voidBedspace.id)
+          .expectStatus().isOk
+          .expectBody(Cas3VoidBedspace::class.java)
+          .returnResult().responseBody!!
+
+        assertAll({
+          assertThat(result.id).isEqualTo(voidBedspace.id)
+          assertThat(result.bedspaceId).isEqualTo(voidBedspace.bedspace!!.id)
+          assertThat(result.bedspaceName).isEqualTo(voidBedspace.bedspace!!.reference)
+          assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
+          assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
+          assertThat(result.reason.id).isEqualTo(voidBedspace.reason.id)
+          assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
+          assertThat(result.notes).isEqualTo(voidBedspace.notes)
+          assertThat(result.cancellationDate).isEqualTo(LocalDate.now().minusDays(1))
+          assertThat(result.cancellationNotes).isNull()
+        })
+      }
+    }
   }
 
   @Nested

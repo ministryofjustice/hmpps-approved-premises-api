@@ -114,13 +114,9 @@ interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspaceEntity, UU
   )
   fun findActiveVoidBedspacesByPremisesId(premisesId: UUID): List<Cas3VoidBedspaceEntity>
 
-  @Query("""select vb from Cas3VoidBedspaceEntity vb where vb.id = :voidBedspaceId and vb.bedspace.premises.id = :premisesId""")
-  fun findVoidBedspace(premisesId: UUID, voidBedspaceId: UUID): Cas3VoidBedspaceEntity?
-
   @Query(
     """select vb from Cas3VoidBedspaceEntity vb 
-      where vb.id = :voidBedspaceId and vb.bedspace.id = :bedspaceId and vb.bedspace.premises.id = :premisesId 
-      and vb.cancellationDate is null""",
+      where vb.id = :voidBedspaceId and vb.bedspace.id = :bedspaceId and vb.bedspace.premises.id = :premisesId""",
   )
   fun findVoidBedspace(premisesId: UUID, bedspaceId: UUID, voidBedspaceId: UUID): Cas3VoidBedspaceEntity?
 }
@@ -141,6 +137,7 @@ class Cas3VoidBedspaceEntity(
   @ManyToOne
   @JoinColumn(name = "premises_id")
   var premises: PremisesEntity?,
+  @Deprecated("This will be replaced in V2 by Cas3VoidBedspaceEntity.cancellationDate and Cas3VoidBedspaceEntity.cancellationNotes")
   @OneToOne(mappedBy = "voidBedspace")
   var cancellation: Cas3VoidBedspaceCancellationEntity?,
   @ManyToOne
