@@ -1,5 +1,5 @@
 -- ${flyway:timestamp}
--- ideally this would only be managed via the seed CSV files but removing the contents of this file breaks R__7_create_bookings_for_cas3 as they require the beds
+-- ideally this would only be managed via the seed CSV files but removing the contents of this file breaks R__5_create_bookings_for_cas3 as they require the beds
 -- to exist at that point in time. The correct solution is to move this logic into the SeedOnStartupService
 
 -- CAS3 beds for Kent, Surrey & Sussex
