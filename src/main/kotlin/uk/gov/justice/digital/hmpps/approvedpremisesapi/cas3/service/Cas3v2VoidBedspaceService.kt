@@ -40,6 +40,8 @@ class Cas3v2VoidBedspaceService(
   ): CasResult<Cas3VoidBedspaceEntity> = validatedCasResult {
     val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
 
+    cas3BookingService.throwIfVoidBedspaceDatesConflict(voidBedspaceStartDate, voidBedspaceEndDate, null, bedspace.id)
+
     if (validateVoidBedspaceDetails(bedspace, voidBedspaceStartDate, voidBedspaceEndDate, reason).any()) {
       return fieldValidationError
     }
@@ -100,6 +102,8 @@ class Cas3v2VoidBedspaceService(
       return generalError("This Void Bedspace has been cancelled")
     }
 
+    cas3BookingService.throwIfVoidBedspaceDatesConflict(voidBedspaceStartDate, voidBedspaceEndDate, null, bedspace.id, voidBedspaceEntity.id)
+
     if (validateVoidBedspaceDetails(bedspace, voidBedspaceStartDate, voidBedspaceEndDate, reason).any()) {
       return fieldValidationError
     }
@@ -124,7 +128,6 @@ class Cas3v2VoidBedspaceService(
     reason: Cas3VoidBedspaceReasonEntity?,
   ): ValidationErrors {
     cas3BookingService.throwIfBookingDatesConflict(voidBedspaceStartDate, voidBedspaceEndDate, null, bedspace.id)
-    cas3BookingService.throwIfVoidBedspaceDatesConflict(voidBedspaceStartDate, voidBedspaceEndDate, null, bedspace.id)
 
     if (voidBedspaceEndDate.isBefore(voidBedspaceStartDate)) {
       "$.endDate" hasValidationError "voidEndDateBeforeVoidStartDate"

@@ -47,7 +47,6 @@ class Cas3v2VoidBedspaceTest {
   @BeforeEach
   fun setup() {
     every { cas3BookingService.throwIfBookingDatesConflict(any(), any(), any(), any()) } just runs
-    every { cas3BookingService.throwIfVoidBedspaceDatesConflict(any(), any(), any(), any()) } just runs
     every { cas3VoidBedspaceReasonRepository.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
     every { cas3VoidBedspacesRepository.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspaceEntity }
   }
@@ -58,6 +57,11 @@ class Cas3v2VoidBedspaceTest {
     private val bedspaceEndDate = LocalDate.now().plusDays(10)
     private val bedspace =
       Cas3BedspaceEntityFactory().withStartDate(bedspaceStartDate).withEndDate(bedspaceEndDate).produce()
+
+    @BeforeEach
+    fun setup() {
+      every { cas3BookingService.throwIfVoidBedspaceDatesConflict(any(), any(), any(), any(), null) } just runs
+    }
 
     @Test
     fun `createVoidBedspace returns Success with correct result when validation passed`() {
@@ -169,10 +173,10 @@ class Cas3v2VoidBedspaceTest {
 
   @Nested
   inner class UpdateVoidBedspace {
-
     @BeforeEach
     fun setup() {
       every { cas3VoidBedspacesRepository.findVoidBedspace(any(), any(), any()) } returns voidBedspaceEntity
+      every { cas3BookingService.throwIfVoidBedspaceDatesConflict(any(), any(), any(), any(), any()) } just runs
     }
 
     private val bedspaceStartDate = LocalDate.now()
@@ -218,6 +222,7 @@ class Cas3v2VoidBedspaceTest {
           voidBedspaceEndDate,
           null,
           bedspace.id,
+          voidBedspaceEntity.id,
         )
       }
       verify(exactly = 1) {

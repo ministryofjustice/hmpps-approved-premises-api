@@ -515,26 +515,22 @@ class Cas3v2BookingService(
     endDate: LocalDate,
     bookingId: UUID?,
     bedspaceId: UUID,
+    excludeVoidBedspaceId: UUID? = null,
   ) {
-    getVoidBedspaceWithConflictingDates(startDate, endDate, bookingId, bedspaceId)?.let {
+    val voidBedspaces = cas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+      bedspaceId,
+      startDate,
+      endDate,
+      bookingId,
+    ).filter { excludeVoidBedspaceId == null || it.id != excludeVoidBedspaceId }
+
+    voidBedspaces.firstOrNull()?.let {
       throw ConflictProblem(
         it.id,
         "A Void Bedspace already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates",
       )
     }
   }
-
-  fun getVoidBedspaceWithConflictingDates(
-    startDate: LocalDate,
-    endDate: LocalDate,
-    bookingId: UUID?,
-    bedspaceId: UUID,
-  ) = cas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
-    bedspaceId,
-    startDate,
-    endDate,
-    bookingId,
-  ).firstOrNull()
 
   fun Cas3BookingEntity.lastUnavailableDate() = workingDayService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
 }

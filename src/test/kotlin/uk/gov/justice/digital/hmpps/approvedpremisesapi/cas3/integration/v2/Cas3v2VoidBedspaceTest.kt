@@ -458,6 +458,40 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
     }
 
     @Test
+    fun `Update void bedspace is idempotent`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+        val existingVoidBedspace = cas3VoidBedspaceEntityFactory.produceAndPersist {
+          withBedspace(bedspace)
+          withStartDate(bedspace.startDate.plusDays(1))
+          withEndDate(bedspace.startDate.plusDays(2))
+          withYieldedReason { reason }
+        }
+
+        val updateVoidBedspace = Cas3VoidBedspaceRequest(
+          startDate = existingVoidBedspace.startDate,
+          endDate = existingVoidBedspace.endDate,
+          reasonId = existingVoidBedspace.reason.id,
+          referenceNumber = existingVoidBedspace.referenceNumber,
+          notes = existingVoidBedspace.notes,
+          costCentre = existingVoidBedspace.costCentre,
+        )
+
+        val result =
+          doPutRequest(jwt, premises.id, bedspace.id, existingVoidBedspace.id, updateVoidBedspace)
+            .expectStatus()
+            .isOk
+            .expectBody(Cas3VoidBedspace::class.java)
+            .returnResult().responseBody!!
+
+        val updatedEntity =
+          cas3VoidBedspacesRepository.findVoidBedspace(premises.id, bedspace.id, existingVoidBedspace.id)!!
+        assertThat(result).isEqualTo(cas3VoidBedspacesTransformer.toCas3VoidBedspace(updatedEntity))
+      }
+    }
+
+    @Test
     fun `Update Void Bedspace returns OK with correct body when correct data is provided, and does not conflict with canceled bookings or void bedspaces`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
@@ -590,19 +624,33 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val (premises, bedspace) = givenCas3PremisesAndBedspace(user)
         val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
-        val voidBedspaceEntity = cas3VoidBedspaceEntityFactory.produceAndPersist {
+        val voidBedspaceEntity1 = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBedspace(bedspace)
           withStartDate(LocalDate.now())
           withEndDate(LocalDate.now().plusDays(2))
           withYieldedReason { reason }
         }
 
-        val updateVoidBedspace = buildUpdateVoidBedspace(voidBedspaceEntity)
+        val voidBedspaceEntity2 = cas3VoidBedspaceEntityFactory.produceAndPersist {
+          withBedspace(bedspace)
+          withStartDate(LocalDate.now().plusDays(5))
+          withEndDate(LocalDate.now().plusDays(10))
+          withYieldedReason { reason }
+        }
 
-        doPutRequest(jwt, premises.id, bedspace.id, voidBedspaceEntity.id, updateVoidBedspace)
+        val updateVoidBedspace = Cas3VoidBedspaceRequest(
+          // set the updated start date during the other void bedspace date rate
+          startDate = voidBedspaceEntity2.endDate.minusDays(1),
+          endDate = voidBedspaceEntity2.endDate.plusDays(12),
+          reasonId = voidBedspaceEntity1.reason.id,
+          referenceNumber = voidBedspaceEntity1.referenceNumber,
+          notes = voidBedspaceEntity1.notes,
+        )
+
+        doPutRequest(jwt, premises.id, bedspace.id, voidBedspaceEntity1.id, updateVoidBedspace)
           .expectStatus()
           .is4xxClientError
-          .withConflictMessage("A Void Bedspace already exists for dates from ${voidBedspaceEntity.startDate} to ${voidBedspaceEntity.endDate} which overlaps with the desired dates: ${voidBedspaceEntity.id}")
+          .withConflictMessage("A Void Bedspace already exists for dates from ${voidBedspaceEntity2.startDate} to ${voidBedspaceEntity2.endDate} which overlaps with the desired dates: ${voidBedspaceEntity2.id}")
       }
     }
   }
