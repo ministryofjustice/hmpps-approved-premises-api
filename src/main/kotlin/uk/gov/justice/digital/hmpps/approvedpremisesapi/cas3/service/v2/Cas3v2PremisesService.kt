@@ -154,7 +154,7 @@ class Cas3v2PremisesService(
       postcode,
       turnaroundWorkingDays,
     ) {
-      isUniqueName(reference = reference, probationDeliveryUnitId = probationDeliveryUnitId)
+      isUniqueName(reference = reference, probationDeliveryUnitId = probationDeliveryUnitId, premisesId = premisesId)
     }
     val validatedPremisesCharacteristics = getValidatedCharacteristics(characteristicIds)
 
@@ -195,4 +195,10 @@ class Cas3v2PremisesService(
   }
 
   private fun isUniqueName(reference: String, probationDeliveryUnitId: UUID): Boolean = !cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(reference, probationDeliveryUnitId)
+
+  private fun isUniqueName(premisesId: UUID, reference: String, probationDeliveryUnitId: UUID): Boolean = !cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitIdAndIdNot(
+    reference,
+    probationDeliveryUnitId,
+    id = premisesId,
+  )
 }
