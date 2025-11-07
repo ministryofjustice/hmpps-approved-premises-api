@@ -90,6 +90,7 @@ class ApplicationsTransformer(
       id = applicationEntity.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
       createdByUserId = applicationEntity.createdByUser.id,
+      createdByUserName = applicationEntity.createdByUser.name,
       createdAt = applicationEntity.createdAt.toInstant(),
       submittedAt = applicationEntity.submittedAt?.toInstant(),
       isWomensApplication = applicationEntity.isWomensApplication,

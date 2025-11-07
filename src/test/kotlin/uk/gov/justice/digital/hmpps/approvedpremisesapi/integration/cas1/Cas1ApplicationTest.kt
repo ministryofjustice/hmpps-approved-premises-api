@@ -1161,6 +1161,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(responseBody.person.crn).isEqualTo(applicationEntity.crn)
           assertThat(responseBody.createdAt).isEqualTo(applicationEntity.createdAt.toInstant())
           assertThat(responseBody.createdByUserId).isEqualTo(applicationEntity.createdByUser.id)
+          assertThat(responseBody.createdByUserName).isEqualTo(applicationEntity.createdByUser.name)
           assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
           assertThat(responseBody.releaseType).isEqualTo(ReleaseTypeOption.valueOf(applicationEntity.releaseType!!))
           assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))

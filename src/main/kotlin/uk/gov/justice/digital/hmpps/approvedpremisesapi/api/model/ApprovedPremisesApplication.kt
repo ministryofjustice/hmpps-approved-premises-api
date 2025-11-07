@@ -8,9 +8,9 @@ data class ApprovedPremisesApplication(
 
   val status: ApprovedPremisesApplicationStatus,
 
-  val isWomensApplication: kotlin.Boolean? = null,
+  val isWomensApplication: Boolean? = null,
 
-  val isEmergencyApplication: kotlin.Boolean? = null,
+  val isEmergencyApplication: Boolean? = null,
 
   val apType: ApType? = null,
 
@@ -18,9 +18,9 @@ data class ApprovedPremisesApplication(
 
   val risks: PersonRisks? = null,
 
-  val `data`: kotlin.Any? = null,
+  val `data`: Any? = null,
 
-  val document: kotlin.Any? = null,
+  val document: Any? = null,
 
   val assessmentId: java.util.UUID? = null,
 
@@ -49,7 +49,9 @@ data class ApprovedPremisesApplication(
 
   val sentenceType: SentenceTypeOption? = null,
 
-  override val type: kotlin.String,
+  val createdByUserName: String? = null,
+
+  override val type: String,
 
   override val id: java.util.UUID,
 
