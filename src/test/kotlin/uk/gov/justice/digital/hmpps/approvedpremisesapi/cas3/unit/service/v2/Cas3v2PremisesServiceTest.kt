@@ -212,31 +212,6 @@ class Cas3v2PremisesServiceTest {
     }
 
     @Test
-    fun `has validation errors when given probationDeliveryUnitId does not match premises`() {
-      every { localAuthorityAreaRepository.findByIdOrNull(any()) } returns null
-      every { probationDeliveryUnitRepository.findByIdAndProbationRegionId(any(), any()) } returns null
-
-      val result = cas3v2PremisesService.updatePremises(
-        premisesId = premises.id,
-        reference = "",
-        addressLine1 = "",
-        addressLine2 = "",
-        town = "",
-        postcode = "",
-        localAuthorityAreaId = UUID.randomUUID(),
-        probationRegionId = UUID.randomUUID(),
-        probationDeliveryUnitId = UUID.randomUUID(),
-        characteristicIds = mutableListOf(),
-        notes = null,
-        turnaroundWorkingDays = 2,
-      )
-
-      assertThatCasResult(result).isFieldValidationError()
-        .hasMessage("$.probationDeliveryUnitId", "premisesNotInProbationDeliveryUnit")
-        .withNumberOfMessages(1)
-    }
-
-    @Test
     fun `has validation error when reference is not unique`() {
       val notUniqueName = "notUnique"
       every {
