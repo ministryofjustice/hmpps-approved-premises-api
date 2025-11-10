@@ -1,5 +1,5 @@
 -- ${flyway:timestamp}
--- ideally this would only be managed via the seed CSV files but removing the contents of this file breaks R__7_create_bookings_for_cas3 as they require the beds
+-- ideally this would only be managed via the seed CSV files but removing the contents of this file breaks R__5_create_bookings_for_cas3 as they require the beds
 -- to exist at that point in time. The correct solution is to move this logic into the SeedOnStartupService
 
 insert into "premises" ("address_line1", "id", "local_authority_area_id", "name", "notes", "postcode", "probation_region_id", "service", "status") values ('Address 1', 'd33006b7-55d9-4a8e-b722-5e18093dbcdf', 'd75ce5b8-fc07-494b-8950-a46a63ac377e', 'Something House', NULL, 'LA9 1DS', 'a02b7727-63aa-46f2-80f1-e0b05b31903c', 'temporary-accommodation', 'active') ON CONFLICT (id) DO NOTHING;
