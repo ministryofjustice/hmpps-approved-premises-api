@@ -136,10 +136,6 @@ class Cas3v2PremisesService(
     val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
       ?: return CasResult.NotFound("Cas3Premises", premisesId.toString())
 
-    if (premises.probationDeliveryUnit.id != probationDeliveryUnitId) {
-      return "$.probationDeliveryUnitId" hasSingleValidationError "premisesNotInProbationDeliveryUnit"
-    }
-
     val localAuthorityArea = localAuthorityAreaId?.let { localAuthorityAreaRepository.findByIdOrNull(it) }
     val probationDeliveryUnit =
       probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
