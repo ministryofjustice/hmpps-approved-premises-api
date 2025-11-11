@@ -179,6 +179,16 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     nativeQuery = true,
   )
   fun updateData(id: UUID, updatedData: String)
+
+  @Query(
+    """
+      SELECT d
+      FROM DomainEventEntity d
+      WHERE d.id IN (:ids)
+        AND d.createdAt >= :createdAt
+    """,
+  )
+  fun findByCas3PremisesIdAndCreatedAtAfter(ids: List<UUID>, createdAt: OffsetDateTime): List<DomainEventEntity>
 }
 
 @Entity

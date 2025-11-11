@@ -29,4 +29,5 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   updateCas3DomainEventArchiveUnarchiveTransaction("update_cas3_domain_event_archive_unarchive_transaction"),
   updateCas3ArchiveUnarchiveDomainEventDetails("update_cas3_archive_unarchive_domain_event_details"),
   updateCas3BedspaceStartDate("update_cas3_bedspace_start_date"),
+  updateCas3PremisesDomainEventDates("update_cas3_premises_domain_event_dates"),
 }
