@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
@@ -105,35 +104,6 @@ class AssessmentController(
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),
     )
-  }
-
-  @Operation(
-    tags = ["Assessment data"],
-    summary = "Accepts an Assessment",
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/assessments/{assessmentId}/acceptance"],
-    consumes = ["application/json"],
-  )
-  @Transactional
-  fun assessmentsAssessmentIdAcceptancePost(
-    @PathVariable assessmentId: UUID,
-    @RequestBody assessmentAcceptance: AssessmentAcceptance,
-  ): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest()
-
-    val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
-
-    val assessmentAuthResult = cas3AssessmentService.acceptAssessment(
-      acceptingUser = user,
-      assessmentId = assessmentId,
-      document = serializedData,
-    )
-
-    extractEntityFromCasResult(assessmentAuthResult)
-
-    return ResponseEntity(HttpStatus.OK)
   }
 
   @Operation(
