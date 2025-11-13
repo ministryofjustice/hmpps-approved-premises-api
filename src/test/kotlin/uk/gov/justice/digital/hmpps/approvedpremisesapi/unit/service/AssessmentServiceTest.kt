@@ -21,8 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
@@ -37,19 +35,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHisto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1TaskDeadlineService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
@@ -59,10 +51,8 @@ import java.util.UUID
 @ExtendWith(MockKExtension::class)
 class AssessmentServiceTest {
   private val userServiceMock = mockk<UserService>()
-  private val userAccessServiceMock = mockk<UserAccessService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
-  private val offenderServiceMock = mockk<OffenderService>()
   private val objectMapperMock = spyk<ObjectMapper>()
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
@@ -73,10 +63,8 @@ class AssessmentServiceTest {
 
   private val assessmentService = AssessmentService(
     userServiceMock,
-    userAccessServiceMock,
     assessmentRepositoryMock,
     assessmentReferralHistoryNoteRepositoryMock,
-    offenderServiceMock,
     objectMapperMock,
     cas1TaskDeadlineServiceMock,
     cas1AssessmentEmailServiceMock,
@@ -86,131 +74,6 @@ class AssessmentServiceTest {
     lockableAssessmentRepository,
     cas1AssessmentService,
   )
-
-  @Test
-  fun `getAssessmentAndValidate gets assessment when user is authorised to view assessment`() {
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withAllocatedToUser(
-        UserEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .produce(),
-      )
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
-          .produce(),
-      )
-      .produce()
-
-    every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns true
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-    every {
-      offenderServiceMock.getOffenderByCrn(
-        assessment.application.crn,
-        user.deliusUsername,
-      )
-    } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
-
-    every { offenderServiceMock.getPersonSummaryInfoResult(assessment.application.crn, user.cas1LaoStrategy()) } returns
-      PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce())
-
-    val result = assessmentService.getAssessmentAndValidate(user, assessment.id)
-
-    assertThat(result is CasResult.Success).isTrue
-    result as CasResult.Success
-    assertThat(result.value).isEqualTo(assessment)
-  }
-
-  @Test
-  fun `getAssessmentAndValidate does not get assessment when user is not authorised to view assessment`() {
-    val assessmentId = UUID.randomUUID()
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val assessment =
-      ApprovedPremisesAssessmentEntityFactory()
-        .withId(assessmentId)
-        .withAllocatedToUser(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce(),
-        )
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
-        .produce()
-
-    every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns false
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
-
-    val result = assessmentService.getAssessmentAndValidate(user, assessmentId)
-
-    assertThat(result is CasResult.Unauthorised).isTrue
-  }
-
-  @Test
-  fun `getAssessmentAndValidate returns not found for non-existent Assessment`() {
-    val assessmentId = UUID.randomUUID()
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-
-    val result = assessmentService.getAssessmentAndValidate(user, assessmentId) as CasResult.NotFound
-
-    assertThat(result.id).isEqualTo(assessmentId.toString())
-    assertThat(result.entityType).isEqualTo("AssessmentEntity")
-  }
 
   @Nested
   inner class ReallocateAssessment {

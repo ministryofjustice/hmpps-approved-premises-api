@@ -19,10 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
@@ -34,37 +31,12 @@ import java.util.UUID
 @RestController
 class AssessmentController(
   private val objectMapper: ObjectMapper,
-  private val assessmentService: AssessmentService,
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
   private val assessmentTransformer: AssessmentTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val cas3AssessmentService: Cas3AssessmentService,
 ) {
-  @Operation(
-    tags = ["Assessment data"],
-    summary = "Gets a single assessment by its id",
-    description = """This endpoint is deprecated; please use the CAS-specific endpoint instead""",
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/assessments/{assessmentId}"],
-    produces = ["application/json"],
-  )
-  fun assessmentsAssessmentIdGet(@PathVariable assessmentId: UUID): ResponseEntity<Assessment> {
-    val user = userService.getUserForRequest()
-
-    val assessment = extractEntityFromCasResult(assessmentService.getAssessmentAndValidate(user, assessmentId))
-
-    val ignoreLaoRestrictions = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
-
-    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
-
-    val transformedResponse = assessmentTransformer.transformJpaToApi(assessment, personInfo)
-
-    return ResponseEntity.ok(transformedResponse)
-  }
-
   @Operation(
     tags = ["Assessment data"],
     summary = "Updates an assessment",

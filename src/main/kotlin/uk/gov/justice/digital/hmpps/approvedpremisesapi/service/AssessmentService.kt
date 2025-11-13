@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -18,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
@@ -34,10 +32,8 @@ import java.util.UUID
 @Suppress("ReturnCount", "CyclomaticComplexMethod")
 class AssessmentService(
   private val userService: UserService,
-  private val userAccessService: UserAccessService,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
-  private val offenderService: OffenderService,
   private val objectMapper: ObjectMapper,
   private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
@@ -47,29 +43,6 @@ class AssessmentService(
   private val lockableAssessmentRepository: LockableAssessmentRepository,
   private val cas1AssessmentService: Cas1AssessmentService,
 ) {
-  fun getAssessmentAndValidate(
-    user: UserEntity,
-    assessmentId: UUID,
-    forTimeline: Boolean = false,
-  ): CasResult<AssessmentEntity> {
-    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-      ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
-
-    val isAuthorised = userAccessService.userCanViewAssessment(user, assessment) || (forTimeline && userAccessService.userCanViewApplication(user, assessment.application))
-
-    if (!isAuthorised) {
-      return CasResult.Unauthorised("Not authorised to view the assessment")
-    }
-
-    val offenderDetails = getOffenderDetails(assessment.application.crn, user.cas1LaoStrategy())
-
-    if (offenderDetails == null) {
-      return CasResult.Unauthorised()
-    }
-
-    return CasResult.Success(assessment)
-  }
-
   fun createTemporaryAccommodationAssessment(
     application: TemporaryAccommodationApplicationEntity,
     summaryData: Any,
@@ -282,19 +255,5 @@ class AssessmentService(
     if (assessment is ApprovedPremisesAssessmentEntity) {
       cas1ApplicationStatusService.assessmentUpdated(assessment)
     }
-  }
-
-  private fun getOffenderDetails(offenderCrn: String, laoStrategy: LaoStrategy): CaseSummary? {
-    val offenderDetails = offenderService.getPersonSummaryInfoResult(
-      offenderCrn,
-      laoStrategy,
-    ).let { offenderDetailsResult ->
-      when (offenderDetailsResult) {
-        is PersonSummaryInfoResult.Success.Full -> offenderDetailsResult.summary
-        else -> null
-      }
-    }
-
-    return offenderDetails
   }
 }
