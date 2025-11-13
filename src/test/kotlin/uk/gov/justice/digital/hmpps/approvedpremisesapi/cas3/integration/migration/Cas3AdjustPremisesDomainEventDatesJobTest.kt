@@ -12,11 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.eve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+
+private const val DATE_TO_UPDATE = "2025-10-15"
+private const val DATE_TO_SET = "2025-10-13"
 
 class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
 
@@ -34,19 +38,19 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
     val matchingId1 = UUID.fromString("69f21552-fc3d-44cc-a8d1-0480ee9f80b9")
     val matchingId2 = UUID.fromString("abc9660e-dac3-4b5d-8bc8-7cd3fc2b5bdc")
 
-    val createdAt = OffsetDateTime.of(2025, 10, 20, 12, 0, 0, 0, ZoneOffset.UTC)
-    val occurredAt = createdAt.minusHours(1)
+    val createdAt = OffsetDateTime.of(2025, 10, 15, 12, 0, 0, 0, ZoneOffset.UTC)
+    val occurredAt = createdAt
 
     val premisesId = UUID.randomUUID()
     val userId = UUID.randomUUID()
 
     val archivePayloadBefore = CAS3PremisesArchiveEvent(
       id = UUID.randomUUID(),
-      timestamp = Instant.parse("2025-10-20T11:00:00Z"),
+      timestamp = Instant.parse("2025-10-15T11:00:00Z"),
       eventType = EventType.premisesArchived,
       eventDetails = CAS3PremisesArchiveEventDetails(
         premisesId = premisesId,
-        endDate = LocalDate.parse("2025-10-25"),
+        endDate = LocalDate.parse(DATE_TO_UPDATE),
         userId = userId,
         transactionId = UUID.randomUUID(),
       ),
@@ -54,13 +58,13 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
 
     val unarchivePayloadBefore = CAS3PremisesUnarchiveEvent(
       id = UUID.randomUUID(),
-      timestamp = Instant.parse("2025-10-21T09:30:00Z"),
+      timestamp = Instant.parse("2025-10-15T09:30:00Z"),
       eventType = EventType.premisesUnarchived,
       eventDetails = CAS3PremisesUnarchiveEventDetails(
         premisesId = premisesId,
-        currentStartDate = LocalDate.parse("2025-10-10"),
-        newStartDate = LocalDate.parse("2025-10-22"),
-        currentEndDate = LocalDate.parse("2025-11-05"),
+        currentStartDate = LocalDate.parse(DATE_TO_UPDATE),
+        newStartDate = LocalDate.parse(DATE_TO_UPDATE),
+        currentEndDate = LocalDate.parse(DATE_TO_UPDATE),
         userId = userId,
         transactionId = UUID.randomUUID(),
       ),
@@ -88,26 +92,102 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
 
     migrationJobService.runMigrationJob(MigrationJobType.updateCas3PremisesDomainEventDates, 50)
 
+    val expectedDate = LocalDate.parse(DATE_TO_SET)
+
     assertBedStartDate()
 
     val updated1 = domainEventRepository.findById(e1.id).get()
     val updated2 = domainEventRepository.findById(e2.id).get()
 
-    assertThat(updated1.occurredAt).isEqualTo(occurredAt.minusDays(2))
-    assertThat(updated1.createdAt).isEqualTo(createdAt.minusDays(2))
-    assertThat(updated2.occurredAt).isEqualTo(occurredAt.minusDays(2))
-    assertThat(updated2.createdAt).isEqualTo(createdAt.minusDays(2))
+    assertThat(updated1.occurredAt.toLocalDate()).isEqualTo(expectedDate)
+    assertThat(updated1.createdAt.toLocalDate()).isEqualTo(expectedDate)
+    assertThat(updated2.occurredAt.toLocalDate()).isEqualTo(expectedDate)
+    assertThat(updated2.createdAt.toLocalDate()).isEqualTo(expectedDate)
 
     val archiveAfter = objectMapper.readValue(updated1.data, CAS3PremisesArchiveEvent::class.java)
-    assertThat(archiveAfter.timestamp).isEqualTo(archivePayloadBefore.timestamp.minusSeconds(2 * 24 * 60 * 60))
+    assertThat(archiveAfter.timestamp.toLocalDate()).isEqualTo(expectedDate)
 
-    assertThat(archiveAfter.eventDetails.endDate).isEqualTo(archivePayloadBefore.eventDetails.endDate)
+    assertThat(archiveAfter.eventDetails.endDate).isEqualTo(expectedDate)
 
     val unarchiveAfter = objectMapper.readValue(updated2.data, CAS3PremisesUnarchiveEvent::class.java)
-    assertThat(unarchiveAfter.timestamp).isEqualTo(unarchivePayloadBefore.timestamp.minusSeconds(2 * 24 * 60 * 60))
-    assertThat(unarchiveAfter.eventDetails.currentStartDate).isEqualTo(unarchivePayloadBefore.eventDetails.currentStartDate.minusDays(2))
-    assertThat(unarchiveAfter.eventDetails.newStartDate).isEqualTo(unarchivePayloadBefore.eventDetails.newStartDate.minusDays(2))
-    assertThat(unarchiveAfter.eventDetails.currentEndDate).isEqualTo(unarchivePayloadBefore.eventDetails.currentEndDate?.minusDays(2))
+    assertThat(unarchiveAfter.timestamp.toLocalDate()).isEqualTo(expectedDate)
+    assertThat(unarchiveAfter.eventDetails.currentStartDate).isEqualTo(expectedDate)
+    assertThat(unarchiveAfter.eventDetails.newStartDate).isEqualTo(expectedDate)
+    assertThat(unarchiveAfter.eventDetails.currentEndDate).isEqualTo(expectedDate)
+  }
+
+  @Test
+  fun `does not update events if not 15th`() {
+    val createdAt = cutoff.minusDays(2)
+    val occurredAt = createdAt
+
+    val archiveEvent = CAS3PremisesArchiveEvent(
+      id = UUID.randomUUID(),
+      timestamp = Instant.parse("2025-10-13T10:00:00Z"),
+      eventType = EventType.premisesArchived,
+      eventDetails = CAS3PremisesArchiveEventDetails(
+        premisesId = UUID.randomUUID(),
+        endDate = LocalDate.parse(DATE_TO_SET),
+        userId = UUID.randomUUID(),
+        transactionId = UUID.randomUUID(),
+      ),
+    )
+
+    val unarchiveEvent = CAS3PremisesUnarchiveEvent(
+      id = UUID.randomUUID(),
+      timestamp = Instant.parse("2025-10-13T10:00:00Z"),
+      eventType = EventType.premisesArchived,
+      eventDetails = CAS3PremisesUnarchiveEventDetails(
+        premisesId = UUID.randomUUID(),
+        currentStartDate = LocalDate.parse(DATE_TO_SET),
+        newStartDate = LocalDate.parse(DATE_TO_SET),
+        currentEndDate = LocalDate.parse(DATE_TO_SET),
+        userId = UUID.randomUUID(),
+        transactionId = UUID.randomUUID(),
+      ),
+    )
+
+    val originalArchive = domainEventFactory.produceAndPersist {
+      withId(archiveEvent.id)
+      withService(ServiceName.temporaryAccommodation)
+      withCas3PremisesId(UUID.randomUUID())
+      withType(DomainEventType.CAS3_PREMISES_ARCHIVED)
+      withOccurredAt(occurredAt)
+      withCreatedAt(createdAt)
+      withData(objectMapper.writeValueAsString(archiveEvent))
+    }
+
+    val originalUnarchive = domainEventFactory.produceAndPersist {
+      withId(unarchiveEvent.id)
+      withService(ServiceName.temporaryAccommodation)
+      withCas3PremisesId(UUID.randomUUID())
+      withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
+      withOccurredAt(occurredAt)
+      withCreatedAt(createdAt)
+      withData(objectMapper.writeValueAsString(unarchiveEvent))
+    }
+
+    migrationJobService.runMigrationJob(MigrationJobType.updateCas3PremisesDomainEventDates, 50)
+
+    val expectedDate = LocalDate.parse(DATE_TO_SET)
+
+    val afterArchive = domainEventRepository.findById(originalArchive.id).get()
+    assertThat(afterArchive.createdAt.toLocalDate()).isEqualTo(expectedDate)
+    assertThat(afterArchive.occurredAt.toLocalDate()).isEqualTo(expectedDate)
+
+    val afterArchivePayload = objectMapper.readValue(afterArchive.data, CAS3PremisesArchiveEvent::class.java)
+    assertThat(afterArchivePayload.timestamp.toLocalDate()).isEqualTo(expectedDate)
+    assertThat(afterArchivePayload.eventDetails.endDate).isEqualTo(expectedDate)
+
+    val afterUnarchive = domainEventRepository.findById(originalUnarchive.id).get()
+    assertThat(afterUnarchive.createdAt.toLocalDate()).isEqualTo(expectedDate)
+    assertThat(afterUnarchive.occurredAt.toLocalDate()).isEqualTo(expectedDate)
+
+    val afterUnarchivePayload = objectMapper.readValue(afterUnarchive.data, CAS3PremisesUnarchiveEvent::class.java)
+    assertThat(afterUnarchivePayload.timestamp.toLocalDate()).isEqualTo(expectedDate)
+    assertThat(afterUnarchivePayload.eventDetails.newStartDate).isEqualTo(expectedDate)
+    assertThat(afterUnarchivePayload.eventDetails.currentStartDate).isEqualTo(expectedDate)
+    assertThat(afterUnarchivePayload.eventDetails.currentEndDate).isEqualTo(expectedDate)
   }
 
   @Test
@@ -229,7 +309,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
 
   private fun assertBedStartDate() {
     bedRepository.findAllById(bedIds).forEach { bed ->
-      assertThat(bed.startDate).isEqualTo(LocalDate.parse("2025-10-13"))
+      assertThat(bed.startDate).isEqualTo(LocalDate.parse(DATE_TO_SET))
     }
   }
 
@@ -244,7 +324,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
     bedIds.forEach { bedId ->
       bedEntityFactory.produceAndPersist {
         withId(bedId)
-        withStartDate(LocalDate.parse("2025-10-15"))
+        withStartDate(LocalDate.parse(DATE_TO_UPDATE))
         withRoom(
           roomEntityFactory.produceAndPersist {
             withName("room for $bedId")

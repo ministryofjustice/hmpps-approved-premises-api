@@ -26,6 +26,8 @@ class Cas3AdjustPremisesDomainEventDatesJob(
   override val shouldRunInTransaction = false
 
   private val createdAtCutoff: OffsetDateTime = OffsetDateTime.parse("2025-10-15T00:00:00Z", DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+  private val dateToUpdate = LocalDate.parse("2025-10-15")
+  private val dateToSet = LocalDate.parse("2025-10-13")
 
   @Suppress("MagicNumber")
   private val twoDaysInSeconds = 172800L
@@ -40,7 +42,7 @@ class Cas3AdjustPremisesDomainEventDatesJob(
 
     bedRepository.findAllById(bedIds).forEach { bed ->
       migrationLogger.info("Updating bedId startDate ${bed.id}")
-      bedRepository.save(bed.copy(startDate = LocalDate.parse("2025-10-13")))
+      bedRepository.save(bed.copy(startDate = dateToSet))
     }
 
     val domainEventIds: List<UUID> = listOf(
@@ -108,10 +110,12 @@ class Cas3AdjustPremisesDomainEventDatesJob(
 
       val eventDetails = root.get("eventDetails")
       if (eventDetails is ObjectNode) {
-        listOf("newStartDate", "currentEndDate", "currentStartDate").forEach { field ->
+        listOf("newStartDate", "currentEndDate", "currentStartDate", "endDate").forEach { field ->
           eventDetails.get(field)?.let { dateNode ->
             parseLocalDateString(dateNode)?.let { d ->
-              eventDetails.put(field, d.minusDays(2).toString())
+              if (d.isEqual(dateToUpdate)) {
+                eventDetails.put(field, d.minusDays(2).toString())
+              }
             }
           }
         }
