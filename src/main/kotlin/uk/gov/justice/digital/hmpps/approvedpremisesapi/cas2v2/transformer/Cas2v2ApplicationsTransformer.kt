@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Applicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
@@ -24,9 +24,9 @@ class Cas2v2ApplicationsTransformer(
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
 ) {
 
-  fun transformJpaToApi(jpa: Cas2v2ApplicationEntity, personInfo: PersonInfoResult): Cas2v2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.transformModelToPersonApi(personInfo))
+  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2v2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.transformModelToPersonApi(personInfo))
 
-  fun transformJpaAndFullPersonToApi(jpa: Cas2v2ApplicationEntity, fullPerson: Person): Cas2v2Application = Cas2v2Application(
+  fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person): Cas2v2Application = Cas2v2Application(
     id = jpa.id,
     person = fullPerson,
     createdBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),
@@ -42,7 +42,7 @@ class Cas2v2ApplicationsTransformer(
     applicationOrigin = jpa.applicationOrigin,
   )
 
-  fun transformJpaAndFullPersonToApiSubmitted(jpa: Cas2v2ApplicationEntity, fullPerson: Person): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
+  fun transformJpaAndFullPersonToApiSubmitted(jpa: Cas2ApplicationEntity, fullPerson: Person): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
     id = jpa.id,
     person = fullPerson,
     submittedBy = Cas2v2UserTransformer().transformJpaToApi(jpa.createdByUser),
@@ -56,7 +56,7 @@ class Cas2v2ApplicationsTransformer(
   )
 
   fun transformJpaSummaryToSummary(
-    jpaSummary: Cas2v2ApplicationSummaryEntity,
+    jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
   ): Cas2v2ApplicationSummary = Cas2v2ApplicationSummary(
     id = jpaSummary.id,
@@ -85,7 +85,7 @@ class Cas2v2ApplicationsTransformer(
     else -> ApplicationOrigin.homeDetentionCurfew
   }
 
-  private fun getStatus(entity: Cas2v2ApplicationEntity): ApplicationStatus {
+  private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {
       return ApplicationStatus.submitted
     }
@@ -93,7 +93,7 @@ class Cas2v2ApplicationsTransformer(
     return ApplicationStatus.inProgress
   }
 
-  private fun getStatusFromSummary(summary: Cas2v2ApplicationSummaryEntity): ApplicationStatus = when {
+  private fun getStatusFromSummary(summary: Cas2ApplicationSummaryEntity): ApplicationStatus = when {
     summary.submittedAt != null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
   }

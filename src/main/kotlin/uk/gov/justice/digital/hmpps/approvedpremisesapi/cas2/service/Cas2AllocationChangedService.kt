@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
@@ -38,7 +38,7 @@ class Cas2AllocationChangedService(
 
       when (val pomAllocation = getAllocationResponse(detailUrl)) {
         is PomAllocation -> {
-          val allocatedUser = cas2UserService.getUserByStaffId(staffId = pomAllocation.manager.code)
+          val allocatedUser = cas2UserService.getUserByStaffId(staffId = pomAllocation.manager.code, application.serviceOrigin)
           val isSamePOM = allocatedUser.id == application.currentPomUserId
           if (isSamePOM) {
             log.info("POM has not changed for $nomsNumber.")
@@ -65,7 +65,7 @@ class Cas2AllocationChangedService(
   private fun addApplicationAssignmentAndSendEmails(
     application: Cas2ApplicationEntity,
     pomAllocationPrisonCode: String,
-    pomAllocatedToOffender: NomisUserEntity,
+    pomAllocatedToOffender: Cas2UserEntity,
   ) {
     // We don't send emails for same prison allocations, so only send emails on the first allocation.
     val isFirstPomAllocationAtPrison = application.currentPomUserId == null

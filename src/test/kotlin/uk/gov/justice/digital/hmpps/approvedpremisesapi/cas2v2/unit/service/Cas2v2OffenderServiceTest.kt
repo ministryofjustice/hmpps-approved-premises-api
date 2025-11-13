@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2PersonTransformer
@@ -39,14 +37,6 @@ class Cas2v2OffenderServiceTest {
     mockApDeliusContextApiClient,
     cas2v2PersonTransformer,
   )
-
-  val deliusUser = Cas2v2UserEntityFactory()
-    .withUserType(Cas2v2UserType.DELIUS)
-    .produce()
-
-  val nomisUser = Cas2v2UserEntityFactory()
-    .withUserType(Cas2v2UserType.NOMIS)
-    .produce()
 
   @Nested
   inner class GetPersonByNomsNumber {
