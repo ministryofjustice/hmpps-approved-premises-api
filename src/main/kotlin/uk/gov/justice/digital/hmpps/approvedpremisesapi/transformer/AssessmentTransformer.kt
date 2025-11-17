@@ -3,109 +3,34 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
 @Component
 class AssessmentTransformer(
   private val objectMapper: ObjectMapper,
-  private val applicationsTransformer: ApplicationsTransformer,
-  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
-  private val userTransformer: UserTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   private val userService: UserService,
 ) {
-  @Deprecated("This will be removed shortly. Please use the CAS-specific version instead.")
-  fun transformJpaToApi(
-    jpa: AssessmentEntity,
-    personInfo: PersonInfoResult,
-  ) = when (jpa) {
-    is ApprovedPremisesAssessmentEntity -> ApprovedPremisesAssessment(
-      id = jpa.id,
-      application = applicationsTransformer.transformJpaToApi(
-        jpa.application,
-        personInfo,
-      ) as ApprovedPremisesApplication,
-      createdAt = jpa.createdAt.toInstant(),
-      allocatedAt = jpa.allocatedAt?.toInstant(),
-      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-      clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-      allocatedToStaffMember = jpa.allocatedToUser?.let {
-        userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) as ApprovedPremisesUser
-      },
-      submittedAt = jpa.submittedAt?.toInstant(),
-      decision = transformJpaDecisionToApi(jpa.decision),
-      rejectionRationale = jpa.rejectionRationale,
-      status = getStatusForApprovedPremisesAssessment(jpa),
-      service = "CAS1",
-      createdFromAppeal = jpa.createdFromAppeal,
-    )
-
-    is TemporaryAccommodationAssessmentEntity -> {
-      val application = applicationsTransformer.transformJpaToApi(
-        jpa.application,
-        personInfo,
-      ) as TemporaryAccommodationApplication
-
-      TemporaryAccommodationAssessment(
-        id = jpa.id,
-        application = application,
-        createdAt = jpa.createdAt.toInstant(),
-        allocatedAt = jpa.allocatedAt?.toInstant(),
-        data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-        clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-        allocatedToStaffMember = jpa.allocatedToUser?.let {
-          userTransformer.transformJpaToApi(
-            it,
-            ServiceName.temporaryAccommodation,
-          ) as TemporaryAccommodationUser
-        },
-        submittedAt = jpa.submittedAt?.toInstant(),
-        decision = transformJpaDecisionToApi(jpa.decision),
-        rejectionRationale = jpa.rejectionRationale,
-        status = getStatusForTemporaryAccommodationAssessment(jpa),
-        summaryData = objectMapper.readTree(jpa.summaryData),
-        service = "CAS3",
-        releaseDate = jpa.releaseDate ?: jpa.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate,
-        accommodationRequiredFromDate = jpa.accommodationRequiredFromDate ?: LocalDate.from(jpa.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate),
-      )
-    }
-
-    else -> throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")
-  }
-
   fun getSortedReferralHistoryNotes(
     assessment: TemporaryAccommodationAssessmentEntity,
     cas3Events: List<DomainEventEntity>,
@@ -203,19 +128,6 @@ class AssessmentTransformer(
     else -> null
   }
 
-  /**
-   * Note that the logic to determine assessment status is duplicated in
-   * [uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated]
-   * and as such changes should be synchronized
-   */
-  private fun getStatusForApprovedPremisesAssessment(entity: AssessmentEntity) = when {
-    entity.decision !== null -> ApprovedPremisesAssessmentStatus.completed
-    entity.clarificationNotes.any { it.response == null } -> ApprovedPremisesAssessmentStatus.awaitingResponse
-    entity.reallocatedAt != null -> ApprovedPremisesAssessmentStatus.reallocated
-    entity.data != null -> ApprovedPremisesAssessmentStatus.inProgress
-    else -> ApprovedPremisesAssessmentStatus.notStarted
-  }
-
   private fun getStatusForApprovedPremisesAssessment(ase: DomainAssessmentSummary): ApprovedPremisesAssessmentStatus = when (ase.status) {
     DomainAssessmentSummaryStatus.COMPLETED -> ApprovedPremisesAssessmentStatus.completed
     DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> ApprovedPremisesAssessmentStatus.awaitingResponse
@@ -230,16 +142,6 @@ class AssessmentTransformer(
     DomainAssessmentSummaryStatus.IN_PROGRESS -> Cas1AssessmentStatus.inProgress
     DomainAssessmentSummaryStatus.REALLOCATED -> Cas1AssessmentStatus.reallocated
     else -> Cas1AssessmentStatus.notStarted
-  }
-
-  private fun getStatusForTemporaryAccommodationAssessment(entity: AssessmentEntity) = when {
-    entity.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.rejected
-    entity.decision == AssessmentDecision.ACCEPTED && (entity as TemporaryAccommodationAssessmentEntity).completedAt != null ->
-      TemporaryAccommodationAssessmentStatus.closed
-
-    entity.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.readyToPlace
-    entity.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.inReview
-    else -> TemporaryAccommodationAssessmentStatus.unallocated
   }
 
   private fun getStatusForTemporaryAccommodationAssessment(ase: DomainAssessmentSummary) = when {

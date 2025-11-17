@@ -7,23 +7,16 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
@@ -32,53 +25,9 @@ import java.util.UUID
 class AssessmentController(
   private val objectMapper: ObjectMapper,
   private val userService: UserService,
-  private val offenderDetailService: OffenderDetailService,
-  private val assessmentTransformer: AssessmentTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val cas3AssessmentService: Cas3AssessmentService,
 ) {
-  @Operation(
-    tags = ["Assessment data"],
-    summary = "Updates an assessment",
-    description = """This endpoint is deprecated; please use the CAS-specific endpoint instead""",
-  )
-  @RequestMapping(
-    method = [RequestMethod.PUT],
-    value = ["/assessments/{assessmentId}"],
-    produces = ["application/json"],
-    consumes = ["application/json"],
-  )
-  @Transactional
-  fun assessmentsAssessmentIdPut(
-    @PathVariable assessmentId: UUID,
-    @RequestBody updateAssessment: UpdateAssessment,
-    @RequestHeader("X-Service-Name") xServiceName: ServiceName?,
-  ): ResponseEntity<Assessment> {
-    val user = userService.getUserForRequest()
-    val assessment =
-      when (xServiceName) {
-        ServiceName.temporaryAccommodation -> {
-          extractEntityFromCasResult(
-            cas3AssessmentService.updateAssessment(
-              user,
-              assessmentId,
-              updateAssessment.releaseDate,
-              updateAssessment.accommodationRequiredFromDate,
-            ),
-          )
-        }
-
-        ServiceName.approvedPremises -> throw BadRequestProblem(errorDetail = "This Api endpoint does not support get assessments for CAS1 use PUT /cas1/assessments/{assessmentId} Api endpoint.")
-        else -> throw BadRequestProblem(errorDetail = "This Api endpoint is deprecated; please use the CAS-specific Api endpoint instead")
-      }
-
-    val personInfo = offenderDetailService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, false)
-
-    return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToApi(assessment, personInfo),
-    )
-  }
-
   @Operation(
     tags = ["Assessment data"],
     summary = "Accepts an Assessment",
