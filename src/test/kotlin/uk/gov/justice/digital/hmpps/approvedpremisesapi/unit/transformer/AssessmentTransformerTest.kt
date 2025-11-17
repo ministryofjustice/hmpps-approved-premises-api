@@ -9,7 +9,6 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
-import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
@@ -31,18 +29,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentReferralHistorySystemNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentReferralHistoryUserNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
@@ -59,11 +51,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
 @ExtendWith(MockKExtension::class)
 class AssessmentTransformerTest {
@@ -96,34 +85,6 @@ class AssessmentTransformerTest {
   @InjectMockKs
   lateinit var assessmentTransformer: AssessmentTransformer
 
-  private val allocatedToUser = UserEntityFactory()
-    .withYieldedProbationRegion {
-      ProbationRegionEntityFactory()
-        .withYieldedApArea { ApAreaEntityFactory().produce() }
-        .produce()
-    }
-    .produce()
-
-  private val approvedPremisesAssessmentFactory = ApprovedPremisesAssessmentEntityFactory()
-    .withApplication(mockk<ApprovedPremisesApplicationEntity>())
-    .withId(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
-    .withDecision(JpaAssessmentDecision.REJECTED)
-    .withRejectionRationale("reasoning")
-    .withData("{\"data\": \"something\"}")
-    .withCreatedAt(OffsetDateTime.parse("2022-12-14T12:05:00Z"))
-    .withSubmittedAt(OffsetDateTime.parse("2022-12-14T12:06:00Z"))
-    .withAllocatedToUser(allocatedToUser)
-
-  private val temporaryAccommodationAssessmentFactory = TemporaryAccommodationAssessmentEntityFactory()
-    .withApplication(mockk<TemporaryAccommodationApplicationEntity>())
-    .withId(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
-    .withDecision(JpaAssessmentDecision.REJECTED)
-    .withRejectionRationale("reasoning")
-    .withData("{\"data\": \"something\"}")
-    .withCreatedAt(OffsetDateTime.parse("2022-12-14T12:05:00Z"))
-    .withSubmittedAt(OffsetDateTime.parse("2022-12-14T12:06:00Z"))
-    .withAllocatedToUser(allocatedToUser)
-
   private val approvedPremisesUser = mockk<ApprovedPremisesUser>()
   private val temporaryAccommodationUser = mockk<TemporaryAccommodationUser>()
 
@@ -141,245 +102,6 @@ class AssessmentTransformerTest {
     every { mockUserTransformer.transformJpaToApi(any(), ServiceName.temporaryAccommodation) } returns temporaryAccommodationUser
     every { mockUserTransformer.transformCas1JpaToApi(any()) } returns approvedPremisesUser
     every { mockApplicationsTransformer.transformJpaToCas1Application(any(), any()) } returns mockk<Cas1Application>()
-  }
-
-  @Nested
-  inner class TransformJpaToApiCas1 {
-
-    @Test
-    fun `transformJpaToApi transforms correctly`() {
-      val assessment = approvedPremisesAssessmentFactory
-        .withData("{ \"some\": \"data\" }")
-        .withDocument("{ \"some\": \"doc\" }")
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk()) as ApprovedPremisesAssessment
-
-      assertThat(result.id).isEqualTo(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
-      assertThat(result.decision).isEqualTo(ApiAssessmentDecision.rejected)
-      assertThat(result.rejectionRationale).isEqualTo("reasoning")
-      assertThat(result.createdAt).isEqualTo(Instant.parse("2022-12-14T12:05:00Z"))
-      assertThat(result.submittedAt).isEqualTo(Instant.parse("2022-12-14T12:06:00Z"))
-      assertThat(result.allocatedToStaffMember).isEqualTo(approvedPremisesUser)
-      assertThat(result.createdFromAppeal).isEqualTo(assessment.createdFromAppeal)
-      assertThat(result.data.toString()).isEqualTo("{\"some\":\"data\"}")
-      assertThat(result.document.toString()).isEqualTo("{\"some\":\"doc\"}")
-
-      verify { mockUserTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises) }
-    }
-
-    @Test
-    fun `transformJpaToApi for CAS1 handles minimum null values`() {
-      val assessment = approvedPremisesAssessmentFactory
-        .withAllocatedAt(null)
-        .withAllocatedToUser(null)
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk()) as ApprovedPremisesAssessment
-
-      assertThat(result.id).isEqualTo(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
-      assertThat(result.allocatedAt).isNull()
-      assertThat(result.allocatedToStaffMember).isNull()
-    }
-
-    @Test
-    fun `transformJpaToApi for Approved Premises sets a pending status when there is a clarification note with no response`() {
-      val assessment = approvedPremisesAssessmentFactory.withDecision(null).produce()
-
-      val clarificationNotes = mutableListOf(
-        AssessmentClarificationNoteEntityFactory()
-          .withAssessment(assessment)
-          .withResponse("Some text")
-          .withCreatedBy(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
-          .produce(),
-        AssessmentClarificationNoteEntityFactory()
-          .withAssessment(assessment)
-          .withCreatedBy(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
-          .produce(),
-      )
-
-      assessment.clarificationNotes = clarificationNotes
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
-      result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.awaitingResponse)
-    }
-
-    @Test
-    fun `transformJpaToApi for Approved Premises sets a completed status when there is a decision`() {
-      val assessment = approvedPremisesAssessmentFactory
-        .withDecision(JpaAssessmentDecision.ACCEPTED)
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
-      result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.completed)
-    }
-
-    @Test
-    fun `transformJpaToApi for Approved Premises sets a deallocated status when there is a deallocated timestamp`() {
-      val assessment = approvedPremisesAssessmentFactory
-        .withDecision(null)
-        .withReallocatedAt(OffsetDateTime.now())
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
-      result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.reallocated)
-    }
-
-    @Test
-    fun `transformJpaToApi for Approved Premises sets an inProgress status when there is no decision and the assessment has data`() {
-      val assessment = approvedPremisesAssessmentFactory
-        .withData("{\"data\": \"something\"}")
-        .withDecision(null)
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
-      result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.inProgress)
-    }
-
-    @Test
-    fun `transformJpaToApi for Approved Premises sets a notStarted status when there is no decision and the assessment has no data`() {
-      val assessment = approvedPremisesAssessmentFactory
-        .withData(null)
-        .withDecision(null)
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(ApprovedPremisesAssessment::class.java)
-      result as ApprovedPremisesAssessment
-      assertThat(result.status).isEqualTo(ApprovedPremisesAssessmentStatus.notStarted)
-    }
-  }
-
-  @Nested
-  inner class TransformJpaToApiCas3 {
-
-    @Test
-    fun `transformJpaToApi for Temporary Accommodation sets an unallocated status when there is no allocated user`() {
-      val assessment = temporaryAccommodationAssessmentFactory
-        .withDecision(null)
-        .withoutAllocatedToUser()
-        .withReleaseDate(LocalDate.now())
-        .withAccommodationRequiredFromDate(LocalDate.now())
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
-      result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.unallocated)
-    }
-
-    @Test
-    fun `transformJpaToApi for Temporary Accommodation sets an inReview status when there is an allocated user`() {
-      val assessment = temporaryAccommodationAssessmentFactory
-        .withDecision(null)
-        .withReleaseDate(LocalDate.now())
-        .withAccommodationRequiredFromDate(LocalDate.now())
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
-      result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.inReview)
-    }
-
-    @Test
-    fun `transformJpaToApi for Temporary Accommodation sets a readyToPlace status when the assessment is approved`() {
-      val assessment = temporaryAccommodationAssessmentFactory
-        .withDecision(JpaAssessmentDecision.ACCEPTED)
-        .withReleaseDate(LocalDate.now())
-        .withAccommodationRequiredFromDate(LocalDate.now())
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
-      result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.readyToPlace)
-    }
-
-    @Test
-    fun `transformJpaToApi for Temporary Accommodation sets a closed status when the assessment is approved and has been completed`() {
-      val assessment = temporaryAccommodationAssessmentFactory
-        .withDecision(JpaAssessmentDecision.ACCEPTED)
-        .withCompletedAt(OffsetDateTime.now())
-        .withReleaseDate(LocalDate.now())
-        .withAccommodationRequiredFromDate(LocalDate.now())
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
-      result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.closed)
-    }
-
-    @Test
-    fun `transformJpaToApi for Temporary Accommodation sets a rejected status when the assessment is rejected`() {
-      val assessment = temporaryAccommodationAssessmentFactory
-        .withDecision(JpaAssessmentDecision.REJECTED)
-        .withReleaseDate(LocalDate.now())
-        .withAccommodationRequiredFromDate(LocalDate.now())
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
-      result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.rejected)
-    }
-
-    @Test
-    fun `transformJpaToApi for Temporary Accommodation serializes the summary data blob correctly`() {
-      val assessment = temporaryAccommodationAssessmentFactory
-        .withSummaryData("{\"num\": 50, \"text\": \"Hello world!\"}")
-        .withReleaseDate(LocalDate.now())
-        .withAccommodationRequiredFromDate(LocalDate.now())
-        .produce()
-
-      val result = assessmentTransformer.transformJpaToApi(assessment, mockk())
-
-      assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
-      result as TemporaryAccommodationAssessment
-      assertThat(result.summaryData).isEqualTo(
-        objectMapper.valueToTree(
-          object {
-            val num = 50
-            val text = "Hello world!"
-          },
-        ),
-      )
-    }
   }
 
   @Nested
