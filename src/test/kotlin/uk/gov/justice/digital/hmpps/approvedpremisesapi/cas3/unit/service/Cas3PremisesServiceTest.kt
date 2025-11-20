@@ -1938,14 +1938,14 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
-    fun `unarchivePremises returns FieldValidationError when restart date is more than 7 days in the past`() {
+    fun `unarchivePremises returns FieldValidationError when restart date is more than 14 days in the past`() {
       val archivedPremises = createPremisesEntity(
-        startDate = LocalDate.now().minusDays(30),
-        endDate = LocalDate.now().minusDays(10),
+        startDate = LocalDate.now().minusDays(60),
+        endDate = LocalDate.now().minusDays(16),
         status = PropertyStatus.archived,
       )
 
-      val restartDate = LocalDate.now().minusDays(8)
+      val restartDate = LocalDate.now().minusDays(15)
 
       every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
 
@@ -1955,14 +1955,14 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
-    fun `unarchivePremises returns FieldValidationError when restart date is more than 7 days in the future`() {
+    fun `unarchivePremises returns FieldValidationError when restart date is more than 14 days in the future`() {
       val archivedPremises = createPremisesEntity(
         startDate = LocalDate.now().minusDays(30),
         endDate = LocalDate.now().minusDays(1),
         status = PropertyStatus.archived,
       )
 
-      val restartDate = LocalDate.now().plusDays(8)
+      val restartDate = LocalDate.now().plusDays(15)
 
       every { premisesRepositoryMock.findByIdOrNull(archivedPremises.id) } returns archivedPremises
 
@@ -2247,11 +2247,11 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
-    fun `unarchiveBedspace returns FieldValidationError when restart date is more than 7 days in the past`() {
+    fun `unarchiveBedspace returns FieldValidationError when restart date is more than 14 days in the past`() {
       val premises = createPremisesEntity()
-      val archivedBedspace = createBedspace(premises, endDate = LocalDate.now().minusDays(10))
+      val archivedBedspace = createBedspace(premises, endDate = LocalDate.now().minusDays(16))
 
-      val restartDate = LocalDate.now().minusDays(8)
+      val restartDate = LocalDate.now().minusDays(15)
 
       every { bedRepositoryMock.findCas3Bedspace(premises.id, archivedBedspace.id) } returns archivedBedspace
 
@@ -2261,11 +2261,11 @@ class Cas3PremisesServiceTest {
     }
 
     @Test
-    fun `unarchiveBedspace returns FieldValidationError when restart date is more than 7 days in the future`() {
+    fun `unarchiveBedspace returns FieldValidationError when restart date is more than 14 days in the future`() {
       val premises = createPremisesEntity()
       val archivedBedspace = createBedspace(premises, endDate = LocalDate.now().minusDays(1))
 
-      val restartDate = LocalDate.now().plusDays(8)
+      val restartDate = LocalDate.now().plusDays(15)
 
       every { bedRepositoryMock.findCas3Bedspace(premises.id, archivedBedspace.id) } returns archivedBedspace
 

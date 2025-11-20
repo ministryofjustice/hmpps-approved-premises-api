@@ -3035,12 +3035,12 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
     fun `Unarchive premises returns 400 when restart date is too far in the past`() {
       givenATemporaryAccommodationPremisesWithUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
-        premisesStartDate = LocalDate.now().minusDays(30),
-        premisesEndDate = LocalDate.now().minusDays(10),
+        premisesStartDate = LocalDate.now().minusDays(60),
+        premisesEndDate = LocalDate.now().minusDays(16),
         premisesStatus = PropertyStatus.archived,
       ) { _, jwt, premises ->
 
-        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().minusDays(8))
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().minusDays(15))
         val restartDate = LocalDate.now()
 
         webTestClient.post()
@@ -3066,7 +3066,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         premisesStatus = PropertyStatus.archived,
       ) { _, jwt, premises ->
 
-        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(9))
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(15))
 
         webTestClient.post()
           .uri("/cas3/premises/${premises.id}/unarchive")
@@ -3310,15 +3310,15 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
         roles = listOf(UserRole.CAS3_ASSESSOR),
         bedspaceCount = 1,
         bedspaceStartDates = listOf(
-          LocalDate.now().minusDays(30),
+          LocalDate.now().minusDays(60),
         ),
         bedspaceEndDates = listOf(
-          LocalDate.now().minusDays(10),
+          LocalDate.now().minusDays(16),
         ),
       ) { _, jwt, premises, _, bedspaces ->
         val archivedBedspace = bedspaces.first()
 
-        val cas3UnarchiveBedspace = Cas3UnarchiveBedspace(LocalDate.now().minusDays(8))
+        val cas3UnarchiveBedspace = Cas3UnarchiveBedspace(LocalDate.now().minusDays(15))
 
         webTestClient.post()
           .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
@@ -3348,7 +3348,7 @@ class Cas3PremisesTest : Cas3IntegrationTestBase() {
       ) { _, jwt, premises, _, bedspaces ->
         val archivedBedspace = bedspaces.first()
 
-        val cas3UnarchiveBedspace = Cas3UnarchiveBedspace(LocalDate.now().plusDays(8))
+        val cas3UnarchiveBedspace = Cas3UnarchiveBedspace(LocalDate.now().plusDays(15))
 
         webTestClient.post()
           .uri("/cas3/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")

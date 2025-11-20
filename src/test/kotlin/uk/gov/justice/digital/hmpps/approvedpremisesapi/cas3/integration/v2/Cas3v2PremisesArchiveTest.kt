@@ -1211,12 +1211,12 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
     fun `Unarchive premises returns 400 when restart date is too far in the past`() {
       givenACas3PremisesWithUser(
         roles = listOf(UserRole.CAS3_ASSESSOR),
-        premisesStartDate = LocalDate.now().minusDays(30),
-        premisesEndDate = LocalDate.now().minusDays(10),
+        premisesStartDate = LocalDate.now().minusDays(60),
+        premisesEndDate = LocalDate.now().minusDays(16),
         premisesStatus = Cas3PremisesStatus.archived,
       ) { _, jwt, premises ->
 
-        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().minusDays(8))
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().minusDays(15))
         val restartDate = LocalDate.now()
 
         webTestClient.post()
@@ -1242,7 +1242,7 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
         premisesStatus = Cas3PremisesStatus.archived,
       ) { _, jwt, premises ->
 
-        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(9))
+        val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().plusDays(15))
 
         webTestClient.post()
           .uri("/cas3/v2/premises/${premises.id}/unarchive")
