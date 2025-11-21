@@ -91,7 +91,7 @@ class OAuth2ResourceServerSecurityConfiguration {
 
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
         authorize(HttpMethod.GET, "/subject-access-request", hasAnyRole("SAR_DATA_ACCESS"))
-        authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
+        authorize(anyRequest, hasAnyAuthority("ROLE_PROBATION", "ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
       }
 
       anonymous { disable() }
