@@ -93,12 +93,14 @@ class Cas3PremisesService(
 
   companion object {
     const val MAX_LENGTH_BEDSPACE_REFERENCE: Long = 3
-    const val MAX_DAYS_UNARCHIVE_PREMISES: Long = 7
-    const val MAX_DAYS_ARCHIVE_PREMISES_IN_PAST: Long = 7
-    const val MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE: Long = 3
     const val MAX_DAYS_CREATE_BEDSPACE: Long = 7
-    const val MAX_DAYS_UNARCHIVE_BEDSPACE: Long = 7
+
+    const val MAX_DAYS_ARCHIVE_PREMISES_IN_PAST: Long = 7
     const val MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST: Long = 7
+    const val MAX_DAYS_UNARCHIVE_PREMISES: Long = 14
+    const val MAX_DAYS_UNARCHIVE_BEDSPACE: Long = 14
+
+    const val MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE: Long = 3
     const val MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE: Long = 3
   }
 
