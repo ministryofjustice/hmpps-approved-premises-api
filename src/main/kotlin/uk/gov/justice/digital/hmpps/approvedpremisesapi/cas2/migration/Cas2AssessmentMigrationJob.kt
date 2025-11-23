@@ -29,7 +29,7 @@ class Cas2AssessmentMigrationJob(
     var slice: Slice<Cas2ApplicationEntity>
 
     while (hasNext) {
-      slice = applicationRepository.findAllSubmittedApplicationsWithoutAssessments()
+      slice = applicationRepository.findAllSubmittedApplicationsWithoutAssessments(Cas2ServiceOrigin.HDC)
       slice.content.forEach { application ->
         transactionTemplate.executeWithoutResult {
           log.info("Saving assessment for ${application.id}")
@@ -38,7 +38,7 @@ class Cas2AssessmentMigrationJob(
               id = UUID.randomUUID(),
               application = application,
               createdAt = OffsetDateTime.now(),
-              serviceOrigin = Cas2ServiceOrigin.HDC,
+              serviceOrigin = application.serviceOrigin,
             ),
           )
         }

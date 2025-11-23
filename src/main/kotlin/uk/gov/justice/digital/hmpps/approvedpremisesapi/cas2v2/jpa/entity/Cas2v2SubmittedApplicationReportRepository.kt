@@ -24,9 +24,10 @@ interface Cas2v2SubmittedApplicationReportRepository : JpaRepository<DomainEvent
         TO_CHAR(events.occurred_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS') AS submittedAt,
         TO_CHAR(applications.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
         applications.application_origin as applicationOrigin,
+        applications.service_origin as serviceOrigin,
         CAST(applications.bail_hearing_date as DATE) as bailHearingDate
       FROM domain_events events
-      INNER JOIN cas_2_v2_applications applications ON events.application_id = applications.id      
+      INNER JOIN cas_2_applications applications ON events.application_id = applications.id and applications.service_origin = 'BAIL'     
       WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
         AND applications.submitted_at IS NOT NULL
         AND events.occurred_at  > CURRENT_DATE - 365
