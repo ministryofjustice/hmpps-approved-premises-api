@@ -20,6 +20,7 @@ enum class ApprovedPremisesUserRole(@get:JsonValue val value: kotlin.String) {
   janitor("janitor"),
   userManager("user_manager"),
   apAreaManager("ap_area_manager"),
+  manageResident("manage_resident"),
   ;
 
   companion object {

@@ -184,6 +184,23 @@ class UserTransformerTest {
       )
     }
 
+    @Test
+    fun `transformJpaToApi should return correct permission for CAS1_MANAGE_RESIDENT `() {
+      val user = buildUserEntity(
+        role = UserRole.CAS1_MANAGE_RESIDENT,
+        apArea = ApAreaEntityFactory().produce(),
+        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
+      )
+
+      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
+      every { environmentService.isNotProd() } returns true
+
+      val result =
+        userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+
+      assertThat(result.permissions).containsOnly(ApprovedPremisesUserPermission.apResidentProfile)
+    }
+
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_APPEALS_MANAGER"])
     fun `transformJpaToApi CAS1 should return permissions for Approved Premises roles which have permissions defined`(role: UserRole) {

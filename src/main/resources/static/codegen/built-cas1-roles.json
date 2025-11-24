@@ -110,6 +110,7 @@
   {
     "name" : "janitor",
     "permissions" : [
+      "cas1_ap_resident_profile",
       "cas1_application_withdraw_others",
       "cas1_assess_appealed_application",
       "cas1_assess_application",
@@ -180,6 +181,12 @@
       "cas1_user_list",
       "cas1_user_summary_list",
       "cas1_view_manage_tasks"
+    ]
+  },
+  {
+    "name" : "manage_resident",
+    "permissions" : [
+      "cas1_ap_resident_profile"
     ]
   }
 ]
