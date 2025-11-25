@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -82,6 +83,16 @@ class Cas2ApplicationsTransformer(
       else -> error("Unexpected original value ${jpaSummary.applicationOrigin}")
     },
     bailHearingDate = jpaSummary.bailHearingDate,
+  )
+
+  fun transformJpaToCas2ReferralHistory(
+    jpa: Cas2ApplicationEntity,
+  ): Cas2ReferralHistory = Cas2ReferralHistory(
+    id = jpa.assessment!!.id,
+    applicationId = jpa.id,
+    type = "CAS2",
+    createdAt = jpa.submittedAt!!,
+    status = jpa.statusUpdates!!.first().label,
   )
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
