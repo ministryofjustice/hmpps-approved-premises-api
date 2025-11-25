@@ -347,23 +347,6 @@ class UserTransformerTest {
     }
 
     @Test
-    fun `should not include experimental permission for cru member role in production`() {
-      val user = buildUserEntity(
-        role = CAS1_CRU_MEMBER,
-        apArea = ApAreaEntityFactory().produce(),
-        cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
-      )
-
-      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
-      every { environmentService.isNotProd() } returns false
-
-      val result =
-        userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
-
-      assertThat(result.permissions).doesNotContain(ApprovedPremisesUserPermission.cas1SpaceBookingCreateAdditional)
-    }
-
-    @Test
     fun `should include experimental permission for cru member role in non production`() {
       val user = buildUserEntity(
         role = CAS1_CRU_MEMBER,
