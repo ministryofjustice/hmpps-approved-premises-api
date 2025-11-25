@@ -78,6 +78,10 @@ class Cas3AssessmentService(
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
+  fun getAssessmentsByCrn(
+    crn: String,
+  ): List<TemporaryAccommodationAssessmentEntity> = assessmentRepository.findByApplicationCrn(crn)
+
   fun getAssessmentAndValidate(
     user: UserEntity,
     assessmentId: UUID,

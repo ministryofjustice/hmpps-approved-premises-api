@@ -5,8 +5,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
@@ -77,6 +79,14 @@ class Cas3AssessmentTransformer(
     probationDeliveryUnitName = ase.probationDeliveryUnitName,
   )
 
+  fun transformAssessmentToCas3ReferralHistory(a: TemporaryAccommodationAssessmentEntity): Cas3ReferralHistory = Cas3ReferralHistory(
+    id = a.id,
+    applicationId = a.application.id,
+    createdAt = a.createdAt.toInstant(),
+    status = getAssessmentStatus(a),
+    type = ServiceType.CAS3,
+  )
+
   fun transformApiStatusToDomainSummaryState(status: AssessmentStatus) = when (status) {
     AssessmentStatus.cas1Completed -> DomainAssessmentSummaryStatus.COMPLETED
     AssessmentStatus.cas1AwaitingResponse -> DomainAssessmentSummaryStatus.AWAITING_RESPONSE
@@ -102,7 +112,6 @@ class Cas3AssessmentTransformer(
     entity.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.rejected
     entity.decision == AssessmentDecision.ACCEPTED && (entity as TemporaryAccommodationAssessmentEntity).completedAt != null ->
       TemporaryAccommodationAssessmentStatus.closed
-
     entity.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.readyToPlace
     entity.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.inReview
     else -> TemporaryAccommodationAssessmentStatus.unallocated

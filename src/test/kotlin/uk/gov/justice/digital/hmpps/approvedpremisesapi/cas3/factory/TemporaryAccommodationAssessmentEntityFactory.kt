@@ -73,7 +73,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     this.decision = { decision }
   }
 
-  fun withAllocatedToUser(allocatedToUser: UserEntity) = apply {
+  fun withAllocatedToUser(allocatedToUser: UserEntity?) = apply {
     this.allocatedToUser = { allocatedToUser }
   }
 
@@ -93,7 +93,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     this.rejectionRationale = { rejectionRationale }
   }
 
-  fun withCompletedAt(completedAt: OffsetDateTime) = apply {
+  fun withCompletedAt(completedAt: OffsetDateTime?) = apply {
     this.completedAt = { completedAt }
   }
 

@@ -180,6 +180,9 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
 
   fun findByApplicationIdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 
+  @Query("SELECT a FROM TemporaryAccommodationAssessmentEntity a WHERE a.application.crn = :crn and a.application.submittedAt is not null")
+  fun findByApplicationCrn(crn: String): List<TemporaryAccommodationAssessmentEntity>
+
   @Query("SELECT a from ApprovedPremisesAssessmentEntity a WHERE a.dueAt IS NULL")
   fun findAllWithNullDueAt(pageable: Pageable?): Slice<ApprovedPremisesAssessmentEntity>
 
