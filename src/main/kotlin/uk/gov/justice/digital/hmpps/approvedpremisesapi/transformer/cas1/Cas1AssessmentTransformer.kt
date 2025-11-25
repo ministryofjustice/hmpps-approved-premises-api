@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -69,6 +71,14 @@ class Cas1AssessmentTransformer(
     },
     person = personTransformer.transformModelToPersonApi(personInfo),
     dueAt = ase.dueAt!!,
+  )
+
+  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity): Cas1ReferralHistory = Cas1ReferralHistory(
+    id = entity.id,
+    applicationId = entity.application.id,
+    createdAt = entity.createdAt.toInstant(),
+    status = getStatusForCas1Assessment(entity),
+    type = ServiceType.CAS1,
   )
 
   fun transformCas1AssessmentStatusToDomainSummaryState(status: Cas1AssessmentStatus) = when (status) {

@@ -6,8 +6,9 @@ import com.fasterxml.jackson.annotation.JsonValue
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
 enum class ServiceType(@get:JsonValue val value: String) {
 
-  CAS3("CAS3"),
+  CAS1("CAS1"),
   CAS2("CAS2"),
+  CAS3("CAS3"),
   ;
 
   companion object {
