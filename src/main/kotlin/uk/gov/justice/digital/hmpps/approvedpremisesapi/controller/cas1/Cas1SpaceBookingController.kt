@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ShortenSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
@@ -470,6 +471,21 @@ class Cas1SpaceBookingController(
     )
 
     return ResponseEntity(HttpStatus.OK)
+  }
+
+  @SuppressWarnings("MaxLineLength")
+  @Operation(summary = "Get all bookings for a CRN")
+  @GetMapping("/people/{crn}/space-bookings/")
+  fun getAllSpaceBookingsForCrn(
+    @Parameter(description = "CRN of the person to show space bookings for", required = true) @PathVariable crn: String,
+    @Parameter(description = "Include cancelled bookings when true; defaults to false", required = false) @RequestParam(name = "includeCancelled", required = false, defaultValue = "false") includeCancelled: Boolean = false,
+  ): ResponseEntity<List<Cas1SpaceBookingShortSummary>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val bookings = cas1SpaceBookingService.findAllBookingsForCrn(crn, includeCancelled)
+      .map { spaceBookingTransformer.transformToCas1SpaceBookingShortSummary(it) }
+
+    return ResponseEntity.ok(bookings)
   }
 
   private fun toCas1SpaceBooking(booking: Cas1SpaceBookingEntity): Cas1SpaceBooking {

@@ -117,6 +117,12 @@ class Cas1SpaceBookingTransformer(
     isNonArrival = spaceBooking.hasNonArrival(),
     cancellation = spaceBooking.extractCancellation(),
     characteristics = spaceBooking.criteria.toCas1SpaceCharacteristics(),
+    keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
+    nonArrival = spaceBooking.extractNonArrival(),
+    transferReason = spaceBooking.transferReason,
+    additionalInformation = spaceBooking.additionalInformation,
+    departure = spaceBooking.extractDeparture(),
+    bookedBy = spaceBooking.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
   )
 
   private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() = Cas1SpaceBookingDates(

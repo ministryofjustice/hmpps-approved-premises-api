@@ -1601,4 +1601,35 @@ class Cas1SpaceBookingServiceTest {
       verify { cas1SpaceBookingUpdateService.update(updateDetails) }
     }
   }
+
+  @Nested
+  inner class FindAllSpaceBookingsForCrn {
+    @Test
+    fun `successfully return bookings`() {
+      val includeCancelled = false
+      val crn = "X12345"
+      val booking1 = Cas1SpaceBookingEntityFactory().withCancellationOccurredAt(null).produce()
+      val booking2 = Cas1SpaceBookingEntityFactory().withCancellationOccurredAt(null).produce()
+      val expected = listOf(booking1, booking2)
+
+      every { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) } returns expected
+
+      val result = service.findAllBookingsForCrn(crn, includeCancelled)
+
+      assertThat(result).isEqualTo(expected)
+      verify(exactly = 1) { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) }
+    }
+
+    @Test
+    fun `returns empty list when no bookings`() {
+      val includeCancelled = false
+      val crn = "X99999"
+      every { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) } returns emptyList()
+
+      val result = service.findAllBookingsForCrn(crn, includeCancelled)
+
+      assertThat(result).isEmpty()
+      verify(exactly = 1) { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) }
+    }
+  }
 }

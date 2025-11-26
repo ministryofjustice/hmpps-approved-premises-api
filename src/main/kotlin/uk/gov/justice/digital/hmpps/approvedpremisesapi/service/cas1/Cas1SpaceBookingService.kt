@@ -75,6 +75,7 @@ class Cas1SpaceBookingService(
   private val offenderService: OffenderService,
   private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
 ) {
+
   @Transactional
   fun createNewBooking(
     placementRequestId: UUID,
@@ -445,6 +446,8 @@ class Cas1SpaceBookingService(
       }
     return spaceBookingSummaries
   }
+
+  fun findAllBookingsForCrn(crn: String, includeCancelled: Boolean): List<Cas1SpaceBookingEntity> = cas1SpaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled)
 
   private fun getBookingCharacteristicIds(bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?) = bookingsCriteriaFilter?.let { bookingCriteria ->
     val characteristics = bookingCriteria.map { it.value }

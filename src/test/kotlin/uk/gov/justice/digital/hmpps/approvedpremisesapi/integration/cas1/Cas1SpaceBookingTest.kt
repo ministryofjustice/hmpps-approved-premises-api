@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
@@ -3047,6 +3048,178 @@ class Cas1SpaceBookingTest {
 
       emailAsserter.assertEmailRequested(existingSpaceBooking.premises.emailAddress!!, Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_REQUESTING_AP)
       emailAsserter.assertEmailRequested(destinationPremises.emailAddress!!, Cas1NotifyTemplates.PLANNED_TRANSFER_REQUEST_ACCEPTED_FOR_TARGET_AP)
+    }
+  }
+
+  @Nested
+  inner class GetAllSpaceBookingsForCrn : InitialiseDatabasePerClassTestBase() {
+    lateinit var premises: ApprovedPremisesEntity
+    lateinit var spaceBooking2029: Cas1SpaceBookingEntity
+    lateinit var otherSpaceBookingAtPremises2021: Cas1SpaceBookingEntity
+    lateinit var otherSpaceBookingAtPremises2020: Cas1SpaceBookingEntity
+    lateinit var otherSpaceBookingAtPremises2032: Cas1SpaceBookingEntity
+    lateinit var cancelledSpaceBooking: Cas1SpaceBookingEntity
+    lateinit var expectedBookingsWithoutCancelled: List<Cas1SpaceBookingShortSummary>
+    lateinit var expectedBookingsWithCancelled: List<Cas1SpaceBookingShortSummary>
+    lateinit var cancelledBookingShortSummary: Cas1SpaceBookingShortSummary
+
+    @Autowired
+    lateinit var cas1SpaceBookingTransformer: Cas1SpaceBookingTransformer
+
+    @BeforeAll
+    fun setupTestData() {
+      val region = givenAProbationRegion()
+
+      premises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+      )
+
+      val otherPremises = givenAnApprovedPremises(
+        region = region,
+        supportsSpaceBookings = true,
+      )
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking2029 = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withExpectedArrivalDate(LocalDate.parse("2029-05-29"))
+        withExpectedDepartureDate(LocalDate.parse("2029-06-29"))
+      }
+
+      otherSpaceBookingAtPremises2021 = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withExpectedArrivalDate(LocalDate.parse("2021-05-29"))
+        withExpectedDepartureDate(LocalDate.parse("2021-06-29"))
+      }
+
+      otherSpaceBookingAtPremises2020 = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withExpectedArrivalDate(LocalDate.parse("2020-06-29"))
+        withExpectedDepartureDate(LocalDate.parse("2020-07-29"))
+      }
+
+      // otherSpaceBookingAtPremisesDifferentCrn
+      cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn("othercrn")
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2031-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2031-06-29"))
+      }
+
+      // otherSpaceBookingAtPremisesCancelled
+      cancelledSpaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withExpectedArrivalDate(LocalDate.parse("2031-05-29"))
+        withExpectedDepartureDate(LocalDate.parse("2031-06-29"))
+        withCancellationOccurredAt(LocalDate.parse("2020-01-01"))
+      }
+
+      otherSpaceBookingAtPremises2032 = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(otherPremises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withExpectedArrivalDate(LocalDate.parse("2032-05-29"))
+        withExpectedDepartureDate(LocalDate.parse("2032-06-29"))
+      }
+
+      expectedBookingsWithoutCancelled = listOf(
+        spaceBooking2029,
+        otherSpaceBookingAtPremises2021,
+        otherSpaceBookingAtPremises2020,
+        otherSpaceBookingAtPremises2032,
+      )
+        .map { cas1SpaceBookingTransformer.transformToCas1SpaceBookingShortSummary(it) }
+        .sortedByDescending { it.actualDepartureDate ?: it.expectedDepartureDate }
+
+      cancelledBookingShortSummary =
+        cas1SpaceBookingTransformer.transformToCas1SpaceBookingShortSummary(cancelledSpaceBooking)
+
+      expectedBookingsWithCancelled = listOf(
+        spaceBooking2029,
+        otherSpaceBookingAtPremises2021,
+        otherSpaceBookingAtPremises2020,
+        otherSpaceBookingAtPremises2032,
+        cancelledSpaceBooking,
+      )
+        .map { cas1SpaceBookingTransformer.transformToCas1SpaceBookingShortSummary(it) }
+        .sortedByDescending { it.actualDepartureDate ?: it.expectedDepartureDate }
+    }
+
+    @Test
+    fun `returns empty list if crn doesn't exist`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+
+      webTestClient.get()
+        .uri("/cas1/people/${"XX"}/space-bookings/")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingShortSummary>().isEmpty()
+    }
+
+    @Test
+    fun `returns bookings without cancelled bookings by default`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+
+      val response = webTestClient.get()
+        .uri("/cas1/people/${spaceBooking2029.crn}/space-bookings/")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingShortSummary>()
+
+      assertThat(response)
+        .usingRecursiveFieldByFieldElementComparatorIgnoringFields("createdAt")
+        .isEqualTo(expectedBookingsWithoutCancelled)
+
+      assertThat(response).doesNotContain(cancelledBookingShortSummary)
+    }
+
+    @Test
+    fun `returns bookings including cancelled bookings when includeCancelled is true`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+
+      val response = webTestClient.get()
+        .uri("/cas1/people/${spaceBooking2029.crn}/space-bookings/?includeCancelled=true")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingShortSummary>()
+
+      assertThat(response)
+        .usingRecursiveFieldByFieldElementComparatorIgnoringFields("createdAt")
+        .isEqualTo(expectedBookingsWithCancelled)
     }
   }
 }
