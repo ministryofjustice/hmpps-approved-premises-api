@@ -66,6 +66,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.DELETE, "/internal/premises/*", permitAll)
         authorize(HttpMethod.GET, "/events/cas2/**", hasAuthority("ROLE_CAS2_EVENTS"))
         authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))
+        authorize(HttpMethod.GET, "/cas2/external/**", hasAuthority("ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
         authorize(HttpMethod.PUT, "/cas2/assessments/**", hasRole("CAS2_ASSESSOR"))
         authorize(HttpMethod.GET, "/cas2/assessments/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER"))
         authorize(HttpMethod.POST, "/cas2/assessments/*/status-updates", hasRole("CAS2_ASSESSOR"))
@@ -93,7 +94,6 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/subject-access-request", hasAnyRole("SAR_DATA_ACCESS"))
 
         authorize(HttpMethod.GET, "/cas1/external/**", hasAuthority("ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
-        authorize(HttpMethod.GET, "/cas2/external/**", hasAuthority("ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
         authorize(HttpMethod.GET, "/cas2v2/external/**", hasAuthority("ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
         authorize(HttpMethod.GET, "/cas3/external/**", hasAuthority("ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
 

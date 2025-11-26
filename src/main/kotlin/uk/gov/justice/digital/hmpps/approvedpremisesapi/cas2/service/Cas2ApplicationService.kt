@@ -98,6 +98,8 @@ class Cas2ApplicationService(
     return Pair(response.content, metadata)
   }
 
+  fun getSubmittedApplicationsByCrn(crn: String): List<Cas2ApplicationEntity> = applicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
+
   fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber)
 
   fun findApplicationToAssign(nomsNumber: String): Cas2ApplicationEntity? = findMostRecentApplication(nomsNumber)?.takeIf { !it.isMostRecentStatusUpdateANonAssignableStatus() }

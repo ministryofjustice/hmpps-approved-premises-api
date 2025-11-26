@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -82,6 +84,16 @@ class Cas2ApplicationsTransformer(
       else -> error("Unexpected original value ${jpaSummary.applicationOrigin}")
     },
     bailHearingDate = jpaSummary.bailHearingDate,
+  )
+
+  fun transformJpaToCas2ReferralHistory(
+    jpa: Cas2ApplicationEntity,
+  ) = Cas2ReferralHistory(
+    id = jpa.assessment!!.id,
+    applicationId = jpa.id,
+    type = ServiceType.CAS2,
+    createdAt = jpa.submittedAt!!.toInstant(),
+    status = jpa.statusUpdates!!.first().label,
   )
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
