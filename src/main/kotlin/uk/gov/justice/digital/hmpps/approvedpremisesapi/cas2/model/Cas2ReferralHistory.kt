@@ -1,12 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
-import java.time.OffsetDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
+import java.time.Instant
 import java.util.UUID
 
 data class Cas2ReferralHistory(
-  val type: String,
+  val type: ServiceType,
   val id: UUID,
   val applicationId: UUID,
   val status: String,
-  val createdAt: OffsetDateTime,
+  val createdAt: Instant,
 )

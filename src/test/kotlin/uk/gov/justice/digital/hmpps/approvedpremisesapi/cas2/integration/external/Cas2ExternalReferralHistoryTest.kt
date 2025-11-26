@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
@@ -44,7 +45,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
     fun `Get all referrals returns ok`() {
       givenACas2PomUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-          val type = "CAS2"
+          val type = ServiceType.CAS2
           val application1 = createApplication(user, "Status 1")
           val application2 = createApplication(user, "Status 2")
           val application3 = createApplication(user, "Status 3")
@@ -55,35 +56,35 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
             Cas2ReferralHistory(
               id = application1.assessment!!.id,
               applicationId = application1.id,
-              createdAt = application1.submittedAt!!,
+              createdAt = application1.submittedAt!!.toInstant(),
               status = application1.statusUpdates!!.first().label,
               type = type,
             ),
             Cas2ReferralHistory(
               id = application2.assessment!!.id,
               applicationId = application2.id,
-              createdAt = application2.submittedAt!!,
+              createdAt = application2.submittedAt!!.toInstant(),
               status = application2.statusUpdates!!.first().label,
               type = type,
             ),
             Cas2ReferralHistory(
               id = application3.assessment!!.id,
               applicationId = application3.id,
-              createdAt = application3.submittedAt!!,
+              createdAt = application3.submittedAt!!.toInstant(),
               status = application3.statusUpdates!!.first().label,
               type = type,
             ),
             Cas2ReferralHistory(
               id = application4.assessment!!.id,
               applicationId = application4.id,
-              createdAt = application4.submittedAt!!,
+              createdAt = application4.submittedAt!!.toInstant(),
               status = application4.statusUpdates!!.first().label,
               type = type,
             ),
             Cas2ReferralHistory(
               id = application5.assessment!!.id,
               applicationId = application5.id,
-              createdAt = application5.submittedAt!!,
+              createdAt = application5.submittedAt!!.toInstant(),
               status = application5.statusUpdates!!.first().label,
               type = type,
             ),
