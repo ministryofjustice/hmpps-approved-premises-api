@@ -191,6 +191,10 @@ class Cas1AssessmentService(
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
+  fun getApprovedPremisesAssessmentsByCrn(
+    crn: String,
+  ): List<ApprovedPremisesAssessmentEntity> = assessmentRepository.findApprovedPremisesAssessmentsByCrn(crn)
+
   @SuppressWarnings("ReturnCount")
   fun addAssessmentClarificationNote(
     user: UserEntity,
