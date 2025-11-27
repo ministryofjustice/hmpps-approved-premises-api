@@ -375,6 +375,19 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     nativeQuery = true,
   )
   fun findUpcomingOrCurrentKeyWorkers(premisesId: UUID): List<UpcomingOrCurrentKeyWorkerResult>
+
+  @Query(
+    """
+    SELECT b FROM Cas1SpaceBookingEntity b
+    JOIN b.placementRequest pr
+    JOIN pr.application app
+    WHERE
+      b.crn = :crn AND
+      (:includeCancelled = true OR b.cancellationOccurredAt IS NULL)
+    ORDER BY COALESCE(b.actualDepartureDate, b.expectedDepartureDate) DESC
+    """,
+  )
+  fun findAllSpaceBookingsForCrn(crn: String, includeCancelled: Boolean): List<Cas1SpaceBookingEntity>
 }
 
 interface UpcomingOrCurrentKeyWorkerResult {
