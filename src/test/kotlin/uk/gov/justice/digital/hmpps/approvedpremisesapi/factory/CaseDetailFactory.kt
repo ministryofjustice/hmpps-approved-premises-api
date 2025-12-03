@@ -104,6 +104,10 @@ class RegistrationFactory : Factory<Registration> {
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var startDate: Yielded<LocalDate> = { LocalDate.now() }
 
+  fun withDescription(description: String) = apply {
+    this.description = { description }
+  }
+
   override fun produce(): Registration = Registration(
     code = this.code(),
     description = this.description(),
@@ -118,6 +122,14 @@ class MappaDetailFactory : Factory<MappaDetail> {
   var categoryDescription: Yielded<String> = { randomStringUpperCase(3) }
   var startDate: Yielded<LocalDate> = { LocalDate.now() }
   var lastUpdated: Yielded<ZonedDateTime> = { ZonedDateTime.now() }
+
+  fun withLevelDescription(levelDescription: String) = apply {
+    this.levelDescription = { levelDescription }
+  }
+
+  fun withCategoryDescription(categoryDescription: String) = apply {
+    this.categoryDescription = { categoryDescription }
+  }
 
   override fun produce(): MappaDetail = MappaDetail(
     level = this.level(),
