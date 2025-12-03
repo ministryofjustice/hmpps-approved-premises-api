@@ -8,25 +8,34 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimeline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PersonDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PersonalTimeline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.util.UUID
 import kotlin.collections.listOf
 
 class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
@@ -486,6 +495,76 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             )
         }
       }
+    }
+  }
+
+  @Nested
+  inner class GetPersonalDetailsForCrn {
+    @Test
+    fun `Getting personal details for a CRN without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/people/CRN/personal-details")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+  }
+
+  @Test
+  fun `Getting a personal timeline for a CRN that does not exist returns 404`() {
+    givenAUser { _, jwt ->
+      apDeliusContextEmptyCaseSummaryToBulkResponse("CRN1")
+
+      webTestClient.get()
+        .uri("/cas1/people/CRN/personal-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+  }
+
+  val levels = listOf("B1", "C2", "D3")
+
+  @Test
+  fun `Getting personal details for a CRN returns OK with correct body`() {
+    givenAUser { userEntity, jwt ->
+      val caseSummary = CaseSummaryFactory().produce()
+      val tier = Tier(
+        tierScore = levels.random(),
+        calculationId = UUID.randomUUID(),
+        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+        )
+
+      apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSummary)
+
+      hmppsTierMockSuccessfulTierCall(caseSummary.crn, tier)
+
+      val response = webTestClient.get()
+        .uri("/cas1/people/${caseSummary.crn}/personal-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1PersonDetails>()
+
+      assertThat(response.name).isEqualTo("${caseSummary.name.forename} ${caseSummary.name.surname}")
+      assertThat(response.alias).isEqualTo("Dummy Value")
+      assertThat(response.dateOfBirth).isEqualTo(caseSummary.dateOfBirth)
+      assertThat(response.nationality).isEqualTo(caseSummary.profile!!.nationality)
+      assertThat(response.immigrationStatus).isEqualTo("Dummy Value")
+      assertThat(response.languages).isEqualTo("Dummy Value")
+      assertThat(response.relationshipStatus).isEqualTo("Dummy Value")
+      assertThat(response.dependants).isEqualTo("Dummy Value")
+      assertThat(response.disabilities).isEqualTo("Dummy Value")
+      assertThat(response.tier).isEqualTo(tier.tierScore)
+      assertThat(response.nomsId).isEqualTo(caseSummary.nomsId)
+      assertThat(response.pnc).isEqualTo(caseSummary.pnc)
+      assertThat(response.ethnicity).isEqualTo(caseSummary.profile.ethnicity)
+      assertThat(response.religion).isEqualTo(caseSummary.profile.religion)
+      assertThat(response.sex).isEqualTo("Dummy Value")
+      assertThat(response.genderIdentity).isEqualTo(caseSummary.profile.genderIdentity)
+      assertThat(response.sexualOrientation).isEqualTo("Dummy Value")
     }
   }
 }

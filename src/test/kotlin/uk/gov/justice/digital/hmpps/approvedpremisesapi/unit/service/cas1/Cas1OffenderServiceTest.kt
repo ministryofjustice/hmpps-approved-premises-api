@@ -6,6 +6,7 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagerFactory
@@ -14,14 +15,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
 class Cas1OffenderServiceTest {
   private val cas1OffenderRepository = mockk<Cas1OffenderRepository>()
+  private val offenderService = mockk<OffenderService>()
+  private val hmppsTierApiClient = mockk<HMPPSTierApiClient>()
 
-  private val service = Cas1OffenderService(cas1OffenderRepository)
+  private val service = Cas1OffenderService(
+    cas1OffenderRepository,
+    offenderService,
+    hmppsTierApiClient = TODO()
+  )
 
   @Test
   fun `should return existing offender when exist`() {
