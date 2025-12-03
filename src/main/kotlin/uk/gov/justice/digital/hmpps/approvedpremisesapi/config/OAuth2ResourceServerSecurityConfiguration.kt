@@ -87,6 +87,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas2v2/reports/**", hasAuthority("ROLE_CAS2_MI"))
         authorize(HttpMethod.GET, "/cas2v2/people/search-by-crn/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
         authorize(HttpMethod.GET, "/cas2v2/people/search-by-noms/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2v2/external/**", hasAuthority("ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
         authorize("/cas2v2/applications/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
         authorize("/cas2v2/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
 
@@ -94,7 +95,6 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/subject-access-request", hasAnyRole("SAR_DATA_ACCESS"))
 
         authorize(HttpMethod.GET, "/cas1/external/**", hasAuthority("ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
-        authorize(HttpMethod.GET, "/cas2v2/external/**", hasAuthority("ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
         authorize(HttpMethod.GET, "/cas3/external/**", hasAuthority("ROLE_ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE"))
 
         authorize(anyRequest, hasAuthority("ROLE_PROBATION"))

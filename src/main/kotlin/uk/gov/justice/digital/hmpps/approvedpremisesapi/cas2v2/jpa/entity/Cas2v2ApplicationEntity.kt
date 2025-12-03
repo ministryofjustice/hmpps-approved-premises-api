@@ -29,6 +29,8 @@ interface Cas2v2ApplicationRepository : JpaRepository<Cas2v2ApplicationEntity, U
   @Query("SELECT n.id FROM Cas2v2ApplicationEntity n")
   fun findApplicationIds(): List<UUID>
 
+  fun findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn: String): List<Cas2v2ApplicationEntity>
+
   @Query(
     "SELECT a FROM Cas2v2ApplicationEntity a WHERE a.id = :id AND " +
       "a.submittedAt IS NOT NULL",

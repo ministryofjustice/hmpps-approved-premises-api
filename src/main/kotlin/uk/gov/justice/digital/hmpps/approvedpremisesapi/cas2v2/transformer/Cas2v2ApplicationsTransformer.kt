@@ -6,8 +6,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -84,6 +86,16 @@ class Cas2v2ApplicationsTransformer(
     "prisonBail" -> ApplicationOrigin.prisonBail
     else -> ApplicationOrigin.homeDetentionCurfew
   }
+
+  fun transformJpaToCas2v2ReferralHistory(
+    jpa: Cas2v2ApplicationEntity,
+  ) = Cas2v2ReferralHistory(
+    id = jpa.assessment!!.id,
+    applicationId = jpa.id,
+    type = ServiceType.CAS2v2,
+    createdAt = jpa.submittedAt!!.toInstant(),
+    status = jpa.statusUpdates!!.first().label,
+  )
 
   private fun getStatus(entity: Cas2v2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {
