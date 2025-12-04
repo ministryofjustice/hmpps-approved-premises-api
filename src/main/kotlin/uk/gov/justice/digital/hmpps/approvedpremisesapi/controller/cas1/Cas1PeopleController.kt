@@ -9,12 +9,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.BoxedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineModel
@@ -29,6 +33,8 @@ class Cas1PeopleController(
   private val cas1PersonalTimelineTransformer: Cas1PersonalTimelineTransformer,
   private val cas1TimelineService: Cas1TimelineService,
   private val sentryService: SentryService,
+  private val offenderRiskService: OffenderRisksService,
+  private val userAccessService: Cas1UserAccessService,
 ) {
 
   companion object {
@@ -48,6 +54,15 @@ class Cas1PeopleController(
     }
 
     return ResponseEntity.ok(timeline)
+  }
+
+  @Operation(summary = "Returns a risk profile for a Person.")
+  @GetMapping("/people/{crn}/risk-profile")
+  fun getPersonRiskProfile(@PathVariable crn: String): ResponseEntity<PersonRisks> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val personRisks = offenderRiskService.getPersonRisks(crn)
+    return ResponseEntity.ok(personRisks)
   }
 
   private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): Cas1PersonalTimeline = cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())

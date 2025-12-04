@@ -14,7 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PersonalTimeline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -22,11 +27,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.util.UUID
 import kotlin.collections.listOf
 
 class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
@@ -485,6 +497,66 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
               ),
             )
         }
+      }
+    }
+  }
+
+  @Nested
+  inner class GetPersonRiskProfileTest {
+
+    @Test
+    fun `Getting a person risk profile for a CRN without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/people/CRN/risk-profile")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Getting a person risk profile for a CRN returns OK with correct body`() {
+      val caseDetail = CaseDetailFactory()
+        .withMappaDetail(
+          MappaDetailFactory()
+            .withLevelDescription("Level1 MAPPA")
+            .withCategoryDescription("CAT2")
+            .produce(),
+        )
+        .withRegistrations(
+          listOf(
+            RegistrationFactory().withDescription("Arson").produce(),
+            RegistrationFactory().withDescription("Weapon").produce(),
+
+          ),
+        )
+        .produce()
+      val roshRatings = RoshRatingsFactory().produce()
+      val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now())
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      givenAnOffender { offenderDetails, _ ->
+        apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
+        apOASysContextMockSuccessfulRoshRatingsCall(offenderDetails.otherIds.crn, roshRatings)
+        hmppsTierMockSuccessfulTierCall(
+          offenderDetails.otherIds.crn,
+          tier,
+        )
+
+        val response = webTestClient.get()
+          .uri("/cas1/people/${offenderDetails.otherIds.crn}/risk-profile")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult(PersonRisks::class.java)
+
+        val personRisks = response.responseBody.blockFirst()!!
+
+        assertThat(personRisks).isNotNull
+        assertThat(personRisks.tier.value!!.level).isEqualTo("A1")
+        assertThat(personRisks.roshRisks.value!!.overallRisk).isEqualTo("Low")
+        assertThat(personRisks.mappa.value!!.level).isEqualTo("CAT CAT2/LEVEL Level1 MAPPA")
+        assertThat(personRisks.flags.value!![0]).isEqualTo("Arson")
+        assertThat(personRisks.flags.value[1]).isEqualTo("Weapon")
       }
     }
   }
