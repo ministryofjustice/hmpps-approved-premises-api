@@ -3178,7 +3178,7 @@ class Cas1SpaceBookingTest {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
       webTestClient.get()
-        .uri("/cas1/people/${"XX"}/space-bookings/")
+        .uri("/cas1/people/${"XX"}/space-bookings")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -3191,7 +3191,7 @@ class Cas1SpaceBookingTest {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
       val response = webTestClient.get()
-        .uri("/cas1/people/${spaceBooking2029.crn}/space-bookings/")
+        .uri("/cas1/people/${spaceBooking2029.crn}/space-bookings")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -3210,7 +3210,7 @@ class Cas1SpaceBookingTest {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
       val response = webTestClient.get()
-        .uri("/cas1/people/${spaceBooking2029.crn}/space-bookings/?includeCancelled=true")
+        .uri("/cas1/people/${spaceBooking2029.crn}/space-bookings?includeCancelled=true")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()

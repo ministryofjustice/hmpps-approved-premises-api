@@ -475,7 +475,7 @@ class Cas1SpaceBookingController(
 
   @SuppressWarnings("MaxLineLength")
   @Operation(summary = "Get all bookings for a CRN")
-  @GetMapping("/people/{crn}/space-bookings/")
+  @GetMapping("/people/{crn}/space-bookings")
   fun getAllSpaceBookingsForCrn(
     @Parameter(description = "CRN of the person to show space bookings for", required = true) @PathVariable crn: String,
     @Parameter(description = "Include cancelled bookings when true; defaults to false", required = false) @RequestParam(name = "includeCancelled", required = false, defaultValue = "false") includeCancelled: Boolean = false,
