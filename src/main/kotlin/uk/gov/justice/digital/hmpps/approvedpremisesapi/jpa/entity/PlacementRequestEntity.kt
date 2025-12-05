@@ -195,6 +195,10 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     cruManagementAreaId: UUID? = null,
     pageable: Pageable? = null,
   ): Page<Cas1PlacementRequestSummary>
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select pr from PlacementRequestEntity pr where pr.id = :id")
+  fun findByIdForUpdate(id: UUID): PlacementRequestEntity?
 }
 
 /**
