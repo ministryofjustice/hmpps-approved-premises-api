@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -51,7 +50,6 @@ class Cas1PlacementRequestService(
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val offenderService: OffenderService,
-  private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
   private val clock: Clock,
 ) {
 
@@ -227,9 +225,11 @@ class Cas1PlacementRequestService(
     userProvidedReason: PlacementRequestWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
   ): CasResult<PlacementRequestAndCancellations> {
-    lockablePlacementRequestRepository.acquirePessimisticLock(placementRequestId)
-
-    val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
+    /*Load with a pessimistic write lock to guarantee we work on the latest state and to block
+      concurrent updates. This prevents stale managed instances (loaded earlier when building
+      the withdrawable tree) from triggering optimistic locking failures.
+     */
+    val placementRequest = placementRequestRepository.findByIdForUpdate(placementRequestId)
       ?: return CasResult.NotFound("PlacementRequest", placementRequestId.toString())
 
     if (placementRequest.isWithdrawn) {
