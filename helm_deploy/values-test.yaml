@@ -32,7 +32,8 @@ generic-service:
     SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
     SERVICES_MANAGE-POM-CASES_BASE-URL: https://dev.moic.service.justice.gov.uk
     SERVICES_PRISONER-SEARCH_BASE-URL: https://prisoner-search-dev.prison.service.justice.gov.uk
-    SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/test,classpath:db/migration/all-except-integration
+#    this is now set in the deploy_test github workflow
+#    SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/test,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
     SENTRY_ENVIRONMENT: test
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20

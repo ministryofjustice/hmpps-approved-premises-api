@@ -2,6 +2,12 @@ name: Deploy to test
 
 on:
   workflow_dispatch:
+    inputs:
+      enable_flyway:
+        description: 'Wipe Test Database'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   docker_build:
@@ -24,3 +30,7 @@ jobs:
       environment: 'test'
       app_version: '${{ needs.docker_build.outputs.app_version }}'
       show_changelog: false
+      helm_additional_args: >
+        ${{ github.event.inputs.enable_flyway == 'true' && 
+           'SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/test,classpath:db/migration/all-except-integration' || 
+           'SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/dev-truncate,classpath:db/migration/dev,classpath:db/migration/all-except-integration' }}
