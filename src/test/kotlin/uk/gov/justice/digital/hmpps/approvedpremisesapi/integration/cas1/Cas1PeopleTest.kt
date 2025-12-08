@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimeline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PersonDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PersonalTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
@@ -26,10 +28,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockUnsuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -558,6 +563,114 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         assertThat(personRisks.flags.value!![0]).isEqualTo("Arson")
         assertThat(personRisks.flags.value[1]).isEqualTo("Weapon")
       }
+    }
+  }
+
+  @Nested
+  inner class GetPersonalDetailsForCrn {
+    @Test
+    fun `Returns 404 when getting personal details for a CRN without a JWT`() {
+      webTestClient.get()
+        .uri("/cas1/people/CRN/personal-details")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+  }
+
+  @Test
+  fun `Returns 404 when getting personal details for a CRN that does not exist`() {
+    givenAUser { _, jwt ->
+      apDeliusContextEmptyCaseSummaryToBulkResponse("CRN1")
+
+      webTestClient.get()
+        .uri("/cas1/people/CRN1/personal-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+  }
+
+  val levels = listOf("B1", "C2", "D3")
+
+  @Test
+  fun `Returns correct body when getting personal details for a CRN`() {
+    givenAUser { userEntity, jwt ->
+      val caseSummary = CaseSummaryFactory().produce()
+      val tier = Tier(
+        tierScore = levels.random(),
+        calculationId = UUID.randomUUID(),
+        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+      )
+
+      apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSummary)
+
+      hmppsTierMockSuccessfulTierCall(caseSummary.crn, tier)
+
+      val response = webTestClient.get()
+        .uri("/cas1/people/${caseSummary.crn}/personal-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1PersonDetails>()
+
+      assertThat(response.name).isEqualTo("${caseSummary.name.forename} ${caseSummary.name.surname}")
+      assertThat(response.dateOfBirth).isEqualTo(caseSummary.dateOfBirth)
+      assertThat(response.nationality).isEqualTo(caseSummary.profile!!.nationality)
+      assertThat(response.tier).isEqualTo(tier.tierScore)
+      assertThat(response.nomsId).isEqualTo(caseSummary.nomsId)
+      assertThat(response.pnc).isEqualTo(caseSummary.pnc)
+      assertThat(response.ethnicity).isEqualTo(caseSummary.profile.ethnicity)
+      assertThat(response.religion).isEqualTo(caseSummary.profile.religion)
+      assertThat(response.genderIdentity).isEqualTo(caseSummary.profile.genderIdentity)
+    }
+  }
+
+  @Test
+  fun `Returns 500 Internal Server Error when getting case details for a CRN from AP and Delius fails`() {
+    givenAUser { userEntity, jwt ->
+      val caseSummary = CaseSummaryFactory().produce()
+      val tier = Tier(
+        tierScore = levels.random(),
+        calculationId = UUID.randomUUID(),
+        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+      )
+
+      apDeliusContextMockUnsuccessfulCaseSummaryCall()
+
+      hmppsTierMockSuccessfulTierCall(caseSummary.crn, tier)
+
+      webTestClient.get()
+        .uri("/cas1/people/${caseSummary.crn}/personal-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .is5xxServerError
+    }
+  }
+
+  @Test
+  fun `Returns 400 Bad Request when getting risk tier for a CRN from HMPPS Tier fails`() {
+    givenAUser { userEntity, jwt ->
+      val caseSummary = CaseSummaryFactory().produce()
+      val tier = Tier(
+        tierScore = levels.random(),
+        calculationId = UUID.randomUUID(),
+        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+      )
+
+      apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSummary)
+
+      hmppsTierMockUnsuccessfulTierCall(caseSummary.crn)
+
+      webTestClient.get()
+        .uri("/cas1/people/${caseSummary.crn}/personal-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isBadRequest
     }
   }
 }

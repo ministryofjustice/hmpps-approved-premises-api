@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimeline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PersonDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -18,11 +19,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.BoxedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineModel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PersonalTimelineTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Cas1Controller
 @Tag(name = "CAS1 People")
@@ -35,6 +40,8 @@ class Cas1PeopleController(
   private val sentryService: SentryService,
   private val offenderRiskService: OffenderRisksService,
   private val userAccessService: Cas1UserAccessService,
+  private val cas1PersonTransformer: Cas1PersonTransformer,
+  private val cas1OffenderService: Cas1OffenderService,
 ) {
 
   companion object {
@@ -98,6 +105,22 @@ class Cas1PeopleController(
   private fun getOfflineApplications(crn: String) = cas1ApplicationService
     .getOfflineApplicationsForCrn(crn, limit = TIMELINE_APPLICATION_LIMIT)
     .map { BoxedApplication.of(it) }
+
+  @Operation(summary = "Returns the person details for a CRN.")
+  @GetMapping("/people/{crn}/personal-details")
+  fun getPersonDetailsForCrn(@PathVariable crn: String): ResponseEntity<Cas1PersonDetails> {
+    val user = userService.getUserForRequest()
+
+    val personSummaryInfoResult = cas1OffenderService.getCas1PersonSummaryInfoResult(crn, user.cas1LaoStrategy())
+    ensureEntityFromCasResultIsSuccess(personSummaryInfoResult)
+
+    val tier = cas1OffenderService.getRiskTier(crn)
+    ensureEntityFromCasResultIsSuccess(tier)
+
+    val cas1PersonDetails = cas1PersonTransformer.transformPersonToCas1PersonDetails(extractEntityFromCasResult(personSummaryInfoResult), extractEntityFromCasResult(tier))
+
+    return ResponseEntity.ok(cas1PersonDetails)
+  }
 }
 
 data class Cas1PersonalTimeline(

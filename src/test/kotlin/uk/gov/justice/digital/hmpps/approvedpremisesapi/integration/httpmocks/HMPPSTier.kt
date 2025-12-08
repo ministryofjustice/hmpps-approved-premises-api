@@ -7,3 +7,8 @@ fun IntegrationTestBase.hmppsTierMockSuccessfulTierCall(crn: String, response: T
   url = "/crn/$crn/tier",
   responseBody = response,
 )
+
+fun IntegrationTestBase.hmppsTierMockUnsuccessfulTierCall(crn: String, responseStatus: Int = 500) = mockUnsuccessfulGetCall(
+  url = "/crn/$crn/tier",
+  responseStatus = responseStatus,
+)
