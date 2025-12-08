@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.io.IOException
 
-@Component
 class UserVersionFilter(
   private val userService: UserService,
   private val requestContextService: RequestContextService,
