@@ -136,6 +136,34 @@ class WebClientConfiguration(
     )
   }
 
+  @Bean(name = ["adjudicationsApiWebClient"])
+  fun adjudicationsApiWebClient(
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.manage-adjudications-api.base-url}") adjudicationsApiBaseUrl: String,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("manage-adjudications-api")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .baseUrl(adjudicationsApiBaseUrl)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(
+                ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
+              ),
+          ),
+        )
+        .filter(oauth2Client)
+        .build(),
+    )
+  }
+
   @Bean(name = ["prisonerAlertsApiWebClient"])
   fun prisonerAlertsApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,

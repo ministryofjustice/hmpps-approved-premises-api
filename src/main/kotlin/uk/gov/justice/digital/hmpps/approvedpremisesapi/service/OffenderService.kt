@@ -4,17 +4,17 @@ import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AdjudicationsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserOffenderAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.manageadjudicationsapi.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.manageadjudicationsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi
 
 @Service
 class OffenderService(
-  private val prisonsApiClient: PrisonsApiClient,
+  private val adjudicationsApiClient: AdjudicationsApiClient,
   private val prisionerAlertsApiClient: PrisonerAlertsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
@@ -308,7 +308,6 @@ class OffenderService(
 
   fun getPrisonAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
     val allAdjudications = mutableListOf<Adjudication>()
-    val allAgencies = mutableListOf<Agency>()
 
     var currentPage: AdjudicationsPage? = null
     var currentPageIndex = 0
@@ -319,7 +318,7 @@ class OffenderService(
 
       val offset = currentPageIndex * adjudicationsConfig.prisonApiPageSize
 
-      val adjudicationsPageResponse = prisonsApiClient.getAdjudicationsPage(nomsNumber, offset, adjudicationsConfig.prisonApiPageSize)
+      val adjudicationsPageResponse = adjudicationsApiClient.getAdjudicationsPage(nomsNumber, offset, adjudicationsConfig.prisonApiPageSize)
       currentPage = when (adjudicationsPageResponse) {
         is ClientResult.Success -> adjudicationsPageResponse.body
         is ClientResult.Failure.StatusCode -> when (adjudicationsPageResponse.status) {
@@ -331,13 +330,11 @@ class OffenderService(
       }
 
       allAdjudications.addAll(currentPage.results)
-      allAgencies.addAll(currentPage.agencies)
     } while (currentPage != null && currentPage.results.size == adjudicationsConfig.prisonApiPageSize)
 
     return AuthorisableActionResult.Success(
       AdjudicationsPage(
-        results = allAdjudications,
-        agencies = allAgencies,
+        results = allAdjudications
       ),
     )
   }
