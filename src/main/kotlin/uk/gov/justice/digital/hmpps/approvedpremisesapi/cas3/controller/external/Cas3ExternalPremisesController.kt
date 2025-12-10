@@ -5,7 +5,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -13,7 +13,7 @@ import java.util.UUID
 
 @Cas3ExternalController
 class Cas3ExternalPremisesController(
-  private val cas3PremisesService: Cas3PremisesService,
+  private val cas3PremisesService: Cas3v2PremisesService,
   private val cas3PremisesTransformer: Cas3PremisesTransformer,
 ) {
 
@@ -24,6 +24,6 @@ class Cas3ExternalPremisesController(
 
     val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises.id))
 
-    return ResponseEntity.ok(cas3PremisesTransformer.transformDomainToApi(premises, archiveHistory))
+    return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(premises, archiveHistory))
   }
 }
