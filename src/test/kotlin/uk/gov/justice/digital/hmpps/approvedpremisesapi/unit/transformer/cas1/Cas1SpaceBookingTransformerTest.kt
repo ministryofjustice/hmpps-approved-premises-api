@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
@@ -287,6 +288,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.allowedActions).containsExactly(Cas1SpaceBookingAction.APPEAL_CREATE)
       assertThat(result.openChangeRequests.size).isEqualTo(1)
       assertThat(result.openChangeRequests[0]).isEqualTo(changeRequests[0])
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.CANCELLED)
     }
 
     @Test
@@ -368,6 +370,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(departure.parentReason!!.name).isEqualTo(parentDepartureReason.name)
       assertThat(departure.notes).isNull()
       assertThat(departure.moveOnCategory).isNull()
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.DEPARTED)
     }
   }
 
@@ -468,6 +471,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.createdAt).isEqualTo(createdAt.toInstant())
       assertThat(result.transferReason).isEqualTo(TransferReason.riskToResident)
       assertThat(result.additionalInformation).isEqualTo("some additional information")
+      assertThat(result.status).isEqualTo(if (cancelled) Cas1SpaceBookingStatus.CANCELLED else Cas1SpaceBookingStatus.NOT_ARRIVED)
     }
   }
 
@@ -545,6 +549,7 @@ class Cas1SpaceBookingTransformerTest {
         Cas1ChangeRequestType.PLANNED_TRANSFER,
         Cas1ChangeRequestType.PLACEMENT_EXTENSION,
       )
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.CANCELLED)
     }
 
     @Test
@@ -592,6 +597,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.isCancelled).isFalse()
       assertThat(result.plannedTransferRequested).isFalse()
       assertThat(result.appealRequested).isFalse()
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.UPCOMING)
     }
   }
 }

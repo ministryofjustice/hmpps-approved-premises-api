@@ -22,6 +22,7 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
@@ -631,6 +632,14 @@ data class Cas1SpaceBookingEntity(
     !hasNonArrival() &&
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
+
+  fun getSpaceBookingStatus(): Cas1SpaceBookingStatus = when {
+    isCancelled() -> Cas1SpaceBookingStatus.CANCELLED
+    hasNonArrival() -> Cas1SpaceBookingStatus.NOT_ARRIVED
+    hasDeparted() -> Cas1SpaceBookingStatus.DEPARTED
+    hasArrival() -> Cas1SpaceBookingStatus.ARRIVED
+    else -> Cas1SpaceBookingStatus.UPCOMING
+  }
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade

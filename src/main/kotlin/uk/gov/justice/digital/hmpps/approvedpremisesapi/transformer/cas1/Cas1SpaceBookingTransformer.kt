@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingNonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingShortSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -91,6 +92,7 @@ class Cas1SpaceBookingTransformer(
       openChangeRequests = openChangeRequests,
       additionalInformation = jpa.additionalInformation,
       transferReason = jpa.transferReason,
+      status = jpa.getSpaceBookingStatus(),
     )
   }
 
@@ -123,6 +125,7 @@ class Cas1SpaceBookingTransformer(
     additionalInformation = spaceBooking.additionalInformation,
     departure = spaceBooking.extractDeparture(),
     bookedBy = spaceBooking.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
+    status = spaceBooking.getSpaceBookingStatus(),
   )
 
   private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() = Cas1SpaceBookingDates(
@@ -221,6 +224,7 @@ class Cas1SpaceBookingTransformer(
       createdAt = spaceBooking.createdAt.toInstant(),
       transferReason = spaceBooking.transferReason,
       additionalInformation = spaceBooking.additionalInformation,
+      status = spaceBooking.getSpaceBookingStatus(),
     )
   }
 
@@ -263,6 +267,12 @@ class Cas1SpaceBookingTransformer(
     plannedTransferRequested = false,
     appealRequested = false,
     openChangeRequestTypes = searchResult.getOpenChangeRequestTypes().map { it.toApiType() },
+    status = determineBookingStatus(
+      isCancelled = searchResult.cancelled,
+      hasNonArrival = searchResult.nonArrivalConfirmedAtDateTime != null,
+      hasDeparted = searchResult.actualDepartureDate != null,
+      hasArrival = searchResult.actualArrivalDate != null,
+    ),
   )
 
   companion object {
@@ -274,5 +284,18 @@ class Cas1SpaceBookingTransformer(
       log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
       null
     }
+  }
+
+  private fun determineBookingStatus(
+    isCancelled: Boolean,
+    hasNonArrival: Boolean,
+    hasDeparted: Boolean,
+    hasArrival: Boolean,
+  ): Cas1SpaceBookingStatus = when {
+    isCancelled -> Cas1SpaceBookingStatus.CANCELLED
+    hasNonArrival -> Cas1SpaceBookingStatus.NOT_ARRIVED
+    hasDeparted -> Cas1SpaceBookingStatus.DEPARTED
+    hasArrival -> Cas1SpaceBookingStatus.ARRIVED
+    else -> Cas1SpaceBookingStatus.UPCOMING
   }
 }

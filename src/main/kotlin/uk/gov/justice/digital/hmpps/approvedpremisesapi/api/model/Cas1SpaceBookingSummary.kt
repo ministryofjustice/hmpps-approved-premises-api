@@ -45,4 +45,5 @@ data class Cas1SpaceBookingSummary(
   val transferReason: TransferReason? = null,
 
   val additionalInformation: String? = null,
+  val status: Cas1SpaceBookingStatus? = null,
 )
