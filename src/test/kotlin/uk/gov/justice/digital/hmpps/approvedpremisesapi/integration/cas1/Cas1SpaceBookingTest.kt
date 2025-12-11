@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingShortSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
@@ -1150,6 +1151,7 @@ class Cas1SpaceBookingTest {
       assertThat(response.actualArrivalTime).isEqualTo("11:24")
       assertThat(response.actualDepartureTime).isEqualTo("10:24")
       assertThat(response.openChangeRequests.size).isEqualTo(1)
+      assertThat(response.status).isEqualTo(Cas1SpaceBookingStatus.UPCOMING)
     }
   }
 
@@ -1275,6 +1277,7 @@ class Cas1SpaceBookingTest {
       assertThat(response.otherBookingsInPremisesForCrn).hasSize(1)
       assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
       assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
+      assertThat(response.status).isEqualTo(Cas1SpaceBookingStatus.UPCOMING)
     }
   }
 
