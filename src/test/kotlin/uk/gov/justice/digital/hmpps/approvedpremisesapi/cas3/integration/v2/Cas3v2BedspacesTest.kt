@@ -655,12 +655,14 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
       history.forEach { (eventStatus, date) ->
         when (eventStatus) {
           Cas3BedspaceStatus.archived -> createBedspaceArchiveDomainEvent(bedspace.id, premisesId, userId, null, date)
+
           Cas3BedspaceStatus.online -> createBedspaceUnarchiveDomainEvent(
             bedspace.copy(endDate = date),
             premisesId,
             userId,
             date,
           )
+
           Cas3BedspaceStatus.upcoming -> null
         }
       }
@@ -767,6 +769,30 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Bad Request")
           .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
+      }
+    }
+
+    @Test
+    fun `Update cas3 bedspace is idempotent`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(
+          user,
+          startDate = LocalDate.now().randomDateBefore(360),
+          endDate = null,
+        )
+        webTestClient.put()
+          .uri("/cas3/v2/premises/${premises.id}/bedspaces/${bedspace.id}")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            Cas3UpdateBedspace(
+              reference = bedspace.reference,
+              notes = bedspace.notes,
+              characteristicIds = bedspace.characteristics.map { it.id },
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
       }
     }
   }

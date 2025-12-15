@@ -132,8 +132,6 @@ class Cas3v2BedspacesService(
     return !validationErrors.any()
   }
 
-  fun getPremisesBedspaces(premisesId: UUID): List<Cas3BedspacesEntity> = cas3BedspacesRepository.findByPremisesId(premisesId)
-
   fun getBedspaceArchiveHistory(bedspaceId: UUID): CasResult<List<Cas3BedspaceArchiveAction>> = validatedCasResult {
     val domainEvents = cas3v2DomainEventService.getBedspaceActiveDomainEvents(
       bedspaceId,
@@ -210,7 +208,13 @@ class Cas3v2BedspacesService(
     val bedspace = cas3BedspacesRepository.findCas3Bedspace(premises.id, bedspaceId) ?: return CasResult.NotFound("Bedspace", bedspaceId.toString())
     val trimmedReference = bedspaceReference.trim()
     if (isValidBedspaceReference(trimmedReference) &&
-      premises.bedspaces.any { bedspace -> bedspace.reference.equals(bedspaceReference, ignoreCase = true) }
+      premises.bedspaces.any { bedspace ->
+        bedspace.reference.equals(
+          bedspaceReference,
+          ignoreCase = true,
+        ) &&
+          bedspaceId != bedspace.id
+      }
     ) {
       "$.reference" hasValidationError "bedspaceReferenceExists"
     }
