@@ -14,6 +14,9 @@ class OffenceTransformer {
       offenceId = it.id,
       convictionId = it.eventId,
       offenceDate = it.date,
+      mainOffence = it.main,
+      mainCategoryDescription = it.mainCategoryDescription,
+      subCategoryDescription = it.subCategoryDescription,
     )
   }
 

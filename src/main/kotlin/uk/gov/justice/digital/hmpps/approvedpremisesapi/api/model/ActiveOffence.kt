@@ -1,20 +1,25 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class ActiveOffence(
 
-  @Schema(example = "7", required = true, description = "")
-  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: kotlin.String,
+  val deliusEventNumber: String,
 
-  @get:JsonProperty("offenceDescription", required = true) val offenceDescription: kotlin.String,
+  @Deprecated("Use mainCategoryDescription & subCategoryDescription instead")
+  val offenceDescription: String,
 
-  @Schema(example = "M1502750438", required = true, description = "")
-  @get:JsonProperty("offenceId", required = true) val offenceId: kotlin.String,
+  @Schema(example = "M1502750438")
+  val offenceId: String,
 
-  @Schema(example = "1502724704", required = true, description = "")
-  @get:JsonProperty("convictionId", required = true) val convictionId: kotlin.Long,
+  @Schema(example = "1502724704")
+  val convictionId: Long,
 
-  @get:JsonProperty("offenceDate") val offenceDate: java.time.LocalDate? = null,
+  val offenceDate: java.time.LocalDate? = null,
+
+  val mainOffence: Boolean = false,
+
+  val mainCategoryDescription: String,
+
+  val subCategoryDescription: String? = null,
 )
