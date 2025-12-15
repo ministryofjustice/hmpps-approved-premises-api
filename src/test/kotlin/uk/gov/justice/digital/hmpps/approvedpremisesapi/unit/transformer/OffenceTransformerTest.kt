@@ -24,6 +24,7 @@ class OffenceTransformerTest {
             .withDate(LocalDate.parse("2024-11-01"))
             .withEventNumber("20")
             .withEventId(30)
+            .withMain(true)
             .produce(),
           CaseDetailOffenceFactory()
             .withId("A100")
@@ -45,6 +46,9 @@ class OffenceTransformerTest {
         offenceId = "M10",
         convictionId = 30,
         offenceDate = LocalDate.parse("2024-11-01"),
+        mainOffence = true,
+        mainCategoryDescription = "Main Category 1",
+        subCategoryDescription = "Sub Category 1",
       ),
       ActiveOffence(
         deliusEventNumber = "200",
@@ -52,6 +56,9 @@ class OffenceTransformerTest {
         offenceId = "A100",
         convictionId = 300,
         offenceDate = LocalDate.parse("2024-11-11"),
+        mainOffence = false,
+        mainCategoryDescription = "Main Category 2",
+        subCategoryDescription = "Sub Category 2",
       ),
     )
   }
@@ -81,6 +88,9 @@ class OffenceTransformerTest {
         offenceId = "M10",
         convictionId = 30,
         offenceDate = LocalDate.parse("2024-11-01"),
+        mainOffence = false,
+        mainCategoryDescription = "A Description",
+        subCategoryDescription = "A Description",
       ),
     )
   }

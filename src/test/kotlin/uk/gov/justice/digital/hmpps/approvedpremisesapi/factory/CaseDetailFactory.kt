@@ -87,6 +87,10 @@ class CaseDetailOffenceFactory : Factory<Offence> {
     this.eventId = { eventId }
   }
 
+  fun withMain(main: Boolean) = apply {
+    this.main = { main }
+  }
+
   override fun produce(): Offence = Offence(
     id = this.id(),
     description = this.description(),
