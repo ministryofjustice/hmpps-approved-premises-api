@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -57,54 +58,52 @@ class Cas3v2BedspaceServiceTest {
   inner class CreateBedspace {
     @Test
     fun `When create a new bedspace returns Success with correct result when validation passed`() {
-      val (premises, bedspace) = createPremisesAndBedspace(
-        bedspaceStartDate = LocalDate.now().plusDays(5),
-      )
+      val premises = createPremises()
 
-      every { mockCas3BedspacesRepository.save(any()) } returns bedspace
+      every { mockCas3BedspacesRepository.save(any()) } answers { firstArg() }
 
       val result = cas3v2BedspacesService.createBedspace(
         premises,
-        bedspaceReference = bedspace.reference,
-        startDate = bedspace.startDate,
-        notes = null,
+        bedspaceReference = "bedspacereference",
+        startDate = LocalDate.now().plusDays(5),
+        notes = "notes",
         characteristicIds = emptyList(),
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it.reference).isEqualTo(bedspace.reference)
-        assertThat(it.notes).isEqualTo(bedspace.notes)
-        assertThat(it.startDate).isEqualTo(bedspace.startDate)
-        assertThat(it.endDate).isEqualTo(bedspace.endDate)
-        assertThat(it.createdDate).isEqualTo(bedspace.createdDate)
+        assertThat(it.reference).isEqualTo("bedspacereference")
+        assertThat(it.notes).isEqualTo("notes")
+        assertThat(it.startDate).isEqualTo(LocalDate.now().plusDays(5))
+        assertThat(it.endDate).isNull()
+        assertThat(it.createdDate).isEqualTo(it.startDate)
+        assertThat(it.createdAt).isWithinTheLastMinute()
       }
     }
 
     @Test
     fun `When create a new bedspace in a scheduled to archive premises returns Success and unarchive the premises`() {
       val bedspaceStartDate = LocalDate.now().plusDays(5)
-      val (premises, bedspace) = createPremisesAndBedspace(
-        premisesStatus = Cas3PremisesStatus.archived,
-        premisesEndDate = LocalDate.now().plusDays(2),
-        bedspaceStartDate,
+      val premises = createPremises(
+        status = Cas3PremisesStatus.archived,
+        endDate = LocalDate.now().plusDays(2),
       )
 
-      every { mockCas3BedspacesRepository.save(any()) } returns bedspace
+      every { mockCas3BedspacesRepository.save(any()) } answers { firstArg() }
       every { mockCas3v2PremisesService.unarchivePremisesAndSaveDomainEvent(any(), any(), any()) } returns Unit
 
       val result = cas3v2BedspacesService.createBedspace(
         premises,
-        bedspaceReference = bedspace.reference,
-        startDate = bedspace.startDate,
+        bedspaceReference = "bedspacereference",
+        startDate = bedspaceStartDate,
         notes = null,
         characteristicIds = emptyList(),
       )
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it.reference).isEqualTo(bedspace.reference)
-        assertThat(it.notes).isEqualTo(bedspace.notes)
-        assertThat(it.startDate).isEqualTo(bedspace.startDate)
-        assertThat(it.endDate).isEqualTo(bedspace.endDate)
+        assertThat(it.reference).isEqualTo("bedspacereference")
+        assertThat(it.notes).isNull()
+        assertThat(it.startDate).isEqualTo(bedspaceStartDate)
+        assertThat(it.endDate).isNull()
       }
 
       verify(exactly = 1) {
@@ -772,11 +771,32 @@ class Cas3v2BedspaceServiceTest {
     }
   }
 
+  @Test
+  fun `Updating a bedspace without changing the reference does not fail`() {
+    val (premises, bedspace) = createPremisesAndBedspace(bedspaceReference = "SAMEREFERENCE")
+
+    val characteristicIds = bedspace.characteristics.map { it.id }
+
+    every { mockCas3BedspacesRepository.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
+    every { mockCas3BedspacesRepository.save(any()) } returns bedspace
+
+    val result = cas3v2BedspacesService.updateBedspace(
+      premises,
+      bedspace.id,
+      bedspaceReference = "SAMEREFERENCE",
+      notes = bedspace.notes,
+      characteristicIds = characteristicIds,
+    )
+
+    assertThatCasResult(result).isSuccess()
+  }
+
   private fun createPremisesAndBedspace(
     premisesStatus: Cas3PremisesStatus = Cas3PremisesStatus.online,
     premisesEndDate: LocalDate? = null,
     bedspaceStartDate: LocalDate = LocalDate.now(),
     bedspaceEndDate: LocalDate? = null,
+    bedspaceReference: String = "reference",
   ): Pair<Cas3PremisesEntity, Cas3BedspacesEntity> {
     val premises = createPremises(status = premisesStatus, endDate = premisesEndDate)
     val bedspace = Cas3BedspaceEntityFactory()
@@ -784,7 +804,10 @@ class Cas3v2BedspaceServiceTest {
       .withStartDate(bedspaceStartDate)
       .withCreatedDate(bedspaceStartDate)
       .withEndDate(bedspaceEndDate)
+      .withReference(bedspaceReference)
       .produce()
+
+    premises.bedspaces.add(bedspace)
     return Pair(premises, bedspace)
   }
 
