@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 
 enum class Cas3BookingSearchSortField(val value: String) {
   PERSON_NAME("name"),
@@ -9,6 +10,9 @@ enum class Cas3BookingSearchSortField(val value: String) {
   BOOKING_END_DATE("endDate"),
   BOOKING_CREATED_AT("createdAt"),
   ;
+
+  @JsonValue
+  fun toValue(): String = value
 
   companion object {
     @JvmStatic
