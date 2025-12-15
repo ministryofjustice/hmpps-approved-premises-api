@@ -192,17 +192,7 @@ ON CONFLICT(id) DO NOTHING;
 
 --- Add a void ---
 
-INSERT INTO
-    cas3_void_bedspaces (
-    "id",
-    "premises_id",
-    "start_date",
-    "end_date",
-    "reference_number",
-    "notes",
-    "cas3_void_bedspace_reason_id",
-    "bed_id"
-  )
+INSERT INTO cas3_void_bedspaces (id, premises_id, start_date, end_date, reference_number, notes, cas3_void_bedspace_reason_id, bed_id, bedspace_id)
 VALUES
   (
     'c0417398-b3a2-4144-ad36-01e206b8caa9',
@@ -212,6 +202,7 @@ VALUES
     '132',
     'Some notes for a void',
     (SELECT id FROM cas3_void_bedspace_reasons WHERE name='Deep clean'),
+    '38e6b775-88c5-4571-8b6e-da3711aeaca6',
     '38e6b775-88c5-4571-8b6e-da3711aeaca6'
   )
 ON CONFLICT(id) DO NOTHING;
