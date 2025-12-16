@@ -288,6 +288,50 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Searching for a bedspace returns results that do not include bedspaces with voids`() {
+      givenAUser(
+        probationRegion = probationRegion,
+      ) { user, jwt ->
+        val startDate = LocalDate.now().minusDays(30)
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(user, startDate, endDate = null)
+        val voidBedspaceReason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
+        cas3VoidBedspaceEntityFactory.produceAndPersist {
+          withStartDate(startDate)
+          withEndDate(startDate.plusDays(10))
+          withBedspace(bedspace)
+          withYieldedReason { voidBedspaceReason }
+        }
+
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        val searchPdu = premises.probationDeliveryUnit
+        webTestClient.post()
+          .uri("cas3/v2/bedspaces/search")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            Cas3BedspaceSearchParameters(
+              startDate = startDate,
+              durationDays = 7,
+              probationDeliveryUnits = listOf(searchPdu.id),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              Cas3v2BedspaceSearchResults(
+                resultsPremisesCount = 0,
+                resultsBedspaceCount = 0,
+                results = listOf(),
+              ),
+            ),
+          )
+      }
+    }
+
+    @Test
     fun `Searching for a bedspace returns results when existing booking departure date is same as search start date`() {
       givenAUser(
         probationRegion = probationRegion,
