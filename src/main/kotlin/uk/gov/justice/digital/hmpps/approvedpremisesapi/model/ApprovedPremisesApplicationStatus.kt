@@ -20,6 +20,14 @@ enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesAp
    * (it will remain as PENDING_PLACEMENT_REQUEST)
    */
   AWAITING_PLACEMENT(ApiApprovedPremisesApplicationStatus.awaitingPlacement),
+  REQUESTED_FURTHER_INFORMATION(ApiApprovedPremisesApplicationStatus.requestedFurtherInformation),
+
+  /**
+   * An application has been assessed. Because no arrival date was defined,
+   * one or more [PlacementApplicationEntity]s are required
+   */
+
+  PENDING_PLACEMENT_REQUEST(ApiApprovedPremisesApplicationStatus.pendingPlacementRequest),
 
   /**
    * A [BookingEntity] has been created for a [PlacementRequestEntity]
@@ -27,14 +35,6 @@ enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesAp
   PLACEMENT_ALLOCATED(ApiApprovedPremisesApplicationStatus.placementAllocated),
   INAPPLICABLE(ApiApprovedPremisesApplicationStatus.inapplicable),
   WITHDRAWN(ApiApprovedPremisesApplicationStatus.withdrawn),
-  REQUESTED_FURTHER_INFORMATION(ApiApprovedPremisesApplicationStatus.requestedFurtherInformation),
-
-  /**
-   * An application has been assessed. Because no arrival date was defined,
-   * one or more [PlacementApplicationEntity]s are required
-   */
-  PENDING_PLACEMENT_REQUEST(ApiApprovedPremisesApplicationStatus.pendingPlacementRequest),
-
   EXPIRED(ApiApprovedPremisesApplicationStatus.expired),
   ;
 
