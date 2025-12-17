@@ -10,14 +10,20 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -25,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -37,9 +44,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
+import java.time.Instant
+import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.stream.Stream
 
 @SuppressWarnings("UnusedPrivateProperty")
 @ExtendWith(MockKExtension::class)
@@ -76,6 +88,9 @@ class Cas1ApplicationServiceTest {
 
   @MockK
   private lateinit var userRepository: UserRepository
+
+  @MockK
+  private lateinit var cas1SpaceBookingService: Cas1SpaceBookingService
 
   @InjectMockKs
   private lateinit var service: Cas1ApplicationService
@@ -270,6 +285,232 @@ class Cas1ApplicationServiceTest {
       result as CasResult.Success
 
       assertThat(result.value).isEqualTo(applicationEntity)
+    }
+  }
+
+  @Nested
+  inner class GetSuitableApplicationByCrn {
+    private val crn = "ABC123"
+    private val user = UserEntityFactory()
+      .withDefaults()
+      .produce()
+
+    @Test
+    fun `getSuitableApplicationByCrn returns null as no applications of that crn`() {
+      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns emptyList()
+
+      val result = service.getSuitableApplicationByCrn(crn)
+
+      assertThat(result).isNull()
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns null as applications have unsuitable statuses`() {
+      val startedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+      val rejectedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.REJECTED)
+        .produce()
+      val inapplicableApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.INAPPLICABLE)
+        .produce()
+      val expiredApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.EXPIRED)
+        .produce()
+      val withdrawnApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.WITHDRAWN)
+        .produce()
+      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
+        startedApplication,
+        rejectedApplication,
+        inapplicableApplication,
+        expiredApplication,
+        withdrawnApplication,
+      )
+      val result = service.getSuitableApplicationByCrn(crn)
+      assertThat(result).isNull()
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns placementAllocatedApplication as suitable application when they all have suitable status`() {
+      val placementAllocatedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+        .produce()
+      val pendingPlacementRequestApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+        .produce()
+      val requestedFurtherInformationApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+        .produce()
+      val assessmentInProgressApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+        .produce()
+      val unallocatedAssessmentApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+        .produce()
+      val awaitingAssessmentApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+        .produce()
+      val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+
+      val upcomingBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .withActualDepartureDate(null)
+        .withActualArrivalDate(null)
+        .withNonArrivalConfirmedAt(null)
+        .withCreatedAt(OffsetDateTime.now())
+        .withApplication(placementAllocatedApplication)
+        .produce()
+
+      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
+        assessmentInProgressApplication,
+        awaitingAssessmentApplication,
+        placementAllocatedApplication,
+        unallocatedAssessmentApplication,
+        awaitingPlacementApplication,
+        requestedFurtherInformationApplication,
+        pendingPlacementRequestApplication,
+      )
+
+      every { cas1SpaceBookingService.findLatestPlacement(crn, placementAllocatedApplication.id) } returns upcomingBooking
+
+      val suitableApplication = Cas1SuitableApplication(
+        id = placementAllocatedApplication.id,
+        applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
+        placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+      )
+
+      val result = service.getSuitableApplicationByCrn(crn)
+
+      assertThat(result).isEqualTo(suitableApplication)
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn errors if application is placement allocated but there is not a latest placement`() {
+      val placementAllocatedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+        .produce()
+
+      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
+        placementAllocatedApplication,
+      )
+
+      every { cas1SpaceBookingService.findLatestPlacement(crn, placementAllocatedApplication.id) } returns null
+
+      val exception = assertThrows<IllegalStateException> { service.getSuitableApplicationByCrn(crn) }
+      assertThat(exception.message).isEqualTo("Could not find latest placement for application ${placementAllocatedApplication.id} with application status ${placementAllocatedApplication.status}")
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1ApplicationServiceTest#provideBooking")
+    fun `getSuitableApplicationByCrn returns placementAllocatedApplication as suitable application with correct placement status`(
+      booking: Cas1SpaceBookingEntity,
+      placementStatus: Cas1SpaceBookingStatus,
+    ) {
+      val placementAllocatedApplication = booking.application!!
+
+      every { approvedPremisesApplicationRepository.findByCrn(placementAllocatedApplication.crn) } returns listOf(placementAllocatedApplication)
+      every { cas1SpaceBookingService.findLatestPlacement(placementAllocatedApplication.crn, placementAllocatedApplication.id) } returns booking
+
+      val suitableApplication = Cas1SuitableApplication(
+        id = placementAllocatedApplication.id,
+        applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
+        placementStatus = placementStatus,
+      )
+
+      val result = service.getSuitableApplicationByCrn(placementAllocatedApplication.crn)
+
+      assertThat(result).isEqualTo(suitableApplication)
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1ApplicationServiceTest#provideApplications")
+    fun `getSuitableApplicationByCrn returns appropriate suitable application when they all have suitable status`(
+      applications: List<ApprovedPremisesApplicationEntity>,
+      suitableApprovedPremisesApplication: ApprovedPremisesApplicationEntity,
+    ) {
+      every { approvedPremisesApplicationRepository.findByCrn(suitableApprovedPremisesApplication.crn) } returns applications
+      val suitableApplication = Cas1SuitableApplication(
+        id = suitableApprovedPremisesApplication.id,
+        applicationStatus = suitableApprovedPremisesApplication.status,
+        placementStatus = null,
+      )
+      val result = service.getSuitableApplicationByCrn(suitableApprovedPremisesApplication.crn)
+      assertThat(result).isEqualTo(suitableApplication)
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns application with latest submitted date as suitable application when some have same status`() {
+      val awaitingPlacementApplication1 = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now().minusDays(1))
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+      val awaitingPlacementApplication2 = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now().minusDays(2))
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+      val unallocatedAssessment = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now().plusDays(2))
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+        .produce()
+      val latestAwaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+
+      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
+        awaitingPlacementApplication1,
+        latestAwaitingPlacementApplication,
+        awaitingPlacementApplication2,
+        unallocatedAssessment,
+      )
+
+      val suitableApplication = Cas1SuitableApplication(
+        id = latestAwaitingPlacementApplication.id,
+        applicationStatus = ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
+        placementStatus = null,
+      )
+
+      val result = service.getSuitableApplicationByCrn(crn)
+
+      assertThat(result).isEqualTo(suitableApplication)
     }
   }
 
@@ -581,6 +822,150 @@ class Cas1ApplicationServiceTest {
       val result = service.getWithdrawableState(application, user)
 
       assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
+    }
+  }
+
+  private companion object {
+    const val CRN = "X99999"
+    private val user = UserEntityFactory()
+      .withDefaults()
+      .produce()
+
+    @JvmStatic
+    fun provideApplications(): Stream<Arguments> {
+      val pendingPlacementRequestApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+        .produce()
+      val requestedFurtherInformationApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+        .produce()
+      val assessmentInProgressApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+        .produce()
+      val unallocatedAssessmentApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+        .produce()
+      val awaitingAssessmentApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+        .produce()
+      val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+      return Stream.of(
+        Arguments.of(
+          listOf(
+            assessmentInProgressApplication,
+            awaitingAssessmentApplication,
+            unallocatedAssessmentApplication,
+            awaitingPlacementApplication,
+            pendingPlacementRequestApplication,
+            requestedFurtherInformationApplication,
+          ),
+          pendingPlacementRequestApplication,
+        ),
+        Arguments.of(
+          listOf(
+            assessmentInProgressApplication,
+            awaitingAssessmentApplication,
+            unallocatedAssessmentApplication,
+            requestedFurtherInformationApplication,
+            awaitingPlacementApplication,
+          ),
+          requestedFurtherInformationApplication,
+        ),
+        Arguments.of(
+          listOf(
+            assessmentInProgressApplication,
+            awaitingAssessmentApplication,
+            awaitingPlacementApplication,
+            unallocatedAssessmentApplication,
+          ),
+          awaitingPlacementApplication,
+        ),
+        Arguments.of(
+          listOf(
+            awaitingAssessmentApplication,
+            assessmentInProgressApplication,
+            unallocatedAssessmentApplication,
+          ),
+          assessmentInProgressApplication,
+        ),
+        Arguments.of(
+          listOf(
+            awaitingAssessmentApplication,
+            unallocatedAssessmentApplication,
+          ),
+          unallocatedAssessmentApplication,
+        ),
+      )
+    }
+
+    @JvmStatic
+    fun provideBooking(): Stream<Arguments> {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+        .produce()
+      val cancelledBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(LocalDate.now())
+        .withActualDepartureDate(LocalDate.now())
+        .withActualArrivalDate(LocalDate.now().plusDays(1))
+        .withNonArrivalConfirmedAt(Instant.now())
+        .withCreatedAt(OffsetDateTime.now())
+        .withApplication(application)
+        .produce()
+      val upcomingBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .withActualDepartureDate(null)
+        .withActualArrivalDate(null)
+        .withNonArrivalConfirmedAt(null)
+        .withCreatedAt(OffsetDateTime.now())
+        .withApplication(application)
+        .produce()
+      val arrivedBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .withActualDepartureDate(null)
+        .withActualArrivalDate(LocalDate.now().plusDays(1))
+        .withNonArrivalConfirmedAt(null)
+        .withCreatedAt(OffsetDateTime.now())
+        .withApplication(application)
+        .produce()
+      val notArrivedBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .withActualDepartureDate(null)
+        .withActualArrivalDate(null)
+        .withNonArrivalConfirmedAt(Instant.now())
+        .withCreatedAt(OffsetDateTime.now())
+        .withApplication(application)
+        .produce()
+      val departedBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .withActualDepartureDate(LocalDate.now())
+        .withActualArrivalDate(LocalDate.now().plusDays(1))
+        .withNonArrivalConfirmedAt(null)
+        .withCreatedAt(OffsetDateTime.now())
+        .withApplication(application)
+        .produce()
+      return Stream.of(
+        Arguments.of(upcomingBooking, Cas1SpaceBookingStatus.UPCOMING),
+        Arguments.of(notArrivedBooking, Cas1SpaceBookingStatus.NOT_ARRIVED),
+        Arguments.of(cancelledBooking, Cas1SpaceBookingStatus.CANCELLED),
+        Arguments.of(departedBooking, Cas1SpaceBookingStatus.DEPARTED),
+        Arguments.of(arrivedBooking, Cas1SpaceBookingStatus.ARRIVED),
+      )
     }
   }
 }

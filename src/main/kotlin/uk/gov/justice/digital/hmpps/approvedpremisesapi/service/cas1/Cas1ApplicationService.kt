@@ -5,6 +5,7 @@ import org.springframework.data.domain.Limit
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -33,6 +34,7 @@ class Cas1ApplicationService(
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val userRepository: UserRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
+  private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
   private val cas1AssessmentService: Cas1AssessmentService,
@@ -81,6 +83,36 @@ class Cas1ApplicationService(
   }
 
   fun getSubmittedApplicationsForCrn(crn: String, limit: Int) = approvedPremisesApplicationRepository.findByCrnAndSubmittedAtIsNotNull(crn, Limit.of(limit))
+
+  fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? {
+    @SuppressWarnings("MagicNumber")
+    val suitableStatusesAsc = mapOf(
+      ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT to 0,
+      ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT to 1,
+      ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS to 2,
+      ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT to 3,
+      ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION to 4,
+      ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST to 5,
+      ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED to 6,
+    )
+
+    return approvedPremisesApplicationRepository.findByCrn(crn)
+      .filter { it.status in suitableStatusesAsc.keys }
+      .maxWithOrNull(compareBy<ApprovedPremisesApplicationEntity> { suitableStatusesAsc[it.status] }.thenBy { it.submittedAt })
+      ?.let { application ->
+        Cas1SuitableApplication(
+          id = application.id,
+          applicationStatus = application.status,
+          placementStatus = application
+            .takeIf { it.status == ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED }
+            ?.let {
+              cas1SpaceBookingService.findLatestPlacement(crn, it.id)
+                ?.getSpaceBookingStatus()
+                ?: error("Could not find latest placement for application ${application.id} with application status ${application.status}")
+            },
+        )
+      }
+  }
 
   fun getOfflineApplicationsForCrn(crn: String, limit: Int) = offlineApplicationRepository.findAllByCrn(crn, Limit.of(limit))
 

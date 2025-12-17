@@ -127,9 +127,6 @@ AND (
     createdByUserId: UUID?,
   ): Page<ApprovedPremisesApplicationSummary>
 
-  @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
-  fun <T : ApplicationEntity> findAllByCreatedByUserId(id: UUID, type: Class<T>): List<ApplicationEntity>
-
   @Query(
     value = """
     SELECT 
@@ -266,6 +263,8 @@ interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremises
   fun findAllIdsByCas1OffenderEntityIsNull(): List<UUID>
 
   fun findByIdIn(applicationIds: List<UUID>): List<ApprovedPremisesApplicationEntity>
+
+  fun findByCrn(crn: String): List<ApprovedPremisesApplicationEntity>
 
   fun findByCrnAndSubmittedAtIsNotNull(crn: String, limit: Limit): List<ApprovedPremisesApplicationEntity>
 

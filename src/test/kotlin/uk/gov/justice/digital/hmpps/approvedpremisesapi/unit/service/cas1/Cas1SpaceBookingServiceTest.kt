@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -1629,6 +1630,56 @@ class Cas1SpaceBookingServiceTest {
       val result = service.findAllBookingsForCrn(crn, includeCancelled)
 
       assertThat(result).isEmpty()
+      verify(exactly = 1) { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) }
+    }
+  }
+
+  @Nested
+  inner class FindLatestPlacement {
+    private val includeCancelled = true
+    private val crn = "X99999"
+    private val user = UserEntityFactory()
+      .withDefaults()
+      .produce()
+    private val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+      .produce()
+
+    @Test
+    fun `successfully return latest placement`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .withCreatedAt(OffsetDateTime.now().minusDays(2))
+        .withApplication(application)
+        .produce()
+      val latestBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(LocalDate.now())
+        .withCreatedAt(OffsetDateTime.now())
+        .withApplication(application)
+        .produce()
+      val booking2 = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .withCreatedAt(OffsetDateTime.now().minusDays(1))
+        .withApplication(application)
+        .produce()
+      val bookings = listOf(booking1, latestBooking, booking2)
+
+      every { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) } returns bookings
+
+      val result = service.findLatestPlacement(crn, application.id)
+
+      assertThat(result).isEqualTo(latestBooking)
+      verify(exactly = 1) { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) }
+    }
+
+    @Test
+    fun `returns null when no placements`() {
+      every { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) } returns emptyList()
+
+      val result = service.findLatestPlacement(crn, application.id)
+
+      assertThat(result).isNull()
       verify(exactly = 1) { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) }
     }
   }
