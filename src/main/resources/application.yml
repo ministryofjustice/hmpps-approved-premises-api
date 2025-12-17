@@ -124,6 +124,11 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
+          licence-api:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${hmpps.auth.url}/oauth/token
@@ -205,6 +210,8 @@ services:
     base-url: http://localhost:8083
   prisoner-search:
     base-url: http://localhost:8081
+  licence-api:
+    base-url: http://localhost:8091
 
 hmpps:
   auth:

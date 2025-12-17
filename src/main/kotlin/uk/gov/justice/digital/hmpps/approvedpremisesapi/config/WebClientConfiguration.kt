@@ -375,4 +375,37 @@ class WebClientConfiguration(
         .build(),
     )
   }
+
+  @Bean(name = ["licenceApiWebClient"])
+  fun licenceApiWebClient(
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.licence-api.base-url}") licenceApiBaseUrl: String,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("licence-api")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .baseUrl(licenceApiBaseUrl)
+        .filter(oauth2Client)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(
+                ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
+              ),
+          ),
+        )
+        .exchangeStrategies(
+          ExchangeStrategies.builder().codecs {
+            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
+          }.build(),
+        )
+        .build(),
+    )
+  }
 }
