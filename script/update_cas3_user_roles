@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Script to update CAS3 user roles on preprod or prod
+# Usage: ./update_user_roles.sh <environment> <local_csv_file>
+
+set -e  # Exit on any error
+
+# Check if correct number of arguments provided
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <environment> <local_csv_file>"
+    echo "Environment should be 'prod' or 'preprod'"
+    exit 1
+fi
+
+ENVIRONMENT=$1
+LOCAL_CSV_FILE=$2
+
+# Validate environment
+if [[ "$ENVIRONMENT" != "prod" && "$ENVIRONMENT" != "preprod" ]]; then
+    echo "Error: Environment must be 'prod' or 'preprod'"
+    exit 1
+fi
+
+# Check if CSV file exists
+if [ ! -f "$LOCAL_CSV_FILE" ]; then
+    echo "Error: CSV file '$LOCAL_CSV_FILE' not found"
+    exit 1
+fi
+
+# Extract filename from path for use on the pod
+CSV_FILENAME=$(basename "$LOCAL_CSV_FILE")
+
+# Production confirmation
+if [ "$ENVIRONMENT" = "prod" ]; then
+    echo "WARNING: You are about to update user roles on the PRODUCTION environment!"
+    echo "CSV file: $LOCAL_CSV_FILE"
+    read -p "Are you sure you want to proceed? [y/N]: " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Cancelled."
+        exit 0
+    fi
+fi
+
+echo "Starting user roles update process for $ENVIRONMENT environment..."
+echo "CSV file: $LOCAL_CSV_FILE"
+echo
+
+# Step 1: Upload CSV file and capture the pod name
+echo "Step 1: Uploading CSV file to pod..."
+UPLOAD_OUTPUT=$(script/pod_upload_seed_file "$ENVIRONMENT" "$LOCAL_CSV_FILE")
+echo "$UPLOAD_OUTPUT"
+
+# Extract pod name from the upload output (assuming it's the last word of the output)
+POD_NAME=$(echo "$UPLOAD_OUTPUT" | tail -n 1 | awk '{print $NF}')
+
+if [ -z "$POD_NAME" ]; then
+    echo "Error: Could not determine pod name from upload output"
+    exit 1
+fi
+
+# Step 2: Run the seed job on the pod
+echo "Step 2: Running seed job on pod $POD_NAME..."
+
+# Use the pod_shell script to execute the command
+NAMESPACE="hmpps-community-accommodation-$ENVIRONMENT"
+kubectl -n "$NAMESPACE" exec --stdin --tty "$POD_NAME" -- /app/run_seed_job temporary_accommodation_users $CSV_FILENAME
+
+echo
+echo "User roles update process started successfully!"
+echo "Environment: $ENVIRONMENT"
+echo "CSV file processed: $CSV_FILENAME"
+echo "Pod used: $POD_NAME"
