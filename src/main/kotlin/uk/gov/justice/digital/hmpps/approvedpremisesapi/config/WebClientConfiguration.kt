@@ -383,7 +383,7 @@ class WebClientConfiguration(
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
-    oauth2Client.setDefaultClientRegistrationId("licence-api")
+    oauth2Client.setDefaultClientRegistrationId("cvl")
 
     return WebClientConfig(
       WebClient.builder()
