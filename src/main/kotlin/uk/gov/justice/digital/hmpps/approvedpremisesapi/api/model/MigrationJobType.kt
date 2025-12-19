@@ -21,6 +21,7 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   updateCas1ApplicationsWithOffender("update_cas1_applications_with_offender"),
   updateCas3BedspaceModelData("update_cas3_bedspace_model_data"),
   updateCas3VoidBedspaceData("update_cas3_void_bedspace_data"),
+  cas3FixWalesHptPremises("cas3_fix_wales_hpt_premises"),
   cas1BackfillApplicationDuration("cas1_backfill_application_duration"),
   cas1BackfillAutomaticPlacementApplications("cas1_backfill_automatic_placement_applications"),
   cas1BackfillKeyWorkerUserAssignments("cas1_backfill_key_worker_user_assignments"),
