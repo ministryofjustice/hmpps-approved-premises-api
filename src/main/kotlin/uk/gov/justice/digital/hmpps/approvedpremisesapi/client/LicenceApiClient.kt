@@ -14,7 +14,7 @@ class LicenceApiClient(
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
 
-  fun getLicenceDetails(licenceId: String) = getRequest<Licence> {
+  fun getLicenceDetails(licenceId: Long) = getRequest<Licence> {
     path = "/public/licences/id/$licenceId"
   }
 

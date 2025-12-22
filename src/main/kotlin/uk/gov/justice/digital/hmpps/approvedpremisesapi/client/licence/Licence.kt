@@ -7,12 +7,12 @@ import java.time.LocalDateTime
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Licence(
-  val id: Long?,
+  val id: Long,
   val kind: String?,
-  val licenceType: LicenceType?,
+  val licenceType: LicenceType,
   val policyVersion: String?,
   val version: String?,
-  val statusCode: LicenceStatus?,
+  val statusCode: LicenceStatus,
   val prisonNumber: String?,
   val bookingId: Long?,
   val crn: String?,
@@ -24,20 +24,26 @@ data class Licence(
   val updatedDateTime: LocalDateTime?,
   val licenceStartDate: LocalDate?,
   val isInPssPeriod: Boolean?,
-  val conditions: LicenceConditions?,
+  val conditions: LicenceConditions,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LicenceConditions(
-  @field:JsonProperty("AP") val apConditions: LicenceConditionsBlock?,
-  @field:JsonProperty("PSS") val pssConditions: LicenceConditionsBlock?,
+  @field:JsonProperty("AP") val apConditions: ApConditions,
+  @field:JsonProperty("PSS") val pssConditions: PssConditions,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class LicenceConditionsBlock(
-  val standard: List<StandardCondition>?,
-  val additional: List<AdditionalCondition>?,
-  val bespoke: List<BespokeCondition>?,
+data class ApConditions(
+  val standard: List<StandardCondition>,
+  val additional: List<AdditionalCondition>,
+  val bespoke: List<BespokeCondition>,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PssConditions(
+  val standard: List<StandardCondition>,
+  val additional: List<AdditionalCondition>,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

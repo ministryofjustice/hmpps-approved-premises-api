@@ -5,12 +5,12 @@ import java.time.LocalDateTime
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LicenceSummary(
-  val id: Long?,
+  val id: Long,
   val kind: String?,
-  val licenceType: LicenceType?,
+  val licenceType: LicenceType,
   val policyVersion: String?,
   val version: String?,
-  val statusCode: LicenceStatus?,
+  val statusCode: LicenceStatus,
   val prisonNumber: String?,
   val bookingId: Long?,
   val crn: String?,
