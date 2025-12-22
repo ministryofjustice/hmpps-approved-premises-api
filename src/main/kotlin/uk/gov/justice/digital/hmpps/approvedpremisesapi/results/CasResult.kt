@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.results
 
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
@@ -41,4 +43,17 @@ inline fun <T> CasResult<T>.ifError(block: (CasResult.Error<T>) -> Unit) {
   if (this is CasResult.Error) {
     block(this)
   }
+}
+
+fun <T> ClientResult<T>.toCasResult(
+  entityType: String,
+  id: String,
+): CasResult<T> = when (this) {
+  is ClientResult.Success -> CasResult.Success(body)
+  is ClientResult.Failure.StatusCode -> when (status) {
+    HttpStatus.NOT_FOUND -> CasResult.NotFound(entityType, id)
+    HttpStatus.FORBIDDEN -> CasResult.Unauthorised()
+    else -> throwException()
+  }
+  is ClientResult.Failure -> throwException()
 }
