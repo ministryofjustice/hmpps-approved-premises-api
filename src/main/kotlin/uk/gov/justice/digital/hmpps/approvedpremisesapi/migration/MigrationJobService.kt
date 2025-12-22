@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2NoteM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.migration.Cas2StatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3AdjustPremisesDomainEventDatesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3FixWalesHptPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3MigrateNewBedspaceModelDataJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateArchiveUnarchiveDomainEventDetailsJob
@@ -64,6 +65,7 @@ class MigrationJobService(
         MigrationJobType.updateCas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
         MigrationJobType.updateCas3BedspaceModelData -> getBean(Cas3MigrateNewBedspaceModelDataJob::class)
         MigrationJobType.updateCas3VoidBedspaceData -> getBean(Cas3VoidBedspaceJob::class)
+        MigrationJobType.cas3FixWalesHptPremises -> getBean(Cas3FixWalesHptPremises::class)
         MigrationJobType.cas1BackfillApplicationDuration -> getBean(Cas1BackfillApplicationDuration::class)
         MigrationJobType.cas1BackfillAutomaticPlacementApplications -> getBean(Cas1BackfillAutomaticPlacementApplicationsJob::class)
         MigrationJobType.cas1BackfillKeyWorkerUserAssignments -> getBean(Cas1BackfillKeyWorkerUserAssignmentsJob::class)
