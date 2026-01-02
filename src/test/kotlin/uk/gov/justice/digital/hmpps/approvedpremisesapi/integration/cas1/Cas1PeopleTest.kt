@@ -15,8 +15,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PersonalTimeline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
@@ -26,16 +29,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundCsraSummariesCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulCsraSummariesCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -557,6 +565,163 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         assertThat(personRisks.mappa.value!!.level).isEqualTo("CAT CAT2/LEVEL Level1 MAPPA")
         assertThat(personRisks.flags.value!![0]).isEqualTo("Arson")
         assertThat(personRisks.flags.value[1]).isEqualTo("Weapon")
+      }
+    }
+  }
+
+  @Nested
+  inner class GetCsraSummaries {
+    @Test
+    fun `Getting CSRA summaries for a CRN without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/people/CRN/csra-summaries")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Getting CSRA summaries for a CRN without the required role returns 403`() {
+      val (_, jwt) = givenAUser()
+      webTestClient.get()
+        .uri("/cas1/people/CRN/csra-summaries")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Getting CSRA summaries for a CRN returns OK with correct body`() {
+      val csraSummaries = listOf(
+        CsraSummary(
+          bookingId = 123,
+          classificationCode = "HI",
+          assessmentCode = "STANDARD",
+          assessmentSeq = 1,
+          assessmentDate = LocalDate.now(),
+          assessmentAgencyId = "MDI",
+          assessmentComment = "comment",
+          cellSharingAlertFlag = true,
+        ),
+      )
+
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      givenAnOffender { offenderDetails, _ ->
+        prisonAPIMockSuccessfulCsraSummariesCall(offenderDetails.otherIds.nomsNumber!!, csraSummaries)
+
+        webTestClient.get()
+          .uri("/cas1/people/${offenderDetails.otherIds.crn}/csra-summaries")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(objectMapper.writeValueAsString(csraSummaries))
+      }
+    }
+
+    @Test
+    fun `Getting CSRA summaries for a CRN where the Offender is LAO, and the user does have LAO qualification returns OK with correct body`() {
+      val csraSummaries = listOf(
+        CsraSummary(
+          bookingId = 123,
+          classificationCode = "HI",
+          assessmentCode = "STANDARD",
+          assessmentSeq = 1,
+          assessmentDate = LocalDate.now(),
+          assessmentAgencyId = "MDI",
+          assessmentComment = "comment",
+          cellSharingAlertFlag = true,
+        ),
+      )
+
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT), qualifications = listOf(UserQualification.LAO))
+      val crn = "LAO_CRN"
+      val nomsNumber = "LAO_NOMS"
+
+      val caseSummary = CaseSummaryFactory()
+        .withCrn(crn)
+        .withNomsId(nomsNumber)
+        .withCurrentRestriction(true)
+        .produce()
+
+      val caseAccess = CaseAccessFactory()
+        .withCrn(crn)
+        .withUserExcluded(false)
+        .withUserRestricted(false)
+        .produce()
+
+      apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseSummary))
+      apDeliusContextAddResponseToUserAccessCall(listOf(caseAccess), user.deliusUsername)
+      prisonAPIMockSuccessfulCsraSummariesCall(nomsNumber, csraSummaries)
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/csra-summaries")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(objectMapper.writeValueAsString(csraSummaries))
+    }
+
+    @Test
+    fun `Getting CSRA summaries for a CRN where the Offender is LAO, but the user does not have LAO qualification returns 403`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val crn = "LAO_CRN"
+      val nomsNumber = "LAO_NOMS"
+
+      val caseSummary = CaseSummaryFactory()
+        .withCrn(crn)
+        .withNomsId(nomsNumber)
+        .withCurrentRestriction(true)
+        .produce()
+
+      val caseAccess = CaseAccessFactory()
+        .withCrn(crn)
+        .withUserExcluded(false)
+        .withUserRestricted(true)
+        .produce()
+
+      apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseSummary))
+      apDeliusContextAddResponseToUserAccessCall(listOf(caseAccess), user.deliusUsername)
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/csra-summaries")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Getting CSRA summaries for a CRN that does not exist returns 404`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val crn = "NOT_FOUND_CRN"
+
+      apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/csra-summaries")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Getting CSRA summaries for a CRN where Prison API returns 404 returns 404`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      givenAnOffender { offenderDetails, _ ->
+        prisonAPIMockNotFoundCsraSummariesCall(offenderDetails.otherIds.nomsNumber!!)
+
+        webTestClient.get()
+          .uri("/cas1/people/${offenderDetails.otherIds.crn}/csra-summaries")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
       }
     }
   }

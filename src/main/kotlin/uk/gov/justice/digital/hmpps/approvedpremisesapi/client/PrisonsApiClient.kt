@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import java.time.Duration
@@ -54,4 +55,6 @@ class PrisonsApiClient(
 
     path = "/api/offenders/$nomsNumber/adjudications"
   }
+
+  fun getCsraSummariesForOffender(nomsNumber: String) = getRequest<List<CsraSummary>> { path = "/api/offender-assessments/csra/$nomsNumber" }
 }
