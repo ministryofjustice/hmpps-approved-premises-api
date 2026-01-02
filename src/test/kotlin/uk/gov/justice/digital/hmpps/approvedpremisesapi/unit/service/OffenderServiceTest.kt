@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
@@ -30,9 +31,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
@@ -40,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailureArgumentsProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
+import java.time.LocalDate
 
 class OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
@@ -47,6 +52,7 @@ class OffenderServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
+  private val mockOffenderRepository = mockk<Cas1OffenderRepository>()
 
   private val adjudicationsConfigBindingModel = PrisonAdjudicationsConfigBindingModel().apply {
     prisonApiPageSize = 2
@@ -59,6 +65,7 @@ class OffenderServiceTest {
     mockOffenderDetailsDataSource,
     adjudicationsConfigBindingModel,
     mockFeatureFlagService,
+    mockOffenderRepository,
   )
 
   @Test
@@ -1019,6 +1026,249 @@ class OffenderServiceTest {
         assertThat(result).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
         assertThat((result as PersonSummaryInfoResult.Success.Full).summary).isEqualTo(offenderSummaries[it])
       }
+    }
+  }
+
+  @Nested
+  inner class GetCsraSummariesForOffender {
+    private val crn = "CRN123"
+    private val nomsNumber = "NOMS456"
+    private val laoStrategy = CheckUserAccess(USERNAME)
+
+    @Test
+    fun `returns Success when NOMS number is in repository and Prisons API returns success`() {
+      val csraSummaries = listOf(
+        CsraSummary(
+          bookingId = 123,
+          classificationCode = "HI",
+          assessmentCode = "STANDARD",
+          assessmentSeq = 1,
+          assessmentDate = LocalDate.now(),
+          assessmentAgencyId = "MDI",
+          assessmentComment = "comment",
+          cellSharingAlertFlag = true,
+        ),
+      )
+
+      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .produce()
+
+      every { mockPrisonsApiClient.getCsraSummariesForOffender(nomsNumber) } returns ClientResult.Success(
+        HttpStatus.OK,
+        csraSummaries,
+      )
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCrn(crn)
+              .withNomsId(nomsNumber)
+              .produce(),
+          ),
+        ),
+      )
+
+      val result = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
+
+      assertThat(result is CasResult.Success).isTrue
+      assertThat((result as CasResult.Success).value).isEqualTo(csraSummaries)
+
+      verify(exactly = 1) { mockApDeliusContextApiClient.getCaseSummaries(any()) }
+    }
+
+    @Test
+    fun `returns Success when NOMS number is not in repository, found via getPersonSummaryInfoResult, and Prisons API returns success`() {
+      val csraSummaries = listOf(
+        CsraSummary(
+          bookingId = 123,
+          classificationCode = "HI",
+          assessmentCode = "STANDARD",
+          assessmentSeq = 1,
+          assessmentDate = LocalDate.now(),
+          assessmentAgencyId = "MDI",
+          assessmentComment = "comment",
+          cellSharingAlertFlag = true,
+        ),
+      )
+
+      every { mockOffenderRepository.findByCrn(crn) } returns null
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCrn(crn)
+              .withNomsId(nomsNumber)
+              .produce(),
+          ),
+        ),
+      )
+
+      every { mockPrisonsApiClient.getCsraSummariesForOffender(nomsNumber) } returns ClientResult.Success(
+        HttpStatus.OK,
+        csraSummaries,
+      )
+
+      val result = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
+
+      assertThat(result is CasResult.Success).isTrue
+      assertThat((result as CasResult.Success).value).isEqualTo(csraSummaries)
+    }
+
+    @Test
+    fun `returns Unauthorised when getPersonSummaryInfoResult returns restricted due to LAO restrictions`() {
+      every { mockOffenderRepository.findByCrn(crn) } returns null
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCrn(crn)
+              .withNomsId(nomsNumber)
+              .withCurrentRestriction(true)
+              .produce(),
+          ),
+        ),
+      )
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(crn))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        UserAccess(
+          listOf(
+            CaseAccessFactory()
+              .withCrn(crn)
+              .withUserRestricted(true)
+              .produce(),
+          ),
+        ),
+      )
+
+      val result = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
+
+      assertThat(result is CasResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `returns NotFound when getPersonSummaryInfoResult fails because Person is not found`() {
+      every { mockOffenderRepository.findByCrn(crn) } returns null
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(emptyList()),
+      )
+
+      val result = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
+
+      assertThat(result is CasResult.NotFound).isTrue
+      val notFoundResult = result as CasResult.NotFound
+      assertThat(notFoundResult.entityType).isEqualTo("Person")
+      assertThat(notFoundResult.id).isEqualTo(crn)
+    }
+
+    @Test
+    fun `returns NotFound when getPersonSummaryInfoResult fails because NOMS number is null`() {
+      every { mockOffenderRepository.findByCrn(crn) } returns null
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCrn(crn)
+              .withNomsId(null)
+              .produce(),
+          ),
+        ),
+      )
+
+      val result = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
+
+      assertThat(result is CasResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `returns NotFound when Prisons API returns 404`() {
+      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCrn(crn)
+              .withNomsId(nomsNumber)
+              .produce(),
+          ),
+        ),
+      )
+
+      every { mockPrisonsApiClient.getCsraSummariesForOffender(nomsNumber) } returns StatusCode(
+        HttpMethod.GET,
+        "/api/offender-assessments/csra/$nomsNumber",
+        HttpStatus.NOT_FOUND,
+        null,
+      )
+
+      val result = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
+
+      assertThat(result is CasResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `throws exception when Prisons API returns 500`() {
+      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
+      } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCrn(crn)
+              .withNomsId(nomsNumber)
+              .produce(),
+          ),
+        ),
+      )
+
+      every { mockPrisonsApiClient.getCsraSummariesForOffender(nomsNumber) } returns StatusCode(
+        HttpMethod.GET,
+        "/api/offender-assessments/csra/$nomsNumber",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        null,
+      )
+
+      assertThatThrownBy {
+        offenderService.getCsraSummariesForOffender(crn, laoStrategy)
+      }.isInstanceOf(RuntimeException::class.java)
+        .hasMessage("Unable to complete GET request to /api/offender-assessments/csra/NOMS456: 500 INTERNAL_SERVER_ERROR")
     }
   }
 }
