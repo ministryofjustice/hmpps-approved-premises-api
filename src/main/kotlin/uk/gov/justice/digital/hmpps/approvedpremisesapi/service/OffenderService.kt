@@ -16,13 +16,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Use
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.toCasResult
 import java.util.stream.Collectors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.Alert as PrisionerAlert
 
@@ -34,6 +37,7 @@ class OffenderService(
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
   private val featureFlagService: FeatureFlagService,
+  private val cas1OffenderRepository: Cas1OffenderRepository,
 ) {
   companion object {
     const val MAX_OFFENDER_REQUEST_COUNT = 500
@@ -370,5 +374,34 @@ class OffenderService(
       is ClientResult.Failure -> caseDetailResult.throwException()
     }
     return CasResult.Success(caseDetail)
+  }
+
+  fun getCsraSummariesForOffender(
+    crn: String,
+    laoStrategy: LaoStrategy,
+  ): CasResult<List<CsraSummary>> = when (laoStrategy) {
+    is LaoStrategy.NeverRestricted -> {
+      cas1OffenderRepository.findByCrn(crn)?.nomsNumber?.let { nomsNumber ->
+        prisonsApiClient.getCsraSummariesForOffender(nomsNumber)
+          .toCasResult(entityType = "CsraSummary", id = crn)
+      } ?: getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
+    }
+
+    is LaoStrategy.CheckUserAccess -> {
+      getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
+    }
+  }
+
+  private fun PersonSummaryInfoResult.toCsraSummaries(crn: String): CasResult<List<CsraSummary>> = when (this) {
+    is PersonSummaryInfoResult.Success.Full -> {
+      this.summary.nomsId?.let { nomsNumber ->
+        prisonsApiClient.getCsraSummariesForOffender(nomsNumber)
+          .toCasResult(entityType = "CsraSummary", id = crn)
+      } ?: CasResult.NotFound("Noms Number", crn)
+    }
+
+    is PersonSummaryInfoResult.Success.Restricted -> CasResult.Unauthorised()
+    is PersonSummaryInfoResult.NotFound -> CasResult.NotFound("Person", crn)
+    is PersonSummaryInfoResult.Unknown -> CasResult.NotFound("Person", crn)
   }
 }
