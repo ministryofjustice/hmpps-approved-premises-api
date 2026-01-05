@@ -20,8 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsCsvReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.FutureBookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.TransitionalAccommodationReferralReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceOccupancyReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceUsageReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingGapReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.FutureBookingsReportDataAndPersonInfo
@@ -156,25 +158,56 @@ class Cas3ReportService(
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
     log.info("Beginning CAS3 Bed Usage Report")
+
     when (featureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled")) {
       true -> {
-        val bedspacesInScope = bedUsageRepository.findAllBedspacesV2(
-          probationRegionId = properties.probationRegionId,
-        )
-        BedspaceUsageReportGenerator(cas3BookingTransformer, cas3v2BookingRepository, cas3VoidBedspacesRepository, workingDayService)
-          .createReport(bedspacesInScope, properties)
-          .writeExcel(
-            outputStream = outputStream,
-            factory = WorkbookFactory.create(true),
-          )
+        when (featureFlagService.getBooleanFlag("cas3-reports-optimised-bed-usage-report-enabled")) {
+          true -> log.info("Generating CAS3 Bed Usage Report using optimised query")
+          false -> {
+            val bedspacesInScope = bedUsageRepository.findAllBedspacesV2(
+              probationRegionId = properties.probationRegionId,
+            )
+            val bedspaceIds = bedspacesInScope.map { it.id }
+            val bookings = cas3v2BookingRepository.findAllByOverlappingDateForBedspaceIds(properties.startDate, properties.endDate, bedspaceIds)
+            val voids = cas3VoidBedspacesRepository.findAllByOverlappingDateForBedspaceIds(properties.startDate, properties.endDate, bedspaceIds)
+
+            val reportData = bedspacesInScope.map { bedspace ->
+              BedspaceUsageReportData(
+                bedspace = bedspace,
+                bookings = bookings.filter { it.bedspace.id == bedspace.id },
+                voids = voids.filter { it.bedspace?.id == bedspace.id },
+              )
+            }
+
+            BedspaceUsageReportGenerator(cas3BookingTransformer, workingDayService)
+              .createReport(reportData, properties)
+              .writeExcel(
+                outputStream = outputStream,
+                factory = WorkbookFactory.create(true),
+              )
+          }
+        }
       }
       false -> {
+        // Deprecated, this will be removed when we clean up the code.
         val bedspacesInScope = bedUsageRepository.findAllBedspaces(
           probationRegionId = properties.probationRegionId,
         )
+        val bedIds = bedspacesInScope.map { it.id }
+        val bookings = bookingRepository.findAllByOverlappingDateForBedIds(properties.startDate, properties.endDate, bedIds)
+        val voids = cas3VoidBedspacesRepository.findAllByOverlappingDateForBedIds(properties.startDate, properties.endDate, bedIds)
+
+        val reportData = bedspacesInScope.map { bed ->
+          BedUsageReportData(
+            bed = bed,
+            bookings = bookings.filter { it.bed?.id == bed.id },
+            voids = voids.filter { it.bed?.id == bed.id },
+          )
+        }
+
         log.info("Creating report")
-        BedUsageReportGenerator(bookingTransformer, bookingRepository, cas3VoidBedspacesRepository, workingDayService)
-          .createReport(bedspacesInScope, properties)
+        BedUsageReportGenerator(bookingTransformer, workingDayService)
+          .createReport(reportData, properties)
           .writeExcel(
             outputStream = outputStream,
             factory = WorkbookFactory.create(true),

@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator
 
+import org.jetbrains.kotlinx.dataframe.DataFrame
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BedUsageReportProperties
@@ -14,20 +16,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusi
 
 class BedUsageReportGenerator(
   private val bookingTransformer: BookingTransformer,
-  private val bookingRepository: BookingRepository,
-  private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val workingDayService: WorkingDayService,
-) : ReportGenerator<BedEntity, BedUsageReportRow, BedUsageReportProperties>(BedUsageReportRow::class) {
-  override fun filter(properties: BedUsageReportProperties): (BedEntity) -> Boolean = {
-    checkServiceType(properties.serviceName, it.room.premises) &&
-      (properties.probationRegionId == null || it.room.premises.probationRegion.id == properties.probationRegionId)
+) : ReportGenerator<BedUsageReportData, BedUsageReportRow, BedUsageReportProperties>(BedUsageReportRow::class) {
+
+  override fun filter(properties: BedUsageReportProperties): (BedUsageReportData) -> Boolean = {
+    checkServiceType(properties.serviceName, it.bed.room.premises) &&
+      (properties.probationRegionId == null || it.bed.room.premises.probationRegion.id == properties.probationRegionId)
   }
 
-  override val convert: BedEntity.(properties: BedUsageReportProperties) -> List<BedUsageReportRow> = { properties ->
-    val bookings = bookingRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
-    val voids = cas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(properties.startDate, properties.endDate, this)
+  override val convert: BedUsageReportData.(properties: BedUsageReportProperties) -> List<BedUsageReportRow> = { properties ->
+    val bed = this.bed
+    val bookings = this.bookings
+    val voids = this.voids
 
-    val premises = this.room.premises
+    val premises = bed.room.premises
     val temporaryAccommodationPremisesEntity = premises as? TemporaryAccommodationPremisesEntity
     val resultRows = mutableListOf<BedUsageReportRow>()
 
@@ -40,7 +42,7 @@ class BedUsageReportGenerator(
         addressLine1 = premises.addressLine1,
         town = premises.town,
         postCode = premises.postcode,
-        bedspaceRef = this.room.name,
+        bedspaceRef = bed.room.name,
         crn = booking.crn,
         type = BedUsageType.Booking,
         startDate = booking.arrivalDate,
@@ -51,7 +53,7 @@ class BedUsageReportGenerator(
         voidNotes = null,
         costCentre = null,
         uniquePropertyRef = premises.id.toShortBase58(),
-        uniqueBedspaceRef = this.room.id.toShortBase58(),
+        uniqueBedspaceRef = bed.room.id.toShortBase58(),
       )
 
       val turnaround = booking.turnaround
@@ -67,7 +69,7 @@ class BedUsageReportGenerator(
           addressLine1 = premises.addressLine1,
           town = premises.town,
           postCode = premises.postcode,
-          bedspaceRef = this.room.name,
+          bedspaceRef = bed.room.name,
           crn = null,
           type = BedUsageType.Turnaround,
           startDate = turnaroundStartDate,
@@ -78,7 +80,7 @@ class BedUsageReportGenerator(
           voidNotes = null,
           costCentre = null,
           uniquePropertyRef = premises.id.toShortBase58(),
-          uniqueBedspaceRef = this.room.id.toShortBase58(),
+          uniqueBedspaceRef = bed.room.id.toShortBase58(),
         )
       }
     }
@@ -92,7 +94,7 @@ class BedUsageReportGenerator(
         addressLine1 = premises.addressLine1,
         town = premises.town,
         postCode = premises.postcode,
-        bedspaceRef = this.room.name,
+        bedspaceRef = bed.room.name,
         crn = null,
         type = BedUsageType.Void,
         startDate = voidBedspace.startDate,
@@ -103,7 +105,7 @@ class BedUsageReportGenerator(
         voidNotes = voidBedspace.notes,
         costCentre = voidBedspace.costCentre,
         uniquePropertyRef = premises.id.toShortBase58(),
-        uniqueBedspaceRef = this.room.id.toShortBase58(),
+        uniqueBedspaceRef = bed.room.id.toShortBase58(),
       )
     }
 

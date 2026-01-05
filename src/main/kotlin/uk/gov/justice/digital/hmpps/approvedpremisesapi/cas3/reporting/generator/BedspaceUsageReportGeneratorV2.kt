@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3Boo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 
-class BedspaceUsageReportGenerator(
+class BedspaceUsageReportGeneratorV2(
   private val bookingTransformer: Cas3BookingTransformer,
   private val workingDayService: WorkingDayService,
 ) : ReportGenerator<BedspaceUsageReportData, Cas3BedUsageReportRow, BedUsageReportProperties>(Cas3BedUsageReportRow::class) {

@@ -75,6 +75,9 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed ORDER BY b.createdAt")
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
 
+  @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed.id IN :bedIds ORDER BY b.createdAt")
+  fun findAllByOverlappingDateForBedIds(startDate: LocalDate, endDate: LocalDate, bedIds: List<UUID>): List<BookingEntity>
+
   @Modifying
   @Query(
     """
