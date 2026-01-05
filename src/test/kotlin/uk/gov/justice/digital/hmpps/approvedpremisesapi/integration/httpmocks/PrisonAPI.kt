@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.AlertsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.PrisonerInPrisonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -50,4 +51,19 @@ fun IntegrationTestBase.prisonAPIMockSuccessfulAdjudicationsCall(nomsNumber: Str
 fun IntegrationTestBase.prisonAPIMockSuccessfulAgencyDetailsCall(agency: Agency) = mockSuccessfulGetCallWithJsonResponse(
   url = "/api/agencies/${agency.agencyId}",
   responseBody = agency,
+)
+
+fun IntegrationTestBase.prisonAPIMockSuccessfulCsraSummariesCall(nomsNumber: String, summaries: List<CsraSummary>) = mockSuccessfulGetCallWithJsonResponse(
+  url = "/api/offender-assessments/csra/$nomsNumber",
+  responseBody = summaries,
+)
+
+fun IntegrationTestBase.prisonAPIMockNotFoundCsraSummariesCall(nomsNumber: String) = mockUnsuccessfulGetCall(
+  url = "/api/offender-assessments/csra/$nomsNumber",
+  responseStatus = 404,
+)
+
+fun IntegrationTestBase.prisonAPIMockServerErrorCsraSummariesCall(nomsNumber: String) = mockUnsuccessfulGetCall(
+  url = "/api/offender-assessments/csra/$nomsNumber",
+  responseStatus = 500,
 )

@@ -8,15 +8,18 @@ import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LicenceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
@@ -39,6 +42,7 @@ class Cas1PeopleController(
   private val offenderRiskService: OffenderRisksService,
   private val userAccessService: Cas1UserAccessService,
   private val licenceService: LicenceService,
+  private val offenderService: OffenderService,
 ) {
 
   companion object {
@@ -76,6 +80,17 @@ class Cas1PeopleController(
 
     val licence = licenceService.getLicence(crn)
     return ResponseEntity.ok(extractEntityFromCasResult(licence))
+  }
+
+  @Operation(summary = "Returns a list of CSRA summaries for a Person.")
+  @GetMapping("/people/{crn}/csra-summaries")
+  fun getCsraSummaries(@PathVariable crn: String): ResponseEntity<List<CsraSummary>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+    val laoStrategy = LaoStrategy.CheckUserAccess(userService.getDeliusUserNameForRequest())
+
+    val csraSummaries = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
+
+    return ResponseEntity.ok(extractEntityFromCasResult(csraSummaries))
   }
 
   private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): Cas1PersonalTimeline = cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())
