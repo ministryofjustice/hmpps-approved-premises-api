@@ -12,6 +12,7 @@ import org.jetbrains.kotlinx.dataframe.api.toList
 import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.jetbrains.kotlinx.dataframe.size
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -1905,6 +1906,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class GetBedUsageReport {
+
+    @AfterEach
+    fun afterEach() {
+      mockFeatureFlagService.reset()
+    }
+
     @Test
     fun `Get bed usage report for all regions returns 403 Forbidden if user does not have all regions access`() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
@@ -1944,8 +1951,10 @@ class Cas3ReportsTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Get bed usage report returns OK with correct body`() {
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `Get bed usage report returns OK with correct body`(isOptimised: Boolean) {
+      mockFeatureFlagService.setFlag("cas3-reports-optimised-bed-usage-report-enabled", isOptimised)
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
@@ -2019,8 +2028,10 @@ class Cas3ReportsTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Get bed usage report returns OK with correct body with pdu and local authority`() {
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `Get bed usage report returns OK with correct body with pdu and local authority`(isOptimised: Boolean) {
+      mockFeatureFlagService.setFlag("cas3-reports-optimised-bed-usage-report-enabled", isOptimised)
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
