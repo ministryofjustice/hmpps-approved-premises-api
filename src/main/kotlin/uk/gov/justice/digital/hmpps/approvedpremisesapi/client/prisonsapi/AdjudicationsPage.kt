@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi
 
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class AdjudicationsPage(
@@ -27,4 +28,15 @@ data class Agency(
   val agencyId: String,
   val description: String,
   val agencyType: String,
+)
+
+data class CsraSummary(
+  val bookingId: Long,
+  val classificationCode: String,
+  val assessmentCode: String,
+  val assessmentSeq: Int,
+  val assessmentDate: LocalDate,
+  val assessmentAgencyId: String,
+  val assessmentComment: String?,
+  val cellSharingAlertFlag: Boolean,
 )
