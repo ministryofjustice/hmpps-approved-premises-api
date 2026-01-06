@@ -6,10 +6,8 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -43,7 +41,7 @@ class Cas3ApplicationTransformer(
       } else {
         null
       },
-      status = getStatus(applicationEntity, latestAssessment),
+      status = applicationEntity.getStatus(),
       offenceId = applicationEntity.offenceId,
       assessmentId = latestAssessment?.id,
       assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
@@ -72,12 +70,6 @@ class Cas3ApplicationTransformer(
     entity.getLatestAssessmentHasClarificationNotesWithoutResponse() -> ApplicationStatus.requestedFurtherInformation
     entity.getLatestAssessmentDecision() == AssessmentDecision.REJECTED -> ApplicationStatus.rejected
     entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
-    else -> ApplicationStatus.inProgress
-  }
-
-  private fun getStatus(entity: ApplicationEntity, latestAssessment: AssessmentEntity?): ApplicationStatus = when {
-    latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
-    entity.submittedAt !== null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
   }
 
