@@ -11,11 +11,15 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderLanguages
@@ -24,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Assign
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -59,6 +64,7 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import kotlin.collections.listOf
 
 class Cas3ApplicationServiceTest {
   private val mockApplicationRepository = mockk<ApplicationRepository>()
@@ -74,6 +80,7 @@ class Cas3ApplicationServiceTest {
   private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
+  private val mockCas3v2BookingService = mockk<Cas3v2BookingService>()
 
   private val cas3ApplicationService = Cas3ApplicationService(
     mockApplicationRepository,
@@ -89,7 +96,7 @@ class Cas3ApplicationServiceTest {
     mockOffenderService,
     mockOffenderRisksService,
     mockObjectMapper,
-
+    mockCas3v2BookingService,
   )
 
   val user = UserEntityFactory()
@@ -107,6 +114,372 @@ class Cas3ApplicationServiceTest {
     .withProbationRegion(user.probationRegion)
     .withSubmittedAt(null)
     .produce()
+
+  @Nested
+  inner class GetSuitableApplicationByCrn {
+    val crn = "X123456"
+
+    @Test
+    fun `getSuitableApplicationByCrn where application does not exist returns null`() {
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns emptyList()
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(
+          crn,
+        ),
+      ).isNull()
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns inProgress application when only inProgress exists`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(null)
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(application)
+      every { mockCas3v2BookingService.getLatestBookingStatus(application.id) } returns null
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          application.id,
+          ApplicationStatus.inProgress,
+          bookingStatus = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns suitable application when one has been submitted`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(application)
+      every { mockCas3v2BookingService.getLatestBookingStatus(application.id) } returns null
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          application.id,
+          ApplicationStatus.submitted,
+          bookingStatus = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns latest suitable application when multiple have been submitted`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application1 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now().minusDays(1))
+        .produce()
+
+      val application2 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now().minusDays(2))
+        .produce()
+
+      val application3 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(
+        application1,
+        application3,
+        application2,
+      )
+      every { mockCas3v2BookingService.getLatestBookingStatus(application3.id) } returns null
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          application3.id,
+          ApplicationStatus.submitted,
+          bookingStatus = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns suitable application when one has been submitted requesting further info`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      assessment.clarificationNotes = mutableListOf(
+        AssessmentClarificationNoteEntityFactory()
+          .withAssessment(assessment)
+          .withCreatedBy(user)
+          .produce(),
+      )
+
+      application.assessments = mutableListOf(assessment)
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(application)
+      every { mockCas3v2BookingService.getLatestBookingStatus(application.id) } returns null
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          application.id,
+          ApplicationStatus.requestedFurtherInformation,
+          bookingStatus = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns suitable application when one has been submitted requesting further info instead of one that has just been submitted`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val applicationRequestInfo = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now().minusDays(1))
+        .produce()
+
+      val applicationSubmitted1 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val applicationSubmitted2 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(applicationRequestInfo)
+        .produce()
+
+      assessment.clarificationNotes = mutableListOf(
+        AssessmentClarificationNoteEntityFactory()
+          .withAssessment(assessment)
+          .withCreatedBy(user)
+          .produce(),
+      )
+
+      applicationRequestInfo.assessments = mutableListOf(assessment)
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(
+        applicationSubmitted1,
+        applicationRequestInfo,
+        applicationSubmitted2,
+      )
+      every { mockCas3v2BookingService.getLatestBookingStatus(applicationRequestInfo.id) } returns null
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          applicationRequestInfo.id,
+          ApplicationStatus.requestedFurtherInformation,
+          bookingStatus = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns submitted over inProgress regardless of date`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val inProgressApplication = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withCreatedAt(OffsetDateTime.now())
+        .withSubmittedAt(null)
+        .produce()
+
+      val submittedApplication = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withCreatedAt(OffsetDateTime.now().minusDays(10))
+        .withSubmittedAt(OffsetDateTime.now().minusDays(10))
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(
+        inProgressApplication,
+        submittedApplication,
+      )
+      every { mockCas3v2BookingService.getLatestBookingStatus(submittedApplication.id) } returns null
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          submittedApplication.id,
+          ApplicationStatus.submitted,
+          bookingStatus = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn uses createdAt as tiebreaker when submittedAt is null`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val olderInProgressApplication = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withCreatedAt(OffsetDateTime.now().minusDays(5))
+        .withSubmittedAt(null)
+        .produce()
+
+      val newerInProgressApplication = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withCreatedAt(OffsetDateTime.now())
+        .withSubmittedAt(null)
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(
+        olderInProgressApplication,
+        newerInProgressApplication,
+      )
+      every { mockCas3v2BookingService.getLatestBookingStatus(newerInProgressApplication.id) } returns null
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          newerInProgressApplication.id,
+          ApplicationStatus.inProgress,
+          bookingStatus = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns booking status when booking exists`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(application)
+      every { mockCas3v2BookingService.getLatestBookingStatus(application.id) } returns Cas3BookingStatus.confirmed
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          application.id,
+          ApplicationStatus.submitted,
+          bookingStatus = Cas3BookingStatus.confirmed,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns latest booking status when multiple bookings exist`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(application)
+      every { mockCas3v2BookingService.getLatestBookingStatus(application.id) } returns Cas3BookingStatus.arrived
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(crn),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          application.id,
+          ApplicationStatus.submitted,
+          bookingStatus = Cas3BookingStatus.arrived,
+        ),
+      )
+    }
+  }
 
   @Nested
   inner class GetApplicationForUsername {

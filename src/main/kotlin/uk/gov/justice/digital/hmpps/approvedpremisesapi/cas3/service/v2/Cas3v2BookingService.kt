@@ -50,6 +50,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
+@Suppress("TooManyFunctions")
 class Cas3v2BookingService(
   private val cas3BookingRepository: Cas3v2BookingRepository,
   private val cas3BedspaceRepository: Cas3BedspacesRepository,
@@ -570,4 +571,8 @@ class Cas3v2BookingService(
   }
 
   fun Cas3BookingEntity.lastUnavailableDate() = workingDayService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
+
+  fun getLatestBookingStatus(applicationId: UUID): Cas3BookingStatus? = cas3BookingRepository.findAllByApplicationId(applicationId)
+    .maxByOrNull { it.createdAt }
+    ?.status
 }

@@ -2504,4 +2504,66 @@ class Cas3v2BookingServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class GetLatestBookingStatus {
+    private val applicationId = UUID.randomUUID()
+
+    @Test
+    fun `returns null when no bookings exist for application`() {
+      every { mockBookingRepository.findAllByApplicationId(applicationId) } returns emptyList()
+
+      val result = cas3BookingService.getLatestBookingStatus(applicationId)
+
+      assertThat(result).isNull()
+    }
+
+    @Test
+    fun `returns booking status when single booking exists`() {
+      val booking = Cas3BookingEntityFactory()
+        .withDefaults()
+        .withStatus(Cas3BookingStatus.confirmed)
+        .produce()
+
+      every { mockBookingRepository.findAllByApplicationId(applicationId) } returns listOf(booking)
+
+      val result = cas3BookingService.getLatestBookingStatus(applicationId)
+
+      assertThat(result).isEqualTo(Cas3BookingStatus.confirmed)
+    }
+
+    @Test
+    fun `returns latest booking status when multiple bookings exist`() {
+      val olderBooking = Cas3BookingEntityFactory()
+        .withDefaults()
+        .withStatus(Cas3BookingStatus.provisional)
+        .withCreatedAt(OffsetDateTime.now().minusDays(5))
+        .produce()
+
+      val newerBooking = Cas3BookingEntityFactory()
+        .withDefaults()
+        .withStatus(Cas3BookingStatus.arrived)
+        .withCreatedAt(OffsetDateTime.now())
+        .produce()
+
+      every { mockBookingRepository.findAllByApplicationId(applicationId) } returns listOf(olderBooking, newerBooking)
+
+      val result = cas3BookingService.getLatestBookingStatus(applicationId)
+
+      assertThat(result).isEqualTo(Cas3BookingStatus.arrived)
+    }
+
+    @Test
+    fun `returns null when booking has no status`() {
+      val booking = Cas3BookingEntityFactory()
+        .withDefaults()
+        .produce()
+
+      every { mockBookingRepository.findAllByApplicationId(applicationId) } returns listOf(booking)
+
+      val result = cas3BookingService.getLatestBookingStatus(applicationId)
+
+      assertThat(result).isNull()
+    }
+  }
 }
