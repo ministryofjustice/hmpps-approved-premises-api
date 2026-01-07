@@ -1636,8 +1636,6 @@ class Cas1SpaceBookingServiceTest {
 
   @Nested
   inner class FindLatestPlacement {
-    private val includeCancelled = true
-    private val crn = "X99999"
     private val user = UserEntityFactory()
       .withDefaults()
       .produce()
@@ -1665,22 +1663,22 @@ class Cas1SpaceBookingServiceTest {
         .produce()
       val bookings = listOf(booking1, latestBooking, booking2)
 
-      every { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) } returns bookings
+      every { spaceBookingRepository.findAllSpaceBookingsForApplicationId(application.id) } returns bookings
 
-      val result = service.findLatestPlacement(crn, application.id)
+      val result = service.getLatestPlacement(application.id)
 
       assertThat(result).isEqualTo(latestBooking)
-      verify(exactly = 1) { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) }
+      verify(exactly = 1) { spaceBookingRepository.findAllSpaceBookingsForApplicationId(application.id) }
     }
 
     @Test
     fun `returns null when no placements`() {
-      every { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) } returns emptyList()
+      every { spaceBookingRepository.findAllSpaceBookingsForApplicationId(application.id) } returns emptyList()
 
-      val result = service.findLatestPlacement(crn, application.id)
+      val result = service.getLatestPlacement(application.id)
 
       assertThat(result).isNull()
-      verify(exactly = 1) { spaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled) }
+      verify(exactly = 1) { spaceBookingRepository.findAllSpaceBookingsForApplicationId(application.id) }
     }
   }
 }

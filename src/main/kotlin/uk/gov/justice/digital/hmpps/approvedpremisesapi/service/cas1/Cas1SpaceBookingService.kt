@@ -449,9 +449,7 @@ class Cas1SpaceBookingService(
 
   fun findAllBookingsForCrn(crn: String, includeCancelled: Boolean): List<Cas1SpaceBookingEntity> = cas1SpaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled)
 
-  fun findLatestPlacement(crn: String, applicationId: UUID): Cas1SpaceBookingEntity? = cas1SpaceBookingRepository.findAllSpaceBookingsForCrn(crn, true).filter {
-    it.application?.id == applicationId
-  }.maxByOrNull { it.createdAt }
+  fun getLatestPlacement(applicationId: UUID): Cas1SpaceBookingEntity? = cas1SpaceBookingRepository.findAllSpaceBookingsForApplicationId(applicationId).maxByOrNull { it.createdAt }
 
   private fun getBookingCharacteristicIds(bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?) = bookingsCriteriaFilter?.let { bookingCriteria ->
     val characteristics = bookingCriteria.map { it.value }
