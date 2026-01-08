@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
@@ -24,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Assign
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -59,6 +62,7 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import kotlin.collections.listOf
 
 class Cas3ApplicationServiceTest {
   private val mockApplicationRepository = mockk<ApplicationRepository>()
@@ -107,6 +111,230 @@ class Cas3ApplicationServiceTest {
     .withProbationRegion(user.probationRegion)
     .withSubmittedAt(null)
     .produce()
+
+  @Nested
+  inner class GetSuitableApplicationByCrn {
+    val crn = "X123456"
+
+    @Test
+    fun `getSuitableApplicationByCrn where application does not exist returns null`() {
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns emptyList()
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(
+          crn,
+        ),
+      ).isNull()
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn where suitable application does not exist returns null`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(
+        application,
+      )
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(
+          crn,
+        ),
+      ).isNull()
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns suitable application when one has been submitted`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(
+        application,
+      )
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(
+          crn,
+        ),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          application.id,
+          ApplicationStatus.submitted,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns latest suitable application when multiple have been submitted`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application1 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now().minusDays(1))
+        .produce()
+
+      val application2 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now().minusDays(2))
+        .produce()
+
+      val application3 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(
+        application1,
+        application3,
+        application2,
+      )
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(
+          crn,
+        ),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          application3.id,
+          ApplicationStatus.submitted,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns suitable application when one has been submitted requesting further info`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      assessment.clarificationNotes = mutableListOf(
+        AssessmentClarificationNoteEntityFactory()
+          .withAssessment(assessment)
+          .withCreatedBy(user)
+          .produce(),
+      )
+
+      application.assessments = mutableListOf(assessment)
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(
+        application,
+      )
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(
+          crn,
+        ),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          application.id,
+          ApplicationStatus.requestedFurtherInformation,
+        ),
+      )
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns suitable application when one has been submitted requesting further info instead of one that has just been submitted`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val applicationRequestInfo = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now().minusDays(1))
+        .produce()
+
+      val applicationSubmitted1 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val applicationSubmitted2 = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(applicationRequestInfo)
+        .produce()
+
+      assessment.clarificationNotes = mutableListOf(
+        AssessmentClarificationNoteEntityFactory()
+          .withAssessment(assessment)
+          .withCreatedBy(user)
+          .produce(),
+      )
+
+      applicationRequestInfo.assessments = mutableListOf(assessment)
+
+      every { mockTemporaryAccommodationApplicationRepository.findByCrn(crn) } returns listOf(
+        applicationSubmitted1,
+        applicationRequestInfo,
+        applicationSubmitted2,
+      )
+
+      assertThat(
+        cas3ApplicationService.getSuitableApplicationByCrn(
+          crn,
+        ),
+      ).isEqualTo(
+        Cas3SuitableApplication(
+          applicationRequestInfo.id,
+          ApplicationStatus.requestedFurtherInformation,
+        ),
+      )
+    }
+  }
 
   @Nested
   inner class GetApplicationForUsername {
@@ -321,8 +549,6 @@ class Cas3ApplicationServiceTest {
     @Test
     fun `submitApplication returns NotFound when application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-      val username = "SOMEPERSON"
-
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
       assertThat(
@@ -429,7 +655,7 @@ class Cas3ApplicationServiceTest {
       every {
         mockAssessmentService.createTemporaryAccommodationAssessment(
           application,
-          submitApplication.summaryData!!,
+          submitApplication.summaryData,
         )
       } returns TemporaryAccommodationAssessmentEntityFactory()
         .withApplication(application)
@@ -459,7 +685,7 @@ class Cas3ApplicationServiceTest {
       verify(exactly = 1) {
         mockAssessmentService.createTemporaryAccommodationAssessment(
           application,
-          submitApplication.summaryData!!,
+          submitApplication.summaryData,
         )
       }
 
@@ -485,7 +711,7 @@ class Cas3ApplicationServiceTest {
       every {
         mockAssessmentService.createTemporaryAccommodationAssessment(
           application,
-          submitTemporaryAccommodationApplicationWithMiReportingData.summaryData!!,
+          submitTemporaryAccommodationApplicationWithMiReportingData.summaryData,
         )
       } returns TemporaryAccommodationAssessmentEntityFactory()
         .withApplication(application)
@@ -531,7 +757,7 @@ class Cas3ApplicationServiceTest {
       verify(exactly = 1) {
         mockAssessmentService.createTemporaryAccommodationAssessment(
           application,
-          submitTemporaryAccommodationApplicationWithMiReportingData.summaryData!!,
+          submitTemporaryAccommodationApplicationWithMiReportingData.summaryData,
         )
       }
     }
@@ -1223,7 +1449,7 @@ class Cas3ApplicationServiceTest {
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success
 
-      val approvedPremisesApplication = result.value as TemporaryAccommodationApplicationEntity
+      val approvedPremisesApplication = result.value
 
       assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
     }
