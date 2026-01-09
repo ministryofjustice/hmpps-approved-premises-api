@@ -2,12 +2,20 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.ConditionTypes
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.ElectronicMonitoringAdditionalConditionWithRestriction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.GenericAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.MultipleExclusionZoneAdditionalCondition
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdditionalConditionFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApConditionsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LicenceConditionsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LicenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LicenceSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PssConditionsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.licenceApiMockNotFoundLicenceDetails
@@ -150,6 +158,62 @@ class PersonLicenceTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .bodyAsObject()
+
+    assertThat(response).isEqualTo(licence)
+  }
+
+  @Test
+  fun `returns 200 with licence body containing additional conditions`() {
+    val crn = "X12345"
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+
+    val activeId = 102L
+    val summaries = listOf(aLicenceSummary(activeId, crn, LicenceStatus.ACTIVE))
+
+    val additionalConditions = listOf(
+      AdditionalConditionFactory().withType(ConditionTypes.STANDARD).produce(),
+      AdditionalConditionFactory().withType(ConditionTypes.ELECTRONIC_MONITORING).produce(),
+      AdditionalConditionFactory().withType(ConditionTypes.MULTIPLE_EXCLUSION_ZONE).produce(),
+    )
+
+    val licence = LicenceFactory()
+      .withId(activeId)
+      .withStatus(LicenceStatus.ACTIVE)
+      .withCrn(crn)
+      .withConditions(
+        LicenceConditionsFactory()
+          .withApConditions(
+            ApConditionsFactory()
+              .withAdditional(additionalConditions)
+              .produce(),
+          )
+          .withPssConditions(
+            PssConditionsFactory()
+              .withAdditional(additionalConditions)
+              .produce(),
+          )
+          .produce(),
+      )
+      .produce()
+
+    licenceApiMockSuccessfulLicenceSummaries(crn, summaries)
+    licenceApiMockSuccessfulLicenceDetails(licence)
+
+    val response: Licence = webTestClient.get()
+      .uri("/cas1/people/$crn/licence-details")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsObject()
+
+    assertThat(response.conditions.apConditions.additional[0]).isInstanceOf(GenericAdditionalCondition::class.java)
+    assertThat(response.conditions.apConditions.additional[1]).isInstanceOf(ElectronicMonitoringAdditionalConditionWithRestriction::class.java)
+    assertThat(response.conditions.apConditions.additional[2]).isInstanceOf(MultipleExclusionZoneAdditionalCondition::class.java)
+
+    assertThat(response.conditions.pssConditions.additional[0]).isInstanceOf(GenericAdditionalCondition::class.java)
+    assertThat(response.conditions.pssConditions.additional[1]).isInstanceOf(ElectronicMonitoringAdditionalConditionWithRestriction::class.java)
+    assertThat(response.conditions.pssConditions.additional[2]).isInstanceOf(MultipleExclusionZoneAdditionalCondition::class.java)
 
     assertThat(response).isEqualTo(licence)
   }

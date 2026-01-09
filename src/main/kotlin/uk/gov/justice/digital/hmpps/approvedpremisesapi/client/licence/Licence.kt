@@ -1,7 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.JsonTypeName
+import com.fasterxml.jackson.annotation.JsonValue
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -53,20 +58,94 @@ data class StandardCondition(
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class AdditionalCondition(
-  val id: Long?,
-  val type: String?,
-  val text: String?,
-  val code: String?,
-  val category: String?,
-  val restrictions: String?,
-  val hasImageUpload: Boolean?,
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class BespokeCondition(
   val text: String?,
 )
+
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME,
+  property = "type",
+  include = JsonTypeInfo.As.EXISTING_PROPERTY,
+)
+@JsonSubTypes(
+  JsonSubTypes.Type(
+    value = GenericAdditionalCondition::class,
+    name = ConditionTypes.STANDARD,
+  ),
+  JsonSubTypes.Type(
+    value = ElectronicMonitoringAdditionalConditionWithRestriction::class,
+    name = ConditionTypes.ELECTRONIC_MONITORING,
+  ),
+  JsonSubTypes.Type(
+    value = MultipleExclusionZoneAdditionalCondition::class,
+    name = ConditionTypes.MULTIPLE_EXCLUSION_ZONE,
+  ),
+  JsonSubTypes.Type(
+    value = SingleUploadAdditionalCondition::class,
+    name = ConditionTypes.SINGLE_UPLOAD,
+  ),
+)
+sealed interface AdditionalCondition {
+  val id: Long
+  val category: String
+  val code: String
+  val text: String
+  val type: String
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(ConditionTypes.STANDARD)
+data class GenericAdditionalCondition(
+  override val id: Long,
+  override val category: String,
+  override val code: String,
+  override val text: String,
+) : AdditionalCondition {
+  override val type: String = ConditionTypes.STANDARD
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(ConditionTypes.ELECTRONIC_MONITORING)
+data class ElectronicMonitoringAdditionalConditionWithRestriction(
+  override val id: Long,
+  override val category: String,
+  override val code: String,
+  override val text: String,
+  val restrictions: List<ElectronicMonitoringType>,
+) : AdditionalCondition {
+  override val type: String = ConditionTypes.ELECTRONIC_MONITORING
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(ConditionTypes.MULTIPLE_EXCLUSION_ZONE)
+data class MultipleExclusionZoneAdditionalCondition(
+  override val id: Long,
+  override val category: String,
+  override val code: String,
+  override val text: String,
+  val hasImageUpload: Boolean,
+) : AdditionalCondition {
+  override val type: String = ConditionTypes.MULTIPLE_EXCLUSION_ZONE
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(ConditionTypes.SINGLE_UPLOAD)
+data class SingleUploadAdditionalCondition(
+  override val id: Long,
+  override val category: String,
+  override val code: String,
+  override val text: String,
+  val hasImageUpload: Boolean,
+) : AdditionalCondition {
+  override val type: String = ConditionTypes.SINGLE_UPLOAD
+}
+
+object ConditionTypes {
+  const val ELECTRONIC_MONITORING = "ELECTRONIC_MONITORING"
+  const val MULTIPLE_EXCLUSION_ZONE = "MULTIPLE_EXCLUSION_ZONE"
+  const val SINGLE_UPLOAD = "SINGLE_UPLOAD"
+  const val STANDARD = "STANDARD"
+}
 
 enum class LicenceType {
   AP,
@@ -88,4 +167,24 @@ enum class LicenceStatus {
   VARIATION_APPROVED,
   NOT_STARTED,
   TIMED_OUT,
+}
+
+enum class ElectronicMonitoringType(val value: String) {
+  EXCLUSION_ZONE("exclusion zone"),
+  CURFEW("curfew"),
+  LOCATION_MONITORING("location monitoring"),
+  ATTENDANCE_AT_APPOINTMENTS("attendance at appointments"),
+  ALCOHOL_MONITORING("alcohol monitoring"),
+  ALCOHOL_ABSTINENCE("alcohol abstinence"),
+  ;
+
+  companion object {
+    @JsonCreator
+    @JvmStatic
+    fun fromValue(value: String): ElectronicMonitoringType = entries.firstOrNull { it.value.equals(value, ignoreCase = true) }
+      ?: throw IllegalArgumentException("Unknown ElectronicMonitoringType: $value")
+  }
+
+  @JsonValue
+  fun toJson(): String = value
 }

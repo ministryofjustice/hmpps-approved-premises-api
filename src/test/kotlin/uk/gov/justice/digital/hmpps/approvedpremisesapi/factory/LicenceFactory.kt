@@ -5,11 +5,17 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.AdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.ApConditions
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.BespokeCondition
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.ConditionTypes
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.ElectronicMonitoringAdditionalConditionWithRestriction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.ElectronicMonitoringType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.GenericAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceConditions
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.MultipleExclusionZoneAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.PssConditions
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.SingleUploadAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.StandardCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomLong
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
@@ -121,31 +127,53 @@ class StandardConditionFactory : Factory<StandardCondition> {
 }
 
 class AdditionalConditionFactory : Factory<AdditionalCondition> {
-  var id: Yielded<Long?> = { randomLong() }
-  var type: Yielded<String?> = { "TYPE" }
-  var text: Yielded<String?> = { randomStringLowerCase(12) }
-  var code: Yielded<String?> = { randomStringUpperCase(4) }
-  var category: Yielded<String?> = { "CATEGORY" }
-  var restrictions: Yielded<String?> = { null }
-  var hasImageUpload: Yielded<Boolean?> = { false }
+  var id: Yielded<Long> = { randomLong() }
+  var type: Yielded<String> = { ConditionTypes.STANDARD }
+  var text: Yielded<String> = { randomStringLowerCase(12) }
+  var code: Yielded<String> = { randomStringUpperCase(4) }
+  var category: Yielded<String> = { "CATEGORY" }
 
-  fun withId(id: Long?) = apply { this.id = { id } }
-  fun withType(type: String?) = apply { this.type = { type } }
-  fun withText(text: String?) = apply { this.text = { text } }
-  fun withCode(code: String?) = apply { this.code = { code } }
-  fun withCategory(category: String?) = apply { this.category = { category } }
-  fun withRestrictions(restrictions: String?) = apply { this.restrictions = { restrictions } }
-  fun withHasImageUpload(hasImageUpload: Boolean?) = apply { this.hasImageUpload = { hasImageUpload } }
+  fun withId(id: Long) = apply { this.id = { id } }
+  fun withType(type: String) = apply { this.type = { type } }
+  fun withText(text: String) = apply { this.text = { text } }
+  fun withCode(code: String) = apply { this.code = { code } }
+  fun withCategory(category: String) = apply { this.category = { category } }
 
-  override fun produce(): AdditionalCondition = AdditionalCondition(
-    id = this.id(),
-    type = this.type(),
-    text = this.text(),
-    code = this.code(),
-    category = this.category(),
-    restrictions = this.restrictions(),
-    hasImageUpload = this.hasImageUpload(),
-  )
+  override fun produce(): AdditionalCondition = when (this.type()) {
+    ConditionTypes.STANDARD -> GenericAdditionalCondition(
+      id = this.id(),
+      text = this.text(),
+      code = this.code(),
+      category = this.category(),
+    )
+    ConditionTypes.ELECTRONIC_MONITORING -> ElectronicMonitoringAdditionalConditionWithRestriction(
+      id = this.id(),
+      text = this.text(),
+      code = this.code(),
+      category = this.category(),
+      restrictions = emptyList<ElectronicMonitoringType>(),
+    )
+    ConditionTypes.MULTIPLE_EXCLUSION_ZONE -> MultipleExclusionZoneAdditionalCondition(
+      id = this.id(),
+      text = this.text(),
+      code = this.code(),
+      category = this.category(),
+      hasImageUpload = true,
+    )
+    ConditionTypes.SINGLE_UPLOAD -> SingleUploadAdditionalCondition(
+      id = this.id(),
+      text = this.text(),
+      code = this.code(),
+      category = this.category(),
+      hasImageUpload = true,
+    )
+    else -> GenericAdditionalCondition(
+      id = this.id(),
+      text = this.text(),
+      code = this.code(),
+      category = this.category(),
+    )
+  }
 }
 
 class BespokeConditionFactory : Factory<BespokeCondition> {

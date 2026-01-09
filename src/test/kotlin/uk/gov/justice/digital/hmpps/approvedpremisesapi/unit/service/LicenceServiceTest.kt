@@ -10,12 +10,21 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.LicenceApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.ConditionTypes
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.ElectronicMonitoringAdditionalConditionWithRestriction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.GenericAdditionalCondition
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.MultipleExclusionZoneAdditionalCondition
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.SingleUploadAdditionalCondition
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdditionalConditionFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApConditionsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LicenceConditionsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LicenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LicenceSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PssConditionsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LicenceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 
@@ -93,6 +102,66 @@ class LicenceServiceTest {
       val result = service.getLicence(crn)
 
       assertThatCasResult(result).isSuccess().with { assertThat(it).isEqualTo(licence) }
+    }
+
+    @Test
+    fun `returns Success with licence details containing all types of additional conditions`() {
+      val crn = "X12345"
+      val activeId = 99L
+      every { mockLicenceApiClient.getLicenceSummaries(crn) } returns ClientResult.Success(
+        HttpStatus.OK,
+        listOf(
+          licenceSummary(activeId, LicenceStatus.ACTIVE),
+        ),
+      )
+
+      val additionalConditions = listOf(
+        AdditionalConditionFactory().withType(ConditionTypes.STANDARD).produce(),
+        AdditionalConditionFactory().withType(ConditionTypes.ELECTRONIC_MONITORING).produce(),
+        AdditionalConditionFactory().withType(ConditionTypes.MULTIPLE_EXCLUSION_ZONE).produce(),
+        AdditionalConditionFactory().withType(ConditionTypes.SINGLE_UPLOAD).produce(),
+      )
+
+      val licence = LicenceFactory()
+        .withId(activeId)
+        .withStatus(LicenceStatus.ACTIVE)
+        .withCrn(crn)
+        .withConditions(
+          LicenceConditionsFactory()
+            .withApConditions(
+              ApConditionsFactory()
+                .withAdditional(additionalConditions)
+                .produce(),
+            )
+            .withPssConditions(
+              PssConditionsFactory()
+                .withAdditional(additionalConditions)
+                .produce(),
+            )
+            .produce(),
+        )
+        .produce()
+
+      every { mockLicenceApiClient.getLicenceDetails(activeId) } returns ClientResult.Success(HttpStatus.OK, licence)
+
+      val result = service.getLicence(crn)
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(licence)
+        val apAdditional = it.conditions.apConditions.additional
+        assertThat(apAdditional).hasSize(4)
+        assertThat(apAdditional[0]).isInstanceOf(GenericAdditionalCondition::class.java)
+        assertThat(apAdditional[1]).isInstanceOf(ElectronicMonitoringAdditionalConditionWithRestriction::class.java)
+        assertThat(apAdditional[2]).isInstanceOf(MultipleExclusionZoneAdditionalCondition::class.java)
+        assertThat(apAdditional[3]).isInstanceOf(SingleUploadAdditionalCondition::class.java)
+
+        val pssAdditional = it.conditions.pssConditions.additional
+        assertThat(pssAdditional).hasSize(4)
+        assertThat(pssAdditional[0]).isInstanceOf(GenericAdditionalCondition::class.java)
+        assertThat(pssAdditional[1]).isInstanceOf(ElectronicMonitoringAdditionalConditionWithRestriction::class.java)
+        assertThat(pssAdditional[2]).isInstanceOf(MultipleExclusionZoneAdditionalCondition::class.java)
+        assertThat(pssAdditional[3]).isInstanceOf(SingleUploadAdditionalCondition::class.java)
+      }
     }
 
     @Test
