@@ -16,6 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Depa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
@@ -64,6 +66,7 @@ class Cas3v2BookingService(
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val cas3v2ConfirmationRepository: Cas3v2ConfirmationRepository,
   private val cas3ExtensionRepository: Cas3ExtensionRepository,
+  private val cas3OverstayRepository: Cas3OverstayRepository,
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
   private val cas3AssessmentService: Cas3AssessmentService,
@@ -162,6 +165,7 @@ class Cas3v2BookingService(
         cancellations = mutableListOf(),
         confirmation = null,
         extensions = mutableListOf(),
+        overstays = mutableListOf(),
         dateChanges = mutableListOf(),
         premises = premises,
         bedspace = bedspace!!,
@@ -410,14 +414,7 @@ class Cas3v2BookingService(
     newDepartureDate: LocalDate,
     notes: String?,
   ) = validatedCasResult<Cas3ExtensionEntity> {
-    val expectedLastUnavailableDate =
-      workingDayService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
-
-    throwIfBookingDatesConflict(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bedspace.id)
-    throwIfVoidBedspaceDatesConflict(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bedspace.id)
-    if (booking.arrivalDate.isAfter(newDepartureDate)) {
-      return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
-    }
+    if (validBookingDates(newDepartureDate, booking)) return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
 
     val extensionEntity = Cas3ExtensionEntity(
       id = UUID.randomUUID(),
@@ -434,6 +431,46 @@ class Cas3v2BookingService(
     updateBooking(booking)
 
     return CasResult.Success(extensionEntity)
+  }
+
+  @Transactional
+  fun createOverstay(
+    booking: Cas3BookingEntity,
+    newDepartureDate: LocalDate,
+    isAuthorised: Boolean,
+    reason: String?,
+  ): CasResult<Cas3OverstayEntity> = validatedCasResult {
+    if (validBookingDates(newDepartureDate, booking)) return "$.newDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
+
+    val overstayEntity = Cas3OverstayEntity(
+      id = UUID.randomUUID(),
+      previousDepartureDate = booking.departureDate,
+      newDepartureDate = newDepartureDate,
+      isAuthorised = isAuthorised,
+      reason = reason,
+      booking = booking,
+      createdAt = OffsetDateTime.now(),
+    )
+
+    val overstay = cas3OverstayRepository.save(overstayEntity)
+    booking.departureDate = overstayEntity.newDepartureDate
+    booking.overstays.add(overstay)
+    updateBooking(booking)
+
+    return CasResult.Success(overstayEntity)
+  }
+
+  private fun validBookingDates(
+    newDepartureDate: LocalDate,
+    booking: Cas3BookingEntity,
+  ): Boolean {
+    val expectedLastUnavailableDate =
+      workingDayService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
+
+    throwIfBookingDatesConflict(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bedspace.id)
+    throwIfVoidBedspaceDatesConflict(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bedspace.id)
+
+    return booking.arrivalDate.isAfter(newDepartureDate)
   }
 
   @Transactional

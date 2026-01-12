@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Overstay
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -56,6 +57,8 @@ data class Cas3Booking(
   @get:JsonProperty("status", required = true) val status: Cas3BookingStatus,
 
   @get:JsonProperty("extensions", required = true) val extensions: List<Cas3Extension>,
+
+  @get:JsonProperty("overstays", required = true) val overstays: List<Cas3Overstay>,
 
   @Schema(example = "null", required = true, description = "The full history of the departure")
   @get:JsonProperty("departures", required = true) val departures: List<Cas3Departure>,

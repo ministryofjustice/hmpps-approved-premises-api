@@ -38,6 +38,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Depa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
@@ -104,6 +106,7 @@ class Cas3v2BookingServiceTest {
   private val mockMoveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockExtensionRepository = mockk<Cas3ExtensionRepository>()
+  private val mockOverstayRepository = mockk<Cas3OverstayRepository>()
 
   private fun createCas3v2BookingService(): Cas3v2BookingService = Cas3v2BookingService(
     cas3BookingRepository = mockBookingRepository,
@@ -121,6 +124,7 @@ class Cas3v2BookingServiceTest {
     offenderService = mockOffenderService,
     workingDayService = mockWorkingDayService,
     cas3ExtensionRepository = mockExtensionRepository,
+    cas3OverstayRepository = mockOverstayRepository,
     cas3DomainEventService = mockCas3DomainEventService,
     userAccessService = mockUserAccessService,
     cas3AssessmentService = mockCas3AssessmentService,
@@ -2350,6 +2354,54 @@ class Cas3v2BookingServiceTest {
         assertThat(it.booking).isEqualTo(booking)
         assertThat(it.workingDayCount).isEqualTo(2)
       }
+    }
+  }
+
+  @Nested
+  inner class CreateOverstay {
+
+    @BeforeEach
+    fun setup() {
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
+      every { mockOverstayRepository.save(any()) } answers { it.invocation.args[0] as Cas3OverstayEntity }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
+      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
+    }
+
+    @Test
+    fun `Success with correct result when a booking has a new departure date`() {
+      val bookingEntity = createCas3Booking(
+        arrivalDate = LocalDate.parse("2022-08-10"),
+        departureDate = LocalDate.parse("2022-08-26"),
+      )
+      val result = cas3BookingService.createOverstay(
+        booking = bookingEntity,
+        newDepartureDate = LocalDate.parse("2022-08-31"),
+        isAuthorised = true,
+        reason = "reason",
+      )
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-31"))
+        assertThat(it.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
+        assertThat(it.isAuthorised).isTrue()
+        assertThat(it.reason).isEqualTo("reason")
+      }
+    }
+
+    @Test
+    fun `FieldValidationError when a booking has a new departure date before the arrival date`() {
+      val bookingEntity = createCas3Booking(
+        arrivalDate = LocalDate.parse("2022-08-26"),
+      )
+      val result = cas3BookingService.createOverstay(
+        booking = bookingEntity,
+        newDepartureDate = LocalDate.parse("2022-08-25"),
+        isAuthorised = true,
+        reason = "reason",
+      )
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.newDepartureDate", "beforeBookingArrivalDate")
     }
   }
 

@@ -11,6 +11,7 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewOverstay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
@@ -2572,6 +2573,51 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .jsonPath(".previousDepartureDate").isEqualTo(booking.departureDate.toString())
           .jsonPath(".newDepartureDate").isEqualTo(newDate)
           .jsonPath(".notes").isEqualTo("notes")
+          .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
+
+        val actualBooking = bookingRepository.findByIdOrNull(booking.id)
+        assertThat(actualBooking?.departureDate).isEqualTo(LocalDate.parse(newDate))
+        assertThat(actualBooking?.originalDepartureDate).isEqualTo(booking.departureDate)
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateOverstay {
+
+    @Test
+    fun `Create Overstay returns OK with expected body, updates departureDate on Booking entity when user has one of roles CAS3_ASSESSOR`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        val (premises, bedspace) = givenCas3PremisesAndBedspace(userEntity)
+        val booking = cas3BookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.parse("2022-08-18"))
+          withDepartureDate(LocalDate.parse("2022-08-20"))
+          withPremises(premises)
+          withBedspace(bedspace)
+        }
+        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+        val newDate = "2022-10-20"
+        webTestClient.post()
+          .uri("/cas3/v2/premises/${booking.premises.id}/bookings/${booking.id}/overstays")
+          .headers(buildTemporaryAccommodationHeaders(jwt))
+          .bodyValue(
+            NewOverstay(
+              newDepartureDate = LocalDate.parse(newDate),
+              isAuthorised = true,
+              reason = "reason",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .expectBody()
+          .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+          .jsonPath(".previousDepartureDate").isEqualTo(booking.departureDate.toString())
+          .jsonPath(".newDepartureDate").isEqualTo(newDate)
+          .jsonPath(".isAuthorised").isEqualTo(true)
+          .jsonPath(".reason").isEqualTo("reason")
           .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
 
         val actualBooking = bookingRepository.findByIdOrNull(booking.id)
