@@ -169,22 +169,25 @@ enum class LicenceStatus {
   TIMED_OUT,
 }
 
-enum class ElectronicMonitoringType(val value: String) {
-  EXCLUSION_ZONE("exclusion zone"),
-  CURFEW("curfew"),
-  LOCATION_MONITORING("location monitoring"),
-  ATTENDANCE_AT_APPOINTMENTS("attendance at appointments"),
-  ALCOHOL_MONITORING("alcohol monitoring"),
-  ALCOHOL_ABSTINENCE("alcohol abstinence"),
+enum class ElectronicMonitoringType {
+  EXCLUSION_ZONE,
+  CURFEW,
+  LOCATION_MONITORING,
+  ATTENDANCE_AT_APPOINTMENTS,
+  ALCOHOL_MONITORING,
+  ALCOHOL_ABSTINENCE,
   ;
 
   companion object {
-    @JsonCreator
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     @JvmStatic
-    fun fromValue(value: String): ElectronicMonitoringType = entries.firstOrNull { it.value.equals(value, ignoreCase = true) }
-      ?: throw IllegalArgumentException("Unknown ElectronicMonitoringType: $value")
+    fun fromValue(value: String): ElectronicMonitoringType {
+      val normalizedInput = value.trim().replace(" ", "_")
+      return entries.firstOrNull { it.name.equals(normalizedInput, ignoreCase = true) }
+        ?: throw IllegalArgumentException("Unknown ElectronicMonitoringType: $value")
+    }
   }
 
   @JsonValue
-  fun toJson(): String = value
+  fun toJson(): String = name
 }
