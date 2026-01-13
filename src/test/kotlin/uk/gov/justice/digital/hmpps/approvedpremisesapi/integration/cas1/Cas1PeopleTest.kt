@@ -596,11 +596,11 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       val csraSummaries = listOf(
         CsraSummary(
           bookingId = 123,
-          classificationCode = "HI",
-          assessmentCode = "STANDARD",
+          classificationCode = null,
+          assessmentCode = "CSR",
           assessmentSeq = 1,
           assessmentDate = LocalDate.now(),
-          assessmentAgencyId = "MDI",
+          assessmentAgencyId = null,
           assessmentComment = "comment",
           cellSharingAlertFlag = true,
         ),
