@@ -32,11 +32,11 @@ data class Agency(
 
 data class CsraSummary(
   val bookingId: Long,
-  val classificationCode: String,
+  val classificationCode: String?,
   val assessmentCode: String,
   val assessmentSeq: Int,
   val assessmentDate: LocalDate,
-  val assessmentAgencyId: String,
+  val assessmentAgencyId: String?,
   val assessmentComment: String?,
   val cellSharingAlertFlag: Boolean,
 )
