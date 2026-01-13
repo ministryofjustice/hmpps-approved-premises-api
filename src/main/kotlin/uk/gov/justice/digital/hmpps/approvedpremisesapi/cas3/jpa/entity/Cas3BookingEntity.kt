@@ -52,6 +52,8 @@ data class Cas3BookingEntity(
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var extensions: MutableList<Cas3ExtensionEntity>,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
+  var overstays: MutableList<Cas3OverstayEntity>,
+  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var dateChanges: MutableList<DateChangeEntity>,
   var service: String,
   var originalArrivalDate: LocalDate,

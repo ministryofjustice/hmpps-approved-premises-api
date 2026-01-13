@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Canc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3NonArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
@@ -39,6 +40,7 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
   private var cancellations: Yielded<MutableList<Cas3CancellationEntity>>? = null
   private var confirmation: Yielded<Cas3v2ConfirmationEntity>? = null
   private var extensions: Yielded<MutableList<Cas3ExtensionEntity>>? = null
+  private var overstays: Yielded<MutableList<Cas3OverstayEntity>>? = null
   private var dateChanges: Yielded<MutableList<DateChangeEntity>>? = null
   private var premises: Yielded<Cas3PremisesEntity>? = null
   private var serviceName: Yielded<ServiceName> = { randomOf(listOf(ServiceName.approvedPremises, ServiceName.temporaryAccommodation)) }
@@ -123,6 +125,14 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
     this.extensions = { extensions }
   }
 
+  fun withYieldedOverstays(overstays: Yielded<MutableList<Cas3OverstayEntity>>) = apply {
+    this.overstays = overstays
+  }
+
+  fun withOverstays(overstays: MutableList<Cas3OverstayEntity>) = apply {
+    this.overstays = { overstays }
+  }
+
   fun withDateChanges(dateChanges: MutableList<DateChangeEntity>) = apply {
     this.dateChanges = { dateChanges }
   }
@@ -193,6 +203,7 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
     cancellations = this.cancellations?.invoke() ?: mutableListOf(),
     confirmation = this.confirmation?.invoke(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
+    overstays = this.overstays?.invoke() ?: mutableListOf(),
     dateChanges = this.dateChanges?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bedspace = this.bedspace?.invoke() ?: throw RuntimeException("Must provide a Bedspace"),

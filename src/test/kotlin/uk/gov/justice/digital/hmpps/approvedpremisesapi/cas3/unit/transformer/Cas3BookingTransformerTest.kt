@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3Con
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3NonArrivalTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3OverstayTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -73,6 +74,7 @@ class Cas3BookingTransformerTest {
   private val mockCas3ConfirmationTransformer = mockk<Cas3ConfirmationTransformer>()
   private val mockDepartureTransformer = mockk<Cas3DepartureTransformer>()
   private val mockExtensionTransformer = mockk<Cas3ExtensionTransformer>()
+  private val mockOverstayTransformer = mockk<Cas3OverstayTransformer>()
   private val mockBedspaceTransformer = mockk<Cas3BedspaceTransformer>()
   private val mockCas3TurnaroundTransformer = mockk<Cas3TurnaroundTransformer>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
@@ -85,6 +87,7 @@ class Cas3BookingTransformerTest {
     mockCancellationTransformer,
     mockCas3ConfirmationTransformer,
     mockExtensionTransformer,
+    mockOverstayTransformer,
     mockBedspaceTransformer,
     mockCas3TurnaroundTransformer,
     mockWorkingDayService,
@@ -140,6 +143,7 @@ class Cas3BookingTransformerTest {
     cancellations = mutableListOf(),
     confirmation = null,
     extensions = mutableListOf(),
+    overstays = mutableListOf(),
     dateChanges = mutableListOf(),
     premises = premisesEntity,
     bedspace = bedspaceEntity,
@@ -234,6 +238,7 @@ class Cas3BookingTransformerTest {
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.provisional,
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -302,6 +307,7 @@ class Cas3BookingTransformerTest {
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -371,6 +377,7 @@ class Cas3BookingTransformerTest {
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -442,6 +449,7 @@ class Cas3BookingTransformerTest {
           premisesName = premisesEntity.name,
         ),
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -559,6 +567,7 @@ class Cas3BookingTransformerTest {
           premisesName = premisesEntity.name,
         ),
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -728,6 +737,7 @@ class Cas3BookingTransformerTest {
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -927,6 +937,7 @@ class Cas3BookingTransformerTest {
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1127,6 +1138,7 @@ class Cas3BookingTransformerTest {
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1355,6 +1367,7 @@ class Cas3BookingTransformerTest {
           createdAt = Instant.parse("2022-07-02T12:34:56.789Z"),
         ),
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1463,6 +1476,7 @@ class Cas3BookingTransformerTest {
           createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
         ),
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1554,6 +1568,7 @@ class Cas3BookingTransformerTest {
         departureDate = LocalDate.parse("2022-08-30"),
         status = Cas3BookingStatus.provisional,
         extensions = listOf(),
+        overstays = listOf(),
         originalArrivalDate = LocalDate.parse("2022-08-10"),
         originalDepartureDate = LocalDate.parse("2022-08-30"),
         createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
