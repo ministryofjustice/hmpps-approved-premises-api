@@ -15,7 +15,7 @@ class Cas2v2ExternalReferralController(
 
 ) {
 
-  @PreAuthorize("hasRole('ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE')")
+  @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   @GetMapping("/referrals/{crn}")
   fun getReferralsByCrn(
     @PathVariable crn: String,

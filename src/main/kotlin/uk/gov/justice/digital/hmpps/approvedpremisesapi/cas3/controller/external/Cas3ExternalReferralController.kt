@@ -14,7 +14,7 @@ class Cas3ExternalReferralController(
   private val cas3AssessmentTransformer: Cas3AssessmentTransformer,
 ) {
 
-  @PreAuthorize("hasRole('ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE')")
+  @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   @GetMapping("/referrals/{crn}")
   fun getReferralsByCrn(
     @PathVariable crn: String,
