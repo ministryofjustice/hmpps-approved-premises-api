@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 class Cas1ExternalSuitableApplicationsController(
   private val cas1ApplicationService: Cas1ApplicationService,
 ) {
-  @PreAuthorize("hasRole('ACCOMMODATION_API__SINGLE_ACCOMMODATION_SERVICE')")
+  @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   @GetMapping("/suitable-application/{crn}")
   fun getSuitableApplicationsByCrn(@PathVariable crn: String): ResponseEntity<Cas1SuitableApplication> = cas1ApplicationService.getSuitableApplicationByCrn(crn)
     ?.let { ResponseEntity.ok(it) }
