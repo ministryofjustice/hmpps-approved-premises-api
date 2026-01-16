@@ -1,24 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
@@ -32,7 +26,6 @@ class PremisesService(
   private val bookingRepository: BookingRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,
-  private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
 ) {
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
@@ -60,128 +53,6 @@ class PremisesService(
         voidBedspaces = lostBedsOnDay.size,
       )
     }.associateBy { it.date }
-  }
-
-  @SuppressWarnings("CyclomaticComplexMethod")
-  fun createNewPremises(
-    addressLine1: String,
-    addressLine2: String?,
-    town: String?,
-    postcode: String,
-    latitude: Double?,
-    longitude: Double?,
-    service: String,
-    localAuthorityAreaId: UUID?,
-    probationRegionId: UUID,
-    name: String,
-    notes: String?,
-    characteristicIds: List<UUID>,
-    status: PropertyStatus,
-    probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    turnaroundWorkingDays: Int?,
-  ) = validated {
-    val probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
-    if (probationRegion == null) {
-      "$.probationRegionId" hasValidationError "doesNotExist"
-    }
-
-    val localAuthorityArea = if (localAuthorityAreaId == null) {
-      if (service == ServiceName.approvedPremises.value) {
-        "$.localAuthorityAreaId" hasValidationError "empty"
-      }
-      null
-    } else {
-      val localAuthorityArea = localAuthorityAreaRepository.findByIdOrNull(localAuthorityAreaId)
-      if (localAuthorityArea == null) {
-        "$.localAuthorityAreaId" hasValidationError "doesNotExist"
-      }
-      localAuthorityArea
-    }
-
-    // start of validation
-    if (addressLine1.isEmpty()) {
-      "$.address" hasValidationError "empty"
-    }
-
-    if (postcode.isEmpty()) {
-      "$.postcode" hasValidationError "empty"
-    }
-
-    if (service.isEmpty()) {
-      "$.service" hasValidationError "empty"
-    } else if (service != ServiceName.temporaryAccommodation.value) {
-      "$.service" hasValidationError "onlyCas3Supported"
-    }
-
-    if (name.isEmpty()) {
-      "$.name" hasValidationError "empty"
-    }
-
-    if (!premisesRepository.nameIsUniqueForType(name, TemporaryAccommodationPremisesEntity::class.java)) {
-      "$.name" hasValidationError "notUnique"
-    }
-
-    val probationDeliveryUnit = tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
-      property hasValidationError err
-    }
-
-    if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
-      "$.turnaroundWorkingDayCount" hasValidationError "isNotAPositiveInteger"
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
-
-    val premises = TemporaryAccommodationPremisesEntity(
-      id = UUID.randomUUID(),
-      name = name,
-      addressLine1 = addressLine1,
-      addressLine2 = addressLine2,
-      town = town,
-      postcode = postcode,
-      latitude = null,
-      longitude = null,
-      probationRegion = probationRegion!!,
-      localAuthorityArea = localAuthorityArea,
-      startDate = LocalDate.now(),
-      bookings = mutableListOf(),
-      lostBeds = mutableListOf(),
-      notes = if (notes.isNullOrEmpty()) "" else notes,
-      emailAddress = null,
-      rooms = mutableListOf(),
-      characteristics = mutableListOf(),
-      status = status,
-      probationDeliveryUnit = probationDeliveryUnit,
-      turnaroundWorkingDays = turnaroundWorkingDays ?: 2,
-      endDate = null,
-    )
-
-    val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
-      val entity = characteristicService.getCharacteristic(uuid)
-
-      if (entity == null) {
-        "$.characteristics[$index]" hasValidationError "doesNotExist"
-      } else {
-        if (!characteristicService.modelScopeMatches(entity, Characteristic.ModelScope.premises)) {
-          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicModelScope"
-        }
-        if (!characteristicService.serviceScopeMatches(entity, premises)) {
-          "$.characteristics[$index]" hasValidationError "incorrectCharacteristicServiceScope"
-        }
-      }
-
-      entity
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
-    // end of validation
-    premises.characteristics.addAll(characteristicEntities.map { it!! })
-    premisesRepository.save(premises)
-
-    return success(premises)
   }
 
   fun updatePremises(
@@ -260,42 +131,6 @@ class PremisesService(
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedPremises),
     )
-  }
-
-  private fun tryGetProbationDeliveryUnit(
-    probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    probationRegionId: UUID,
-    onValidationError: (property: String, err: String) -> Unit,
-  ): ProbationDeliveryUnitEntity? {
-    val probationDeliveryUnit = when (probationDeliveryUnitIdentifier) {
-      null -> {
-        onValidationError("$.probationDeliveryUnitId", "empty")
-        null
-      }
-      else -> probationDeliveryUnitIdentifier.fold({ name ->
-        if (name.isBlank()) {
-          onValidationError("$.pdu", "empty")
-        }
-
-        val result = probationDeliveryUnitRepository.findByNameAndProbationRegionId(name, probationRegionId)
-
-        if (result == null) {
-          onValidationError("$.pdu", "doesNotExist")
-        }
-
-        result
-      }, { id ->
-        val result = probationDeliveryUnitRepository.findByIdAndProbationRegionId(id, probationRegionId)
-
-        if (result == null) {
-          onValidationError("$.probationDeliveryUnitId", "doesNotExist")
-        }
-
-        result
-      })
-    }
-
-    return probationDeliveryUnit
   }
 
   fun getBedCount(premises: PremisesEntity): Int = premisesRepository.getBedCount(premises)

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -8,11 +9,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesSummaryResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.validatePremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -28,7 +35,20 @@ class Cas3v2PremisesService(
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
   private val cas3UserAccessService: Cas3UserAccessService,
+  private val objectMapper: ObjectMapper,
 ) {
+
+  companion object {
+    const val MAX_LENGTH_BEDSPACE_REFERENCE: Long = 3
+    const val MAX_DAYS_UNARCHIVE_PREMISES: Long = 7
+    const val MAX_DAYS_ARCHIVE_PREMISES_IN_PAST: Long = 7
+    const val MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE: Long = 3
+    const val MAX_DAYS_CREATE_BEDSPACE: Long = 7
+    const val MAX_DAYS_UNARCHIVE_BEDSPACE: Long = 7
+    const val MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST: Long = 7
+    const val MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE: Long = 3
+  }
+
   fun getValidatedPremises(premisesId: UUID): CasResult<Cas3PremisesEntity> {
     val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
     if (premises == null) return CasResult.NotFound("Cas3Premises", premisesId.toString())
@@ -176,6 +196,46 @@ class Cas3v2PremisesService(
     return success(cas3PremisesRepository.save(premises))
   }
 
+  fun getPremisesArchiveHistory(premisesId: UUID): CasResult<List<Cas3PremisesArchiveAction>> = validatedCasResult {
+    val archiveHistory = cas3v2DomainEventService.getPremisesActiveDomainEvents(
+      premisesId,
+      listOf(DomainEventType.CAS3_PREMISES_ARCHIVED, DomainEventType.CAS3_PREMISES_UNARCHIVED),
+    )
+      .mapNotNull { domainEventEntity ->
+        when (domainEventEntity.type) {
+          DomainEventType.CAS3_PREMISES_UNARCHIVED -> {
+            val newStartDate = objectMapper.readValue(domainEventEntity.data, CAS3PremisesUnarchiveEvent::class.java).eventDetails.newStartDate
+            if (newStartDate <= LocalDate.now()) {
+              Cas3PremisesArchiveAction(
+                status = Cas3PremisesStatus.online,
+                date = newStartDate,
+              )
+            } else {
+              null
+            }
+          }
+
+          DomainEventType.CAS3_PREMISES_ARCHIVED -> {
+            val endDate =
+              objectMapper.readValue(domainEventEntity.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate
+            if (endDate <= LocalDate.now()) {
+              Cas3PremisesArchiveAction(
+                status = Cas3PremisesStatus.archived,
+                date = endDate,
+              )
+            } else {
+              null
+            }
+          }
+
+          else -> return CasResult.GeneralValidationError("Incorrect domain event type for archive history: ${domainEventEntity.type}, ${domainEventEntity.id}")
+        }
+      }
+      .sortedBy { it.date }
+
+    return CasResult.Success(archiveHistory)
+  }
+
   private fun <T> CasResultValidatedScope<T>.getValidatedCharacteristics(premisesCharacteristicIds: List<UUID>): List<Cas3PremisesCharacteristicEntity> {
     val validatedCharacteristics =
       cas3PremisesCharacteristicRepository.findActiveCharacteristicsByIdIn(premisesCharacteristicIds)
@@ -197,4 +257,47 @@ class Cas3v2PremisesService(
     probationDeliveryUnitId,
     id = premisesId,
   )
+}
+
+@Suppress("LongParameterList")
+fun <T> CasResultValidatedScope<T>.validatePremises(
+  probationRegion: ProbationRegionEntity?,
+  localAuthorityAreaId: UUID?,
+  localAuthorityArea: LocalAuthorityAreaEntity?,
+  probationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  reference: String,
+  addressLine1: String,
+  postcode: String,
+  turnaroundWorkingDays: Int?,
+  isUniqueName: () -> Boolean,
+) {
+  if (localAuthorityAreaId != null && localAuthorityArea == null) {
+    "$.localAuthorityAreaId" hasValidationError "doesNotExist"
+  }
+
+  if (probationRegion == null) {
+    "$.probationRegionId" hasValidationError "doesNotExist"
+  }
+
+  if (probationDeliveryUnit == null) {
+    "$.probationDeliveryUnitId" hasValidationError "doesNotExist"
+  }
+
+  if (reference.isEmpty()) {
+    "$.reference" hasValidationError "empty"
+  } else if (!isUniqueName()) {
+    "$.reference" hasValidationError "notUnique"
+  }
+
+  if (addressLine1.isEmpty()) {
+    "$.address" hasValidationError "empty"
+  }
+
+  if (postcode.isEmpty()) {
+    "$.postcode" hasValidationError "empty"
+  }
+
+  if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
+    "$.turnaroundWorkingDays" hasValidationError "isNotAPositiveInteger"
+  }
 }
