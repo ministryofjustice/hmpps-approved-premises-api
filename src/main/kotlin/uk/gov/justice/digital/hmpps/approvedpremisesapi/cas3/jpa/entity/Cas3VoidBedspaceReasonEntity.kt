@@ -26,6 +26,7 @@ data class Cas3VoidBedspaceReasonEntity(
   @Id
   override val id: UUID,
   override val name: String,
+  @Transient // @Transient because this field is not in the database.
   override val description: String?,
   val isActive: Boolean,
 ) : ReferenceData {
