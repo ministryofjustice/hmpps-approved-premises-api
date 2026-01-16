@@ -11,12 +11,12 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewOverstay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3NewBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.NewOverstay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer

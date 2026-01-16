@@ -10,29 +10,16 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceCancellationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspaceCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspaceReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspacesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -42,115 +29,8 @@ class Cas3VoidBedspacesTransformerTest {
   @MockK
   lateinit var cas3VoidBedspaceReasonTransformer: Cas3VoidBedspaceReasonTransformer
 
-  @MockK
-  lateinit var cas3VoidBedspaceCancellationTransformer: Cas3VoidBedspaceCancellationTransformer
-
   @InjectMockKs
   lateinit var cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer
-
-  @Nested
-  inner class V1TransformerTests {
-
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea {
-            ApAreaEntityFactory()
-              .produce()
-          }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea {
-        LocalAuthorityEntityFactory()
-          .produce()
-      }
-      .produce()
-
-    val room = RoomEntityFactory()
-      .withYieldedPremises { premises }
-      .produce()
-
-    val bed = BedEntityFactory()
-      .withYieldedRoom { room }
-      .produce()
-
-    private val voidBedspace = Cas3VoidBedspaceEntityFactory()
-      .withYieldedReason {
-        Cas3VoidBedspaceReasonEntityFactory()
-          .produce()
-      }
-      .withYieldedPremises { premises }
-      .withYieldedBed { bed }
-      .produce().apply {
-        costCentre = Cas3CostCentre.HMPPS
-      }
-
-    @Test
-    fun `Void Bedspace entity is correctly transformed`() {
-      every { cas3VoidBedspaceReasonTransformer.transformJpaToApi(voidBedspace.reason) } returns LostBedReason(
-        id = voidBedspace.reason.id,
-        name = voidBedspace.reason.name,
-        isActive = true,
-        serviceScope = "approved-premises",
-      )
-
-      val result = cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspace)
-
-      assertThat(result.id).isEqualTo(voidBedspace.id)
-      assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
-      assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
-      assertThat(result.reason.id).isEqualTo(voidBedspace.reason.id)
-      assertThat(result.notes).isEqualTo(voidBedspace.notes)
-      assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
-      assertThat(result.status).isEqualTo(LostBedStatus.active)
-      assertThat(result.cancellation).isNull()
-      assertThat(result.bedId).isEqualTo(bed.id)
-      assertThat(result.bedName).isEqualTo(bed.name)
-      assertThat(result.roomName).isEqualTo(room.name)
-      assertThat(result.costCentre).isEqualTo(voidBedspace.costCentre)
-    }
-
-    @Test
-    fun `A cancelled void bedspace entity is correctly transformed`() {
-      val lostBedCancellation = Cas3VoidBedspaceCancellationEntityFactory()
-        .withYieldedVoidBedspace { voidBedspace }
-        .produce()
-
-      voidBedspace.cancellation = lostBedCancellation
-
-      every { cas3VoidBedspaceReasonTransformer.transformJpaToApi(voidBedspace.reason) } returns LostBedReason(
-        id = voidBedspace.reason.id,
-        name = voidBedspace.reason.name,
-        isActive = true,
-        serviceScope = "approved-premises",
-      )
-
-      val now = Instant.now()
-      every { cas3VoidBedspaceCancellationTransformer.transformJpaToApi(voidBedspace.cancellation!!) } returns LostBedCancellation(
-        id = voidBedspace.cancellation!!.id,
-        createdAt = now,
-        notes = "Some notes",
-      )
-
-      val result = cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspace)
-
-      assertThat(result.id).isEqualTo(voidBedspace.id)
-      assertThat(result.startDate).isEqualTo(voidBedspace.startDate)
-      assertThat(result.endDate).isEqualTo(voidBedspace.endDate)
-      assertThat(result.reason.id).isEqualTo(voidBedspace.reason.id)
-      assertThat(result.notes).isEqualTo(voidBedspace.notes)
-      assertThat(result.referenceNumber).isEqualTo(voidBedspace.referenceNumber)
-      assertThat(result.status).isEqualTo(LostBedStatus.cancelled)
-      assertThat(result.cancellation).isNotNull
-      assertThat(result.cancellation!!.id).isEqualTo(voidBedspace.cancellation!!.id)
-      assertThat(result.cancellation!!.createdAt).isEqualTo(now)
-      assertThat(result.cancellation!!.notes).isEqualTo("Some notes")
-      assertThat(result.bedId).isEqualTo(bed.id)
-      assertThat(result.bedName).isEqualTo(bed.name)
-      assertThat(result.roomName).isEqualTo(room.name)
-      assertThat(result.costCentre).isEqualTo(voidBedspace.costCentre)
-    }
-  }
 
   @Nested
   inner class Cas3v2VoidBedspaces {
