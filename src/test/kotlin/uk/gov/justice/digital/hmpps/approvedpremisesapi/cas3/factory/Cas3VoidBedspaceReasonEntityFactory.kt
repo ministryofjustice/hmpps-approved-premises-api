@@ -27,5 +27,6 @@ class Cas3VoidBedspaceReasonEntityFactory : Factory<Cas3VoidBedspaceReasonEntity
     id = this.id(),
     name = this.name(),
     isActive = this.isActive(),
+    description = null,
   )
 }

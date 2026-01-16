@@ -106,6 +106,7 @@ class ReferenceDataController(
         true -> departureReasonRepository.findAllByServiceScope(xServiceName.value)
         else -> departureReasonRepository.findActiveByServiceScope(xServiceName.value)
       }
+
       false -> when (includeInactive) {
         true -> departureReasonRepository.findAll()
         else -> departureReasonRepository.findActive()
@@ -144,12 +145,14 @@ class ReferenceDataController(
       } else {
         cancellationReasonRepository.findAllByServiceScope(xServiceName.value)
       }
+
       false -> cancellationReasonRepository.findAll()
     }
 
     return ResponseEntity.ok(cancellationReasons.map(cancellationReasonTransformer::transformJpaToApi))
   }
 
+  @Deprecated("use /cas3/reference-data?VOID_BEDSPACE_REASONS")
   override fun referenceDataLostBedReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<LostBedReason>> {
     val voidBedspaceReasons = when (xServiceName == ServiceName.temporaryAccommodation) {
       true -> cas3VoidBedspaceReasonRepository.findAllActive()
