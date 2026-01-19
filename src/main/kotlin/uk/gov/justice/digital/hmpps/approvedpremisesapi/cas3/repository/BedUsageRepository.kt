@@ -26,14 +26,15 @@ interface BedUsageRepository : JpaRepository<BedEntity, UUID> {
 
   @Query(
     """
-    SELECT b.*
-    FROM cas3_bedspaces b 
-    INNER JOIN cas3_premises p ON b.premises_id = p.id
-    LEFT JOIN probation_delivery_units pdu ON p.probation_delivery_unit_id = pdu.id
-    WHERE (CAST(:probationRegionId AS UUID) IS NULL OR pdu.probation_region_id = :probationRegionId)
+    SELECT b
+    FROM Cas3BedspacesEntity b 
+    JOIN FETCH b.premises p
+    JOIN FETCH p.probationDeliveryUnit pdu
+    JOIN FETCH pdu.probationRegion pr
+    LEFT JOIN FETCH p.localAuthorityArea la
+    WHERE (:probationRegionId IS NULL OR pr.id = :probationRegionId)
     ORDER BY b.reference
     """,
-    nativeQuery = true,
   )
   fun findAllBedspacesV2(
     probationRegionId: UUID?,

@@ -294,11 +294,11 @@ data class BookingEntity(
   var arrivals: MutableList<ArrivalEntity>,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var departures: MutableList<DepartureEntity>,
-  @OneToOne(mappedBy = "booking", cascade = [ CascadeType.REMOVE ])
+  @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var nonArrival: NonArrivalEntity?,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var cancellations: MutableList<CancellationEntity>,
-  @OneToOne(mappedBy = "booking")
+  @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY)
   var confirmation: Cas3ConfirmationEntity?,
   @OneToOne
   @JoinColumn(name = "application_id")

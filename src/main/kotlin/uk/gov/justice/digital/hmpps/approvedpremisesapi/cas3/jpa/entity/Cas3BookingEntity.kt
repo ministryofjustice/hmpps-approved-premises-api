@@ -12,8 +12,11 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.hibernate.annotations.Fetch
+import org.hibernate.annotations.FetchMode
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -37,12 +40,15 @@ data class Cas3BookingEntity(
   var arrivalDate: LocalDate,
   var departureDate: LocalDate,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
+  @Fetch(FetchMode.SUBSELECT)
   var arrivals: MutableList<Cas3ArrivalEntity>,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
+  @Fetch(FetchMode.SUBSELECT)
   var departures: MutableList<Cas3DepartureEntity>,
   @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var nonArrival: Cas3NonArrivalEntity?,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
+  @Fetch(FetchMode.SUBSELECT)
   var cancellations: MutableList<Cas3CancellationEntity>,
   @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY)
   var confirmation: Cas3v2ConfirmationEntity?,
@@ -60,6 +66,7 @@ data class Cas3BookingEntity(
   var originalDepartureDate: LocalDate,
   val createdAt: OffsetDateTime,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
+  @Fetch(FetchMode.SUBSELECT)
   var turnarounds: MutableList<Cas3v2TurnaroundEntity>,
   var nomsNumber: String?,
   @Enumerated(value = EnumType.STRING)
@@ -191,6 +198,15 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
   @Query("SELECT b FROM Cas3BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bedspace = :bedspace ORDER BY b.createdAt")
   fun findAllByOverlappingDateForBedspace(startDate: LocalDate, endDate: LocalDate, bedspace: Cas3BedspacesEntity): List<Cas3BookingEntity>
 
+  @EntityGraph(
+    attributePaths = [
+      "bedspace.premises.probationDeliveryUnit.probationRegion",
+      "application",
+      "confirmation",
+      "cancellations",
+      "nonArrival",
+    ],
+  )
   @Query("SELECT b FROM Cas3BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bedspace.id IN :bedspaceIds ORDER BY b.createdAt")
   fun findAllByOverlappingDateForBedspaceIds(startDate: LocalDate, endDate: LocalDate, bedspaceIds: List<UUID>): List<Cas3BookingEntity>
 
