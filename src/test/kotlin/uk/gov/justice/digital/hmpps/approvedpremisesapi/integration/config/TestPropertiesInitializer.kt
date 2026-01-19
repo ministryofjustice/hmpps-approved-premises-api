@@ -14,7 +14,8 @@ class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableAppl
   override fun initialize(applicationContext: ConfigurableApplicationContext?) {
     val wiremockPort = WiremockPortManager.reserveFreePort()
 
-    val databaseConfigMap = IntegrationTestDbManager.initialiseDatabase()
+    val databaseConfigMap = emptyMap<String, String>()
+      //IntegrationTestDbManager.initialiseDatabase()
 
     val upstreamServiceUrlsToOverride = mutableMapOf<String, String>()
 

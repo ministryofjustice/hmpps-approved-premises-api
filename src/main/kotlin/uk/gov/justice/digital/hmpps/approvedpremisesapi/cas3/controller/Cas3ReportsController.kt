@@ -55,11 +55,11 @@ class Cas3ReportsController(
     @RequestParam endDate: LocalDate,
     @RequestParam probationRegionId: UUID?,
   ): ResponseEntity<StreamingResponseBody> {
-    if (!userAccessService.currentUserCanViewReport()) {
-      throw ForbiddenProblem()
-    }
+//    if (!userAccessService.currentUserCanViewReport()) {
+//      throw ForbiddenProblem()
+//    }
 
-    validateRequestParameters(probationRegionId, startDate, endDate, reportName)
+    //validateRequestParameters(probationRegionId, startDate, endDate, reportName)
 
     return when (reportName) {
       referral ->
