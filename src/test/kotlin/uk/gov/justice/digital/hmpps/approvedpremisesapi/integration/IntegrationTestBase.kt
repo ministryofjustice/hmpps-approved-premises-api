@@ -309,7 +309,7 @@ import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
 
-@ExtendWith(IntegrationTestDbManager.IntegrationTestListener::class)
+//@ExtendWith(IntegrationTestDbManager.IntegrationTestListener::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ContextConfiguration(initializers = [TestPropertiesInitializer::class])
 @ActiveProfiles("test")
