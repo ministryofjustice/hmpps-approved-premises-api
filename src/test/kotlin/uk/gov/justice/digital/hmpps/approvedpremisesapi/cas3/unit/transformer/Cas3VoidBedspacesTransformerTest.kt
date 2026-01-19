@@ -41,7 +41,9 @@ class Cas3VoidBedspacesTransformerTest {
       every { cas3VoidBedspaceReasonTransformer.toCas3VoidBedspaceReason(any()) } returns Cas3VoidBedspaceReason(
         reason.id,
         reason.name,
+        description = null,
         reason.isActive,
+
       )
     }
 

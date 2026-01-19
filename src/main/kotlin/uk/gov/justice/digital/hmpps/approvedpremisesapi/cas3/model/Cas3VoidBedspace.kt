@@ -33,10 +33,11 @@ data class Cas3VoidBedspaceRequest(
 data class Cas3VoidBedspaceCancellation(val cancellationNotes: String?)
 
 data class Cas3VoidBedspaceReason(
-  val id: UUID,
-  val name: String,
+  override val id: UUID,
+  override val name: String,
+  override val description: String?,
   val isActive: Boolean,
-)
+) : ReferenceData
 
 enum class Cas3VoidBedspaceStatus(@JsonValue val value: String) {
   ACTIVE("active"),

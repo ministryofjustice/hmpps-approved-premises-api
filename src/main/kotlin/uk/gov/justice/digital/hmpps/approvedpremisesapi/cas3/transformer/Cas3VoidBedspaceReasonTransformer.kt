@@ -19,5 +19,6 @@ class Cas3VoidBedspaceReasonTransformer {
     id = entity.id,
     name = entity.name,
     isActive = entity.isActive,
+    description = null,
   )
 }
