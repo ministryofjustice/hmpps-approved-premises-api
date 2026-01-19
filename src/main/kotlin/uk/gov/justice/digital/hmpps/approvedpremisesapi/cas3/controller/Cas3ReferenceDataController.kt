@@ -21,4 +21,5 @@ class Cas3ReferenceDataController(
 enum class Cas3RefDataType {
   BEDSPACE_CHARACTERISTICS,
   PREMISES_CHARACTERISTICS,
+  VOID_BEDSPACE_REASONS,
 }

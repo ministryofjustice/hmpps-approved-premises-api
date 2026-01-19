@@ -8,6 +8,7 @@ import org.hibernate.annotations.Immutable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.ReferenceData
 import java.util.UUID
 
 @Repository
@@ -23,9 +24,11 @@ interface Cas3VoidBedspaceReasonRepository : JpaRepository<Cas3VoidBedspaceReaso
 @Immutable
 data class Cas3VoidBedspaceReasonEntity(
   @Id
-  val id: UUID,
-  val name: String,
+  override val id: UUID,
+  override val name: String,
+  @Transient // @Transient because this field is not in the database.
+  override val description: String?,
   val isActive: Boolean,
-) {
+) : ReferenceData {
   override fun toString() = "Cas3VoidBedspaceReasonEntity:$id"
 }

@@ -6,12 +6,12 @@ import java.util.UUID
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class Cas3ReferenceData(
   val id: UUID,
-  val description: String,
+  val description: String?,
   val name: String?,
 )
 
 interface ReferenceData {
   val id: UUID
-  val description: String
+  val description: String?
   val name: String?
 }
