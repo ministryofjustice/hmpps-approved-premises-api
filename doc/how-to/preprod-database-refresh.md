@@ -73,11 +73,9 @@ Then check the logs using the pod name:
 kubectl -n hmpps-community-accommodation-prod logs -f {pod-name}
 ```
 
-If the container is in an error state and you want to re-run, you may have to stop the job manually first:
+### :warning: If the adhoc job fails
 
-```sh
-kubectl -n hmpps-community-accommodation-prod delete job db-refresh-job-adhoc
-```
+If the container is in an error state, you need to stop the job manually. This will allow you to rerun the job if needed, but also prevent alerts that the container is in an error state being sent to the team's event channel. See the following section on how to do this.
 
 ## Stopping recurring alerting for failed jobs
 
