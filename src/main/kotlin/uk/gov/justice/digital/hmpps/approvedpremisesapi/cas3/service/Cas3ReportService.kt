@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -52,6 +53,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
+
+private const val MAX_IN_MEMORY_ROWS = 100
 
 @Service
 class Cas3ReportService(
@@ -177,12 +180,14 @@ class Cas3ReportService(
                 voids = voids.filter { it.bedspace?.id == bedspace.id },
               )
             }
+            val workbook = SXSSFWorkbook(MAX_IN_MEMORY_ROWS)
             BedspaceUsageReportGeneratorV2(cas3BookingTransformer, workingDayService)
               .createReport(reportData, properties)
               .writeExcel(
                 outputStream = outputStream,
-                factory = WorkbookFactory.create(true),
+                factory = workbook,
               )
+            workbook.close()
           }
           false -> {
             log.info("Not using optimised BedUsage Report")
