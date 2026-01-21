@@ -20,14 +20,9 @@ data:
       --format=custom \
       --no-privileges \
       --verbose \
-      --exclude-table=public.users \
-      --exclude-table=public.user_role_assignments \
-      --exclude-table=public.user_qualification_assignments \
       --file=/tmp/db.dump \
       "$DB_NAME"
     
-    echo "prod dump complete." 
-    echo "Dumping preprod user data."
     # Dump existing preprod users as upserts
     pg_dump --host="$DB_HOST_PREPROD" \
       --username="$DB_USER_PREPROD" \
@@ -41,37 +36,22 @@ data:
       --table public.user_role_assignments \
       --file=/tmp/users.dump \
       "$DB_NAME_PREPROD"
-
+    
     # Restore production data to preprod
-    echo "Beginning pg_restore"
-    if pg_restore --host="$DB_HOST_PREPROD" \
+    pg_restore --host="$DB_HOST_PREPROD" \
       --username="$DB_USER_PREPROD" \
       --clean \
       --no-owner \
       --verbose \
-      --if-exists \
       --dbname="$DB_NAME_PREPROD" \
-      /tmp/db.dump; then 
-      echo "pg_restore complete."
-    else
-      echo "pg_restore failed."
-      exit 1
-    fi
+      /tmp/db.dump
     
     # Restore existing preprod users
-    echo "Restoring preprod users"
-    if psql --host="$DB_HOST_PREPROD" \
+    psql --host="$DB_HOST_PREPROD" \
       --username="$DB_USER_PREPROD" \
-      "$DB_NAME_PREPROD" < /tmp/users.dump; then
-      echo "preprod user restore complete."
-    else
-      echo "preprod user restore failed."
-      exit 1
-    fi
+      "$DB_NAME_PREPROD" < /tmp/users.dump
 
-    echo "Removing files."
     rm -v /tmp/db.dump /tmp/users.dump ~/.pgpass
-    echo "Process complete."
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -83,7 +63,7 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 0
-      activeDeadlineSeconds: 3600
+      activeDeadlineSeconds: 2400
       template:
         spec:
           {{- if .Values.serviceAccountName }}
