@@ -2,6 +2,12 @@ name: Deploy to test
 
 on:
   workflow_dispatch:
+    inputs:
+      wipe_database:
+        description: 'Wipe test database'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   docker_build:
@@ -24,3 +30,4 @@ jobs:
       environment: 'test'
       app_version: '${{ needs.docker_build.outputs.app_version }}'
       show_changelog: false
+      helm_additional_args: ${{ inputs.wipe_database == true && '--set-literal "generic-service.env.SPRING_FLYWAY_LOCATIONS=classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/dev-truncate,classpath:db/migration/dev,classpath:db/migration/all-except-integration"' || '' }}
