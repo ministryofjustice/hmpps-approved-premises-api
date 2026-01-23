@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PersonalTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -33,6 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskToTheIndividual404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundCsraSummariesCall
@@ -52,6 +56,104 @@ import kotlin.collections.listOf
 class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var personTransformer: PersonTransformer
+
+  @Nested
+  inner class GetOasysRisksToIndividual {
+    @Test
+    fun `Getting OASys risks to individual without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/people/CRN/oasys/risks-to-individual")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Getting OASys risks to individual returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT)) { _, jwt ->
+        val crn = "CRN"
+        val risksToTheIndividual = RisksToTheIndividual(
+          assessmentId = 1,
+          assessmentType = "TYPE",
+          dateCompleted = OffsetDateTime.now(),
+          assessorSignedDate = OffsetDateTime.now(),
+          initiationDate = OffsetDateTime.now(),
+          assessmentStatus = "STATUS",
+          superStatus = "SUPER",
+          limitedAccessOffender = false,
+          riskToTheIndividual = RiskToTheIndividualInner(
+            currentConcernsSelfHarmSuicide = "currentConcernsSelfHarmSuicide",
+            previousConcernsSelfHarmSuicide = "previousConcernsSelfHarmSuicide",
+            currentCustodyHostelCoping = "currentCustodyHostelCoping",
+            previousCustodyHostelCoping = "previousCustodyHostelCoping",
+            currentVulnerability = "currentVulnerability",
+            previousVulnerability = "previousVulnerability",
+            riskOfSeriousHarm = "riskOfSeriousHarm",
+            currentConcernsBreachOfTrustText = "currentConcernsBreachOfTrustText",
+            analysisSuicideSelfharm = "analysisSuicideSelfharm",
+            analysisCoping = "analysisCoping",
+            analysisVulnerabilities = "analysisVulnerabilities",
+          ),
+        )
+
+        apOASysContextMockSuccessfulRiskToTheIndividualCall(crn, risksToTheIndividual)
+
+        webTestClient.get()
+          .uri("/cas1/people/$crn/oasys/risks-to-individual")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(risksToTheIndividual.riskToTheIndividual),
+          )
+      }
+    }
+
+    @Test
+    fun `Getting OASys risks to individual returns 404 when OASys returns 404`() {
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT)) { _, jwt ->
+        val crn = "CRN"
+
+        apOASysContextMockRiskToTheIndividual404Call(crn)
+
+        webTestClient.get()
+          .uri("/cas1/people/$crn/oasys/risks-to-individual")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+
+    @Test
+    fun `Getting OASys risks to individual returns 404 when riskToTheIndividual is null`() {
+      givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT)) { _, jwt ->
+        val crn = "CRN"
+        val risksToTheIndividual = RisksToTheIndividual(
+          assessmentId = 1,
+          assessmentType = "TYPE",
+          dateCompleted = OffsetDateTime.now(),
+          assessorSignedDate = OffsetDateTime.now(),
+          initiationDate = OffsetDateTime.now(),
+          assessmentStatus = "STATUS",
+          superStatus = "SUPER",
+          limitedAccessOffender = false,
+          riskToTheIndividual = null,
+        )
+
+        apOASysContextMockSuccessfulRiskToTheIndividualCall(crn, risksToTheIndividual)
+
+        webTestClient.get()
+          .uri("/cas1/people/$crn/oasys/risks-to-individual")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+  }
 
   @Nested
   inner class GetTimelineForCrn {

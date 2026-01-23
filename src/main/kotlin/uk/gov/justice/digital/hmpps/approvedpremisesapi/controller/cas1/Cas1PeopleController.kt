@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LicenceService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -43,6 +45,7 @@ class Cas1PeopleController(
   private val userAccessService: Cas1UserAccessService,
   private val licenceService: LicenceService,
   private val offenderService: OffenderService,
+  private val oasysService: OASysService,
 ) {
 
   companion object {
@@ -91,6 +94,21 @@ class Cas1PeopleController(
     val csraSummaries = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
 
     return ResponseEntity.ok(extractEntityFromCasResult(csraSummaries))
+  }
+
+  @Operation(summary = "Returns OASys risk to the individual for a Person.")
+  @GetMapping("/people/{crn}/oasys/risks-to-individual")
+  fun getOasysRisksToIndividual(@PathVariable crn: String): ResponseEntity<RiskToTheIndividualInner> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val risksToTheIndividualWrapper = extractEntityFromCasResult(
+      oasysService.getOASysRiskToTheIndividual(crn),
+    )
+
+    val riskToTheIndividual = risksToTheIndividualWrapper.riskToTheIndividual
+      ?: throw NotFoundProblem(crn, "RiskToTheIndividual")
+
+    return ResponseEntity.ok(riskToTheIndividual)
   }
 
   private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): Cas1PersonalTimeline = cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())
