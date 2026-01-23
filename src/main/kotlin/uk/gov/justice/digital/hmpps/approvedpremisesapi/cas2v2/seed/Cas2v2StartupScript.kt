@@ -57,13 +57,19 @@ class Cas2v2StartupScript(
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting CAS2v2 applications")
-    cas2v2UserRepository.findAll().forEach { user ->
-      listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
-        listOf(ApplicationOrigin.homeDetentionCurfew, ApplicationOrigin.prisonBail, ApplicationOrigin.courtBail).forEach { applicationOrigin ->
-          createApplicationFor(cas2v2UserEntity = user, state = state, applicationOrigin = applicationOrigin)
+    cas2v2UserRepository.findAll()
+      .filter { user -> user.userType.authSource in listOf("nomis", "delius") }
+      .forEach { user ->
+        listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
+          listOf(
+            ApplicationOrigin.homeDetentionCurfew,
+            ApplicationOrigin.prisonBail,
+            ApplicationOrigin.courtBail,
+          ).forEach { applicationOrigin ->
+            createApplicationFor(cas2v2UserEntity = user, state = state, applicationOrigin = applicationOrigin)
+          }
         }
       }
-    }
   }
 
   private fun createApplicationFor(cas2v2UserEntity: Cas2v2UserEntity, state: String, applicationOrigin: ApplicationOrigin) {
@@ -73,12 +79,12 @@ class Cas2v2StartupScript(
     val application = cas2v2applicationRepository.save(
       Cas2v2ApplicationEntity(
         id = UUID.randomUUID(),
-        crn = "X320742",
-        nomsNumber = seedConfig.onStartup.script.noms,
+        crn = "X698232",
+        nomsNumber = "A5275DZ",
         createdAt = createdAt,
         createdByUser = cas2v2UserEntity,
-        data = dataFor(state = state, nomsNumber = "DO16821"),
-        document = documentFor(state = state, nomsNumber = "DO16821"),
+        data = dataFor(state = state, nomsNumber = "A5275DZ"),
+        document = documentFor(state = state, nomsNumber = "A5275DZ"),
         submittedAt = submittedAt,
         applicationOrigin = applicationOrigin,
       ),
