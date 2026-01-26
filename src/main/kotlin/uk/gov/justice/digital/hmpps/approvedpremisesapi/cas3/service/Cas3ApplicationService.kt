@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
@@ -51,6 +53,24 @@ class Cas3ApplicationService(
   private val objectMapper: ObjectMapper,
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+
+  fun getSuitableApplicationByCrn(crn: String): Cas3SuitableApplication? {
+    @SuppressWarnings("MagicNumber")
+    val suitableStatusesAsc = mapOf(
+      ApplicationStatus.requestedFurtherInformation to 0,
+      ApplicationStatus.submitted to 1,
+    )
+
+    return temporaryAccommodationApplicationRepository.findByCrn(crn)
+      .filter { it.getStatus() in suitableStatusesAsc.keys }
+      .maxWithOrNull(compareBy<TemporaryAccommodationApplicationEntity> { suitableStatusesAsc[it.getStatus()] }.thenBy { it.submittedAt })
+      ?.let {
+        Cas3SuitableApplication(
+          id = it.id,
+          applicationStatus = it.getStatus(),
+        )
+      }
+  }
 
   @Suppress("TooGenericExceptionThrown")
   fun getApplicationForUsername(

@@ -30,6 +30,7 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -282,7 +283,9 @@ interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremises
 }
 
 @Repository
-interface TemporaryAccommodationApplicationRepository : JpaRepository<TemporaryAccommodationApplicationEntity, UUID>
+interface TemporaryAccommodationApplicationRepository : JpaRepository<TemporaryAccommodationApplicationEntity, UUID> {
+  fun findByCrn(crn: String): List<TemporaryAccommodationApplicationEntity>
+}
 
 @Repository
 interface LockableApplicationRepository : JpaRepository<LockableApplicationEntity, UUID> {
@@ -529,6 +532,12 @@ class TemporaryAccommodationApplicationEntity(
   override fun getLatestAssessment(): TemporaryAccommodationAssessmentEntity? = this.assessments
     .filterIsInstance<TemporaryAccommodationAssessmentEntity>()
     .maxByOrNull { it.createdAt }
+
+  fun getStatus(): ApplicationStatus = when {
+    getLatestAssessment()?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
+    this.submittedAt !== null -> ApplicationStatus.submitted
+    else -> ApplicationStatus.inProgress
+  }
 }
 
 /**
