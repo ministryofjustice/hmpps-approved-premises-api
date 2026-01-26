@@ -389,6 +389,17 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     """,
   )
   fun findAllSpaceBookingsForCrn(crn: String, includeCancelled: Boolean): List<Cas1SpaceBookingEntity>
+
+  @Query(
+    """
+    SELECT b FROM Cas1SpaceBookingEntity b
+    JOIN b.placementRequest pr
+    JOIN pr.application app
+    WHERE
+      app.id = :applicationId
+    """,
+  )
+  fun findAllSpaceBookingsForApplicationId(applicationId: UUID): List<Cas1SpaceBookingEntity>
 }
 
 interface UpcomingOrCurrentKeyWorkerResult {

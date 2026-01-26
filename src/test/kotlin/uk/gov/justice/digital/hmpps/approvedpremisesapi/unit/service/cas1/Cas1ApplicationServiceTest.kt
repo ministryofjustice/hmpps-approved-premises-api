@@ -305,44 +305,6 @@ class Cas1ApplicationServiceTest {
     }
 
     @Test
-    fun `getSuitableApplicationByCrn returns null as applications have unsuitable statuses`() {
-      val startedApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
-        .produce()
-      val rejectedApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.REJECTED)
-        .produce()
-      val inapplicableApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.INAPPLICABLE)
-        .produce()
-      val expiredApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.EXPIRED)
-        .produce()
-      val withdrawnApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.WITHDRAWN)
-        .produce()
-      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
-        startedApplication,
-        rejectedApplication,
-        inapplicableApplication,
-        expiredApplication,
-        withdrawnApplication,
-      )
-      val result = service.getSuitableApplicationByCrn(crn)
-      assertThat(result).isNull()
-    }
-
-    @Test
     fun `getSuitableApplicationByCrn returns placementAllocatedApplication as suitable application when they all have suitable status`() {
       val placementAllocatedApplication = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
@@ -399,7 +361,7 @@ class Cas1ApplicationServiceTest {
         pendingPlacementRequestApplication,
       )
 
-      every { cas1SpaceBookingService.findLatestPlacement(crn, placementAllocatedApplication.id) } returns upcomingBooking
+      every { cas1SpaceBookingService.getLatestPlacement(placementAllocatedApplication.id) } returns upcomingBooking
 
       val suitableApplication = Cas1SuitableApplication(
         id = placementAllocatedApplication.id,
@@ -424,7 +386,7 @@ class Cas1ApplicationServiceTest {
         placementAllocatedApplication,
       )
 
-      every { cas1SpaceBookingService.findLatestPlacement(crn, placementAllocatedApplication.id) } returns null
+      every { cas1SpaceBookingService.getLatestPlacement(placementAllocatedApplication.id) } returns null
 
       val exception = assertThrows<IllegalStateException> { service.getSuitableApplicationByCrn(crn) }
       assertThat(exception.message).isEqualTo("Could not find latest placement for application ${placementAllocatedApplication.id} with application status ${placementAllocatedApplication.status}")
@@ -439,7 +401,7 @@ class Cas1ApplicationServiceTest {
       val placementAllocatedApplication = booking.application!!
 
       every { approvedPremisesApplicationRepository.findByCrn(placementAllocatedApplication.crn) } returns listOf(placementAllocatedApplication)
-      every { cas1SpaceBookingService.findLatestPlacement(placementAllocatedApplication.crn, placementAllocatedApplication.id) } returns booking
+      every { cas1SpaceBookingService.getLatestPlacement(placementAllocatedApplication.id) } returns booking
 
       val suitableApplication = Cas1SuitableApplication(
         id = placementAllocatedApplication.id,
@@ -454,7 +416,7 @@ class Cas1ApplicationServiceTest {
 
     @ParameterizedTest
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1ApplicationServiceTest#provideApplications")
-    fun `getSuitableApplicationByCrn returns appropriate suitable application when they all have suitable status`(
+    fun `getSuitableApplicationByCrn returns appropriate suitable application`(
       applications: List<ApprovedPremisesApplicationEntity>,
       suitableApprovedPremisesApplication: ApprovedPremisesApplicationEntity,
     ) {
@@ -505,6 +467,51 @@ class Cas1ApplicationServiceTest {
       val suitableApplication = Cas1SuitableApplication(
         id = latestAwaitingPlacementApplication.id,
         applicationStatus = ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
+        placementStatus = null,
+      )
+
+      val result = service.getSuitableApplicationByCrn(crn)
+
+      assertThat(result).isEqualTo(suitableApplication)
+    }
+
+    @Test
+    fun `getSuitableApplicationByCrn returns application with latest created date as suitable application when some have same status but no submitted at date`() {
+      val startedApplication1 = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCreatedAt(OffsetDateTime.now().minusDays(1))
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+      val startedApplication2 = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCreatedAt(OffsetDateTime.now().minusDays(2))
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+      val inapplicableAssessment = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCreatedAt(OffsetDateTime.now().plusDays(2))
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.INAPPLICABLE)
+        .produce()
+      val latestStartedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCreatedAt(OffsetDateTime.now())
+        .withCrn(crn)
+        .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+        .produce()
+
+      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
+        startedApplication1,
+        latestStartedApplication,
+        startedApplication2,
+        inapplicableAssessment,
+      )
+
+      val suitableApplication = Cas1SuitableApplication(
+        id = latestStartedApplication.id,
+        applicationStatus = ApprovedPremisesApplicationStatus.STARTED,
         placementStatus = null,
       )
 
@@ -830,87 +837,229 @@ class Cas1ApplicationServiceTest {
     private val user = UserEntityFactory()
       .withDefaults()
       .produce()
+    private val pendingPlacementRequestApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+      .produce()
+    private val requestedFurtherInformationApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+      .produce()
+    private val assessmentInProgressApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+      .produce()
+    private val unallocatedAssessmentApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
+      .produce()
+    private val awaitingAssessmentApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+      .produce()
+    private val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+      .produce()
+    private val startedApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.STARTED)
+      .produce()
+    private val rejectedApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.REJECTED)
+      .produce()
+    private val inapplicableApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.INAPPLICABLE)
+      .produce()
+    private val expiredApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.EXPIRED)
+      .produce()
+    private val withdrawnApplication = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withCrn(CRN)
+      .withStatus(ApprovedPremisesApplicationStatus.WITHDRAWN)
+      .produce()
 
     @JvmStatic
-    fun provideApplications(): Stream<Arguments> {
-      val pendingPlacementRequestApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
-        .produce()
-      val requestedFurtherInformationApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
-        .produce()
-      val assessmentInProgressApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
-        .produce()
-      val unallocatedAssessmentApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT)
-        .produce()
-      val awaitingAssessmentApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
-        .produce()
-      val awaitingPlacementApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(CRN)
-        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-        .produce()
-      return Stream.of(
-        Arguments.of(
-          listOf(
-            assessmentInProgressApplication,
-            awaitingAssessmentApplication,
-            unallocatedAssessmentApplication,
-            awaitingPlacementApplication,
-            pendingPlacementRequestApplication,
-            requestedFurtherInformationApplication,
-          ),
-          pendingPlacementRequestApplication,
-        ),
-        Arguments.of(
-          listOf(
-            assessmentInProgressApplication,
-            awaitingAssessmentApplication,
-            unallocatedAssessmentApplication,
-            requestedFurtherInformationApplication,
-            awaitingPlacementApplication,
-          ),
-          requestedFurtherInformationApplication,
-        ),
-        Arguments.of(
-          listOf(
-            assessmentInProgressApplication,
-            awaitingAssessmentApplication,
-            awaitingPlacementApplication,
-            unallocatedAssessmentApplication,
-          ),
-          awaitingPlacementApplication,
-        ),
-        Arguments.of(
-          listOf(
-            awaitingAssessmentApplication,
-            assessmentInProgressApplication,
-            unallocatedAssessmentApplication,
-          ),
-          assessmentInProgressApplication,
-        ),
-        Arguments.of(
-          listOf(
-            awaitingAssessmentApplication,
-            unallocatedAssessmentApplication,
-          ),
+    fun provideApplications(): Stream<Arguments> = Stream.of(
+      Arguments.of(
+        listOf(
+          inapplicableApplication,
+          expiredApplication,
+          withdrawnApplication,
+          rejectedApplication,
+          startedApplication,
           unallocatedAssessmentApplication,
+          awaitingAssessmentApplication,
+          assessmentInProgressApplication,
+          requestedFurtherInformationApplication,
+          pendingPlacementRequestApplication,
+          awaitingPlacementApplication,
+          pendingPlacementRequestApplication,
+          requestedFurtherInformationApplication,
+          assessmentInProgressApplication,
+          awaitingAssessmentApplication,
+          unallocatedAssessmentApplication,
+          startedApplication,
+          rejectedApplication,
+          withdrawnApplication,
+          expiredApplication,
+          inapplicableApplication,
         ),
-      )
-    }
+        awaitingPlacementApplication,
+      ),
+      Arguments.of(
+        listOf(
+          inapplicableApplication,
+          expiredApplication,
+          withdrawnApplication,
+          rejectedApplication,
+          startedApplication,
+          unallocatedAssessmentApplication,
+          awaitingAssessmentApplication,
+          assessmentInProgressApplication,
+          requestedFurtherInformationApplication,
+          pendingPlacementRequestApplication,
+          requestedFurtherInformationApplication,
+          assessmentInProgressApplication,
+          awaitingAssessmentApplication,
+          unallocatedAssessmentApplication,
+          startedApplication,
+          rejectedApplication,
+          withdrawnApplication,
+          expiredApplication,
+          inapplicableApplication,
+        ),
+        pendingPlacementRequestApplication,
+      ),
+      Arguments.of(
+        listOf(
+          inapplicableApplication,
+          expiredApplication,
+          withdrawnApplication,
+          rejectedApplication,
+          startedApplication,
+          unallocatedAssessmentApplication,
+          awaitingAssessmentApplication,
+          assessmentInProgressApplication,
+          requestedFurtherInformationApplication,
+          assessmentInProgressApplication,
+          awaitingAssessmentApplication,
+          unallocatedAssessmentApplication,
+          startedApplication,
+          rejectedApplication,
+          withdrawnApplication,
+          expiredApplication,
+          inapplicableApplication,
+        ),
+        requestedFurtherInformationApplication,
+      ),
+      Arguments.of(
+        listOf(
+          inapplicableApplication,
+          expiredApplication,
+          withdrawnApplication,
+          rejectedApplication,
+          startedApplication,
+          unallocatedAssessmentApplication,
+          awaitingAssessmentApplication,
+          assessmentInProgressApplication,
+          awaitingAssessmentApplication,
+          unallocatedAssessmentApplication,
+          startedApplication,
+          rejectedApplication,
+          withdrawnApplication,
+          expiredApplication,
+          inapplicableApplication,
+        ),
+        assessmentInProgressApplication,
+      ),
+      Arguments.of(
+        listOf(
+          inapplicableApplication,
+          expiredApplication,
+          withdrawnApplication,
+          rejectedApplication,
+          startedApplication,
+          unallocatedAssessmentApplication,
+          awaitingAssessmentApplication,
+          unallocatedAssessmentApplication,
+          startedApplication,
+          rejectedApplication,
+          withdrawnApplication,
+          expiredApplication,
+          inapplicableApplication,
+        ),
+        awaitingAssessmentApplication,
+      ),
+      Arguments.of(
+        listOf(
+          inapplicableApplication,
+          expiredApplication,
+          withdrawnApplication,
+          rejectedApplication,
+          startedApplication,
+          unallocatedAssessmentApplication,
+          startedApplication,
+          rejectedApplication,
+          withdrawnApplication,
+          expiredApplication,
+          inapplicableApplication,
+        ),
+        unallocatedAssessmentApplication,
+      ),
+      Arguments.of(
+        listOf(
+          inapplicableApplication,
+          expiredApplication,
+          withdrawnApplication,
+          rejectedApplication,
+          startedApplication,
+          rejectedApplication,
+          withdrawnApplication,
+          expiredApplication,
+          inapplicableApplication,
+        ),
+        startedApplication,
+      ),
+      Arguments.of(
+        listOf(
+          inapplicableApplication,
+          expiredApplication,
+          withdrawnApplication,
+          rejectedApplication,
+          withdrawnApplication,
+          expiredApplication,
+          inapplicableApplication,
+        ),
+        rejectedApplication,
+      ),
+      Arguments.of(
+        listOf(
+          inapplicableApplication,
+          expiredApplication,
+          withdrawnApplication,
+          expiredApplication,
+          inapplicableApplication,
+        ),
+        withdrawnApplication,
+      ),
+      Arguments.of(listOf(inapplicableApplication, expiredApplication, inapplicableApplication), expiredApplication),
+      Arguments.of(listOf(inapplicableApplication), inapplicableApplication),
+    )
 
     @JvmStatic
     fun provideBooking(): Stream<Arguments> {
