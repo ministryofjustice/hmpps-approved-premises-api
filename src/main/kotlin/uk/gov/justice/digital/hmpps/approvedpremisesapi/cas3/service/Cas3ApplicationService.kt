@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -49,8 +52,32 @@ class Cas3ApplicationService(
   private val offenderService: OffenderService,
   private val offenderRisksService: OffenderRisksService,
   private val objectMapper: ObjectMapper,
+  private val cas3v2BookingService: Cas3v2BookingService,
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+
+  fun getSuitableApplicationByCrn(crn: String): Cas3SuitableApplication? {
+    @SuppressWarnings("MagicNumber")
+    val statusPriorityAsc = mapOf(
+      ApplicationStatus.rejected to 0,
+      ApplicationStatus.inProgress to 1,
+      ApplicationStatus.submitted to 2,
+      ApplicationStatus.requestedFurtherInformation to 3,
+    )
+
+    return temporaryAccommodationApplicationRepository.findByCrn(crn)
+      .maxWithOrNull(
+        compareBy<TemporaryAccommodationApplicationEntity> { statusPriorityAsc[it.getStatus()] }
+          .thenBy { it.submittedAt ?: it.createdAt },
+      )
+      ?.let { application ->
+        Cas3SuitableApplication(
+          id = application.id,
+          applicationStatus = application.getStatus(),
+          bookingStatus = cas3v2BookingService.getLatestBookingStatus(application.id),
+        )
+      }
+  }
 
   @Suppress("TooGenericExceptionThrown")
   fun getApplicationForUsername(
