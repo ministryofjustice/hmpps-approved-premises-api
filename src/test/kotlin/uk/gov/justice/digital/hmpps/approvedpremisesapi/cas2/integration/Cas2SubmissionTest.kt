@@ -24,7 +24,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
@@ -172,7 +174,7 @@ class Cas2SubmissionTest(
   inner class GetToIndex {
     @Test
     fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API `() {
-      externalUserRepository.deleteAll()
+      cas2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -194,7 +196,7 @@ class Cas2SubmissionTest(
         .isOk
 
       assertThat(
-        externalUserRepository.findByUsername(username),
+        cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.EXTERNAL, Cas2ServiceOrigin.HDC),
       ).isNotNull
     }
 
@@ -310,7 +312,7 @@ class Cas2SubmissionTest(
 
     private fun createInProgressApplication(
       crn: String,
-      user: NomisUserEntity,
+      user: Cas2UserEntity,
     ): Cas2ApplicationEntity {
       val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
         withCrn(crn)
@@ -329,8 +331,8 @@ class Cas2SubmissionTest(
     }
 
     @Test
-    fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API`() {
-      externalUserRepository.deleteAll()
+    fun `Previously unknown Assessor has an Cas2User record created from details retrieved from Manage-Users API`() {
+      cas2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -352,7 +354,7 @@ class Cas2SubmissionTest(
         .isNotFound
 
       assertThat(
-        externalUserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+        cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin("PREVIOUSLY_UNKNOWN_ASSESSOR", Cas2UserType.EXTERNAL, Cas2ServiceOrigin.HDC),
       ).isNotNull
     }
 
@@ -425,7 +427,7 @@ class Cas2SubmissionTest(
 
             val assignmentDate = OffsetDateTime.now().minusDays(5)
 
-            val newPom = nomisUserEntityFactory.produceAndPersist()
+            val newPom = cas2UserEntityFactory.produceAndPersist()
             applicationEntity.applicationAssignments.addAll(
               mutableListOf(
                 Cas2ApplicationAssignmentEntity(
@@ -773,8 +775,8 @@ class Cas2SubmissionTest(
         assertThat(domainEventFromJson.eventDetails.applicationUrl)
           .isEqualTo(expectedFrontEndUrl)
 
-        val persistedAssessment = realAssessmentRepository.findAll().first()
-        assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
+        val persistedAssessment = realAssessmentRepository.findByServiceOrigin(Cas2ServiceOrigin.HDC).first()
+        assertThat(persistedAssessment.application.id).isEqualTo(applicationId)
 
         val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
         emailAsserter.assertEmailsRequestedCount(1)
@@ -906,7 +908,7 @@ class Cas2SubmissionTest(
 
           assertThat(domainEventRepository.count()).isEqualTo(0)
           assertThat(realAssessmentRepository.count()).isEqualTo(0)
-          assertThat(realApplicationRepository.findById(applicationId).get().submittedAt).isNull()
+          assertThat(realApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)!!.submittedAt).isNull()
         }
       }
     }

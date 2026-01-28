@@ -15,11 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2AssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2TimelineEventsTransformer
@@ -51,11 +52,15 @@ class Cas2v2SubmissionsTransformerTest {
     mockCas2v2AssessmentsTransformer,
   )
 
-  private val user = Cas2v2UserEntityFactory().produce()
+  private val user = Cas2UserEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .produce()
 
-  private val cas2v2ApplicationFactory = Cas2v2ApplicationEntityFactory().withCreatedByUser(user)
+  private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
+    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withCreatedByUser(user)
 
-  private val submittedCas2v2ApplicationFactory = cas2v2ApplicationFactory
+  private val submittedCas2ApplicationFactory = cas2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
   private val mockStatusUpdate = Cas2v2StatusUpdate(
     id = UUID.fromString("c426c63a-be35-421f-a1a0-fc286b60da41"),
@@ -82,13 +87,14 @@ class Cas2v2SubmissionsTransformerTest {
   inner class TransformJpaToApi {
     @Test
     fun `transforms to API representation with NomisUser, no data, status updates and assessment`() {
-      val assessmentEntity = Cas2v2AssessmentEntityFactory()
-        .withApplication(submittedCas2v2ApplicationFactory.produce())
+      val assessmentEntity = Cas2AssessmentEntityFactory()
+        .withApplication(submittedCas2ApplicationFactory.produce())
         .withNacroReferralId("OH123")
         .withAssessorName("Assessor name")
+        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .produce()
 
-      val jpaEntity = submittedCas2v2ApplicationFactory.withAssessment(assessmentEntity).produce()
+      val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
 
       every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
 
@@ -120,7 +126,7 @@ class Cas2v2SubmissionsTransformerTest {
   inner class TransformJpaSummaryToCas2v2SubmittedSummary {
     @Test
     fun `transforms submitted summary application to API summary representation `() {
-      val applicationSummary = Cas2v2ApplicationSummaryEntity(
+      val applicationSummary = Cas2ApplicationSummaryEntity(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRN123",
         nomsNumber = "NOMS456",
@@ -132,6 +138,10 @@ class Cas2v2SubmissionsTransformerTest {
         latestStatusUpdateLabel = null,
         latestStatusUpdateStatusId = null,
         prisonCode = "BRI",
+        allocatedPomName = null,
+        allocatedPomUserId = null,
+        currentPrisonCode = null,
+        assignmentDate = null,
       )
 
       val expectedSubmittedApplicationSummary = Cas2v2SubmittedApplicationSummary(
