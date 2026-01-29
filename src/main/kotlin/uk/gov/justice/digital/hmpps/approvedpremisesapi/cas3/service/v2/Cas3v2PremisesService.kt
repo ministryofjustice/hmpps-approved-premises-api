@@ -151,7 +151,7 @@ class Cas3v2PremisesService(
     characteristicIds: List<UUID>,
     notes: String?,
     probationDeliveryUnitId: UUID,
-    turnaroundWorkingDays: Int,
+    turnaroundWorkingDays: Int?,
   ): CasResult<Cas3PremisesEntity> = validatedCasResult {
     val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
       ?: return CasResult.NotFound("Cas3Premises", premisesId.toString())
@@ -189,7 +189,7 @@ class Cas3v2PremisesService(
         premises.characteristics = validatedPremisesCharacteristics.toMutableList()
         premises.notes = notes.orEmpty()
         premises.probationDeliveryUnit = probationDeliveryUnit!!
-        premises.turnaroundWorkingDays = turnaroundWorkingDays
+        premises.turnaroundWorkingDays = turnaroundWorkingDays ?: 2
         premises.lastUpdatedAt = OffsetDateTime.now()
       }
 
