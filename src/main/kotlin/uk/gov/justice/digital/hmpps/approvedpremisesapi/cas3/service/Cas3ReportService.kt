@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTrans
 import java.io.OutputStream
 
 private const val MAX_IN_MEMORY_ROWS = 100
+const val MAX_DAYS_STAY = 84
 
 @Service
 class Cas3ReportService(

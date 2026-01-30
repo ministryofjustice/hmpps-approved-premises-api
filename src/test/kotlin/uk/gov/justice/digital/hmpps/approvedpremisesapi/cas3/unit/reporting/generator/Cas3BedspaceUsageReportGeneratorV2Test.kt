@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ExtensionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3OverstayEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
@@ -30,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 class Cas3BedspaceUsageReportGeneratorV2Test {
   private val mockBookingTransformer = mockk<Cas3BookingTransformer>()
@@ -575,5 +578,185 @@ class Cas3BedspaceUsageReportGeneratorV2Test {
     assertThat(result[0][Cas3BedUsageReportRow::costCentre]).isEqualTo(Cas3CostCentre.SUPPLIER)
     assertThat(result[0][Cas3BedUsageReportRow::uniquePropertyRef]).isEqualTo(cas3Premises.id.toShortBase58())
     assertThat(result[0][Cas3BedUsageReportRow::uniqueBedspaceRef]).isEqualTo(cas3Bedspace.id.toShortBase58())
+  }
+
+  @Test
+  fun `Overstay columns show overstay when booking has overstayed`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val localAuthority = LocalAuthorityEntityFactory().produce()
+
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory().produce()
+
+    val cas3Premises = Cas3PremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthority)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .produce()
+
+    val cas3Bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(cas3Premises)
+      .produce()
+
+    val arrivalDate = LocalDate.parse("2023-02-01")
+    val expectedDepartureDate = LocalDate.parse("2023-03-20")
+
+    val booking = Cas3BookingEntityFactory()
+      .withPremises(cas3Premises)
+      .withBedspace(cas3Bedspace)
+      .withArrivalDate(arrivalDate)
+      .withDepartureDate(LocalDate.parse("2023-08-15"))
+      .produce()
+
+    booking.overstays = mutableListOf(
+      Cas3OverstayEntityFactory()
+        .withBooking(booking)
+        .withReason("test reason")
+        .withNewDepartureDate(expectedDepartureDate)
+        .produce(),
+    )
+
+    every { mockBookingRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns listOf(booking)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns emptyList()
+    every { mockBookingTransformer.determineStatus(booking) } returns Cas3BookingStatus.closed
+
+    val reportData = BedspaceUsageReportData(
+      bedspace = cas3Bedspace,
+      bookings = listOf(booking),
+      voids = emptyList(),
+    )
+
+    val result = bedUsageReportGenerator.createReport(
+      listOf(reportData),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][Cas3BedUsageReportRow::overstay]).isEqualTo("Y")
+    assertThat(result[0][Cas3BedUsageReportRow::authorised]).isEqualTo("Y")
+    assertThat(result[0][Cas3BedUsageReportRow::reason]).isEqualTo("test reason")
+  }
+
+  @Test
+  fun `Overstay columns show no overstay when booking did not overstay`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val localAuthority = LocalAuthorityEntityFactory().produce()
+
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory().produce()
+
+    val cas3Premises = Cas3PremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthority)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .produce()
+
+    val cas3Bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(cas3Premises)
+      .produce()
+
+    val arrivalDate = LocalDate.parse("2023-03-01")
+    val expectedDepartureDate = LocalDate.parse("2023-04-10")
+
+    val booking = Cas3BookingEntityFactory()
+      .withPremises(cas3Premises)
+      .withBedspace(cas3Bedspace)
+      .withArrivalDate(arrivalDate)
+      .withDepartureDate(LocalDate.parse("2023-04-08"))
+      .produce()
+
+    every { mockBookingRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns listOf(booking)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns emptyList()
+    every { mockBookingTransformer.determineStatus(booking) } returns Cas3BookingStatus.closed
+
+    val reportData = BedspaceUsageReportData(
+      bedspace = cas3Bedspace,
+      bookings = listOf(booking),
+      voids = emptyList(),
+    )
+
+    val result = bedUsageReportGenerator.createReport(
+      listOf(reportData),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][Cas3BedUsageReportRow::overstay]).isEqualTo("N")
+  }
+
+  @Test
+  fun `Overstay columns show no overstay when booking has an extension that is newer than overstay`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val localAuthority = LocalAuthorityEntityFactory().produce()
+
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory().produce()
+
+    val cas3Premises = Cas3PremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthority)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .produce()
+
+    val cas3Bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(cas3Premises)
+      .produce()
+
+    val arrivalDate = LocalDate.parse("2023-02-01")
+    val departureDate = LocalDate.parse("2023-03-20")
+
+    val booking = Cas3BookingEntityFactory()
+      .withPremises(cas3Premises)
+      .withBedspace(cas3Bedspace)
+      .withArrivalDate(arrivalDate)
+      .withDepartureDate(departureDate)
+      .produce()
+
+    // Book an overstay
+    booking.overstays = mutableListOf(
+      Cas3OverstayEntityFactory()
+        .withBooking(booking)
+        .withPreviousDepartureDate(LocalDate.parse("2023-03-20"))
+        .withNewDepartureDate(LocalDate.parse("2023-05-01"))
+        .withCreatedAt(OffsetDateTime.now().minusHours(24))
+        .produce(),
+    )
+
+    // Now change the date so it's no longer an overstay
+    booking.extensions = mutableListOf(
+      Cas3ExtensionEntityFactory()
+        .withBooking(booking)
+        .withPreviousDepartureDate(LocalDate.parse("2023-05-01"))
+        .withNewDepartureDate(LocalDate.parse("2023-03-20"))
+        .withCreatedAt(OffsetDateTime.now())
+        .produce(),
+    )
+
+    every { mockBookingRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns listOf(booking)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBedspace(startDate, endDate, cas3Bedspace) } returns emptyList()
+    every { mockBookingTransformer.determineStatus(booking) } returns Cas3BookingStatus.closed
+
+    val reportData = BedspaceUsageReportData(
+      bedspace = cas3Bedspace,
+      bookings = listOf(booking),
+      voids = emptyList(),
+    )
+
+    val result = bedUsageReportGenerator.createReport(
+      listOf(reportData),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][Cas3BedUsageReportRow::overstay]).isEqualTo("N")
   }
 }

@@ -38,7 +38,11 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       cas3_app.duty_to_refer_local_authority_area_name AS dutyToReferLocalAuthorityAreaName,
       pdu.name as pdu,
       premises.town as town,
-      premises.postcode as postCode
+      premises.postcode as postCode,
+      overstay.created_at AS overstayCreatedAt,
+      overstay.is_authorised AS overstayIsAuthorised,
+      overstay.reason AS overstayReason,
+      extension.created_at AS extensionCreatedAt
     FROM
       bookings booking
     LEFT JOIN
@@ -67,6 +71,10 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       temporary_accommodation_premises tap ON tap.premises_id = premises.id  
     LEFT JOIN 
       probation_delivery_units pdu on pdu.id = tap.probation_delivery_unit_id  
+    LEFT JOIN 
+      cas3_overstays overstay ON overstay.booking_id = booking.id AND overstay.created_at = (SELECT max(o.created_at) FROM cas3_overstays o WHERE o.booking_id = booking.id)
+    LEFT JOIN
+      extensions extension ON extension.booking_id = booking.id AND extension.created_at = (SELECT max(e.created_at) FROM extensions e WHERE e.booking_id = booking.id)
     WHERE
       booking.arrival_date <= :endDate
       AND booking.departure_date >= :startDate
@@ -113,7 +121,11 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       cas3_app.duty_to_refer_local_authority_area_name AS dutyToReferLocalAuthorityAreaName,
       pdu.name as pdu,
       premises.town as town,
-      premises.postcode as postCode
+      premises.postcode as postCode,
+      overstay.created_at AS overstayCreatedAt,
+      overstay.is_authorised AS overstayIsAuthorised,
+      overstay.reason AS overstayReason,
+      extension.created_at AS extensionCreatedAt
     FROM
       bookings booking
     LEFT JOIN
@@ -140,6 +152,10 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       probation_delivery_units pdu on pdu.id = premises.probation_delivery_unit_id  
     LEFT JOIN
       probation_regions probation_region ON probation_region.id = pdu.probation_region_id
+    LEFT JOIN 
+      cas3_overstays overstay ON overstay.booking_id = booking.id AND overstay.created_at = (SELECT max(o.created_at) FROM cas3_overstays o WHERE o.booking_id = booking.id)
+    LEFT JOIN
+      extensions extension ON extension.booking_id = booking.id AND extension.created_at = (SELECT max(e.created_at) FROM extensions e WHERE e.booking_id = booking.id)
     WHERE
       booking.arrival_date <= :endDate
       AND booking.departure_date >= :startDate
@@ -184,4 +200,8 @@ interface BookingsReportData {
   val pdu: String?
   val town: String?
   val postCode: String?
+  val overstayCreatedAt: Instant?
+  val overstayIsAuthorised: Boolean?
+  val overstayReason: String?
+  val extensionCreatedAt: Instant?
 }

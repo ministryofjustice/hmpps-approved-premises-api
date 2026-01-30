@@ -85,7 +85,9 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import kotlin.collections.get
 import kotlin.collections.listOf
+import kotlin.text.get
 
 class Cas3v2ReportsTest : IntegrationTestBase() {
 
@@ -1034,6 +1036,75 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class GetBookingReport {
+
+    @Test
+    fun `Get bookings report returns OK with overstay populated when booking is over 84 days`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 7, 24)
+
+          val (premises, bedspace, booking) = setupPremisesWIthABedspaceAndABooking(
+            crn = offenderDetails.otherIds.crn,
+            user,
+            startDate,
+            departureDate = endDate, // 111 days from arrival (2023-04-05)
+          )
+
+          val overstay = cas3OverstayEntityFactory.produceAndPersist {
+            withNewDepartureDate(endDate)
+            withPreviousDepartureDate(LocalDate.of(2023, 4, 30))
+            withBooking(booking)
+            withReason("test reason")
+            withIsAuthorised(true)
+          }
+
+          cas3ArrivalEntityFactory.produceAndPersist {
+            withBooking(booking)
+            withArrivalDate(startDate)
+          }
+
+          cas3DepartureEntityFactory.produceAndPersist {
+            withBooking(booking)
+            withDateTime(endDate.atStartOfDay().atOffset(ZoneOffset.UTC))
+            withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+            withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+            withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+          }
+
+          val caseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetails)
+            .withPnc(offenderDetails.otherIds.pncNumber)
+            .produce()
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            user.deliusUsername,
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/booking?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<BookingsReportRow>(Remove)
+                .toList()
+
+              assertThat(actual.size).isEqualTo(1)
+              assertThat(actual[0].overstay).isEqualTo("Y")
+            }
+        }
+      }
+    }
 
     @Test
     fun `Get bookings report returns OK with correct body`() {
