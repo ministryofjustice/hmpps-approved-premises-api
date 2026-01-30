@@ -224,7 +224,6 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
       probationDeliveryUnitId = pdu.id,
       localAuthorityAreaId = null,
       characteristicIds = characteristicIds,
-      turnaroundWorkingDayCount = null,
       turnaroundWorkingDays = 59,
     )
 
@@ -290,7 +289,6 @@ class Cas3v2PremisesTest : IntegrationTestBase() {
             probationDeliveryUnitId = premises.probationDeliveryUnit.id,
             localAuthorityAreaId = premises.localAuthorityArea?.id,
             characteristicIds = premises.characteristics.map { it.id },
-            turnaroundWorkingDayCount = null,
             turnaroundWorkingDays = premises.turnaroundWorkingDays,
           ),
         )
