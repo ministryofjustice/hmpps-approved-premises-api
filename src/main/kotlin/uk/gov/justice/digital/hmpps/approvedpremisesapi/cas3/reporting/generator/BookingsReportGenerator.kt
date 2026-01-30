@@ -1,21 +1,43 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator
 
+import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.toYesNo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.MAX_DAYS_STAY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
+import kotlin.String
 
 class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
-
+  private val log = LoggerFactory.getLogger(this::class.java)
   override val convert: BookingsReportDataAndPersonInfo.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
     val booking = this.bookingsReportData
     val personInfo = this.personInfoReportData
+
+    val actualNightsStayed = if (booking.startDate == null) {
+      null
+    } else {
+      booking.actualEndDate?.let { ChronoUnit.DAYS.between(LocalDateTime.of(booking.startDate, LocalTime.MAX), it.toLocalDateTime()).toInt() + 1 }
+    }
+
+    var overstay: String? = "N"
+    var authorised: String? = null
+    var reason: String? = null
+
+    if (actualNightsStayed != null && actualNightsStayed > MAX_DAYS_STAY) {
+      if (booking.overstayCreatedAt == null || booking.overstayIsAuthorised == null) {
+        log.warn("booking ${booking.bookingId} is over ${MAX_DAYS_STAY} but has no overstay record")
+      }
+      overstay = "Y"
+      authorised = if (booking.overstayIsAuthorised != null && booking.overstayIsAuthorised!!) "Y" else "N"
+      reason = booking.overstayReason
+    }
 
     listOf(
       BookingsReportRow(
@@ -56,11 +78,10 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
         } else {
           booking.startDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
         },
-        actualNightsStayed = if (booking.startDate == null) {
-          null
-        } else {
-          booking.actualEndDate?.let { ChronoUnit.DAYS.between(LocalDateTime.of(booking.startDate, LocalTime.MAX), it.toLocalDateTime()).toInt() + 1 }
-        },
+        actualNightsStayed = actualNightsStayed,
+        overstay = overstay,
+        authorised = authorised,
+        reason = reason,
         accommodationOutcome = booking.accommodationOutcome,
       ),
     )

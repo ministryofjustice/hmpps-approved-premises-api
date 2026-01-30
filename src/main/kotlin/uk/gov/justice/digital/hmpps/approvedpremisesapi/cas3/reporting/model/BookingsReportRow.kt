@@ -37,5 +37,8 @@ data class BookingsReportRow(
   val actualEndDate: LocalDate?,
   val currentNightsStayed: Int?,
   val actualNightsStayed: Int?,
+  val overstay: String?,
+  val authorised: String?,
+  val reason: String?,
   val accommodationOutcome: String?,
 )

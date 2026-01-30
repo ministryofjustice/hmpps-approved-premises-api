@@ -4,13 +4,22 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.api.count
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ConfirmationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3DepartureEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ExtensionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3OverstayEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.PersonInformationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.toBookingsReportDataAndPersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
@@ -846,5 +855,172 @@ class BookingsReportGeneratorTest {
     assertThat(actual[0][BookingsReportRow::gender]).isEqualTo("Male")
     assertThat(actual[0][BookingsReportRow::ethnicity]).isEqualTo("Other White")
     assertThat(actual[0][BookingsReportRow::dateOfBirth]).isEqualTo("1571-12-27")
+  }
+
+  @Test
+  fun `The overstays columns show overstay when booking has a departure that overstayed`() {
+    val now = OffsetDateTime.now()
+    val today = now.toLocalDate()
+    val arrivalDate = today.minusDays(100L)
+    val expectedDepartureDate = today.minusDays(10L)
+
+    val premises = Cas3PremisesEntityFactory()
+      .withDefaults()
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val booking = Cas3BookingEntityFactory()
+      .withPremises(premises)
+      .withBedspace(bedspace)
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .produce()
+
+    booking.arrivals += Cas3ArrivalEntityFactory()
+      .withArrivalDate(arrivalDate)
+      .withExpectedDepartureDate(expectedDepartureDate)
+      .withBooking(booking)
+      .produce()
+
+    booking.departures = mutableListOf(
+      Cas3DepartureEntityFactory()
+        .withDateTime(now)
+        .withYieldedReason {
+          DepartureReasonEntityFactory()
+            .produce()
+        }
+        .withYieldedMoveOnCategory {
+          MoveOnCategoryEntityFactory()
+            .produce()
+        }
+        .withYieldedDestinationProvider {
+          DestinationProviderEntityFactory()
+            .produce()
+        }
+        .withBooking(booking)
+        .produce(),
+    )
+
+    booking.overstays = mutableListOf(
+      Cas3OverstayEntityFactory()
+        .withNewDepartureDate(expectedDepartureDate)
+        .withBooking(booking)
+        .produce(),
+    )
+
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo { crn ->
+        PersonInformationReportData("abc", Name("name", "surname"), LocalDate.parse("2000-01-01"), "M", "")
+      },
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+    )
+    assertThat(actual.count()).isEqualTo(1)
+    assertThat(actual[0][BookingsReportRow::overstay]).isEqualTo("Y")
+  }
+
+  @Test
+  fun `The overstays columns show no overstay when booking has a departure that did not overstay`() {
+    val now = OffsetDateTime.now()
+    val today = now.toLocalDate()
+    val arrivalDate = today.minusDays(50L)
+    val expectedDepartureDate = today.plusDays(10L)
+
+    val premises = Cas3PremisesEntityFactory()
+      .withDefaults()
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val booking = Cas3BookingEntityFactory()
+      .withPremises(premises)
+      .withBedspace(bedspace)
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .produce()
+
+    booking.arrivals += Cas3ArrivalEntityFactory()
+      .withArrivalDate(arrivalDate)
+      .withExpectedDepartureDate(expectedDepartureDate)
+      .withBooking(booking)
+      .produce()
+
+    booking.departures = mutableListOf(
+      Cas3DepartureEntityFactory()
+        .withDateTime(now)
+        .withYieldedReason {
+          DepartureReasonEntityFactory()
+            .produce()
+        }
+        .withYieldedMoveOnCategory {
+          MoveOnCategoryEntityFactory()
+            .produce()
+        }
+        .withYieldedDestinationProvider {
+          DestinationProviderEntityFactory()
+            .produce()
+        }
+        .withBooking(booking)
+        .produce(),
+    )
+
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo { crn ->
+        PersonInformationReportData("abc", Name("name", "surname"), LocalDate.parse("2000-01-01"), "M", "")
+      },
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+    )
+    assertThat(actual.count()).isEqualTo(1)
+    assertThat(actual[0][BookingsReportRow::overstay]).isEqualTo("N")
+  }
+
+  @Test
+  fun `The overstays columns show no overstay when booking has an extension that overwrites a previous overstay`() {
+    val now = OffsetDateTime.now()
+    val today = now.toLocalDate()
+    val arrivalDate = today.minusDays(100L)
+    val originalExpectedDepartureDate = today.minusDays(10L)
+    val extendedDepartureDate = today.plusDays(20L)
+
+    val premises = Cas3PremisesEntityFactory()
+      .withDefaults()
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+    val bedspace = Cas3BedspaceEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val booking = Cas3BookingEntityFactory()
+      .withPremises(premises)
+      .withBedspace(bedspace)
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .produce()
+
+    val arrival = Cas3ArrivalEntityFactory()
+      .withArrivalDate(arrivalDate)
+      .withExpectedDepartureDate(originalExpectedDepartureDate)
+      .withBooking(booking)
+      .produce()
+
+    booking.arrivals += arrival
+
+    booking.extensions = mutableListOf(
+      Cas3ExtensionEntityFactory()
+        .withNewDepartureDate(extendedDepartureDate)
+        .withBooking(booking)
+        .withCreatedAt(now)
+        .produce(),
+    )
+
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo { crn ->
+        PersonInformationReportData("abc", Name("name", "surname"), LocalDate.parse("2000-01-01"), "M", "")
+      },
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+    )
+    assertThat(actual.count()).isEqualTo(1)
+    assertThat(actual[0][BookingsReportRow::overstay]).isEqualTo("N")
   }
 }
