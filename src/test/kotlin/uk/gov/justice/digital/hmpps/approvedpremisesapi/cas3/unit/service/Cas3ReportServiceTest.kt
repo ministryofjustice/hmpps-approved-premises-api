@@ -779,5 +779,9 @@ class Cas3ReportServiceTest {
     override val pdu: String?,
     override val town: String?,
     override val postCode: String?,
+    override val overstayCreatedAt: Instant? = null,
+    override val overstayIsAuthorised: Boolean? = null,
+    override val overstayReason: String? = null,
+    override val extensionCreatedAt: Instant? = null,
   ) : BookingsReportData
 }
