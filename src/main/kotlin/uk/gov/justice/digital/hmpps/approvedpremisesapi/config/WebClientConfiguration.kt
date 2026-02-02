@@ -343,6 +343,37 @@ class WebClientConfiguration(
     )
   }
 
+  @Bean(name = ["nonAssociationsWebClient"])
+  fun nonAssociationsWebClient(
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("non-associations")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .filter(oauth2Client)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(
+                ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
+              ),
+          ),
+        )
+        .exchangeStrategies(
+          ExchangeStrategies.builder().codecs {
+            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
+          }.build(),
+        )
+        .build(),
+    )
+  }
+
   @Bean(name = ["prisonerSearchWebClient"])
   fun prisonerSearchWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
