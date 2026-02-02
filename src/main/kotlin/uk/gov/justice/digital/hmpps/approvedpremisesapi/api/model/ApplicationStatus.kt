@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class ApplicationStatus(@get:JsonValue val value: String) {
+enum class ApplicationStatus(@get:JsonValue val value: String, val priority: Int) {
 
-  inProgress("inProgress"),
-  submitted("submitted"),
-  requestedFurtherInformation("requestedFurtherInformation"),
-  rejected("rejected"),
+  rejected("rejected", 0),
+  inProgress("inProgress", 1),
+  submitted("submitted", 2),
+  requestedFurtherInformation("requestedFurtherInformation", 3),
   ;
 
   companion object {

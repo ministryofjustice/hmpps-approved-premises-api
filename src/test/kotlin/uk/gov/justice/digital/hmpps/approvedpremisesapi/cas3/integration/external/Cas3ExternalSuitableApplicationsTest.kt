@@ -4,8 +4,8 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
@@ -21,7 +21,7 @@ class Cas3ExternalSuitableApplicationsTest : IntegrationTestBase() {
     @Test
     fun `Get suitable application without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas1/external/suitable-application/$crn")
+        .uri("/cas3/external/suitable-application/$crn")
         .exchange()
         .expectStatus()
         .isUnauthorized
