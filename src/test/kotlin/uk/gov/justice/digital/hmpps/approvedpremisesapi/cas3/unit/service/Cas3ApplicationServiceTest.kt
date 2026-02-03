@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -1331,6 +1332,7 @@ class Cas3ApplicationServiceTest {
         )
       },
       custodyStatus = status,
+      bookingId = null,
     )
 
     private fun createOffenderDetailsSummary(crn: String) = OffenderDetailSummary(
@@ -1628,11 +1630,11 @@ class Cas3ApplicationServiceTest {
         .withYieldedApArea { ApAreaEntityFactory().produce() }
         .produce()
 
-      val mainPdu = mockk<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity>()
+      val mainPdu = mockk<ProbationDeliveryUnitEntity>()
       every { mainPdu.id } returns UUID.randomUUID()
       every { mainPdu.name } returns "Main PDU"
 
-      val outOfRegionPdu = mockk<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity>()
+      val outOfRegionPdu = mockk<ProbationDeliveryUnitEntity>()
       every { outOfRegionPdu.id } returns UUID.randomUUID()
       every { outOfRegionPdu.name } returns "Out Of Region PDU"
 

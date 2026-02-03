@@ -213,6 +213,7 @@ class Cas2v2OffenderServiceTest {
             description = "AGENCY DESCRIPTION",
             agencyName = "AGENCY NAME",
           ),
+          bookingId = 123,
         ),
       )
 

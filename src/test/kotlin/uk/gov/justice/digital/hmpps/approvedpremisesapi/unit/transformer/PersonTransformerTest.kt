@@ -367,6 +367,7 @@ class PersonTransformerTest {
           agencyName = "HMP Bristol",
         ),
         custodyStatus = InmateStatus.IN,
+        bookingId = null,
       )
 
       val personInfoResult = PersonInfoResult.Success.Full(
@@ -460,6 +461,7 @@ class PersonTransformerTest {
           agencyName = "HMP Bristol",
         ),
         custodyStatus = InmateStatus.IN,
+        bookingId = null,
       )
 
       val personInfoResult = PersonInfoResult.Success.Full(

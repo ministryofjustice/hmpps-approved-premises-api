@@ -8,6 +8,7 @@ data class InmateDetail(
   @JsonProperty("status")
   val custodyStatus: InmateStatus,
   val assignedLivingUnit: AssignedLivingUnit?,
+  val bookingId: Long?,
 )
 
 data class AssignedLivingUnit(

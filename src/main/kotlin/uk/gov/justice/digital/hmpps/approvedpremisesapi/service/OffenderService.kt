@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Use
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.BookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
@@ -403,5 +404,28 @@ class OffenderService(
     is PersonSummaryInfoResult.Success.Restricted -> CasResult.Unauthorised()
     is PersonSummaryInfoResult.NotFound -> CasResult.NotFound("Person", crn)
     is PersonSummaryInfoResult.Unknown -> CasResult.NotFound("Person", crn)
+  }
+
+  fun getOffenderBookingDetails(crn: String): CasResult<BookingDetails> {
+    val nomsNumber = cas1OffenderRepository.findByCrn(crn)?.nomsNumber
+      ?: return CasResult.NotFound("Offender", crn)
+
+    return when (val inmateDetailResult = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)) {
+      is ClientResult.Success -> {
+        val bookingId = inmateDetailResult.body.bookingId
+          ?: return CasResult.NotFound("BookingDetails", crn)
+
+        prisonsApiClient.getOffenderBookingDetails(bookingId)
+          .toCasResult(entityType = "BookingDetails", id = crn)
+      }
+
+      is ClientResult.Failure.StatusCode -> when (inmateDetailResult.status) {
+        HttpStatus.NOT_FOUND -> CasResult.NotFound("BookingDetails", crn)
+        HttpStatus.FORBIDDEN -> CasResult.Unauthorised()
+        else -> inmateDetailResult.throwException()
+      }
+
+      is ClientResult.Failure -> inmateDetailResult.throwException()
+    }
   }
 }
