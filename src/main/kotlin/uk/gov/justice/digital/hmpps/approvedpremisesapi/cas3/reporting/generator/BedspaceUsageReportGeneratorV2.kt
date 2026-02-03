@@ -1,10 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator
 
+import org.slf4j.LoggerFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceUsageReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.Cas3BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.Cas3BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.toShortBase58
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.MAX_DAYS_STAY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
@@ -13,7 +17,7 @@ class BedspaceUsageReportGeneratorV2(
   private val bookingTransformer: Cas3BookingTransformer,
   private val workingDayService: WorkingDayService,
 ) : ReportGenerator<BedspaceUsageReportData, Cas3BedUsageReportRow, BedUsageReportProperties>(Cas3BedUsageReportRow::class) {
-
+  private val log = LoggerFactory.getLogger(this::class.java)
   override fun filter(properties: BedUsageReportProperties): (BedspaceUsageReportData) -> Boolean = {
     properties.probationRegionId == null || it.bedspace.premises.probationDeliveryUnit.probationRegion.id == properties.probationRegionId
   }
@@ -27,6 +31,7 @@ class BedspaceUsageReportGeneratorV2(
     val resultRows = mutableListOf<Cas3BedUsageReportRow>()
 
     bookings.forEach { booking ->
+      var (overstay, durationOfBookingDays) = getStayData(booking)
       resultRows += Cas3BedUsageReportRow(
         probationRegion = premises.probationDeliveryUnit.probationRegion.name,
         pdu = premises.probationDeliveryUnit.name,
@@ -40,8 +45,11 @@ class BedspaceUsageReportGeneratorV2(
         type = Cas3BedUsageType.Booking,
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
-        durationOfBookingDays = booking.arrivalDate.getDaysUntilExclusiveEnd(booking.departureDate).size,
+        durationOfBookingDays = durationOfBookingDays,
         bookingStatus = bookingTransformer.determineStatus(booking),
+        overstay = overstay?.let { "Y" } ?: "N",
+        authorised = overstay?.let { if (it.isAuthorised) "Y" else "N" },
+        reason = overstay?.reason,
         voidCategory = null,
         voidNotes = null,
         costCentre = null,
@@ -69,6 +77,9 @@ class BedspaceUsageReportGeneratorV2(
           endDate = endDate,
           durationOfBookingDays = turnaroundStartDate.getDaysUntilExclusiveEnd(endDate).size,
           bookingStatus = null,
+          overstay = null,
+          authorised = null,
+          reason = null,
           voidCategory = null,
           voidNotes = null,
           costCentre = null,
@@ -94,6 +105,9 @@ class BedspaceUsageReportGeneratorV2(
         endDate = voidBedspace.endDate,
         durationOfBookingDays = voidBedspace.startDate.getDaysUntilExclusiveEnd(voidBedspace.endDate).size,
         bookingStatus = null,
+        overstay = null,
+        authorised = null,
+        reason = null,
         voidCategory = voidBedspace.reason.name,
         voidNotes = voidBedspace.notes,
         costCentre = voidBedspace.costCentre,
@@ -103,5 +117,18 @@ class BedspaceUsageReportGeneratorV2(
     }
 
     resultRows
+  }
+
+  private fun getStayData(booking: Cas3BookingEntity): Pair<Cas3OverstayEntity?, Int> {
+    var overstay: Cas3OverstayEntity? = null
+    val durationOfBookingDays = booking.arrivalDate.getDaysUntilExclusiveEnd(booking.departureDate).size
+
+    if (durationOfBookingDays > MAX_DAYS_STAY) {
+      overstay = booking.overstays.maxByOrNull { it.createdAt }
+      if (overstay == null) {
+        log.warn("booking ${booking.id} is over ${MAX_DAYS_STAY} but has no overstay record")
+      }
+    }
+    return Pair(overstay, durationOfBookingDays)
   }
 }

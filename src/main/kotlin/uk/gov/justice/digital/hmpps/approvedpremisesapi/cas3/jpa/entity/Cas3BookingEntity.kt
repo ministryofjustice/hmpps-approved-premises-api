@@ -57,6 +57,7 @@ data class Cas3BookingEntity(
   var application: ApplicationEntity?,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var extensions: MutableList<Cas3ExtensionEntity>,
+  @Fetch(FetchMode.SUBSELECT)
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var overstays: MutableList<Cas3OverstayEntity>,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])

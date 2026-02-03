@@ -70,6 +70,14 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
         get() = it.premises.town
       override val postCode: String
         get() = it.premises.postcode
+      override val overstayCreatedAt: Instant?
+        get() = null
+      override val overstayIsAuthorised: Boolean?
+        get() = null
+      override val overstayReason: String?
+        get() = null
+      override val extensionCreatedAt: Instant?
+        get() = null
     }
   }
   .sortedBy { it.bookingId }
