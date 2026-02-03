@@ -106,6 +106,7 @@ class Cas2v2ApplicationService(
     return Pair(response.content, metadata)
   }
 
+  // NOT UNIT TESTED
   fun getSubmittedCas2v2ApplicationForAssessor(applicationId: UUID): CasResult<Cas2v2ApplicationEntity> {
     val applicationEntity = cas2v2ApplicationRepository.findSubmittedApplicationById(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
@@ -302,6 +303,7 @@ class Cas2v2ApplicationService(
 
     application = cas2v2ApplicationRepository.save(application)
 
+    // not quite sure why we are adding to a cas2 domain events table, i thought cas2v2 was meant to have separate tables
     createCas2ApplicationSubmittedEvent(application)
 
     createAssessment(application)

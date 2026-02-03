@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 @Component
 class Cas2v2PersonTransformer {
 
+  // NOT UNIT TESTED
   fun transformCaseSummaryToFullPerson(caseSummary: CaseSummary): FullPerson = FullPerson(
     name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
     dateOfBirth = caseSummary.dateOfBirth,
