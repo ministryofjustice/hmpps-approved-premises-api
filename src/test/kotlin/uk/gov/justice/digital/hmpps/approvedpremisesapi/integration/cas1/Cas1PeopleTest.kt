@@ -19,12 +19,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.Risk
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PersonalTimeline
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -39,8 +42,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundBookingDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundCsraSummariesCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulBookingDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulCsraSummariesCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -825,6 +831,83 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isNotFound
       }
+    }
+  }
+
+  @Nested
+  inner class GetOffenderBookingDetails {
+    @Test
+    fun `Getting booking details for a CRN returns 200`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+
+      val crn = "CRN01"
+      val nomsNumber = "NOMS01"
+      val bookingId = 12345L
+
+      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      cas1OffenderRepository.saveAndFlush(existingOffender)
+
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo(nomsNumber)
+        .withBookingId(bookingId)
+        .produce()
+
+      val bookingDetails = BookingDetailsFactory()
+        .withOffenderNo(nomsNumber)
+        .withBookingId(bookingId)
+        .produce()
+
+      prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail)
+      prisonAPIMockSuccessfulBookingDetailsCall(bookingId, bookingDetails)
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/booking-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(objectMapper.writeValueAsString(bookingDetails))
+    }
+
+    @Test
+    fun `Getting booking details for a CRN that does not exist returns 404`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val crn = "NOT_FOUND_CRN"
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/booking-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Getting booking details for a CRN where Prison API returns 404 returns 404`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val (offenderDetails, _) = givenAnOffender()
+      val existingOffender = Cas1OffenderEntityFactory().withCrn(offenderDetails.otherIds.crn).withNomsNumber(offenderDetails.otherIds.nomsNumber).withName("name").produce()
+      cas1OffenderRepository.saveAndFlush(existingOffender)
+
+      val crn = existingOffender.crn
+      val nomsNumber = existingOffender.nomsNumber!!
+      val bookingId = 12345L
+
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo(nomsNumber)
+        .withBookingId(bookingId)
+        .produce()
+
+      prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail)
+      prisonAPIMockNotFoundBookingDetailsCall(bookingId)
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/booking-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
     }
   }
 }

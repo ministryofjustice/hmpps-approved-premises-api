@@ -393,6 +393,7 @@ class Cas2OffenderServiceTest {
             description = "AGENCY DESCRIPTION",
             agencyName = "AGENCY NAME",
           ),
+          bookingId = null,
         ),
       )
 

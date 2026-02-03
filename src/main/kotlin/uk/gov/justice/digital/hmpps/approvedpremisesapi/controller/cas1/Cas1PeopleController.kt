@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.BookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -109,6 +110,16 @@ class Cas1PeopleController(
       ?: throw NotFoundProblem(crn, "RiskToTheIndividual")
 
     return ResponseEntity.ok(riskToTheIndividual)
+  }
+
+  @Operation(summary = "Returns booking details for a Person.")
+  @GetMapping("/people/{crn}/booking-details")
+  fun getOffenderBookingDetails(@PathVariable crn: String): ResponseEntity<BookingDetails> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val bookingDetails = extractEntityFromCasResult(offenderService.getOffenderBookingDetails(crn))
+
+    return ResponseEntity.ok(bookingDetails)
   }
 
   private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): Cas1PersonalTimeline = cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())

@@ -28,8 +28,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetai
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
@@ -1269,6 +1271,93 @@ class OffenderServiceTest {
         offenderService.getCsraSummariesForOffender(crn, laoStrategy)
       }.isInstanceOf(RuntimeException::class.java)
         .hasMessage("Unable to complete GET request to /api/offender-assessments/csra/NOMS456: 500 INTERNAL_SERVER_ERROR")
+    }
+  }
+
+  @Nested
+  inner class GetOffenderBookingDetails {
+    private val crn = "CRN123"
+    private val nomsNumber = "NOMS456"
+    private val bookingId = 12345L
+
+    @Test
+    fun `returns Success when offender is found and Prisons API returns success`() {
+      val bookingDetails = BookingDetailsFactory().withOffenderNo(nomsNumber).withBookingId(bookingId).produce()
+
+      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithCall(nomsNumber) } returns ClientResult.Success(
+        HttpStatus.OK,
+        InmateDetailFactory().withOffenderNo(nomsNumber).withBookingId(bookingId).produce(),
+      )
+
+      every { mockPrisonsApiClient.getOffenderBookingDetails(bookingId) } returns ClientResult.Success(
+        HttpStatus.OK,
+        bookingDetails,
+      )
+
+      val result = offenderService.getOffenderBookingDetails(crn)
+
+      assertThat(result is CasResult.Success).isTrue
+      assertThat((result as CasResult.Success).value).isEqualTo(bookingDetails)
+    }
+
+    @Test
+    fun `returns NotFound when offender is not in repository`() {
+      every { mockOffenderRepository.findByCrn(crn) } returns null
+
+      val result = offenderService.getOffenderBookingDetails(crn)
+
+      assertThat(result is CasResult.NotFound).isTrue
+      val notFoundResult = result as CasResult.NotFound
+      assertThat(notFoundResult.entityType).isEqualTo("Offender")
+      assertThat(notFoundResult.id).isEqualTo(crn)
+    }
+
+    @Test
+    fun `returns NotFound when Inmate Details returns 404`() {
+      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithCall(nomsNumber) } returns StatusCode(
+        HttpMethod.GET,
+        "/api/offenders/$nomsNumber",
+        HttpStatus.NOT_FOUND,
+        null,
+      )
+
+      val result = offenderService.getOffenderBookingDetails(crn)
+
+      assertThat(result is CasResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `returns NotFound when Booking Details returns 404`() {
+      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithCall(nomsNumber) } returns ClientResult.Success(
+        HttpStatus.OK,
+        InmateDetailFactory().withOffenderNo(nomsNumber).withBookingId(bookingId).produce(),
+      )
+
+      every { mockPrisonsApiClient.getOffenderBookingDetails(bookingId) } returns StatusCode(
+        HttpMethod.GET,
+        "/api/bookings/$bookingId?extraInfo=true",
+        HttpStatus.NOT_FOUND,
+        null,
+      )
+
+      val result = offenderService.getOffenderBookingDetails(crn)
+
+      assertThat(result is CasResult.NotFound).isTrue
     }
   }
 }

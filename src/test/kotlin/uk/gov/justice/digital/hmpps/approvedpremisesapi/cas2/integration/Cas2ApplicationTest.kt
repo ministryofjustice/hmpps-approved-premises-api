@@ -1630,7 +1630,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
           val caseDetail = offenderDetails.asCaseSummary()
           apDeliusContextMockCaseSummary(caseDetail)
-          mockInmateDetailPrisonsApiCall(InmateDetail(caseDetail.nomsId!!, InmateStatus.IN, null))
+          mockInmateDetailPrisonsApiCall(InmateDetail(caseDetail.nomsId!!, InmateStatus.IN, null, bookingId = null))
 
           webTestClient.post()
             .uri("/cas2/applications")

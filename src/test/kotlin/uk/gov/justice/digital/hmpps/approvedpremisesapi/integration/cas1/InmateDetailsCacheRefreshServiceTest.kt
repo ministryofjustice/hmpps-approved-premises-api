@@ -91,6 +91,7 @@ class InmateDetailsCacheRefreshServiceTest : IntegrationTestBase() {
       offenderNo = UUID.randomUUID().toString(),
       custodyStatus = InmateStatus.IN,
       assignedLivingUnit = null,
+      bookingId = null,
     )
     approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)

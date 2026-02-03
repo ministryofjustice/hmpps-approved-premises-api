@@ -83,6 +83,7 @@ class OffenderDetailServiceTest {
             description = "AGENCY DESCRIPTION",
             agencyName = "AGENCY NAME",
           ),
+          bookingId = null,
         ),
       )
 

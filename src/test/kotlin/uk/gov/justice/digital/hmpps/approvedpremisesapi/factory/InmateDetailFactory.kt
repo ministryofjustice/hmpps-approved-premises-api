@@ -11,6 +11,7 @@ class InmateDetailFactory : Factory<InmateDetail> {
   private var offenderNo: Yielded<String> = { randomStringUpperCase(8) }
   private var assignedLivingUnit: Yielded<AssignedLivingUnit?> = { null }
   private var custodyStatus: Yielded<InmateStatus> = { InmateStatus.OUT }
+  private var bookingId: Yielded<Long?> = { null }
 
   fun withOffenderNo(offenderNo: String) = apply {
     this.offenderNo = { offenderNo }
@@ -24,9 +25,14 @@ class InmateDetailFactory : Factory<InmateDetail> {
     this.custodyStatus = { status }
   }
 
+  fun withBookingId(bookingId: Long?) = apply {
+    this.bookingId = { bookingId }
+  }
+
   override fun produce(): InmateDetail = InmateDetail(
     offenderNo = this.offenderNo(),
     assignedLivingUnit = this.assignedLivingUnit(),
     custodyStatus = this.custodyStatus(),
+    bookingId = this.bookingId(),
   )
 }
