@@ -11,7 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Futu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.TransitionalAccommodationReferralReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingGapReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.properties.TransitionalAccommodationReferralReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.BedUsageRepository
@@ -606,6 +608,47 @@ class Cas3ReportServiceTest {
     }
     verify { mockUserService.getUserForRequest() }
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `createBookingGapReport calls getBookingsV2 when optimised-bed-usage-report-enabled is true`(optimisedReport: Boolean) {
+    val startDate = LocalDate.of(2024, 1, 1)
+    val endDate = LocalDate.of(2024, 1, 31)
+    val properties = BookingGapReportProperties(startDate, endDate)
+
+    every { mockFeatureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled") } returns optimisedReport
+    every { mockFeatureFlagService.getBooleanFlag("cas3-reports-optimised-bed-usage-report-enabled") } returns optimisedReport
+
+    val bedspace = BedspaceInfo(
+      id = UUID.randomUUID(),
+      premisesName = "premises",
+      roomName = "room",
+      probationRegion = "region",
+      pduName = "pdu",
+      startDate = LocalDate.of(2023, 1, 1),
+      endDate = null,
+    )
+
+    every { mockCas3BookingGapReportRepository.getBedspacesV2(startDate, endDate) } returns listOf(bedspace)
+    every { mockCas3BookingGapReportRepository.getBedspaces(startDate, endDate) } returns listOf(bedspace)
+    every { mockCas3BookingGapReportRepository.getBookingsV2(startDate, endDate) } returns emptyList()
+    every { mockCas3BookingGapReportRepository.getBookings(startDate, endDate) } returns emptyList()
+    every { mockCas3BookingGapReportRepository.getBedspaceVoidsV2(startDate) } returns emptyList()
+    every { mockCas3BookingGapReportRepository.getBedspaceVoids(startDate) } returns emptyList()
+
+    cas3ReportService.createBookingGapReport(properties, ByteArrayOutputStream())
+
+    when (optimisedReport) {
+      true -> {
+        verify(exactly = 1) { mockCas3BookingGapReportRepository.getBookingsV2(startDate, endDate) }
+        verify(exactly = 0) { mockCas3BookingGapReportRepository.getBookings(any(), any()) }
+      }
+      false -> {
+        verify(exactly = 1) { mockCas3BookingGapReportRepository.getBookings(startDate, endDate) }
+        verify(exactly = 0) { mockCas3BookingGapReportRepository.getBookingsV2(any(), any()) }
+      }
+    }
   }
 
   private fun createDBReferralReportData(): TestTransitionalAccommodationReferralReportData = createDBReferralReportData("crn")

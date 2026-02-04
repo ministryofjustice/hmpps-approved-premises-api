@@ -428,10 +428,19 @@ class Cas3ReportService(
         if (bedspaces.isEmpty()) {
           createBookingGapReport(BookingGapReportData(bedspaces, emptyList(), emptyList()), properties, outputStream)
         } else {
+          val bookings = when (featureFlagService.getBooleanFlag("cas3-reports-optimised-bed-usage-report-enabled")) {
+            true -> {
+              cas3BookingGapReportRepository.getBookingsV2(properties.startDate, properties.endDate)
+            }
+            false -> {
+              cas3BookingGapReportRepository.getBookings(properties.startDate, properties.endDate)
+            }
+          }
+
           createBookingGapReport(
             BookingGapReportData(
               bedspaces,
-              cas3BookingGapReportRepository.getBookings(properties.startDate, properties.endDate),
+              bookings,
               cas3BookingGapReportRepository.getBedspaceVoidsV2(properties.startDate),
             ),
             properties,
