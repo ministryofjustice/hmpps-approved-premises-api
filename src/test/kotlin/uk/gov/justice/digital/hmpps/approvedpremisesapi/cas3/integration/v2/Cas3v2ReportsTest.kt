@@ -94,6 +94,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
   @BeforeEach
   fun beforeEach() {
     mockFeatureFlagService.setFlag("cas3-reports-with-new-bedspace-model-tables-enabled", true)
+    mockFeatureFlagService.setFlag("cas3-reports-optimised-bed-usage-report-enabled", true)
   }
 
   @AfterEach

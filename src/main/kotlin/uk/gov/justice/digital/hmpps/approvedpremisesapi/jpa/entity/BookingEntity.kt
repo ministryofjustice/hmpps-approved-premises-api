@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import jakarta.persistence.CascadeType
+import jakarta.persistence.ColumnResult
+import jakarta.persistence.ConstructorResult
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -10,8 +12,10 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
+import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.hibernate.annotations.NamedNativeQuery
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingRecord
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import java.time.Instant
 import java.time.LocalDate
@@ -280,6 +285,42 @@ interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
   ): Slice<BookingEntity>
 }
 
+@NamedNativeQuery(
+  name = "BookingEntity.getBookingsV2",
+  query = """
+      SELECT 
+          b.bed_id AS bedId,
+          b.arrival_date AS arrivalDate,
+          b.departure_date AS departureDate,
+          t.working_day_count AS turnaroundDays
+      FROM bookings b
+      LEFT JOIN cancellations c ON c.booking_id = b.id
+      LEFT JOIN (
+          SELECT DISTINCT ON (booking_id) booking_id, working_day_count
+          FROM cas3_turnarounds
+          ORDER BY booking_id, created_at DESC
+      ) t ON t.booking_id = b.id
+      WHERE b.service = 'temporary-accommodation' 
+        AND c.id IS NULL 
+        AND b.arrival_date <= :endDate 
+        AND b.departure_date >= :startDate
+    """,
+  resultSetMapping = "BookingRecordMapping",
+)
+@SqlResultSetMapping(
+  name = "BookingRecordMapping",
+  classes = [
+    ConstructorResult(
+      targetClass = BookingRecord::class,
+      columns = [
+        ColumnResult(name = "bedId", type = UUID::class),
+        ColumnResult(name = "arrivalDate", type = LocalDate::class),
+        ColumnResult(name = "departureDate", type = LocalDate::class),
+        ColumnResult(name = "turnaroundDays", type = Int::class),
+      ],
+    ),
+  ],
+)
 @Entity
 @Table(name = "bookings")
 data class BookingEntity(
