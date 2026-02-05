@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -169,7 +169,7 @@ class Cas2OffenderServiceTest {
   @Nested
   inner class GetPersonByNomsNumber {
     val nomsNumber = "DEF123"
-    private val currentUser = NomisUserEntityFactory().withActiveCaseloadId("my-prison").produce()
+    private val currentUser = Cas2UserEntityFactory().withActiveNomisCaseloadId("my-prison").produce()
 
     @Test
     fun `returns NotFound result when Probation Offender Search returns 404`() {

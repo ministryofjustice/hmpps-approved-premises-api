@@ -22,7 +22,7 @@ class StatusUpdateTransformer(
     label = jpa.label,
     description = jpa.description,
     updatedBy = externalUserTransformer.transformJpaToApi(jpa.assessor),
-    updatedAt = jpa.createdAt?.toInstant(),
+    updatedAt = jpa.createdAt.toInstant(),
     statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
   )
 

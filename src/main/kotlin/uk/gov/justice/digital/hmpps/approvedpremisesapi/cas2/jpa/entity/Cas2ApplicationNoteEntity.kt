@@ -15,9 +15,6 @@ import java.util.UUID
 
 @Repository
 interface Cas2ApplicationNoteRepository : JpaRepository<Cas2ApplicationNoteEntity, UUID> {
-  @Query("SELECT n.id FROM Cas2ApplicationNoteEntity n")
-  fun findApplicationNoteIds(): List<UUID>
-
   @Query(
     "SELECT n FROM Cas2ApplicationNoteEntity n WHERE n.assessment IS NULL",
   )
@@ -40,8 +37,9 @@ data class Cas2ApplicationNoteEntity(
   @Id
   val id: UUID,
 
-  @Transient
-  final val createdByUser: UnifiedUser,
+  @ManyToOne
+  @JoinColumn(name = "created_by_cas2_user_id")
+  var createdByUser: Cas2UserEntity,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
@@ -54,34 +52,6 @@ data class Cas2ApplicationNoteEntity(
   @ManyToOne
   @JoinColumn(name = "assessment_id")
   var assessment: Cas2AssessmentEntity?,
-
-  @ManyToOne
-  @JoinColumn(name = "created_by_cas2_user_id")
-  var createdByCas2User: Cas2UserEntity? = null,
 ) {
-
-  /*
-  BAIL-WIP createdByNomisUser and createdByExternalUser can both be replaced by cas2user entity when the move happens
-  the unifieduser was an early attempt to unify the different user types but didn't seem to get propagated across the whole
-  code base.
-   */
-  @ManyToOne
-  @JoinColumn(name = "created_by_nomis_user_id")
-  var createdByNomisUser: NomisUserEntity? = null
-
-  @ManyToOne
-  @JoinColumn(name = "created_by_external_user_id")
-  var createdByExternalUser: ExternalUserEntity? = null
-
-  init {
-    when (this.createdByUser) {
-      is NomisUserEntity -> this.createdByNomisUser = this.createdByUser
-      is ExternalUserEntity -> this.createdByExternalUser = this.createdByUser
-    }
-  }
-
-  fun getUser(): UnifiedUser = this.createdByNomisUser ?: this.createdByExternalUser ?: error("No user found!")
-  fun getUserId(): UUID = this.createdByNomisUser?.id ?: this.createdByExternalUser?.id ?: error("No user id found!")
-
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
 }

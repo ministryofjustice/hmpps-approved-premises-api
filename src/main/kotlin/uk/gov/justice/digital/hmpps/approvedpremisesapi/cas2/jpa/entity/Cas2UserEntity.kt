@@ -27,7 +27,13 @@ enum class Cas2UserType(val authSource: String) {
 
 @Repository
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
+  fun findByServiceOrigin(serviceOrigin: Cas2ServiceOrigin): List<Cas2UserEntity>
+  fun findByUsernameAndServiceOrigin(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByUserTypeAndServiceOrigin(type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): List<Cas2UserEntity>
+  fun findByIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByNomisStaffIdAndServiceOrigin(nomisStaffId: Long, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
   fun findByUsernameAndUserTypeAndServiceOrigin(username: String, type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByUsernameAndUserTypeAndServiceOriginAndActiveNomisCaseloadId(username: String, type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin, activeNomisCaseloadId: String?): Cas2UserEntity?
 }
 
 @Entity
@@ -36,8 +42,6 @@ data class Cas2UserEntity(
   @Id
   val id: UUID,
   val username: String,
-
-  // Cas2v2User interface implementation
   var email: String?,
   var name: String,
 
@@ -57,15 +61,15 @@ data class Cas2UserEntity(
   // Delius specific fields that are only expected to have values if the
   // accountType is Cas2UserType.DELIUS
   @Convert(converter = StringListConverter::class)
-  var deliusTeamCodes: List<String>?,
-  var deliusStaffCode: String?,
+  var deliusTeamCodes: List<String>? = null,
+  var deliusStaffCode: String? = null,
 
   var isEnabled: Boolean,
   var isActive: Boolean,
 
   val createdAt: OffsetDateTime = OffsetDateTime.now(),
 
-  @OneToMany(mappedBy = "createdByCas2User")
+  @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
 
   @Enumerated(EnumType.STRING)
@@ -78,4 +82,6 @@ data class Cas2UserEntity(
     Cas2UserType.DELIUS -> deliusStaffCode ?: error("Couldn't resolve delius ID for user $id")
     Cas2UserType.EXTERNAL -> "" // BAIL-WIP - this currently needs to be not null - refactor them when we add the user type to cas2 user type
   }
+
+  fun isExternal() = userType == Cas2UserType.EXTERNAL
 }

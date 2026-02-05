@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -110,29 +110,29 @@ class Cas2v2ExternalReferralHistoryTest : Cas2v2IntegrationTestBase() {
   }
 
   private fun createApplication(
-    user: Cas2v2UserEntity,
+    user: Cas2UserEntity,
     label: String,
-  ): Cas2v2ApplicationEntity {
-    val statusApplication = cas2v2ApplicationEntityFactory.produceAndPersist {
+  ): Cas2ApplicationEntity {
+    val statusApplication = cas2ApplicationEntityFactory.produceAndPersist {
       withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
       withCreatedByUser(user)
     }
-    val application = cas2v2ApplicationEntityFactory.produceAndPersist {
+    val application = cas2ApplicationEntityFactory.produceAndPersist {
       withId(statusApplication.id)
       withCreatedByUser(user)
       withCrn(crn)
       withSubmittedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
       withStatusUpdates(
         mutableListOf(
-          cas2v2StatusUpdateEntityFactory.produceAndPersist {
+          cas2StatusUpdateEntityFactory.produceAndPersist {
             withLabel(label)
             withApplication(statusApplication)
-            withAssessor(cas2v2UserEntityFactory.produceAndPersist { withUserType(Cas2v2UserType.EXTERNAL) })
+            withAssessor(cas2UserEntityFactory.produceAndPersist { withUserType(Cas2UserType.EXTERNAL) })
           },
         ),
       )
       withAssessment(
-        cas2v2AssessmentEntityFactory.produceAndPersist {
+        cas2AssessmentEntityFactory.produceAndPersist {
           withApplication(statusApplication)
         },
       )
