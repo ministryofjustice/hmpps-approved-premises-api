@@ -46,6 +46,7 @@ spring:
     locations: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/dev,classpath:db/migration/all-except-integration
   jpa:
     database: postgresql
+    show-sql: true
   output:
     ansi:
       enabled: ALWAYS
@@ -74,8 +75,8 @@ logging:
     # Log hibernate queries
     org.hibernate.SQL: DEBUG
     # Uncomment the two entries below to see SQL binding
-    #org.hibernate.orm.jdbc.bind: TRACE
-    #org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     # Log jdbc template queries
     org.springframework.jdbc.core.JdbcTemplate: debug
     # allows us to see the JWT token to simplify local API invocation

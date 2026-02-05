@@ -341,7 +341,7 @@ data class BookingEntity(
   var cancellations: MutableList<CancellationEntity>,
   @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY)
   var confirmation: Cas3ConfirmationEntity?,
-  @OneToOne
+  @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "application_id")
   var application: ApplicationEntity?,
   @OneToOne
