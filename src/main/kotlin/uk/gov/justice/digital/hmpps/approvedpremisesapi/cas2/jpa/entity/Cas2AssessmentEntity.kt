@@ -17,9 +17,7 @@ import java.util.UUID
 
 @Repository
 interface Cas2AssessmentRepository : JpaRepository<Cas2AssessmentEntity, UUID> {
-  fun findFirstByApplicationIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2AssessmentEntity?
-  fun findByIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2AssessmentEntity?
-  fun findByServiceOrigin(serviceOrigin: Cas2ServiceOrigin): List<Cas2AssessmentEntity>
+  fun findFirstByApplicationId(applicationId: UUID): Cas2AssessmentEntity?
 }
 
 @Entity

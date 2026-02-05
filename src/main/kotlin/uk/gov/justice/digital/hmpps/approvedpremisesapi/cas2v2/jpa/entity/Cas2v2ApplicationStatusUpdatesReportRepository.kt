@@ -15,7 +15,6 @@ interface Cas2v2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainE
         CAST(events.id AS TEXT) AS id,
         CAST(events.application_id AS TEXT) AS applicationId,
         applications.application_origin as applicationOrigin,
-        applications.service_origin as serviceOrigin,
         events.data -> 'eventDetails' -> 'personReference' ->> 'noms' AS personNoms,
         events.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS personCrn,
         events.data -> 'eventDetails' -> 'newStatus' ->> 'name' AS newStatus,
@@ -27,14 +26,14 @@ interface Cas2v2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainE
          ) AS updatedAt
 
       FROM domain_events events
-      INNER JOIN cas_2_applications applications ON events.application_id = applications.id and applications.service_origin = 'BAIL'
+      INNER JOIN cas_2_v2_applications applications ON events.application_id = applications.id
       LEFT JOIN LATERAL jsonb_array_elements(events.data -> 'eventDetails' -> 'newStatus' -> 'statusDetails') as details ON true
       WHERE events.type = 'CAS2_APPLICATION_STATUS_UPDATED'
         AND events.occurred_at  > CURRENT_DATE - 365
+        AND applications.application_origin IS NOT NULL
       GROUP BY 
         events.id,
-        applications.application_origin,
-        applications.service_origin
+        applications.application_origin
       ORDER BY updatedAt DESC;
     """,
     nativeQuery = true,

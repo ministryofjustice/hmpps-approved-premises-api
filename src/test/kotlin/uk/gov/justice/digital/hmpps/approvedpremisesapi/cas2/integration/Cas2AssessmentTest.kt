@@ -11,7 +11,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -130,7 +130,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2UserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+    private fun createSubmittedApplication(applicationId: UUID, referrer: NomisUserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withId(applicationId)
       withCreatedByUser(referrer)
       withSubmittedAt(OffsetDateTime.now())
@@ -259,7 +259,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2UserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+    private fun createSubmittedApplication(applicationId: UUID, referrer: NomisUserEntity): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
       withId(applicationId)
       withCreatedByUser(referrer)
       withSubmittedAt(OffsetDateTime.now())

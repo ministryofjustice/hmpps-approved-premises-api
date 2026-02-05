@@ -57,6 +57,4 @@ data class Cas2v2ApplicationSummaryEntity(
   val prisonCode: String,
   @Column(name = "application_origin")
   var applicationOrigin: String? = null,
-  @Column(name = "service_origin")
-  var serviceOrigin: String? = null,
 )

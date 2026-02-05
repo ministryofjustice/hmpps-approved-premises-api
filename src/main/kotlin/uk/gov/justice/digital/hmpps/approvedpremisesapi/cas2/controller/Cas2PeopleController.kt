@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
@@ -38,7 +37,7 @@ class Cas2PeopleController(
   @SuppressWarnings("TooGenericExceptionThrown", "ThrowsCount")
   @GetMapping("/people/search")
   fun peopleSearchGet(@RequestParam nomsNumber: String): ResponseEntity<Person> {
-    val currentUser = cas2UserService.getUserForRequest(Cas2ServiceOrigin.HDC)
+    val currentUser = cas2UserService.getUserForRequest()
 
     val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
 

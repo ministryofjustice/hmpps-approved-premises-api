@@ -1,10 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
+import jakarta.transaction.Transactional
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -16,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.nomisuserroles.No
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.nomisuserroles.NomisUserDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -24,11 +26,21 @@ class Cas2UserService(
   private val httpAuthService: HttpAuthService,
   private val nomisUserRolesApiClient: NomisUserRolesApiClient,
   private val nomisUserRolesForRequesterApiClient: NomisUserRolesForRequesterApiClient,
+  private val nomisUserRepository: NomisUserRepository,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val manageUsersApiClient: ManageUsersApiClient,
   private val cas2UserRepository: Cas2UserRepository,
 ) {
-  fun getUserForRequest(serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
+  // BAIL-WIP When we migrate, remove this method and force all calls to getCas2UserForRequest
+  fun getUserForRequest(): NomisUserEntity {
+    val authenticatedPrincipal = httpAuthService.getNomisPrincipalOrThrow()
+    val jwt = authenticatedPrincipal.token.tokenValue
+    val username = authenticatedPrincipal.name
+
+    return getNomisUserForUsername(username, jwt)
+  }
+
+  fun getCas2UserForRequest(serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val authenticatedPrincipal = httpAuthService.getPrincipalOrThrow(listOf("nomis", "auth", "delius"))
     val jwt = authenticatedPrincipal.token.tokenValue
     val username = authenticatedPrincipal.name
@@ -37,17 +49,17 @@ class Cas2UserService(
     return getCas2UserForUsername(username, jwt, userType, serviceOrigin)
   }
 
-  fun getNomisUserById(id: UUID, serviceOrigin: Cas2ServiceOrigin) = cas2UserRepository.findByIdAndServiceOrigin(id, serviceOrigin) ?: throw NotFoundProblem(id, "NomisUser")
+  fun getNomisUserById(id: UUID) = nomisUserRepository.findById(id).orElseThrow { NotFoundProblem(id, "NomisUser") }
 
-  fun getUserByStaffId(staffId: Long, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
-    val userDetails = cas2UserRepository.findByNomisStaffIdAndServiceOrigin(staffId, serviceOrigin)
+  fun getUserByStaffId(staffId: Long): NomisUserEntity {
+    val userDetails = nomisUserRepository.findByNomisStaffId(staffId)
     if (userDetails != null) {
       return userDetails
     }
     val userStaffInformation = getUserStaffInformation(staffId)
     val normalisedUsername = userStaffInformation.generalAccount.username.uppercase()
     val userDetail = getUserDetail(username = normalisedUsername)
-    return ensureUserExists(username = normalisedUsername, userDetail, serviceOrigin)
+    return ensureUserExists(username = normalisedUsername, userDetail)
   }
 
   private fun getUserDetail(username: String): NomisUserDetail = when (
@@ -64,35 +76,66 @@ class Cas2UserService(
     is ClientResult.Failure -> nomsStaffInformationResponse.throwException()
   }
 
+  @Transactional(value = Transactional.TxType.REQUIRES_NEW)
+  fun getNomisUserForUsername(username: String, jwt: String): NomisUserEntity {
+    val nomisUserDetails = when (
+      val nomisUserDetailResponse = nomisUserRolesForRequesterApiClient.getUserDetailsForMe(jwt)
+    ) {
+      is ClientResult.Success -> nomisUserDetailResponse.body
+      is ClientResult.Failure -> nomisUserDetailResponse.throwException()
+    }
+
+    if (nomisUserDetails.primaryEmail == null) {
+      error("User $username does not have a primary email set in NOMIS")
+    }
+
+    val normalisedUsername = username.uppercase()
+    val existingUser = nomisUserRepository.findByNomisUsername(normalisedUsername)
+
+    if (existingUser != null) {
+      if (existingUserDetailsHaveChanged(existingUser, nomisUserDetails)) {
+        existingUser.email = nomisUserDetails.primaryEmail
+        existingUser.activeCaseloadId = nomisUserDetails.activeCaseloadId
+        nomisUserRepository.save(existingUser)
+      }
+      return existingUser
+    }
+    return ensureUserExists(username = normalisedUsername, nomisUserDetails)
+  }
+
   private fun ensureUserExists(
     username: String,
     nomisUserDetails: NomisUserDetail,
-    serviceOrigin: Cas2ServiceOrigin,
-  ): Cas2UserEntity {
-    return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin) ?: try {
-      cas2UserRepository.save(
-        Cas2UserEntity(
+  ): NomisUserEntity {
+    return nomisUserRepository.findByNomisUsername(username) ?: try {
+      nomisUserRepository.save(
+        NomisUserEntity(
           id = UUID.randomUUID(),
           name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
-          username = username,
+          nomisUsername = username,
           nomisStaffId = nomisUserDetails.staffId,
-          nomisAccountType = nomisUserDetails.accountType,
+          accountType = nomisUserDetails.accountType,
           email = nomisUserDetails.primaryEmail,
           isEnabled = nomisUserDetails.enabled,
           isActive = nomisUserDetails.active,
-          activeNomisCaseloadId = nomisUserDetails.activeCaseloadId,
-          userType = Cas2UserType.NOMIS,
-          createdAt = OffsetDateTime.now(),
-          serviceOrigin = serviceOrigin,
+          activeCaseloadId = nomisUserDetails.activeCaseloadId,
         ),
       )
     } catch (ex: DataIntegrityViolationException) {
-      return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin)
+      return nomisUserRepository.findByNomisUsername(username)
         ?: throw IllegalStateException("User creation failed and username $username not found", ex)
     }
   }
 
-  private fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
+  private fun existingUserDetailsHaveChanged(
+    existingUser: NomisUserEntity,
+    nomisUserDetails: NomisUserDetail,
+  ): Boolean = (
+    existingUser.email != nomisUserDetails.primaryEmail ||
+      existingUser.activeCaseloadId != nomisUserDetails.activeCaseloadId
+    )
+
+  fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val normalisedUsername = username.uppercase()
 
     val userEntity = when (userType) {
@@ -120,10 +163,7 @@ class Cas2UserService(
 
     val existingUser = getExistingCas2User(username, Cas2UserType.NOMIS, serviceOrigin)
     if (existingUser != null) {
-      if (
-        existingUser.email != nomisUserDetails.primaryEmail ||
-        existingUser.activeNomisCaseloadId != nomisUserDetails.activeCaseloadId
-      ) {
+      if (existingUser.email != nomisUserDetails.primaryEmail || existingUser.activeNomisCaseloadId != nomisUserDetails.activeCaseloadId) {
         existingUser.email = nomisUserDetails.primaryEmail
         existingUser.activeNomisCaseloadId = nomisUserDetails.activeCaseloadId
 
@@ -146,9 +186,7 @@ class Cas2UserService(
         isActive = nomisUserDetails.active,
         deliusTeamCodes = null,
         deliusStaffCode = null,
-        createdAt = OffsetDateTime.now(),
         serviceOrigin = serviceOrigin,
-        nomisAccountType = nomisUserDetails.accountType,
       ),
     )
   }
@@ -186,7 +224,6 @@ class Cas2UserService(
         deliusTeamCodes = deliusUser.teamCodes(),
         deliusStaffCode = deliusUser.code,
         serviceOrigin = serviceOrigin,
-        createdAt = OffsetDateTime.now(),
       ),
     )
   }
@@ -215,9 +252,7 @@ class Cas2UserService(
         email = externalUserDetails.email,
         isEnabled = externalUserDetails.enabled,
         isActive = true,
-        createdAt = OffsetDateTime.now(),
         serviceOrigin = serviceOrigin,
-        externalType = "NACRO",
       ),
     )
   }

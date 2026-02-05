@@ -6,8 +6,9 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
@@ -32,14 +33,14 @@ class Cas2AssessmentServiceTest {
     fun `saves and returns entity from db`() {
       val application = Cas2ApplicationEntityFactory()
         .withCreatedByUser(
-          Cas2UserEntityFactory()
+          NomisUserEntityFactory()
             .produce(),
         ).produce()
       val assessEntity = Cas2AssessmentEntity(
         id = UUID.randomUUID(),
         application = application,
         createdAt = OffsetDateTime.now(),
-        serviceOrigin = application.serviceOrigin,
+        serviceOrigin = Cas2ServiceOrigin.HDC,
       )
 
       every { mockAssessmentRepository.save(any()) } answers
@@ -68,14 +69,14 @@ class Cas2AssessmentServiceTest {
       val assessmentId = UUID.randomUUID()
       val application = Cas2ApplicationEntityFactory()
         .withCreatedByUser(
-          Cas2UserEntityFactory()
+          NomisUserEntityFactory()
             .produce(),
         ).produce()
       val assessEntity = Cas2AssessmentEntity(
         id = assessmentId,
         application = application,
         createdAt = OffsetDateTime.now(),
-        serviceOrigin = application.serviceOrigin,
+        serviceOrigin = Cas2ServiceOrigin.HDC,
       )
 
       val newAssessmentData = UpdateCas2Assessment(
@@ -88,7 +89,7 @@ class Cas2AssessmentServiceTest {
           assessEntity
         }
 
-      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC) } answers
+      every { mockAssessmentRepository.findByIdOrNull(assessmentId) } answers
         {
           assessEntity
         }
@@ -122,7 +123,7 @@ class Cas2AssessmentServiceTest {
         assessorName = "Anne Assessor",
       )
 
-      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC) } answers
+      every { mockAssessmentRepository.findByIdOrNull(assessmentId) } answers
         {
           null
         }

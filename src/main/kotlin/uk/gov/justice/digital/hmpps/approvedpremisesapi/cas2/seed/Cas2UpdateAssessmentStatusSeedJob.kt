@@ -1,13 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed
 
 import org.slf4j.LoggerFactory
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
@@ -17,7 +16,7 @@ import java.util.UUID
 class Cas2UpdateAssessmentStatusSeedJob(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationRepository: Cas2ApplicationRepository,
-  private val cas2UserRepository: Cas2UserRepository,
+  private val externalUserRepository: ExternalUserRepository,
   private val cas2UpdateService: StatusUpdateService,
 ) : SeedJob<Cas2AssessmentUpdateStatusSeedRow>(
   requiredHeaders =
@@ -46,18 +45,18 @@ class Cas2UpdateAssessmentStatusSeedJob(
     )
 
     val assessment =
-      assessmentRepository.findByIdAndServiceOrigin(row.assessmentId, Cas2ServiceOrigin.HDC)
+      assessmentRepository.findByIdOrNull(row.assessmentId)
         ?: throw SeedException(
           "Assessment with id ${row.assessmentId} not found",
         )
 
-    val application = applicationRepository.findByIdAndServiceOrigin(row.applicationId, assessment.serviceOrigin)
+    val application = applicationRepository.findByIdOrNull(row.applicationId)
       ?: throw SeedException(
         "Application with id ${row.applicationId} not found",
       )
 
     val assessor =
-      cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(row.assessorUsername, Cas2UserType.EXTERNAL, application.serviceOrigin)
+      externalUserRepository.findByUsername(row.assessorUsername)
         ?: throw SeedException(
           "Assessor with username ${row.assessorUsername} not found",
         )

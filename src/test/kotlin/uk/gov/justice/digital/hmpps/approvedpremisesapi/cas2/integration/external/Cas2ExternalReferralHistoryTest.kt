@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
@@ -109,7 +109,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
   }
 
   private fun createApplication(
-    user: Cas2UserEntity,
+    user: NomisUserEntity,
     label: String,
   ): Cas2ApplicationEntity {
     val statusApplication = cas2ApplicationEntityFactory.produceAndPersist {
@@ -126,7 +126,7 @@ class Cas2ExternalReferralHistoryTest : IntegrationTestBase() {
           cas2StatusUpdateEntityFactory.produceAndPersist {
             withLabel(label)
             withApplication(statusApplication)
-            withAssessor(cas2UserEntityFactory.produceAndPersist())
+            withAssessor(externalUserEntityFactory.produceAndPersist())
           },
         ),
       )

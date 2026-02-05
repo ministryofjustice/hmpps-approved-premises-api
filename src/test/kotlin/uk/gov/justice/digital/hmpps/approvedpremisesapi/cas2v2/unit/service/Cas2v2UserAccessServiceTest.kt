@@ -8,9 +8,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
 import java.time.OffsetDateTime
@@ -26,15 +25,13 @@ class Cas2v2UserAccessServiceTest {
 
     @Nested
     inner class WhenApplicationCreatedByUser {
-      private val user = Cas2UserEntityFactory()
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      private val user = Cas2v2UserEntityFactory()
         .produce()
 
       @Test
       fun `returns true`() {
-        val application = Cas2ApplicationEntityFactory()
+        val application = Cas2v2ApplicationEntityFactory()
           .withCreatedByUser(user)
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
 
         assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, application)).isTrue
@@ -46,17 +43,14 @@ class Cas2v2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationNotSubmitted {
-        private val user = Cas2UserEntityFactory()
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        private val user = Cas2v2UserEntityFactory()
           .produce()
-        private val anotherUser = Cas2UserEntityFactory()
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        private val anotherUser = Cas2v2UserEntityFactory()
           .produce()
 
         @Test
         fun `returns false`() {
-          val cas2v2Application = Cas2ApplicationEntityFactory()
-            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          val cas2v2Application = Cas2v2ApplicationEntityFactory()
             .withCreatedByUser(anotherUser)
             .produce()
 
@@ -66,22 +60,18 @@ class Cas2v2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationMadeForDifferentPrison {
-        private val user = Cas2UserEntityFactory()
+        private val user = Cas2v2UserEntityFactory()
           .withActiveNomisCaseloadId("my-prison")
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
-        private val anotherUser = Cas2UserEntityFactory()
-          .withActiveNomisCaseloadId("different-prison")
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
-          .produce()
+        private val anotherUser = Cas2v2UserEntityFactory()
+          .withActiveNomisCaseloadId("different-prison").produce()
 
         @Test
         fun `returns false`() {
-          val cas2v2Application = Cas2ApplicationEntityFactory()
+          val cas2v2Application = Cas2v2ApplicationEntityFactory()
             .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("different-prison")
-            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
             .produce()
 
           assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isFalse
@@ -89,20 +79,16 @@ class Cas2v2UserAccessServiceTest {
 
         @Nested
         inner class WhenNoPrisonData {
-          private val userWithNoPrison = Cas2UserEntityFactory()
+          private val userWithNoPrison = Cas2v2UserEntityFactory()
             .withActiveNomisCaseloadId("my-prison")
-            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
             .produce()
-          private val anotherUserWithNoPrison = Cas2UserEntityFactory()
-            .withActiveNomisCaseloadId("different-prison")
-            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
-            .produce()
+          private val anotherUserWithNoPrison = Cas2v2UserEntityFactory()
+            .withActiveNomisCaseloadId("different-prison").produce()
 
           @Test
           fun `returns false`() {
-            val cas2v2Application = Cas2ApplicationEntityFactory()
+            val cas2v2Application = Cas2v2ApplicationEntityFactory()
               .withCreatedByUser(anotherUserWithNoPrison)
-              .withServiceOrigin(Cas2ServiceOrigin.BAIL)
               .withSubmittedAt(OffsetDateTime.now())
               .produce()
 
@@ -118,22 +104,19 @@ class Cas2v2UserAccessServiceTest {
 
       @Nested
       inner class WhenCas2v2ApplicationMadeForSamePrison {
-        private val user = Cas2UserEntityFactory()
+        private val user = Cas2v2UserEntityFactory()
           .withActiveNomisCaseloadId("my-prison")
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
-        private val anotherUser = Cas2UserEntityFactory()
+        private val anotherUser = Cas2v2UserEntityFactory()
           .withActiveNomisCaseloadId("my-prison")
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
 
         @Test
         fun `returns true if the user created the application`() {
-          val cas2v2Application = Cas2ApplicationEntityFactory()
+          val cas2v2Application = Cas2v2ApplicationEntityFactory()
             .withCreatedByUser(user)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")
-            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
             .produce()
 
           assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isTrue
@@ -141,11 +124,10 @@ class Cas2v2UserAccessServiceTest {
 
         @Test
         fun `returns true when user NOT creator`() {
-          val cas2v2Application = Cas2ApplicationEntityFactory()
+          val cas2v2Application = Cas2v2ApplicationEntityFactory()
             .withCreatedByUser(anotherUser)
             .withSubmittedAt(OffsetDateTime.now())
             .withReferringPrisonCode("my-prison")
-            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
             .produce()
 
           assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isTrue
@@ -154,24 +136,20 @@ class Cas2v2UserAccessServiceTest {
 
       @Nested
       inner class PrisonBailApplications {
-        private val referrerOne = Cas2UserEntityFactory()
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        private val referrerOne = Cas2v2UserEntityFactory()
           .produce()
-        private val referrerTwo = Cas2UserEntityFactory()
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        private val referrerTwo = Cas2v2UserEntityFactory()
           .produce()
 
-        private val submittedPrisonApplication = Cas2ApplicationEntityFactory()
+        private val submittedPrisonApplication = Cas2v2ApplicationEntityFactory()
           .withApplicationOrigin(ApplicationOrigin.prisonBail)
           .withCreatedByUser(referrerOne)
           .withSubmittedAt(OffsetDateTime.now())
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
 
-        private val unsubmittedPrisonApplication = Cas2ApplicationEntityFactory()
+        private val unsubmittedPrisonApplication = Cas2v2ApplicationEntityFactory()
           .withApplicationOrigin(ApplicationOrigin.prisonBail)
           .withCreatedByUser(referrerOne)
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
 
         @Nested

@@ -8,6 +8,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
@@ -16,6 +17,9 @@ import java.util.UUID
 
 @Repository
 interface Cas2v2StatusUpdateRepository : JpaRepository<Cas2v2StatusUpdateEntity, UUID> {
+  @Query("SELECT n.id FROM Cas2v2StatusUpdateEntity n")
+  fun findStatusUpdateIds(): List<UUID>
+
   fun findFirstByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas2v2StatusUpdateEntity?
 }
 

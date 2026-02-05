@@ -3,9 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.seed
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2AssessmentUpdateStatusSeedRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -19,8 +18,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          cas2UserEntityFactory.produceAndPersist {
-            withUsername("nomis_username")
+          nomisUserEntityFactory.produceAndPersist {
+            withNomisUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -40,8 +39,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.EXTERNAL)
+      externalUserEntityFactory.produceAndPersist {
         withUsername("billy.bunter")
         withName("Billy Bunter")
         withEmail("billy.bunter@example.com")
@@ -60,7 +58,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     seed(SeedFileType.cas2UpdateAssessmentStatus, rowsToCsv(listOf(seedRow)))
 
     // Then
-    val persistedAssessment = cas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC)!!
+    val persistedAssessment = cas2AssessmentRepository.findByIdOrNull(assessment.id)!!
     assertThat(persistedAssessment.statusUpdates).hasSize(1)
 
     val statusUpdate =
@@ -104,8 +102,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          cas2UserEntityFactory.produceAndPersist {
-            withUsername("nomis_username")
+          nomisUserEntityFactory.produceAndPersist {
+            withNomisUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -119,8 +117,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.EXTERNAL)
+      externalUserEntityFactory.produceAndPersist {
         withUsername("john.smith")
         withName("John Smith")
         withEmail("john.smith@example.com")
@@ -150,8 +147,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          cas2UserEntityFactory.produceAndPersist {
-            withUsername("nomis_username")
+          nomisUserEntityFactory.produceAndPersist {
+            withNomisUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -171,8 +168,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.EXTERNAL)
+      externalUserEntityFactory.produceAndPersist {
         withUsername("bob.wilson")
         withName("Bob Wilson")
         withEmail("bob.wilson@example.com")
@@ -202,8 +198,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          cas2UserEntityFactory.produceAndPersist {
-            withUsername("nomis_username")
+          nomisUserEntityFactory.produceAndPersist {
+            withNomisUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -242,9 +238,9 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
   @Test
   fun `should make no change if application ID does not match assessment application`() {
     // Given
-    val user =
-      cas2UserEntityFactory.produceAndPersist {
-        withUsername("nomis_username")
+    var user =
+      nomisUserEntityFactory.produceAndPersist {
+        withNomisUsername("nomis_username")
         withNomisStaffCode(100L)
         withNomisStaffIdentifier(101L)
         withIsActive(true)
@@ -275,8 +271,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.EXTERNAL)
+      externalUserEntityFactory.produceAndPersist {
         withUsername("charlie.davis")
         withName("Charlie Davis")
         withEmail("charlie.davis@example.com")
@@ -305,8 +300,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          cas2UserEntityFactory.produceAndPersist {
-            withUsername("nomis_username")
+          nomisUserEntityFactory.produceAndPersist {
+            withNomisUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -326,8 +321,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.EXTERNAL)
+      externalUserEntityFactory.produceAndPersist {
         withUsername("david.evans")
         withName("David Wilson") // But user has different name
         withEmail("david.evans@example.com")
@@ -356,8 +350,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          cas2UserEntityFactory.produceAndPersist {
-            withUsername("nomis_username")
+          nomisUserEntityFactory.produceAndPersist {
+            withNomisUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -377,8 +371,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.EXTERNAL)
+      externalUserEntityFactory.produceAndPersist {
         withUsername("emma.foster")
         withName("Emma Foster")
         withEmail("emma.foster@example.com")
@@ -408,8 +401,8 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     val application =
       cas2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(
-          cas2UserEntityFactory.produceAndPersist {
-            withUsername("nomis_username")
+          nomisUserEntityFactory.produceAndPersist {
+            withNomisUsername("nomis_username")
             withNomisStaffCode(100L)
             withNomisStaffIdentifier(101L)
             withIsActive(true)
@@ -429,8 +422,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val assessor =
-      cas2UserEntityFactory.produceAndPersist {
-        withUserType(Cas2UserType.EXTERNAL)
+      externalUserEntityFactory.produceAndPersist {
         withUsername("frank.green")
         withName("Frank Green")
         withEmail("frank.green@example.com")
@@ -458,7 +450,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     seed(SeedFileType.cas2UpdateAssessmentStatus, rowsToCsv(listOf(seedRow1, seedRow2)))
 
     // Then
-    val persistedAssessment = cas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC)
+    val persistedAssessment = cas2AssessmentRepository.findByIdOrNull(assessment.id)
     assertThat(persistedAssessment?.statusUpdates).hasSize(2)
 
     // Verify both status updates were created

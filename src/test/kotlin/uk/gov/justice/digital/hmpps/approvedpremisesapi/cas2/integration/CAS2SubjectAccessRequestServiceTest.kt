@@ -1,4 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
@@ -8,8 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -44,7 +45,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Applications`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity()
+    val user = nomisUserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
 
@@ -74,7 +75,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Application with assessment`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity()
+    val user = nomisUserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
@@ -105,7 +106,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Application with Note`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity()
+    val user = nomisUserEntity()
 
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
@@ -139,13 +140,13 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Application with Note and Status update`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity()
-    val assessor = cas2ExternalUserEntity()
+    val user = nomisUserEntity()
+    val externalAssessor = externalUserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, externalAssessor)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
 
     val result = sarService.getCAS2Result(
@@ -175,13 +176,13 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS2 Information - Domain Events`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity()
-    val assessor = cas2ExternalUserEntity()
+    val user = nomisUserEntity()
+    val externalAssessor = externalUserEntity()
     val application = cas2ApplicationEntity(offenderDetails, user)
     val assessment = cas2AssessmentEntity(application)
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, externalAssessor)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
     val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, ServiceName.cas2)
 
@@ -217,7 +218,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "assessment_id": "${statusUpdateDetail.statusUpdate.assessment!!.id}",
         "status_label": "${statusUpdateDetail.statusUpdate.label}",
         "detail_label": "${statusUpdateDetail.label}",
-        "created_at": "${statusUpdateDetail.createdAt.toStandardisedFormat()}"
+        "created_at": "${statusUpdateDetail.createdAt!!.toStandardisedFormat()}"
     }
   """.trimIndent()
 
@@ -229,7 +230,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       	"application_id": "${statusUpdate.application.id}",
       	"assessment_id": "${statusUpdate.assessment!!.id}",
       	"assessor_name": "${statusUpdate.assessor.name}",
-        "assessor_origin": "${statusUpdate.assessor.externalType}",
+        "assessor_origin": "${statusUpdate.assessor.origin}",
       	"created_at": "${statusUpdate.createdAt.toStandardisedFormat()}",
         "description": "${statusUpdate.description}",
         "label": "${statusUpdate.label}"
@@ -243,8 +244,8 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "noms_number": "${applicationNotes.application.nomsNumber}",
       "application_id": "${applicationNotes.application.id}",
       "assessment_id": "${applicationNotes.assessment!!.id}",
-      "created_by_user": "${applicationNotes.createdByUser.name}",
-      "created_by_user_type": "NOMIS",
+      "created_by_user": "${applicationNotes.getUser().name}",
+      "created_by_user_type": "nomis",
       "body": "${applicationNotes.body}"
   }
   """.trimIndent()
@@ -278,7 +279,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "conditional_release_date": "$arrivedAtDateOnly",
       "abandoned_at": null,
       "application_origin": "${application.applicationOrigin}",
-      "service_origin": "${application.serviceOrigin}",
       "bail_hearing_date": null,
     }
   """.trimIndent()
@@ -286,7 +286,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   private fun cas2ApplicationNoteEntity(
     application: Cas2ApplicationEntity,
     assessment: Cas2AssessmentEntity,
-    user: Cas2UserEntity,
+    user: NomisUserEntity,
   ) = cas2NoteEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
@@ -298,12 +298,12 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   private fun cas2StatusUpdateEntity(
     application: Cas2ApplicationEntity,
     assessment: Cas2AssessmentEntity,
-    assessor: Cas2UserEntity,
+    externalAssessor: ExternalUserEntity,
   ): Cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
     withStatusId(UUID.randomUUID())
-    withAssessor(assessor)
+    withAssessor(externalAssessor)
     withLabel("Some Label")
     withDescription("Some Description")
   }
@@ -312,6 +312,13 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withStatusUpdate(statusUpdate)
     withLabel("Some detailed label")
     withStatusDetailId(UUID.randomUUID())
+  }
+
+  private fun externalUserEntity() = externalUserEntityFactory.produceAndPersist {
+    withName(randomStringMultiCaseWithNumbers(12))
+    withEmail(randomEmailAddress())
+    withOrigin("NACRO")
+    withUsername(randomStringMultiCaseWithNumbers(10))
   }
 
   private fun cas2AssessmentEntity(application: Cas2ApplicationEntity) = cas2AssessmentEntityFactory.produceAndPersist {
@@ -323,7 +330,7 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   private fun cas2ApplicationEntity(
     offenderDetails: OffenderDetailSummary,
-    user: Cas2UserEntity,
+    user: NomisUserEntity,
   ) = cas2ApplicationEntityFactory.produceAndPersist {
     withCrn(offenderDetails.otherIds.crn)
     withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
@@ -334,25 +341,18 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withReferringPrisonCode(randomStringMultiCaseWithNumbers(3))
     withTelephoneNumber(randomStringMultiCaseWithNumbers(7))
+
     withConditionalReleaseDate(LocalDate.parse(arrivedAtDateOnly))
     withHdcEligibilityDate(LocalDate.parse(arrivedAtDateOnly))
     withPreferredAreas("some areas")
   }
 
-  private fun cas2NomisUserEntity() = cas2UserEntityFactory.produceAndPersist {
+  private fun nomisUserEntity() = nomisUserEntityFactory.produceAndPersist {
     withName(randomStringMultiCaseWithNumbers(12))
     withEmail(randomEmailAddress())
-    withUsername(randomStringMultiCaseWithNumbers(7))
-    withActiveNomisCaseloadId(randomStringMultiCaseWithNumbers(3))
+    withNomisUsername(randomStringMultiCaseWithNumbers(7))
+    withActiveCaseloadId(randomStringMultiCaseWithNumbers(3))
     withNomisStaffCode(9L)
     withNomisStaffIdentifier(90L)
-  }
-
-  private fun cas2ExternalUserEntity() = cas2UserEntityFactory.produceAndPersist {
-    withName(randomStringMultiCaseWithNumbers(12))
-    withEmail(randomEmailAddress())
-    withUsername(randomStringMultiCaseWithNumbers(7))
-    withUserType(Cas2UserType.EXTERNAL)
-    withExternalType("NACRO")
   }
 }

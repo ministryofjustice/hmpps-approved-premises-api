@@ -7,12 +7,16 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
 interface Cas2ApplicationAssignmentRepository : JpaRepository<Cas2ApplicationAssignmentEntity, UUID> {
+  @Query("SELECT n.id FROM Cas2ApplicationAssignmentEntity n")
+  fun findApplicationAssignmentIds(): List<UUID>
+
   fun findFirstByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas2ApplicationAssignmentEntity?
 }
 
@@ -31,8 +35,12 @@ data class Cas2ApplicationAssignmentEntity(
    * exist when the bail system was branched and it will only ever be a nomis user that is assigned a transfer.
    */
   @ManyToOne
-  @JoinColumn(name = "allocated_pom_cas_2_user_id")
-  val allocatedPomUser: Cas2UserEntity? = null,
+  @JoinColumn(name = "allocated_pom_user_id")
+  val allocatedPomUser: NomisUserEntity? = null,
 
   val createdAt: OffsetDateTime,
+
+  @ManyToOne
+  @JoinColumn(name = "allocated_pom_cas_2_user_id")
+  val allocatedPomCas2User: Cas2UserEntity? = null,
 )

@@ -6,16 +6,14 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2ApplicationEntityTest : Cas2v2IntegrationTestBase() {
+class Cas2ApplicationEntityTest : IntegrationTestBase() {
 
   @Test
   fun `applicationAssignments are returned sorted by createdAt descending`() {
@@ -36,8 +34,8 @@ class Cas2ApplicationEntityTest : Cas2v2IntegrationTestBase() {
 
         cas2ApplicationRepository.save(application)
 
-        val retrievedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)
-        val assignments = retrievedApplication!!.applicationAssignments
+        val retrievedApplication = cas2ApplicationRepository.findById(application.id).get()
+        val assignments = retrievedApplication.applicationAssignments
 
         assertThat(assignments.size).isEqualTo(4)
         // verify list is returned sorted by created at descending
@@ -85,8 +83,8 @@ class Cas2ApplicationEntityTest : Cas2v2IntegrationTestBase() {
 
         cas2ApplicationRepository.save(application)
 
-        val retrievedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)
-        val assignments = retrievedApplication!!.applicationAssignments
+        val retrievedApplication = cas2ApplicationRepository.findById(application.id).get()
+        val assignments = retrievedApplication.applicationAssignments
 
         assertThat(assignments.size).isEqualTo(2)
         assertThat(assignment2.id).isEqualTo(assignments[0].id)
@@ -133,28 +131,25 @@ class Cas2ApplicationEntityTest : Cas2v2IntegrationTestBase() {
     fun `test bail hearing is persisted if present`() {
       val now = OffsetDateTime.now().toLocalDate()
 
-      givenACas2PomUser { userEntity, _ ->
-        givenACas2v2PomUser { cas2v2UserEntity, _ ->
-          givenAnOffender { _, _ ->
-            val applicationNoBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
-              withCreatedByUser(userEntity)
-            }
-
-            val applicationBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
-              withCreatedByUser(cas2v2UserEntity)
-              withBailHearingDate(now)
-              withServiceOrigin(Cas2ServiceOrigin.BAIL)
-            }
-
-            cas2ApplicationRepository.save(applicationNoBailHearingDate)
-            cas2ApplicationRepository.save(applicationBailHearingDate)
-
-            val retrievedApplicationNoBailHearingDate = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationNoBailHearingDate.id, Cas2ServiceOrigin.HDC)
-            val retrievedApplicationBailHearingDate = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationBailHearingDate.id, Cas2ServiceOrigin.BAIL)
-
-            assertThat(retrievedApplicationNoBailHearingDate!!.bailHearingDate).isNull()
-            assertThat(retrievedApplicationBailHearingDate!!.bailHearingDate).isEqualTo(now)
+      givenACas2PomUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val applicationNoBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
           }
+
+          val applicationBailHearingDate = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withBailHearingDate(now)
+          }
+
+          cas2ApplicationRepository.save(applicationNoBailHearingDate)
+          cas2ApplicationRepository.save(applicationBailHearingDate)
+
+          val retrievedApplicationNoBailHearingDate = cas2ApplicationRepository.findById(applicationNoBailHearingDate.id).get()
+          val retrievedApplicationBailHearingDate = cas2ApplicationRepository.findById(applicationBailHearingDate.id).get()
+
+          assertThat(retrievedApplicationNoBailHearingDate.bailHearingDate).isNull()
+          assertThat(retrievedApplicationBailHearingDate.bailHearingDate).isEqualTo(now)
         }
       }
     }

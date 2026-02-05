@@ -17,12 +17,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationSummaryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.LatestCas2StatusUpdate
@@ -66,11 +65,11 @@ class Cas2ApplicationsTransformerTest {
     offenderManagementUnitRepository,
   )
 
-  private val nomisUserEntity = Cas2UserEntityFactory().produce()
+  private val nomisUserEntity = NomisUserEntityFactory().produce()
   private val nomisUser = NomisUser(
     id = this.nomisUserEntity.id,
     name = this.nomisUserEntity.name,
-    nomisUsername = this.nomisUserEntity.username,
+    nomisUsername = this.nomisUserEntity.nomisUsername,
     isActive = this.nomisUserEntity.isActive,
   )
 
@@ -149,7 +148,7 @@ class Cas2ApplicationsTransformerTest {
     fun `transformJpaToApi transforms a submitted CAS2 application correctly without status updates`() {
       val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
-      every { cas2UserService.getNomisUserById(any(), eq(Cas2ServiceOrigin.HDC)) } returns nomisUserEntity
+      every { cas2UserService.getNomisUserById(any()) } returns nomisUserEntity
       val prison = OffenderManagementUnitEntityFactory().produce()
       every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
 
@@ -194,7 +193,7 @@ class Cas2ApplicationsTransformerTest {
       val prison = OffenderManagementUnitEntityFactory().produce()
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
       every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
-      every { cas2UserService.getNomisUserById(any(), eq(Cas2ServiceOrigin.HDC)) } returns nomisUserEntity
+      every { cas2UserService.getNomisUserById(any()) } returns nomisUserEntity
 
       val application = submittedCas2ApplicationFactory.withAssessment(Cas2AssessmentEntityFactory().produce())
         .withReferringPrisonCode("PRI")
@@ -221,7 +220,7 @@ class Cas2ApplicationsTransformerTest {
     fun `transformJpaToApi transforms a submitted CAS2 application correctly which has been transferred`() {
       val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
-      every { cas2UserService.getNomisUserById(any(), eq(Cas2ServiceOrigin.HDC)) } returns nomisUserEntity
+      every { cas2UserService.getNomisUserById(any()) } returns nomisUserEntity
       val prison = OffenderManagementUnitEntityFactory().produce()
       val newPrison = OffenderManagementUnitEntityFactory().withPrisonCode("NEW").withPrisonName("New Prison")
         .withEmail("test@test.co.uk").produce()
@@ -267,7 +266,6 @@ class Cas2ApplicationsTransformerTest {
       val application = cas2ApplicationFactory
         .withSubmittedAt(null)
         .withApplicationOrigin(ApplicationOrigin.courtBail)
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .withBailHearingDate(now)
         .produce()
 
@@ -353,14 +351,14 @@ class Cas2ApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId.toString()).isEqualTo(application.userId)
+      assertThat(result.createdByUserId.toString()).isEqualTo(application.getCreatedById())
       assertThat(result.risks).isNull()
       assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
-      assertThat(result.createdByUserName).isEqualTo(application.userName)
+      assertThat(result.createdByUserName).isEqualTo(application.getCreatedByUsername())
       assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
       assertThat(result.bailHearingDate).isNull()
     }
@@ -382,8 +380,8 @@ class Cas2ApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId).isEqualTo(UUID.fromString(application.userId))
-      assertThat(result.createdByUserName).isEqualTo(application.userName)
+      assertThat(result.createdByUserId).isEqualTo(UUID.fromString(application.getCreatedById()))
+      assertThat(result.createdByUserName).isEqualTo(application.getCreatedByUsername())
       assertThat(result.allocatedPomUserId).isEqualTo(application.allocatedPomUserId)
       assertThat(result.allocatedPomName).isEqualTo(application.allocatedPomName)
       assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)

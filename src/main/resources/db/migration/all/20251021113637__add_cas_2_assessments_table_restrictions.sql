@@ -1,1 +1,0 @@
-ALTER TABLE cas_2_assessments ALTER COLUMN service_origin SET NOT NULL;
