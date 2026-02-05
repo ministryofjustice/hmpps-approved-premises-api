@@ -1,5 +1,7 @@
 username,email,name,userType,nomisStaffId,activeCaseloadId,deliusTeamCodes,deliusStaffCode,isEnabled,isActive
-CAS2V2_NOMIS_PB,nick.bail@example.com,Nick Nomis-Bail,NOMIS,12345,LEI,aaa,bbb,YES,YES
-CAS2V2_NOMIS_CB,courtney.clark@example.com,Courtney Nomis-Clerk,NOMIS,12345,LEI,aaa,bbb,YES,YES
-CAS2V2_DELIUS_PB,nick.deliusbail@example.com,Nick Delius-Bail,DELIUS,,,code1|code2,delius_code,YES,YES
-CAS2V2_DELIUS_CB,courtney.deliusclark@example.com,Courtney Delius-Clerk,DELIUS,,,code1|code2,delius_code,YES,YES
+CAS2_COURT_BAIL_DELIUS_REF,courtney.delius@example.com,Courtney Delius,DELIUS,,,aaa,delius_code,YES,YES
+CAS2_COURT_BAIL_NOMIS_REFERRER,courtney.nomis@example.com,Courtney Nomis,NOMIS,12345,MID,,,YES,YES
+CAS2_PRISON_BAIL_DELIUS_REF,nick.delius@example.com,Nick Delius,DELIUS,,,aaa,delius_code,YES,YES
+CAS2_PRISON_BAIL_NOMIS_REF,nick.nomis@example.com,Nick Nomis,NOMIS,23456,MID,,,YES,YES
+HUGHESA_GEN,hughesa.gen@example.com,Adam Hughes,NOMIS,34567,MID,,,YES,YES
+MICK_MONIS,mick.monis@example.com,Mick Monis,NOMIS,45678,MID,,,YES,YES
