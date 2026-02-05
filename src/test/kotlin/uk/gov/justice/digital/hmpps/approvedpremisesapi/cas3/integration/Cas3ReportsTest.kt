@@ -135,8 +135,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report returns 400 if dates provided is more than or equal to 3 months`(reportType: Cas3ReportType) {
-    val expectedErrorCode = if (reportType == Cas3ReportType.bookingGap) "rangeTooLargeGapReport" else "rangeTooLarge"
-
     givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-04-01"
       val endDate = "2023-08-02"
@@ -149,7 +147,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("invalid-params[0].errorType").isEqualTo(expectedErrorCode)
+        .jsonPath("invalid-params[0].errorType").isEqualTo("rangeTooLarge")
         .jsonPath("invalid-params[0].propertyName").isEqualTo("$.endDate")
     }
 
@@ -164,7 +162,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("invalid-params[0].errorType").isEqualTo(expectedErrorCode)
+        .jsonPath("invalid-params[0].errorType").isEqualTo("rangeTooLarge")
         .jsonPath("invalid-params[0].propertyName").isEqualTo("$.endDate")
     }
   }
