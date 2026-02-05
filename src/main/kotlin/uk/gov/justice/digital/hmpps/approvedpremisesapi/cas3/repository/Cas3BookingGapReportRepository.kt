@@ -74,27 +74,7 @@ interface Cas3BookingGapReportRepository : JpaRepository<Cas3VoidBedspaceEntity,
   )
   fun getBookings(startDate: LocalDate, endDate: LocalDate): List<BookingRecord>
 
-  @Query(
-    """
-      SELECT 
-          b.bed_id AS bedId,
-          b.arrival_date AS arrivalDate,
-          b.departure_date AS departureDate,
-          t.working_day_count AS turnaroundDays
-      FROM bookings b
-      LEFT JOIN cancellations c ON c.booking_id = b.id
-      LEFT JOIN (
-          SELECT DISTINCT ON (booking_id) booking_id, working_day_count
-          FROM cas3_turnarounds
-          ORDER BY booking_id, created_at DESC
-      ) t ON t.booking_id = b.id
-      WHERE b.service = 'temporary-accommodation' 
-        AND c.id IS NULL 
-        AND b.arrival_date <= :endDate 
-        AND b.departure_date >= :startDate
-    """,
-    nativeQuery = true,
-  )
+  @Query(name = "BookingEntity.getBookingsV2", nativeQuery = true)
   fun getBookingsV2(startDate: LocalDate, endDate: LocalDate): List<BookingRecord>
 
   @Query(
