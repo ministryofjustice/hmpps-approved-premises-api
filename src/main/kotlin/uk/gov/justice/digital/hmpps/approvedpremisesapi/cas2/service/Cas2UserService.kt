@@ -26,7 +26,6 @@ class Cas2UserService(
   private val manageUsersApiClient: ManageUsersApiClient,
   private val cas2UserRepository: Cas2UserRepository,
   private val cas2NomisUserService: Cas2NomisUserService,
-
 ) {
   fun getUserForRequest(serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val authenticatedPrincipal = httpAuthService.getPrincipalOrThrow(listOf("nomis", "auth", "delius"))
