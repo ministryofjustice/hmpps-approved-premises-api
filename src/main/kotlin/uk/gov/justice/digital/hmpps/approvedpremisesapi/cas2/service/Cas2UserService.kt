@@ -133,24 +133,7 @@ class Cas2UserService(
       return existingUser
     }
 
-    return cas2UserRepository.save(
-      Cas2UserEntity(
-        id = UUID.randomUUID(),
-        name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
-        username = username,
-        nomisStaffId = nomisUserDetails.staffId,
-        activeNomisCaseloadId = nomisUserDetails.activeCaseloadId,
-        userType = Cas2UserType.NOMIS,
-        email = nomisUserDetails.primaryEmail,
-        isEnabled = nomisUserDetails.enabled,
-        isActive = nomisUserDetails.active,
-        deliusTeamCodes = null,
-        deliusStaffCode = null,
-        createdAt = OffsetDateTime.now(),
-        serviceOrigin = serviceOrigin,
-        nomisAccountType = nomisUserDetails.accountType,
-      ),
-    )
+    return ensureUserExists(username = username, nomisUserDetails, serviceOrigin = serviceOrigin)
   }
 
   private fun getCas2UserEntityForDeliusUser(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
