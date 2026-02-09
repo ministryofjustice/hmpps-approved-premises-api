@@ -9,8 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 import java.time.OffsetDateTime
@@ -59,21 +58,21 @@ class Cas2MigrateAssessmentsTest : MigrationJobTestBase() {
   }
 
   private fun checkApplicationHasAssociationWithAssessment(submittedWithoutAssessment: Cas2ApplicationEntity) {
-    val application = realApplicationRepository.findByIdAndServiceOrigin(submittedWithoutAssessment.id, Cas2ServiceOrigin.HDC)
-    Assertions.assertThat(application!!.assessment).isNotNull()
+    val application = realApplicationRepository.findById(submittedWithoutAssessment.id)
+    Assertions.assertThat(application.get().assessment).isNotNull()
   }
 
   private fun checkAssessmentWasCreated(submittedWithoutAssessment: Cas2ApplicationEntity) {
-    val newAssessment = realAssessmentRepository.findFirstByApplicationIdAndServiceOrigin(submittedWithoutAssessment.id, Cas2ServiceOrigin.HDC)
+    val newAssessment = realAssessmentRepository.findFirstByApplicationId(submittedWithoutAssessment.id)
     Assertions.assertThat(newAssessment).isNotNull()
   }
 
   private fun checkUnsubmittedDoesNotHaveAssessment(unsubmittedApp: Cas2ApplicationEntity) {
-    val unsubmittedApplication = realApplicationRepository.findByIdAndServiceOrigin(unsubmittedApp.id, Cas2ServiceOrigin.HDC)
-    Assertions.assertThat(unsubmittedApplication?.assessment).isNull()
+    val unsubmittedApplication = realApplicationRepository.findById(unsubmittedApp.id)
+    Assertions.assertThat(unsubmittedApplication.get().assessment).isNull()
   }
 
-  private fun createApplicationEntity(userEntity: Cas2UserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
+  private fun createApplicationEntity(userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
     withId(UUID.randomUUID())
     withCreatedByUser(userEntity)
     withData("{}")

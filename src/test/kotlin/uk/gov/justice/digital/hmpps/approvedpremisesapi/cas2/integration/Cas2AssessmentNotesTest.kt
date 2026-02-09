@@ -163,7 +163,7 @@ class Cas2AssessmentNotesTest(
                 withSubmittedAt(OffsetDateTime.now())
               }
 
-              application.createApplicationAssignment(referrer.activeNomisCaseloadId!!, referrer)
+              application.createApplicationAssignment(referrer.activeCaseloadId!!, referrer)
 
               cas2ApplicationRepository.save(application)
 
@@ -226,8 +226,8 @@ class Cas2AssessmentNotesTest(
 
               givenACas2PomUser { _, jwt ->
 
-                val otherUser = cas2UserEntityFactory.produceAndPersist {
-                  withActiveNomisCaseloadId("another-prison")
+                val otherUser = nomisUserEntityFactory.produceAndPersist {
+                  withActiveCaseloadId("another-prison")
                 }
 
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
@@ -266,17 +266,17 @@ class Cas2AssessmentNotesTest(
             fun `referrer can create a note for an application they did not create`() {
               givenACas2PomUser { referrer, jwt ->
 
-                val otherUser = cas2UserEntityFactory.produceAndPersist {
-                  withActiveNomisCaseloadId(referrer.activeNomisCaseloadId!!)
+                val otherUser = nomisUserEntityFactory.produceAndPersist {
+                  withActiveCaseloadId(referrer.activeCaseloadId!!)
                 }
 
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
-                  withReferringPrisonCode(referrer.activeNomisCaseloadId!!)
+                  withReferringPrisonCode(referrer.activeCaseloadId!!)
                 }
 
-                applicationEntity.createApplicationAssignment(referrer.activeNomisCaseloadId!!, otherUser)
+                applicationEntity.createApplicationAssignment(referrer.activeCaseloadId!!, otherUser)
 
                 cas2ApplicationRepository.save(applicationEntity)
 
@@ -345,7 +345,7 @@ class Cas2AssessmentNotesTest(
                 withSubmittedAt(OffsetDateTime.now())
               }
 
-              application.createApplicationAssignment(referrer.activeNomisCaseloadId!!, referrer)
+              application.createApplicationAssignment(referrer.activeCaseloadId!!, referrer)
 
               cas2ApplicationRepository.save(application)
 
@@ -408,8 +408,8 @@ class Cas2AssessmentNotesTest(
 
               givenACas2LicenceCaseAdminUser { _, jwt ->
 
-                val otherUser = cas2UserEntityFactory.produceAndPersist {
-                  withActiveNomisCaseloadId("another-prison")
+                val otherUser = nomisUserEntityFactory.produceAndPersist {
+                  withActiveCaseloadId("another-prison")
                 }
 
                 val application = cas2ApplicationEntityFactory.produceAndPersist {
@@ -448,17 +448,17 @@ class Cas2AssessmentNotesTest(
             fun `referrer can create a note for an application they did not create`() {
               givenACas2PomUser { referrer, jwt ->
 
-                val otherUser = cas2UserEntityFactory.produceAndPersist {
-                  withActiveNomisCaseloadId(referrer.activeNomisCaseloadId!!)
+                val otherUser = nomisUserEntityFactory.produceAndPersist {
+                  withActiveCaseloadId(referrer.activeCaseloadId!!)
                 }
 
                 val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
                   withCreatedByUser(otherUser)
                   withSubmittedAt(OffsetDateTime.now().minusDays(1))
-                  withReferringPrisonCode(referrer.activeNomisCaseloadId!!)
+                  withReferringPrisonCode(referrer.activeCaseloadId!!)
                 }
 
-                applicationEntity.createApplicationAssignment(referrer.activeNomisCaseloadId!!, otherUser)
+                applicationEntity.createApplicationAssignment(referrer.activeCaseloadId!!, otherUser)
 
                 cas2ApplicationRepository.save(applicationEntity)
 

@@ -55,7 +55,7 @@ class NomisUserTransformerTest {
       .withUserType(Cas2UserType.DELIUS)
       .produce()
 
-    val application = Cas2ApplicationEntityFactory().withCreatedByUser(jpaEntity).produce()
+    val application = Cas2ApplicationEntityFactory().withCreatedByCas2User(jpaEntity).produce()
 
     val expectedRepresentation = NomisUser(
       id = jpaEntity.id,

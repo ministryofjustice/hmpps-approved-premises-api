@@ -5,18 +5,16 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
@@ -42,10 +40,10 @@ const val MINUTES_PER_DAY = 60 * 24
 class Cas2v2StartupScript(
   private val seedLogger: SeedLogger,
   private val seedConfig: SeedConfig,
-  private val cas2UserRepository: Cas2UserRepository,
-  private val cas2applicationRepository: Cas2ApplicationRepository,
-  private val cas2statusUpdateRepository: Cas2StatusUpdateRepository,
-  private val cas2assessmentRepository: Cas2AssessmentRepository,
+  private val cas2v2UserRepository: Cas2v2UserRepository,
+  private val cas2v2applicationRepository: Cas2v2ApplicationRepository,
+  private val cas2v2statusUpdateRepository: Cas2v2StatusUpdateRepository,
+  private val cas2v2assessmentRepository: Cas2v2AssessmentRepository,
   private val cas2v2applicationService: Cas2v2ApplicationService,
   private val cas2v2statusUpdateService: Cas2v2StatusUpdateService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
@@ -59,31 +57,30 @@ class Cas2v2StartupScript(
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting CAS2v2 applications")
-    cas2UserRepository.findByServiceOrigin(Cas2ServiceOrigin.BAIL).filter { it.userType != Cas2UserType.EXTERNAL }.forEach { user ->
+    cas2v2UserRepository.findAll().forEach { user ->
       listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
-        listOf(ApplicationOrigin.prisonBail, ApplicationOrigin.courtBail).forEach { applicationOrigin ->
-          createApplicationFor(cas2UserEntity = user, state = state, applicationOrigin = applicationOrigin)
+        listOf(ApplicationOrigin.homeDetentionCurfew, ApplicationOrigin.prisonBail, ApplicationOrigin.courtBail).forEach { applicationOrigin ->
+          createApplicationFor(cas2v2UserEntity = user, state = state, applicationOrigin = applicationOrigin)
         }
       }
     }
   }
 
-  private fun createApplicationFor(cas2UserEntity: Cas2UserEntity, state: String, applicationOrigin: ApplicationOrigin) {
-    seedLogger.info("Auto-scripting application for ${cas2UserEntity.username}, in state $state")
+  private fun createApplicationFor(cas2v2UserEntity: Cas2v2UserEntity, state: String, applicationOrigin: ApplicationOrigin) {
+    seedLogger.info("Auto-scripting application for ${cas2v2UserEntity.username}, in state $state")
     val createdAt = randomDateTime()
     val submittedAt = if (state == "IN_PROGRESS") null else createdAt.plusDays(randomInt(EARLIEST_SUBMISSION, LATEST_SUBMISSION).toLong())
-    val application = cas2applicationRepository.save(
-      Cas2ApplicationEntity(
+    val application = cas2v2applicationRepository.save(
+      Cas2v2ApplicationEntity(
         id = UUID.randomUUID(),
         crn = "X320742",
         nomsNumber = seedConfig.onStartup.script.noms,
         createdAt = createdAt,
-        createdByUser = cas2UserEntity,
+        createdByUser = cas2v2UserEntity,
         data = dataFor(state = state, nomsNumber = "DO16821"),
         document = documentFor(state = state, nomsNumber = "DO16821"),
         submittedAt = submittedAt,
         applicationOrigin = applicationOrigin,
-        serviceOrigin = Cas2ServiceOrigin.BAIL,
       ),
     )
 
@@ -100,7 +97,7 @@ class Cas2v2StartupScript(
     }
   }
 
-  private fun applyFirstClassProperties(application: Cas2ApplicationEntity): Cas2ApplicationEntity = cas2applicationRepository.saveAndFlush(
+  private fun applyFirstClassProperties(application: Cas2v2ApplicationEntity): Cas2v2ApplicationEntity = cas2v2applicationRepository.saveAndFlush(
     application.apply {
       referringPrisonCode = seedConfig.onStartup.script.prisonCode
       preferredAreas = "Happisburgh | Norfolk"
@@ -110,13 +107,13 @@ class Cas2v2StartupScript(
     },
   )
 
-  private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
+  private fun createStatusUpdate(idx: Int, application: Cas2v2ApplicationEntity) {
     seedLogger.info("Auto-scripting status update $idx for application ${application.id}")
-    val assessor = cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.EXTERNAL, Cas2ServiceOrigin.BAIL).random()
+    val assessor = cas2v2UserRepository.findAll().random()
     log.info(assessor.toString())
     val status = findStatusAtPosition(idx)
-    val update = cas2statusUpdateRepository.save(
-      Cas2StatusUpdateEntity(
+    val update = cas2v2statusUpdateRepository.save(
+      Cas2v2StatusUpdateEntity(
         id = UUID.randomUUID(),
         application = application,
         assessment = application.assessment,
@@ -128,21 +125,20 @@ class Cas2v2StartupScript(
       ),
     )
     update.apply { this.createdAt = application.submittedAt!!.plusDays(idx + 1.toLong()) }
-    cas2statusUpdateRepository.save(update)
+    cas2v2statusUpdateRepository.save(update)
     cas2v2statusUpdateService.createStatusUpdatedDomainEvent(update)
   }
 
   private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = statusFinder.active()[idx]
 
-  private fun createAssessment(application: Cas2ApplicationEntity) {
+  private fun createAssessment(application: Cas2v2ApplicationEntity) {
     val id = UUID.randomUUID()
     seedLogger.info("Auto-scripting assessment $id for application ${application.id}")
-    val assessment = cas2assessmentRepository.save(
-      Cas2AssessmentEntity(
+    val assessment = cas2v2assessmentRepository.save(
+      Cas2v2AssessmentEntity(
         id = id,
         createdAt = OffsetDateTime.now(),
         application = application,
-        serviceOrigin = application.serviceOrigin,
       ),
     )
     application.assessment = assessment

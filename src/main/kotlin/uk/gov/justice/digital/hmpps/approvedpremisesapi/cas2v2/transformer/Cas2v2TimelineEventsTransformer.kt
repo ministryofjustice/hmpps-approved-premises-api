@@ -2,13 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
 
 @Component
 class Cas2v2TimelineEventsTransformer {
 
-  fun transformApplicationToTimelineEvents(jpa: Cas2ApplicationEntity): List<Cas2TimelineEvent> {
+  fun transformApplicationToTimelineEvents(jpa: Cas2v2ApplicationEntity): List<Cas2TimelineEvent> {
     val timelineEvents: MutableList<Cas2TimelineEvent> = mutableListOf()
 
     addSubmittedEvent(jpa, timelineEvents)
@@ -20,19 +20,19 @@ class Cas2v2TimelineEventsTransformer {
     return timelineEvents.sortedByDescending { it.occurredAt }
   }
 
-  private fun addNoteEvents(jpa: Cas2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
+  private fun addNoteEvents(jpa: Cas2v2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
     jpa.notes?.forEach {
       timelineEvents += Cas2TimelineEvent(
         type = TimelineEventType.cas2Note,
         occurredAt = it.createdAt.toInstant(),
         label = "Note",
-        createdByName = it.createdByUser.name,
+        createdByName = it.getUser().name,
         body = it.body,
       )
     }
   }
 
-  private fun addStatusUpdateEvents(jpa: Cas2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
+  private fun addStatusUpdateEvents(jpa: Cas2v2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
     jpa.statusUpdates?.forEach {
       timelineEvents += Cas2TimelineEvent(
         type = TimelineEventType.cas2StatusUpdate,
@@ -44,7 +44,7 @@ class Cas2v2TimelineEventsTransformer {
     }
   }
 
-  private fun addSubmittedEvent(jpa: Cas2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
+  private fun addSubmittedEvent(jpa: Cas2v2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
     if (jpa.submittedAt !== null) {
       val submittedAtEvent = Cas2TimelineEvent(
         type = TimelineEventType.cas2ApplicationSubmitted,

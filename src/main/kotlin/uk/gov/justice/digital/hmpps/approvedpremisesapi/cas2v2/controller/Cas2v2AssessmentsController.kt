@@ -37,8 +37,8 @@ class Cas2v2AssessmentsController(
     @PathVariable assessmentId: UUID,
   ): ResponseEntity<Cas2v2Assessment> {
     val assessmentResult = cas2v2AssessmentService.getAssessment(assessmentId)
-    val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
-    return ResponseEntity.ok(cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity))
+    val cas2v2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
+    return ResponseEntity.ok(cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2v2AssessmentEntity))
   }
 
   @PutMapping("/assessments/{assessmentId}")
@@ -48,9 +48,9 @@ class Cas2v2AssessmentsController(
   ): ResponseEntity<Cas2v2Assessment> {
     val assessmentResult = cas2v2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment)
 
-    val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
+    val cas2v2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(
-      cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity),
+      cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2v2AssessmentEntity),
     )
   }
 

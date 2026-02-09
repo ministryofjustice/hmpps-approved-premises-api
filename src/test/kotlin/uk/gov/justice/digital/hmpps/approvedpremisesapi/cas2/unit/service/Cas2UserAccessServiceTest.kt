@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import java.time.OffsetDateTime
 
@@ -20,10 +20,10 @@ class Cas2UserAccessServiceTest {
       val referringPrisonCode = "other"
       val transferredToPrisonCode = "prison"
 
-      private val user = Cas2UserEntityFactory().withActiveNomisCaseloadId(transferredToPrisonCode).produce()
-      private val samePrisonUser = Cas2UserEntityFactory().withActiveNomisCaseloadId(transferredToPrisonCode).produce()
-      private val otherUser = Cas2UserEntityFactory().withActiveNomisCaseloadId(referringPrisonCode).produce()
-      private val otherPrisonUser = Cas2UserEntityFactory().withActiveNomisCaseloadId(referringPrisonCode).produce()
+      private val user = NomisUserEntityFactory().withActiveCaseloadId(transferredToPrisonCode).produce()
+      private val samePrisonUser = NomisUserEntityFactory().withActiveCaseloadId(transferredToPrisonCode).produce()
+      private val otherUser = NomisUserEntityFactory().withActiveCaseloadId(referringPrisonCode).produce()
+      private val otherPrisonUser = NomisUserEntityFactory().withActiveCaseloadId(referringPrisonCode).produce()
 
       @Test
       fun `returns true if currently allocated POM or if in same prison`() {
@@ -58,7 +58,7 @@ class Cas2UserAccessServiceTest {
 
     @Nested
     inner class WhenApplicationCreatedByUser {
-      private val user = Cas2UserEntityFactory()
+      private val user = NomisUserEntityFactory()
         .produce()
 
       @Test
@@ -76,9 +76,9 @@ class Cas2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationNotSubmitted {
-        private val user = Cas2UserEntityFactory()
+        private val user = NomisUserEntityFactory()
           .produce()
-        private val anotherUser = Cas2UserEntityFactory()
+        private val anotherUser = NomisUserEntityFactory()
           .produce()
 
         @Test
@@ -93,11 +93,11 @@ class Cas2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationMadeForDifferentPrison {
-        private val user = Cas2UserEntityFactory()
-          .withActiveNomisCaseloadId("my-prison")
+        private val user = NomisUserEntityFactory()
+          .withActiveCaseloadId("my-prison")
           .produce()
-        private val anotherUser = Cas2UserEntityFactory()
-          .withActiveNomisCaseloadId("different-prison").produce()
+        private val anotherUser = NomisUserEntityFactory()
+          .withActiveCaseloadId("different-prison").produce()
 
         @Test
         fun `returns false`() {
@@ -112,11 +112,11 @@ class Cas2UserAccessServiceTest {
 
         @Nested
         inner class WhenNoPrisonData {
-          private val userWithNoPrison = Cas2UserEntityFactory()
-            .withActiveNomisCaseloadId("my-prison")
+          private val userWithNoPrison = NomisUserEntityFactory()
+            .withActiveCaseloadId("my-prison")
             .produce()
-          private val anotherUserWithNoPrison = Cas2UserEntityFactory()
-            .withActiveNomisCaseloadId("different-prison").produce()
+          private val anotherUserWithNoPrison = NomisUserEntityFactory()
+            .withActiveCaseloadId("different-prison").produce()
 
           @Test
           fun `returns false`() {
@@ -132,11 +132,11 @@ class Cas2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationMadeForSamePrison {
-        private val user = Cas2UserEntityFactory()
-          .withActiveNomisCaseloadId("my-prison")
+        private val user = NomisUserEntityFactory()
+          .withActiveCaseloadId("my-prison")
           .produce()
-        private val anotherUser = Cas2UserEntityFactory()
-          .withActiveNomisCaseloadId("my-prison")
+        private val anotherUser = NomisUserEntityFactory()
+          .withActiveCaseloadId("my-prison")
           .produce()
 
         @Test

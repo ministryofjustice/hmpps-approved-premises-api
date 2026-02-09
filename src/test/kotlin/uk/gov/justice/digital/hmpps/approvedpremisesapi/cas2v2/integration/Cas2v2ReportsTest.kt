@@ -20,11 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2StatusFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -114,21 +113,19 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val tooOldSubmitted = OffsetDateTime.now().minusDays(366)
       val tooOldCreated = tooOldSubmitted.minusSeconds(daysInSeconds(7))
 
-      val user1 = cas2UserEntityFactory.produceAndPersist {
+      val user1 = cas2v2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_1")
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
-      val user2 = cas2UserEntityFactory.produceAndPersist {
+      val user2 = cas2v2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_2")
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       val applicationId1 = UUID.randomUUID()
       val applicationId2 = UUID.randomUUID()
       val applicationId3 = UUID.randomUUID()
 
-      val application1 = cas2ApplicationEntityFactory.produceAndPersist {
+      val application1 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId1)
         withApplicationOrigin(ApplicationOrigin.courtBail)
         withCreatedByUser(user1)
@@ -138,10 +135,9 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withData("{}")
         withSubmittedAt(oldSubmitted)
         withBailHearingDate(LocalDate.now().minusDays(2))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
-      val application2 = cas2ApplicationEntityFactory.produceAndPersist {
+      val application2 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId2)
         withApplicationOrigin(ApplicationOrigin.courtBail)
         withCreatedByUser(user2)
@@ -151,18 +147,16 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withData("{}")
         withSubmittedAt(newerSubmitted)
         withBailHearingDate(LocalDate.now().minusDays(2))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       // outside time limit -- should not feature in report
-      cas2ApplicationEntityFactory.produceAndPersist {
+      cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId3)
         withCreatedByUser(user2)
         withCreatedAt(tooOldCreated)
         withData("{}")
         withSubmittedAt(tooOldSubmitted)
         withBailHearingDate(LocalDate.now().minusDays(2))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       val event1Details = Cas2ApplicationSubmittedEventDetailsFactory()
@@ -340,19 +334,15 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
     fun `streams spreadsheet of cas2v2 Cas2ApplicationStatusUpdatedEvents, last 12 months only`() {
       // create applications and then
 
-      val user = cas2UserEntityFactory.produceAndPersist {
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
-      val application1 = cas2ApplicationEntityFactory.produceAndPersist {
+      val user = cas2v2UserEntityFactory.produceAndPersist()
+      val application1 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user)
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
       val application1ID = application1.id
 
-      val application2 = cas2ApplicationEntityFactory.produceAndPersist {
+      val application2 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withApplicationOrigin(ApplicationOrigin.courtBail)
         withCreatedByUser(user)
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
       val application2ID = application2.id
 
@@ -496,17 +486,15 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val newer = Instant.now().minusSeconds(daysInSeconds(100))
       val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
-      val user1 = cas2UserEntityFactory.produceAndPersist {
+      val user1 = cas2v2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_1")
       }
 
-      val user2 = cas2UserEntityFactory.produceAndPersist {
+      val user2 = cas2v2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_2")
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
-      // HDC application, which should not feature in report
-      cas2ApplicationEntityFactory.produceAndPersist {
+      val application1 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
@@ -515,7 +503,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withSubmittedAt(null)
       }
 
-      val application2 = cas2ApplicationEntityFactory.produceAndPersist {
+      val application2 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user2)
         withCrn("CRN_2")
         withApplicationOrigin(ApplicationOrigin.prisonBail)
@@ -523,27 +511,22 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withCreatedAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       // outside time limit -- should not feature in report
-      cas2ApplicationEntityFactory.produceAndPersist {
+      cas2v2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user2)
         withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withApplicationOrigin(ApplicationOrigin.prisonBail)
         withData("{}")
         withSubmittedAt(null)
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       // submitted application, which should not feature in report
-      cas2ApplicationEntityFactory.produceAndPersist {
+      cas2v2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user2)
         withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
         withData("{}")
-        withApplicationOrigin(ApplicationOrigin.prisonBail)
         withSubmittedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(50))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       val expectedDataFrame = listOf(
@@ -554,6 +537,14 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first() + 'Z',
           startedBy = application2.createdByUser.username,
+        ),
+        UnsubmittedApplicationsReportRow(
+          applicationId = application1.id.toString(),
+          personCrn = application1.crn,
+          personNoms = application1.nomsNumber.toString(),
+          startedAt = application1.createdAt.toString().split(".").first() + 'Z',
+          startedBy = application1.createdByUser.username,
+          applicationOrigin = application1.applicationOrigin,
         ),
       )
         .toDataFrame()
@@ -585,12 +576,11 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
     val submitted = OffsetDateTime.now()
     val created = submitted.minusDays(7)
 
-    val user = cas2UserEntityFactory.produceAndPersist {
+    val user = cas2v2UserEntityFactory.produceAndPersist {
       withUsername("NOMIS_USER_1")
-      withServiceOrigin(Cas2ServiceOrigin.BAIL)
     }
 
-    val allApplications: ArrayList<Cas2ApplicationEntity> = ArrayList()
+    val allApplications: ArrayList<Cas2v2ApplicationEntity> = ArrayList()
 
     repeat(5) { allApplications.add(createApplication(user, created)) }
     repeat(5) {
@@ -645,22 +635,21 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
   }
 
   private fun createApplication(
-    user: Cas2UserEntity,
+    user: Cas2v2UserEntity,
     created: OffsetDateTime,
     applicationOrigin: ApplicationOrigin? = null,
-  ): Cas2ApplicationEntity {
+  ): Cas2v2ApplicationEntity {
     if (applicationOrigin == null) {
-      return cas2ApplicationEntityFactory.produceAndPersist {
+      return cas2v2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user)
         withCreatedAt(created)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
         withData("{}")
         withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(30))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
     } else {
-      return cas2ApplicationEntityFactory.produceAndPersist {
+      return cas2v2ApplicationEntityFactory.produceAndPersist {
         withCreatedByUser(user)
         withCreatedAt(created)
         withApplicationOrigin(applicationOrigin)
@@ -668,7 +657,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withNomsNumber("NOMS_2")
         withData("{}")
         withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(30))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
     }
   }

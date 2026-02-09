@@ -34,7 +34,7 @@ class TimelineEventsTransformer(
         type = TimelineEventType.cas2Note,
         occurredAt = it.createdAt.toInstant(),
         label = "Note",
-        createdByName = it.createdByUser.name,
+        createdByName = it.getUser().name,
         body = it.body,
       )
     }
@@ -58,7 +58,7 @@ class TimelineEventsTransformer(
         type = TimelineEventType.cas2ApplicationSubmitted,
         occurredAt = jpa.submittedAt?.toInstant()!!,
         label = "Application submitted",
-        createdByName = jpa.createdByUser.name,
+        createdByName = jpa.getCreatedByCanonicalName(),
       )
       timelineEvents += submittedAtEvent
     }

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
@@ -20,7 +20,7 @@ class Cas2v2SubmissionsTransformer(
 ) {
 
   fun transformJpaToApiRepresentation(
-    jpa: Cas2ApplicationEntity,
+    jpa: Cas2v2ApplicationEntity,
     personInfo: PersonInfoResult
       .Success,
   ): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
@@ -37,7 +37,7 @@ class Cas2v2SubmissionsTransformer(
   )
 
   fun transformJpaSummaryToApiRepresentation(
-    jpaSummary: Cas2ApplicationSummaryEntity,
+    jpaSummary: Cas2v2ApplicationSummaryEntity,
     personName: String,
   ): Cas2v2SubmittedApplicationSummary = Cas2v2SubmittedApplicationSummary(
     id = jpaSummary.id,

@@ -25,9 +25,9 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
         COUNT(distinct location_assignments.id) as numberOfLocationTransfers,
         CASE WHEN COUNT(distinct pom_assignments.id) = 0 THEN 0 ELSE COUNT(distinct pom_assignments.id) - 1 END as numberOfPomTransfers
     FROM domain_events events
-             JOIN cas_2_applications as a on a.id = events.application_id and a.service_origin = 'HDC'
-             LEFT JOIN cas_2_application_assignments as pom_assignments on events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_cas_2_user_id is NOT NULL
-             LEFT JOIN cas_2_application_assignments as location_assignments on events.application_id = location_assignments.application_id and location_assignments.allocated_pom_cas_2_user_id is NULL
+             JOIN cas_2_applications as a on a.id = events.application_id
+             LEFT JOIN cas_2_application_assignments as pom_assignments on events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_user_id is NOT NULL
+             LEFT JOIN cas_2_application_assignments as location_assignments on events.application_id = location_assignments.application_id and location_assignments.allocated_pom_user_id is NULL
              LEFT JOIN LATERAL jsonb_array_elements(events.data -> 'eventDetails' -> 'newStatus' -> 'statusDetails') as details ON true
     WHERE events.type = 'CAS2_APPLICATION_STATUS_UPDATED'
       AND events.occurred_at  > CURRENT_DATE - 365

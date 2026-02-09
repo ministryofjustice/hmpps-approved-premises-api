@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -98,7 +98,7 @@ class Cas2OffenderService(
     }
   }
 
-  fun getPersonByNomsNumber(nomsNumber: String, currentUser: Cas2UserEntity) = currentUser.activeNomisCaseloadId?.let { getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, it) }
+  fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity) = currentUser.activeCaseloadId?.let { getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, it) }
 
   private fun getInmateDetailsForProbationOffender(caseSummary: CaseSummary): InmateDetail? = caseSummary.nomsId?.let { nomsNumber ->
     when (val inmateDetailsResult = getInmateDetailByNomsNumber(caseSummary.crn, nomsNumber)) {

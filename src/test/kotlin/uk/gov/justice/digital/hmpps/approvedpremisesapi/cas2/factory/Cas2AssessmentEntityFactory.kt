@@ -14,7 +14,7 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var application: Yielded<Cas2ApplicationEntity> = {
     Cas2ApplicationEntityFactory()
-      .withCreatedByUser(Cas2UserEntityFactory().produce())
+      .withCreatedByUser(NomisUserEntityFactory().produce())
       .produce()
   }
   private var nacroReferralId: String? = null

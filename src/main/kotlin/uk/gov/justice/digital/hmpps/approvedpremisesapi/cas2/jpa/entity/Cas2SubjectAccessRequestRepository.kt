@@ -16,7 +16,6 @@ class Cas2SubjectAccessRequestRepository(
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-    serviceOrigin: String,
   ): String? {
     val result = jdbcTemplate.queryForMap(
       """
@@ -28,7 +27,7 @@ class Cas2SubjectAccessRequestRepository(
         	ca.noms_number,
         	ca."data",
         	ca."document",
-        	cu."name" as created_by_user,
+        	nu."name" as created_by_user,
         	ca.created_at,
         	ca.submitted_at,
         	ca.referring_prison_code,
@@ -38,33 +37,25 @@ class Cas2SubjectAccessRequestRepository(
         	ca.conditional_release_date,
         	ca.abandoned_at,
           ca.application_origin,
-          ca.service_origin,
           CAST( ca.bail_hearing_date as DATE) 
         from
         	cas_2_applications ca
-        inner join cas_2_users cu on
-        	cu.id = ca.created_by_cas2_user_id and cu.user_type = 'NOMIS' and cu.service_origin = :service_origin
+        inner join nomis_users nu on
+        	nu.id = ca.created_by_user_id
         where 
         	(ca.crn = :crn
         		or ca.noms_number = :noms_number ) 
         	and (:start_date::date is null or ca.created_at >= :start_date) 
         	and (:end_date::date is null or ca.created_at <= :end_date)
-        and ca.service_origin = :service_origin
       ) applications
       """.trimIndent(),
       MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
+        .addSarParameters(crn, nomsNumber, startDate, endDate),
     )
     return toJsonString(result)
   }
 
-  fun getAssessments(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceOrigin: String,
-  ): String? {
+  fun getAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(assessments) as json
@@ -81,28 +72,21 @@ class Cas2SubjectAccessRequestRepository(
           	cas_2_assessments caa
           inner join cas_2_applications ca 
           on
-          	ca.id = caa.application_id and ca.service_origin = :service_origin
+          	ca.id = caa.application_id
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )
           and (:start_date::date is null or ca.created_at >= :start_date) 
           and (:end_date::date is null or ca.created_at <= :end_date)
-          and caa.service_origin = :service_origin
       ) assessments
       """.trimIndent(),
-      MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
+      MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
     )
 
     return toJsonString(result)
   }
 
-  fun getApplicationNotes(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceOrigin: String,
-  ): String? {
+  fun getApplicationNotes(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(application_notes) as json 
@@ -114,18 +98,22 @@ class Cas2SubjectAccessRequestRepository(
           	can.application_id,
           	can.assessment_id, 
           	case 
-          		when can.created_by_cas2_user_id is not null then cu."name"
+          		when created_by_external_user_id is not null then eu."name"
+          		when created_by_nomis_user_id is not null then nu."name"
           		else 'unknown'
           	end as created_by_user,
           	case 
-          		when can.created_by_cas2_user_id is not null then cu.user_type
+          		when created_by_external_user_id is not null then 'external'
+          		when created_by_nomis_user_id is not null then 'nomis'
           		else 'unknown'
           	end as created_by_user_type,
           	can.body
           from cas_2_application_notes can 
           inner join cas_2_applications ca on
-          	ca.id  = can.application_id and ca.service_origin = :service_origin
-          left join cas_2_users cu on cu.id = can.created_by_cas2_user_id and cu.service_origin = :service_origin
+          	ca.id  = can.application_id 
+          left join external_users eu on 
+          	eu.id = can.created_by_external_user_id
+          left join nomis_users nu on nu.id = can.created_by_nomis_user_id 
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )
@@ -133,18 +121,12 @@ class Cas2SubjectAccessRequestRepository(
           and (:end_date::date is null or ca.created_at <= :end_date)
       ) application_notes
       """.trimIndent(),
-      MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
+      MapSqlParameterSource().addSarParameters(crn, nomsNumber, startDate, endDate),
     )
     return toJsonString(result)
   }
 
-  fun getStatusUpdates(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceOrigin: String,
-  ): String? {
+  fun getStatusUpdates(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(application_status_updates) as json 
@@ -155,16 +137,16 @@ class Cas2SubjectAccessRequestRepository(
               ca.noms_number, 
               csu.application_id,
               csu.assessment_id,
-              u."name" as assessor_name,
-              u.external_type as assessor_origin,
+              eu."name" as assessor_name,
+              eu.origin as assessor_origin,
               to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
               csu.description ,
               csu."label"
           from cas_2_status_updates csu 
           inner join cas_2_applications ca
-              on ca.id =csu.application_id and ca.service_origin = :service_origin
-          inner join cas_2_users u 
-              on u.id = csu.cas2_user_assessor_id  and u.user_type = 'EXTERNAL' and u.service_origin = :service_origin
+              on ca.id =csu.application_id
+          inner join external_users eu 
+              on eu.id = csu.assessor_id
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )
@@ -173,18 +155,12 @@ class Cas2SubjectAccessRequestRepository(
       ) application_status_updates
       """.trimIndent(),
       MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
+        .addSarParameters(crn, nomsNumber, startDate, endDate),
     )
     return toJsonString(result)
   }
 
-  fun getStatusUpdateDetails(
-    crn: String?,
-    nomsNumber: String?,
-    startDate: LocalDateTime?,
-    endDate: LocalDateTime?,
-    serviceOrigin: String,
-  ): String? {
+  fun getStatusUpdateDetails(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """
       select json_agg(application_status_update_details) as json 
@@ -201,10 +177,10 @@ class Cas2SubjectAccessRequestRepository(
         from cas_2_status_updates csu 
         inner join cas_2_status_update_details csud  
         	on csu.id  = csud.status_update_id 
-        inner join cas_2_applications ca 
-        	on ca.id =csu.application_id and ca.service_origin = :service_origin
-        inner join cas_2_users u 
-        	on u.id = csu.cas2_user_assessor_id and u.user_type = 'EXTERNAL' and u.service_origin = :service_origin
+        inner join cas_2_applications ca
+        	on ca.id =csu.application_id
+        inner join external_users eu 
+        	on eu.id = csu.assessor_id 
         where 
         	(ca.crn = :crn
         		or ca.noms_number = :noms_number )
@@ -213,7 +189,7 @@ class Cas2SubjectAccessRequestRepository(
         ) application_status_update_details
       """.trimIndent(),
       MapSqlParameterSource()
-        .addSarParameters(crn, nomsNumber, startDate, endDate).addValue("service_origin", serviceOrigin),
+        .addSarParameters(crn, nomsNumber, startDate, endDate),
     )
     return toJsonString(result)
   }

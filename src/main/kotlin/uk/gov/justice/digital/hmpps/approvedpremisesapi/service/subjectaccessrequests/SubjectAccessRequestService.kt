@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2SubjectAccessRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.CAS3SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
@@ -135,13 +134,13 @@ class SubjectAccessRequestService(
   }
 
   fun getCAS2Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
-    val applicationsJson = cas2SubjectAccessRequestRepository.getApplicationsJson(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
+    val applicationsJson = cas2SubjectAccessRequestRepository.getApplicationsJson(crn, nomsNumber, startDate, endDate)
     val applicationNotesJson =
-      cas2SubjectAccessRequestRepository.getApplicationNotes(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val statusUpdatesJson = cas2SubjectAccessRequestRepository.getStatusUpdates(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
+      cas2SubjectAccessRequestRepository.getApplicationNotes(crn, nomsNumber, startDate, endDate)
+    val statusUpdatesJson = cas2SubjectAccessRequestRepository.getStatusUpdates(crn, nomsNumber, startDate, endDate)
     val statusUpdateDetailsJson =
-      cas2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
-    val assessmentsJson = cas2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate, Cas2ServiceOrigin.HDC.toString())
+      cas2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)
+    val assessmentsJson = cas2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
     val domainEventsJson = cas2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2")
     val domainEventsMetaDataJson =
       cas2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2")
@@ -178,7 +177,8 @@ class SubjectAccessRequestService(
 
   fun getCAS2v2Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val applicationsJson = cas2v2SubjectAccessRequestRepository.getApplicationsJson(crn, nomsNumber, startDate, endDate)
-    val applicationNotesJson = cas2v2SubjectAccessRequestRepository.getApplicationNotes(crn, nomsNumber, startDate, endDate)
+    val applicationNotesJson =
+      cas2v2SubjectAccessRequestRepository.getApplicationNotes(crn, nomsNumber, startDate, endDate)
     val statusUpdatesJson = cas2v2SubjectAccessRequestRepository.getStatusUpdates(crn, nomsNumber, startDate, endDate)
     val statusUpdateDetailsJson =
       cas2v2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)

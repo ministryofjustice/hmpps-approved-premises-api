@@ -15,9 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Appli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
@@ -171,7 +171,7 @@ class Cas2v2ApplicationController(
   }
 
   private fun getPersonNamesAndTransformToSummaries(
-    applicationSummaries: List<Cas2ApplicationSummaryEntity>,
+    applicationSummaries: List<Cas2v2ApplicationSummaryEntity>,
   ): List<ModelCas2v2ApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
@@ -184,7 +184,7 @@ class Cas2v2ApplicationController(
 
   @SuppressWarnings("ThrowsCount")
   private fun getPersonDetailAndTransform(
-    application: Cas2ApplicationEntity,
+    application: Cas2v2ApplicationEntity,
   ): Application {
     val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(application.crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")

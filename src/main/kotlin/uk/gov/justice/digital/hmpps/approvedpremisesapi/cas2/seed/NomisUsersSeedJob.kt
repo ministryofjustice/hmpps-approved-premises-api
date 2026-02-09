@@ -47,6 +47,7 @@ class NomisUsersSeedJob(
         email = row.email,
         isEnabled = true,
         isActive = true,
+        applications = mutableListOf(),
       ),
     )
   }

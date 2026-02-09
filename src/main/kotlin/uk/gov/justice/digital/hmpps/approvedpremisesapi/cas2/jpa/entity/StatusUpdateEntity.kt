@@ -18,6 +18,9 @@ import java.util.UUID
 
 @Repository
 interface Cas2StatusUpdateRepository : JpaRepository<Cas2StatusUpdateEntity, UUID> {
+  @Query("SELECT n.id FROM Cas2StatusUpdateEntity n")
+  fun findStatusUpdateIds(): List<UUID>
+
   fun findFirstByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas2StatusUpdateEntity?
 
   @Query(
@@ -44,8 +47,12 @@ data class Cas2StatusUpdateEntity(
   val label: String,
 
   @ManyToOne
+  @JoinColumn(name = "assessor_id")
+  val assessor: ExternalUserEntity,
+
+  @ManyToOne
   @JoinColumn(name = "cas2_user_assessor_id")
-  val assessor: Cas2UserEntity,
+  val cas2UserAssessor: Cas2UserEntity? = null,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
