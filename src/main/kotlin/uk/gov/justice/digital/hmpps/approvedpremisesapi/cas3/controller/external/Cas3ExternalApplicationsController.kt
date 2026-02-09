@@ -8,12 +8,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ApplicationService
 
 @Cas3ExternalController
-class Cas3ExternalSuitableApplicationsController(
+class Cas3ExternalApplicationsController(
   private val cas3ApplicationService: Cas3ApplicationService,
 ) {
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
-  @GetMapping("/suitable-application/{crn}")
-  fun getSuitableApplicationsByCrn(@PathVariable crn: String): ResponseEntity<Cas3SuitableApplication> = cas3ApplicationService.getSuitableApplicationByCrn(crn)
-    ?.let { ResponseEntity.ok(it) }
-    ?: ResponseEntity.notFound().build()
+  @GetMapping("/cases/{crn}/applications/{type}")
+  fun getApplicationsByCrnAndType(
+    @PathVariable crn: String,
+    @PathVariable type: String,
+  ): ResponseEntity<Cas3SuitableApplication> = when (type) {
+    "suitable" -> cas3ApplicationService.getSuitableApplicationByCrn(crn)
+      ?.let { ResponseEntity.ok(it) }
+      ?: ResponseEntity.notFound().build()
+    else -> ResponseEntity.badRequest().build()
+  }
 }
