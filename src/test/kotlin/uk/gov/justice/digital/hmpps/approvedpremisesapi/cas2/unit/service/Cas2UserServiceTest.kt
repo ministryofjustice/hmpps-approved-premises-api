@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -39,14 +40,16 @@ class Cas2UserServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockManageUsersApiClient = mockk<ManageUsersApiClient>()
   private val mockCas2UserRepository = mockk<Cas2UserRepository>()
+  private val mockCas2NomisUserService = mockk<Cas2NomisUserService>()
+
 
   private val cas2UserService = Cas2UserService(
     mockHttpAuthService,
     mockNomisUserRolesApiClient,
-    mockNomisUserRolesForRequesterApiClient,
     mockApDeliusContextApiClient,
     mockManageUsersApiClient,
     mockCas2UserRepository,
+    mockCas2NomisUserService
   )
 
   val username = "SOMEPERSON"
@@ -92,27 +95,12 @@ class Cas2UserServiceTest {
         every { mockPrincipal.token.tokenValue } returns "abc123"
         every { mockPrincipal.authenticationSource() } returns "nomis"
         every { mockPrincipal.name } returns username
-        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, existingCas2User.serviceOrigin) } returns existingCas2User
         every { mockCas2UserRepository.save(any()) } answers { it.invocation.args[0] as Cas2UserEntity }
+        every { mockCas2NomisUserService.getCas2UserEntityForNomisUser(username, "abc123", Cas2ServiceOrigin.HDC) } returns existingCas2User
 
-        val existingNomisUser = NomisUserDetailFactory()
-          .withUsername(username)
-          .withFirstName("Bob")
-          .withLastName("Robson")
-          .withEmail("new.email@example.com")
-          .withActiveCaseloadId("456")
-          .produce()
-        every { mockNomisUserRolesForRequesterApiClient.getUserDetailsForMe("abc123") } returns ClientResult.Success(
-          HttpStatus.OK,
-          existingNomisUser,
-        )
+        val result = cas2UserService.getUserForRequest(serviceOrigin = existingCas2User.serviceOrigin)
 
-        assertThat(cas2UserService.getUserForRequest(serviceOrigin = existingCas2User.serviceOrigin)).matches {
-          it.id == existingCas2User.id &&
-            it.name == "This Should Not Be Updated" &&
-            it.email == "new.email@example.com" &&
-            it.activeNomisCaseloadId == "456"
-        }
+        assertThat(result).isEqualTo(existingCas2User)
       }
 
       @Test
@@ -184,6 +172,18 @@ class Cas2UserServiceTest {
           HttpStatus.OK,
           existingNomisUser,
         )
+
+        val cas2User = Cas2UserEntityFactory()
+          .withUsername(username)
+          .withName("Bob Robson")
+          .withEmail("new.email@example.com")
+          .withUserType(Cas2UserType.NOMIS)
+          .withServiceOrigin(Cas2ServiceOrigin.HDC)
+          .withActiveNomisCaseloadId("456")
+          .produce()
+
+        every { mockCas2NomisUserService.getCas2UserEntityForNomisUser(username, "abc123", Cas2ServiceOrigin.HDC) } returns cas2User
+
 
         assertThat(cas2UserService.getUserForRequest(Cas2ServiceOrigin.HDC)).matches {
           it.name == "Bob Robson" &&
