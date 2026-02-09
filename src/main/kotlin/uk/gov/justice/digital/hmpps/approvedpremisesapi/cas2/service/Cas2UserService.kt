@@ -118,7 +118,9 @@ class Cas2UserService(
       is ClientResult.Failure -> nomisUserDetailResponse.throwException()
     }
 
-    val existingUser = getExistingCas2User(username, Cas2UserType.NOMIS, serviceOrigin)
+    val normalisedUsername = username.uppercase()
+
+    val existingUser = getExistingCas2User(normalisedUsername, Cas2UserType.NOMIS, serviceOrigin)
     if (existingUser != null) {
       if (
         existingUser.email != nomisUserDetails.primaryEmail ||
@@ -133,7 +135,24 @@ class Cas2UserService(
       return existingUser
     }
 
-    return ensureUserExists(username = username, nomisUserDetails, serviceOrigin = serviceOrigin)
+    return cas2UserRepository.save(
+      Cas2UserEntity(
+        id = UUID.randomUUID(),
+        name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
+        username = normalisedUsername,
+        nomisStaffId = nomisUserDetails.staffId,
+        activeNomisCaseloadId = nomisUserDetails.activeCaseloadId,
+        userType = Cas2UserType.NOMIS,
+        email = nomisUserDetails.primaryEmail,
+        isEnabled = nomisUserDetails.enabled,
+        isActive = nomisUserDetails.active,
+        deliusTeamCodes = null,
+        deliusStaffCode = null,
+        createdAt = OffsetDateTime.now(),
+        serviceOrigin = serviceOrigin,
+        nomisAccountType = nomisUserDetails.accountType,
+      ),
+    )
   }
 
   private fun getCas2UserEntityForDeliusUser(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {

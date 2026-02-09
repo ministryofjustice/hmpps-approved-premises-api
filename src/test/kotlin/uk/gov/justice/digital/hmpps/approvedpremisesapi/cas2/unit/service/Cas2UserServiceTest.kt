@@ -77,6 +77,49 @@ class Cas2UserServiceTest {
     inner class WhenExistingUser {
 
       @Test
+      fun `get user and doesn't create a new user if one already exists with mismatching username case`() {
+        val username = "someperson"
+        val normalisedUsername = "SOMEPERSON"
+
+        val existingCas2User = Cas2UserEntityFactory()
+          .withUsername(normalisedUsername)
+          .withName("This Should Not Be Updated")
+          .withEmail("same@example.com")
+          .withServiceOrigin(Cas2ServiceOrigin.HDC)
+          .withUserType(Cas2UserType.NOMIS)
+          .withActiveNomisCaseloadId("123")
+          .produce()
+
+        // setup auth service
+        val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+        every { mockHttpAuthService.getPrincipalOrThrow(listOf("nomis", "auth", "delius")) } returns mockPrincipal
+        every { mockPrincipal.token.tokenValue } returns "abc123"
+        every { mockPrincipal.authenticationSource() } returns "nomis"
+        every { mockPrincipal.name } returns username
+        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(normalisedUsername, Cas2UserType.NOMIS, existingCas2User.serviceOrigin) } returns existingCas2User
+        every { mockCas2UserRepository.save(any()) } answers { it.invocation.args[0] as Cas2UserEntity }
+
+        val existingNomisUser = NomisUserDetailFactory()
+          .withUsername(username)
+          .withFirstName("Bob")
+          .withLastName("Robson")
+          .withEmail("new.email@example.com")
+          .withActiveCaseloadId("456")
+          .produce()
+        every { mockNomisUserRolesForRequesterApiClient.getUserDetailsForMe("abc123") } returns ClientResult.Success(
+          HttpStatus.OK,
+          existingNomisUser,
+        )
+
+        assertThat(cas2UserService.getUserForRequest(serviceOrigin = existingCas2User.serviceOrigin)).matches {
+          it.id == existingCas2User.id &&
+            it.name == "This Should Not Be Updated" &&
+            it.email == "new.email@example.com" &&
+            it.activeNomisCaseloadId == "456"
+        }
+      }
+
+      @Test
       fun `get user and doesn't update details for nomis sources`() {
         val username = "SOMEPERSON"
 
