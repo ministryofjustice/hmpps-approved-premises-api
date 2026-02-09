@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
 import jakarta.transaction.Transactional
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
@@ -42,23 +43,34 @@ class Cas2NomisUserService(
       return existingUser
     }
 
-    return cas2UserRepository.save(
-      Cas2UserEntity(
-        id = UUID.randomUUID(),
-        name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
-        username = username,
-        nomisStaffId = nomisUserDetails.staffId,
-        activeNomisCaseloadId = nomisUserDetails.activeCaseloadId,
-        userType = Cas2UserType.NOMIS,
-        email = nomisUserDetails.primaryEmail,
-        isEnabled = nomisUserDetails.enabled,
-        isActive = nomisUserDetails.active,
-        deliusTeamCodes = null,
-        deliusStaffCode = null,
-        createdAt = OffsetDateTime.now(),
-        serviceOrigin = serviceOrigin,
-        nomisAccountType = nomisUserDetails.accountType,
-      ),
-    )
+    return ensureUserExists(username, nomisUserDetails, serviceOrigin)
+  }
+
+  private fun ensureUserExists(
+    username: String,
+    nomisUserDetails: NomisUserDetail,
+    serviceOrigin: Cas2ServiceOrigin,
+  ): Cas2UserEntity {
+    return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin) ?: try {
+      cas2UserRepository.save(
+        Cas2UserEntity(
+          id = UUID.randomUUID(),
+          name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
+          username = username,
+          nomisStaffId = nomisUserDetails.staffId,
+          nomisAccountType = nomisUserDetails.accountType,
+          email = nomisUserDetails.primaryEmail,
+          isEnabled = nomisUserDetails.enabled,
+          isActive = nomisUserDetails.active,
+          activeNomisCaseloadId = nomisUserDetails.activeCaseloadId,
+          userType = Cas2UserType.NOMIS,
+          createdAt = OffsetDateTime.now(),
+          serviceOrigin = serviceOrigin,
+        ),
+      )
+    } catch (ex: DataIntegrityViolationException) {
+      return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin)
+        ?: throw IllegalStateException("User creation failed and username $username not found", ex)
+    }
   }
 }
