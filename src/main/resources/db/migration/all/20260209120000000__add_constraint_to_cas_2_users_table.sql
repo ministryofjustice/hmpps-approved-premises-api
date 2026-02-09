@@ -1,0 +1,1 @@
+alter table cas_2_users add constraint unique_user unique (username, user_type, service_origin)
