@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
@@ -69,8 +68,9 @@ class Cas2UserService(
     nomisUserDetails: NomisUserDetail,
     serviceOrigin: Cas2ServiceOrigin,
   ): Cas2UserEntity {
-    return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin) ?: try {
-      cas2UserRepository.save(
+    cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin)
+      ?.let { return it }
+      ?: cas2UserRepository.createCas2User(
         Cas2UserEntity(
           id = UUID.randomUUID(),
           name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
@@ -86,10 +86,7 @@ class Cas2UserService(
           serviceOrigin = serviceOrigin,
         ),
       )
-    } catch (ex: DataIntegrityViolationException) {
-      return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin)
-        ?: throw IllegalStateException("User creation failed and username $username not found", ex)
-    }
+    return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin)!!
   }
 
   private fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
@@ -133,7 +130,7 @@ class Cas2UserService(
       return existingUser
     }
 
-    return cas2UserRepository.save(
+    cas2UserRepository.createCas2User(
       Cas2UserEntity(
         id = UUID.randomUUID(),
         name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
@@ -151,6 +148,7 @@ class Cas2UserService(
         nomisAccountType = nomisUserDetails.accountType,
       ),
     )
+    return getExistingCas2User(username, Cas2UserType.NOMIS, serviceOrigin)!!
   }
 
   private fun getCas2UserEntityForDeliusUser(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
@@ -171,8 +169,7 @@ class Cas2UserService(
 
       return existingUser
     }
-
-    return cas2UserRepository.save(
+    cas2UserRepository.createCas2User(
       Cas2UserEntity(
         id = UUID.randomUUID(),
         name = "${deliusUser.name.forename} ${deliusUser.name.surname}",
@@ -189,6 +186,7 @@ class Cas2UserService(
         createdAt = OffsetDateTime.now(),
       ),
     )
+    return getExistingCas2User(username, Cas2UserType.DELIUS, serviceOrigin)!!
   }
 
   private fun getCas2UserEntityForExternalUser(username: String, jwt: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
@@ -201,8 +199,7 @@ class Cas2UserService(
       is ClientResult.Success -> externalUserDetailsResponse.body
       is ClientResult.Failure -> externalUserDetailsResponse.throwException()
     }
-
-    return cas2UserRepository.save(
+    cas2UserRepository.createCas2User(
       Cas2UserEntity(
         id = UUID.randomUUID(),
         name = "${externalUserDetails.firstName} ${externalUserDetails.lastName}",
@@ -220,5 +217,6 @@ class Cas2UserService(
         externalType = "NACRO",
       ),
     )
+    return getExistingCas2User(username, Cas2UserType.EXTERNAL, serviceOrigin)!!
   }
 }

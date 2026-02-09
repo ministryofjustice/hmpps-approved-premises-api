@@ -85,7 +85,7 @@ class Cas2v2UserService(
       return existingUser
     }
 
-    return cas2UserRepository.save(
+    cas2UserRepository.createCas2User(
       Cas2UserEntity(
         id = UUID.randomUUID(),
         name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
@@ -102,6 +102,7 @@ class Cas2v2UserService(
         nomisAccountType = nomisUserDetails.accountType,
       ),
     )
+    return getExistingUser(username, Cas2UserType.NOMIS)!!
   }
 
   private fun getEntityForDeliusUser(username: String): Cas2UserEntity {
@@ -123,7 +124,7 @@ class Cas2v2UserService(
       return existingUser
     }
 
-    return cas2UserRepository.save(
+    cas2UserRepository.createCas2User(
       Cas2UserEntity(
         id = UUID.randomUUID(),
         name = "${deliusUser.name.forename} ${deliusUser.name.surname}",
@@ -139,6 +140,7 @@ class Cas2v2UserService(
         serviceOrigin = Cas2ServiceOrigin.BAIL,
       ),
     )
+    return getExistingUser(username, Cas2UserType.DELIUS)!!
   }
 
   private fun getEntityForExternalUser(username: String, jwt: String): Cas2UserEntity {
@@ -152,7 +154,7 @@ class Cas2v2UserService(
       is ClientResult.Failure -> externalUserDetailsResponse.throwException()
     }
 
-    return cas2UserRepository.save(
+    cas2UserRepository.createCas2User(
       Cas2UserEntity(
         id = UUID.randomUUID(),
         name = "${externalUserDetails.firstName} ${externalUserDetails.lastName}",
@@ -169,5 +171,6 @@ class Cas2v2UserService(
         externalType = "NACRO",
       ),
     )
+    return getExistingUser(username, Cas2UserType.EXTERNAL)!!
   }
 }
