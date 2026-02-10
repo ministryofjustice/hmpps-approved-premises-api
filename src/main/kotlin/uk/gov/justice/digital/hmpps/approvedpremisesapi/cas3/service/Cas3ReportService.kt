@@ -109,13 +109,14 @@ class Cas3ReportService(
       TransitionalAccommodationReferralReportDataAndPersonInfo(it, personInfo)
     }
     log.info("Creating report")
-
+    val workbook = SXSSFWorkbook(MAX_IN_MEMORY_ROWS)
     TransitionalAccommodationReferralReportGenerator()
       .createReport(reportData, properties)
       .writeExcel(
         outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
+        factory = workbook,
       )
+    workbook.close()
   }
 
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
@@ -143,7 +144,7 @@ class Cas3ReportService(
     }
 
     log.info("Creating report")
-
+    val workbook = SXSSFWorkbook(MAX_IN_MEMORY_ROWS)
     BookingsReportGenerator()
       .createReport(
         reportData,
@@ -156,8 +157,9 @@ class Cas3ReportService(
       )
       .writeExcel(
         outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
+        factory = workbook,
       )
+    workbook.close()
   }
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
@@ -281,13 +283,14 @@ class Cas3ReportService(
     }
 
     log.info("Creating report")
-
+    val workbook = SXSSFWorkbook(MAX_IN_MEMORY_ROWS)
     BedUtilisationReportGenerator(workingDayService)
       .createReport(reportData, properties)
       .writeExcel(
         outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
+        factory = workbook,
       )
+    workbook.close()
   }
 
   fun createBedspaceOccupancyReport(properties: BedspaceOccupancyReportProperties, outputStream: OutputStream) {
@@ -348,13 +351,14 @@ class Cas3ReportService(
     }
 
     log.info("Creating bedspace occupancy report")
-
+    val workbook = SXSSFWorkbook(MAX_IN_MEMORY_ROWS)
     BedspaceOccupancyReportGenerator(workingDayService)
       .createReport(reportData, properties)
       .writeExcel(
         outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
+        factory = workbook,
       )
+    workbook.close()
   }
 
   fun createFutureBookingReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
@@ -380,13 +384,14 @@ class Cas3ReportService(
     }
 
     log.info("Creating report")
-
+    val workbook = SXSSFWorkbook(MAX_IN_MEMORY_ROWS)
     FutureBookingsReportGenerator()
       .createReport(reportData, properties)
       .writeExcel(
         outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
+        factory = workbook,
       )
+    workbook.close()
   }
 
   fun createFutureBookingCsvReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
@@ -473,6 +478,7 @@ class Cas3ReportService(
     properties: BookingGapReportProperties,
     outputStream: OutputStream,
   ) {
+    val workbook = SXSSFWorkbook(MAX_IN_MEMORY_ROWS)
     BookingGapReportGenerator(workingDayService)
       .createReport(
         listOf(
@@ -481,8 +487,9 @@ class Cas3ReportService(
         properties,
       ).writeExcel(
         outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
+        factory = workbook,
       )
+    workbook.close()
   }
 
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
