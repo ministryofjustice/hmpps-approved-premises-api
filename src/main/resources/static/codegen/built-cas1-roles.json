@@ -123,8 +123,10 @@
       "cas1_experimental_new_assign_keyworker_flow",
       "cas1_experimental_new_request_for_placement_flow",
       "cas1_keyworker_assignable_as",
+      "cas1_management_reports_view",
       "cas1_national_occupancy_view",
       "cas1_offline_application_view",
+      "cas1_operational_reports_view",
       "cas1_out_of_service_bed_cancel",
       "cas1_out_of_service_bed_create",
       "cas1_out_of_service_bed_create_bed_on_hold",
@@ -187,5 +189,17 @@
   {
     "name" : "manage_resident",
     "permissions" : [ ]
+  },
+  {
+    "name" : "operational_report_viewer",
+    "permissions" : [
+      "cas1_operational_reports_view"
+    ]
+  },
+  {
+    "name" : "management_report_viewer",
+    "permissions" : [
+      "cas1_management_reports_view"
+    ]
   }
 ]
