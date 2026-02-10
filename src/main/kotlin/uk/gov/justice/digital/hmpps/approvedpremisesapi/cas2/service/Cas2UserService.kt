@@ -46,7 +46,7 @@ class Cas2UserService(
     val userStaffInformation = getUserStaffInformation(staffId)
     val normalisedUsername = userStaffInformation.generalAccount.username.uppercase()
     val userDetail = getUserDetail(username = normalisedUsername)
-    return ensureUserExists(username = normalisedUsername, userDetail, serviceOrigin)
+    return findOrCreateNomisUser(username = normalisedUsername, userDetail, serviceOrigin)
   }
 
   private fun getUserDetail(username: String): NomisUserDetail = when (
@@ -63,11 +63,12 @@ class Cas2UserService(
     is ClientResult.Failure -> nomsStaffInformationResponse.throwException()
   }
 
-  private fun ensureUserExists(
+  private fun findOrCreateNomisUser(
     username: String,
     nomisUserDetails: NomisUserDetail,
     serviceOrigin: Cas2ServiceOrigin,
   ): Cas2UserEntity {
+    /* This call to get user is unnecessary - we already check the user before this point so can be removed. */
     cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin)
       ?.let { return it }
       ?: cas2UserRepository.createCas2User(
