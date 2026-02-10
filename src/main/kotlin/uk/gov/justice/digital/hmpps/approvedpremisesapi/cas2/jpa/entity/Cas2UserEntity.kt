@@ -7,7 +7,10 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
@@ -27,6 +30,31 @@ enum class Cas2UserType(val authSource: String) {
 
 @Repository
 interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
+
+  @Modifying
+  @Transactional
+  @Query(
+    nativeQuery = true,
+    value = """
+    INSERT INTO cas_2_users (
+      id, username, email, name, user_type, external_type,
+      nomis_staff_id, active_nomis_caseload_id, nomis_account_type,
+      delius_team_codes, delius_staff_code,
+      is_enabled, is_active, created_at, service_origin
+    )
+    VALUES (
+      :#{#user.id}, :#{#user.username}, :#{#user.email}, :#{#user.name},
+      :#{#user.userType.name()}, :#{#user.externalType},
+      :#{#user.nomisStaffId}, :#{#user.activeNomisCaseloadId}, :#{#user.nomisAccountType},
+      :#{#user.deliusTeamCodes}, :#{#user.deliusStaffCode},
+      :#{#user.isEnabled}, :#{#user.isActive},
+      :#{#user.createdAt}, :#{#user.serviceOrigin.name()}
+    )
+    ON CONFLICT (username, user_type, service_origin) DO NOTHING
+  """,
+  )
+  fun createCas2User(user: Cas2UserEntity): Unit
+
   fun findByServiceOrigin(serviceOrigin: Cas2ServiceOrigin): List<Cas2UserEntity>
   fun findByUsernameAndServiceOrigin(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
   fun findByUserTypeAndServiceOrigin(type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): List<Cas2UserEntity>
