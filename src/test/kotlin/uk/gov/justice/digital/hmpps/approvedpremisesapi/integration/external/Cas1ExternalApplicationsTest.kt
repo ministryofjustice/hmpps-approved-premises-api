@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import java.time.LocalDate
 
-class Cas1ExternalSuitableApplicationsTest : IntegrationTestBase() {
+class Cas1ExternalApplicationsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
 
   @Nested
@@ -21,17 +21,17 @@ class Cas1ExternalSuitableApplicationsTest : IntegrationTestBase() {
     @Test
     fun `Get suitable application without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas1/external/suitable-application/$crn")
+        .uri("/cas1/external/cases/$crn/applications/suitable")
         .exchange()
         .expectStatus()
         .isUnauthorized
     }
 
     @Test
-    fun `Get suitable application without correct JWT authority returns 401`() {
+    fun `Get suitable application without correct JWT authority returns 403`() {
       givenAUser { _, jwt ->
         webTestClient.get()
-          .uri("/cas1/external/suitable-application/$crn")
+          .uri("/cas1/external/cases/$crn/applications/suitable")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -66,7 +66,7 @@ class Cas1ExternalSuitableApplicationsTest : IntegrationTestBase() {
           )
 
           val response = webTestClient.get()
-            .uri("/cas1/external/suitable-application/$crn")
+            .uri("/cas1/external/cases/$crn/applications/suitable")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -81,10 +81,22 @@ class Cas1ExternalSuitableApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get application with unsupported type returns bad request`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+        webTestClient.get()
+          .uri("/cas1/external/cases/$crn/applications/unsupported")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .exchange()
+          .expectStatus()
+          .isBadRequest
+      }
+    }
+
+    @Test
     fun `Get suitable application returns not found`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         webTestClient.get()
-          .uri("/cas1/external/suitable-application/$crn")
+          .uri("/cas1/external/cases/$crn/applications/suitable")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
