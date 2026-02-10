@@ -87,7 +87,7 @@ class Cas2UserService(
           serviceOrigin = serviceOrigin,
         ),
       )
-    return cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin)!!
+    return findCas2User(username, Cas2UserType.NOMIS, serviceOrigin)!!
   }
 
   private fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
@@ -102,7 +102,7 @@ class Cas2UserService(
     return userEntity
   }
 
-  private fun getExistingCas2User(
+  private fun findCas2User(
     username: String,
     userType: Cas2UserType,
     serviceOrigin: Cas2ServiceOrigin,
@@ -116,7 +116,7 @@ class Cas2UserService(
       is ClientResult.Failure -> nomisUserDetailResponse.throwException()
     }
 
-    val existingUser = getExistingCas2User(username, Cas2UserType.NOMIS, serviceOrigin)
+    val existingUser = findCas2User(username, Cas2UserType.NOMIS, serviceOrigin)
     if (existingUser != null) {
       if (
         existingUser.email != nomisUserDetails.primaryEmail ||
@@ -149,7 +149,7 @@ class Cas2UserService(
         nomisAccountType = nomisUserDetails.accountType,
       ),
     )
-    return getExistingCas2User(username, Cas2UserType.NOMIS, serviceOrigin)!!
+    return findCas2User(username, Cas2UserType.NOMIS, serviceOrigin)!!
   }
 
   private fun getCas2UserEntityForDeliusUser(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
@@ -159,7 +159,7 @@ class Cas2UserService(
         is ClientResult.Failure<*> -> staffUserDetailsResponse.throwException()
       }
 
-    val existingUser = getExistingCas2User(username, Cas2UserType.DELIUS, serviceOrigin)
+    val existingUser = findCas2User(username, Cas2UserType.DELIUS, serviceOrigin)
     if (existingUser != null) {
       val teamsDiffer = deliusUser.teamCodes().sorted() != existingUser.deliusTeamCodes?.sorted()
       if (deliusUser.email != existingUser.email || teamsDiffer) {
@@ -187,11 +187,11 @@ class Cas2UserService(
         createdAt = OffsetDateTime.now(),
       ),
     )
-    return getExistingCas2User(username, Cas2UserType.DELIUS, serviceOrigin)!!
+    return findCas2User(username, Cas2UserType.DELIUS, serviceOrigin)!!
   }
 
   private fun getCas2UserEntityForExternalUser(username: String, jwt: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
-    val existingUser = getExistingCas2User(username, Cas2UserType.EXTERNAL, serviceOrigin = serviceOrigin)
+    val existingUser = findCas2User(username, Cas2UserType.EXTERNAL, serviceOrigin = serviceOrigin)
     if (existingUser != null) return existingUser
 
     val externalUserDetailsResponse = manageUsersApiClient.getExternalUserDetails(username, jwt)
@@ -218,6 +218,6 @@ class Cas2UserService(
         externalType = "NACRO",
       ),
     )
-    return getExistingCas2User(username, Cas2UserType.EXTERNAL, serviceOrigin)!!
+    return findCas2User(username, Cas2UserType.EXTERNAL, serviceOrigin)!!
   }
 }
