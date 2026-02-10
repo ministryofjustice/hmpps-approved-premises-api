@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService
@@ -40,6 +42,8 @@ class Cas1SpaceBookingCreateServiceTest {
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val cas1BookingEmailService = mockk<Cas1BookingEmailService>()
   private val cas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
+  private val cas1outOfServiceBedRepository = mockk<Cas1OutOfServiceBedRepository>()
+  private val cas1OutOfServiceBedService = mockk<Cas1OutOfServiceBedService>()
   private val clock = ClockConfiguration.FixedClock()
 
   private val service = Cas1SpaceBookingCreateService(
@@ -49,6 +53,8 @@ class Cas1SpaceBookingCreateServiceTest {
     cas1ApplicationStatusService,
     cas1BookingDomainEventService,
     cas1BookingEmailService,
+    cas1outOfServiceBedRepository,
+    cas1OutOfServiceBedService,
     clock,
   )
 
@@ -290,6 +296,7 @@ class Cas1SpaceBookingCreateServiceTest {
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingMade(any()) } returns Unit
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
+      every { cas1outOfServiceBedRepository.findCurrentOverlappingBohByCrnAndPremises(any(), any(), any(), any(), any()) } returns null
 
       val persistedBooking = Cas1SpaceBookingEntityFactory().produce()
       every { spaceBookingRepository.save(spaceBookingToCreate) } returns persistedBooking

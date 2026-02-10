@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository.Companion.UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -82,6 +83,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -408,6 +410,226 @@ class Cas1SpaceBookingTest {
 
           assertThat(approvedPremisesApplicationRepository.findByIdOrNull(placementRequest.application.id)!!.status)
             .isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+
+          assertThat(cas1SpaceBookingRepository.findAllByApplication(application)).hasSize(2)
+        }
+      }
+    }
+
+    @Test
+    fun `Booking a space cancels existing overlapping BOH and returns OK with the correct data, updates app status, emits domain event and emails`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { applicant, jwt ->
+        givenAPlacementRequest(
+          assessmentAllocatedTo = applicant,
+          createdByUser = applicant,
+          crn = "CRN1234",
+          caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+            withEmailAddress("caseManager@test.com")
+          },
+        ) { placementRequest, application ->
+          val characteristics = listOf(
+            Cas1SpaceCharacteristic.hasEnSuite,
+            Cas1SpaceCharacteristic.isArsonSuitable,
+          )
+
+          placementRequest.placementRequirements = placementRequirementsFactory.produceAndPersist {
+            withYieldedPostcodeDistrict {
+              postCodeDistrictFactory.produceAndPersist()
+            }
+            withApplication(application as ApprovedPremisesApplicationEntity)
+            withAssessment(placementRequest.assessment)
+            withEssentialCriteria(emptyList())
+            withDesirableCriteria(emptyList())
+          }
+
+          placementRequestRepository.saveAndFlush(placementRequest)
+
+          val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
+
+          val bed1 = bedEntityFactory.produceAndPersist {
+            withName("bed1")
+            withRoom(
+              roomEntityFactory.produceAndPersist {
+                withName("room1")
+                withPremises(premises)
+              },
+            )
+          }
+
+          apDeliusContextAddSingleCaseSummaryToBulkResponse(
+            CaseSummaryFactory()
+              .withCrn(application.crn)
+              .produce(),
+          )
+
+          // add BOH entry with overlapping dates
+          cas1OutOfServiceBedEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withBed(bed1)
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.parse("2020-01-03T10:15:30+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(applicant)
+              withReferenceNumber("CRN1234")
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.now().plusDays(1))
+              withEndDate(LocalDate.now().plusMonths(3))
+              withReason(
+                cas1OutOfServiceBedReasonTestRepository.getReferenceById(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID),
+              )
+            }
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.parse("2020-01-04T10:15:30+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(applicant)
+              withReferenceNumber("CRN1234")
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.now().plusDays(2))
+              withEndDate(LocalDate.now().plusMonths(2))
+              withReason(
+                cas1OutOfServiceBedReasonTestRepository.getReferenceById(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID),
+              )
+            }
+          }
+
+          givenACas1SpaceBooking(placementRequest = placementRequest)
+
+          val bohBeforeSpaceBooking = cas1OutOfServiceBedTestRepository.findAll().first()
+
+          assertThat(bohBeforeSpaceBooking.cancellation).isNull()
+
+          webTestClient.post()
+            .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewSpaceBooking(
+                arrivalDate = LocalDate.now().plusDays(1),
+                departureDate = LocalDate.now().plusMonths(3),
+                premisesId = premises.id,
+                characteristics = characteristics,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult(Cas1SpaceBooking::class.java)
+
+          val bohBeforeAfterBooking = cas1OutOfServiceBedTestRepository.findById(bohBeforeSpaceBooking.id).get()
+
+          assertThat(bohBeforeAfterBooking.cancellation).isNotNull()
+
+          domainEventAsserter.assertDomainEventOfTypeStored(
+            placementRequest.application.id,
+            DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+          )
+
+          emailAsserter.assertEmailsRequestedCount(3)
+          emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
+          emailAsserter.assertEmailRequested(premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
+          emailAsserter.assertEmailRequested(
+            placementRequest.application.caseManagerUserDetails!!.email!!,
+            Cas1NotifyTemplates.BOOKING_MADE,
+          )
+
+          assertThat(approvedPremisesApplicationRepository.findByIdOrNull(placementRequest.application.id)!!.status)
+            .isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+
+          assertThat(cas1SpaceBookingRepository.findAllByApplication(application)).hasSize(2)
+        }
+      }
+    }
+
+    @Test
+    fun `Booking a space does not cancel existing non-overlapping BOH`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { applicant, jwt ->
+        givenAPlacementRequest(
+          assessmentAllocatedTo = applicant,
+          createdByUser = applicant,
+          crn = "CRN1234",
+          caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+            withEmailAddress("caseManager@test.com")
+          },
+        ) { placementRequest, application ->
+          val characteristics = listOf(
+            Cas1SpaceCharacteristic.hasEnSuite,
+            Cas1SpaceCharacteristic.isArsonSuitable,
+          )
+
+          placementRequest.placementRequirements = placementRequirementsFactory.produceAndPersist {
+            withYieldedPostcodeDistrict {
+              postCodeDistrictFactory.produceAndPersist()
+            }
+            withApplication(application as ApprovedPremisesApplicationEntity)
+            withAssessment(placementRequest.assessment)
+            withEssentialCriteria(emptyList())
+            withDesirableCriteria(emptyList())
+          }
+
+          placementRequestRepository.saveAndFlush(placementRequest)
+
+          val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
+
+          val bed1 = bedEntityFactory.produceAndPersist {
+            withName("bed1")
+            withRoom(
+              roomEntityFactory.produceAndPersist {
+                withName("room1")
+                withPremises(premises)
+              },
+            )
+          }
+
+          apDeliusContextAddSingleCaseSummaryToBulkResponse(
+            CaseSummaryFactory()
+              .withCrn(application.crn)
+              .produce(),
+          )
+
+          // add BOH entry without overlapping dates
+          val bohStartDate = LocalDate.now().plusMonths(4)
+          val bohEndDate = LocalDate.now().plusMonths(5)
+
+          val bohNotOverlapping = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withBed(bed1)
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.parse("2020-01-03T10:15:30+01:00").roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(applicant)
+              withReferenceNumber("CRN1234")
+              withOutOfServiceBed(this@apply)
+              withStartDate(bohStartDate)
+              withEndDate(bohEndDate)
+              withReason(
+                cas1OutOfServiceBedReasonTestRepository.getReferenceById(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID),
+              )
+            }
+          }
+
+          givenACas1SpaceBooking(placementRequest = placementRequest)
+
+          val bohBeforeSpaceBooking = cas1OutOfServiceBedTestRepository.findById(bohNotOverlapping.id).get()
+
+          assertThat(bohBeforeSpaceBooking.cancellation).isNull()
+
+          webTestClient.post()
+            .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewSpaceBooking(
+                arrivalDate = LocalDate.now().plusDays(1),
+                departureDate = LocalDate.now().plusMonths(3),
+                premisesId = premises.id,
+                characteristics = characteristics,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult(Cas1SpaceBooking::class.java)
+
+          val bohAfterBooking = cas1OutOfServiceBedTestRepository.findById(bohBeforeSpaceBooking.id).get()
+
+          assertThat(bohAfterBooking.cancellation).isNull()
 
           assertThat(cas1SpaceBookingRepository.findAllByApplication(application)).hasSize(2)
         }

@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository.Companion.BED_ON_HOLD_REASON_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -26,6 +28,8 @@ class Cas1SpaceBookingCreateService(
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
+  private val cas1OutOfServiceBedRepository: Cas1OutOfServiceBedRepository,
+  private val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
   private val clock: Clock,
 ) {
 
@@ -35,6 +39,18 @@ class Cas1SpaceBookingCreateService(
     val application = bookingToCreate.placementRequest!!.application
 
     val spaceBooking = cas1SpaceBookingRepository.save(validatedDetails.bookingToCreate)
+
+    val currentBedOnHold = cas1OutOfServiceBedRepository.findCurrentOverlappingBohByCrnAndPremises(
+      spaceBooking.crn,
+      spaceBooking.premises.id,
+      spaceBooking.expectedArrivalDate,
+      spaceBooking.expectedDepartureDate,
+      BED_ON_HOLD_REASON_ID,
+    )
+
+    currentBedOnHold?.let { bedOnHold ->
+      cas1OutOfServiceBedService.cancelOutOfServiceBed(bedOnHold, null)
+    }
 
     cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
 
