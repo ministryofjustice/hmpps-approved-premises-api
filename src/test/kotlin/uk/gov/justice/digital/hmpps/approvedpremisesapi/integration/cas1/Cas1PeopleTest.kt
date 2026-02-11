@@ -76,7 +76,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting OASys risks to individual returns OK with correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         val crn = "CRN"
         val risksToTheIndividual = RisksToTheIndividual(
           assessmentId = 1,
@@ -119,7 +119,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting OASys risks to individual returns 404 when OASys returns 404`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         val crn = "CRN"
 
         apOASysContextMockRiskToTheIndividual404Call(crn)
@@ -135,7 +135,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting OASys risks to individual returns 404 when riskToTheIndividual is null`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         val crn = "CRN"
         val risksToTheIndividual = RisksToTheIndividual(
           assessmentId = 1,
@@ -648,7 +648,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         .produce()
       val roshRatings = RoshRatingsFactory().produce()
       val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now())
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       givenAnOffender { offenderDetails, _ ->
         apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
         apOASysContextMockSuccessfulRoshRatingsCall(offenderDetails.otherIds.crn, roshRatings)
@@ -714,7 +714,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         ),
       )
 
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       givenAnOffender { offenderDetails, _ ->
         prisonAPIMockSuccessfulCsraSummariesCall(offenderDetails.otherIds.nomsNumber!!, csraSummaries)
 
@@ -744,7 +744,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         ),
       )
 
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT), qualifications = listOf(UserQualification.LAO))
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER), qualifications = listOf(UserQualification.LAO))
       val crn = "LAO_CRN"
       val nomsNumber = "LAO_NOMS"
 
@@ -776,7 +776,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting CSRA summaries for a CRN where the Offender is LAO, but the user does not have LAO qualification returns 403`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val crn = "LAO_CRN"
       val nomsNumber = "LAO_NOMS"
 
@@ -805,7 +805,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting CSRA summaries for a CRN that does not exist returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val crn = "NOT_FOUND_CRN"
 
       apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
@@ -820,7 +820,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting CSRA summaries for a CRN where Prison API returns 404 returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       givenAnOffender { offenderDetails, _ ->
         prisonAPIMockNotFoundCsraSummariesCall(offenderDetails.otherIds.nomsNumber!!)
 
@@ -838,7 +838,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
   inner class GetOffenderBookingDetails {
     @Test
     fun `Getting booking details for a CRN returns 200`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
 
       val crn = "CRN01"
       val nomsNumber = "NOMS01"
@@ -872,7 +872,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting booking details for a CRN that does not exist returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val crn = "NOT_FOUND_CRN"
 
       webTestClient.get()
@@ -885,7 +885,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting booking details for a CRN where Prison API returns 404 returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val (offenderDetails, _) = givenAnOffender()
       val existingOffender = Cas1OffenderEntityFactory().withCrn(offenderDetails.otherIds.crn).withNomsNumber(offenderDetails.otherIds.nomsNumber).withName("name").produce()
       cas1OffenderRepository.saveAndFlush(existingOffender)
