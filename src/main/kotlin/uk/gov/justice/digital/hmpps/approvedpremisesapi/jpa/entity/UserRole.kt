@@ -166,6 +166,12 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     listOf(UserPermission.CAS1_OPERATIONAL_REPORTS_VIEW),
   ),
 
+  CAS1_MANAGEMENT_REPORTS_VIEWER(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.managementReportViewer,
+    listOf(UserPermission.CAS1_MANAGEMENT_REPORTS_VIEW),
+  ),
+
   CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
   CAS3_REFERRER(ServiceName.temporaryAccommodation, null),
   CAS3_REPORTER(ServiceName.temporaryAccommodation, null),
