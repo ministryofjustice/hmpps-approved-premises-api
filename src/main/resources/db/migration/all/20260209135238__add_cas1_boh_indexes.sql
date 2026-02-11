@@ -1,0 +1,1 @@
+CREATE INDEX idx_oosb_revisions_oosb_id_created_at ON cas1_out_of_service_bed_revisions(out_of_service_bed_id, created_at DESC);
