@@ -92,6 +92,9 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val
 
   CAS1_APPLICATION_WITHDRAW_OTHERS(ApprovedPremisesUserPermission.applicationWithdrawOthers),
 
+  CAS1_OPERATIONAL_REPORTS_VIEW(ApprovedPremisesUserPermission.operationalReportsView),
+  CAS1_MANAGEMENT_REPORTS_VIEW(ApprovedPremisesUserPermission.managementReportsView),
+
   /**
    * View reports, excluding those containing PII
    */

@@ -58,4 +58,6 @@ enum class ApprovedPremisesUserPermission(@get:JsonValue val value: String) {
   cas1TestExperimentalPermission("cas1_test_experimental_permission"),
   cas1SpaceBookingCreateAdditional("cas1_space_booking_create_additional"),
   apResidentProfile("cas1_ap_resident_profile"),
+  operationalReportsView("cas1_operational_reports_view"),
+  managementReportsView("cas1_management_reports_view"),
 }

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.ReportDateRange
@@ -46,7 +47,15 @@ class Cas1ReportsController(
       throw NotAllowedProblem("This endpoint only supports CAS1")
     }
 
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
+    if (reportName == Cas1ReportName.overduePlacements) {
+      if (!userAccessService.currentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW) &&
+        !userAccessService.currentUserHasPermission(UserPermission.CAS1_OPERATIONAL_REPORTS_VIEW)
+      ) {
+        throw ForbiddenProblem("Permission ${UserPermission.CAS1_REPORTS_VIEW.name} or ${UserPermission.CAS1_OPERATIONAL_REPORTS_VIEW} is required")
+      }
+    } else {
+      userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
+    }
 
     validateDateInputs(year, month, startDate, endDate)
 
