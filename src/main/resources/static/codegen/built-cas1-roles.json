@@ -12,7 +12,6 @@
   {
     "name" : "future_manager",
     "permissions" : [
-      "cas1_ap_resident_profile",
       "cas1_keyworker_assignable_as",
       "cas1_offline_application_view",
       "cas1_out_of_service_bed_create",
@@ -186,6 +185,8 @@
   },
   {
     "name" : "manage_resident",
-    "permissions" : [ ]
+    "permissions" : [
+      "cas1_ap_resident_profile"
+    ]
   }
 ]
