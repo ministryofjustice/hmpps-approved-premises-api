@@ -605,7 +605,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     offenderDetails: OffenderDetailSummary,
   ): String = """
         {
-           "id": "${application.id}",
            "name": "$NAME",
            "crn": "${offenderDetails.otherIds.crn}",
            "noms_number": "${offenderDetails.otherIds.nomsNumber}",
