@@ -23,7 +23,6 @@ select
 from
 	(
 	select
-		a.id,
 		apa.name,
 		a.crn,
 		a.noms_number,
