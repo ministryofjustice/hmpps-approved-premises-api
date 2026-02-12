@@ -34,6 +34,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_SPACE_BOOKING_VIEW,
       UserPermission.CAS1_USER_SUMMARY_LIST,
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
+      UserPermission.CAS1_AP_RESIDENT_PROFILE,
     ),
   ),
 
@@ -157,7 +158,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_MANAGE_RESIDENT(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.manageResident,
-    listOf(UserPermission.CAS1_AP_RESIDENT_PROFILE),
+    listOf(),
   ),
 
   CAS3_ASSESSOR(ServiceName.temporaryAccommodation, null),
