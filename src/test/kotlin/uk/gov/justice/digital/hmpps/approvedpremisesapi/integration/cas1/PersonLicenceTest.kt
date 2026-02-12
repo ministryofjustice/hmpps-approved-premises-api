@@ -44,7 +44,7 @@ class PersonLicenceTest : IntegrationTestBase() {
   @Test
   fun `returns 403 when user does not have CAS1_AP_RESIDENT_PROFILE permission`() {
     val crn = "X12345"
-    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR))
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
 
     webTestClient.get()
       .uri("/cas1/people/$crn/licence-details")
@@ -57,7 +57,7 @@ class PersonLicenceTest : IntegrationTestBase() {
   @Test
   fun `returns 404 when licence summaries endpoint returns 404`() {
     val crn = "X12345"
-    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
     licenceApiMockNotFoundLicenceSummaries(crn)
 
@@ -72,7 +72,7 @@ class PersonLicenceTest : IntegrationTestBase() {
   @Test
   fun `returns 403 when licence summaries endpoint returns 403`() {
     val crn = "X12345"
-    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
     mockUnsuccessfulGetCall(url = "/public/licence-summaries/crn/$crn", responseStatus = 403)
 
@@ -87,7 +87,7 @@ class PersonLicenceTest : IntegrationTestBase() {
   @Test
   fun `returns 404 when no ACTIVE licence summary exists`() {
     val crn = "X12345"
-    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
     val summaries = listOf(
       aLicenceSummary(1, crn, LicenceStatus.APPROVED),
@@ -106,7 +106,7 @@ class PersonLicenceTest : IntegrationTestBase() {
   @Test
   fun `returns 404 when details endpoint returns 404 for ACTIVE summary`() {
     val crn = "X12345"
-    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
     val activeId = 99L
     val summaries = listOf(aLicenceSummary(activeId, crn, LicenceStatus.ACTIVE))
@@ -124,7 +124,7 @@ class PersonLicenceTest : IntegrationTestBase() {
   @Test
   fun `returns 403 when details endpoint returns 403 for ACTIVE summary`() {
     val crn = "X12345"
-    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
     val activeId = 100L
     val summaries = listOf(aLicenceSummary(activeId, crn, LicenceStatus.ACTIVE))
@@ -142,7 +142,7 @@ class PersonLicenceTest : IntegrationTestBase() {
   @Test
   fun `returns 200 with licence body when ACTIVE summary exists and details found`() {
     val crn = "X12345"
-    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
     val activeId = 101L
     val summaries = listOf(aLicenceSummary(activeId, crn, LicenceStatus.ACTIVE))
@@ -165,7 +165,7 @@ class PersonLicenceTest : IntegrationTestBase() {
   @Test
   fun `returns 200 with licence body containing additional conditions`() {
     val crn = "X12345"
-    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_MANAGE_RESIDENT))
 
     val activeId = 102L
     val summaries = listOf(aLicenceSummary(activeId, crn, LicenceStatus.ACTIVE))

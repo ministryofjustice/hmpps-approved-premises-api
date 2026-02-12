@@ -185,9 +185,9 @@ class UserTransformerTest {
     }
 
     @Test
-    fun `transformJpaToApi should return correct permission for CAS1_FUTURE_MANAGER `() {
+    fun `transformJpaToApi should return correct permission for CAS1_MANAGE_RESIDENT `() {
       val user = buildUserEntity(
-        role = UserRole.CAS1_FUTURE_MANAGER,
+        role = UserRole.CAS1_MANAGE_RESIDENT,
         apArea = ApAreaEntityFactory().produce(),
         cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
@@ -198,22 +198,7 @@ class UserTransformerTest {
       val result =
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
-      assertThat(result.permissions).containsExactlyInAnyOrder(
-        ApprovedPremisesUserPermission.keyworkerAssignableAs,
-        ApprovedPremisesUserPermission.offlineApplicationView,
-        ApprovedPremisesUserPermission.outOfServiceBedCreate,
-        ApprovedPremisesUserPermission.premisesView,
-        ApprovedPremisesUserPermission.premisesManage,
-        ApprovedPremisesUserPermission.spaceBookingList,
-        ApprovedPremisesUserPermission.spaceBookingRecordArrival,
-        ApprovedPremisesUserPermission.spaceBookingRecordDeparture,
-        ApprovedPremisesUserPermission.spaceBookingRecordNonArrival,
-        ApprovedPremisesUserPermission.spaceBookingRecordKeyworker,
-        ApprovedPremisesUserPermission.spaceBookingView,
-        ApprovedPremisesUserPermission.userSummaryList,
-        ApprovedPremisesUserPermission.viewOutOfServiceBeds,
-        ApprovedPremisesUserPermission.apResidentProfile,
-      )
+      assertThat(result.permissions).containsOnly(ApprovedPremisesUserPermission.apResidentProfile)
     }
 
     @ParameterizedTest
