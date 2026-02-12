@@ -32,7 +32,7 @@ generic-service:
     SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
     SERVICES_MANAGE-POM-CASES_BASE-URL: https://moic.service.justice.gov.uk
     SERVICES_PRISONER-SEARCH_BASE-URL: https://prisoner-search.prison.service.justice.gov.uk
-    SERVICES_LICENCE-API_BASE-URL: https://create-and-vary-a-licence.hmpps.service.justice.gov.uk
+    SERVICES_LICENCE-API_BASE-URL: https://create-and-vary-a-licence-api.hmpps.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: false
     SENTRY_ENVIRONMENT: prod
