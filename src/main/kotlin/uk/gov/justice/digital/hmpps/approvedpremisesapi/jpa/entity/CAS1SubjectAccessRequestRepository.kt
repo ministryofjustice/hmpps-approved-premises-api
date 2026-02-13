@@ -99,7 +99,6 @@ from
   	json_agg(apptimeline) as json
   from(
       select
-          a.id as application_id,
           a.service,
           a.crn,
           a.noms_number,
