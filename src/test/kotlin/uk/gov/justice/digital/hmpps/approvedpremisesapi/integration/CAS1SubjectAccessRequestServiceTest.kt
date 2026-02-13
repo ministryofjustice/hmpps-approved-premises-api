@@ -660,7 +660,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   ): String =
     """
       {
-         "assessment_id":"${assessment.id}",
          "crn":"${offenderDetails.otherIds.crn}",
          "noms_number":"${offenderDetails.otherIds.nomsNumber}",
          "assessor_name":"${assessment.allocatedToUser?.name}",
