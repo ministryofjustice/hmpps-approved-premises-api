@@ -608,7 +608,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
            "name": "$NAME",
            "crn": "${offenderDetails.otherIds.crn}",
            "noms_number": "${offenderDetails.otherIds.nomsNumber}",
-           "data": $DATA_JSON_SIMPLE, 
            "document": $DOCUMENT_JSON_SIMPLE,
            "created_at": "$CREATED_AT",
            "submitted_at": "$SUBMITTED_AT",
