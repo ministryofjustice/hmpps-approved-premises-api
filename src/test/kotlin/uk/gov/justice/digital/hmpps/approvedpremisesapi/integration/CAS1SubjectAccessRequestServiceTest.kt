@@ -689,6 +689,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "created_at": "$CREATED_AT",
         "query": "${clarificationNote.query}",
         "response": "${clarificationNote.response}",
+        "response_received_on": "$RESPONSE_RECEIVED_AT",
         "created_by_user": "${clarificationNote.createdByUser.name}",   
       }
     """.trimIndent()
