@@ -180,7 +180,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
        "ApplicationTimeline" :[],
        "Assessments": [${approvedPremisesAssessmentJson(offenderDetails, assessment)}],
        "AssessmentClarificationNotes": [${approvedPremisesAssessmentClarificationNoteJson(
-      assessment,
       offenderDetails,
       clarificationNote,
     )}],
@@ -680,13 +679,11 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     """.trimIndent()
 
   private fun approvedPremisesAssessmentClarificationNoteJson(
-    assessment: ApprovedPremisesAssessmentEntity,
     offenderDetails: OffenderDetailSummary,
     clarificationNote: AssessmentClarificationNoteEntity,
   ): String =
     """
       {
-        "assessment_id": "${assessment.id}",
         "crn": "${offenderDetails.otherIds.crn}",
         "noms_number": "${offenderDetails.otherIds.nomsNumber}",
         "created_at": "$CREATED_AT",
