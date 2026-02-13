@@ -145,7 +145,8 @@ from
                assess.rejection_rationale,
                assess.is_withdrawn,
                apa.created_from_appeal,
-               apa.agree_with_short_notice_reason
+               apa.agree_with_short_notice_reason,
+               apa.agree_with_short_notice_reason_comments
            from
                assessments assess
            inner join 

@@ -674,6 +674,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "is_withdrawn":false,
          "created_from_appeal":false,
          "agree_with_short_notice_reason": false,
+         "agree_with_short_notice_reason_comments": "$REASON_COMMENTS",
       }
     """.trimIndent()
 
@@ -869,6 +870,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withDueAt(OffsetDateTime.parse(DUE_AT))
     withAgreeWithShortNoticeReason(false)
+    withAgreeWithShortNoticeReasonComments(REASON_COMMENTS)
   }
 
   private fun bookingNotMadeEntity(placementRequest: PlacementRequestEntity) = bookingNotMadeFactory.produceAndPersist {
