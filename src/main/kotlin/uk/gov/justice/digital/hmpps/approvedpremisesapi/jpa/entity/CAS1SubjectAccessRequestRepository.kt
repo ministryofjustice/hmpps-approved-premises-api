@@ -132,7 +132,6 @@ from
       """
        select json_agg(assess) as json from (
            select
-               assess.id as assessment_id,
                app.crn,
                app.noms_number,
                u."name" as assessor_name,
