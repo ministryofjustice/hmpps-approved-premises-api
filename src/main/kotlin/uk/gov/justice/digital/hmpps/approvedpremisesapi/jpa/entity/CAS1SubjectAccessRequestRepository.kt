@@ -50,7 +50,8 @@ from
 		apa.ap_type,
 		case_manager."name" as case_manager_name,
 		apa.case_manager_is_not_applicant,
-    apa.situation
+    apa.situation,
+    apa.is_inapplicable
 	from
 		approved_premises_applications apa
 	join 

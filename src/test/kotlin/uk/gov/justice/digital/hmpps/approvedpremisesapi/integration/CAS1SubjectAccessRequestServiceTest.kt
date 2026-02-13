@@ -634,6 +634,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
            "case_manager_name": "${application.caseManagerUserDetails?.name}",
            "case_manager_is_not_applicant" : true,
            "situation": "${SituationOption.bailSentence}",
+           "is_inapplicable": false,
         }
   """.trimIndent()
 
@@ -851,6 +852,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withData(DATA_JSON_SIMPLE)
       withDocument(DOCUMENT_JSON_SIMPLE)
       withSituation(SituationOption.bailSentence.toString())
+      withIsInapplicable(false)
     }
     return application
   }
