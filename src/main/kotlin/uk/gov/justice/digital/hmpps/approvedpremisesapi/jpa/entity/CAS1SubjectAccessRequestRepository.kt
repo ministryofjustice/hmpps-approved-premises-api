@@ -26,7 +26,6 @@ from
 		apa.name,
 		a.crn,
 		a.noms_number,
-		a."data",
 		a."document",
 		a.created_at,
 		a.submitted_at,
