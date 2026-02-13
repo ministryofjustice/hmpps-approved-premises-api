@@ -635,6 +635,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
            "case_manager_is_not_applicant" : true,
            "situation": "${SituationOption.bailSentence}",
            "is_inapplicable": false,
+           "licence_expiry_date": "$LICENCE_EXPIRY_DATE",
         }
   """.trimIndent()
 
@@ -853,6 +854,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withDocument(DOCUMENT_JSON_SIMPLE)
       withSituation(SituationOption.bailSentence.toString())
       withIsInapplicable(false)
+      withLicenseExpiredDate(LocalDate.parse(LICENCE_EXPIRY_DATE))
     }
     return application
   }
