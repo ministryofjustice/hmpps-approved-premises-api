@@ -236,6 +236,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.duration = { duration }
   }
 
+  fun withExpiredReason(expiredReason: String?) = apply {
+    this.expiredReason = { expiredReason }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
