@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
@@ -104,7 +105,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val expectedJson = """
     {
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
-        "ApplicationTimeline": [${approvedPremisesApplicationTimelineNotesJson(application, timelineNotes, offender)}],
+        "ApplicationTimeline": [${approvedPremisesApplicationTimelineNotesJson(timelineNotes, offender)}],
         "Assessments": [],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
@@ -143,7 +144,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
         "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(application, offenderDetails, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(offenderDetails, assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
@@ -177,9 +178,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
        "ApplicationTimeline" :[],
-       "Assessments": [${approvedPremisesAssessmentJson(application, offenderDetails, assessment)}],
+       "Assessments": [${approvedPremisesAssessmentJson(offenderDetails, assessment)}],
        "AssessmentClarificationNotes": [${approvedPremisesAssessmentClarificationNoteJson(
-      assessment,
       offenderDetails,
       clarificationNote,
     )}],
@@ -341,7 +341,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {        
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
@@ -411,7 +411,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {   
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
         "AssessmentClarificationNotes": [],
         "OfflineApplications":  [],    
         "SpaceBookings":  [],    
@@ -448,7 +448,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
       "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
       "ApplicationTimeline" :[],
-      "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+      "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
       "AssessmentClarificationNotes": [],
       "SpaceBookings":  [],    
       "OfflineApplications":  [],    
@@ -483,7 +483,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],    
@@ -605,11 +605,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     offenderDetails: OffenderDetailSummary,
   ): String = """
         {
-           "id": "${application.id}",
            "name": "$NAME",
            "crn": "${offenderDetails.otherIds.crn}",
            "noms_number": "${offenderDetails.otherIds.nomsNumber}",
-           "data": $DATA_JSON_SIMPLE, 
            "document": $DOCUMENT_JSON_SIMPLE,
            "created_at": "$CREATED_AT",
            "submitted_at": "$SUBMITTED_AT",
@@ -633,20 +631,20 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
            "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
            "ap_type": "${ApprovedPremisesType.NORMAL}",
            "case_manager_name": "${application.caseManagerUserDetails?.name}",
-           "case_manager_is_not_applicant" : true
+           "case_manager_is_not_applicant" : true,
+           "situation": "${SituationOption.bailSentence}",
+           "is_inapplicable": false,
+           "licence_expiry_date": "$LICENCE_EXPIRY_DATE",
+           "expired_reason": "$EXPIRED_REASON",
         }
   """.trimIndent()
 
   private fun approvedPremisesApplicationTimelineNotesJson(
-    application: ApprovedPremisesApplicationEntity,
     timelineNote: ApplicationTimelineNoteEntity,
     offender: OffenderDetailSummary,
-    serviceName: ServiceName = ServiceName.approvedPremises,
   ): String =
     """
       {
-          "application_id":"${application.id}",
-          "service":"${serviceName.value}",
           "crn":"${offender.otherIds.crn}",
           "noms_number":"${offender.otherIds.nomsNumber}",
           "body":"${timelineNote.body}",
@@ -656,18 +654,14 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     """.trimIndent()
 
   private fun approvedPremisesAssessmentJson(
-    application: ApprovedPremisesApplicationEntity,
     offenderDetails: OffenderDetailSummary,
     assessment: ApprovedPremisesAssessmentEntity,
   ): String =
     """
       {
-         "application_id":"${application.id}",
-         "assessment_id":"${assessment.id}",
          "crn":"${offenderDetails.otherIds.crn}",
          "noms_number":"${offenderDetails.otherIds.nomsNumber}",
          "assessor_name":"${assessment.allocatedToUser?.name}",
-         "data":$DATA_JSON_SIMPLE,
          "document":$DOCUMENT_JSON_SIMPLE,
          "created_at":"$CREATED_AT",
          "allocated_at":"$ALLOCATED_AT",
@@ -676,26 +670,26 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "due_at":"$DUE_AT",
          "decision":"${AssessmentDecision.REJECTED}",
          "rejection_rationale":"rejected as no good",
-         "service":"approved-premises",
          "is_withdrawn":false,
-         "created_from_appeal":false
+         "created_from_appeal":false,
+         "agree_with_short_notice_reason": false,
+         "agree_with_short_notice_reason_comments": "$REASON_COMMENTS",
+         "reason_for_late_application": "$LATE_APPLICATION_REASON",
       }
     """.trimIndent()
 
   private fun approvedPremisesAssessmentClarificationNoteJson(
-    assessment: ApprovedPremisesAssessmentEntity,
     offenderDetails: OffenderDetailSummary,
     clarificationNote: AssessmentClarificationNoteEntity,
   ): String =
     """
       {
-        "application_id": "${assessment.application.id}",
-        "assessment_id": "${assessment.id}",
         "crn": "${offenderDetails.otherIds.crn}",
         "noms_number": "${offenderDetails.otherIds.nomsNumber}",
         "created_at": "$CREATED_AT",
         "query": "${clarificationNote.query}",
         "response": "${clarificationNote.response}",
+        "response_received_on": "$RESPONSE_RECEIVED_AT",
         "created_by_user": "${clarificationNote.createdByUser.name}",   
       }
     """.trimIndent()
@@ -850,6 +844,10 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withCaseManagerIsNotApplicant(true)
       withData(DATA_JSON_SIMPLE)
       withDocument(DOCUMENT_JSON_SIMPLE)
+      withSituation(SituationOption.bailSentence.toString())
+      withIsInapplicable(false)
+      withLicenseExpiredDate(LocalDate.parse(LICENCE_EXPIRY_DATE))
+      withExpiredReason(EXPIRED_REASON)
     }
     return application
   }
@@ -869,6 +867,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withRejectionRationale("rejected as no good")
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withDueAt(OffsetDateTime.parse(DUE_AT))
+    withAgreeWithShortNoticeReason(false)
+    withAgreeWithShortNoticeReasonComments(REASON_COMMENTS)
+    withReasonForLateApplication(LATE_APPLICATION_REASON)
   }
 
   private fun bookingNotMadeEntity(placementRequest: PlacementRequestEntity) = bookingNotMadeFactory.produceAndPersist {
