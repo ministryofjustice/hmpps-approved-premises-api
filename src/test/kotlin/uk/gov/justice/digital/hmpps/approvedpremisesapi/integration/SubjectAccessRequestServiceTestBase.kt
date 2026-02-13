@@ -73,6 +73,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
     const val OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE = "NOT APPLICABLE"
     const val SENTENCE_TYPE_CUSTODIAL = "CUSTODIAL"
     const val NAME = "Jeffity Jeff"
+    const val LICENCE_EXPIRY_DATE = "2021-07-17"
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
