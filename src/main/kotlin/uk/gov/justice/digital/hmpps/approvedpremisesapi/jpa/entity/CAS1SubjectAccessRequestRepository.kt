@@ -191,6 +191,7 @@ from
         acn.created_at,
         acn.query,
         acn.response,
+        acn.response_received_on,
         u."name" as created_by_user
       from
         assessment_clarification_notes acn
