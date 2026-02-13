@@ -144,7 +144,6 @@ from
                assess.decision,
                assess.rejection_rationale,
                assess.is_withdrawn,
-               assess.service,
                apa.created_from_appeal
            from
                assessments assess
