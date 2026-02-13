@@ -186,7 +186,6 @@ from
     select json_agg(assess) as json 
     from (    
       select
-        a.id as assessment_id,
         app.crn,
         app.noms_number,
         acn.created_at,
