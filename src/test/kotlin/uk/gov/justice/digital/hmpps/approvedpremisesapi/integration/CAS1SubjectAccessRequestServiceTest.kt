@@ -643,11 +643,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   private fun approvedPremisesApplicationTimelineNotesJson(
     timelineNote: ApplicationTimelineNoteEntity,
     offender: OffenderDetailSummary,
-    serviceName: ServiceName = ServiceName.approvedPremises,
   ): String =
     """
       {
-          "service":"${serviceName.value}",
           "crn":"${offender.otherIds.crn}",
           "noms_number":"${offender.otherIds.nomsNumber}",
           "body":"${timelineNote.body}",
