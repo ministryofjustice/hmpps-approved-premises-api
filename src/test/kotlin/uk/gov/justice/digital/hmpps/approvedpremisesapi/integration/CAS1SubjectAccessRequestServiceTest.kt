@@ -636,6 +636,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
            "situation": "${SituationOption.bailSentence}",
            "is_inapplicable": false,
            "licence_expiry_date": "$LICENCE_EXPIRY_DATE",
+           "expired_reason": "$EXPIRED_REASON",
         }
   """.trimIndent()
 
@@ -855,6 +856,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withSituation(SituationOption.bailSentence.toString())
       withIsInapplicable(false)
       withLicenseExpiredDate(LocalDate.parse(LICENCE_EXPIRY_DATE))
+      withExpiredReason(EXPIRED_REASON)
     }
     return application
   }
