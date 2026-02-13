@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
@@ -631,7 +632,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
            "notice_type":  "${Cas1ApplicationTimelinessCategory.emergency}",
            "ap_type": "${ApprovedPremisesType.NORMAL}",
            "case_manager_name": "${application.caseManagerUserDetails?.name}",
-           "case_manager_is_not_applicant" : true
+           "case_manager_is_not_applicant" : true,
+           "situation": "${SituationOption.bailSentence}",
         }
   """.trimIndent()
 
@@ -848,6 +850,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withCaseManagerIsNotApplicant(true)
       withData(DATA_JSON_SIMPLE)
       withDocument(DOCUMENT_JSON_SIMPLE)
+      withSituation(SituationOption.bailSentence.toString())
     }
     return application
   }

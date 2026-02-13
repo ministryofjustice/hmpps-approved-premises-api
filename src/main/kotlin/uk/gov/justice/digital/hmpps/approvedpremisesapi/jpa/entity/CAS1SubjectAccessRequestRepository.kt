@@ -49,7 +49,8 @@ from
 		apa.notice_type,
 		apa.ap_type,
 		case_manager."name" as case_manager_name,
-		apa.case_manager_is_not_applicant
+		apa.case_manager_is_not_applicant,
+    apa.situation
 	from
 		approved_premises_applications apa
 	join 
