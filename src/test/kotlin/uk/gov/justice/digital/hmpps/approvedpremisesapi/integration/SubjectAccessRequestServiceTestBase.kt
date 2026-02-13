@@ -76,6 +76,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
     const val LICENCE_EXPIRY_DATE = "2021-07-17"
     const val EXPIRED_REASON = "Expired reason"
     const val REASON_COMMENTS = "agree with short notice reason comments"
+    const val LATE_APPLICATION_REASON = "late application reason"
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
