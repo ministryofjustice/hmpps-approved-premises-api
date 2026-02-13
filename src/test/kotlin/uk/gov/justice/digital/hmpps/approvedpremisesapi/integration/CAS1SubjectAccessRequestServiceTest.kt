@@ -144,7 +144,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
         "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(application, offenderDetails, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(offenderDetails, assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
@@ -178,7 +178,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
        "Applications": [${approvedPremisesApplicationsJson(application, offenderDetails)}],
        "ApplicationTimeline" :[],
-       "Assessments": [${approvedPremisesAssessmentJson(application, offenderDetails, assessment)}],
+       "Assessments": [${approvedPremisesAssessmentJson(offenderDetails, assessment)}],
        "AssessmentClarificationNotes": [${approvedPremisesAssessmentClarificationNoteJson(
       assessment,
       offenderDetails,
@@ -342,7 +342,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {        
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],
@@ -412,7 +412,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {   
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
         "AssessmentClarificationNotes": [],
         "OfflineApplications":  [],    
         "SpaceBookings":  [],    
@@ -449,7 +449,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
       "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
       "ApplicationTimeline" :[],
-      "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+      "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
       "AssessmentClarificationNotes": [],
       "SpaceBookings":  [],    
       "OfflineApplications":  [],    
@@ -484,7 +484,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
         "ApplicationTimeline" :[],
-        "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
+        "Assessments": [${approvedPremisesAssessmentJson(offender, assessment)}],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
         "OfflineApplications":  [],    
@@ -655,13 +655,11 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     """.trimIndent()
 
   private fun approvedPremisesAssessmentJson(
-    application: ApprovedPremisesApplicationEntity,
     offenderDetails: OffenderDetailSummary,
     assessment: ApprovedPremisesAssessmentEntity,
   ): String =
     """
       {
-         "application_id":"${application.id}",
          "assessment_id":"${assessment.id}",
          "crn":"${offenderDetails.otherIds.crn}",
          "noms_number":"${offenderDetails.otherIds.nomsNumber}",
