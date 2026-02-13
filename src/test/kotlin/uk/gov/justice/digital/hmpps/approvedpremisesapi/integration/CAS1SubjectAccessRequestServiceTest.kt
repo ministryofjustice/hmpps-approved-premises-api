@@ -672,7 +672,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "decision":"${AssessmentDecision.REJECTED}",
          "rejection_rationale":"rejected as no good",
          "is_withdrawn":false,
-         "created_from_appeal":false
+         "created_from_appeal":false,
+         "agree_with_short_notice_reason": false,
       }
     """.trimIndent()
 
@@ -867,6 +868,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withRejectionRationale("rejected as no good")
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withDueAt(OffsetDateTime.parse(DUE_AT))
+    withAgreeWithShortNoticeReason(false)
   }
 
   private fun bookingNotMadeEntity(placementRequest: PlacementRequestEntity) = bookingNotMadeFactory.produceAndPersist {
