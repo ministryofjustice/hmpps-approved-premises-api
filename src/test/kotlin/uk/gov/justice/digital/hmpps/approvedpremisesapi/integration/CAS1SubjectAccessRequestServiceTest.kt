@@ -671,7 +671,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "due_at":"$DUE_AT",
          "decision":"${AssessmentDecision.REJECTED}",
          "rejection_rationale":"rejected as no good",
-         "service":"approved-premises",
          "is_withdrawn":false,
          "created_from_appeal":false
       }
