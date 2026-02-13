@@ -52,7 +52,8 @@ from
 		apa.case_manager_is_not_applicant,
     apa.situation,
     apa.is_inapplicable,
-    apa.licence_expiry_date
+    apa.licence_expiry_date,
+    apa.expired_reason
 	from
 		approved_premises_applications apa
 	join 
