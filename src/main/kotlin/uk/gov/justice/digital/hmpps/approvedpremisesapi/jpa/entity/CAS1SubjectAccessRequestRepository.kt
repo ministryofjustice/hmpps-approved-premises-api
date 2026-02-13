@@ -135,7 +135,6 @@ from
                app.crn,
                app.noms_number,
                u."name" as assessor_name,
-               assess."data" ,
                assess."document",
                assess.created_at,
                assess.allocated_at,
