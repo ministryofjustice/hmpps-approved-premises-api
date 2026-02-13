@@ -105,7 +105,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val expectedJson = """
     {
         "Applications": [${approvedPremisesApplicationsJson(application, offender)}],
-        "ApplicationTimeline": [${approvedPremisesApplicationTimelineNotesJson(application, timelineNotes, offender)}],
+        "ApplicationTimeline": [${approvedPremisesApplicationTimelineNotesJson(timelineNotes, offender)}],
         "Assessments": [],
         "AssessmentClarificationNotes": [],
         "SpaceBookings": [],
@@ -641,14 +641,12 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   """.trimIndent()
 
   private fun approvedPremisesApplicationTimelineNotesJson(
-    application: ApprovedPremisesApplicationEntity,
     timelineNote: ApplicationTimelineNoteEntity,
     offender: OffenderDetailSummary,
     serviceName: ServiceName = ServiceName.approvedPremises,
   ): String =
     """
       {
-          "application_id":"${application.id}",
           "service":"${serviceName.value}",
           "crn":"${offender.otherIds.crn}",
           "noms_number":"${offender.otherIds.nomsNumber}",
