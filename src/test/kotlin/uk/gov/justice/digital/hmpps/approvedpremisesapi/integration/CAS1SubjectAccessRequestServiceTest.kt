@@ -663,7 +663,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "crn":"${offenderDetails.otherIds.crn}",
          "noms_number":"${offenderDetails.otherIds.nomsNumber}",
          "assessor_name":"${assessment.allocatedToUser?.name}",
-         "data":$DATA_JSON_SIMPLE,
          "document":$DOCUMENT_JSON_SIMPLE,
          "created_at":"$CREATED_AT",
          "allocated_at":"$ALLOCATED_AT",
