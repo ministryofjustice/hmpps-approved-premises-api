@@ -567,6 +567,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "created_by_user": "${placementApplication.createdByUser.name}",
         "allocated_user": null,
         "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
+        "release_type": "$RELEASE_TYPE_CONDITIONAL",
       }
     """.trimIndent()
 
@@ -767,6 +768,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withReallocatedAt(null)
     withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
     withSentenceType(SENTENCE_TYPE_CUSTODIAL)
+    withReleaseType(RELEASE_TYPE_CONDITIONAL)
   }
 
   private fun appealEntity(
