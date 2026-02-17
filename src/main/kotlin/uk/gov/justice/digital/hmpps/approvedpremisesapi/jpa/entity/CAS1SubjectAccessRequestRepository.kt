@@ -237,7 +237,6 @@ from
           select
             a.crn,
             a.noms_number,
-            pa.application_id,
             pa."data",
             pa."document",
             pa.created_at,
