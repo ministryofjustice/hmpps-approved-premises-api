@@ -245,6 +245,7 @@ from
             pa.due_at,
             pa.decision,
             pa.decision_made_at,
+            pa.sentence_type,
             case
                when pa.placement_type = '0' then 'ROTL'
                when pa.placement_type = '1' then 'RELEASE_FOLLOWING_DECISION'
