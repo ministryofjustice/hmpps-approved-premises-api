@@ -570,6 +570,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "release_type": "$RELEASE_TYPE_CONDITIONAL",
         "requested_duration": $REQUESTED_DURATION,
         "authorised_duration": $AUTHORISED_DURATION,
+        "expected_arrival": "$arrivedAtDateOnly",
       }
     """.trimIndent()
 
@@ -773,6 +774,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withReleaseType(RELEASE_TYPE_CONDITIONAL)
     withRequestedDuration(REQUESTED_DURATION)
     withAuthorisedDuration(AUTHORISED_DURATION)
+    withExpectedArrival(LocalDate.parse(arrivedAtDateOnly))
   }
 
   private fun appealEntity(

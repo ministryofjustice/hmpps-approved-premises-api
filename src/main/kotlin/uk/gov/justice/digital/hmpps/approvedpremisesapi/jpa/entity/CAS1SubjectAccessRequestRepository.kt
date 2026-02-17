@@ -249,6 +249,7 @@ from
             pa.release_type,
             pa.requested_duration,
             pa.authorised_duration,
+            pa.expected_arrival,
             case
                when pa.placement_type = '0' then 'ROTL'
                when pa.placement_type = '1' then 'RELEASE_FOLLOWING_DECISION'
