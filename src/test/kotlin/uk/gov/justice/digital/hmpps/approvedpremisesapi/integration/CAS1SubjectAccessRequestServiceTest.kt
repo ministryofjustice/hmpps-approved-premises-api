@@ -553,7 +553,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
         "crn": "${placementApplication.application.crn}",
         "noms_number": "${placementApplication.application.nomsNumber}",
-        "application_id": "${placementApplication.application.id}",
         "data": $DATA_JSON_SIMPLE,
         "document": $DOCUMENT_JSON_SIMPLE,
         "created_at": "$CREATED_AT_NO_TZ",
