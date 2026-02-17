@@ -569,6 +569,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
         "release_type": "$RELEASE_TYPE_CONDITIONAL",
         "requested_duration": $REQUESTED_DURATION,
+        "authorised_duration": $AUTHORISED_DURATION,
       }
     """.trimIndent()
 
@@ -771,6 +772,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withSentenceType(SENTENCE_TYPE_CUSTODIAL)
     withReleaseType(RELEASE_TYPE_CONDITIONAL)
     withRequestedDuration(REQUESTED_DURATION)
+    withAuthorisedDuration(AUTHORISED_DURATION)
   }
 
   private fun appealEntity(
