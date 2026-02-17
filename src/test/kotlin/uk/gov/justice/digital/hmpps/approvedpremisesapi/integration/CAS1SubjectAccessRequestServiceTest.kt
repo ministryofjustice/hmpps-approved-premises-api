@@ -568,6 +568,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "allocated_user": null,
         "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
         "release_type": "$RELEASE_TYPE_CONDITIONAL",
+        "requested_duration": $REQUESTED_DURATION,
       }
     """.trimIndent()
 
@@ -769,6 +770,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
     withSentenceType(SENTENCE_TYPE_CUSTODIAL)
     withReleaseType(RELEASE_TYPE_CONDITIONAL)
+    withRequestedDuration(REQUESTED_DURATION)
   }
 
   private fun appealEntity(
