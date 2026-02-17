@@ -248,6 +248,7 @@ from
             pa.sentence_type,
             pa.release_type,
             pa.requested_duration,
+            pa.authorised_duration,
             case
                when pa.placement_type = '0' then 'ROTL'
                when pa.placement_type = '1' then 'RELEASE_FOLLOWING_DECISION'

@@ -78,6 +78,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
     const val REASON_COMMENTS = "agree with short notice reason comments"
     const val LATE_APPLICATION_REASON = "late application reason"
     const val REQUESTED_DURATION = 8
+    const val AUTHORISED_DURATION = 9
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
