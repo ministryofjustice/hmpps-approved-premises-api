@@ -565,7 +565,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "is_withdrawn": ${placementApplication.isWithdrawn},
         "withdrawal_reason": "${placementApplication.withdrawalReason}",
         "created_by_user": "${placementApplication.createdByUser.name}",
-        "allocated_user": null
+        "allocated_user": null,
+        "sentence_type": "$SENTENCE_TYPE_CUSTODIAL",
       }
     """.trimIndent()
 
@@ -765,6 +766,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
     withReallocatedAt(null)
     withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+    withSentenceType(SENTENCE_TYPE_CUSTODIAL)
   }
 
   private fun appealEntity(
