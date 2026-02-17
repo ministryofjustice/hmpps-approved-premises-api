@@ -571,6 +571,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "requested_duration": $REQUESTED_DURATION,
         "authorised_duration": $AUTHORISED_DURATION,
         "expected_arrival": "$arrivedAtDateOnly",
+        "expected_arrival_flexible": true,
       }
     """.trimIndent()
 
@@ -775,6 +776,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withRequestedDuration(REQUESTED_DURATION)
     withAuthorisedDuration(AUTHORISED_DURATION)
     withExpectedArrival(LocalDate.parse(arrivedAtDateOnly))
+    withExpectedArrivalFlexible(true)
   }
 
   private fun appealEntity(
