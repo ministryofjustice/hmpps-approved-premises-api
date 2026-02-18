@@ -693,7 +693,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
         "crn": "${booking.crn}",
         "noms_number": ${if (booking.application?.nomsNumber != null) "\"${booking.application?.nomsNumber}\"" else null},
-        "booking_id":"${booking.id}",
         "created_at":"$CREATED_AT"
       }
     """.trimIndent()
