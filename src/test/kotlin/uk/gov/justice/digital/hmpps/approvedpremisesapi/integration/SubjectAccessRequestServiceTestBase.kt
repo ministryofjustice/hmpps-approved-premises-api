@@ -80,6 +80,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
     const val LATE_APPLICATION_REASON = "late application reason"
     const val REQUESTED_DURATION = 8
     const val AUTHORISED_DURATION = 9
+    const val ADDITIONAL_INFORMATION = "some additional information"
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
@@ -158,6 +159,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "cancellation_recorded_at": "$CANCELLATION_DATE",
          "characteristics_property_names": "${booking.criteria?.let{ it.map { criteria -> criteria.propertyName}.sortedBy{ propertyName -> propertyName }.joinToString(",")}}",
          "transfer_type": ${booking.transferType?.let { "\"${booking.transferType}\"" }},
+         "additional_information": ${booking.additionalInformation?.let { "\"${it}\"" }},
       }
     """.trimIndent()
 
@@ -270,6 +272,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
     cancellationReason: CancellationReasonEntity? = null,
     offlineApplication: OfflineApplicationEntity? = null,
     transferType: TransferType? = null,
+    additionalInformation: String? = null,
   ): Cas1SpaceBookingEntity {
     val (user, _) = givenAUser()
     val (placementRequest) = givenAPlacementRequest(
@@ -314,6 +317,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
         )
         withOfflineApplication(offlineApplication)
         withTransferType(transferType)
+        withAdditionalInformation(additionalInformation)
       }
     return spaceBooking
   }
