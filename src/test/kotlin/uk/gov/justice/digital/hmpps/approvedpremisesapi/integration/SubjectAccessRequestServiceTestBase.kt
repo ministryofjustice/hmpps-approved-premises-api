@@ -143,7 +143,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
          "key_worker_assigned_at": "$CREATED_AT",
          "key_worker_name": "${booking.keyWorkerName}",
-         "approved_premises_application_id": ${if (booking.application != null) "\"${booking.application!!.id}\"" else null},
          "offline_application_id": ${if (booking.offlineApplication != null) "\"${booking.offlineApplication!!.id}\"" else null},
          "premises_name": "${booking.premises.name}",
          "person_name": ${if (booking.application != null) "\"${booking.application!!.name}\"" else "\"${booking.offlineApplication!!.name}\""},
