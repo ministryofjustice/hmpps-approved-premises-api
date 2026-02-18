@@ -177,6 +177,29 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     nativeQuery = true,
   )
   fun findCurrentOverlappingBohByCrnAndPremises(crn: String, premisesId: UUID, startDate: LocalDate, endDate: LocalDate, reasonId: UUID): Cas1OutOfServiceBedEntity?
+
+  @Query(
+    value = """
+      SELECT oosb.*
+      FROM cas1_out_of_service_beds oosb
+      LEFT JOIN cas1_out_of_service_bed_cancellations c
+        ON c.out_of_service_bed_id = oosb.id
+      JOIN LATERAL (
+        SELECT r.*
+        FROM cas1_out_of_service_bed_revisions r
+        WHERE r.out_of_service_bed_id = oosb.id
+        ORDER BY r.created_at DESC
+        LIMIT 1
+      ) latest_revision ON true
+      WHERE
+        c.id IS NULL
+        AND latest_revision.out_of_service_bed_reason_id = :bedOnHoldReasonId
+        -- Midnight the day after start_date
+        AND latest_revision.start_date + INTERVAL '1 day' <= :today;
+    """,
+    nativeQuery = true,
+  )
+  fun findBedOnHoldsPastStartDate(bedOnHoldReasonId: UUID, today: LocalDate): List<Cas1OutOfServiceBedEntity>
 }
 
 @Entity
