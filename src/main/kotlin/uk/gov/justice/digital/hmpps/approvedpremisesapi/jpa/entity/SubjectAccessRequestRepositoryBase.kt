@@ -101,6 +101,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             b.cancellation_recorded_at,
             b.transfer_type,
             b.additional_information,
+            b.transfer_reason,
             ( 
               SELECT STRING_AGG (characteristics.property_name, ',')
               FROM cas1_space_bookings_criteria sbc
