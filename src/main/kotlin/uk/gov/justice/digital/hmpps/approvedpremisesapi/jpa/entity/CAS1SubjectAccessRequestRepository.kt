@@ -328,7 +328,6 @@ from
         select 
              app.crn,
              app.noms_number,
-             pr.id as placement_requirements_id,
              case
                when pr.ap_type = '0' then 'NORMAL'
                when pr.ap_type = '1' then 'PIPE'
