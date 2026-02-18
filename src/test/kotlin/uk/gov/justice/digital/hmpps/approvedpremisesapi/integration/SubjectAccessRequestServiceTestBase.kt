@@ -146,7 +146,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "premises_name": "${booking.premises.name}",
          "person_name": ${if (booking.application != null) "\"${booking.application!!.name}\"" else "\"${booking.offlineApplication!!.name}\""},
          "delius_event_number": "${booking.deliusEventNumber}",
-         "placement_request_id":  "${booking.placementRequest!!.id}",
          "created_by_user_id":  "${booking.createdBy!!.id}",
          "departure_reason_id": ${if (booking.departureReason != null) "\"${booking.departureReason!!.id}\"" else null},
          "departure_notes": ${if (booking.departureNotes != null) "\"${booking.departureNotes}\"" else null},
