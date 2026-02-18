@@ -569,7 +569,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
           "crn": "${appeal.application.crn}" ,
           "noms_number": "${appeal.application.nomsNumber}", 
-          "assessment_id": "${appeal.assessment.id}",
           "appeal_date": "$APPEAL_DATE_ONLY",
           "appeal_detail": "${appeal.appealDetail}",
           "decision" : "${appeal.decision}",
