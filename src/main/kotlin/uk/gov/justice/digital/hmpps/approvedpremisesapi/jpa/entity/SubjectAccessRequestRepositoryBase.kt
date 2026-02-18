@@ -92,7 +92,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             p."name" as premises_name,
             b.delius_event_number,
             b.created_by_user_id,
-            b.departure_reason_id, 
+            dr.name as departure_reason,
             b.departure_notes,
             b.departure_move_on_category_id,
             b.cancellation_reason_notes,
@@ -123,6 +123,8 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             LEFT OUTER JOIN   
               applications a on 
               a.id = apa.id
+            LEFT JOIN departure_reasons dr ON 
+              b.departure_reason_id = dr.id
           where
               (b.crn = :crn
               or a.noms_number = :noms_number )
