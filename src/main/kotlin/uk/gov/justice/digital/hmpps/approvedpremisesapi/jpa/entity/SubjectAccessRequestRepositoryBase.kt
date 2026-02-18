@@ -94,7 +94,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             b.created_by_user_id,
             dr.name as departure_reason,
             b.departure_notes,
-            b.departure_move_on_category_id,
+            moc.name as move_on_category,
             b.cancellation_reason_notes,
             b.cancellation_reason_id,
             b.cancellation_occurred_at, 
@@ -125,6 +125,8 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
               a.id = apa.id
             LEFT JOIN departure_reasons dr ON 
               b.departure_reason_id = dr.id
+            LEFT JOIN move_on_categories moc ON
+              b.departure_move_on_category_id = moc.id
           where
               (b.crn = :crn
               or a.noms_number = :noms_number )

@@ -149,7 +149,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "created_by_user_id":  "${booking.createdBy!!.id}",
          "departure_reason": ${booking.departureReason?.let { "\"${it.name}\"" }},
          "departure_notes": ${if (booking.departureNotes != null) "\"${booking.departureNotes}\"" else null},
-         "departure_move_on_category_id": ${if (booking.departureMoveOnCategory != null) "\"${booking.departureMoveOnCategory!!.id}\"" else null},
+         "move_on_category": ${booking.departureMoveOnCategory?.let { "\"${it.name}\"" }},
          "cancellation_reason_notes": ${if (booking.cancellationReasonNotes != null) "\"${booking.cancellationReasonNotes}\"" else null},
          "cancellation_reason_id": ${if (booking.cancellationReason != null) "\"${booking.cancellationReason!!.id}\"" else null},
          "cancellation_occurred_at": ${if (booking.cancellationOccurredAt != null) "\"${booking.cancellationOccurredAt}\"" else null},
