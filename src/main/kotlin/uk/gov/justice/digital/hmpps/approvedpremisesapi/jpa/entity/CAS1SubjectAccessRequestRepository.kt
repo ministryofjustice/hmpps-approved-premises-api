@@ -298,7 +298,6 @@ from
               pr.expected_arrival,
               pr.duration, 
               pr.created_at,
-              pr.assessment_id,
               pr.notes,
               pr.is_parole,
               pr.is_withdrawn,
