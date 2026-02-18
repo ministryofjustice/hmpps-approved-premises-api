@@ -486,7 +486,6 @@ from
             select
               app.crn,
               app.noms_number,
-              a.id as appeal_id,
               a.application_id,
               a.assessment_id,
               a.appeal_date,
