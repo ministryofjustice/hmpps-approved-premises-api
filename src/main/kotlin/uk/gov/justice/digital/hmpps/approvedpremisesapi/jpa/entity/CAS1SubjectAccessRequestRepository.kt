@@ -371,7 +371,6 @@ from
             app.crn,
             app.noms_number,
             c."name" as criteria_name,
-            c.model_scope,
             c.property_name,
             c.is_active,
             'DESIRABLE' as criteria_type
@@ -395,7 +394,6 @@ from
             app.crn as crn,
             app.noms_number as noms_number,
             c."name" as criteria_name,
-            c.model_scope,
             c.property_name,
             c.is_active,
             'ESSENTIAL' as criteria_type
