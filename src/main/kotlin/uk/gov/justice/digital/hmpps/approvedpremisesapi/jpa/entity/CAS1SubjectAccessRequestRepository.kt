@@ -328,7 +328,6 @@ from
         select 
              app.crn,
              app.noms_number,
-             pr.application_id,
              pr.assessment_id,
              pr.id as placement_requirements_id,
              case

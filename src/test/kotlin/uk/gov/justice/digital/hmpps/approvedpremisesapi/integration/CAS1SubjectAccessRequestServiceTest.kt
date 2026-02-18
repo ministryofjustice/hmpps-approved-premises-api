@@ -520,7 +520,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
         "crn": "${placementRequirement.application.crn}",
         "noms_number": "${placementRequirement.application.nomsNumber}",
-        "application_id": "${placementRequirement.application.id}",
         "assessment_id": "${placementRequirement.assessment.id}",
         "placement_requirements_id": "${placementRequirement.id}",
         "ap_type": "${placementRequirement.apType.name}",
