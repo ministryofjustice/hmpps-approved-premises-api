@@ -538,7 +538,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "expected_arrival": "$arrivedAtDateOnly",
         "duration": ${placementRequest.duration},
         "created_at": "$CREATED_AT",
-        "placement_application_id": "${placementRequest.placementApplication?.id}",
         "application_id": "${placementRequest.application.id}",
         "assessment_id": "${placementRequest.assessment.id}",
         "notes": "${placementRequest.notes}",
