@@ -155,7 +155,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "cancellation_occurred_at": ${if (booking.cancellationOccurredAt != null) "\"${booking.cancellationOccurredAt}\"" else null},
          "cancellation_recorded_at": "$CANCELLATION_DATE",
          "characteristics_property_names": "${booking.criteria?.let{ it.map { criteria -> criteria.propertyName}.sortedBy{ propertyName -> propertyName }.joinToString(",")}}",
-         "migrated_management_info_from":  ${if (booking.migratedManagementInfoFrom != null) "\"${booking.migratedManagementInfoFrom}\"" else null},
          "version": ${booking.version}
       }
     """.trimIndent()
