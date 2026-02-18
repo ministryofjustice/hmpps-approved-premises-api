@@ -427,7 +427,6 @@ from
             select 
                 sb.crn,
                 null AS noms_number,
-                sb.id AS booking_id,                
                 oa.created_at 
             from offline_applications oa 
             left join cas1_space_bookings sb on sb.offline_application_id = oa.id 
