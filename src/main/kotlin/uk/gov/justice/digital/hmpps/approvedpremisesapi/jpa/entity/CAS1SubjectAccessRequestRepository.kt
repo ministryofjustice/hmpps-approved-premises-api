@@ -370,7 +370,6 @@ from
     
             app.crn,
             app.noms_number,
-            pr.id as placement_requirement_id,
             c."name" as criteria_name,
             c.service_scope,
             c.model_scope,
@@ -396,7 +395,6 @@ from
           select 
             app.crn as crn,
             app.noms_number as noms_number,
-            pr.id as placement_requirement_id,
             c."name" as criteria_name,
             c.service_scope,
             c.model_scope,

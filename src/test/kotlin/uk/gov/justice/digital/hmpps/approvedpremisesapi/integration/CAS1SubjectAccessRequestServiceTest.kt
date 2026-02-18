@@ -494,7 +494,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
           "crn": "${placementRequirements.application.crn}",
           "noms_number": "${placementRequirements.application.nomsNumber}",
-          "placement_requirement_id": "${placementRequirements.id}",
           "criteria_name": "${placementRequirements.desirableCriteria[0].name}",
           "service_scope": "${placementRequirements.desirableCriteria[0].serviceScope}",
           "model_scope": "${placementRequirements.desirableCriteria[0].modelScope}",
@@ -505,7 +504,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
           "crn": "${placementRequirements.application.crn}",
           "noms_number": "${placementRequirements.application.nomsNumber}",
-          "placement_requirement_id": "${placementRequirements.id}",
           "criteria_name": "${placementRequirements.essentialCriteria[0].name}",
           "service_scope": "${placementRequirements.essentialCriteria[0].serviceScope}",
           "model_scope": "${placementRequirements.essentialCriteria[0].modelScope}",
