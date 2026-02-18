@@ -680,7 +680,6 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       {
         "crn": "${bookingNotMade.placementRequest.application.crn}",
         "noms_number": "${bookingNotMade.placementRequest.application.nomsNumber}",
-        "application_id": "${bookingNotMade.placementRequest.application.id}",
         "placement_request_id": "${bookingNotMade.placementRequest.id}",
         "created_at": "$CREATED_AT_NO_TZ",
         "notes": "${bookingNotMade.notes}"
