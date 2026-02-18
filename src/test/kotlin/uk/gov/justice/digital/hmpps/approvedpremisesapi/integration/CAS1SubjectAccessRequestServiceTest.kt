@@ -211,6 +211,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       departureReason = departureReason,
       moveOnCategory = moveOnCategory,
       cancellationReason = cancellationReason,
+      transferType = TRANSFER_TYPE,
     )
 
     val result =

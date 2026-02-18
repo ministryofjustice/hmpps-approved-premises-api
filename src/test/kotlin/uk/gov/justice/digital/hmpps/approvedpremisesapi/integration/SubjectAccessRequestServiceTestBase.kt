@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -82,6 +83,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
+    val TRANSFER_TYPE = TransferType.PLANNED
     var arrivedAtDateOnly = ARRIVED_AT.substring(0..9)
     var submittedAtDateOnly = SUBMITTED_AT.substring(0..9)
     var departedAtDateOnly = DEPARTED_AT.substring(0..9)
@@ -155,6 +157,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "cancellation_occurred_at": ${if (booking.cancellationOccurredAt != null) "\"${booking.cancellationOccurredAt}\"" else null},
          "cancellation_recorded_at": "$CANCELLATION_DATE",
          "characteristics_property_names": "${booking.criteria?.let{ it.map { criteria -> criteria.propertyName}.sortedBy{ propertyName -> propertyName }.joinToString(",")}}",
+         "transfer_type": ${booking.transferType?.let { "\"${booking.transferType}\"" }},
       }
     """.trimIndent()
 
@@ -266,6 +269,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
     moveOnCategory: MoveOnCategoryEntity? = null,
     cancellationReason: CancellationReasonEntity? = null,
     offlineApplication: OfflineApplicationEntity? = null,
+    transferType: TransferType? = null,
   ): Cas1SpaceBookingEntity {
     val (user, _) = givenAUser()
     val (placementRequest) = givenAPlacementRequest(
@@ -309,6 +313,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
           ),
         )
         withOfflineApplication(offlineApplication)
+        withTransferType(transferType)
       }
     return spaceBooking
   }
