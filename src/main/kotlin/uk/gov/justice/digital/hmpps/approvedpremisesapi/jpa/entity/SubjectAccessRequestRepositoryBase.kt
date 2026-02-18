@@ -99,7 +99,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             cr.name as cancellation_reason,
             b.cancellation_occurred_at, 
             b.cancellation_recorded_at,
-            b.migrated_management_info_from, 
             b.version,
             ( 
               SELECT STRING_AGG (characteristics.property_name, ',')
