@@ -456,7 +456,6 @@ from
              select 
                  a.crn,
                  a.noms_number,
-                 b.placement_request_id,
                  b.created_at,
                  b.notes
              from booking_not_mades b
