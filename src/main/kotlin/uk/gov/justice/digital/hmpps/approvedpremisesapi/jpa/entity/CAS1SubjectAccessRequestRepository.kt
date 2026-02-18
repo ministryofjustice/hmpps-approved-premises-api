@@ -427,7 +427,6 @@ from
             select 
                 sb.crn,
                 null AS noms_number,
-                oa.id as offline_application_id, 
                 sb.id AS booking_id,                
                 oa.created_at 
             from offline_applications oa 
