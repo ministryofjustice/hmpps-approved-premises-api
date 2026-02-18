@@ -89,7 +89,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             b.key_worker_staff_code,
             b.key_worker_assigned_at,
             b.key_worker_name,
-            b.offline_application_id,
             p."name" as premises_name,
             b.delius_event_number,
             b.placement_request_id,
