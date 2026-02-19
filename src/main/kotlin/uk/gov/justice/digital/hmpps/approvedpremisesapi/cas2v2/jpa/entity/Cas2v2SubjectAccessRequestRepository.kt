@@ -121,7 +121,6 @@ class Cas2v2SubjectAccessRequestRepository(
           select
               ca.crn,
               ca.noms_number, 
-              csu.application_id,
               csu.assessment_id,
               eu."name" as assessor_name,
               to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
