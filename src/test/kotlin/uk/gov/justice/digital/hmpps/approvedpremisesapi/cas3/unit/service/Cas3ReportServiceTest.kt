@@ -618,7 +618,6 @@ class Cas3ReportServiceTest {
     val properties = BookingGapReportProperties(startDate, endDate)
 
     every { mockFeatureFlagService.getBooleanFlag("cas3-reports-with-new-bedspace-model-tables-enabled") } returns optimisedReport
-    every { mockFeatureFlagService.getBooleanFlag("cas3-reports-optimised-bed-usage-report-enabled") } returns optimisedReport
 
     val bedspace = BedspaceInfo(
       id = UUID.randomUUID(),

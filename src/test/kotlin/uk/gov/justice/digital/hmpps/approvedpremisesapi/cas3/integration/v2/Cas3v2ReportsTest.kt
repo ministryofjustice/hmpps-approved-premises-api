@@ -94,7 +94,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
   @BeforeEach
   fun beforeEach() {
     mockFeatureFlagService.setFlag("cas3-reports-with-new-bedspace-model-tables-enabled", true)
-    mockFeatureFlagService.setFlag("cas3-reports-optimised-bed-usage-report-enabled", true)
   }
 
   @AfterEach
@@ -145,10 +144,10 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
-  fun `Get report returns 400 if dates provided is more than or equal to 3 months`(reportType: Cas3ReportType) {
+  fun `Get report returns 400 if dates provided is more than or equal to 6 months`(reportType: Cas3ReportType) {
     givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-04-01"
-      val endDate = "2023-08-02"
+      val endDate = "2023-11-02"
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
         .headers(buildTemporaryAccommodationHeaders(jwt))
@@ -162,7 +161,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
 
     givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-04-01"
-      val endDate = "2023-07-01"
+      val endDate = "2023-11-01"
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
         .headers(buildTemporaryAccommodationHeaders(jwt))
