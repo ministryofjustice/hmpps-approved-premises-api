@@ -272,7 +272,6 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     {
       "crn": "${application.crn}",
       "noms_number": "${application.nomsNumber}",
-      "data": ${application.data},
       "document": ${application.document},
       "created_by_user": "${application.createdByUser.name}",
       "created_at": "$CREATED_AT",
