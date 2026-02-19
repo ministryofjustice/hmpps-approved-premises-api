@@ -14,14 +14,6 @@ data:
     chmod 0600 ~/.pgpass
 
     set -x
-    # Dump production data
-    pg_dump --host="$DB_HOST" \
-      --username="$DB_USER" \
-      --format=custom \
-      --no-privileges \
-      --verbose \
-      --file=/tmp/db.dump \
-      "$DB_NAME"
     
     # Dump existing preprod users as upserts
     pg_dump --host="$DB_HOST_PREPROD" \
@@ -37,7 +29,16 @@ data:
       --file=/tmp/users.dump \
       "$DB_NAME_PREPROD"
     
-    # Restore production data to preprod
+    # Dump production data
+    pg_dump --host="$DB_HOST" \
+      --username="$DB_USER" \
+      --format=custom \
+      --no-privileges \
+      --verbose \
+      --exclude-table=public.users \
+      --exclude-table=public.user_role_assignments \
+      --exclude-table=public.user_qualification_assignments \
+      "$DB_NAME" | \
     pg_restore --host="$DB_HOST_PREPROD" \
       --username="$DB_USER_PREPROD" \
       --clean \
@@ -45,13 +46,14 @@ data:
       --verbose \
       --dbname="$DB_NAME_PREPROD" \
       /tmp/db.dump
+  
     
     # Restore existing preprod users
     psql --host="$DB_HOST_PREPROD" \
       --username="$DB_USER_PREPROD" \
       "$DB_NAME_PREPROD" < /tmp/users.dump
 
-    rm -v /tmp/db.dump /tmp/users.dump ~/.pgpass
+    rm -v /tmp/users.dump ~/.pgpass
 ---
 apiVersion: batch/v1
 kind: CronJob
