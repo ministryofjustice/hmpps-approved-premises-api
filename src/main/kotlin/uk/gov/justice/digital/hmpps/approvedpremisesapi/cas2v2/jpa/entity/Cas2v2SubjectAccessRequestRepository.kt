@@ -22,7 +22,6 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(applications) as json
       from ( 
         select
-          ca.id,
         	ca.crn,
         	ca.noms_number,
         	ca."data",
