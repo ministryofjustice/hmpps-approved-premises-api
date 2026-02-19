@@ -246,7 +246,6 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   {
       "crn": "${applicationNotes.application.crn}",
       "noms_number": "${applicationNotes.application.nomsNumber}",
-      "application_id": "${applicationNotes.application.id}",
       "assessment_id": "${applicationNotes.assessment!!.id}",
       "created_by_user": "${applicationNotes.createdByUser.name}",
       "created_by_user_type": "NOMIS",
