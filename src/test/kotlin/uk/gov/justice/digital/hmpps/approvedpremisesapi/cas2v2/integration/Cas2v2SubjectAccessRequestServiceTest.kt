@@ -244,7 +244,6 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
 
   private fun cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
-      "id": "${applicationNotes.id}",
       "crn": "${applicationNotes.application.crn}",
       "noms_number": "${applicationNotes.application.nomsNumber}",
       "application_id": "${applicationNotes.application.id}",
