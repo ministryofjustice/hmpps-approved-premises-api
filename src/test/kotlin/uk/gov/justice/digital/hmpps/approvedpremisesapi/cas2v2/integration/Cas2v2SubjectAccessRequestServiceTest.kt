@@ -229,7 +229,6 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
 
   private fun cas2StatusUpdatesJson(statusUpdate: Cas2StatusUpdateEntity): String = """
     {
-      	"id": "${statusUpdate.id}",
       	"crn": "${statusUpdate.application.crn}",
       	"noms_number": "${statusUpdate.application.nomsNumber}", 
       	"application_id": "${statusUpdate.application.id}",

@@ -119,7 +119,6 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(cas_2_application_status_updates) as json 
       from (
           select
-              csu.id,
               ca.crn,
               ca.noms_number, 
               csu.application_id,
