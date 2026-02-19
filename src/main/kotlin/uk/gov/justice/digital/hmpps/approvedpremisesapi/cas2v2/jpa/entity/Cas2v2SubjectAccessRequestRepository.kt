@@ -95,7 +95,6 @@ class Cas2v2SubjectAccessRequestRepository(
           	ca.crn,
           	ca.noms_number,
           	cu."name" as created_by_user,
-            cu.user_type as created_by_user_type,
             can.body
           from cas_2_application_notes can 
           inner join cas_2_applications ca on

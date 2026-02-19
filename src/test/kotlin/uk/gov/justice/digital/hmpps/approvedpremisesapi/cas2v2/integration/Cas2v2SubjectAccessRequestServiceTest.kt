@@ -247,7 +247,6 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "crn": "${applicationNotes.application.crn}",
       "noms_number": "${applicationNotes.application.nomsNumber}",
       "created_by_user": "${applicationNotes.createdByUser.name}",
-      "created_by_user_type": "NOMIS",
       "body": "${applicationNotes.body}"
   }
   """.trimIndent()
