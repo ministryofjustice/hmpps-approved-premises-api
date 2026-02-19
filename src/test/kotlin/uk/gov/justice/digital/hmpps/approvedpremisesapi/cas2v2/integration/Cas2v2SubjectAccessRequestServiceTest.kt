@@ -257,7 +257,6 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
 
   private fun cas2AssessmentsJson(assessment: Cas2AssessmentEntity): String = """
     {
-        "id": "${assessment.id}",
         "crn": "${assessment.application.crn}",
         "noms_number": "${assessment.application.nomsNumber}",
         "application_id": "${assessment.application.id}",
