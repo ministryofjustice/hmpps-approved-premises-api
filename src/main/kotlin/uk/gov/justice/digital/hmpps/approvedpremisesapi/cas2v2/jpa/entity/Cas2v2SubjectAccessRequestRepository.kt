@@ -94,7 +94,6 @@ class Cas2v2SubjectAccessRequestRepository(
           select
           	ca.crn,
           	ca.noms_number,
-          	can.assessment_id, 
           	cu."name" as created_by_user,
             cu.user_type as created_by_user_type,
             can.body
