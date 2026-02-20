@@ -83,7 +83,6 @@ class CAS3SubjectAccessRequestRepository(
                 assess.decision,
                 assess.rejection_rationale,
                 assess.is_withdrawn,
-                assess.service,
                 taa.summary_data,
                 taa.completed_at,
                 rrr."name" as referral_rejection_reason_category,
