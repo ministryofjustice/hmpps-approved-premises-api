@@ -141,7 +141,6 @@ class Cas2SubjectAccessRequestRepository(
           select
               ca.crn,
               ca.noms_number, 
-              csu.application_id,
               csu.assessment_id,
               u."name" as assessor_name,
               u.external_type as assessor_origin,
