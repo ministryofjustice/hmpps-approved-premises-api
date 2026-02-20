@@ -300,7 +300,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "decision": "${AssessmentDecision.REJECTED}",
          "rejection_rationale": "${assessment.rejectionRationale}",
          "is_withdrawn": ${assessment.isWithdrawn},
-         "service": "temporary-accommodation",
          "summary_data": $DATA_JSON_SIMPLE,
          "completed_at": "$SUBMITTED_AT",
          "referral_rejection_reason_category": "${assessment.referralRejectionReason?.name}",
