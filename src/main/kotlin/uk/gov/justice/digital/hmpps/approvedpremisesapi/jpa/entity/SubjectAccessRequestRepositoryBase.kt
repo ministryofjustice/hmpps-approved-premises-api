@@ -250,8 +250,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                  de.created_at,
                  de."data",
                  u."name" as triggered_by_user,
-                 de.noms_number,
-                 de.trigger_source
+                 de.noms_number
                from
                      domain_events de 
                left join users u on 
