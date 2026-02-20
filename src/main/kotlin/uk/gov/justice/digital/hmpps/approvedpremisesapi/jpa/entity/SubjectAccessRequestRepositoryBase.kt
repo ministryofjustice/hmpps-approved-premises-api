@@ -33,7 +33,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
               p."name" as premises_name,
               b.adhoc,
               b.key_worker_staff_code,
-              b.offline_application_id,
               b."version"
           from
               bookings b
