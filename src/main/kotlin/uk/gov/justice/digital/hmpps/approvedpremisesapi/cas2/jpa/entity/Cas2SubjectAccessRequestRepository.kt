@@ -70,7 +70,6 @@ class Cas2SubjectAccessRequestRepository(
           select
           	ca.crn,
           	ca.noms_number,
-          	ca.id as application_id,
           	caa.created_at,
           	caa.assessor_name,
           	caa.nacro_referral_id

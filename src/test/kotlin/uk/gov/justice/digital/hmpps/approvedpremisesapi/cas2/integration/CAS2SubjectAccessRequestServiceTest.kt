@@ -253,7 +253,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
         "crn": "${assessment.application.crn}",
         "noms_number": "${assessment.application.nomsNumber}",
-        "application_id": "${assessment.application.id}",
         "created_at": "$CREATED_AT",
         "assessor_name": "${assessment.assessorName}",
         "nacro_referral_id": "${assessment.nacroReferralId}"
