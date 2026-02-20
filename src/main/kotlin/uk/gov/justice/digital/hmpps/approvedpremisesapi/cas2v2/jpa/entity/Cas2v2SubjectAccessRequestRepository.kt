@@ -185,7 +185,6 @@ class Cas2v2SubjectAccessRequestRepository(
       """
            select json_agg(domain_events) as json from ( 
                select 
-                 de.application_id,
                  de.crn,
                  de."type",
                  de.occurred_at,
