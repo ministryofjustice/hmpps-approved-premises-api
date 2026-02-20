@@ -209,7 +209,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
 
   protected fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String = """ 
       {
-        "id": "${domainEvent.id}",
         "application_id": "${domainEvent.applicationId}",
         "crn": "${domainEvent.crn}",
         "type": "${domainEvent.type}",
