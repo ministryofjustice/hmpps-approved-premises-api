@@ -39,6 +39,8 @@ class Cas1PlacementReportRepository(
             to_char(CAST(csb.cancellation_recorded_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS placement_withdrawal_recorded_date_time,
             cr.name AS placement_withdrawn_reason,
             criteria_grouped.criteria AS criteria,
+            csb.transfer_reason AS transfer_reason,
+            csb.additional_information AS additional_information,
             matching.*
         FROM cas1_space_bookings csb
         INNER JOIN placement_matching_outcomes matching ON matching.placement_request_id = csb.placement_request_id

@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementReportTest.Constants.REPORT_MONTH
@@ -65,7 +66,6 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.UUID
-import kotlin.collections.toList
 
 class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
@@ -307,6 +307,8 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         withCriteria(criteria)
         withNonArrivalReason(null)
         withNonArrivalNotes(null)
+        withTransferReason(TransferReason.riskToResident)
+        withAdditionalInformation("Some additional info")
       }
     }
 
@@ -330,6 +332,8 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.placement_withdrawn_date).isNull()
       assertThat(row.placement_withdrawal_recorded_date_time).isNull()
       assertThat(row.placement_withdrawn_reason).isNull()
+      assertThat(row.transfer_reason).isEqualTo(TransferReason.riskToResident.name)
+      assertThat(row.additional_information).isEqualTo("Some additional info")
     }
   }
 
@@ -412,6 +416,8 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.placement_withdrawn_date).isNull()
       assertThat(row.placement_withdrawal_recorded_date_time).isNull()
       assertThat(row.placement_withdrawn_reason).isNull()
+      assertThat(row.transfer_reason).isNull()
+      assertThat(row.additional_information).isNull()
     }
   }
 
@@ -483,6 +489,8 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.placement_withdrawn_date).isNull()
       assertThat(row.placement_withdrawal_recorded_date_time).isNull()
       assertThat(row.placement_withdrawn_reason).isNull()
+      assertThat(row.transfer_reason).isNull()
+      assertThat(row.additional_information).isNull()
     }
   }
 
@@ -559,6 +567,8 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.placement_withdrawn_date).isEqualTo("2024-02-05")
       assertThat(row.placement_withdrawal_recorded_date_time).isEqualTo("2024-02-05T00:00:00Z")
       assertThat(row.placement_withdrawn_reason).isEqualTo("Cancelled")
+      assertThat(row.transfer_reason).isNull()
+      assertThat(row.additional_information).isNull()
     }
   }
 
@@ -792,4 +802,6 @@ data class PlacementReportRow(
   val placement_withdrawal_recorded_date_time: String?,
   val placement_withdrawn_reason: String?,
   val criteria: String?,
+  val transfer_reason: String?,
+  val additional_information: String?,
 )
