@@ -106,7 +106,6 @@ class Cas2SubjectAccessRequestRepository(
           select
           	ca.crn,
           	ca.noms_number,
-          	can.application_id,
           	can.assessment_id, 
           	case 
           		when can.created_by_cas2_user_id is not null then cu."name"
