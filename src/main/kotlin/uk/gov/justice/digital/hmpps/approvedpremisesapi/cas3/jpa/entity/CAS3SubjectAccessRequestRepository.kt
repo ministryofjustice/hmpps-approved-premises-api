@@ -70,7 +70,6 @@ class CAS3SubjectAccessRequestRepository(
         select json_agg(assessments) as json 
         from (
               select
-                app.id as application_id,
                 assess.id as assessment_id,
                 app.crn,
                 app.noms_number,

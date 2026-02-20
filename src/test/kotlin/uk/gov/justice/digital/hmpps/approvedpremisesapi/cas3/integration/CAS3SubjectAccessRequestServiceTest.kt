@@ -287,7 +287,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   ): String =
     """
       {
-         "application_id": "${assessment.application.id}",
          "assessment_id": "${assessment.id}",
          "crn": "${assessment.application.crn}",
          "noms_number": "${assessment.application.nomsNumber}",
