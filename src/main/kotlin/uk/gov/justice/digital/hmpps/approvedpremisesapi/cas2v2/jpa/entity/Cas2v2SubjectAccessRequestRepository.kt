@@ -190,7 +190,6 @@ class Cas2v2SubjectAccessRequestRepository(
                  de.occurred_at,
                  de.created_at,
                  de."data",
-                 de.booking_id,
                  de.service,
                  de.assessment_id,
                  u."name" as triggered_by_user,
