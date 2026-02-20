@@ -68,7 +68,6 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(assessments) as json
       from(
           select
-          	caa.id,
           	ca.crn,
           	ca.noms_number,
           	ca.id as application_id,
