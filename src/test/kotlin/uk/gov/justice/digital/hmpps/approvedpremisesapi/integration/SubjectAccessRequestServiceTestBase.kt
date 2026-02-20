@@ -115,7 +115,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
   protected fun bookingExtensionJson(bookingExtension: ExtensionEntity): String =
     """
       {
-        "application_id": "${bookingExtension.booking.application?.id}",
         "offline_application_id": ${bookingExtension.booking.offlineApplication?.let { "\"${bookingExtension.booking.offlineApplication!!.id}\"" }},
         "crn": "${bookingExtension.booking.crn}",
         "noms_number": "${bookingExtension.booking.nomsNumber}",
