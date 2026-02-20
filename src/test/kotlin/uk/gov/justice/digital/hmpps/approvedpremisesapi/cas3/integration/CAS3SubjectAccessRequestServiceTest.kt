@@ -240,7 +240,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
       "crn": "${assessmentReferralHistoryNoteSystem.assessment.application.crn}",
       "noms_number": "${assessmentReferralHistoryNoteSystem.assessment.application.nomsNumber}",
-      "application_id": "${assessmentReferralHistoryNoteSystem.assessment.application.id}",
       "assessment_id": "${assessmentReferralHistoryNoteSystem.assessment.id}",
       "message": "${assessmentReferralHistoryNoteSystem.message}",
       "created_at": "$CREATED_AT",
@@ -251,7 +250,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     { 
       "crn": "${assessmentReferralHistoryNoteUser.assessment.application.crn}",
       "noms_number": "${assessmentReferralHistoryNoteUser.assessment.application.nomsNumber}",
-      "application_id": "${assessmentReferralHistoryNoteUser.assessment.application.id}",
       "assessment_id": "${assessmentReferralHistoryNoteUser.assessment.id}",
       "message": "${assessmentReferralHistoryNoteUser.message}",
       "created_at": "$CREATED_AT",
