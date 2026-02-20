@@ -34,7 +34,7 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-private const val MAXIMUM_REPORT_DURATION_IN_MONTHS = 3
+private const val MAXIMUM_REPORT_DURATION_IN_MONTHS = 6
 private const val FUTURE_BOOKINGS_REPORT_EXTRA_MONTHS = 6
 
 @Cas3Controller

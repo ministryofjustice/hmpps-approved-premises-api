@@ -134,10 +134,10 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
-  fun `Get report returns 400 if dates provided is more than or equal to 3 months`(reportType: Cas3ReportType) {
+  fun `Get report returns 400 if dates provided is more than or equal to 6 months`(reportType: Cas3ReportType) {
     givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-04-01"
-      val endDate = "2023-08-02"
+      val endDate = "2023-11-02"
 
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
@@ -153,7 +153,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
     givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-04-01"
-      val endDate = "2023-07-01"
+      val endDate = "2023-11-01"
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
         .header("Authorization", "Bearer $jwt")
@@ -1949,10 +1949,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `Get bed usage report returns OK with correct body`(isOptimised: Boolean) {
-      mockFeatureFlagService.setFlag("cas3-reports-optimised-bed-usage-report-enabled", isOptimised)
+    @Test
+    fun `Get bed usage report returns OK with correct body`() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
@@ -2026,10 +2024,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `Get bed usage report returns OK with correct body with pdu and local authority`(isOptimised: Boolean) {
-      mockFeatureFlagService.setFlag("cas3-reports-optimised-bed-usage-report-enabled", isOptimised)
+    @Test
+    fun `Get bed usage report returns OK with correct body with pdu and local authority`() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
