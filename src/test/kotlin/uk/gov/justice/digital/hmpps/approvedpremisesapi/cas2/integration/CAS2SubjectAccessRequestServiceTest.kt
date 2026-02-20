@@ -225,7 +225,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
       	"crn": "${statusUpdate.application.crn}",
       	"noms_number": "${statusUpdate.application.nomsNumber}", 
-      	"application_id": "${statusUpdate.application.id}",
       	"assessment_id": "${statusUpdate.assessment!!.id}",
       	"assessor_name": "${statusUpdate.assessor.name}",
         "assessor_origin": "${statusUpdate.assessor.externalType}",
