@@ -283,7 +283,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                      de.crn,
                      de.noms_number,
                      de.created_at,
-                     dem.domain_event_id,
                      dem."name",
                      dem.value
                  from 

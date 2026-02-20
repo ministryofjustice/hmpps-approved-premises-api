@@ -225,7 +225,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
         "crn": "${domainEvent.crn}",
         "noms_number": "${domainEvent.nomsNumber}",
         "created_at": "$CREATED_AT",
-        "domain_event_id": "${domainEvent.id}",
         "name": "${MetaDataName.CAS1_REQUESTED_AP_TYPE}",
         "value": "${ApprovedPremisesType.NORMAL}"
       }
