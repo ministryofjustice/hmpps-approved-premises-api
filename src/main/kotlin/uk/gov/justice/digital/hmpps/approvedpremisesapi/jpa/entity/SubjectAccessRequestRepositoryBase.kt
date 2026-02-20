@@ -249,7 +249,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                  de.occurred_at,
                  de.created_at,
                  de."data",
-                 de.assessment_id,
                  u."name" as triggered_by_user,
                  de.noms_number,
                  de.trigger_source

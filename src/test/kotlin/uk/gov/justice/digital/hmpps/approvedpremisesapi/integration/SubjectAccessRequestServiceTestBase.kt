@@ -214,7 +214,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
         "occurred_at": "$ALLOCATED_AT",
         "created_at": "$CREATED_AT",
         "data": ${domainEvent.data},
-        "assessment_id": "${domainEvent.assessmentId}",
         "triggered_by_user": ${user?.let {"\"${it.name}\""} ?: "null"},
         "noms_number": "${domainEvent.nomsNumber}",
         "trigger_source": null
