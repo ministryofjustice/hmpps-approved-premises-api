@@ -180,7 +180,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "premises_name": "${booking.premises.name}",
          "adhoc": ${booking.adhoc},
          "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
-         "version": ${booking.version}
       }
     """.trimIndent()
 
