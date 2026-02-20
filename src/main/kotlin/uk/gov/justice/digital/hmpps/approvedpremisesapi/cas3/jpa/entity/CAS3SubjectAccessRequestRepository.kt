@@ -19,7 +19,6 @@ class CAS3SubjectAccessRequestRepository(
              a.crn,
              a.noms_number,
              taa."name" as offender_name,
-             a."data",
              a."document",
              a.created_at,
              a.submitted_at,

@@ -320,7 +320,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "crn": "${temporaryAccommodationApplication.crn}",
         "noms_number": "${temporaryAccommodationApplication.nomsNumber}",
         "offender_name": "${temporaryAccommodationApplication.name}",
-        "data": ${temporaryAccommodationApplication.data},
         "document": ${temporaryAccommodationApplication.document},
         "created_at": "$CREATED_AT",
         "submitted_at": "$SUBMITTED_AT",
