@@ -23,11 +23,9 @@ select
 from
 	(
 	select
-		a.id,
 		apa.name,
 		a.crn,
 		a.noms_number,
-		a."data",
 		a."document",
 		a.created_at,
 		a.submitted_at,
@@ -51,7 +49,11 @@ from
 		apa.notice_type,
 		apa.ap_type,
 		case_manager."name" as case_manager_name,
-		apa.case_manager_is_not_applicant
+		apa.case_manager_is_not_applicant,
+    apa.situation,
+    apa.is_inapplicable,
+    apa.licence_expiry_date,
+    apa.expired_reason
 	from
 		approved_premises_applications apa
 	join 
@@ -97,8 +99,6 @@ from
   	json_agg(apptimeline) as json
   from(
       select
-          a.id as application_id,
-          a.service,
           a.crn,
           a.noms_number,
           atn.body,
@@ -132,12 +132,9 @@ from
       """
        select json_agg(assess) as json from (
            select
-               app.id as application_id,
-               assess.id as assessment_id,
                app.crn,
                app.noms_number,
                u."name" as assessor_name,
-               assess."data" ,
                assess."document",
                assess.created_at,
                assess.allocated_at,
@@ -147,8 +144,10 @@ from
                assess.decision,
                assess.rejection_rationale,
                assess.is_withdrawn,
-               assess.service,
-               apa.created_from_appeal
+               apa.created_from_appeal,
+               apa.agree_with_short_notice_reason,
+               apa.agree_with_short_notice_reason_comments,
+               apa.reason_for_late_application
            from
                assessments assess
            inner join 
@@ -187,13 +186,12 @@ from
     select json_agg(assess) as json 
     from (    
       select
-        app.id as application_id,
-        a.id as assessment_id,
         app.crn,
         app.noms_number,
         acn.created_at,
         acn.query,
         acn.response,
+        acn.response_received_on,
         u."name" as created_by_user
       from
         assessment_clarification_notes acn
@@ -239,8 +237,6 @@ from
           select
             a.crn,
             a.noms_number,
-            pa.application_id,
-            pa."data",
             pa."document",
             pa.created_at,
             pa.submitted_at ,
@@ -249,6 +245,13 @@ from
             pa.due_at,
             pa.decision,
             pa.decision_made_at,
+            pa.sentence_type,
+            pa.release_type,
+            pa.requested_duration,
+            pa.authorised_duration,
+            pa.expected_arrival,
+            pa.expected_arrival_flexible,
+            pa.situation,
             case
                when pa.placement_type = '0' then 'ROTL'
                when pa.placement_type = '1' then 'RELEASE_FOLLOWING_DECISION'
@@ -295,9 +298,6 @@ from
               pr.expected_arrival,
               pr.duration, 
               pr.created_at,
-              pr.placement_application_id, 
-              pr.application_id,
-              pr.assessment_id,
               pr.notes,
               pr.is_parole,
               pr.is_withdrawn,
@@ -328,9 +328,6 @@ from
         select 
              app.crn,
              app.noms_number,
-             pr.application_id,
-             pr.assessment_id,
-             pr.id as placement_requirements_id,
              case
                when pr.ap_type = '0' then 'NORMAL'
                when pr.ap_type = '1' then 'PIPE'
@@ -373,10 +370,7 @@ from
     
             app.crn,
             app.noms_number,
-            pr.id as placement_requirement_id,
             c."name" as criteria_name,
-            c.service_scope,
-            c.model_scope,
             c.property_name,
             c.is_active,
             'DESIRABLE' as criteria_type
@@ -399,10 +393,7 @@ from
           select 
             app.crn as crn,
             app.noms_number as noms_number,
-            pr.id as placement_requirement_id,
             c."name" as criteria_name,
-            c.service_scope,
-            c.model_scope,
             c.property_name,
             c.is_active,
             'ESSENTIAL' as criteria_type
@@ -436,8 +427,6 @@ from
             select 
                 sb.crn,
                 null AS noms_number,
-                oa.id as offline_application_id, 
-                sb.id AS booking_id,                
                 oa.created_at 
             from offline_applications oa 
             left join cas1_space_bookings sb on sb.offline_application_id = oa.id 
@@ -467,9 +456,6 @@ from
              select 
                  a.crn,
                  a.noms_number,
-                 B.id as booking_not_made_id,
-                 a.id as application_id,
-                 b.placement_request_id,
                  b.created_at,
                  b.notes
              from booking_not_mades b
@@ -500,9 +486,6 @@ from
             select
               app.crn,
               app.noms_number,
-              a.id as appeal_id,
-              a.application_id,
-              a.assessment_id,
               a.appeal_date,
               a.appeal_detail,
               a.decision ,

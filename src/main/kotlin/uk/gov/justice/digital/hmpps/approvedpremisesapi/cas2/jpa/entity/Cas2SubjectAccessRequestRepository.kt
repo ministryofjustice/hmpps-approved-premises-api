@@ -23,10 +23,8 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(applications) as json
       from ( 
         select
-          ca.id,
         	ca.crn,
         	ca.noms_number,
-        	ca."data",
         	ca."document",
         	cu."name" as created_by_user,
         	ca.created_at,
@@ -70,10 +68,8 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(assessments) as json
       from(
           select
-          	caa.id,
           	ca.crn,
           	ca.noms_number,
-          	ca.id as application_id,
           	caa.created_at,
           	caa.assessor_name,
           	caa.nacro_referral_id
@@ -108,19 +104,12 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(application_notes) as json 
       from (
           select
-          	can.id,
           	ca.crn,
           	ca.noms_number,
-          	can.application_id,
-          	can.assessment_id, 
           	case 
           		when can.created_by_cas2_user_id is not null then cu."name"
           		else 'unknown'
           	end as created_by_user,
-          	case 
-          		when can.created_by_cas2_user_id is not null then cu.user_type
-          		else 'unknown'
-          	end as created_by_user_type,
           	can.body
           from cas_2_application_notes can 
           inner join cas_2_applications ca on
@@ -150,11 +139,8 @@ class Cas2SubjectAccessRequestRepository(
       select json_agg(application_status_updates) as json 
       from (
           select
-              csu.id,
               ca.crn,
               ca.noms_number, 
-              csu.application_id,
-              csu.assessment_id,
               u."name" as assessor_name,
               u.external_type as assessor_origin,
               to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
@@ -192,9 +178,6 @@ class Cas2SubjectAccessRequestRepository(
         select
         	ca. crn,
         	ca. noms_number, 
-        	csud.status_update_id,
-        	csu.application_id,
-        	csu.assessment_id,
         	csu."label" as status_label,
         	csud."label" as detail_label,
         	to_char(csud.created_at , 'YYYY-MM-DD HH24:MI:SS') as created_at 
