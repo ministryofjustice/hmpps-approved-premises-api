@@ -158,7 +158,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
         select json_agg(booking_ext) as json 
         from (
       select
-            oa.id  as offline_application_id,
             b.crn,
             b.noms_number,
             e.previous_departure_date,
