@@ -178,7 +178,6 @@ class Cas2SubjectAccessRequestRepository(
         select
         	ca. crn,
         	ca. noms_number, 
-        	csu.assessment_id,
         	csu."label" as status_label,
         	csud."label" as detail_label,
         	to_char(csud.created_at , 'YYYY-MM-DD HH24:MI:SS') as created_at 
