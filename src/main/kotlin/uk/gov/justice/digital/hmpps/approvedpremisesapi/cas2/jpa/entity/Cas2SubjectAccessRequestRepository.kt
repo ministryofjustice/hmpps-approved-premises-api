@@ -178,7 +178,6 @@ class Cas2SubjectAccessRequestRepository(
         select
         	ca. crn,
         	ca. noms_number, 
-        	csud.status_update_id,
         	csu.application_id,
         	csu.assessment_id,
         	csu."label" as status_label,
