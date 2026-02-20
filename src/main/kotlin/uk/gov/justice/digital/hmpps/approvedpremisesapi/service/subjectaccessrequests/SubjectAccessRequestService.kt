@@ -36,7 +36,6 @@ class SubjectAccessRequestService(
     val apAssessmentClarificationNotesJson = cas1SubjectAccessRequestRepository.getApprovedPremisesAssessmentClarificationNotes(crn, nomsNumber, startDate, endDate)
 
     val apSpaceBookingsJson = cas1SubjectAccessRequestRepository.spaceBookings(crn, nomsNumber, startDate, endDate)
-    val apBookingExtensionsJson = cas1SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate)
     val domainEventsJson = cas1SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate)
     val domainEventMetaDataJson = cas1SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate)
 
@@ -54,7 +53,6 @@ class SubjectAccessRequestService(
         apAssessmentsJson,
         apAssessmentClarificationNotesJson,
         apSpaceBookingsJson,
-        apBookingExtensionsJson,
         domainEventsJson,
         domainEventMetaDataJson,
         placementApplicationsJson,
@@ -77,7 +75,6 @@ class SubjectAccessRequestService(
          "AssessmentClarificationNotes": ${ apAssessmentClarificationNotesJson ?: "[]"},
          "SpaceBookings": ${ apSpaceBookingsJson ?: "[]"},
          "OfflineApplications": ${ offlineApplicationsJson ?: "[]"},
-         "BookingExtensions": ${ apBookingExtensionsJson ?: "[]"},
          "Appeals": ${ appealsJson ?: "[]"},
          "PlacementApplications": ${ placementApplicationsJson ?: "[]"},
          "PlacementRequests": ${ placementRequestsJson ?: "[]"},
