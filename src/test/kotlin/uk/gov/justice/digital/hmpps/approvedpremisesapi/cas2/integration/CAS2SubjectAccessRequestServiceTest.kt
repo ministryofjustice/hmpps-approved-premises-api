@@ -263,7 +263,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   private fun cas2ApplicationsJson(application: Cas2ApplicationEntity): String = """
     {
-      "id": "${application.id}",
       "crn": "${application.crn}",
       "noms_number": "${application.nomsNumber}",
       "data": ${application.data},
