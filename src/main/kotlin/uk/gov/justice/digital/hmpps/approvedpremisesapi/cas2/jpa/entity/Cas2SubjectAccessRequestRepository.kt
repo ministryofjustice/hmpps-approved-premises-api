@@ -110,10 +110,6 @@ class Cas2SubjectAccessRequestRepository(
           		when can.created_by_cas2_user_id is not null then cu."name"
           		else 'unknown'
           	end as created_by_user,
-          	case 
-          		when can.created_by_cas2_user_id is not null then cu.user_type
-          		else 'unknown'
-          	end as created_by_user_type,
           	can.body
           from cas_2_application_notes can 
           inner join cas_2_applications ca on
