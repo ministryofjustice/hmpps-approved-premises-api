@@ -180,6 +180,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "premises_name": "${booking.premises.name}",
          "adhoc": ${booking.adhoc},
          "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
+         "offender_name": ${booking.offenderName?.let { "\"${it}\"" }},
       }
     """.trimIndent()
 
@@ -347,6 +348,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
       withStatus(BookingStatus.arrived)
       withBed(bed)
       withServiceName(serviceName)
+      withOffenderName("${offenderDetails.firstName} ${offenderDetails.surname}")
     }
     return booking
   }
