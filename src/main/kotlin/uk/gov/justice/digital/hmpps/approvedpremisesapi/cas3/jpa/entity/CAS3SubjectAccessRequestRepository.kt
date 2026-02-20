@@ -121,7 +121,6 @@ class CAS3SubjectAccessRequestRepository(
         select
             app.crn,
             app.noms_number,
-            assess.id  as assessment_id,
             arhn.message,
             arhn.created_at,
             u."name" as created_by_user,
