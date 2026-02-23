@@ -439,4 +439,37 @@ class WebClientConfiguration(
         .build(),
     )
   }
+
+  @Bean(name = ["healthAndMedicationApiWebClient"])
+  fun healthAndMedicationApiWebClient(
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.licence-api.base-url}") healthAndMedicationApiBaseUrl: String,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("health-and-medications")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .baseUrl(healthAndMedicationApiBaseUrl)
+        .filter(oauth2Client)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(
+                ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
+              ),
+          ),
+        )
+        .exchangeStrategies(
+          ExchangeStrategies.builder().codecs {
+            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
+          }.build(),
+        )
+        .build(),
+    )
+  }
 }

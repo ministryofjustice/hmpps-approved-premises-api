@@ -33,6 +33,7 @@ generic-service:
     SERVICES_MANAGE-POM-CASES_BASE-URL: https://dev.moic.service.justice.gov.uk
     SERVICES_PRISONER-SEARCH_BASE-URL: https://prisoner-search-dev.prison.service.justice.gov.uk
     SERVICES_LICENCE-API_BASE-URL: https://create-and-vary-a-licence-api-dev.hmpps.service.justice.gov.uk
+    SERVICES_HEALTH-AND-MEDICATION-API_BASE-URL: https://health-and-medication-api-dev.hmpps.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/dev+test,classpath:db/migration/test,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
     SENTRY_ENVIRONMENT: test
