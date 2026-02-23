@@ -54,6 +54,12 @@ spring:
             client-secret: clientsecret
             client-authentication-method: client_secret_basic
             authorization-grant-type: client_credentials
+          health-and-medications:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: client_credentials
   cache:
     type: none
 
@@ -119,6 +125,8 @@ services:
   prisoner-search-api:
     base-url: http://localhost:#WIREMOCK_PORT
   licence-api:
+    base-url: http://localhost:#WIREMOCK_PORT
+  health-and-medications-api:
     base-url: http://localhost:#WIREMOCK_PORT
 
 prison-case-notes:
