@@ -209,19 +209,13 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
 
   protected fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String = """ 
       {
-        "id": "${domainEvent.id}",
-        "application_id": "${domainEvent.applicationId}",
         "crn": "${domainEvent.crn}",
         "type": "${domainEvent.type}",
         "occurred_at": "$ALLOCATED_AT",
         "created_at": "$CREATED_AT",
         "data": ${domainEvent.data},
-        "booking_id": null,
-        "service": "${domainEvent.service}",
-        "assessment_id": "${domainEvent.assessmentId}",
         "triggered_by_user": ${user?.let {"\"${it.name}\""} ?: "null"},
         "noms_number": "${domainEvent.nomsNumber}",
-        "trigger_source": null
       }
   """.trimIndent()
 
@@ -231,7 +225,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
         "crn": "${domainEvent.crn}",
         "noms_number": "${domainEvent.nomsNumber}",
         "created_at": "$CREATED_AT",
-        "domain_event_id": "${domainEvent.id}",
         "name": "${MetaDataName.CAS1_REQUESTED_AP_TYPE}",
         "value": "${ApprovedPremisesType.NORMAL}"
       }

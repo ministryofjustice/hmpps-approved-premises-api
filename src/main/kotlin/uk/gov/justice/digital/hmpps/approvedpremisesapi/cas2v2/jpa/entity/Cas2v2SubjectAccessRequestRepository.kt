@@ -185,19 +185,13 @@ class Cas2v2SubjectAccessRequestRepository(
       """
            select json_agg(domain_events) as json from ( 
                select 
-                 de.id,
-                 de.application_id,
                  de.crn,
                  de."type",
                  de.occurred_at,
                  de.created_at,
                  de."data",
-                 de.booking_id,
-                 de.service,
-                 de.assessment_id,
                  u."name" as triggered_by_user,
-                 de.noms_number,
-                 de.trigger_source
+                 de.noms_number
                from
                      domain_events de 
                left join cas_2_users u on 
