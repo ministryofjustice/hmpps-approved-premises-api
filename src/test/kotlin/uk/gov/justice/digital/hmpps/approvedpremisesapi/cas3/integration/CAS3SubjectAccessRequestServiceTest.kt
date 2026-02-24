@@ -240,8 +240,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
       "crn": "${assessmentReferralHistoryNoteSystem.assessment.application.crn}",
       "noms_number": "${assessmentReferralHistoryNoteSystem.assessment.application.nomsNumber}",
-      "application_id": "${assessmentReferralHistoryNoteSystem.assessment.application.id}",
-      "assessment_id": "${assessmentReferralHistoryNoteSystem.assessment.id}",
       "message": "${assessmentReferralHistoryNoteSystem.message}",
       "created_at": "$CREATED_AT",
       "created_by_user": "${assessmentReferralHistoryNoteSystem.createdByUser.name}",
@@ -251,8 +249,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     { 
       "crn": "${assessmentReferralHistoryNoteUser.assessment.application.crn}",
       "noms_number": "${assessmentReferralHistoryNoteUser.assessment.application.nomsNumber}",
-      "application_id": "${assessmentReferralHistoryNoteUser.assessment.application.id}",
-      "assessment_id": "${assessmentReferralHistoryNoteUser.assessment.id}",
       "message": "${assessmentReferralHistoryNoteUser.message}",
       "created_at": "$CREATED_AT",
       "created_by_user": "${assessmentReferralHistoryNoteUser.createdByUser.name}",
@@ -287,8 +283,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   ): String =
     """
       {
-         "application_id": "${assessment.application.id}",
-         "assessment_id": "${assessment.id}",
          "crn": "${assessment.application.crn}",
          "noms_number": "${assessment.application.nomsNumber}",
          "assessor_name": "${assessment.allocatedToUser?.name}",
@@ -302,7 +296,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
          "decision": "${AssessmentDecision.REJECTED}",
          "rejection_rationale": "${assessment.rejectionRationale}",
          "is_withdrawn": ${assessment.isWithdrawn},
-         "service": "temporary-accommodation",
          "summary_data": $DATA_JSON_SIMPLE,
          "completed_at": "$SUBMITTED_AT",
          "referral_rejection_reason_category": "${assessment.referralRejectionReason?.name}",
@@ -320,7 +313,6 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "crn": "${temporaryAccommodationApplication.crn}",
         "noms_number": "${temporaryAccommodationApplication.nomsNumber}",
         "offender_name": "${temporaryAccommodationApplication.name}",
-        "data": ${temporaryAccommodationApplication.data},
         "document": ${temporaryAccommodationApplication.document},
         "created_at": "$CREATED_AT",
         "submitted_at": "$SUBMITTED_AT",

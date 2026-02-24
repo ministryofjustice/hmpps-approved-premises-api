@@ -19,7 +19,6 @@ class CAS3SubjectAccessRequestRepository(
              a.crn,
              a.noms_number,
              taa."name" as offender_name,
-             a."data",
              a."document",
              a.created_at,
              a.submitted_at,
@@ -71,8 +70,6 @@ class CAS3SubjectAccessRequestRepository(
         select json_agg(assessments) as json 
         from (
               select
-                app.id as application_id,
-                assess.id as assessment_id,
                 app.crn,
                 app.noms_number,
                 u."name" as assessor_name,
@@ -86,7 +83,6 @@ class CAS3SubjectAccessRequestRepository(
                 assess.decision,
                 assess.rejection_rationale,
                 assess.is_withdrawn,
-                assess.service,
                 taa.summary_data,
                 taa.completed_at,
                 rrr."name" as referral_rejection_reason_category,
@@ -125,8 +121,6 @@ class CAS3SubjectAccessRequestRepository(
         select
             app.crn,
             app.noms_number,
-            app.id as application_id,
-            assess.id  as assessment_id,
             arhn.message,
             arhn.created_at,
             u."name" as created_by_user,

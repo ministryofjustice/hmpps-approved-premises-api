@@ -115,8 +115,6 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
   protected fun bookingExtensionJson(bookingExtension: ExtensionEntity): String =
     """
       {
-        "application_id": "${bookingExtension.booking.application?.id}",
-        "offline_application_id": ${bookingExtension.booking.offlineApplication?.let { "\"${bookingExtension.booking.offlineApplication!!.id}\"" }},
         "crn": "${bookingExtension.booking.crn}",
         "noms_number": "${bookingExtension.booking.nomsNumber}",
         "previous_departure_date": "$previousDepartureDateOnly",
@@ -180,10 +178,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "premises_name": "${booking.premises.name}",
          "adhoc": ${booking.adhoc},
          "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
-         "service": "${booking.service}",
-         "application_id": "${booking.application?.id}",
-         "offline_application_id": ${if (booking.offlineApplication != null) "\"${booking.offlineApplication!!.id}\"" else "null"},
-         "version": ${booking.version}
+         "offender_name": ${booking.offenderName?.let { "\"${it}\"" }},
       }
     """.trimIndent()
 
@@ -351,6 +346,7 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
       withStatus(BookingStatus.arrived)
       withBed(bed)
       withServiceName(serviceName)
+      withOffenderName("${offenderDetails.firstName} ${offenderDetails.surname}")
     }
     return booking
   }

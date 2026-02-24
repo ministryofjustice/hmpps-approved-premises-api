@@ -33,10 +33,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
               p."name" as premises_name,
               b.adhoc,
               b.key_worker_staff_code,
-              b.service,
-              b.application_id, 
-              b.offline_application_id,
-              b."version"
+              b.offender_name
           from
               bookings b
           left join premises p on
@@ -161,8 +158,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
         select json_agg(booking_ext) as json 
         from (
       select
-            a.id as application_id,
-            oa.id  as offline_application_id,
             b.crn,
             b.noms_number,
             e.previous_departure_date,
