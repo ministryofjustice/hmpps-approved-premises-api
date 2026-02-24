@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -73,9 +75,18 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
     const val OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE = "NOT APPLICABLE"
     const val SENTENCE_TYPE_CUSTODIAL = "CUSTODIAL"
     const val NAME = "Jeffity Jeff"
+    const val LICENCE_EXPIRY_DATE = "2021-07-17"
+    const val EXPIRED_REASON = "Expired reason"
+    const val REASON_COMMENTS = "agree with short notice reason comments"
+    const val LATE_APPLICATION_REASON = "late application reason"
+    const val REQUESTED_DURATION = 8
+    const val AUTHORISED_DURATION = 9
+    const val ADDITIONAL_INFORMATION = "some additional information"
 
     val START_DATE: LocalDateTime = LocalDateTime.of(2018, 9, 30, 0, 0, 0)
     val END_DATE: LocalDateTime = LocalDateTime.of(2024, 9, 30, 0, 0, 0)
+    val TRANSFER_TYPE = TransferType.PLANNED
+    val TRANSFER_REASON = TransferReason.movingPersonCloserToResettlementArea
     var arrivedAtDateOnly = ARRIVED_AT.substring(0..9)
     var submittedAtDateOnly = SUBMITTED_AT.substring(0..9)
     var departedAtDateOnly = DEPARTED_AT.substring(0..9)
@@ -137,23 +148,21 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
          "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
          "key_worker_assigned_at": "$CREATED_AT",
          "key_worker_name": "${booking.keyWorkerName}",
-         "approved_premises_application_id": ${if (booking.application != null) "\"${booking.application!!.id}\"" else null},
-         "offline_application_id": ${if (booking.offlineApplication != null) "\"${booking.offlineApplication!!.id}\"" else null},
          "premises_name": "${booking.premises.name}",
          "person_name": ${if (booking.application != null) "\"${booking.application!!.name}\"" else "\"${booking.offlineApplication!!.name}\""},
          "delius_event_number": "${booking.deliusEventNumber}",
-         "placement_request_id":  "${booking.placementRequest!!.id}",
-         "created_by_user_id":  "${booking.createdBy!!.id}",
-         "departure_reason_id": ${if (booking.departureReason != null) "\"${booking.departureReason!!.id}\"" else null},
+         "created_by_user_name":  ${booking.createdBy?.let { "\"${it.name}\"" }},
+         "departure_reason": ${booking.departureReason?.let { "\"${it.name}\"" }},
          "departure_notes": ${if (booking.departureNotes != null) "\"${booking.departureNotes}\"" else null},
-         "departure_move_on_category_id": ${if (booking.departureMoveOnCategory != null) "\"${booking.departureMoveOnCategory!!.id}\"" else null},
+         "move_on_category": ${booking.departureMoveOnCategory?.let { "\"${it.name}\"" }},
          "cancellation_reason_notes": ${if (booking.cancellationReasonNotes != null) "\"${booking.cancellationReasonNotes}\"" else null},
-         "cancellation_reason_id": ${if (booking.cancellationReason != null) "\"${booking.cancellationReason!!.id}\"" else null},
+         "cancellation_reason": ${booking.cancellationReason?.let { "\"${it.name}\"" }},
          "cancellation_occurred_at": ${if (booking.cancellationOccurredAt != null) "\"${booking.cancellationOccurredAt}\"" else null},
          "cancellation_recorded_at": "$CANCELLATION_DATE",
          "characteristics_property_names": "${booking.criteria?.let{ it.map { criteria -> criteria.propertyName}.sortedBy{ propertyName -> propertyName }.joinToString(",")}}",
-         "migrated_management_info_from":  ${if (booking.migratedManagementInfoFrom != null) "\"${booking.migratedManagementInfoFrom}\"" else null},
-         "version": ${booking.version}
+         "transfer_type": ${booking.transferType?.let { "\"${booking.transferType}\"" }},
+         "additional_information": ${booking.additionalInformation?.let { "\"${it}\"" }},
+         "transfer_reason": ${booking.transferReason?.let { "\"${it.name}\"" }}
       }
     """.trimIndent()
 
@@ -265,6 +274,9 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
     moveOnCategory: MoveOnCategoryEntity? = null,
     cancellationReason: CancellationReasonEntity? = null,
     offlineApplication: OfflineApplicationEntity? = null,
+    transferType: TransferType? = null,
+    additionalInformation: String? = null,
+    transferReason: TransferReason? = null,
   ): Cas1SpaceBookingEntity {
     val (user, _) = givenAUser()
     val (placementRequest) = givenAPlacementRequest(
@@ -308,6 +320,9 @@ open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
           ),
         )
         withOfflineApplication(offlineApplication)
+        withTransferType(transferType)
+        withAdditionalInformation(additionalInformation)
+        withTransferReason(transferReason)
       }
     return spaceBooking
   }

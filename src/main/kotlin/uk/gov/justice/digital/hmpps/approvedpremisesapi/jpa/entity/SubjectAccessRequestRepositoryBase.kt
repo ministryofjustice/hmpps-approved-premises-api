@@ -89,21 +89,19 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             b.key_worker_staff_code,
             b.key_worker_assigned_at,
             b.key_worker_name,
-            b.approved_premises_application_id,
-            b.offline_application_id,
             p."name" as premises_name,
             b.delius_event_number,
-            b.placement_request_id,
-            b.created_by_user_id,
-            b.departure_reason_id, 
+            u.name as created_by_user_name,
+            dr.name as departure_reason,
             b.departure_notes,
-            b.departure_move_on_category_id,
+            moc.name as move_on_category,
             b.cancellation_reason_notes,
-            b.cancellation_reason_id,
+            cr.name as cancellation_reason,
             b.cancellation_occurred_at, 
             b.cancellation_recorded_at,
-            b.migrated_management_info_from, 
-            b.version,
+            b.transfer_type,
+            b.additional_information,
+            b.transfer_reason,
             ( 
               SELECT STRING_AGG (characteristics.property_name, ',')
               FROM cas1_space_bookings_criteria sbc
@@ -126,6 +124,14 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             LEFT OUTER JOIN   
               applications a on 
               a.id = apa.id
+            LEFT JOIN departure_reasons dr ON 
+              b.departure_reason_id = dr.id
+            LEFT JOIN move_on_categories moc ON
+              b.departure_move_on_category_id = moc.id
+            LEFT JOIN cancellation_reasons cr ON
+              b.cancellation_reason_id = cr.id
+            LEFT JOIN users u ON
+              b.created_by_user_id = u.id
           where
               (b.crn = :crn
               or a.noms_number = :noms_number )
