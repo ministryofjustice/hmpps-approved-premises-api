@@ -22,10 +22,8 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(applications) as json
       from ( 
         select
-          ca.id,
         	ca.crn,
         	ca.noms_number,
-        	ca."data",
         	ca."document",
         	nu."name" as created_by_user,
         	ca.created_at,
@@ -63,10 +61,8 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(assessments) as json
       from(
           select
-          	caa.id,
           	ca.crn,
           	ca.noms_number,
-          	ca.id as application_id,
           	caa.created_at,
           	caa.assessor_name,
           	caa.nacro_referral_id,
@@ -96,13 +92,9 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(cas_2_application_notes) as json 
       from (
           select
-          	can.id,
           	ca.crn,
           	ca.noms_number,
-          	can.application_id,
-          	can.assessment_id, 
           	cu."name" as created_by_user,
-            cu.user_type as created_by_user_type,
             can.body
           from cas_2_application_notes can 
           inner join cas_2_applications ca on
@@ -127,11 +119,8 @@ class Cas2v2SubjectAccessRequestRepository(
       select json_agg(cas_2_application_status_updates) as json 
       from (
           select
-              csu.id,
               ca.crn,
               ca.noms_number, 
-              csu.application_id,
-              csu.assessment_id,
               eu."name" as assessor_name,
               to_char(csu.created_at,'YYYY-MM-DD HH24:MI:SS')  as created_at,
               csu.description ,
@@ -162,9 +151,6 @@ class Cas2v2SubjectAccessRequestRepository(
         select
         	ca. crn,
         	ca. noms_number, 
-        	csud.status_update_id,
-        	csu.application_id,
-        	csu.assessment_id,
         	csu."label" as status_label,
         	csud."label" as detail_label,
         	to_char(csud.created_at , 'YYYY-MM-DD HH24:MI:SS') as created_at 

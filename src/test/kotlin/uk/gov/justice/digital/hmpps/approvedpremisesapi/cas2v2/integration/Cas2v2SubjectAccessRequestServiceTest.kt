@@ -218,9 +218,6 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     {
         "crn": "${statusUpdateDetail.statusUpdate.application.crn}",
         "noms_number": "${statusUpdateDetail.statusUpdate.application.nomsNumber}", 
-        "status_update_id": "${statusUpdateDetail.statusUpdate.id}",
-        "application_id": "${statusUpdateDetail.statusUpdate.application.id}",
-        "assessment_id": "${statusUpdateDetail.statusUpdate.assessment!!.id}",
         "status_label": "${statusUpdateDetail.statusUpdate.label}",
         "detail_label": "${statusUpdateDetail.label}",
         "created_at": "${statusUpdateDetail.createdAt!!.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}"
@@ -229,11 +226,8 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
 
   private fun cas2StatusUpdatesJson(statusUpdate: Cas2StatusUpdateEntity): String = """
     {
-      	"id": "${statusUpdate.id}",
       	"crn": "${statusUpdate.application.crn}",
       	"noms_number": "${statusUpdate.application.nomsNumber}", 
-      	"application_id": "${statusUpdate.application.id}",
-      	"assessment_id": "${statusUpdate.assessment!!.id}",
       	"assessor_name": "${statusUpdate.assessor.name}",
         "created_at": "${statusUpdate.createdAt.withOffsetSameInstant(ZoneOffset.UTC).toStandardisedFormat()}",
         "description": "${statusUpdate.description}",
@@ -244,23 +238,17 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
 
   private fun cas2ApplicationNotesJson(applicationNotes: Cas2ApplicationNoteEntity): String = """
   {
-      "id": "${applicationNotes.id}",
       "crn": "${applicationNotes.application.crn}",
       "noms_number": "${applicationNotes.application.nomsNumber}",
-      "application_id": "${applicationNotes.application.id}",
-      "assessment_id": "${applicationNotes.assessment!!.id}",
       "created_by_user": "${applicationNotes.createdByUser.name}",
-      "created_by_user_type": "NOMIS",
       "body": "${applicationNotes.body}"
   }
   """.trimIndent()
 
   private fun cas2AssessmentsJson(assessment: Cas2AssessmentEntity): String = """
     {
-        "id": "${assessment.id}",
         "crn": "${assessment.application.crn}",
         "noms_number": "${assessment.application.nomsNumber}",
-        "application_id": "${assessment.application.id}",
         "created_at": "$CREATED_AT",
         "assessor_name": "${assessment.assessorName}",
         "nacro_referral_id": "${assessment.nacroReferralId}",
@@ -270,10 +258,8 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
 
   private fun cas2ApplicationsJson(application: Cas2ApplicationEntity): String = """
     {
-      "id": "${application.id}",
       "crn": "${application.crn}",
       "noms_number": "${application.nomsNumber}",
-      "data": ${application.data},
       "document": ${application.document},
       "created_by_user": "${application.createdByUser.name}",
       "created_at": "$CREATED_AT",
