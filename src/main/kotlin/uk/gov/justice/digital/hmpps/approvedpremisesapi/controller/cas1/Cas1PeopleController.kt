@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.BookingDetails
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HealthAndMedicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LicenceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
@@ -47,6 +49,7 @@ class Cas1PeopleController(
   private val licenceService: LicenceService,
   private val offenderService: OffenderService,
   private val oasysService: OASysService,
+  private val healthAndMedicationService: HealthAndMedicationService,
 ) {
 
   companion object {
@@ -120,6 +123,16 @@ class Cas1PeopleController(
     val bookingDetails = extractEntityFromCasResult(offenderService.getOffenderBookingDetails(crn))
 
     return ResponseEntity.ok(bookingDetails)
+  }
+
+  @Operation(summary = "Returns diet and allergy details for a Person.")
+  @GetMapping("/people/{crn}/diet-and-allergy-details")
+  fun getOffenderDietAndAllergyDetails(@PathVariable crn: String): ResponseEntity<DietAndAllergyResponse> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val dietAndAllergyDetails = extractEntityFromCasResult(healthAndMedicationService.getDietAndAllergyDetails(crn))
+
+    return ResponseEntity.ok(dietAndAllergyDetails)
   }
 
   private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): Cas1PersonalTimeline = cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())

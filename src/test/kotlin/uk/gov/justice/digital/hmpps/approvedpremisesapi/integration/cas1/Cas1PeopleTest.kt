@@ -14,6 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.CodeDescriptionDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.ValueWithMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RisksToTheIndividual
@@ -23,6 +26,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingDetailsFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietAndAllergyDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietAndAllergyResponseFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietaryItemDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
@@ -41,6 +47,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskToTheIndividual404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockForbiddenDietAndAllergyCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockNotFoundDietAndAllergyCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockSuccessfulDietAndAllergyCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundBookingDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundCsraSummariesCall
@@ -908,6 +917,209 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isNotFound
+    }
+  }
+
+  @Nested
+  inner class GetOffenderDietAndAllergyDetails {
+    @Test
+    fun `Getting diet and allergy details for a CRN without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/people/CRN/diet-and-allergy-details")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Getting diet and allergy details for a CRN returns 200`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+
+      val crn = "CRN99"
+      val nomsNumber = "NOMS99"
+
+      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      cas1OffenderRepository.saveAndFlush(existingOffender)
+
+      val response = DietAndAllergyResponseFactory()
+        .withDietAndAllergy(
+          DietAndAllergyDtoFactory()
+            .withFoodAllergies(
+              ValueWithMetadata(
+                data = listOf(DietaryItemDtoFactory().produce()),
+                lastModifiedAt = OffsetDateTime.now(),
+                lastModifiedBy = "user1",
+                lastModifiedPrisonId = "MDI",
+              ),
+            )
+            .withMedicalDietaryRequirements(
+              ValueWithMetadata(
+                data = listOf(DietaryItemDtoFactory().withValue(CodeDescriptionDto(id = "2", code = "VEG", description = "Vegetarian")).produce()),
+                lastModifiedAt = OffsetDateTime.now(),
+                lastModifiedBy = "user1",
+                lastModifiedPrisonId = "MDI",
+              ),
+            )
+            .withPersonalisedDietaryRequirements(
+              ValueWithMetadata(
+                data = listOf(DietaryItemDtoFactory().withValue(CodeDescriptionDto(id = "3", code = "HAL", description = "Halal")).produce()),
+                lastModifiedAt = OffsetDateTime.now(),
+                lastModifiedBy = "user1",
+                lastModifiedPrisonId = "MDI",
+              ),
+            )
+            .withCateringInstructions(
+              ValueWithMetadata(
+                data = "No nuts",
+                lastModifiedAt = OffsetDateTime.now(),
+                lastModifiedBy = "user1",
+                lastModifiedPrisonId = "MDI",
+              ),
+            )
+            .withTopLevelLocation("MDI")
+            .withLastAdmissionDate(LocalDate.now())
+            .produce(),
+        )
+        .produce()
+
+      healthAndMedicationMockSuccessfulDietAndAllergyCall(nomsNumber, response)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$crn/diet-and-allergy-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<DietAndAllergyResponse>()
+
+      val dietAndAllergy = result.dietAndAllergy!!
+      val expectedDietAndAllergy = response.dietAndAllergy!!
+
+      assertThat(dietAndAllergy.foodAllergies!!.data!![0].comment).isEqualTo(expectedDietAndAllergy.foodAllergies!!.data!![0].comment)
+      assertThat(dietAndAllergy.foodAllergies.data[0].value.id).isEqualTo(expectedDietAndAllergy.foodAllergies.data[0].value.id)
+      assertThat(dietAndAllergy.foodAllergies.data[0].value.code).isEqualTo(expectedDietAndAllergy.foodAllergies.data[0].value.code)
+      assertThat(dietAndAllergy.foodAllergies.data[0].value.description).isEqualTo(expectedDietAndAllergy.foodAllergies.data[0].value.description)
+      assertThat(dietAndAllergy.medicalDietaryRequirements!!.data!![0].value.code).isEqualTo("VEG")
+      assertThat(dietAndAllergy.medicalDietaryRequirements.data[0].value.description).isEqualTo("Vegetarian")
+      assertThat(dietAndAllergy.personalisedDietaryRequirements!!.data!![0].value.code).isEqualTo("HAL")
+      assertThat(dietAndAllergy.personalisedDietaryRequirements.data[0].value.description).isEqualTo("Halal")
+      assertThat(dietAndAllergy.cateringInstructions!!.data).isEqualTo("No nuts")
+      assertThat(dietAndAllergy.topLevelLocation).isEqualTo("MDI")
+      assertThat(dietAndAllergy.lastAdmissionDate).isEqualTo(expectedDietAndAllergy.lastAdmissionDate)
+    }
+
+    @Test
+    fun `Getting diet and allergy details for a CRN returns 200 with empty diet and allergy details`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+
+      val crn = "CRN99"
+      val nomsNumber = "NOMS99"
+
+      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      cas1OffenderRepository.saveAndFlush(existingOffender)
+
+      val response = DietAndAllergyResponseFactory()
+        .withDietAndAllergy(
+          DietAndAllergyDtoFactory()
+            .withFoodAllergies(
+              ValueWithMetadata(
+                data = listOf(DietaryItemDtoFactory().produce()),
+                lastModifiedAt = OffsetDateTime.now(),
+                lastModifiedBy = "user1",
+                lastModifiedPrisonId = "MDI",
+              ),
+            )
+            .withMedicalDietaryRequirements(
+              ValueWithMetadata(
+                data = listOf(DietaryItemDtoFactory().withValue(CodeDescriptionDto(id = "2", code = "VEG", description = "Vegetarian")).produce()),
+                lastModifiedAt = OffsetDateTime.now(),
+                lastModifiedBy = "user1",
+                lastModifiedPrisonId = "MDI",
+              ),
+            )
+            .withPersonalisedDietaryRequirements(
+              ValueWithMetadata(
+                data = listOf(DietaryItemDtoFactory().withValue(CodeDescriptionDto(id = "3", code = "HAL", description = "Halal")).produce()),
+                lastModifiedAt = OffsetDateTime.now(),
+                lastModifiedBy = "user1",
+                lastModifiedPrisonId = "MDI",
+              ),
+            )
+            .withCateringInstructions(
+              ValueWithMetadata(
+                data = "No nuts",
+                lastModifiedAt = OffsetDateTime.now(),
+                lastModifiedBy = "user1",
+                lastModifiedPrisonId = "MDI",
+              ),
+            )
+            .withTopLevelLocation("MDI")
+            .withLastAdmissionDate(LocalDate.now())
+            .produce(),
+        )
+        .produce()
+
+      healthAndMedicationMockSuccessfulDietAndAllergyCall(nomsNumber, response)
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/diet-and-allergy-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(objectMapper.writeValueAsString(response))
+    }
+
+    @Test
+    fun `Getting diet and allergy details for a CRN that does not exist returns 404`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val crn = "NOT_FOUND_CRN_DIET"
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/diet-and-allergy-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Getting diet and allergy details for a CRN where Health and Medication API returns 404 returns 404`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val crn = "CRN404"
+      val nomsNumber = "NOMS404"
+
+      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      cas1OffenderRepository.saveAndFlush(existingOffender)
+
+      healthAndMedicationMockNotFoundDietAndAllergyCall(nomsNumber)
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/diet-and-allergy-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+
+    @Test
+    fun `Getting diet and allergy details for a CRN where Health and Medication API returns 403 returns 403`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val crn = "CRN403"
+      val nomsNumber = "NOMS403"
+
+      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      cas1OffenderRepository.saveAndFlush(existingOffender)
+
+      healthAndMedicationMockForbiddenDietAndAllergyCall(nomsNumber)
+
+      webTestClient.get()
+        .uri("/cas1/people/$crn/diet-and-allergy-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
   }
 }

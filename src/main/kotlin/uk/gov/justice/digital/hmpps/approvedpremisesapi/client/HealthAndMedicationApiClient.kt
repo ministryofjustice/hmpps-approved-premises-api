@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAll
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 
 @Component
-class HealthAndMedicationsApiClient(
+class HealthAndMedicationApiClient(
   @Qualifier("healthAndMedicationApiWebClient") val webClientConfig: WebClientConfig,
   objectMapper: ObjectMapper,
   weClientCache: WebClientCache,
