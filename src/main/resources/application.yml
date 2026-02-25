@@ -134,7 +134,7 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
-          health-and-medications:
+          health-and-medication:
             provider: hmpps-auth
             client-id: approved-premises-api
             client-secret: clientsecret
@@ -222,8 +222,8 @@ services:
     base-url: http://localhost:8081
   licence-api:
     base-url: http://localhost:8091
-  health-and-medications-api:
-    base-url: http://localhost:#WIREMOCK_PORT
+  health-and-medication-api:
+    base-url: http://localhost:8093
 
 hmpps:
   auth:

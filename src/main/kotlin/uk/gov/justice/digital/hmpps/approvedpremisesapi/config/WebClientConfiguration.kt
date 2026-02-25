@@ -443,11 +443,11 @@ class WebClientConfiguration(
   @Bean(name = ["healthAndMedicationApiWebClient"])
   fun healthAndMedicationApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
-    @Value("\${services.licence-api.base-url}") healthAndMedicationApiBaseUrl: String,
+    @Value("\${services.health-and-medication-api.base-url}") healthAndMedicationApiBaseUrl: String,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
-    oauth2Client.setDefaultClientRegistrationId("health-and-medications")
+    oauth2Client.setDefaultClientRegistrationId("health-and-medication")
 
     return WebClientConfig(
       WebClient.builder()
