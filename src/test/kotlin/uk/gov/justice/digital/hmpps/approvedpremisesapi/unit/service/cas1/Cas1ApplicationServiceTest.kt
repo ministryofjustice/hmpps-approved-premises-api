@@ -10,7 +10,6 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -18,21 +17,27 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -44,14 +49,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
-import java.time.Instant
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.stream.Stream
+import kotlin.collections.emptyList
 
 @SuppressWarnings("UnusedPrivateProperty")
 @ExtendWith(MockKExtension::class)
@@ -90,7 +95,7 @@ class Cas1ApplicationServiceTest {
   private lateinit var userRepository: UserRepository
 
   @MockK
-  private lateinit var cas1SpaceBookingService: Cas1SpaceBookingService
+  private lateinit var placementApplicationRepository: PlacementApplicationRepository
 
   @InjectMockKs
   private lateinit var service: Cas1ApplicationService
@@ -342,6 +347,17 @@ class Cas1ApplicationServiceTest {
         .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
         .produce()
 
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(placementAllocatedApplication)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withApplication(placementAllocatedApplication)
+        .withPlacementApplication(placementApplication)
+        .produce()
+
       val upcomingBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(null)
         .withActualDepartureDate(null)
@@ -349,7 +365,12 @@ class Cas1ApplicationServiceTest {
         .withNonArrivalConfirmedAt(null)
         .withCreatedAt(OffsetDateTime.now())
         .withApplication(placementAllocatedApplication)
+        .withPlacementRequest(placementRequest)
         .produce()
+
+      placementRequest.spaceBookings.add(upcomingBooking)
+      placementApplication.placementRequest = placementRequest
+      placementAllocatedApplication.placementRequests.add(placementRequest)
 
       every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
         assessmentInProgressApplication,
@@ -361,12 +382,20 @@ class Cas1ApplicationServiceTest {
         pendingPlacementRequestApplication,
       )
 
-      every { cas1SpaceBookingService.getLatestPlacement(placementAllocatedApplication.id) } returns upcomingBooking
+      every { placementApplicationRepository.findByApplication(placementAllocatedApplication) } returns listOf(placementApplication)
 
       val suitableApplication = Cas1SuitableApplication(
         id = placementAllocatedApplication.id,
         applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
         placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+        requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+        placementHistories = listOf(
+          Cas1PlacementHistory(
+            dateApplied = LocalDate.now(),
+            requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+            placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+          ),
+        ),
       )
 
       val result = service.getSuitableApplicationByCrn(crn)
@@ -374,42 +403,75 @@ class Cas1ApplicationServiceTest {
       assertThat(result).isEqualTo(suitableApplication)
     }
 
-    @Test
-    fun `getSuitableApplicationByCrn errors if application is placement allocated but there is not a latest placement`() {
-      val placementAllocatedApplication = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withCrn(crn)
-        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
-        .produce()
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1ApplicationServiceTest#providePlacementApplications")
+    fun `getSuitableApplicationByCrn returns suitable application with correct placement application but not placement requests`(
+      application: ApprovedPremisesApplicationEntity,
+      placementApplications: List<PlacementApplicationEntity>,
+      requestForPlacementStatus: RequestForPlacementStatus,
+      placementHistories: List<Cas1PlacementHistory>,
+    ) {
+      every { placementApplicationRepository.findByApplication(application) } returns placementApplications
+      every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
 
-      every { approvedPremisesApplicationRepository.findByCrn(crn) } returns listOf(
-        placementAllocatedApplication,
+      val suitableApplication = Cas1SuitableApplication(
+        id = application.id,
+        applicationStatus = ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
+        requestForPlacementStatus = requestForPlacementStatus,
+        placementStatus = null,
+        placementHistories = placementHistories,
       )
 
-      every { cas1SpaceBookingService.getLatestPlacement(placementAllocatedApplication.id) } returns null
+      val result = service.getSuitableApplicationByCrn(application.crn)
 
-      val exception = assertThrows<IllegalStateException> { service.getSuitableApplicationByCrn(crn) }
-      assertThat(exception.message).isEqualTo("Could not find latest placement for application ${placementAllocatedApplication.id} with application status ${placementAllocatedApplication.status}")
+      assertThat(result).isEqualTo(suitableApplication)
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1ApplicationServiceTest#provideBooking")
-    fun `getSuitableApplicationByCrn returns placementAllocatedApplication as suitable application with correct placement status`(
-      booking: Cas1SpaceBookingEntity,
-      placementStatus: Cas1SpaceBookingStatus,
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1ApplicationServiceTest#providePlacementRequests")
+    fun `getSuitableApplicationByCrn returns suitable application with correct placement request but no placements`(
+      application: ApprovedPremisesApplicationEntity,
+      placementApplications: List<PlacementApplicationEntity>,
+      requestForPlacementStatus: RequestForPlacementStatus,
+      placementHistories: List<Cas1PlacementHistory>,
     ) {
-      val placementAllocatedApplication = booking.application!!
-
-      every { approvedPremisesApplicationRepository.findByCrn(placementAllocatedApplication.crn) } returns listOf(placementAllocatedApplication)
-      every { cas1SpaceBookingService.getLatestPlacement(placementAllocatedApplication.id) } returns booking
+      every { placementApplicationRepository.findByApplication(application) } returns placementApplications
+      every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
 
       val suitableApplication = Cas1SuitableApplication(
-        id = placementAllocatedApplication.id,
-        applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
-        placementStatus = placementStatus,
+        id = application.id,
+        applicationStatus = ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
+        requestForPlacementStatus = requestForPlacementStatus,
+        placementStatus = null,
+        placementHistories = placementHistories,
       )
 
-      val result = service.getSuitableApplicationByCrn(placementAllocatedApplication.crn)
+      val result = service.getSuitableApplicationByCrn(application.crn)
+
+      assertThat(result).isEqualTo(suitableApplication)
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1ApplicationServiceTest#providePlacements")
+    fun `getSuitableApplicationByCrn returns suitable application with correct placement`(
+      application: ApprovedPremisesApplicationEntity,
+      placementApplications: List<PlacementApplicationEntity>,
+      requestForPlacementStatus: RequestForPlacementStatus,
+      placementStatus: Cas1SpaceBookingStatus,
+      placementHistories: List<Cas1PlacementHistory>,
+    ) {
+      every { placementApplicationRepository.findByApplication(application) } returns placementApplications
+      every { approvedPremisesApplicationRepository.findByCrn(application.crn) } returns listOf(application)
+
+      val suitableApplication = Cas1SuitableApplication(
+        id = application.id,
+        applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
+        requestForPlacementStatus = requestForPlacementStatus,
+        placementStatus = placementStatus,
+        placementHistories = placementHistories,
+      )
+
+      val result = service.getSuitableApplicationByCrn(application.crn)
 
       assertThat(result).isEqualTo(suitableApplication)
     }
@@ -424,8 +486,12 @@ class Cas1ApplicationServiceTest {
       val suitableApplication = Cas1SuitableApplication(
         id = suitableApprovedPremisesApplication.id,
         applicationStatus = suitableApprovedPremisesApplication.status,
+        requestForPlacementStatus = null,
         placementStatus = null,
+        placementHistories = emptyList(),
       )
+      every { placementApplicationRepository.findByApplication(suitableApprovedPremisesApplication) } returns emptyList()
+
       val result = service.getSuitableApplicationByCrn(suitableApprovedPremisesApplication.crn)
       assertThat(result).isEqualTo(suitableApplication)
     }
@@ -464,10 +530,14 @@ class Cas1ApplicationServiceTest {
         unallocatedAssessment,
       )
 
+      every { placementApplicationRepository.findByApplication(latestAwaitingPlacementApplication) } returns emptyList()
+
       val suitableApplication = Cas1SuitableApplication(
         id = latestAwaitingPlacementApplication.id,
         applicationStatus = ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
         placementStatus = null,
+        requestForPlacementStatus = null,
+        placementHistories = emptyList(),
       )
 
       val result = service.getSuitableApplicationByCrn(crn)
@@ -508,11 +578,14 @@ class Cas1ApplicationServiceTest {
         startedApplication2,
         inapplicableAssessment,
       )
+      every { placementApplicationRepository.findByApplication(latestStartedApplication) } returns emptyList()
 
       val suitableApplication = Cas1SuitableApplication(
         id = latestStartedApplication.id,
         applicationStatus = ApprovedPremisesApplicationStatus.STARTED,
         placementStatus = null,
+        requestForPlacementStatus = null,
+        placementHistories = emptyList(),
       )
 
       val result = service.getSuitableApplicationByCrn(crn)
@@ -1062,19 +1135,232 @@ class Cas1ApplicationServiceTest {
     )
 
     @JvmStatic
-    fun provideBooking(): Stream<Arguments> {
-      val application = ApprovedPremisesApplicationEntityFactory()
+    fun providePlacementApplications(): Stream<Arguments> {
+      // REQUEST UNSUBMITTED
+      val requestUnsubmittedDateApplied = LocalDate.now()
+      val requestUnsubmittedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+        .produce()
+      val requestUnsubmittedPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(requestUnsubmittedApplication)
+        .withCreatedAt(requestUnsubmittedDateApplied.toLocalDateTime())
+        .produce()
+
+      // REQUEST REJECTED
+      val requestRejectedDateApplied = LocalDate.now()
+      val requestRejectedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+        .produce()
+      val requestRejectedPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(requestRejectedApplication)
+        .withSubmittedAt(requestRejectedDateApplied.toLocalDateTime())
+        .withDecision(PlacementApplicationDecision.REJECTED)
+        .produce()
+
+      // REQUEST SUBMITTED
+      val requestSubmittedDateApplied = LocalDate.now()
+      val requestSubmittedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+        .produce()
+      val requestSubmittedPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(requestSubmittedApplication)
+        .withSubmittedAt(requestSubmittedDateApplied.toLocalDateTime())
+        .produce()
+
+      // AWAITING MATCH
+      val awaitingMatchDateApplied = LocalDate.now()
+      val awaitingMatchApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+        .produce()
+      val awaitingMatchPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(awaitingMatchApplication)
+        .withSubmittedAt(awaitingMatchDateApplied.toLocalDateTime())
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .produce()
+
+      // REQUEST WITHDRAWN
+      val requestWithdrawnDateApplied = LocalDate.now()
+      val requestWithdrawnApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+        .produce()
+      val requestWithdrawnPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(requestWithdrawnApplication)
+        .withSubmittedAt(requestWithdrawnDateApplied.toLocalDateTime())
+        .withIsWithdrawn(true)
+        .produce()
+
+      return Stream.of(
+        Arguments.of(
+          requestUnsubmittedApplication,
+          listOf(requestUnsubmittedPlacementApplication),
+          RequestForPlacementStatus.requestUnsubmitted,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = requestUnsubmittedDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.requestUnsubmitted,
+              placementStatus = null,
+            ),
+          ),
+        ),
+        Arguments.of(
+          requestRejectedApplication,
+          listOf(requestRejectedPlacementApplication),
+          RequestForPlacementStatus.requestRejected,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = requestRejectedDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.requestRejected,
+              placementStatus = null,
+            ),
+          ),
+        ),
+        Arguments.of(
+          requestSubmittedApplication,
+          listOf(requestSubmittedPlacementApplication),
+          RequestForPlacementStatus.requestSubmitted,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = requestSubmittedDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.requestSubmitted,
+              placementStatus = null,
+            ),
+          ),
+        ),
+        Arguments.of(
+          awaitingMatchApplication,
+          listOf(awaitingMatchPlacementApplication),
+          RequestForPlacementStatus.awaitingMatch,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = awaitingMatchDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
+              placementStatus = null,
+            ),
+          ),
+        ),
+        Arguments.of(
+          requestWithdrawnApplication,
+          listOf(requestWithdrawnPlacementApplication),
+          RequestForPlacementStatus.requestWithdrawn,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = requestWithdrawnDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.requestWithdrawn,
+              placementStatus = null,
+            ),
+          ),
+        ),
+      )
+    }
+
+    @JvmStatic
+    fun providePlacementRequests(): Stream<Arguments> {
+      // AWAITING MATCH
+      val awaitingMatchDateApplied = LocalDate.now()
+      val awaitingMatchApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+      val awaitingMatchPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(awaitingMatchApplication)
+        .withSubmittedAt(awaitingMatchDateApplied.toLocalDateTime())
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withIsWithdrawn(false)
+            .withApplication(awaitingMatchApplication)
+            .produce(),
+        )
+        .produce()
+      awaitingMatchApplication.placementRequests.add(awaitingMatchPlacementApplication.placementRequest!!)
+
+      // REQUEST WITHDRAWN
+      val requestWithdrawnDateApplied = LocalDate.now()
+      val requestWithdrawnApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+        .produce()
+      val requestWithdrawnPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(requestWithdrawnApplication)
+        .withSubmittedAt(requestWithdrawnDateApplied.toLocalDateTime())
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withIsWithdrawn(true)
+            .withApplication(requestWithdrawnApplication)
+            .produce(),
+        )
+        .produce()
+      requestWithdrawnApplication.placementRequests.add(requestWithdrawnPlacementApplication.placementRequest!!)
+
+      return Stream.of(
+        Arguments.of(
+          awaitingMatchApplication,
+          listOf(awaitingMatchPlacementApplication),
+          RequestForPlacementStatus.awaitingMatch,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = awaitingMatchDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.awaitingMatch,
+              placementStatus = null,
+            ),
+          ),
+        ),
+        Arguments.of(
+          requestWithdrawnApplication,
+          listOf(requestWithdrawnPlacementApplication),
+          RequestForPlacementStatus.requestWithdrawn,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = requestWithdrawnDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.requestWithdrawn,
+              placementStatus = null,
+            ),
+          ),
+        ),
+      )
+    }
+
+    @JvmStatic
+    fun providePlacements(): Stream<Arguments> {
+      val upcomingDateApplied = LocalDate.now()
+      val upcomingApplication = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .withCrn(CRN)
         .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
         .produce()
-      val cancelledBooking = Cas1SpaceBookingEntityFactory()
-        .withCancellationOccurredAt(LocalDate.now())
-        .withActualDepartureDate(LocalDate.now())
-        .withActualArrivalDate(LocalDate.now().plusDays(1))
-        .withNonArrivalConfirmedAt(Instant.now())
-        .withCreatedAt(OffsetDateTime.now())
-        .withApplication(application)
+      val upcomingPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(upcomingApplication)
+        .withSubmittedAt(upcomingDateApplied.toLocalDateTime())
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withIsWithdrawn(false)
+            .withApplication(upcomingApplication)
+            .produce(),
+        )
         .produce()
       val upcomingBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(null)
@@ -1082,38 +1368,158 @@ class Cas1ApplicationServiceTest {
         .withActualArrivalDate(null)
         .withNonArrivalConfirmedAt(null)
         .withCreatedAt(OffsetDateTime.now())
-        .withApplication(application)
+        .withApplication(upcomingApplication)
+        .withPlacementRequest(upcomingPlacementApplication.placementRequest!!)
+        .produce()
+      upcomingPlacementApplication.placementRequest!!.spaceBookings.add(upcomingBooking)
+      upcomingApplication.placementRequests.add(upcomingPlacementApplication.placementRequest!!)
+
+      val arrivedDateApplied = LocalDate.now()
+      val arrivedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+        .produce()
+      val arrivedPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(arrivedApplication)
+        .withSubmittedAt(arrivedDateApplied.toLocalDateTime())
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withIsWithdrawn(false)
+            .withApplication(arrivedApplication)
+            .produce(),
+        )
         .produce()
       val arrivedBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(null)
         .withActualDepartureDate(null)
-        .withActualArrivalDate(LocalDate.now().plusDays(1))
+        .withActualArrivalDate(arrivedDateApplied)
         .withNonArrivalConfirmedAt(null)
         .withCreatedAt(OffsetDateTime.now())
-        .withApplication(application)
+        .withApplication(arrivedApplication)
+        .withPlacementRequest(arrivedPlacementApplication.placementRequest!!)
+        .produce()
+      arrivedPlacementApplication.placementRequest!!.spaceBookings.add(arrivedBooking)
+      arrivedApplication.placementRequests.add(arrivedPlacementApplication.placementRequest!!)
+
+      val departedDateApplied = LocalDate.now()
+      val departedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+        .produce()
+      val departedPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(departedApplication)
+        .withSubmittedAt(departedDateApplied.toLocalDateTime())
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withIsWithdrawn(false)
+            .withApplication(departedApplication)
+            .produce(),
+        )
+        .produce()
+      val departedBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(null)
+        .withActualDepartureDate(departedDateApplied)
+        .withActualArrivalDate(LocalDate.now().minusDays(1))
+        .withNonArrivalConfirmedAt(null)
+        .withCreatedAt(OffsetDateTime.now())
+        .withApplication(departedApplication)
+        .withPlacementRequest(departedPlacementApplication.placementRequest!!)
+        .produce()
+      departedPlacementApplication.placementRequest!!.spaceBookings.add(departedBooking)
+      departedApplication.placementRequests.add(departedPlacementApplication.placementRequest!!)
+
+      val notArrivedDateApplied = LocalDate.now()
+      val notArrivedApplication = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withCrn(CRN)
+        .withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+        .produce()
+      val notArrivedPlacementApplication = PlacementApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApplication(notArrivedApplication)
+        .withSubmittedAt(notArrivedDateApplied.toLocalDateTime())
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withPlacementRequest(
+          PlacementRequestEntityFactory()
+            .withDefaults()
+            .withIsWithdrawn(false)
+            .withApplication(notArrivedApplication)
+            .produce(),
+        )
         .produce()
       val notArrivedBooking = Cas1SpaceBookingEntityFactory()
         .withCancellationOccurredAt(null)
         .withActualDepartureDate(null)
         .withActualArrivalDate(null)
-        .withNonArrivalConfirmedAt(Instant.now())
+        .withNonArrivalConfirmedAt(notArrivedDateApplied.toLocalDateTime().toInstant())
         .withCreatedAt(OffsetDateTime.now())
-        .withApplication(application)
+        .withApplication(notArrivedApplication)
+        .withPlacementRequest(notArrivedPlacementApplication.placementRequest!!)
         .produce()
-      val departedBooking = Cas1SpaceBookingEntityFactory()
-        .withCancellationOccurredAt(null)
-        .withActualDepartureDate(LocalDate.now())
-        .withActualArrivalDate(LocalDate.now().plusDays(1))
-        .withNonArrivalConfirmedAt(null)
-        .withCreatedAt(OffsetDateTime.now())
-        .withApplication(application)
-        .produce()
+      notArrivedPlacementApplication.placementRequest!!.spaceBookings.add(notArrivedBooking)
+      notArrivedApplication.placementRequests.add(notArrivedPlacementApplication.placementRequest!!)
+
       return Stream.of(
-        Arguments.of(upcomingBooking, Cas1SpaceBookingStatus.UPCOMING),
-        Arguments.of(notArrivedBooking, Cas1SpaceBookingStatus.NOT_ARRIVED),
-        Arguments.of(cancelledBooking, Cas1SpaceBookingStatus.CANCELLED),
-        Arguments.of(departedBooking, Cas1SpaceBookingStatus.DEPARTED),
-        Arguments.of(arrivedBooking, Cas1SpaceBookingStatus.ARRIVED),
+        Arguments.of(
+          upcomingApplication,
+          listOf(upcomingPlacementApplication),
+          RequestForPlacementStatus.placementBooked,
+          Cas1SpaceBookingStatus.UPCOMING,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = upcomingDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+              placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+            ),
+          ),
+        ),
+        Arguments.of(
+          arrivedApplication,
+          listOf(arrivedPlacementApplication),
+          RequestForPlacementStatus.placementBooked,
+          Cas1SpaceBookingStatus.ARRIVED,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = arrivedDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+              placementStatus = Cas1SpaceBookingStatus.ARRIVED,
+            ),
+          ),
+        ),
+        Arguments.of(
+          departedApplication,
+          listOf(departedPlacementApplication),
+          RequestForPlacementStatus.placementBooked,
+          Cas1SpaceBookingStatus.DEPARTED,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = departedDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+              placementStatus = Cas1SpaceBookingStatus.DEPARTED,
+            ),
+          ),
+        ),
+        Arguments.of(
+          notArrivedApplication,
+          listOf(notArrivedPlacementApplication),
+          RequestForPlacementStatus.placementBooked,
+          Cas1SpaceBookingStatus.NOT_ARRIVED,
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = notArrivedDateApplied,
+              requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+              placementStatus = Cas1SpaceBookingStatus.NOT_ARRIVED,
+            ),
+          ),
+        ),
       )
     }
   }
