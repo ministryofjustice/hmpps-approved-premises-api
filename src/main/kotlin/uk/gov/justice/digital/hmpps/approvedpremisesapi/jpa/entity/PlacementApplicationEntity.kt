@@ -23,6 +23,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementDates
 import java.time.LocalDate
@@ -178,6 +179,15 @@ data class PlacementApplicationEntity(
     )
   } else {
     null
+  }
+
+  fun deriveStatus(): RequestForPlacementStatus = when {
+    this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
+    this.placementRequest?.hasActiveBooking() == true -> RequestForPlacementStatus.placementBooked
+    this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatus.requestRejected
+    this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatus.awaitingMatch
+    this.isSubmitted() -> RequestForPlacementStatus.requestSubmitted
+    else -> RequestForPlacementStatus.requestUnsubmitted
   }
 
   override fun toString() = "PlacementApplicationEntity: $id"

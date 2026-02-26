@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -47,10 +48,10 @@ val suitableStatusesAsc = mapOf(
 class Cas1ApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val applicationRepository: ApplicationRepository,
+  private val placementApplicationRepository: PlacementApplicationRepository,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val userRepository: UserRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
-  private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
   private val cas1AssessmentService: Cas1AssessmentService,
@@ -106,16 +107,14 @@ class Cas1ApplicationService(
         .thenBy { it.submittedAt ?: it.createdAt },
     )
     ?.let { application ->
+      val latestPlacementApplication = placementApplicationRepository.findByApplication(application).maxByOrNull{ it.submittedAt ?: it.createdAt }
+      val latestPlacement = latestPlacementApplication?.placementRequest?.spaceBookings?.maxByOrNull { it.createdAt }
+
       Cas1SuitableApplication(
         id = application.id,
         applicationStatus = application.status,
-        placementStatus = application
-          .takeIf { it.status == ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED }
-          ?.let {
-            cas1SpaceBookingService.getLatestPlacement(it.id)
-              ?.getSpaceBookingStatus()
-              ?: error("Could not find latest placement for application ${application.id} with application status ${application.status}")
-          },
+        placementStatus = latestPlacement?.getSpaceBookingStatus(),
+        requestForPlacementStatus = latestPlacementApplication?.deriveStatus()
       )
     }
 

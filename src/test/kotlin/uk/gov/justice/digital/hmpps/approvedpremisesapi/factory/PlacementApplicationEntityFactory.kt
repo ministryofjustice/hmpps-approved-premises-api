@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
@@ -27,6 +28,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var decisionMadeAt: Yielded<OffsetDateTime?> = { null }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var placementType: Yielded<PlacementType?> = { null }
+  private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
   private var automatic = { false }
   private var withdrawalReason: Yielded<PlacementApplicationWithdrawalReason?> = { null }
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
@@ -55,6 +57,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
 
   fun withAllocatedToUser(allocatedToUser: UserEntity?) = apply {
     this.allocatedToUser = { allocatedToUser }
+  }
+
+  fun withPlacementRequest(placementRequest: PlacementRequestEntity?) = apply {
+    this.placementRequest = { placementRequest }
   }
 
   fun withData(data: String?) = apply {
@@ -152,7 +158,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     decisionMadeAt = this.decisionMadeAt(),
     placementType = this.placementType(),
     automatic = this.automatic(),
-    placementRequest = null,
+    placementRequest = this.placementRequest(),
     withdrawalReason = this.withdrawalReason(),
     dueAt = this.dueAt(),
     submissionGroupId = this.submissionGroupId(),

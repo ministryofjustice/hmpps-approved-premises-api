@@ -7,4 +7,5 @@ data class Cas1SuitableApplication(
   val id: UUID,
   val applicationStatus: ApprovedPremisesApplicationStatus,
   val placementStatus: Cas1SpaceBookingStatus?,
+  val requestForPlacementStatus: RequestForPlacementStatus?,
 )

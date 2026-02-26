@@ -63,6 +63,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             id = application.id,
             applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
             placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+            requestForPlacementStatus = null,
           )
 
           val response = webTestClient.get()

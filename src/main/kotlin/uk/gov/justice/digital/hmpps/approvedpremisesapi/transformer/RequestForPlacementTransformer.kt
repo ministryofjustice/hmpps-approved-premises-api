@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 
@@ -107,14 +106,6 @@ class RequestForPlacementTransformer(
     )
   }
 
-  private fun PlacementApplicationEntity.deriveStatus(): RequestForPlacementStatus = when {
-    this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
-    this.placementRequest?.hasActiveBooking() == true -> RequestForPlacementStatus.placementBooked
-    this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatus.requestRejected
-    this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatus.awaitingMatch
-    this.isSubmitted() -> RequestForPlacementStatus.requestSubmitted
-    else -> RequestForPlacementStatus.requestUnsubmitted
-  }
 
   private fun PlacementRequestEntity.deriveStatus(): RequestForPlacementStatus = when {
     this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
