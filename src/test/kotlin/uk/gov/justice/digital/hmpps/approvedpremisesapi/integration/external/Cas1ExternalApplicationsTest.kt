@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
@@ -49,20 +48,34 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
             withCrn(crn)
           }
+          val placementRequest = placementRequestEntityFactory.produceAndPersist {
+            withDefaults()
+            withApplication(application)
+          }
+          val booking = cas1SpaceBookingEntityFactory.produceAndPersist {
+            withCrn(crn)
+            withCanonicalArrivalDate(LocalDate.of(2025, 5, 6))
+            withCanonicalDepartureDate(LocalDate.of(2025, 5, 28))
+            withApplication(application)
+            withCreatedBy(user)
+            withPremises(premises)
+            withCancellationOccurredAt(null)
+            withPlacementRequest(placementRequest)
+          }
 
-          givenACas1SpaceBooking(
-            crn = crn,
-            premises = premises,
-            canonicalArrivalDate = LocalDate.of(2025, 5, 6),
-            canonicalDepartureDate = LocalDate.of(2025, 5, 28),
-            cancellationOccurredAt = null,
-            application = application,
-          )
+          placementRequest.spaceBookings.add(booking)
+
+          val placementApplication = placementApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(user)
+            withApplication(application)
+            withPlacementRequest(placementRequest)
+          }
 
           val suitableApplication = Cas1SuitableApplication(
             id = application.id,
             applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
             placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+            requestForPlacementStatus = null,
           )
 
           val response = webTestClient.get()
