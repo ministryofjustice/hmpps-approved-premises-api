@@ -399,7 +399,6 @@ class Cas1ApplicationServiceTest {
       val placementAllocatedApplication = placementApplication.application
       println(placementAllocatedApplication.status)
 
-
       every { placementApplicationRepository.findByApplication(placementAllocatedApplication) } returns listOf(placementApplication)
       every { approvedPremisesApplicationRepository.findByCrn(placementAllocatedApplication.crn) } returns listOf(placementAllocatedApplication)
 
@@ -1125,7 +1124,7 @@ class Cas1ApplicationServiceTest {
             .withDefaults()
             .withApplication(application)
             .withSpaceBookings(mutableListOf(cancelledBooking))
-            .produce()
+            .produce(),
         )
         .produce()
       val upcomingPlacementApplication = PlacementApplicationEntityFactory()
@@ -1136,7 +1135,7 @@ class Cas1ApplicationServiceTest {
             .withApplication(application)
             .withDefaults()
             .withSpaceBookings(mutableListOf(upcomingBooking))
-            .produce()
+            .produce(),
         )
         .produce()
       val departedPlacementApplication = PlacementApplicationEntityFactory()
@@ -1147,7 +1146,7 @@ class Cas1ApplicationServiceTest {
             .withApplication(application)
             .withDefaults()
             .withSpaceBookings(mutableListOf(departedBooking))
-            .produce()
+            .produce(),
         )
         .produce()
       val notArrivedPlacementApplication = PlacementApplicationEntityFactory()
@@ -1158,7 +1157,7 @@ class Cas1ApplicationServiceTest {
             .withDefaults()
             .withApplication(application)
             .withSpaceBookings(mutableListOf(notArrivedBooking))
-            .produce()
+            .produce(),
         )
         .produce()
       val arrivedPlacementApplication = PlacementApplicationEntityFactory()
@@ -1169,7 +1168,7 @@ class Cas1ApplicationServiceTest {
             .withDefaults()
             .withApplication(application)
             .withSpaceBookings(mutableListOf(arrivedBooking))
-            .produce()
+            .produce(),
         )
         .produce()
 

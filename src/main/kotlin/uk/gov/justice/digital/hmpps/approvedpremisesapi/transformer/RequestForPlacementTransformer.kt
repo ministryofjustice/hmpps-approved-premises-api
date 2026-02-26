@@ -106,7 +106,6 @@ class RequestForPlacementTransformer(
     )
   }
 
-
   private fun PlacementRequestEntity.deriveStatus(): RequestForPlacementStatus = when {
     this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
     this.hasActiveBooking() -> RequestForPlacementStatus.placementBooked

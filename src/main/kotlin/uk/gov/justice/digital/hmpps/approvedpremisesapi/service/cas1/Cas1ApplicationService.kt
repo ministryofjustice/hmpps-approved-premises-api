@@ -107,14 +107,14 @@ class Cas1ApplicationService(
         .thenBy { it.submittedAt ?: it.createdAt },
     )
     ?.let { application ->
-      val latestPlacementApplication = placementApplicationRepository.findByApplication(application).maxByOrNull{ it.submittedAt ?: it.createdAt }
+      val latestPlacementApplication = placementApplicationRepository.findByApplication(application).maxByOrNull { it.submittedAt ?: it.createdAt }
       val latestPlacement = latestPlacementApplication?.placementRequest?.spaceBookings?.maxByOrNull { it.createdAt }
 
       Cas1SuitableApplication(
         id = application.id,
         applicationStatus = application.status,
         placementStatus = latestPlacement?.getSpaceBookingStatus(),
-        requestForPlacementStatus = latestPlacementApplication?.deriveStatus()
+        requestForPlacementStatus = latestPlacementApplication?.deriveStatus(),
       )
     }
 
