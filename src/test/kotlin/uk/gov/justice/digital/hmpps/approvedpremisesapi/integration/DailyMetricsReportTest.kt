@@ -64,9 +64,10 @@ class DailyMetricsReportTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get daily metrics report for the specified date rang`() {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_REPORT_VIEWER", "CAS1_MANAGEMENT_REPORTS_VIEWER"], mode = EnumSource.Mode.INCLUDE)
+  fun `Get daily metrics report for the specified date range`(role: UserRole) {
+    givenAUser(roles = listOf(role)) { _, jwt ->
       val month = 4
       val year = 2023
 

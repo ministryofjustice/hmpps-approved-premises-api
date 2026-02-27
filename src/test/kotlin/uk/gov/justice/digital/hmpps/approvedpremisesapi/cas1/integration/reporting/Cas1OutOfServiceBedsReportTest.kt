@@ -9,6 +9,8 @@ import org.jetbrains.kotlinx.dataframe.api.toList
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -18,8 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER_WITH_PII
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -162,7 +164,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get out-of-service beds report without PII requires report viewer role`() {
+  fun `Get out-of-service beds report without role`() {
     val (_, jwt) = givenAUser(roles = listOf())
 
     webTestClient.get()
@@ -174,9 +176,10 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
       .isForbidden
   }
 
-  @Test
-  fun `Get out-of-service beds report without PII`() {
-    val (_, jwt) = givenAUser(roles = listOf(CAS1_REPORT_VIEWER))
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_REPORT_VIEWER", "CAS1_MANAGEMENT_REPORTS_VIEWER"], mode = EnumSource.Mode.INCLUDE)
+  fun `Get out-of-service beds report without PII`(role: UserRole) {
+    val (_, jwt) = givenAUser(roles = listOf(role))
     val startDate = LocalDate.of(2023, 4, 1)
     val endDate = LocalDate.of(2023, 4, 30)
 
@@ -252,9 +255,10 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
       .isForbidden()
   }
 
-  @Test
-  fun `Get out-of-service beds report with PII`() {
-    val (_, jwt) = givenAUser(roles = listOf(CAS1_REPORT_VIEWER_WITH_PII))
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_REPORT_VIEWER_WITH_PII", "CAS1_MANAGEMENT_REPORTS_VIEWER"], mode = EnumSource.Mode.INCLUDE)
+  fun `Get out-of-service beds report with PII`(role: UserRole) {
+    val (_, jwt) = givenAUser(roles = listOf(role))
     val startDate = LocalDate.of(2023, 4, 1)
     val endDate = LocalDate.of(2023, 4, 30)
 
