@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.ReportDateRange
@@ -46,8 +47,6 @@ class Cas1ReportsController(
       throw NotAllowedProblem("This endpoint only supports CAS1")
     }
 
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
-
     validateDateInputs(year, month, startDate, endDate)
 
     val reportDateRange = computeReportDateRange(year, month, startDate, endDate)
@@ -57,12 +56,14 @@ class Cas1ReportsController(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("applications", reportDateRange),
       ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
         cas1ReportService.createApplicationReportV2(reportDateRange, includePii = false, outputStream)
       }
       Cas1ReportName.applicationsV2WithPii -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("applications-with-pii", reportDateRange),
       ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
         cas1ReportService.createApplicationReportV2(reportDateRange, includePii = true, outputStream)
       }
@@ -70,31 +71,62 @@ class Cas1ReportsController(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("daily-metrics", reportDateRange),
       ) { outputStream ->
+        if (!(
+            userAccessService.currentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW) ||
+              userAccessService.currentUserHasPermission(UserPermission.CAS1_MANAGEMENT_REPORTS_VIEW)
+            )
+        ) {
+          throw ForbiddenProblem(
+            "Permission ${UserPermission.CAS1_REPORTS_VIEW} " +
+              "or ${UserPermission.CAS1_MANAGEMENT_REPORTS_VIEW} is required",
+          )
+        }
         cas1ReportService.createDailyMetricsReport(reportDateRange, outputStream)
       }
       Cas1ReportName.outOfServiceBeds -> return generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("out-of-service-beds", reportDateRange, ContentType.XLSX),
       ) { outputStream ->
+        if (!(
+            userAccessService.currentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW) ||
+              userAccessService.currentUserHasPermission(UserPermission.CAS1_MANAGEMENT_REPORTS_VIEW)
+            )
+        ) {
+          throw ForbiddenProblem("Permission ${UserPermission.CAS1_REPORTS_VIEW} or ${UserPermission.CAS1_MANAGEMENT_REPORTS_VIEW} is required")
+        }
         cas1ReportService.createOutOfServiceBedReport(reportDateRange, outputStream, includePii = false)
       }
       Cas1ReportName.outOfServiceBedsWithPii -> return generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("out-of-service-beds-with-pii", reportDateRange, ContentType.XLSX),
       ) { outputStream ->
-        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
+        if (!(
+            (
+              userAccessService.currentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW) &&
+                userAccessService.currentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
+              ) ||
+              userAccessService.currentUserHasPermission(UserPermission.CAS1_MANAGEMENT_REPORTS_VIEW)
+            )
+        ) {
+          throw ForbiddenProblem(
+            "Either both permissions ${UserPermission.CAS1_REPORTS_VIEW} and ${UserPermission.CAS1_REPORTS_VIEW_WITH_PII} " +
+              "or permission ${UserPermission.CAS1_MANAGEMENT_REPORTS_VIEW} alone is required",
+          )
+        }
         cas1ReportService.createOutOfServiceBedReport(reportDateRange, outputStream, includePii = true)
       }
       Cas1ReportName.requestsForPlacement -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("requests-for-placement", reportDateRange),
       ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
         cas1ReportService.createRequestForPlacementReport(reportDateRange, includePii = false, outputStream)
       }
       Cas1ReportName.requestsForPlacementWithPii -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("requests-for-placement-with-pii", reportDateRange),
       ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
         cas1ReportService.createRequestForPlacementReport(reportDateRange, includePii = true, outputStream)
       }
@@ -102,12 +134,14 @@ class Cas1ReportsController(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("placement-matching-outcomes", reportDateRange),
       ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
         cas1ReportService.createPlacementMatchingOutcomesV2Report(reportDateRange, includePii = false, outputStream)
       }
       Cas1ReportName.placementMatchingOutcomesV2WithPii -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("placement-matching-outcomes-with-pii", reportDateRange),
       ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
         cas1ReportService.createPlacementMatchingOutcomesV2Report(reportDateRange, includePii = true, outputStream)
       }
@@ -115,12 +149,14 @@ class Cas1ReportsController(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("placements", reportDateRange),
       ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
         cas1ReportService.createPlacementReport(reportDateRange, includePii = false, outputStream)
       }
       Cas1ReportName.placementsWithPii -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("placements-with-pii", reportDateRange),
       ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW)
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
         cas1ReportService.createPlacementReport(reportDateRange, includePii = true, outputStream)
       }
@@ -129,6 +165,18 @@ class Cas1ReportsController(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("overdue-placements", reportDateRange),
       ) { outputStream ->
+        if (!(
+            userAccessService.currentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW) ||
+              userAccessService.currentUserHasPermission(UserPermission.CAS1_OPERATIONAL_REPORTS_VIEW) ||
+              userAccessService.currentUserHasPermission(UserPermission.CAS1_MANAGEMENT_REPORTS_VIEW)
+            )
+        ) {
+          throw ForbiddenProblem(
+            "Permission ${UserPermission.CAS1_REPORTS_VIEW.name} " +
+              "or ${UserPermission.CAS1_OPERATIONAL_REPORTS_VIEW}" +
+              "or ${UserPermission.CAS1_MANAGEMENT_REPORTS_VIEW} is required",
+          )
+        }
         cas1ReportService.createOverduePlacementsReport(reportDateRange, outputStream)
       }
     }

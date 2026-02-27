@@ -7,7 +7,10 @@ import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.sortBy
 import org.jetbrains.kotlinx.dataframe.api.toList
 import org.jetbrains.kotlinx.dataframe.io.readCSV
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -15,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.function.Consumer
@@ -122,13 +125,17 @@ class Cas1OverduePlacementsReportTest : InitialiseDatabasePerClassTestBase() {
       .isForbidden
   }
 
-  @Test
-  fun `Get overdue placements report`() {
-    val (_, jwt) = givenAUser(roles = listOf(CAS1_REPORT_VIEWER))
+  @BeforeAll
+  fun setup() {
+    createBookings()
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS1_REPORT_VIEWER", "CAS1_OPERATIONAL_REPORTS_VIEWER", "CAS1_MANAGEMENT_REPORTS_VIEWER"], mode = EnumSource.Mode.INCLUDE)
+  fun `Get overdue placements report`(role: UserRole) {
+    val (_, jwt) = givenAUser(roles = listOf(role))
     val startDate = LocalDate.of(2025, 4, 1)
     val endDate = LocalDate.of(2025, 4, 30)
-
-    createBookings()
 
     mutableClock.setNow(LocalDateTime.of(2025, 6, 16, 0, 0))
 
