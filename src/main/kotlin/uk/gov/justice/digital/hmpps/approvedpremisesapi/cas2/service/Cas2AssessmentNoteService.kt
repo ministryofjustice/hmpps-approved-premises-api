@@ -17,9 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Applic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
@@ -42,7 +40,7 @@ class Cas2AssessmentNoteService(
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val cas2v2ApplicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val cas2v2AssessmentUrlTemplate: String,
-  ) {
+) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 

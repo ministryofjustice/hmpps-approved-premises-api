@@ -52,7 +52,6 @@ class Cas2UserService(
     ),
   )
 
-
   fun userForRequestHasRole(grantedAuthorities: List<GrantedAuthority>): Boolean {
     val roles = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
     return roles?.any { it in grantedAuthorities } ?: false

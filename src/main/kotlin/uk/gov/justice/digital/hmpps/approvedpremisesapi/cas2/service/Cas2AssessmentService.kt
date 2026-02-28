@@ -7,9 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -41,7 +39,6 @@ class Cas2AssessmentService(
 
     return CasResult.Success(savedAssessment)
   }
-
 
   fun getAssessmentForHdc(assessmentId: UUID): CasResult<Cas2AssessmentEntity> {
     val assessmentEntity = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)

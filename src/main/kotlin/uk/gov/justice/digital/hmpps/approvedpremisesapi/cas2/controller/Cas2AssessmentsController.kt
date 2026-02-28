@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-
 import java.net.URI
 import java.util.UUID
 

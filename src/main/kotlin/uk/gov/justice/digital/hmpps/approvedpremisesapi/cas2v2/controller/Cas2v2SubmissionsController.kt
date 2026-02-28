@@ -15,10 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem

@@ -101,7 +101,7 @@ class Cas2v2AssessmentServiceTest {
         assessmentId = assessmentId,
         newAssessment = newAssessmentData,
         serviceOrigin = Cas2ServiceOrigin.BAIL,
-        )
+      )
       Assertions.assertThat(result).isEqualTo(
 
         CasResult.Success(assessEntity),

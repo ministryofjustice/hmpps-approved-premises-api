@@ -13,9 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -99,11 +97,11 @@ class Cas2AssessmentServiceTest {
         newAssessment = newAssessmentData,
         serviceOrigin = Cas2ServiceOrigin.HDC,
 
-        )
+      )
       Assertions.assertThat(result).isEqualTo(
         CasResult.Success(assessEntity),
 
-        )
+      )
 
       verify(exactly = 1) {
         mockAssessmentRepository.save(
@@ -133,7 +131,7 @@ class Cas2AssessmentServiceTest {
         assessmentId = assessmentId,
         newAssessment = newAssessmentData,
         serviceOrigin = Cas2ServiceOrigin.HDC,
-        )
+      )
 
       Assertions.assertThat(result is CasResult.NotFound).isTrue
     }

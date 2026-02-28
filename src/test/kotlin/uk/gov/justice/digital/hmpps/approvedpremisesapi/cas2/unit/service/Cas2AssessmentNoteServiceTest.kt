@@ -29,9 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -156,7 +154,7 @@ class Cas2AssessmentNoteServiceTest {
 
           val result = assessmentNoteService.createAssessmentNote(
             assessmentId = assessment!!.id,
-            note =NewCas2ApplicationNote(note = "new note"),
+            note = NewCas2ApplicationNote(note = "new note"),
             serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
@@ -315,7 +313,7 @@ class Cas2AssessmentNoteServiceTest {
           val result = assessmentNoteService.createAssessmentNote(
             assessmentId = assessment!!.id,
             note = NewCas2ApplicationNote(note = "new note"),
-            serviceOrigin = Cas2ServiceOrigin.HDC
+            serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
           verify(exactly = 1) { mockApplicationNoteRepository.save(any()) }
@@ -379,7 +377,7 @@ class Cas2AssessmentNoteServiceTest {
             assessmentNoteService.createAssessmentNote(
               assessmentId = assessment.id,
               note = NewCas2ApplicationNote(note = "note for unauthorised app"),
-              serviceOrigin = Cas2ServiceOrigin.HDC
+              serviceOrigin = Cas2ServiceOrigin.HDC,
             ) is CasResult.Unauthorised,
           ).isTrue
         }
