@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
@@ -40,6 +42,7 @@ import java.util.UUID
 
 class Cas2AssessmentNoteServiceTest {
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
+  private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockApplicationNoteRepository = mockk<Cas2ApplicationNoteRepository>()
   private val mockUserService = mockk<Cas2UserService>()
   private val mockHttpAuthService = mockk<HttpAuthService>()
@@ -50,6 +53,7 @@ class Cas2AssessmentNoteServiceTest {
 
   private val assessmentNoteService = Cas2AssessmentNoteService(
     mockAssessmentRepository,
+    mockApplicationRepository,
     mockApplicationNoteRepository,
     mockUserService,
     mockHttpAuthService,
@@ -59,6 +63,8 @@ class Cas2AssessmentNoteServiceTest {
     cas2EmailService,
     "http://frontend/applications/#id/overview",
     "http://frontend/assess/applications/#applicationId/overview",
+    "http://frontend/cas2v2/applications/#id/overview",
+    "http://frontend/cas2v2/assess/applications/#applicationId/overview",
   )
 
   @Nested
@@ -79,7 +85,8 @@ class Cas2AssessmentNoteServiceTest {
           assessmentNoteService.createAssessmentNote(
             assessmentId = UUID.randomUUID(),
             note = NewCas2ApplicationNote(note = "note for missing app"),
-          ) is AuthorisableActionResult.NotFound,
+            serviceOrigin = Cas2ServiceOrigin.HDC,
+          ) is CasResult.NotFound,
         ).isTrue
       }
     }
@@ -149,18 +156,15 @@ class Cas2AssessmentNoteServiceTest {
 
           val result = assessmentNoteService.createAssessmentNote(
             assessmentId = assessment!!.id,
-            NewCas2ApplicationNote(note = "new note"),
+            note =NewCas2ApplicationNote(note = "new note"),
+            serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
           verify(exactly = 1) { mockApplicationNoteRepository.save(any()) }
 
-          Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-          result as AuthorisableActionResult.Success
-
-          Assertions.assertThat(result.entity is ValidatableActionResult.Success).isTrue
-          val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-          val createdNote = validatableActionResult.entity
+          Assertions.assertThat(result is CasResult.Success).isTrue
+          result as CasResult.Success
+          val createdNote = result.value
 
           Assertions.assertThat(createdNote).isEqualTo(noteEntity)
 
@@ -212,10 +216,11 @@ class Cas2AssessmentNoteServiceTest {
 
           val result = assessmentNoteService.createAssessmentNote(
             assessmentId = assessment.id,
-            NewCas2ApplicationNote(note = "new note"),
+            note = NewCas2ApplicationNote(note = "new note"),
+            serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
-          Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+          Assertions.assertThat(result is CasResult.Success).isTrue
           verify(exactly = 1) { mockEmailNotificationService.sendCas2Email(any(), any(), any()) }
         }
       }
@@ -309,18 +314,15 @@ class Cas2AssessmentNoteServiceTest {
             }
           val result = assessmentNoteService.createAssessmentNote(
             assessmentId = assessment!!.id,
-            NewCas2ApplicationNote(note = "new note"),
+            note = NewCas2ApplicationNote(note = "new note"),
+            serviceOrigin = Cas2ServiceOrigin.HDC
           )
 
           verify(exactly = 1) { mockApplicationNoteRepository.save(any()) }
 
-          Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-          result as AuthorisableActionResult.Success
-
-          Assertions.assertThat(result.entity is ValidatableActionResult.Success).isTrue
-          val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-          val createdNote = validatableActionResult.entity
+          Assertions.assertThat(result is CasResult.Success).isTrue
+          result as CasResult.Success
+          val createdNote = result.value
 
           Assertions.assertThat(createdNote).isEqualTo(noteEntity)
 
@@ -377,7 +379,8 @@ class Cas2AssessmentNoteServiceTest {
             assessmentNoteService.createAssessmentNote(
               assessmentId = assessment.id,
               note = NewCas2ApplicationNote(note = "note for unauthorised app"),
-            ) is AuthorisableActionResult.Unauthorised,
+              serviceOrigin = Cas2ServiceOrigin.HDC
+            ) is CasResult.Unauthorised,
           ).isTrue
         }
 
@@ -418,17 +421,14 @@ class Cas2AssessmentNoteServiceTest {
           val result = assessmentNoteService.createAssessmentNote(
             assessmentId = assessment.id,
             NewCas2ApplicationNote(note = "new note"),
+            serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
           verify(exactly = 1) { mockApplicationNoteRepository.save(any()) }
 
-          Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-          result as AuthorisableActionResult.Success
-
-          Assertions.assertThat(result.entity is ValidatableActionResult.Success).isTrue
-          val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-          val createdNote = validatableActionResult.entity
+          Assertions.assertThat(result is CasResult.Success).isTrue
+          result as CasResult.Success
+          val createdNote = result.value
 
           Assertions.assertThat(createdNote).isEqualTo(noteEntity)
 
@@ -493,17 +493,14 @@ class Cas2AssessmentNoteServiceTest {
         val result = assessmentNoteService.createAssessmentNote(
           assessmentId = assessment.id,
           NewCas2ApplicationNote(note = "new note"),
+          serviceOrigin = Cas2ServiceOrigin.HDC,
         )
 
         verify(exactly = 1) { mockApplicationNoteRepository.save(any()) }
 
-        Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-        result as AuthorisableActionResult.Success
-
-        Assertions.assertThat(result.entity is ValidatableActionResult.Success).isTrue
-        val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-        val createdNote = validatableActionResult.entity
+        Assertions.assertThat(result is CasResult.Success).isTrue
+        result as CasResult.Success
+        val createdNote = result.value
 
         Assertions.assertThat(createdNote).isEqualTo(noteEntity)
       }
@@ -542,6 +539,7 @@ class Cas2AssessmentNoteServiceTest {
         assessmentNoteService.createAssessmentNote(
           assessmentId = assessment.id,
           NewCas2ApplicationNote(note = "new note"),
+          serviceOrigin = Cas2ServiceOrigin.HDC,
         )
 
         verify(exactly = 1) {
@@ -624,17 +622,14 @@ class Cas2AssessmentNoteServiceTest {
           val result = assessmentNoteService.createAssessmentNote(
             assessmentId = assessment.id,
             NewCas2ApplicationNote(note = "new note"),
+            serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
           verify(exactly = 1) { mockApplicationNoteRepository.save(any()) }
 
-          Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-          result as AuthorisableActionResult.Success
-
-          Assertions.assertThat(result.entity is ValidatableActionResult.Success).isTrue
-          val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-          val createdNote = validatableActionResult.entity
+          Assertions.assertThat(result is CasResult.Success).isTrue
+          result as CasResult.Success
+          val createdNote = result.value
 
           Assertions.assertThat(createdNote).isEqualTo(noteEntity)
 
@@ -690,9 +685,10 @@ class Cas2AssessmentNoteServiceTest {
           val result = assessmentNoteService.createAssessmentNote(
             assessmentId = assessmentWithoutAssessor.id,
             NewCas2ApplicationNote(note = "new note"),
+            serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
-          Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+          Assertions.assertThat(result is CasResult.Success).isTrue
           verify(exactly = 1) { mockEmailNotificationService.sendCas2Email(any(), any(), any()) }
         }
       }

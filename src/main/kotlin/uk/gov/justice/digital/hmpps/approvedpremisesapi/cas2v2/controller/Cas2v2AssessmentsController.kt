@@ -10,10 +10,11 @@ import org.springframework.web.bind.annotation.RequestBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationNotesTransformer
@@ -26,7 +27,7 @@ import java.util.UUID
 @Cas2v2Controller
 class Cas2v2AssessmentsController(
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
-  private val cas2v2ApplicationNoteService: Cas2v2ApplicationNoteService,
+  private val cas2AssessmentNoteService: Cas2AssessmentNoteService,
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
   private val cas2v2ApplicationNotesTransformer: Cas2v2ApplicationNotesTransformer,
   private val cas2v2StatusUpdateService: Cas2v2StatusUpdateService,
@@ -73,9 +74,9 @@ class Cas2v2AssessmentsController(
   @PostMapping("/assessments/{assessmentId}/notes")
   fun assessmentsAssessmentIdNotesPost(
     @PathVariable assessmentId: UUID,
-    @RequestBody body: NewCas2v2ApplicationNote,
+    @RequestBody body: NewCas2ApplicationNote,
   ): ResponseEntity<Cas2v2ApplicationNote> {
-    val noteResult = cas2v2ApplicationNoteService.createAssessmentNote(assessmentId, body)
+    val noteResult = cas2AssessmentNoteService.createAssessmentNote(assessmentId, body, serviceOrigin = Cas2ServiceOrigin.BAIL)
 
     val note = extractEntityFromCasResult(noteResult)
     return ResponseEntity.created(URI.create("/cas2v2/assessments/$assessmentId/notes/${note.id}"))
