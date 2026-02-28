@@ -1,19 +1,23 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import java.time.OffsetDateTime
 
 class Cas2UserAccessServiceTest {
 
+  val mockkCas2UserService = mockk<Cas2UserService>()
+
   @Nested
   inner class UserCanViewApplication {
 
-    private val userAccessService = Cas2UserAccessService()
+    private val userAccessService = Cas2UserAccessService(mockkCas2UserService)
 
     @Nested
     inner class WhenTransferredApplication {

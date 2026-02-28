@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 
 @Service("Cas2v2UserAccessService")
+@Deprecated("Replace with Cas2UserAccessService")
 class Cas2v2UserAccessService(
   private val cas2UserService: Cas2UserService,
 ) {
