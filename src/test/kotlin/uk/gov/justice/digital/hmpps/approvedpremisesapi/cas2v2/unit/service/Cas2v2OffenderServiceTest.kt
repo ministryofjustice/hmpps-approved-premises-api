@@ -8,10 +8,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
@@ -29,13 +30,17 @@ class Cas2v2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+  private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
 
   private val cas2v2PersonTransformer = Cas2v2PersonTransformer()
 
-  private val cas2v2OffenderService = Cas2v2OffenderService(
+  private val cas2OffenderService = Cas2OffenderService(
     mockPrisonsApiClient,
     mockApDeliusContextApiClient,
+    mockApOASysContextApiClient,
+    mockOffenderDetailsDataSource,
     cas2v2PersonTransformer,
+    400,
   )
 
   @Nested
@@ -47,7 +52,7 @@ class Cas2v2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         StatusCode(HttpMethod.POST, "/case-summaries", HttpStatus.NOT_FOUND, null)
 
-      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
+      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2OffenderSearchResult.NotFound).isTrue
     }
 
     @Test
@@ -55,7 +60,7 @@ class Cas2v2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
 
-      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
+      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2OffenderSearchResult.NotFound).isTrue
     }
 
     @Test
@@ -84,7 +89,7 @@ class Cas2v2OffenderServiceTest {
         body = inmateDetail,
       )
 
-      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.Success).isTrue
+      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2OffenderSearchResult.Success).isTrue
     }
 
     @Test
@@ -92,10 +97,10 @@ class Cas2v2OffenderServiceTest {
       every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
         StatusCode(HttpMethod.POST, "/case-summaries", HttpStatus.INTERNAL_SERVER_ERROR, null)
 
-      val result = cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)
+      val result = cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)
 
-      assertThat(result is Cas2v2OffenderSearchResult.Unknown).isTrue
-      result as Cas2v2OffenderSearchResult.Unknown
+      assertThat(result is Cas2OffenderSearchResult.Unknown).isTrue
+      result as Cas2OffenderSearchResult.Unknown
       assertThat(result.throwable).isNotNull()
     }
 
@@ -125,10 +130,10 @@ class Cas2v2OffenderServiceTest {
         body = inmateDetail,
       )
 
-      val result = cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)
+      val result = cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)
 
-      assertThat(result is Cas2v2OffenderSearchResult.Success.Full).isTrue
-      result as Cas2v2OffenderSearchResult.Success.Full
+      assertThat(result is Cas2OffenderSearchResult.Success.Full).isTrue
+      result as Cas2OffenderSearchResult.Success.Full
       assertThat(result.person.crn).isEqualTo(crn)
       assertThat(result.person.nomsNumber).isEqualTo(offenderDetails.nomsId)
     }
@@ -148,7 +153,7 @@ class Cas2v2OffenderServiceTest {
         null,
       )
 
-      val result = cas2v2OffenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
+      val result = cas2OffenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
       assertThat(result is AuthorisableActionResult.NotFound).isTrue
     }
@@ -165,7 +170,7 @@ class Cas2v2OffenderServiceTest {
         null,
       )
 
-      val result = cas2v2OffenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
+      val result = cas2OffenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
       assertThat(result is AuthorisableActionResult.NotFound).isTrue
     }
@@ -182,7 +187,7 @@ class Cas2v2OffenderServiceTest {
         null,
       )
 
-      val result = cas2v2OffenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
+      val result = cas2OffenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
     }
@@ -207,7 +212,7 @@ class Cas2v2OffenderServiceTest {
         ),
       )
 
-      val result = cas2v2OffenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
+      val result = cas2OffenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
       assertThat(result is AuthorisableActionResult.Success)
       result as AuthorisableActionResult.Success
@@ -271,12 +276,12 @@ class Cas2v2OffenderServiceTest {
 
     @Test
     fun `Check searching by crn cannot view an offender with a currentRestriction`() {
-      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(crn) is Cas2v2OffenderSearchResult.Forbidden).isTrue
+      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(crn) is Cas2OffenderSearchResult.Forbidden).isTrue
     }
 
     @Test
     fun `Check searching by nomis cannot view an offender with a currentRestriction`() {
-      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.Forbidden).isTrue
+      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2OffenderSearchResult.Forbidden).isTrue
     }
   }
 
@@ -326,12 +331,12 @@ class Cas2v2OffenderServiceTest {
 
     @Test
     fun `Check searching by crn can view an offender with a currentExclusion`() {
-      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)).isInstanceOf(Cas2v2OffenderSearchResult.Success.Full::class.java)
+      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(crn)).isInstanceOf(Cas2OffenderSearchResult.Success.Full::class.java)
     }
 
     @Test
     fun `Check searching by nomis can view an offender with a currentExclusion`() {
-      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)).isInstanceOf(Cas2v2OffenderSearchResult.Success.Full::class.java)
+      assertThat(cas2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)).isInstanceOf(Cas2OffenderSearchResult.Success.Full::class.java)
     }
   }
 }

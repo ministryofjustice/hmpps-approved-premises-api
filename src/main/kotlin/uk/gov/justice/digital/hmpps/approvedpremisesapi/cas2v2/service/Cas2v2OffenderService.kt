@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 @Suppress(
   "ReturnCount",
 )
+@Deprecated("Replaced with Cas2OffenderService")
 class Cas2v2OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
@@ -113,6 +114,7 @@ class Cas2v2OffenderService(
   }
 }
 
+@Deprecated("Replaced with Cas2OffenderSearchResult")
 sealed interface Cas2v2OffenderSearchResult {
   val nomisIdOrCrn: String
 

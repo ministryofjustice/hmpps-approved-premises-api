@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -42,12 +43,14 @@ class Cas2OffenderServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+  private val cas2v2PersonTransformer = mockk<Cas2v2PersonTransformer>()
 
   private val offenderService = Cas2OffenderService(
     mockPrisonsApiClient,
     mockApDeliusContextApiClient,
     mockApOASysContextApiClient,
     mockOffenderDetailsDataSource,
+    cas2v2PersonTransformer,
     2,
   )
 

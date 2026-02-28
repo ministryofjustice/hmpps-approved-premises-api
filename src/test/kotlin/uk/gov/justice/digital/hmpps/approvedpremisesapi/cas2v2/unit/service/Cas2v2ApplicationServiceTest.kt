@@ -39,11 +39,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -67,7 +67,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2ApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockCas2LockableApplicationRepository = mockk<Cas2LockableApplicationRepository>()
   private val mockCas2ApplicationSummaryRepository = mockk<Cas2ApplicationSummaryRepository>()
-  private val mockCas2v2OffenderService = mockk<Cas2v2OffenderService>()
+  private val mockCas2OffenderService = mockk<Cas2OffenderService>()
   private val mockCas2UserAccessService = mockk<Cas2UserAccessService>()
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
@@ -80,7 +80,7 @@ class Cas2v2ApplicationServiceTest {
     mockCas2ApplicationRepository,
     mockCas2LockableApplicationRepository,
     mockCas2ApplicationSummaryRepository,
-    mockCas2v2OffenderService,
+    mockCas2OffenderService,
     mockCas2UserAccessService,
     mockDomainEventService,
     mockEmailNotificationService,
@@ -326,7 +326,7 @@ class Cas2v2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOME_PERSON"
 
-      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(any()) } returns Cas2v2OffenderSearchResult.NotFound(crn)
+      every { mockCas2OffenderService.getPersonByNomisIdOrCrn(any()) } returns Cas2OffenderSearchResult.NotFound(crn)
 
       val user = userWithUsername(username)
 
@@ -342,7 +342,7 @@ class Cas2v2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOME PERSON"
 
-      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(any()) } returns Cas2v2OffenderSearchResult.Forbidden(crn)
+      every { mockCas2OffenderService.getPersonByNomisIdOrCrn(any()) } returns Cas2OffenderSearchResult.Forbidden(crn)
 
       val user = userWithUsername(username)
 
@@ -361,7 +361,7 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(crn) } returns Cas2v2OffenderSearchResult.Success.Full(
+      every { mockCas2OffenderService.getPersonByNomisIdOrCrn(crn) } returns Cas2OffenderSearchResult.Success.Full(
         crn,
         FullPerson(
           name = "",
@@ -848,7 +848,7 @@ class Cas2v2ApplicationServiceTest {
         .produce()
 
       every {
-        mockCas2v2OffenderService.getInmateDetailByNomsNumber(
+        mockCas2OffenderService.getInmateDetailByNomsNumber(
           cas2v2Application.crn,
           cas2v2Application.nomsNumber.toString(),
         )
@@ -863,7 +863,7 @@ class Cas2v2ApplicationServiceTest {
           as Cas2ApplicationEntity
       }
 
-      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(cas2v2Application.crn) } returns Cas2v2OffenderSearchResult.Success.Full(
+      every { mockCas2OffenderService.getPersonByNomisIdOrCrn(cas2v2Application.crn) } returns Cas2OffenderSearchResult.Success.Full(
         cas2v2Application.crn,
         FullPerson(
           name = "",
