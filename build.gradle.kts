@@ -38,7 +38,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.10")
   implementation("org.javers:javers-core:7.8.0")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.16")
 
   implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
