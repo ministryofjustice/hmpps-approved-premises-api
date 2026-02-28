@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -36,7 +36,7 @@ class Cas2v2SubmissionsController(
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val cas2v2OffenderService: Cas2v2OffenderService,
   private val offenderService: Cas2OffenderService,
-  private val userService: Cas2v2UserService,
+  private val userService: Cas2UserService,
 ) {
 
   @GetMapping("/submissions")

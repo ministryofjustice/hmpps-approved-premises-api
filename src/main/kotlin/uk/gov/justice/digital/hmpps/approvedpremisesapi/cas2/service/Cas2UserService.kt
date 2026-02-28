@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserRepository
@@ -27,6 +29,9 @@ class Cas2UserService(
   private val manageUsersApiClient: ManageUsersApiClient,
   private val cas2UserRepository: Cas2UserRepository,
 ) {
+
+  fun getUserForRequest(): Cas2UserEntity = getUserForRequest(Cas2ServiceOrigin.BAIL)
+
   fun getUserForRequest(serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val authenticatedPrincipal = httpAuthService.getPrincipalOrThrow(listOf("nomis", "auth", "delius"))
     val jwt = authenticatedPrincipal.token.tokenValue
@@ -34,6 +39,23 @@ class Cas2UserService(
     val userType = Cas2UserType.fromString(authenticatedPrincipal.authenticationSource())
 
     return getCas2UserForUsername(username, jwt, userType, serviceOrigin)
+  }
+
+  fun ensureUserPersisted() {
+    getUserForRequest()
+  }
+
+  fun requiresCaseLoadIdCheck(): Boolean = !userForRequestHasRole(
+    listOf(
+      SimpleGrantedAuthority("ROLE_CAS2_COURT_BAIL_REFERRER"),
+      SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"),
+    ),
+  )
+
+
+  fun userForRequestHasRole(grantedAuthorities: List<GrantedAuthority>): Boolean {
+    val roles = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
+    return roles?.any { it in grantedAuthorities } ?: false
   }
 
   fun getNomisUserById(id: UUID, serviceOrigin: Cas2ServiceOrigin) = cas2UserRepository.findByIdAndServiceOrigin(id, serviceOrigin) ?: throw NotFoundProblem(id, "NomisUser")

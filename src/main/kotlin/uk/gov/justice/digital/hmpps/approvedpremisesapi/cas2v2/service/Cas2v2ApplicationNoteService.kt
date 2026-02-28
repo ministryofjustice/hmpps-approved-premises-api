@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -29,7 +30,7 @@ class Cas2v2ApplicationNoteService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
   private val cas2AssessmentRepository: Cas2AssessmentRepository,
   private val cas2ApplicationNoteRepository: Cas2ApplicationNoteRepository,
-  private val userService: Cas2v2UserService,
+  private val userService: Cas2UserService,
   private val userAccessService: Cas2v2UserAccessService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,

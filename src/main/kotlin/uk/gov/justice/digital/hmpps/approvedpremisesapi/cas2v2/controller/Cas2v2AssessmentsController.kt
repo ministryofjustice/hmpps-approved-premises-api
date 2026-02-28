@@ -12,10 +12,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2StatusUpdateService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -30,7 +30,7 @@ class Cas2v2AssessmentsController(
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
   private val cas2v2ApplicationNotesTransformer: Cas2v2ApplicationNotesTransformer,
   private val cas2v2StatusUpdateService: Cas2v2StatusUpdateService,
-  private val cas2v2UserService: Cas2v2UserService,
+  private val cas2UserService: Cas2UserService,
 ) {
   @GetMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdGet(
@@ -62,7 +62,7 @@ class Cas2v2AssessmentsController(
     val result = cas2v2StatusUpdateService.createForAssessment(
       assessmentId = assessmentId,
       statusUpdate = cas2v2AssessmentStatusUpdate,
-      assessor = cas2v2UserService.getUserForRequest(),
+      assessor = cas2UserService.getUserForRequest(),
     )
 
     processAuthorisationFor(result).run { processValidation(result) }

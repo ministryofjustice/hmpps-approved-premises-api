@@ -11,18 +11,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
 import java.time.OffsetDateTime
 
 class Cas2v2UserAccessServiceTest {
 
-  val mockkCas2v2UserService = mockk<Cas2v2UserService>()
+  val mockkCas2UserService = mockk<Cas2UserService>()
 
   @Nested
   inner class UserCanViewApplication {
 
-    private val cas2v2UserAccessService = Cas2v2UserAccessService(mockkCas2v2UserService)
+    private val cas2v2UserAccessService = Cas2v2UserAccessService(mockkCas2UserService)
 
     @Nested
     inner class WhenApplicationCreatedByUser {
@@ -182,7 +182,7 @@ class Cas2v2UserAccessServiceTest {
             @BeforeEach
             fun setup() {
               every {
-                mockkCas2v2UserService.userForRequestHasRole(
+                mockkCas2UserService.userForRequestHasRole(
                   listOf(SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER")),
                 )
               } returns true
