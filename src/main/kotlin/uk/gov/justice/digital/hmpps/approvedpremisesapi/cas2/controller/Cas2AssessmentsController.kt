@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.zalando.problem.AbstractThrowableProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
@@ -47,19 +46,9 @@ class Cas2AssessmentsController(
   @SuppressWarnings("ThrowsCount")
   @GetMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdGet(@PathVariable assessmentId: UUID): ResponseEntity<Cas2Assessment> {
-    val assessment = when (
-      val assessmentResult = assessmentService.getAssessment(assessmentId)
-    ) {
-      is AuthorisableActionResult.NotFound -> null
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-    }
-
-    if (assessment != null) {
-      return ResponseEntity.ok(assessmentsTransformer.transformJpaToApiRepresentation(assessment))
-    }
-
-    throw NotFoundProblem(assessmentId, "Assessment")
+    val assessmentResult = assessmentService.getAssessmentForHdc(assessmentId)
+    val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
+    return ResponseEntity.ok(assessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity))
   }
 
   @SuppressWarnings("ThrowsCount")
@@ -68,22 +57,11 @@ class Cas2AssessmentsController(
     @PathVariable assessmentId: UUID,
     @RequestBody updateCas2Assessment: UpdateCas2Assessment,
   ): ResponseEntity<Cas2Assessment> {
-    val assessmentResult = assessmentService.updateAssessment(assessmentId, updateCas2Assessment)
-    val validationResult = when (assessmentResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> assessmentResult.entity
-    }
+    val assessmentResult = assessmentService.updateAssessment(assessmentId, updateCas2Assessment, Cas2ServiceOrigin.HDC)
 
-    val updatedAssessment = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages.mapValues { ParamDetails(it.value) })
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
-
+    val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(
-      assessmentsTransformer.transformJpaToApiRepresentation(updatedAssessment),
+      assessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity),
     )
   }
 

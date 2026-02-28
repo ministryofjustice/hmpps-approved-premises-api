@@ -6,13 +6,13 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -21,7 +21,7 @@ class Cas2v2AssessmentServiceTest {
 
   private val mockCas2AssessmentRepository = mockk<Cas2AssessmentRepository>()
 
-  private val cas2v2AssessmentService = Cas2v2AssessmentService(
+  private val cas2AssessmentService = Cas2AssessmentService(
     mockCas2AssessmentRepository,
   )
 
@@ -49,7 +49,7 @@ class Cas2v2AssessmentServiceTest {
           assessEntity
         }
 
-      val result = cas2v2AssessmentService.createCas2v2Assessment(
+      val result = cas2AssessmentService.createCas2Assessment(
         cas2v2Application,
       )
       Assertions.assertThat(result).isEqualTo(assessEntity)
@@ -82,7 +82,7 @@ class Cas2v2AssessmentServiceTest {
         serviceOrigin = cas2v2Application.serviceOrigin,
       )
 
-      val newAssessmentData = UpdateCas2v2Assessment(
+      val newAssessmentData = UpdateCas2Assessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )
@@ -97,10 +97,11 @@ class Cas2v2AssessmentServiceTest {
           assessEntity
         }
 
-      val result = cas2v2AssessmentService.updateAssessment(
+      val result = cas2AssessmentService.updateAssessment(
         assessmentId = assessmentId,
         newAssessment = newAssessmentData,
-      )
+        serviceOrigin = Cas2ServiceOrigin.BAIL,
+        )
       Assertions.assertThat(result).isEqualTo(
 
         CasResult.Success(assessEntity),
@@ -121,7 +122,7 @@ class Cas2v2AssessmentServiceTest {
     @Test
     fun `returns NotFound if entity is not found`() {
       val assessmentId = UUID.randomUUID()
-      val newAssessmentData = UpdateCas2v2Assessment(
+      val newAssessmentData = UpdateCas2Assessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )
@@ -131,9 +132,10 @@ class Cas2v2AssessmentServiceTest {
           null
         }
 
-      val result = cas2v2AssessmentService.updateAssessment(
+      val result = cas2AssessmentService.updateAssessment(
         assessmentId = assessmentId,
         newAssessment = newAssessmentData,
+        serviceOrigin = Cas2ServiceOrigin.BAIL,
       )
 
       Assertions.assertThat(result is CasResult.NotFound).isTrue

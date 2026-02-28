@@ -37,11 +37,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Lock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
@@ -71,7 +71,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2UserAccessService = mockk<Cas2UserAccessService>()
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
-  private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
+  private val mockCas2AssessmentService = mockk<Cas2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
   private val mockSentryService = mockk<SentryService>()
@@ -84,7 +84,7 @@ class Cas2v2ApplicationServiceTest {
     mockCas2UserAccessService,
     mockDomainEventService,
     mockEmailNotificationService,
-    mockCas2v2AssessmentService,
+    mockCas2AssessmentService,
     mockNotifyConfig,
     mockObjectMapper,
     mockSentryService,
@@ -819,7 +819,7 @@ class Cas2v2ApplicationServiceTest {
 
     private fun assertEmailAndAssessmentsWereNotCreated() {
       verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
-      verify(exactly = 0) { mockCas2v2AssessmentService.createCas2v2Assessment(any()) }
+      verify(exactly = 0) { mockCas2AssessmentService.createCas2Assessment(any()) }
     }
 
     @Test
@@ -876,7 +876,7 @@ class Cas2v2ApplicationServiceTest {
         ),
       )
 
-      every { mockCas2v2AssessmentService.createCas2v2Assessment(any()) } returns any()
+      every { mockCas2AssessmentService.createCas2Assessment(any()) } returns any()
 
       val result = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
 
@@ -926,7 +926,7 @@ class Cas2v2ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) { mockCas2v2AssessmentService.createCas2v2Assessment(persistedApplication) }
+      verify(exactly = 1) { mockCas2AssessmentService.createCas2Assessment(persistedApplication) }
     }
   }
 

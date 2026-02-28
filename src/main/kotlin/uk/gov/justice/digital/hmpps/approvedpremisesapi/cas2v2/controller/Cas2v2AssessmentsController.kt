@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RequestBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
@@ -26,7 +26,7 @@ import java.util.UUID
 
 @Cas2v2Controller
 class Cas2v2AssessmentsController(
-  private val cas2v2AssessmentService: Cas2v2AssessmentService,
+  private val cas2AssessmentService: Cas2AssessmentService,
   private val cas2AssessmentNoteService: Cas2AssessmentNoteService,
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
   private val cas2v2ApplicationNotesTransformer: Cas2v2ApplicationNotesTransformer,
@@ -37,7 +37,7 @@ class Cas2v2AssessmentsController(
   fun assessmentsAssessmentIdGet(
     @PathVariable assessmentId: UUID,
   ): ResponseEntity<Cas2v2Assessment> {
-    val assessmentResult = cas2v2AssessmentService.getAssessment(assessmentId)
+    val assessmentResult = cas2AssessmentService.getAssessmentForBail(assessmentId)
     val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity))
   }
@@ -45,9 +45,9 @@ class Cas2v2AssessmentsController(
   @PutMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdPut(
     @PathVariable assessmentId: UUID,
-    @RequestBody updateCas2Assessment: UpdateCas2v2Assessment,
+    @RequestBody updateCas2Assessment: UpdateCas2Assessment,
   ): ResponseEntity<Cas2v2Assessment> {
-    val assessmentResult = cas2v2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment)
+    val assessmentResult = cas2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment, serviceOrigin = Cas2ServiceOrigin.BAIL)
 
     val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(

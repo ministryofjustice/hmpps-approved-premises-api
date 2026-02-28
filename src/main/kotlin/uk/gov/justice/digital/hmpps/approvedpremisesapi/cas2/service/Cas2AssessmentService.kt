@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -27,9 +28,9 @@ class Cas2AssessmentService(
     ),
   )
 
-  fun updateAssessment(assessmentId: UUID, newAssessment: UpdateCas2Assessment): AuthorisableActionResult<ValidatableActionResult<Cas2AssessmentEntity>> {
-    val assessmentEntity = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)
-      ?: return AuthorisableActionResult.NotFound()
+  fun updateAssessment(assessmentId: UUID, newAssessment: UpdateCas2Assessment, serviceOrigin: Cas2ServiceOrigin): CasResult<Cas2AssessmentEntity> {
+    val assessmentEntity = assessmentRepository.findByIdAndServiceOrigin(assessmentId, serviceOrigin)
+      ?: return CasResult.NotFound("Cas2AssessmentEntity", assessmentId.toString())
 
     assessmentEntity.apply {
       this.nacroReferralId = newAssessment.nacroReferralId
@@ -38,15 +39,21 @@ class Cas2AssessmentService(
 
     val savedAssessment = assessmentRepository.save(assessmentEntity)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
-  fun getAssessment(assessmentId: UUID): AuthorisableActionResult<Cas2AssessmentEntity> {
-    val assessmentEntity = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)
-      ?: return AuthorisableActionResult.NotFound()
 
-    return AuthorisableActionResult.Success(assessmentEntity)
+  fun getAssessmentForHdc(assessmentId: UUID): CasResult<Cas2AssessmentEntity> {
+    val assessmentEntity = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)
+      ?: return CasResult.NotFound("Cas2AssessmentEntity", assessmentId.toString())
+
+    return CasResult.Success(assessmentEntity)
+  }
+
+  fun getAssessmentForBail(assessmentId: UUID): CasResult<Cas2AssessmentEntity> {
+    val assessmentEntity = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.BAIL)
+      ?: return CasResult.NotFound("Cas2AssessmentEntity", assessmentId.toString())
+
+    return CasResult.Success(assessmentEntity)
   }
 }
