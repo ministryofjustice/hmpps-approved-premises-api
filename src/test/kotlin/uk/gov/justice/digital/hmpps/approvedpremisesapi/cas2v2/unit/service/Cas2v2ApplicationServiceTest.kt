@@ -38,12 +38,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Lock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -68,7 +68,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2LockableApplicationRepository = mockk<Cas2LockableApplicationRepository>()
   private val mockCas2ApplicationSummaryRepository = mockk<Cas2ApplicationSummaryRepository>()
   private val mockCas2v2OffenderService = mockk<Cas2v2OffenderService>()
-  private val mockCas2v2UserAccessService = mockk<Cas2v2UserAccessService>()
+  private val mockCas2UserAccessService = mockk<Cas2UserAccessService>()
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
@@ -81,7 +81,7 @@ class Cas2v2ApplicationServiceTest {
     mockCas2LockableApplicationRepository,
     mockCas2ApplicationSummaryRepository,
     mockCas2v2OffenderService,
-    mockCas2v2UserAccessService,
+    mockCas2UserAccessService,
     mockDomainEventService,
     mockEmailNotificationService,
     mockCas2v2AssessmentService,
@@ -279,7 +279,7 @@ class Cas2v2ApplicationServiceTest {
           .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
 
-      every { mockCas2v2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns false
+      every { mockCas2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns false
 
       assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.Unauthorised).isTrue
     }
@@ -302,7 +302,7 @@ class Cas2v2ApplicationServiceTest {
         .produce()
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(any(), Cas2ServiceOrigin.BAIL) } returns cas2ApplicationEntity
-      every { mockCas2v2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns true
+      every { mockCas2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns true
 
       val result = cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, userEntity)
 

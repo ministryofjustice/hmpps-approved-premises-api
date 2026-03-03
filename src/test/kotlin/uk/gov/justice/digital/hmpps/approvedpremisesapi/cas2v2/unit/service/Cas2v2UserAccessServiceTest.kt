@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserAccessService
 import java.time.OffsetDateTime
 
 class Cas2v2UserAccessServiceTest {
@@ -22,7 +22,7 @@ class Cas2v2UserAccessServiceTest {
   @Nested
   inner class UserCanViewApplication {
 
-    private val cas2v2UserAccessService = Cas2v2UserAccessService(mockkCas2UserService)
+    private val cas2UserAccessService = Cas2UserAccessService(mockkCas2UserService)
 
     @Nested
     inner class WhenApplicationCreatedByUser {
@@ -37,7 +37,7 @@ class Cas2v2UserAccessServiceTest {
           .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .produce()
 
-        assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, application)).isTrue
+        assertThat(cas2UserAccessService.userCanViewCas2v2Application(user, application)).isTrue
       }
     }
 
@@ -60,7 +60,7 @@ class Cas2v2UserAccessServiceTest {
             .withCreatedByUser(anotherUser)
             .produce()
 
-          assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isFalse
+          assertThat(cas2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isFalse
         }
       }
 
@@ -84,7 +84,7 @@ class Cas2v2UserAccessServiceTest {
             .withServiceOrigin(Cas2ServiceOrigin.BAIL)
             .produce()
 
-          assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isFalse
+          assertThat(cas2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isFalse
         }
 
         @Nested
@@ -107,7 +107,7 @@ class Cas2v2UserAccessServiceTest {
               .produce()
 
             assertThat(
-              cas2v2UserAccessService.userCanViewCas2v2Application(
+              cas2UserAccessService.userCanViewCas2v2Application(
                 userWithNoPrison,
                 cas2v2Application,
               ),
@@ -136,7 +136,7 @@ class Cas2v2UserAccessServiceTest {
             .withServiceOrigin(Cas2ServiceOrigin.BAIL)
             .produce()
 
-          assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isTrue
+          assertThat(cas2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isTrue
         }
 
         @Test
@@ -148,7 +148,7 @@ class Cas2v2UserAccessServiceTest {
             .withServiceOrigin(Cas2ServiceOrigin.BAIL)
             .produce()
 
-          assertThat(cas2v2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isTrue
+          assertThat(cas2UserAccessService.userCanViewCas2v2Application(user, cas2v2Application)).isTrue
         }
       }
 
@@ -191,7 +191,7 @@ class Cas2v2UserAccessServiceTest {
             @Test
             fun `access submitted prison bail applications`() {
               assertThat(
-                cas2v2UserAccessService.userCanViewCas2v2Application(
+                cas2UserAccessService.userCanViewCas2v2Application(
                   referrerTwo,
                   submittedPrisonApplication,
                 ),
@@ -201,7 +201,7 @@ class Cas2v2UserAccessServiceTest {
             @Test
             fun `cannot access unsubmitted prison bail applications`() {
               assertThat(
-                cas2v2UserAccessService.userCanViewCas2v2Application(
+                cas2UserAccessService.userCanViewCas2v2Application(
                   referrerTwo,
                   unsubmittedPrisonApplication,
                 ),
@@ -210,8 +210,8 @@ class Cas2v2UserAccessServiceTest {
 
             @Test
             fun `access a note to any application that is of origin prisonBail`() {
-              assertThat(cas2v2UserAccessService.userCanAddNote(referrerTwo, submittedPrisonApplication)).isTrue
-              assertThat(cas2v2UserAccessService.userCanAddNote(referrerTwo, unsubmittedPrisonApplication)).isTrue
+              assertThat(cas2UserAccessService.userCanAddNote(referrerTwo, submittedPrisonApplication)).isTrue
+              assertThat(cas2UserAccessService.userCanAddNote(referrerTwo, unsubmittedPrisonApplication)).isTrue
             }
           }
         }
