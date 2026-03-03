@@ -17,11 +17,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -44,7 +45,7 @@ class Cas2v2ApplicationController(
   private val objectMapper: ObjectMapper,
   private val cas2v2OffenderService: Cas2v2OffenderService,
   private val cas2OffenderService: Cas2OffenderService,
-  private val userService: Cas2v2UserService,
+  private val userService: Cas2UserService,
 ) {
   @GetMapping("/applications")
   @PaginationHeaders
@@ -57,7 +58,7 @@ class Cas2v2ApplicationController(
     @RequestParam limitByUser: Boolean?,
     @RequestParam crnOrNomsNumber: String?,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
-    val user = userService.getUserForRequest()
+    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
 
     val effectiveLimitByUser = limitByUser ?: true
     if (effectiveLimitByUser && userService.requiresCaseLoadIdCheck()) {
@@ -85,7 +86,7 @@ class Cas2v2ApplicationController(
   fun applicationsApplicationIdGet(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<Application> {
-    val user = userService.getUserForRequest()
+    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
 
     val applicationResult = cas2v2ApplicationService
       .getCas2v2ApplicationForUser(
@@ -103,7 +104,7 @@ class Cas2v2ApplicationController(
   fun applicationsPost(
     @RequestBody body: NewCas2v2Application,
   ): ResponseEntity<Application> {
-    val user = userService.getUserForRequest()
+    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
 
     val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(body.crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(body.crn, "Offender")
@@ -139,7 +140,7 @@ class Cas2v2ApplicationController(
     @PathVariable applicationId: UUID,
     @RequestBody body: UpdateApplication,
   ): ResponseEntity<Application> {
-    val user = userService.getUserForRequest()
+    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
@@ -163,7 +164,7 @@ class Cas2v2ApplicationController(
   fun applicationsApplicationIdAbandonPut(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest()
+    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
 
     val applicationResult = cas2v2ApplicationService.abandonCas2v2Application(applicationId, user)
     ensureEntityFromCasResultIsSuccess(applicationResult)
