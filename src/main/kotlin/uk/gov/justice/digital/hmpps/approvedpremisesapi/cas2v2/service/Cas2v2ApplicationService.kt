@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
@@ -51,7 +52,7 @@ class Cas2v2ApplicationService(
   private val cas2UserAccessService: Cas2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
-  private val cas2v2AssessmentService: Cas2v2AssessmentService,
+  private val cas2AssessmentService: Cas2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
   private val sentryService: SentryService,
@@ -360,7 +361,7 @@ class Cas2v2ApplicationService(
   }
 
   fun createAssessment(application: Cas2ApplicationEntity) {
-    cas2v2AssessmentService.createCas2v2Assessment(application)
+    cas2AssessmentService.createCas2Assessment(application)
   }
 
   @SuppressWarnings("ThrowsCount")

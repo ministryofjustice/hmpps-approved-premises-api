@@ -906,7 +906,7 @@ class Cas2ApplicationServiceTest {
             as Cas2ApplicationEntity
         }
 
-        every { mockAssessmentService.createCas2Assessment(any()) } returns assessment
+        every { mockAssessmentService.createCas2Assessment(any(), any()) } returns assessment
 
         val result = applicationService.submitApplication(submitCas2Application, user)
 
@@ -915,7 +915,7 @@ class Cas2ApplicationServiceTest {
           assertThat(entity.preferredAreas).isEqualTo("Leeds | Bradford")
           assertThat(entity.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
           assertThat(entity.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
-          verify(exactly = 1) { mockAssessmentService.createCas2Assessment(match { it.id == applicationId }) }
+          verify(exactly = 1) { mockAssessmentService.createCas2Assessment(match { it.id == applicationId }, serviceOrigin = Cas2ServiceOrigin.HDC) }
         }
 
         verify { mockApplicationRepository.save(any()) }
