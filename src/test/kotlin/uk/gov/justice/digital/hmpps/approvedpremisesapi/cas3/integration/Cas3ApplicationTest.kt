@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -9,6 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.NullNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
@@ -542,7 +542,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         .responseBody
 
       assertThat(responseBody).matches {
-        applicationEntity.id == it.id &&
+        applicationEntity.id == it!!.id &&
           applicationEntity.crn == it.person.crn &&
           applicationEntity.createdAt.toInstant() == it.createdAt &&
           applicationEntity.createdByUser.id == it.createdByUserId &&
@@ -651,13 +651,13 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
       val blockFirst = result.responseBody.blockFirst()
       assertThat(blockFirst).matches {
-        it.person.crn == crn &&
+        it!!.person.crn == crn &&
           it.offenceId == offenceId
       }
 
       if (agencyName != null) {
         val accommodationApplicationEntity =
-          temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst.id)
+          temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst!!.id)
         assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isNotNull()
         assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isEqualTo(agencyName)
       }
@@ -707,7 +707,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(casApiResult, Cas3Application::class.java)
+            val result = jsonMapper.readValue(casApiResult, Cas3Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
             assertThat(result.data.toString()).isEqualTo("""{thingId=345}""")
@@ -805,7 +805,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
             val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
 
-            assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+            assertThat(persistedAssessment.summaryData).isEqualTo("""{"num": 50, "text": "Hello world!"}""")
             assertThat(persistedApplication.name).isEqualTo(offenderName)
           }
         }
@@ -874,7 +874,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             val persistedAssessment =
               persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
 
-            assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+            assertThat(persistedAssessment.summaryData).isEqualTo("""{"num": 50, "text": "Hello world!"}""")
             assertThat(persistedApplication.personReleaseDate).isEqualTo(LocalDate.now())
             assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
             assertThat(persistedApplication.prisonReleaseTypes).isEqualTo("Parole,CRD licence")
@@ -983,7 +983,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
           val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
 
-          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Out of region test!\"}")
+          assertThat(persistedAssessment.summaryData).isEqualTo("""{"num": 50, "text": "Out of region test!"}""")
           assertThat(persistedApplication.name).isEqualTo(offenderName)
 
           assertThat(persistedApplication.probationRegion.id).isEqualTo(outOfRegionProbationRegion.id)
@@ -1041,7 +1041,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
           val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
 
-          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":42,\"text\":\"Not out of region test!\"}")
+          assertThat(persistedAssessment.summaryData).isEqualTo("""{"num": 42, "text": "Not out of region test!"}""")
           assertThat(persistedApplication.name).isEqualTo(offenderName)
 
           assertThat(persistedApplication.probationRegion.id).isEqualTo(submittingUser.probationRegion.id)
@@ -1112,8 +1112,8 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
+    if (serializable is String) return jsonMapper.readTree(serializable)
 
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
   }
 }

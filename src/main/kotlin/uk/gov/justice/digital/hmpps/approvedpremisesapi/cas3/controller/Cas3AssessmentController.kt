@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3AssessmentAcceptance
@@ -38,7 +38,7 @@ import java.util.UUID
 
 @Cas3Controller
 class Cas3AssessmentController(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val cas3AssessmentService: Cas3AssessmentService,
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
@@ -121,7 +121,7 @@ class Cas3AssessmentController(
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
+    val serializedData = jsonMapper.writeValueAsString(assessmentAcceptance.document)
 
     val assessmentAuthResult = cas3AssessmentService.acceptAssessment(
       acceptingUser = user,
@@ -142,7 +142,7 @@ class Cas3AssessmentController(
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val serializedData = objectMapper.writeValueAsString(assessmentRejection.document)
+    val serializedData = jsonMapper.writeValueAsString(assessmentRejection.document)
 
     val assessmentAuthResult =
       cas3AssessmentService.rejectAssessment(

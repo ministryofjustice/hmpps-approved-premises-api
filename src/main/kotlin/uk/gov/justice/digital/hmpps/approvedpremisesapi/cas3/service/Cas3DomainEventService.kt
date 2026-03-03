@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -8,6 +7,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
@@ -60,7 +60,7 @@ class Cas3DomainEventServiceConfig(
 @SuppressWarnings("TooManyFunctions", "TooGenericExceptionThrown", "")
 @Service("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.DomainEventService")
 class Cas3DomainEventService(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val domainEventRepository: DomainEventRepository,
   private val cas3DomainEventBuilder: Cas3DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
@@ -97,17 +97,17 @@ class Cas3DomainEventService(
 
   fun getBedspaceActiveDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findCas3BedspacesActiveDomainEventsByType(
     listOf(id),
-    bedspaceDomainEventTypes.map { it.toString() },
+    bedspaceDomainEventTypes,
   )
 
   fun getBedspacesActiveDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findCas3BedspacesActiveDomainEventsByType(
     ids,
-    bedspaceDomainEventTypes.map { it.toString() },
+    bedspaceDomainEventTypes,
   )
 
   fun getPremisesActiveDomainEvents(id: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findPremisesActiveDomainEventsByType(
     id,
-    premisesDomainEventTypes.map { it.toString() },
+    premisesDomainEventTypes,
   )
 
   private inline fun <reified T : CAS3Event> get(id: UUID): DomainEvent<T>? {
@@ -115,7 +115,7 @@ class Cas3DomainEventService(
 
     val data = when {
       enumTypeFromDataType(T::class) == domainEventEntity.type ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
+        jsonMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
     return DomainEvent(
@@ -328,7 +328,7 @@ class Cas3DomainEventService(
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         cas3CancelledAt = null,
-        data = objectMapper.writeValueAsString(domainEvent.data),
+        data = jsonMapper.writeValueAsString(domainEvent.data),
         service = "CAS3",
         triggeredByUserId = user?.id,
         triggerSource = triggerSourceType,
@@ -373,7 +373,7 @@ class Cas3DomainEventService(
       val publishResult = domainTopic.snsClient.publish(
         PublishRequest.builder()
           .topicArn(domainTopic.arn)
-          .message(objectMapper.writeValueAsString(snsEvent))
+          .message(jsonMapper.writeValueAsString(snsEvent))
           .messageAttributes(
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),

@@ -154,7 +154,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
               .isOk
               .expectBody()
               .json(
-                objectMapper.writeValueAsString(
+                jsonMapper.writeValueAsString(
                   FullPerson(
                     type = PersonType.fullPerson,
                     crn = "CRN",
@@ -298,7 +298,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
                 .isOk
                 .expectBody()
                 .json(
-                  objectMapper.writeValueAsString(
+                  jsonMapper.writeValueAsString(
                     FullPerson(
                       type = PersonType.fullPerson,
                       crn = "CRN",
@@ -343,7 +343,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
                 .isOk
                 .expectBody()
                 .json(
-                  objectMapper.writeValueAsString(
+                  jsonMapper.writeValueAsString(
                     FullPerson(
                       type = PersonType.fullPerson,
                       crn = "CRN",

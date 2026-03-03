@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
@@ -35,7 +35,7 @@ class Cas3AssessmentTransformer(
   private val risksTransformer: RisksTransformer,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val userTransformer: UserTransformer,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) {
   fun transformJpaToApi(
     jpa: TemporaryAccommodationAssessmentEntity,
@@ -45,7 +45,7 @@ class Cas3AssessmentTransformer(
     application = applicationsTransformer.transformJpaToApi(jpa.application, personInfo) as TemporaryAccommodationApplication,
     createdAt = jpa.createdAt.toInstant(),
     allocatedAt = jpa.allocatedAt?.toInstant(),
-    data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+    data = if (jpa.data != null) jsonMapper.readTree(jpa.data) else null,
     clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
     allocatedToStaffMember = jpa.allocatedToUser?.let {
       userTransformer.transformJpaToApi(
@@ -57,7 +57,7 @@ class Cas3AssessmentTransformer(
     decision = transformJpaDecisionToApi(jpa.decision),
     rejectionRationale = jpa.rejectionRationale,
     status = getAssessmentStatus(jpa),
-    summaryData = objectMapper.readTree(jpa.summaryData),
+    summaryData = jsonMapper.readTree(jpa.summaryData),
     releaseDate = jpa.releaseDate ?: jpa.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate,
     accommodationRequiredFromDate = jpa.accommodationRequiredFromDate ?: LocalDate.from(jpa.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate),
   )
@@ -71,7 +71,7 @@ class Cas3AssessmentTransformer(
     decision = transformDomainSummaryDecisionToApi(ase.decision),
     risks = ase.riskRatings?.let {
       risksTransformer.transformDomainToApi(
-        objectMapper.readValue<PersonRisks>(it),
+        jsonMapper.readValue<PersonRisks>(it),
         ase.crn,
       )
     },

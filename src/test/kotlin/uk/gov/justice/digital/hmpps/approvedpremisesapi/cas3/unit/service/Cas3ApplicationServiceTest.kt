@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
@@ -80,7 +80,7 @@ class Cas3ApplicationServiceTest {
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockOffenderRisksService = mockk<OffenderRisksService>()
-  private val mockObjectMapper = mockk<ObjectMapper>()
+  private val mockJsonMapper = mockk<JsonMapper>()
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
   private val mockCas3v2BookingService = mockk<Cas3v2BookingService>()
 
@@ -97,7 +97,7 @@ class Cas3ApplicationServiceTest {
     mockCas3DomainEventService,
     mockOffenderService,
     mockOffenderRisksService,
-    mockObjectMapper,
+    mockJsonMapper,
     mockCas3v2BookingService,
   )
 
@@ -643,8 +643,8 @@ class Cas3ApplicationServiceTest {
     @BeforeEach
     fun setup() {
       every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
-      every { mockObjectMapper.writeValueAsString(submitApplication.translatedDocument) } returns "{}"
-      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplicationWithMiReportingData.translatedDocument) } returns "{}"
+      every { mockJsonMapper.writeValueAsString(submitApplication.translatedDocument) } returns "{}"
+      every { mockJsonMapper.writeValueAsString(submitTemporaryAccommodationApplicationWithMiReportingData.translatedDocument) } returns "{}"
     }
 
     @Test

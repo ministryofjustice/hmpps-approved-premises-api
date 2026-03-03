@@ -50,16 +50,16 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
       },
     )
 
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.data).isEqualTo(expectedJson)
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.document).isEqualTo(expectedJson)
+    assertThat(jsonMapper.readTree(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.data)).isEqualTo(jsonMapper.readTree(expectedJson))
+    assertThat(jsonMapper.readTree(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.document)).isEqualTo(jsonMapper.readTree(expectedJson))
     assertThat(
       applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(assessment2HasJson.id).any {
         it.body == "Assessment details redacted"
       },
     )
 
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.data).isEqualTo(sampleJson)
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.document).isEqualTo(sampleJson)
+    assertThat(jsonMapper.readTree(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.data)).isEqualTo(jsonMapper.readTree(sampleJson))
+    assertThat(jsonMapper.readTree(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.document)).isEqualTo(jsonMapper.readTree(sampleJson))
     assertThat(
       applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(assessment3Unmodified.id).none {
         it.body == "Assessment details redacted"

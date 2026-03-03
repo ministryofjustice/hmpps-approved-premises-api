@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
 import jakarta.persistence.ElementCollection
@@ -12,7 +11,8 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.MapKeyColumn
 import jakarta.persistence.MapKeyEnumerated
 import jakarta.persistence.Table
-import org.hibernate.annotations.Type
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -133,7 +133,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     WHERE d.cas3BedspaceId in :cas3BedspaceIds and d.type in :bedspaceDomainEventTypes and d.cas3CancelledAt is null
     """,
   )
-  fun findCas3BedspacesActiveDomainEventsByType(cas3BedspaceIds: List<UUID>, bedspaceDomainEventTypes: List<String>): List<DomainEventEntity>
+  fun findCas3BedspacesActiveDomainEventsByType(cas3BedspaceIds: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity>
 
   fun findByCas3TransactionIdAndType(cas3TransactionId: UUID, type: DomainEventType): List<DomainEventEntity>
 
@@ -146,7 +146,7 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
     WHERE d.cas3PremisesId = :cas3PremisesId and d.type in :premisesDomainEventTypes and d.cas3CancelledAt is null
     """,
   )
-  fun findPremisesActiveDomainEventsByType(cas3PremisesId: UUID, premisesDomainEventTypes: List<String>): List<DomainEventEntity>
+  fun findPremisesActiveDomainEventsByType(cas3PremisesId: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity>
 
   @Query(
     """
@@ -217,7 +217,7 @@ data class DomainEventEntity(
   val cas3CancelledAt: OffsetDateTime?,
   @Column(name = "cas3_transaction_id")
   val cas3TransactionId: UUID?,
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   val data: String,
   val service: String,
   @Enumerated(value = EnumType.STRING)

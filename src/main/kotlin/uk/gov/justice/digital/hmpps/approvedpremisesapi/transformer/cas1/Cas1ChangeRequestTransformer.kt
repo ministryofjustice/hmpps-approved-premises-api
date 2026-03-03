@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosecondsToN
 @Service
 class Cas1ChangeRequestTransformer(
   private val personTransformer: PersonTransformer,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) {
 
   fun findOpenResultsToChangeRequestSummary(
@@ -47,7 +47,7 @@ class Cas1ChangeRequestTransformer(
     ),
     updatedAt = entity.updatedAt.toInstant(),
     decision = entity.decision?.name?.let { Cas1ChangeRequestDecision.valueOf(it) },
-    decisionJson = entity.decisionJson?.let { objectMapper.readTree(it) },
+    decisionJson = entity.decisionJson?.let { jsonMapper.readTree(it) },
     rejectionReason = entity.rejectionReason?.let {
       NamedId(
         id = it.id,

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -24,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.cache.CacheManager
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpHeaders
@@ -31,6 +31,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
@@ -314,6 +315,7 @@ import java.util.UUID
 @ContextConfiguration(initializers = [TestPropertiesInitializer::class])
 @ActiveProfiles("test")
 @Tag("integration")
+@AutoConfigureWebTestClient
 abstract class IntegrationTestBase {
   @Autowired
   lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
@@ -343,13 +345,13 @@ abstract class IntegrationTestBase {
   }
 
   @Autowired
-  private lateinit var jdbcTemplate: JdbcTemplate
+  lateinit var jdbcTemplate: JdbcTemplate
 
   @Autowired
   private lateinit var cacheManager: CacheManager
 
   @Autowired
-  lateinit var objectMapper: ObjectMapper
+  lateinit var jsonMapper: JsonMapper
 
   @Autowired
   lateinit var jwtAuthHelper: JwtAuthHelper
@@ -869,7 +871,7 @@ abstract class IntegrationTestBase {
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 GetTokenResponse(
                   accessToken = jwtAuthHelper.createClientCredentialsJwt(
                     username = username,
@@ -882,7 +884,7 @@ abstract class IntegrationTestBase {
                   sub = username?.uppercase() ?: "integration-test-client-id",
                   authSource = authSource,
                   jti = UUID.randomUUID().toString(),
-                  iss = "http://localhost:9092/auth/issuer",
+                  iss = "http://localhost:${wiremockServer.port()}/auth/issuer",
                 ),
               ),
             ),
@@ -897,7 +899,7 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               StaffMembersPage(
                 content = listOf(staffMember),
               ),
@@ -913,7 +915,7 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(inmateDetail),
+            jsonMapper.writeValueAsString(inmateDetail),
           ),
       ),
   )
@@ -926,7 +928,7 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
             .withBody(
-              objectMapper.writeValueAsString(responseBody),
+              jsonMapper.writeValueAsString(responseBody),
             ),
         ),
     )
@@ -941,7 +943,7 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
             .withBody(
-              objectMapper.writeValueAsString(responseBody),
+              jsonMapper.writeValueAsString(responseBody),
             ),
         ),
     )
@@ -962,7 +964,7 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
             .withBody(
-              objectMapper.writeValueAsString(responseBody),
+              jsonMapper.writeValueAsString(responseBody),
             ),
         )
         .apply(additionalConfig),
@@ -983,7 +985,7 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(responseBody),
+            jsonMapper.writeValueAsString(responseBody),
           ),
       )
       .apply(additionalConfig),

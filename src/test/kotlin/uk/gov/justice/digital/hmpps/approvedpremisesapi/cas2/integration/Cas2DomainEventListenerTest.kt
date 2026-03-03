@@ -1,14 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.ninjasquad.springmockk.SpykBean
-import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.timeout
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.test.context.TestPropertySource
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
@@ -42,6 +47,7 @@ import java.util.UUID
 
 const val OCCURRING_AT = "2025-03-25T10:15:23.000+00:00"
 
+@TestPropertySource(properties = ["feature-flags.cas2-sqs-listener-enabled=true"])
 class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
   @Autowired
@@ -53,13 +59,13 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   @Value("\${services.prisoner-search-api.base-url}")
   lateinit var prisonerSearchBaseUrl: String
 
-  @SpykBean
+  @MockitoSpyBean
   private lateinit var domainEventListener: Cas2DomainEventListener
 
-  @SpykBean
+  @MockitoSpyBean
   private lateinit var emailNotificationService: EmailNotificationService
 
-  @SpykBean
+  @MockitoSpyBean
   private lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   private val domainEventsTopic by lazy {
@@ -94,15 +100,17 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   @ParameterizedTest
   @ValueSource(strings = ["offender-management.allocation.changed", "prisoner-offender-search.prisoner.updated"])
   fun `Start to process messages on Domain Events Topic`(eventType: String) {
-    publishMessageToTopic(eventType)
-    verify(exactly = 1, timeout = 5000) { domainEventListener.processMessage(any()) }
+    val event = stubEvent(eventType, "https://localhost", "ABC123")
+    publishMessageToTopic(eventType, event)
+    verify(domainEventListener, timeout(5000)).processMessage(any())
   }
 
   @Test
   fun `Do not process Message that is not a required event type`() {
     val eventType = "unwanted"
-    publishMessageToTopic(eventType)
-    verify(exactly = 0, timeout = 5000) { domainEventListener.processMessage(any()) }
+    val event = stubEvent(eventType, "https://localhost", "ABC123")
+    publishMessageToTopic(eventType, event)
+    verify(domainEventListener, timeout(5000).times(0)).processMessage(any())
   }
 
   @Test
@@ -291,11 +299,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           await().until { applicationAssignmentRepository.count().toInt() == 2 }
           val locations = applicationAssignmentRepository.findAll()
           assertThat(locations.last().prisonCode).isEqualTo(pomAllocation.prison.code)
-
-          verifyEmailsNotSentForAllocationChangedCase(
-            application,
-            pomManagerEmail = newUserEntity.email!!,
-          )
+          verifyNoInteractions(emailNotificationService)
         }
       }
     }
@@ -377,134 +381,83 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     oldOmu: OffenderManagementUnitEntity,
     newOmu: OffenderManagementUnitEntity,
   ) {
-    verify(exactly = 1, timeout = 5000) {
-      emailNotificationService.sendEmail(
-        eq(userEntity.email!!),
-        eq("5adb6390-0c95-4458-a8b5-3e61ff780715"),
-        eq(
-          mapOf(
-            "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to newOmu.prisonName,
-          ),
+    verify(emailNotificationService, timeout(5000)).sendCas2Email(
+      eq(userEntity.email!!),
+      eq("5adb6390-0c95-4458-a8b5-3e61ff780715"),
+      eq(
+        mapOf(
+          "nomsNumber" to application.nomsNumber,
+          "receivingPrisonName" to newOmu.prisonName,
         ),
-        any(),
-      )
-    }
-    verify(exactly = 1, timeout = 5000) {
-      emailNotificationService.sendEmail(
-        eq(oldOmu.email),
-        eq("6b427e8a-eb21-43a3-89c3-f6a147b20c39"),
-        eq(
-          mapOf(
-            "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to newOmu.prisonName,
-          ),
+      ),
+    )
+
+    verify(emailNotificationService, timeout(5000)).sendCas2Email(
+      eq(oldOmu.email!!),
+      eq("6b427e8a-eb21-43a3-89c3-f6a147b20c39"),
+      eq(
+        mapOf(
+          "nomsNumber" to application.nomsNumber,
+          "receivingPrisonName" to newOmu.prisonName,
         ),
-        any(),
-      )
-    }
-    verify(exactly = 1, timeout = 5000) {
-      emailNotificationService.sendEmail(
-        eq(newOmu.email),
-        eq("1e5d98e4-efdf-428e-bca9-fd5daadd27aa"),
-        eq(
-          mapOf(
-            "nomsNumber" to application.nomsNumber,
-            "transferringPrisonName" to oldOmu.prisonName,
-            "link" to getLink(application.id),
-            "applicationStatus" to "Status Update",
-          ),
+      ),
+    )
+
+    verify(emailNotificationService, timeout(5000)).sendCas2Email(
+      eq(newOmu.email),
+      eq("1e5d98e4-efdf-428e-bca9-fd5daadd27aa"),
+      eq(
+        mapOf(
+          "nomsNumber" to application.nomsNumber,
+          "transferringPrisonName" to oldOmu.prisonName,
+          "link" to getLink(application.id),
+          "applicationStatus" to "Status Update",
         ),
-        any(),
-      )
-    }
-    verify(exactly = 1, timeout = 5000) {
-      emailNotificationService.sendEmail(
-        eq("nacro@example.com"),
-        eq("e292b246-0d4e-4636-81f0-933bcf4dadd0"),
-        eq(
-          mapOf(
-            "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to newOmu.prisonName,
-            "transferringPrisonName" to oldOmu.prisonName,
-            "link" to getAssessorLink(application.id),
-          ),
+      ),
+    )
+
+    verify(emailNotificationService, timeout(5000)).sendCas2Email(
+      eq("nacro@example.com"),
+      eq("e292b246-0d4e-4636-81f0-933bcf4dadd0"),
+      eq(
+        mapOf(
+          "nomsNumber" to application.nomsNumber,
+          "receivingPrisonName" to newOmu.prisonName,
+          "transferringPrisonName" to oldOmu.prisonName,
+          "link" to getAssessorLink(application.id),
         ),
-        any(),
-      )
-    }
+      ),
+    )
   }
 
   private fun verifyEmailsSentForAllocationChangedCase(
     application: Cas2ApplicationEntity,
     pomManagerEmail: String,
   ) {
-    verify(exactly = 1, timeout = 5000) {
-      emailNotificationService.sendEmail(
-        eq("nacro@example.com"),
-        eq("e36b226e-99f5-4d1f-83d3-12ef9a814a5b"),
-        eq(
-          mapOf(
-            "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to newOmu.prisonName,
-            "link" to getAssessorLink(application.id),
-          ),
+    verify(emailNotificationService, timeout(5000)).sendCas2Email(
+      eq("nacro@example.com"),
+      eq("e36b226e-99f5-4d1f-83d3-12ef9a814a5b"),
+      eq(
+        mapOf(
+          "nomsNumber" to application.nomsNumber,
+          "receivingPrisonName" to newOmu.prisonName,
+          "link" to getAssessorLink(application.id),
         ),
-        any(),
-      )
-    }
+      ),
+    )
 
-    verify(exactly = 1, timeout = 5000) {
-      emailNotificationService.sendEmail(
-        eq(pomManagerEmail),
-        eq("289d4004-3c95-4c23-b0fa-9187d9da8eaf"),
-        eq(
-          mapOf(
-            "nomsNumber" to application.nomsNumber,
-            "transferringPrisonName" to oldOmu.prisonName,
-            "link" to getLink(application.id),
-            "applicationStatus" to "Status Update",
-          ),
+    verify(emailNotificationService, timeout(5000)).sendCas2Email(
+      eq(pomManagerEmail),
+      eq("289d4004-3c95-4c23-b0fa-9187d9da8eaf"),
+      eq(
+        mapOf(
+          "nomsNumber" to application.nomsNumber,
+          "transferringPrisonName" to oldOmu.prisonName,
+          "link" to getLink(application.id),
+          "applicationStatus" to "Status Update",
         ),
-        any(),
-      )
-    }
-  }
-
-  private fun verifyEmailsNotSentForAllocationChangedCase(
-    application: Cas2ApplicationEntity,
-    pomManagerEmail: String,
-  ) {
-    verify(exactly = 0, timeout = 5000) {
-      emailNotificationService.sendEmail(
-        eq("nacro@example.com"),
-        eq("e36b226e-99f5-4d1f-83d3-12ef9a814a5b"),
-        eq(
-          mapOf(
-            "nomsNumber" to application.nomsNumber,
-            "receivingPrisonName" to newOmu.prisonName,
-            "link" to getAssessorLink(application.id),
-          ),
-        ),
-        any(),
-      )
-    }
-
-    verify(exactly = 0, timeout = 5000) {
-      emailNotificationService.sendEmail(
-        eq(pomManagerEmail),
-        eq("289d4004-3c95-4c23-b0fa-9187d9da8eaf"),
-        eq(
-          mapOf(
-            "nomsNumber" to application.nomsNumber,
-            "transferringPrisonName" to oldOmu.prisonName,
-            "link" to getLink(application.id),
-            "applicationStatus" to "Status Update",
-          ),
-        ),
-        any(),
-      )
-    }
+      ),
+    )
   }
 
   private fun createApplicationAndInitialAssignment(
@@ -549,10 +502,10 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     )
     return application
   }
-
   private fun stubEvent(eventType: String, detailUrl: String, nomsNumber: String?) = """
     {
        "eventType":"$eventType",
+       "version": 1,
        "description": "Test desc",
        "detailUrl":"$detailUrl",
        "occurredAt":"$OCCURRING_AT",

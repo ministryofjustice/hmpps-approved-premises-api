@@ -290,7 +290,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
     @Test
     fun `Returns all reasons if user has Find and Book Beta Role`() {
-      val expectedReasons = objectMapper.writeValueAsString(
+      val expectedReasons = jsonMapper.writeValueAsString(
         listOf(activeReason1, activeReason2, onHoldReason).map { reason -> reasonTransformer.transformJpaToApi(reason) },
       )
 
@@ -308,7 +308,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
     @Test
     fun `Doesn't return 'on hold' if user doesn't have Find and Book Beta Role`() {
-      val expectedReasons = objectMapper.writeValueAsString(
+      val expectedReasons = jsonMapper.writeValueAsString(
         listOf(activeReason1, activeReason2).map { reason -> reasonTransformer.transformJpaToApi(reason) },
       )
 
@@ -455,7 +455,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
         withServiceScope("temporary-accommodation")
       }
 
-      val expectedJson = objectMapper.writeValueAsString(
+      val expectedJson = jsonMapper.writeValueAsString(
         cas1Reasons.map(moveOnCategoryTransformer::transformJpaToApi),
       )
 
@@ -488,7 +488,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
         withIsActive(false)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(
+      val expectedJson = jsonMapper.writeValueAsString(
         activeReason.map(nonArrivalReasonTransformer::transformJpaToApi),
       )
 

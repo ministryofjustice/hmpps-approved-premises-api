@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import org.assertj.core.api.Assertions
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
@@ -35,7 +35,7 @@ import java.util.UUID
 
 class Cas2ReportsTest : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   private lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   @Nested
@@ -228,7 +228,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val event1 = domainEventFactory.produceAndPersist {
         withId(event1Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(objectMapper.writeValueAsString(event1ToSave))
+        withData(jsonMapper.writeValueAsString(event1ToSave))
         withOccurredAt(oldSubmitted)
         withApplicationId(applicationId1)
       }
@@ -236,7 +236,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(objectMapper.writeValueAsString(event2ToSave))
+        withData(jsonMapper.writeValueAsString(event2ToSave))
         withOccurredAt(newerSubmitted)
         withApplicationId(applicationId2)
       }
@@ -246,7 +246,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       domainEventFactory.produceAndPersist {
         withId(event3Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(objectMapper.writeValueAsString(event3ToSave))
+        withData(jsonMapper.writeValueAsString(event3ToSave))
         withOccurredAt(tooOldSubmitted)
         withApplicationId(applicationId3)
       }
@@ -259,8 +259,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personNoms = event2Details.personReference.noms,
           referringPrisonCode = event2Details.referringPrisonCode.toString(),
           preferredAreas = event2Details.preferredAreas.toString(),
-          hdcEligibilityDate = event2Details.hdcEligibilityDate.toString(),
-          conditionalReleaseDate = event2Details.conditionalReleaseDate.toString(),
+          hdcEligibilityDate = event2Details.hdcEligibilityDate,
+          conditionalReleaseDate = event2Details.conditionalReleaseDate,
           submittedAt = event2.occurredAt.toString().split(".").first(),
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
@@ -276,8 +276,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personNoms = event1Details.personReference.noms,
           referringPrisonCode = event1Details.referringPrisonCode.toString(),
           preferredAreas = event1Details.preferredAreas.toString(),
-          hdcEligibilityDate = event1Details.hdcEligibilityDate.toString(),
-          conditionalReleaseDate = event1Details.conditionalReleaseDate.toString(),
+          hdcEligibilityDate = event1Details.hdcEligibilityDate,
+          conditionalReleaseDate = event1Details.conditionalReleaseDate,
           submittedAt = event1.occurredAt.toString().split(".").first(),
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
@@ -403,14 +403,14 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withId(event1Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(objectMapper.writeValueAsString(event1ToSave))
+        withData(jsonMapper.writeValueAsString(event1ToSave))
       }
 
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(objectMapper.writeValueAsString(event2ToSave))
+        withData(jsonMapper.writeValueAsString(event2ToSave))
       }
 
       // we don't expect this event to be included as it relates to an update
@@ -419,14 +419,14 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withId(event3Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(objectMapper.writeValueAsString(event3ToSave))
+        withData(jsonMapper.writeValueAsString(event3ToSave))
       }
 
       val event4 = domainEventFactory.produceAndPersist {
         withId(event4Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(objectMapper.writeValueAsString(event4ToSave))
+        withData(jsonMapper.writeValueAsString(event4ToSave))
       }
 
       val user1 = cas2UserEntityFactory.produceAndPersist {

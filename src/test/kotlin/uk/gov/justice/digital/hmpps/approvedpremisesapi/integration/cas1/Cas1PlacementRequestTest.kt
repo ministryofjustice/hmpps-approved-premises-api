@@ -276,7 +276,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .isOk
               .expectBody()
               .json(
-                objectMapper.writeValueAsString(
+                jsonMapper.writeValueAsString(
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       unmatchedPlacementRequest,
@@ -474,7 +474,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .isOk
               .expectBody()
               .json(
-                objectMapper.writeValueAsString(
+                jsonMapper.writeValueAsString(
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementRequest,
@@ -504,7 +504,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .isOk
               .expectBody()
               .json(
-                objectMapper.writeValueAsString(
+                jsonMapper.writeValueAsString(
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementRequest,
@@ -534,7 +534,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest5thJan,
@@ -567,7 +567,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest1stJan,
@@ -600,7 +600,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequestA1,
@@ -633,7 +633,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequestA1,
@@ -661,7 +661,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     standardRelease,
@@ -689,7 +689,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     parole,
@@ -731,7 +731,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               .isOk
               .expectBody()
               .json(
-                objectMapper.writeValueAsString(
+                jsonMapper.writeValueAsString(
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementOffender1On5thJanTierA2Parole,
@@ -1411,7 +1411,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 .isOk
                 .expectBody()
                 .json(
-                  objectMapper.writeValueAsString(
+                  jsonMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       spaceBooking.placementRequest!!,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
@@ -1467,7 +1467,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 .isOk
                 .expectBody()
                 .json(
-                  objectMapper.writeValueAsString(
+                  jsonMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       spaceBooking.placementRequest!!,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
@@ -1501,7 +1501,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 .isOk
                 .expectBody()
                 .json(
-                  objectMapper.writeValueAsString(
+                  jsonMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       placementRequestRepository.findByIdOrNull(placementRequest.id)!!,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),

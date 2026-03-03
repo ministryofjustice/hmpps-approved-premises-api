@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.health
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
@@ -8,7 +8,7 @@ import uk.gov.justice.hmpps.sqs.MissingQueueException
 
 class QueueHealthCheckTest : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   private lateinit var hmppsSqsPropertiesSpy: HmppsSqsProperties
 
   fun HmppsSqsProperties.domainEventsListenerQueueConfig() = queues["castwodomaineventslistenerqueue"]

@@ -135,7 +135,7 @@ class PersonSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               FullPerson(
                 type = PersonType.fullPerson,
                 crn = "CRN",
@@ -183,7 +183,7 @@ class PersonSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               FullPerson(
                 type = PersonType.fullPerson,
                 crn = "CRN",

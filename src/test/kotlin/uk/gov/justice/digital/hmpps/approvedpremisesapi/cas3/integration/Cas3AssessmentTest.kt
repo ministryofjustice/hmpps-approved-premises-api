@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
@@ -13,6 +12,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
@@ -709,7 +709,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
     private fun assessmentSummaryMapper(
       offenderDetails: OffenderDetailSummary,
       inmateDetails: InmateDetail?,
-    ) = AssessmentSummaryMapper(cas3AssessmentTransformer, objectMapper, offenderDetails, inmateDetails)
+    ) = AssessmentSummaryMapper(cas3AssessmentTransformer, jsonMapper, offenderDetails, inmateDetails)
 
     private fun createAssessmentForStatus(
       user: UserEntity,
@@ -807,7 +807,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
         .responseBody
         .blockFirst()
 
-      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedAssessmentSummaries))
+      assertThat(responseBody).isEqualTo(jsonMapper.writeValueAsString(expectedAssessmentSummaries))
 
       return response
     }
@@ -915,7 +915,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 cas3AssessmentTransformer.transformJpaToApi(
                   assessment,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
@@ -1125,7 +1125,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(persistedAssessment.document).isEqualTo("""{"document": "value"}""")
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.completedAt).isNull()
 
@@ -1184,7 +1184,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
-          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(persistedAssessment.document).isEqualTo("""{"document": "value"}""")
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.completedAt).isNull()
           assertThat(persistedAssessment.referralRejectionReason).isEqualTo(referralRejectionReason)
@@ -1237,7 +1237,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
-          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(persistedAssessment.document).isEqualTo("""{"document": "value"}""")
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.completedAt).isNull()
           assertThat(persistedAssessment.referralRejectionReason).isEqualTo(referralRejectionReason2)
@@ -1496,7 +1496,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
   class AssessmentSummaryMapper(
     private val cas3AssessmentTransformer: Cas3AssessmentTransformer,
-    private val objectMapper: ObjectMapper,
+    private val jsonMapper: JsonMapper,
     private val offenderDetails: OffenderDetailSummary,
     private val inmateDetails: InmateDetail?,
   ) {
@@ -1531,7 +1531,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
         id = assessment.id,
         applicationId = assessment.application.id,
         createdAt = assessment.createdAt.toInstant(),
-        riskRatings = application?.riskRatings?.let { objectMapper.writeValueAsString(it) },
+        riskRatings = application?.riskRatings?.let { jsonMapper.writeValueAsString(it) },
         arrivalDate = application?.arrivalDate?.toInstant(),
         completed = assessment.completedAt != null,
         decision = assessment.decision?.name,

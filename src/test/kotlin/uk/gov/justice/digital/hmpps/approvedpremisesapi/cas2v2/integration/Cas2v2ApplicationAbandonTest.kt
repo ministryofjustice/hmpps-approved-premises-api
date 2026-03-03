@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 
 class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
-  @SpykBean lateinit var realApplicationRepository: Cas2ApplicationRepository
+  @MockkSpyBean lateinit var realApplicationRepository: Cas2ApplicationRepository
 
   val schema = """
         {

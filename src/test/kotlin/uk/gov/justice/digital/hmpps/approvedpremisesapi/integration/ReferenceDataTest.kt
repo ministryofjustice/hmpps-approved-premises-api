@@ -75,7 +75,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       }
     }
 
-    private fun doRequest(modelScope: String? = null): MutableList<Characteristic>? {
+    private fun doRequest(modelScope: String): MutableList<Characteristic>? {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
       return webTestClient.get()
         .uri { uriBuilder ->
@@ -97,7 +97,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       characteristicRepository.deleteAll()
 
       val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10)
-      val expectedJson = objectMapper.writeValueAsString(
+      val expectedJson = jsonMapper.writeValueAsString(
         characteristics.map(characteristicTransformer::transformJpaToApi),
       )
 
@@ -120,7 +120,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
-      val expectedJson = objectMapper.writeValueAsString(
+      val expectedJson = jsonMapper.writeValueAsString(
         characteristics.map(characteristicTransformer::transformJpaToApi),
       )
 
@@ -144,7 +144,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
         withServiceScope(ServiceName.approvedPremises.value)
       }
-      val expectedJson = objectMapper.writeValueAsString(
+      val expectedJson = jsonMapper.writeValueAsString(
         characteristics.map(characteristicTransformer::transformJpaToApi),
       )
 
@@ -174,7 +174,7 @@ class ReferenceDataTest : IntegrationTestBase() {
         withIsActive(false)
       }
 
-      val response = doRequest(modelScope = null)
+      val response = doRequest(modelScope = "")
 
       assertThat(response).isNotNull.hasSize(characteristics.size)
       val expectedResponse = characteristics.map(characteristicTransformer::transformJpaToApi)
@@ -184,7 +184,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     @Test
     fun `Get Characteristics returns all model scopes by default`() {
       setupCharacteristics()
-      val response = doRequest()
+      val response = doRequest("")
       assertThat(response).hasSize(Characteristic.ModelScope.entries.size)
       assertThat(response!!.map { it.modelScope.value }).containsAll(Characteristic.ModelScope.entries.map { it.value })
     }
@@ -221,7 +221,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     localAuthorityAreaRepository.deleteAll()
 
     val localAuthorities = localAuthorityEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       localAuthorities.map(localAuthorityAreaTransformer::transformJpaToApi),
     )
 
@@ -242,7 +242,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     departureReasonRepository.deleteAll()
 
     val departureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       departureReasons.map(departureReasonTransformer::transformJpaToApi),
     )
 
@@ -268,7 +268,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       withServiceScope(ServiceName.approvedPremises.value)
     }
 
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       expectedDepartureReasons.map(departureReasonTransformer::transformJpaToApi),
     )
 
@@ -326,7 +326,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       withIsActive(false)
     }
 
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       departureReasons.map(departureReasonTransformer::transformJpaToApi),
     )
 
@@ -356,7 +356,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val departureReasons = activeDepartureReasons + inactiveDepartureReasons
 
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       departureReasons.map(departureReasonTransformer::transformJpaToApi),
     )
 
@@ -377,7 +377,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
     inactivateExistingMoveOnCategories()
     val moveOnCategories = moveOnCategoryEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
     )
 
@@ -459,7 +459,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       withServiceScope(ServiceName.approvedPremises.value)
     }
 
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       expectedMoveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
     )
 
@@ -572,7 +572,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       withIsActive(false)
     }
 
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
     )
 
@@ -602,7 +602,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val moveOnCategories = activeMoveOnCategories + inactiveMoveOnCategories
 
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi),
     )
 
@@ -623,7 +623,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     destinationProviderRepository.deleteAll()
 
     val destinationProviders = destinationProviderEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       destinationProviders.map(destinationProviderTransformer::transformJpaToApi),
     )
 
@@ -644,7 +644,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     cancellationReasonRepository.deleteAll()
 
     val departureReasons = cancellationReasonEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       departureReasons.map(cancellationReasonTransformer::transformJpaToApi),
     )
 
@@ -680,7 +680,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       CancellationReason(UUID.fromString("1d6f3c6e-3a86-49b4-bfca-2513a078aba3"), "Other", true, "approved-premises"),
     )
 
-    val expectedJson = objectMapper.writeValueAsString(expectedCancellationReasons)
+    val expectedJson = jsonMapper.writeValueAsString(expectedCancellationReasons)
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
@@ -732,7 +732,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     cas3VoidBedspaceReasonTestRepository.deleteAll()
 
     val expectedLostBedReasons = cas3VoidBedspaceReasonEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       expectedLostBedReasons.map(cas3VoidBedspaceReasonTransformer::transformJpaToApi),
     )
 
@@ -758,7 +758,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     val probationRegions = probationRegionEntityFactory.produceAndPersistMultiple(10) {
       withApArea(givenAnApArea())
     }
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       probationRegions.map(probationRegionTransformer::transformJpaToApi),
     )
 
@@ -782,7 +782,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     apAreaRepository.deleteAll()
 
     val apAreas = (1..10).map { givenAnApArea() }
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       apAreas.map(apAreaTransformer::transformJpaToApi),
     )
 
@@ -803,7 +803,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     nonArrivalReasonRepository.deleteAll()
 
     val nonArrivalReasons = nonArrivalReasonEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       nonArrivalReasons.map(nonArrivalReasonTransformer::transformJpaToApi),
     )
 
@@ -827,7 +827,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     nonArrivalReasonEntityFactory.produceAndPersistMultiple(10) {
       withIsActive(false)
     }
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       activeNonArrivalReasons.map(nonArrivalReasonTransformer::transformJpaToApi),
     )
 
@@ -858,7 +858,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       }
     }
 
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       probationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi),
     )
 
@@ -893,7 +893,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     val expectedProbationDeliveryUnits = probationDeliveryUnits.filter { it.probationRegion.id == probationRegionId }
 
-    val expectedJson = objectMapper.writeValueAsString(
+    val expectedJson = jsonMapper.writeValueAsString(
       expectedProbationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi),
     )
 

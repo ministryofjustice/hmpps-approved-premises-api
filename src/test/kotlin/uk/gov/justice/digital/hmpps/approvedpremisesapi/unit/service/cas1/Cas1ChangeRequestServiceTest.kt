@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
@@ -63,7 +63,7 @@ class Cas1ChangeRequestServiceTest {
   lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
   @MockK
-  lateinit var objectMapper: ObjectMapper
+  lateinit var jsonMapper: JsonMapper
 
   @MockK
   lateinit var cas1ChangeRequestRepository: Cas1ChangeRequestRepository
@@ -186,7 +186,7 @@ class Cas1ChangeRequestServiceTest {
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns LockablePlacementRequestEntity(placementRequest.id)
       every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns emptyList()
       every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.APPEAL_CREATE)
-      every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
+      every { jsonMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
@@ -223,7 +223,7 @@ class Cas1ChangeRequestServiceTest {
       every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.PLANNED_TRANSFER_REQUEST)
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns LockablePlacementRequestEntity(placementRequest.id)
       every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns emptyList()
-      every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
+      every { jsonMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
@@ -302,8 +302,8 @@ class Cas1ChangeRequestServiceTest {
       every {
         cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking)
       } returns ActionsResult.forUnavailableAction(SpaceBookingAction.APPEAL_CREATE, "appeal create not allowed!")
-      every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-      every { cas1ChangeRequestRepository.save(any()) } returns null
+      every { jsonMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
+//      every { cas1ChangeRequestRepository.save(any()) } returns null
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
@@ -332,8 +332,8 @@ class Cas1ChangeRequestServiceTest {
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns LockablePlacementRequestEntity(placementRequest.id)
       every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns emptyList()
-      every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-      every { cas1ChangeRequestRepository.save(any()) } returns null
+      every { jsonMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
+//      every { cas1ChangeRequestRepository.save(any()) } returns null
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 

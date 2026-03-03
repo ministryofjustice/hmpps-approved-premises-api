@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -14,6 +11,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.NullNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -56,7 +56,7 @@ import java.util.UUID
 import kotlin.math.sign
 
 class Cas2ApplicationTest : IntegrationTestBase() {
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationRepository: Cas2ApplicationRepository
 
   val schema = """
@@ -673,7 +673,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBodyPage1 =
-              objectMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+              jsonMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             assertThat(responseBodyPage1).size().isEqualTo(10)
 
@@ -695,7 +695,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBodyPage2 =
-              objectMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+              jsonMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             assertThat(responseBodyPage2).size().isEqualTo(2)
           }
@@ -1232,7 +1232,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2Application::class.java,
             )
@@ -1275,7 +1275,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2Application::class.java,
             )
@@ -1314,7 +1314,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2Application::class.java,
             )
@@ -1362,7 +1362,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 .responseBody
                 .blockFirst()
 
-              val responseBody = objectMapper.readValue(
+              val responseBody = jsonMapper.readValue(
                 rawResponseBody,
                 Cas2Application::class.java,
               )
@@ -1485,7 +1485,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 .responseBody
                 .blockFirst()
 
-              val responseBody = objectMapper.readValue(
+              val responseBody = jsonMapper.readValue(
                 rawResponseBody,
                 Cas2Application::class.java,
               )
@@ -1558,7 +1558,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             assertThat(result.responseBody.blockFirst()).matches {
-              it.person.crn == offenderDetails.otherIds.crn &&
+              it!!.person.crn == offenderDetails.otherIds.crn &&
                 it.applicationOrigin == ApplicationOrigin.homeDetentionCurfew &&
                 it.bailHearingDate == null
             }
@@ -1593,7 +1593,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             assertThat(result.responseBody.blockFirst()).matches {
-              it.person.crn == offenderDetails.otherIds.crn
+              it!!.person.crn == offenderDetails.otherIds.crn
             }
           }
         }
@@ -1680,7 +1680,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             assertThat(result.responseBody.blockFirst()).matches {
-              it.person.crn == offenderDetails.otherIds.crn
+              it!!.person.crn == offenderDetails.otherIds.crn
             }
           }
         }
@@ -1742,7 +1742,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Cas2Application::class.java)
+            val result = jsonMapper.readValue(resultBody, Cas2Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
             assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
@@ -1782,7 +1782,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Cas2Application::class.java)
+            val result = jsonMapper.readValue(resultBody, Cas2Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
@@ -1820,7 +1820,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Cas2Application::class.java)
+            val result = jsonMapper.readValue(resultBody, Cas2Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
@@ -1831,9 +1831,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
+    if (serializable is String) return jsonMapper.readTree(serializable)
 
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
   }
 
   private fun produceAndPersistBasicApplication(

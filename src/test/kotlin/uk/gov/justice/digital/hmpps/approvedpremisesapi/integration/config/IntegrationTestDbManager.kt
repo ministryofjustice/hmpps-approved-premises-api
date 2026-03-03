@@ -129,15 +129,16 @@ object IntegrationTestDbManager {
   class IntegrationTestListener :
     BeforeAllCallback,
     BeforeEachCallback {
-    override fun beforeAll(context: ExtensionContext?) {
+
+    override fun beforeAll(context: ExtensionContext) {
       if (isPerClass(context)) {
-        recreateDatabaseFromTemplate(SpringExtension.getApplicationContext(context!!))
+        recreateDatabaseFromTemplate(SpringExtension.getApplicationContext(context))
       }
     }
 
-    override fun beforeEach(context: ExtensionContext?) {
+    override fun beforeEach(context: ExtensionContext) {
       if (!isPerClass(context)) {
-        recreateDatabaseFromTemplate(SpringExtension.getApplicationContext(context!!))
+        recreateDatabaseFromTemplate(SpringExtension.getApplicationContext(context))
       }
     }
   }

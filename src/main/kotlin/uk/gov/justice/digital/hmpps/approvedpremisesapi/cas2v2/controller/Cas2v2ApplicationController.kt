@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -9,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
@@ -41,7 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Applicat
 class Cas2v2ApplicationController(
   private val cas2v2ApplicationService: Cas2v2ApplicationService,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val cas2v2OffenderService: Cas2v2OffenderService,
   private val cas2OffenderService: Cas2OffenderService,
   private val userService: Cas2v2UserService,
@@ -141,7 +141,7 @@ class Cas2v2ApplicationController(
   ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
-    val serializedData = objectMapper.writeValueAsString(body.data)
+    val serializedData = jsonMapper.writeValueAsString(body.data)
 
     val applicationResult = when (body) {
       is UpdateCas2v2Application -> cas2v2ApplicationService.updateCas2v2Application(

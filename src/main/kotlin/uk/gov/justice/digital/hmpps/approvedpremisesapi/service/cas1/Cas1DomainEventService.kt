@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpired
@@ -71,7 +71,7 @@ import kotlin.reflect.KClass
 @SuppressWarnings("TooManyFunctions")
 @Service
 class Cas1DomainEventService(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val domainEventRepository: DomainEventRepository,
   val domainEventWorker: ConfiguredDomainEventWorker,
   private val userService: UserService,
@@ -127,9 +127,9 @@ class Cas1DomainEventService(
       else -> entity.data
     }
 
-    val data = objectMapper.readValue<Cas1DomainEventEnvelope<T>>(
+    val data = jsonMapper.readValue<Cas1DomainEventEnvelope<T>>(
       dataJson,
-      objectMapper.typeFactory.constructParametricType(
+      jsonMapper.typeFactory.constructParametricType(
         Cas1DomainEventEnvelope::class.java,
         payloadType.java,
       ),
@@ -322,7 +322,7 @@ class Cas1DomainEventService(
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         cas3CancelledAt = null,
-        data = objectMapper.writeValueAsString(domainEvent.data),
+        data = jsonMapper.writeValueAsString(domainEvent.data),
         service = "CAS1",
         triggerSource = domainEvent.triggerSource,
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
