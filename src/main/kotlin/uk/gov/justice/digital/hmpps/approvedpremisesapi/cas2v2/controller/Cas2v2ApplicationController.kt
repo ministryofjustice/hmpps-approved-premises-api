@@ -18,11 +18,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -43,7 +42,6 @@ class Cas2v2ApplicationController(
   private val cas2v2ApplicationService: Cas2v2ApplicationService,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
-  private val cas2v2OffenderService: Cas2v2OffenderService,
   private val cas2OffenderService: Cas2OffenderService,
   private val userService: Cas2UserService,
 ) {
@@ -58,7 +56,7 @@ class Cas2v2ApplicationController(
     @RequestParam limitByUser: Boolean?,
     @RequestParam crnOrNomsNumber: String?,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
+    val user = userService.getUserForRequest(serviceOrigin = Cas2ServiceOrigin.BAIL)
 
     val effectiveLimitByUser = limitByUser ?: true
     if (effectiveLimitByUser && userService.requiresCaseLoadIdCheck()) {
@@ -86,7 +84,7 @@ class Cas2v2ApplicationController(
   fun applicationsApplicationIdGet(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<Application> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
+    val user = userService.getUserForRequest(serviceOrigin = Cas2ServiceOrigin.BAIL)
 
     val applicationResult = cas2v2ApplicationService
       .getCas2v2ApplicationForUser(
@@ -104,13 +102,13 @@ class Cas2v2ApplicationController(
   fun applicationsPost(
     @RequestBody body: NewCas2v2Application,
   ): ResponseEntity<Application> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
+    val user = userService.getUserForRequest(serviceOrigin = Cas2ServiceOrigin.BAIL)
 
-    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(body.crn)) {
-      is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(body.crn, "Offender")
-      is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
-      is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${body.crn}")
-      is Cas2v2OffenderSearchResult.Success.Full -> cas2v2OffenderSearchResult.person
+    val personInfo = when (val cas2OffenderSearchResult = cas2OffenderService.getPersonByNomisIdOrCrn(body.crn)) {
+      is Cas2OffenderSearchResult.NotFound -> throw NotFoundProblem(body.crn, "Offender")
+      is Cas2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
+      is Cas2OffenderSearchResult.Unknown -> throw cas2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${body.crn}")
+      is Cas2OffenderSearchResult.Success.Full -> cas2OffenderSearchResult.person
     }
 
     val applicationResult = cas2v2ApplicationService.createCas2v2Application(
@@ -140,7 +138,7 @@ class Cas2v2ApplicationController(
     @PathVariable applicationId: UUID,
     @RequestBody body: UpdateApplication,
   ): ResponseEntity<Application> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
+    val user = userService.getUserForRequest(serviceOrigin = Cas2ServiceOrigin.BAIL)
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
@@ -164,7 +162,7 @@ class Cas2v2ApplicationController(
   fun applicationsApplicationIdAbandonPut(
     @PathVariable applicationId: UUID,
   ): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
+    val user = userService.getUserForRequest(serviceOrigin = Cas2ServiceOrigin.BAIL)
 
     val applicationResult = cas2v2ApplicationService.abandonCas2v2Application(applicationId, user)
     ensureEntityFromCasResultIsSuccess(applicationResult)
@@ -187,11 +185,11 @@ class Cas2v2ApplicationController(
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
   ): Application {
-    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(application.crn)) {
-      is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
-      is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
-      is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${application.crn}")
-      is Cas2v2OffenderSearchResult.Success.Full -> cas2v2OffenderSearchResult.person
+    val personInfo = when (val cas2OffenderSearchResult = cas2OffenderService.getPersonByNomisIdOrCrn(application.crn)) {
+      is Cas2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
+      is Cas2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
+      is Cas2OffenderSearchResult.Unknown -> throw cas2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${application.crn}")
+      is Cas2OffenderSearchResult.Success.Full -> cas2OffenderSearchResult.person
     }
 
     return cas2v2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, personInfo)

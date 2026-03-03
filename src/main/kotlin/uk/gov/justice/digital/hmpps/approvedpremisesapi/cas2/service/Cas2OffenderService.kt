@@ -5,7 +5,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -46,6 +48,7 @@ class Cas2OffenderService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
+  private val cas2v2PersonTransformer: Cas2v2PersonTransformer,
   @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
 
@@ -99,6 +102,48 @@ class Cas2OffenderService(
   }
 
   fun getPersonByNomsNumber(nomsNumber: String, currentUser: Cas2UserEntity) = currentUser.activeNomisCaseloadId?.let { getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, it) }
+
+  fun getPersonByNomisIdOrCrn(nomisIdOrCrn: String): Cas2OffenderSearchResult {
+    fun logFailedResponse(probationResponse: ClientResult.Failure<CaseSummaries>) = log.warn("Could not get inmate details for $nomisIdOrCrn", probationResponse.toException())
+
+    val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomisIdOrCrn))
+    val caseSummaryList = when (caseSummaries) {
+      is ClientResult.Success -> caseSummaries.body.cases
+      is ClientResult.Failure.StatusCode -> when (caseSummaries.status) {
+        HttpStatus.NOT_FOUND -> return emitMessageAndCreateNotFound("Person not found ($nomisIdOrCrn) via the Delius Integration Api", nomisIdOrCrn)
+        HttpStatus.FORBIDDEN -> return Cas2OffenderSearchResult.Forbidden(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
+        else -> {
+          logFailedResponse(caseSummaries)
+          return Cas2OffenderSearchResult.Unknown(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
+        }
+      }
+
+      is ClientResult.Failure -> {
+        logFailedResponse(caseSummaries)
+        return Cas2OffenderSearchResult.Unknown(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
+      }
+    }
+
+    if (caseSummaryList.isEmpty()) {
+      return Cas2OffenderSearchResult.NotFound(nomisIdOrCrn = nomisIdOrCrn)
+    }
+
+    val caseSummary = caseSummaryList[0]
+
+    return when (caseSummary.currentRestriction) {
+      false -> Cas2OffenderSearchResult.Success.Full(
+        nomisIdOrCrn = nomisIdOrCrn,
+        person = cas2v2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary),
+      )
+
+      else -> Cas2OffenderSearchResult.Forbidden(nomisIdOrCrn)
+    }
+  }
+
+  private fun emitMessageAndCreateNotFound(message: String, nomisIdOrCrn: String): Cas2OffenderSearchResult.NotFound {
+    log.warn(message)
+    return Cas2OffenderSearchResult.NotFound(nomisIdOrCrn)
+  }
 
   private fun getInmateDetailsForProbationOffender(caseSummary: CaseSummary): InmateDetail? = caseSummary.nomsId?.let { nomsNumber ->
     when (val inmateDetailsResult = getInmateDetailByNomsNumber(caseSummary.crn, nomsNumber)) {
@@ -334,4 +379,19 @@ sealed interface ProbationOffenderSearchResult {
   data class NotFound(override val nomsNumber: String) : ProbationOffenderSearchResult
   data class Unknown(override val nomsNumber: String, val throwable: Throwable? = null) : ProbationOffenderSearchResult
   data class Forbidden(override val nomsNumber: String, val throwable: Throwable? = null) : ProbationOffenderSearchResult
+}
+
+sealed interface Cas2OffenderSearchResult {
+  val nomisIdOrCrn: String
+
+  sealed interface Success : Cas2OffenderSearchResult {
+    data class Full(
+      override val nomisIdOrCrn: String,
+      val person: FullPerson,
+    ) : Success
+  }
+
+  data class NotFound(override val nomisIdOrCrn: String) : Cas2OffenderSearchResult
+  data class Unknown(override val nomisIdOrCrn: String, val throwable: Throwable? = null) : Cas2OffenderSearchResult
+  data class Forbidden(override val nomisIdOrCrn: String, val throwable: Throwable? = null) : Cas2OffenderSearchResult
 }
