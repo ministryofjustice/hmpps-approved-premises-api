@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
@@ -53,13 +53,13 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   @Value("\${services.prisoner-search-api.base-url}")
   lateinit var prisonerSearchBaseUrl: String
 
-  @SpykBean
+  @MockkSpyBean
   private lateinit var domainEventListener: Cas2DomainEventListener
 
-  @SpykBean
+  @MockkSpyBean
   private lateinit var emailNotificationService: EmailNotificationService
 
-  @SpykBean
+  @MockkSpyBean
   private lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   private val domainEventsTopic by lazy {

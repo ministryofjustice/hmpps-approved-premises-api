@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
@@ -48,7 +48,7 @@ import kotlin.math.sign
 
 class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationRepository: ApplicationRepository
 
   val schema = """
@@ -1493,7 +1493,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         }
 
         Assertions.assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn
+          it!!.person.crn == offenderDetails.otherIds.crn
         }
       }
     }

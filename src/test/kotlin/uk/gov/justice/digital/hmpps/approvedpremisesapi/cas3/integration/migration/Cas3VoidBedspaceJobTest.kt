@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.migration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -17,7 +17,7 @@ import java.time.OffsetDateTime
 
 class Cas3VoidBedspaceJobTest : MigrationJobTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   private lateinit var cas3VoidBedspacesRepository: Cas3VoidBedspaceMigrationRepository
 
   private fun createPremises(user: UserEntity): TemporaryAccommodationPremisesEntity {

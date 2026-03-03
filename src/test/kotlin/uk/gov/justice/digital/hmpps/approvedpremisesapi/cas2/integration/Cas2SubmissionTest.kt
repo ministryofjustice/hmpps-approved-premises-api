@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
@@ -52,16 +52,16 @@ class Cas2SubmissionTest(
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) : IntegrationTestBase() {
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationRepository: Cas2ApplicationRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realAssessmentRepository: Cas2AssessmentRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realStatusUpdateRepository: Cas2StatusUpdateRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realStatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @Autowired
