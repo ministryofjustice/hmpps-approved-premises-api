@@ -802,7 +802,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         val expectedResponse = getExpectedResponse(sortedByDescending, offenderDetails)
 
         webTestClient.get()
-          .uri("/cas3/v2/bookings/search?sortDirection=descending&sortField=crn&page=1&status=provisional")
+          .uri("/cas3/v2/bookings/search?sortDirection=desc&sortField=crn&page=1&status=provisional")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
@@ -826,7 +826,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         val sortedByDescending = allBookings.sortedByDescending { it.crn }
         val expectedResponse = getExpectedResponse(sortedByDescending, offenderDetails)
 
-        callApiAndAssertResponse("/cas3/v2/bookings/search?sortDirection=descending&sortField=crn&status=provisional", jwt, expectedResponse, true)
+        callApiAndAssertResponse("/cas3/v2/bookings/search?sortDirection=desc&sortField=crn&status=provisional", jwt, expectedResponse, true)
       }
     }
   }
@@ -922,7 +922,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         val expectedResponse = getExpectedResponse(emptyList(), offenderDetails)
 
         webTestClient.get()
-          .uri("/cas3/v2/bookings/search?sortDirection=descending&sortField=crn&page=1&status=cancelled")
+          .uri("/cas3/v2/bookings/search?sortDirection=desc&sortField=crn&page=1&status=cancelled")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()

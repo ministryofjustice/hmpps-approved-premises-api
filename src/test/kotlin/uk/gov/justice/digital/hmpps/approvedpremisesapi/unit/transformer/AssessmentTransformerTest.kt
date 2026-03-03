@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
@@ -77,7 +76,7 @@ class AssessmentTransformerTest {
 
   private val risksTransformer = RisksTransformer()
   private val objectMapper = ObjectMapper().apply {
-    registerModule(Jdk8Module())
+//    registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }

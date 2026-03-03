@@ -1,15 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
@@ -49,14 +47,12 @@ class Cas2ApplicationsTransformerTest {
   private val cas2UserService = mockk<Cas2UserService>()
   private val offenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
 
-  private val objectMapper = ObjectMapper().apply {
-    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+  private val jsonMapper = JsonMapper.builder()
+    .addModule(KotlinModule.Builder().build())
+    .build()
 
   private val cas2ApplicationsTransformer = Cas2ApplicationsTransformer(
-    objectMapper,
+    jsonMapper,
     mockPersonTransformer,
     mockNomisUserTransformer,
     mockStatusUpdateTransformer,

@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -30,7 +30,7 @@ class Cas2DomainEventListenerTest {
   @MockK
   lateinit var sentryService: SentryService
 
-  @SpykBean
+  @MockkSpyBean
   var objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   @InjectMockKs

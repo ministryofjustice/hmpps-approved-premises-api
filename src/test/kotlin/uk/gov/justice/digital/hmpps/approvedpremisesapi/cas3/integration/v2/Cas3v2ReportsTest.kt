@@ -255,7 +255,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
         .exchange()
         .expectBody()
 
-      assertThat(actualBody.returnResult().status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+      assertThat(actualBody.returnResult().status).isEqualTo(HttpStatus.BAD_REQUEST)
     }
   }
 

@@ -75,7 +75,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       }
     }
 
-    private fun doRequest(modelScope: String? = null): MutableList<Characteristic>? {
+    private fun doRequest(modelScope: String): MutableList<Characteristic>? {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
       return webTestClient.get()
         .uri { uriBuilder ->
@@ -174,7 +174,7 @@ class ReferenceDataTest : IntegrationTestBase() {
         withIsActive(false)
       }
 
-      val response = doRequest(modelScope = null)
+      val response = doRequest(modelScope = "")
 
       assertThat(response).isNotNull.hasSize(characteristics.size)
       val expectedResponse = characteristics.map(characteristicTransformer::transformJpaToApi)
@@ -184,7 +184,7 @@ class ReferenceDataTest : IntegrationTestBase() {
     @Test
     fun `Get Characteristics returns all model scopes by default`() {
       setupCharacteristics()
-      val response = doRequest()
+      val response = doRequest("")
       assertThat(response).hasSize(Characteristic.ModelScope.entries.size)
       assertThat(response!!.map { it.modelScope.value }).containsAll(Characteristic.ModelScope.entries.map { it.value })
     }

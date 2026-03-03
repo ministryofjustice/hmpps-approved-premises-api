@@ -1598,7 +1598,7 @@ class Cas3v2DomainEventServiceTest {
         any(),
       )
     } returns domainEvent
-    every { domainEventRepositoryMock.save(any()) } returns null
+//    every { domainEventRepositoryMock.save(any()) } returns null
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1680,7 +1680,7 @@ class Cas3v2DomainEventServiceTest {
     )
 
     every { cas3DomainEventBuilderMock.getBedspaceArchiveEvent(eq(bedspace), eq(premises.id), null, eq(user), eq(domainEventTransactionId)) } returns domainEvent
-    every { domainEventRepositoryMock.save(any()) } returns null
+//    every { domainEventRepositoryMock.save(any()) } returns null
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1755,7 +1755,7 @@ class Cas3v2DomainEventServiceTest {
     )
 
     every { cas3DomainEventBuilderMock.getPremisesArchiveEvent(eq(premises), eq(premisesEndDate), eq(user), eq(domainEventTransactionId)) } returns domainEvent
-    every { domainEventRepositoryMock.save(any()) } returns null
+//    every { domainEventRepositoryMock.save(any()) } returns null
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1835,7 +1835,7 @@ class Cas3v2DomainEventServiceTest {
     )
 
     every { cas3DomainEventBuilderMock.getBedspaceUnarchiveEvent(eq(bedspace), eq(premises.id), eq(currentStartDate), eq(currentEndDate), eq(user), any()) } returns domainEvent
-    every { domainEventRepositoryMock.save(any()) } returns null
+//    every { domainEventRepositoryMock.save(any()) } returns null
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
