@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.zalando.problem.AbstractThrowableProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
@@ -29,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
 
@@ -107,11 +107,8 @@ class Cas2AssessmentsController(
     @PathVariable assessmentId: UUID,
     @RequestBody body: NewCas2ApplicationNote,
   ): ResponseEntity<Cas2ApplicationNote> {
-    val noteResult = assessmentNoteService.createAssessmentNote(assessmentId, body)
-
-    val validationResult = processAuthorisationFor(assessmentId, noteResult) as ValidatableActionResult<Cas2ApplicationNote>
-
-    val note = processValidation(validationResult) as Cas2ApplicationNoteEntity
+    val noteResult = assessmentNoteService.createAssessmentNote(assessmentId, body, serviceOrigin = Cas2ServiceOrigin.HDC)
+    val note = extractEntityFromCasResult(noteResult)
 
     return ResponseEntity
       .created(URI.create("/cas2/assessments/$assessmentId/notes/${note.id}"))

@@ -27,6 +27,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
+@Deprecated("Replaced by Cas2AssessmentNoteService")
 class Cas2v2ApplicationNoteService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
   private val cas2AssessmentRepository: Cas2AssessmentRepository,
