@@ -303,7 +303,7 @@ class Cas1ChangeRequestServiceTest {
         cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking)
       } returns ActionsResult.forUnavailableAction(SpaceBookingAction.APPEAL_CREATE, "appeal create not allowed!")
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-      every { cas1ChangeRequestRepository.save(any()) } returns null
+//      every { cas1ChangeRequestRepository.save(any()) } returns null
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
@@ -333,7 +333,7 @@ class Cas1ChangeRequestServiceTest {
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns LockablePlacementRequestEntity(placementRequest.id)
       every { cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequest) } returns emptyList()
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-      every { cas1ChangeRequestRepository.save(any()) } returns null
+//      every { cas1ChangeRequestRepository.save(any()) } returns null
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 

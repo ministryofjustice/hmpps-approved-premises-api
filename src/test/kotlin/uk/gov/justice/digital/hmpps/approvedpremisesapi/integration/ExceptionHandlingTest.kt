@@ -41,7 +41,7 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .responseBody
         .blockFirst()
 
-      assertThat(validationResult.detail).isEqualTo("Expected an object but got an array")
+      assertThat(validationResult!!.detail).isEqualTo("""JSON parse error: Cannot deserialize value of type `uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.DeserializationTestBody` from Array value (token `JsonToken.START_ARRAY`)""")
     }
 
     @Test
@@ -60,7 +60,7 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .responseBody
         .blockFirst()
 
-      assertThat(validationResult.detail).isEqualTo("Expected an array but got an object")
+      assertThat(validationResult!!.detail).isEqualTo("""JSON parse error: Cannot deserialize value of type `java.util.ArrayList<uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.DeserializationTestBody>` from Object value (token `JsonToken.START_OBJECT`)""")
     }
 
     @Test

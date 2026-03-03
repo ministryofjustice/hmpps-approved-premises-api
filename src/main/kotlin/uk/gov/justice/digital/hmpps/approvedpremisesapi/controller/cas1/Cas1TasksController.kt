@@ -310,7 +310,11 @@ class Cas1TasksController(
     user.cas1LaoStrategy(),
   )
 
-  private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(
-    type.kebabCaseToPascalCase(),
-  ) ?: throw NotFoundProblem(type, "TaskType")
+  private fun toTaskType(type: String) = try {
+    enumConverterFactory.getConverter(TaskType::class.java).convert(
+      type.kebabCaseToPascalCase(),
+    ) ?: throw NotFoundProblem(type, "TaskType")
+  } catch (e: IllegalArgumentException) {
+    throw NotFoundProblem(type, "TaskType")
+  }
 }

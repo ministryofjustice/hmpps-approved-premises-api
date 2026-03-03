@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.zalando.problem.AbstractThrowableProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
@@ -129,7 +128,7 @@ class Cas2AssessmentsController(
     is AuthorisableActionResult.Success -> result.entity
   }
 
-  private fun throwProblem(problem: AbstractThrowableProblem): Unit = throw problem
+  private fun throwProblem(problem: RuntimeException): Unit = throw problem
 
   private fun <EntityType : Any> processValidation(validationResult: ValidatableActionResult<EntityType>): Any = when (validationResult) {
     is ValidatableActionResult.GeneralValidationError -> throwProblem(BadRequestProblem(errorDetail = validationResult.message))

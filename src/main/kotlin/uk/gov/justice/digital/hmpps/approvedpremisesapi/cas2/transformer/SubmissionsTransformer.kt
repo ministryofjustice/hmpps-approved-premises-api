@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
@@ -14,7 +14,7 @@ import java.util.UUID
 
 @Component("Cas2SubmittedApplicationTransformer")
 class SubmissionsTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val personTransformer: PersonTransformer,
   private val nomisUserTransformer: NomisUserTransformer,
   private val timelineEventsTransformer: TimelineEventsTransformer,
@@ -35,7 +35,7 @@ class SubmissionsTransformer(
       submittedBy = nomisUserTransformer.transformJpaToApi(jpa),
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
       telephoneNumber = jpa.telephoneNumber,
       timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
       assessment = assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),

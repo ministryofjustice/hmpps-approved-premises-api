@@ -1,31 +1,33 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import org.zalando.problem.AbstractThrowableProblem
-import org.zalando.problem.Exceptional
-import org.zalando.problem.Status
+import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 
 class BadRequestProblem(
   @JsonIgnore val invalidParams: Map<String, ParamDetails>? = null,
   @JsonIgnore val errorDetail: String? = null,
-) : AbstractThrowableProblem(null, "Bad Request", Status.BAD_REQUEST, errorDetail ?: "There is a problem with your request") {
-  override fun getCause(): Exceptional? = null
+) : RuntimeException(listOfNotNull("Bad Request", errorDetail, invalidParams).joinToString(": ")) {
 
-  override val message: String
-    get() = listOfNotNull(this.title, this.detail, this.invalidParams).joinToString(": ")
-
-  override fun getParameters(): MutableMap<String, Any> = mutableMapOf(
-    "invalid-params" to (
-      invalidParams?.map {
-        ParamError(
-          propertyName = it.key,
-          errorType = it.value.errorType,
-          entityId = it.value.entityId,
-          value = it.value.value,
-        )
-      } ?: emptyList()
-      ),
-  )
+  fun toProblemDetail(): ProblemDetail {
+    val detail = errorDetail ?: "There is a problem with your request"
+    val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail)
+    problemDetail.title = "Bad Request"
+    if (invalidParams != null) {
+      problemDetail.setProperty(
+        "invalid-params",
+        invalidParams.map {
+          ParamError(
+            propertyName = it.key,
+            errorType = it.value.errorType,
+            entityId = it.value.entityId,
+            value = it.value.value,
+          )
+        }
+      )
+    }
+    return problemDetail
+  }
 }
 
 data class ParamDetails(

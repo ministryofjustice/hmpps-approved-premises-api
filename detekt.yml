@@ -23,9 +23,11 @@ style:
 
 complexity:
   LongMethod:
-    threshold: 200
+    active: true
+    allowedLines: 200
   LargeClass:
-    threshold: 1000
+    active: true
+    allowedLines: 1000
   LongParameterList:
     ignoreAnnotated:
       # Spring annotations like @Service, @Component, etc.
@@ -41,5 +43,9 @@ complexity:
     excludes:
       - '**/givens/**'
   TooManyFunctions:
-    thresholdInInterfaces: 20
-    thresholdInClasses: 20
+    active: true
+    allowedFunctionsPerFile: 20
+    allowedFunctionsPerClass: 20
+    allowedFunctionsPerInterface: 20
+    allowedFunctionsPerObject: 20
+    allowedFunctionsPerEnum: 20

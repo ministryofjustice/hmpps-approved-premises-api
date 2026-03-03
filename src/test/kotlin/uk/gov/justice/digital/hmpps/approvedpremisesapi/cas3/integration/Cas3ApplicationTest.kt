@@ -542,7 +542,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         .responseBody
 
       assertThat(responseBody).matches {
-        applicationEntity.id == it.id &&
+        applicationEntity.id == it!!.id &&
           applicationEntity.crn == it.person.crn &&
           applicationEntity.createdAt.toInstant() == it.createdAt &&
           applicationEntity.createdByUser.id == it.createdByUserId &&
@@ -651,13 +651,13 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
       val blockFirst = result.responseBody.blockFirst()
       assertThat(blockFirst).matches {
-        it.person.crn == crn &&
+        it!!.person.crn == crn &&
           it.offenceId == offenceId
       }
 
       if (agencyName != null) {
         val accommodationApplicationEntity =
-          temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst.id)
+          temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst!!.id)
         assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isNotNull()
         assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isEqualTo(agencyName)
       }

@@ -2110,7 +2110,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .jsonPath("$.notes").isEqualTo("Some cancellation notes")
-          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
       }
     }
   }
