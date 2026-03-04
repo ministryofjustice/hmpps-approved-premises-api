@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
@@ -133,6 +134,16 @@ class Cas1PeopleController(
     val dietAndAllergyDetails = extractEntityFromCasResult(healthAndMedicationService.getDietAndAllergyDetails(crn))
 
     return ResponseEntity.ok(dietAndAllergyDetails)
+  }
+
+  @Operation(summary = "Returns the case detail for a Person.")
+  @GetMapping("/people/{crn}/case-detail")
+  fun getOffenderCaseDetail(@PathVariable crn: String): ResponseEntity<CaseDetail> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val caseDetail = extractEntityFromCasResult(offenderService.getCaseDetail(crn))
+
+    return ResponseEntity.ok(caseDetail)
   }
 
   private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): Cas1PersonalTimeline = cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())

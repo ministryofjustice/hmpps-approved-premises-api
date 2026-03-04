@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Nam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Offence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Profile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Registration
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Sentence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomLong
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
@@ -23,7 +24,8 @@ class CaseDetailFactory : Factory<CaseDetail> {
   var case: Yielded<CaseSummary> = { CaseSummaryFactory().produce() }
   var offences: Yielded<List<Offence>> = { listOf(CaseDetailOffenceFactory().produce()) }
   var registrations: Yielded<List<Registration>> = { listOf(RegistrationFactory().produce()) }
-  var mappaDetail: Yielded<MappaDetail> = { MappaDetailFactory().produce() }
+  var mappaDetail: Yielded<MappaDetail?> = { MappaDetailFactory().produce() }
+  var sentences: Yielded<List<Sentence>> = { listOf(SentenceFactory().produce()) }
 
   fun withCase(case: CaseSummary) = apply {
     this.case = { case }
@@ -37,8 +39,12 @@ class CaseDetailFactory : Factory<CaseDetail> {
     this.registrations = { registrations }
   }
 
-  fun withMappaDetail(mappaDetail: MappaDetail) = apply {
+  fun withMappaDetail(mappaDetail: MappaDetail?) = apply {
     this.mappaDetail = { mappaDetail }
+  }
+
+  fun withSentences(sentences: List<Sentence>) = apply {
+    this.sentences = { sentences }
   }
 
   override fun produce(): CaseDetail = CaseDetail(
@@ -46,6 +52,7 @@ class CaseDetailFactory : Factory<CaseDetail> {
     offences = this.offences(),
     registrations = this.registrations(),
     mappaDetail = this.mappaDetail(),
+    sentences = this.sentences(),
   )
 }
 
@@ -293,5 +300,35 @@ class ManagerFactory : Factory<Manager> {
 
   override fun produce(): Manager = Manager(
     team = this.team(),
+  )
+}
+
+class SentenceFactory : Factory<Sentence> {
+  var typeDescription: Yielded<String?> = { randomStringLowerCase(10) }
+  var startDate: Yielded<LocalDate?> = { LocalDate.now() }
+  var endDate: Yielded<LocalDate?> = { LocalDate.now() }
+  var eventNumber: Yielded<String?> = { randomStringLowerCase(10) }
+
+  fun withTypeDescription(typeDescription: String?) = apply {
+    this.typeDescription = { typeDescription }
+  }
+
+  fun withStartDate(startDate: LocalDate?) = apply {
+    this.startDate = { startDate }
+  }
+
+  fun withEndDate(endDate: LocalDate?) = apply {
+    this.endDate = { endDate }
+  }
+
+  fun withEventNumber(eventNumber: String?) = apply {
+    this.eventNumber = { eventNumber }
+  }
+
+  override fun produce(): Sentence = Sentence(
+    typeDescription = this.typeDescription(),
+    startDate = this.startDate(),
+    endDate = this.endDate(),
+    eventNumber = this.eventNumber(),
   )
 }

@@ -25,14 +25,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailOffenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietAndAllergyDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietAndAllergyResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietaryItemDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.SentenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
@@ -44,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccesfullCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskToTheIndividual404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
@@ -917,6 +922,145 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isNotFound
+    }
+  }
+
+  @Nested
+  inner class GetOffenderCaseDetail {
+    @Test
+    fun `Getting case detail for a CRN without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/people/CRN/case-detail")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Getting case detail for a CRN returns 200`() {
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
+        val crn = "CRN"
+
+        val caseDetail = CaseDetailFactory()
+          .withCase(
+            CaseSummaryFactory()
+              .withCrn(crn)
+              .withNomsId("NOMS123")
+              .withPnc("PNC123")
+              .withName(
+                NameFactory()
+                  .withForename("Forename")
+                  .withSurname("Surname")
+                  .withMiddleNames(listOf("Middle1", "Middle2"))
+                  .produce(),
+              )
+              .withDateOfBirth(LocalDate.of(1990, 1, 1))
+              .withGender("Male")
+              .withProfile(
+                ProfileFactory()
+                  .withEthnicity("Ethnicity")
+                  .withGenderIdentity("Gender Identity")
+                  .withNationality("Nationality")
+                  .withReligion("Religion")
+                  .produce(),
+              )
+              .withCurrentExclusion(true)
+              .withCurrentRestriction(true)
+              .produce(),
+          )
+          .withOffences(
+            listOf(
+              CaseDetailOffenceFactory()
+                .withId("OFF1")
+                .withDescription("Offence Description")
+                .withMainCategoryDescription("Main Category")
+                .withSubCategoryDescription("Sub Category")
+                .withDate(LocalDate.of(2023, 1, 1))
+                .withMain(true)
+                .withEventNumber("1")
+                .produce(),
+            ),
+          )
+          .withRegistrations(
+            listOf(
+              RegistrationFactory()
+                .withDescription("Registration Description")
+                .produce(),
+            ),
+          )
+          .withMappaDetail(
+            MappaDetailFactory()
+              .withLevelDescription("Level 1")
+              .withCategoryDescription("Category 1")
+              .produce(),
+          )
+          .withSentences(
+            listOf(
+              SentenceFactory()
+                .withTypeDescription("Sentence Type")
+                .withStartDate(LocalDate.of(2023, 2, 1))
+                .withEndDate(LocalDate.of(2024, 2, 1))
+                .withEventNumber("1")
+                .produce(),
+            ),
+          )
+          .produce()
+
+        apDeliusContextMockSuccessfulCaseDetailCall(crn, caseDetail)
+
+        webTestClient.get()
+          .uri("/cas1/people/$crn/case-detail")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.case.crn").isEqualTo(crn)
+          .jsonPath("$.case.nomsId").isEqualTo("NOMS123")
+          .jsonPath("$.case.pnc").isEqualTo("PNC123")
+          .jsonPath("$.case.name.forename").isEqualTo("Forename")
+          .jsonPath("$.case.name.surname").isEqualTo("Surname")
+          .jsonPath("$.case.name.middleNames[0]").isEqualTo("Middle1")
+          .jsonPath("$.case.name.middleNames[1]").isEqualTo("Middle2")
+          .jsonPath("$.case.dateOfBirth").isEqualTo("1990-01-01")
+          .jsonPath("$.case.gender").isEqualTo("Male")
+          .jsonPath("$.case.profile.ethnicity").isEqualTo("Ethnicity")
+          .jsonPath("$.case.profile.genderIdentity").isEqualTo("Gender Identity")
+          .jsonPath("$.case.profile.nationality").isEqualTo("Nationality")
+          .jsonPath("$.case.profile.religion").isEqualTo("Religion")
+          .jsonPath("$.case.currentExclusion").isEqualTo(true)
+          .jsonPath("$.case.currentRestriction").isEqualTo(true)
+          .jsonPath("$.offences[0].id").isEqualTo("OFF1")
+          .jsonPath("$.offences[0].description").isEqualTo("Offence Description")
+          .jsonPath("$.offences[0].mainCategoryDescription").isEqualTo("Main Category")
+          .jsonPath("$.offences[0].subCategoryDescription").isEqualTo("Sub Category")
+          .jsonPath("$.offences[0].date").isEqualTo("2023-01-01")
+          .jsonPath("$.offences[0].main").isEqualTo(true)
+          .jsonPath("$.offences[0].eventNumber").isEqualTo("1")
+          .jsonPath("$.registrations[0].description").isEqualTo("Registration Description")
+          .jsonPath("$.mappaDetail.levelDescription").isEqualTo("Level 1")
+          .jsonPath("$.mappaDetail.categoryDescription").isEqualTo("Category 1")
+          .jsonPath("$.sentences[0].typeDescription").isEqualTo("Sentence Type")
+          .jsonPath("$.sentences[0].startDate").isEqualTo("2023-02-01")
+          .jsonPath("$.sentences[0].endDate").isEqualTo("2024-02-01")
+          .jsonPath("$.sentences[0].eventNumber").isEqualTo("1")
+      }
+    }
+
+    @Test
+    fun `Getting case detail for a CRN that does not exist returns 404`() {
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+        val crn = "CRN"
+
+        apDeliusContextMockUnsuccesfullCaseDetailCall(crn, 404)
+
+        webTestClient.get()
+          .uri("/cas1/people/$crn/case-detail")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
     }
   }
 
