@@ -8,6 +8,7 @@ data class CaseDetail(
   val offences: List<Offence>,
   val registrations: List<Registration>,
   val mappaDetail: MappaDetail?,
+  val sentences: List<Sentence>,
 )
 
 data class CaseSummary(
@@ -100,4 +101,11 @@ data class ReferralDetail(
   Note that the time element is typically 00:00
    */
   val departedAt: ZonedDateTime?,
+)
+
+data class Sentence(
+  val typeDescription: String?,
+  val startDate: LocalDate? = null,
+  val endDate: LocalDate? = null,
+  val eventNumber: String? = null,
 )
