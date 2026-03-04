@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHo
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Deprecated("Replaced with StatusUpdateService")
 @Service("Cas2v2StatusUpdateService")
 class Cas2v2StatusUpdateService(
   private val cas2AssessmentRepository: Cas2AssessmentRepository,

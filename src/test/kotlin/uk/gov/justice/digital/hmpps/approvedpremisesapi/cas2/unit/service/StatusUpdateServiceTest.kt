@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.reference.Cas2v2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -68,8 +69,11 @@ class StatusUpdateServiceTest {
   private val applicationId = application.id
   val assessment = Cas2AssessmentEntityFactory().withApplication(application).produce()
   private val mockStatusFinder = mockk<Cas2PersistedApplicationStatusFinder>()
+  private val mockCas2v2StatusFinder = mockk<Cas2v2PersistedApplicationStatusFinder>()
   private val applicationUrlTemplate = "http://example.com/application-status-updated/#eventId"
   private val applicationOverviewUrlTemplate = "http://example.com/application/#id/overview"
+  private val cas2v2ApplicationUrlTemplate = "http://example.com/cas2v2/application/#id"
+  private val cas2v2ApplicationOverviewUrlTemplate = "http://example.com/cas2v2/application/#id/overview"
 
   private val statusUpdateService = StatusUpdateService(
     mockAssessmentRepository,
@@ -78,10 +82,13 @@ class StatusUpdateServiceTest {
     mockDomainEventService,
     mockEmailNotificationService,
     mockStatusFinder,
+    mockCas2v2StatusFinder,
     mockStatusTransformer,
     cas2EmailService,
     applicationUrlTemplate,
     applicationOverviewUrlTemplate,
+    cas2v2ApplicationUrlTemplate,
+    cas2v2ApplicationOverviewUrlTemplate,
   )
 
   val activeStatus = Cas2PersistedApplicationStatus(
@@ -188,6 +195,7 @@ class StatusUpdateServiceTest {
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
           assessor = assessor,
+          serviceOrigin = Cas2ServiceOrigin.HDC,
         )
 
         verify {
@@ -245,6 +253,7 @@ class StatusUpdateServiceTest {
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
           assessor = assessor,
+          serviceOrigin = Cas2ServiceOrigin.HDC,
         )
 
         verify(exactly = 0) {
@@ -320,6 +329,7 @@ class StatusUpdateServiceTest {
             assessmentId = assessment.id,
             statusUpdate = applicationStatusUpdateWithDetail,
             assessor = assessor,
+            serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
           verify {
@@ -395,6 +405,7 @@ class StatusUpdateServiceTest {
             assessmentId = assessmentWithNoEmail.id,
             statusUpdate = applicationStatusUpdateWithDetail,
             assessor = assessor,
+            serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
           verify(exactly = 1) {
@@ -422,6 +433,7 @@ class StatusUpdateServiceTest {
             assessmentId = assessment.id,
             statusUpdate = applicationStatusUpdate,
             assessor = assessor,
+            serviceOrigin = Cas2ServiceOrigin.HDC,
           )
 
           verify(exactly = 0) {

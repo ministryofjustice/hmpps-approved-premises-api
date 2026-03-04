@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import java.util.UUID
 
 @Service
+@Deprecated("Replaced by Cas2UserService")
 class Cas2v2UserService(
   private val httpAuthService: HttpAuthService,
   private val cas2UserRepository: Cas2UserRepository,

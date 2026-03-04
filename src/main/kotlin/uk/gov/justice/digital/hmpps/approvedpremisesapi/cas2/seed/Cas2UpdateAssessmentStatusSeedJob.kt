@@ -81,6 +81,7 @@ class Cas2UpdateAssessmentStatusSeedJob(
         newStatusDetails = row.newStatusDetails,
       ),
       assessor = assessor,
+      serviceOrigin = Cas2ServiceOrigin.HDC,
     )
   }
 }

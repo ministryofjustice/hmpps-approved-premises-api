@@ -13,8 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -96,11 +95,12 @@ class Cas2AssessmentServiceTest {
       val result = assessmentService.updateAssessment(
         assessmentId = assessmentId,
         newAssessment = newAssessmentData,
+        serviceOrigin = Cas2ServiceOrigin.HDC,
+
       )
       Assertions.assertThat(result).isEqualTo(
-        AuthorisableActionResult.Success(
-          ValidatableActionResult.Success(assessEntity),
-        ),
+        CasResult.Success(assessEntity),
+
       )
 
       verify(exactly = 1) {
@@ -130,9 +130,10 @@ class Cas2AssessmentServiceTest {
       val result = assessmentService.updateAssessment(
         assessmentId = assessmentId,
         newAssessment = newAssessmentData,
+        serviceOrigin = Cas2ServiceOrigin.HDC,
       )
 
-      Assertions.assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      Assertions.assertThat(result is CasResult.NotFound).isTrue
     }
   }
 }

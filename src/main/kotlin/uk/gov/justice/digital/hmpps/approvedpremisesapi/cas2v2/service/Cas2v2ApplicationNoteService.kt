@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Asse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -25,12 +27,13 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
+@Deprecated("Replaced by Cas2AssessmentNoteService")
 class Cas2v2ApplicationNoteService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
   private val cas2AssessmentRepository: Cas2AssessmentRepository,
   private val cas2ApplicationNoteRepository: Cas2ApplicationNoteRepository,
-  private val userService: Cas2v2UserService,
-  private val userAccessService: Cas2v2UserAccessService,
+  private val userService: Cas2UserService,
+  private val userAccessService: Cas2UserAccessService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,
@@ -51,7 +54,7 @@ class Cas2v2ApplicationNoteService(
       return CasResult.GeneralValidationError("This application has not been submitted")
     }
 
-    val user = userService.getUserForRequest()
+    val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
 
     if (!userAccessService.userCanAddNote(user, application)) {
       return CasResult.Unauthorised()
