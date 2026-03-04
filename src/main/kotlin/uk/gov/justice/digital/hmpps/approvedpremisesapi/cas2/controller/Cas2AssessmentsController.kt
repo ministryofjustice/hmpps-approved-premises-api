@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.zalando.problem.AbstractThrowableProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
@@ -21,13 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.AssessmentsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
@@ -73,11 +64,10 @@ class Cas2AssessmentsController(
       assessmentId = assessmentId,
       statusUpdate = cas2AssessmentStatusUpdate,
       assessor = cas2UserService.getUserForRequest(Cas2ServiceOrigin.HDC),
+      serviceOrigin = Cas2ServiceOrigin.HDC,
     )
 
-    processAuthorisationFor(assessmentId, result)
-      .run { processValidation(this as ValidatableActionResult<Cas2StatusUpdateEntity>) }
-
+    extractEntityFromCasResult(result)
     return ResponseEntity(HttpStatus.CREATED)
   }
 
@@ -94,23 +84,5 @@ class Cas2AssessmentsController(
       .body(
         applicationNotesTransformer.transformJpaToApi(note),
       )
-  }
-
-  private fun <EntityType> processAuthorisationFor(
-    assessmentId: UUID,
-    result: AuthorisableActionResult<ValidatableActionResult<EntityType>>,
-  ): Any = when (result) {
-    is AuthorisableActionResult.NotFound -> throwProblem(NotFoundProblem(assessmentId, "Cas2Application"))
-    is AuthorisableActionResult.Unauthorised -> throwProblem(ForbiddenProblem())
-    is AuthorisableActionResult.Success -> result.entity
-  }
-
-  private fun throwProblem(problem: AbstractThrowableProblem): Unit = throw problem
-
-  private fun <EntityType : Any> processValidation(validationResult: ValidatableActionResult<EntityType>): Any = when (validationResult) {
-    is ValidatableActionResult.GeneralValidationError -> throwProblem(BadRequestProblem(errorDetail = validationResult.message))
-    is ValidatableActionResult.FieldValidationError -> throwProblem(BadRequestProblem(invalidParams = validationResult.validationMessages.mapValues { ParamDetails(it.value) }))
-    is ValidatableActionResult.ConflictError -> throwProblem(ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message))
-    is ValidatableActionResult.Success -> validationResult.entity
   }
 }
