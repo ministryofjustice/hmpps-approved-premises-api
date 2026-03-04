@@ -37,22 +37,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Lock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -76,7 +76,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockNotifyConfig = mockk<NotifyConfig>()
   private val mockSentryService = mockk<SentryService>()
 
-  private val cas2v2ApplicationService = Cas2v2ApplicationService(
+  private val cas2ApplicationService = Cas2ApplicationService(
     mockCas2ApplicationRepository,
     mockCas2LockableApplicationRepository,
     mockCas2ApplicationSummaryRepository,
@@ -90,6 +90,8 @@ class Cas2v2ApplicationServiceTest {
     mockSentryService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
+    "http://frontend/cas2v2/applications/#id",
+    "http://frontend/cas2v2/assess/applications/#applicationId/overview",
   )
 
   @Nested
@@ -137,7 +139,7 @@ class Cas2v2ApplicationServiceTest {
         )
       } returns page
 
-      val (applicationSummaries, metadata) = cas2v2ApplicationService.getAllSubmittedCas2v2ApplicationsForAssessor(pageCriteria)
+      val (applicationSummaries, metadata) = cas2ApplicationService.getAllSubmittedCas2v2ApplicationsForAssessor(pageCriteria)
 
       assertThat(applicationSummaries).isEqualTo(listOf(cas2v2ApplicationSummary))
       assertThat(metadata?.currentPage).isEqualTo(3)
@@ -178,7 +180,7 @@ class Cas2v2ApplicationServiceTest {
       every { page.totalPages } returns 10
       every { page.totalElements } returns 100
 
-      val (applicationSummaries, _) = cas2v2ApplicationService.getCas2v2Applications(
+      val (applicationSummaries, _) = cas2ApplicationService.getCas2v2Applications(
         prisonCode,
         isSubmitted,
         null,
@@ -238,7 +240,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns null
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.NotFound).isTrue
+      assertThatCasResult(cas2ApplicationService.getCas2v2ApplicationForUser(applicationId, user)).isNotFound("Cas2ApplicationEntity", applicationId.toString())
     }
 
     @Test
@@ -259,7 +261,7 @@ class Cas2v2ApplicationServiceTest {
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.NotFound).isTrue
+      assertThatCasResult(cas2ApplicationService.getCas2v2ApplicationForUser(applicationId, user)).isNotFound("Cas2ApplicationEntity", applicationId.toString())
     }
 
     @Test
@@ -281,7 +283,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns false
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.Unauthorised).isTrue
+      assertThatCasResult(cas2ApplicationService.getCas2v2ApplicationForUser(applicationId, user)).isUnauthorised()
     }
 
     @Test
@@ -304,12 +306,9 @@ class Cas2v2ApplicationServiceTest {
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(any(), Cas2ServiceOrigin.BAIL) } returns cas2ApplicationEntity
       every { mockCas2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns true
 
-      val result = cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, userEntity)
+      val result = cas2ApplicationService.getCas2v2ApplicationForUser(applicationId, userEntity)
 
-      assertThat(result is CasResult.Success).isTrue
-      val entity = extractEntityFromCasResult(result)
-
-      assertThat(entity).isEqualTo(cas2ApplicationEntity)
+      assertThatCasResult(result).isSuccess().with { assertThat(it).isEqualTo(cas2ApplicationEntity) }
     }
   }
 
@@ -330,7 +329,7 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user)
+      val result = cas2ApplicationService.createCas2v2Application(crn, user)
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -346,7 +345,7 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user)
+      val result = cas2ApplicationService.createCas2v2Application(crn, user)
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -380,7 +379,7 @@ class Cas2v2ApplicationServiceTest {
           Cas2ApplicationEntity
       }
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, ApplicationOrigin.prisonBail, bailHearingDate)
+      val result = cas2ApplicationService.createCas2v2Application(crn, user, ApplicationOrigin.prisonBail, bailHearingDate)
 
       assertThat(result is ValidatableActionResult.Success).isTrue
       result as ValidatableActionResult.Success
@@ -403,14 +402,14 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns null
 
-      assertThat(
-        cas2v2ApplicationService.updateCas2v2Application(
+      assertThatCasResult(
+        cas2ApplicationService.updateCas2v2Application(
           applicationId = applicationId,
           data = "{}",
           user = user,
           null,
-        ) is CasResult.NotFound,
-      ).isTrue
+        ),
+      ).isNotFound("Cas2ApplicationEntity", applicationId.toString())
     }
 
     @Test
@@ -430,14 +429,14 @@ class Cas2v2ApplicationServiceTest {
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns
         cas2v2Application
 
-      assertThat(
-        cas2v2ApplicationService.updateCas2v2Application(
+      assertThatCasResult(
+        cas2ApplicationService.updateCas2v2Application(
           applicationId = applicationId,
           data = "{}",
           user = user,
           null,
-        ) is CasResult.Unauthorised,
-      ).isTrue
+        ),
+      ).isUnauthorised()
     }
 
     @Test
@@ -454,16 +453,14 @@ class Cas2v2ApplicationServiceTest {
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns
         cas2v2Application
 
-      val result = cas2v2ApplicationService.updateCas2v2Application(
+      val result = cas2ApplicationService.updateCas2v2Application(
         applicationId = applicationId,
         data = "{}",
         user = user,
         null,
       )
 
-      result as CasResult.GeneralValidationError
-
-      assertThat(result.message).isEqualTo("This application has already been submitted")
+      assertThatCasResult(result).isGeneralValidationError("This application has already been submitted")
     }
 
     @Test
@@ -479,16 +476,14 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns cas2v2Application
 
-      val result = cas2v2ApplicationService.updateCas2v2Application(
+      val result = cas2ApplicationService.updateCas2v2Application(
         applicationId = applicationId,
         data = "{}",
         user = user,
         null,
       )
 
-      result as CasResult.GeneralValidationError
-
-      assertThat(result.message).isEqualTo("This application has been abandoned")
+      assertThatCasResult(result).isGeneralValidationError("This application has been abandoned")
     }
 
     @ParameterizedTest
@@ -516,24 +511,22 @@ class Cas2v2ApplicationServiceTest {
           as Cas2ApplicationEntity
       }
 
-      val result = cas2v2ApplicationService.updateCas2v2Application(
+      val result = cas2ApplicationService.updateCas2v2Application(
         applicationId = applicationId,
         data = updatedData,
         user = user,
         null,
       )
 
-      result as CasResult.Success
-
-      val cas2v2Application = extractEntityFromCasResult(result)
-
-      assertThat(cas2v2Application.data).isEqualTo(
-        """
+      assertThatCasResult(result).isSuccess().with { cas2v2Application ->
+        assertThat(cas2v2Application.data).isEqualTo(
+          """
       {
         "aProperty": "value"
       }
     """,
-      )
+        )
+      }
     }
 
     @Test
@@ -564,21 +557,18 @@ class Cas2v2ApplicationServiceTest {
           as Cas2ApplicationEntity
       }
 
-      val result = cas2v2ApplicationService.updateCas2v2Application(
+      val result = cas2ApplicationService.updateCas2v2Application(
         applicationId = applicationId,
         data = updatedData,
         user = user,
         bailHearingDate,
       )
 
-      result as CasResult.Success
-
-      val cas2v2Application = extractEntityFromCasResult(result)
-
-      verify { mockCas2ApplicationRepository.save(application) }
-
-      assertThat(cas2v2Application.data).isEqualTo(updatedData)
-      assertThat(cas2v2Application.bailHearingDate).isEqualTo(bailHearingDate)
+      assertThatCasResult(result).isSuccess().with { cas2v2Application ->
+        verify { mockCas2ApplicationRepository.save(application) }
+        assertThat(cas2v2Application.data).isEqualTo(updatedData)
+        assertThat(cas2v2Application.bailHearingDate).isEqualTo(bailHearingDate)
+      }
     }
   }
 
@@ -594,12 +584,12 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns null
 
-      assertThat(
-        cas2v2ApplicationService.abandonCas2v2Application(
+      assertThatCasResult(
+        cas2ApplicationService.abandonCas2v2Application(
           applicationId = applicationId,
           user = user,
-        ) is CasResult.NotFound,
-      ).isTrue
+        ),
+      ).isNotFound("Cas2ApplicationEntity", applicationId.toString())
     }
 
     @Test
@@ -619,12 +609,12 @@ class Cas2v2ApplicationServiceTest {
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns
         application
 
-      assertThat(
-        cas2v2ApplicationService.abandonCas2v2Application(
+      assertThatCasResult(
+        cas2ApplicationService.abandonCas2v2Application(
           applicationId = applicationId,
           user = user,
-        ) is CasResult.Unauthorised,
-      ).isTrue
+        ),
+      ).isUnauthorised()
     }
 
     @Test
@@ -641,14 +631,12 @@ class Cas2v2ApplicationServiceTest {
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns
         application
 
-      val result = cas2v2ApplicationService.abandonCas2v2Application(
+      val result = cas2ApplicationService.abandonCas2v2Application(
         applicationId = applicationId,
         user = user,
       )
 
-      result as CasResult.ConflictError
-
-      assertThat(result.message).isEqualTo("This application has already been submitted")
+      assertThatCasResult(result).isConflictError().hasMessage("This application has already been submitted")
     }
 
     @Test
@@ -665,13 +653,12 @@ class Cas2v2ApplicationServiceTest {
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns
         application
 
-      val result = cas2v2ApplicationService.abandonCas2v2Application(
+      val result = cas2ApplicationService.abandonCas2v2Application(
         applicationId = applicationId,
         user = user,
       )
 
-      result as CasResult.Success
-      assertThat(result).isNotNull
+      assertThatCasResult(result).isSuccess()
     }
 
     @Test
@@ -698,16 +685,12 @@ class Cas2v2ApplicationServiceTest {
         it.invocation.args[0] as Cas2ApplicationEntity
       }
 
-      val result = cas2v2ApplicationService.abandonCas2v2Application(
+      val result = cas2ApplicationService.abandonCas2v2Application(
         applicationId = applicationId,
         user = user,
       )
 
-      result as CasResult.Success
-
-      val cas2v2Application = extractEntityFromCasResult(result)
-
-      assertThat(cas2v2Application.data).isNull()
+      assertThatCasResult(result).isSuccess().with { assertThat(it.data).isNull() }
     }
   }
 
@@ -744,7 +727,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns null
 
-      assertThat(cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user) is CasResult.NotFound).isTrue
+      assertThatCasResult(cas2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)).isNotFound("Cas2ApplicationEntity", applicationId.toString())
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -764,7 +747,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns cas2v2Application
 
-      assertThat(cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user) is CasResult.Unauthorised).isTrue
+      assertThatCasResult(cas2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)).isUnauthorised()
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -783,12 +766,9 @@ class Cas2v2ApplicationServiceTest {
         mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       } returns cas2v2Application
 
-      val result = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
+      val result = cas2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val validatableActionResult = result as CasResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+      assertThatCasResult(result).isGeneralValidationError("This application has already been submitted")
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -807,12 +787,9 @@ class Cas2v2ApplicationServiceTest {
         mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       } returns cas2v2Application
 
-      val result = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
+      val result = cas2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val validatableActionResult = result as CasResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been abandoned")
+      assertThatCasResult(result).isGeneralValidationError("This application has already been abandoned")
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -878,18 +855,14 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2AssessmentService.createCas2Assessment(any(), any()) } returns any()
 
-      val result = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
+      val result = cas2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
 
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
-
-      assertThat(true).isTrue
-      val persistedApplication = extractEntityFromCasResult(result)
-
-      assertThat(persistedApplication.crn).isEqualTo(cas2v2Application.crn)
-      assertThat(persistedApplication.preferredAreas).isEqualTo("Leeds | Bradford")
-      assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
-      assertThat(persistedApplication.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
+      assertThatCasResult(result).isSuccess().with { persistedApplication ->
+        assertThat(persistedApplication.crn).isEqualTo(cas2v2Application.crn)
+        assertThat(persistedApplication.preferredAreas).isEqualTo("Leeds | Bradford")
+        assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
+        assertThat(persistedApplication.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
+      }
 
       verify { mockCas2ApplicationRepository.save(any()) }
 
@@ -901,7 +874,7 @@ class Cas2v2ApplicationServiceTest {
             it.applicationId == cas2v2Application.id &&
               data.personReference.noms == cas2v2Application.nomsNumber &&
               data.personReference.crn == cas2v2Application.crn &&
-              data.applicationUrl == "http://frontend/applications/${cas2v2Application.id}" &&
+              data.applicationUrl == "http://frontend/cas2v2/applications/${cas2v2Application.id}" &&
               data.submittedBy.staffMember.username == username &&
               data.referringPrisonCode == "BRI" &&
               data.preferredAreas == "Leeds | Bradford" &&
@@ -920,13 +893,13 @@ class Cas2v2ApplicationServiceTest {
               it["email"] == user.email &&
               it["prisonNumber"] == cas2v2Application.nomsNumber &&
               it["telephoneNumber"] == cas2v2Application.telephoneNumber &&
-              it["applicationUrl"] == "http://frontend/assess/applications/$applicationId/overview"
+              it["applicationUrl"] == "http://frontend/cas2v2/assess/applications/$applicationId/overview"
           },
           "def456",
         )
       }
 
-      verify(exactly = 1) { mockCas2AssessmentService.createCas2Assessment(persistedApplication, serviceOrigin = Cas2ServiceOrigin.BAIL) }
+      verify(exactly = 1) { mockCas2AssessmentService.createCas2Assessment(extractEntityFromCasResult(result), serviceOrigin = Cas2ServiceOrigin.BAIL) }
     }
   }
 

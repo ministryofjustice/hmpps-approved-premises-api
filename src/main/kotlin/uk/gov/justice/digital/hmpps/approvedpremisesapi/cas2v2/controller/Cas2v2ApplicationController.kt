@@ -18,10 +18,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -39,7 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Applicat
 
 @Cas2v2Controller
 class Cas2v2ApplicationController(
-  private val cas2v2ApplicationService: Cas2v2ApplicationService,
+  private val cas2ApplicationService: Cas2ApplicationService,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val cas2OffenderService: Cas2OffenderService,
@@ -65,7 +65,7 @@ class Cas2v2ApplicationController(
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
-    val (applications, metadata) = cas2v2ApplicationService.getCas2v2Applications(
+    val (applications, metadata) = cas2ApplicationService.getCas2v2Applications(
       prisonCode,
       isSubmitted,
       applicationOrigin,
@@ -86,7 +86,7 @@ class Cas2v2ApplicationController(
   ): ResponseEntity<Application> {
     val user = userService.getUserForRequest(serviceOrigin = Cas2ServiceOrigin.BAIL)
 
-    val applicationResult = cas2v2ApplicationService
+    val applicationResult = cas2ApplicationService
       .getCas2v2ApplicationForUser(
         applicationId,
         user,
@@ -111,7 +111,7 @@ class Cas2v2ApplicationController(
       is Cas2OffenderSearchResult.Success.Full -> cas2OffenderSearchResult.person
     }
 
-    val applicationResult = cas2v2ApplicationService.createCas2v2Application(
+    val applicationResult = cas2ApplicationService.createCas2v2Application(
       body.crn,
       user,
       body.applicationOrigin,
@@ -143,7 +143,7 @@ class Cas2v2ApplicationController(
     val serializedData = objectMapper.writeValueAsString(body.data)
 
     val applicationResult = when (body) {
-      is UpdateCas2v2Application -> cas2v2ApplicationService.updateCas2v2Application(
+      is UpdateCas2v2Application -> cas2ApplicationService.updateCas2v2Application(
         applicationId = applicationId,
         data = serializedData,
         user,
@@ -164,7 +164,7 @@ class Cas2v2ApplicationController(
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest(serviceOrigin = Cas2ServiceOrigin.BAIL)
 
-    val applicationResult = cas2v2ApplicationService.abandonCas2v2Application(applicationId, user)
+    val applicationResult = cas2ApplicationService.abandonCas2v2Application(applicationId, user)
     ensureEntityFromCasResultIsSuccess(applicationResult)
     return ResponseEntity.ok(Unit)
   }

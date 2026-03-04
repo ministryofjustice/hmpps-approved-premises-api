@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -91,6 +92,9 @@ class Cas2ApplicationServiceTest {
   @MockK
   lateinit var mockNotifyConfig: NotifyConfig
 
+  @MockK
+  lateinit var mockSentryService: SentryService
+
   lateinit var applicationService: Cas2ApplicationService
 
   @BeforeEach
@@ -106,8 +110,11 @@ class Cas2ApplicationServiceTest {
       mockAssessmentService,
       mockNotifyConfig,
       mockObjectMapper,
+      mockSentryService,
       "http://frontend/applications/#id",
       "http://frontend/assess/applications/#applicationId/overview",
+      "http://frontend/cas2v2/applications/#id",
+      "http://frontend/cas2v2/assess/applications/#applicationId/overview",
     )
   }
 

@@ -15,10 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -31,7 +31,7 @@ import java.util.UUID
 
 @Cas2v2Controller
 class Cas2v2SubmissionsController(
-  private val cas2v2ApplicationService: Cas2v2ApplicationService,
+  private val cas2ApplicationService: Cas2ApplicationService,
   private val cas2v2SubmissionsTransformer: Cas2v2SubmissionsTransformer,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val cas2OffenderService: Cas2OffenderService,
@@ -48,7 +48,7 @@ class Cas2v2SubmissionsController(
     val sortDirection = SortDirection.asc
     val sortBy = "submittedAt"
 
-    val (applications, metadata) = cas2v2ApplicationService.getAllSubmittedCas2v2ApplicationsForAssessor(PageCriteria(sortBy, sortDirection, page))
+    val (applications, metadata) = cas2ApplicationService.getAllSubmittedCas2v2ApplicationsForAssessor(PageCriteria(sortBy, sortDirection, page))
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
@@ -61,7 +61,7 @@ class Cas2v2SubmissionsController(
   ): ResponseEntity<Cas2v2SubmittedApplication> {
     userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
 
-    val applicationResult = cas2v2ApplicationService.getSubmittedCas2v2ApplicationForAssessor(applicationId)
+    val applicationResult = cas2ApplicationService.getSubmittedCas2v2ApplicationForAssessor(applicationId)
     val application = extractEntityFromCasResult(applicationResult)
 
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
@@ -73,7 +73,7 @@ class Cas2v2SubmissionsController(
     @RequestBody submitCas2v2Application: SubmitCas2v2Application,
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest(Cas2ServiceOrigin.BAIL)
-    val submitResult = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
+    val submitResult = cas2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
     ensureEntityFromCasResultIsSuccess(submitResult)
 
     return ResponseEntity(HttpStatus.OK)

@@ -45,6 +45,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
+@Deprecated("Replaced with Cas2ApplicationService")
 @Service("Cas2v2ApplicationService")
 class Cas2v2ApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
