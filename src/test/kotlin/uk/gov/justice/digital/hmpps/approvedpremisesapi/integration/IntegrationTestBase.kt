@@ -727,7 +727,8 @@ abstract class IntegrationTestBase {
   lateinit var cas1ChangeRequestReasonEntityFactory: PersistedFactory<Cas1ChangeRequestReasonEntity, UUID, Cas1ChangeRequestReasonEntityFactory>
   lateinit var cas1ChangeRequestRejectionReasonEntityFactory: PersistedFactory<Cas1ChangeRequestRejectionReasonEntity, UUID, Cas1ChangeRequestRejectionReasonEntityFactory>
   lateinit var cas1ChangeRequestEntityFactory: PersistedFactory<Cas1ChangeRequestEntity, UUID, Cas1ChangeRequestEntityFactory>
-
+  lateinit var placementApplicationEntityFactory: PersistedFactory<PlacementApplicationEntity, UUID, PlacementApplicationEntityFactory>
+  lateinit var placementRequestEntityFactory: PersistedFactory<PlacementRequestEntity, UUID, PlacementRequestEntityFactory>
   lateinit var cas1PremisesLocalRestrictionEntityFactory: PersistedFactory<Cas1PremisesLocalRestrictionEntity, UUID, Cas1PremisesLocalRestrictionEntityFactory>
   private var clientCredentialsCallMocked = false
 
@@ -769,6 +770,8 @@ abstract class IntegrationTestBase {
   }
 
   fun setupFactories() {
+    placementRequestEntityFactory = PersistedFactory({ PlacementRequestEntityFactory() }, placementRequestRepository)
+    placementApplicationEntityFactory = PersistedFactory({ PlacementApplicationEntityFactory() }, placementApplicationRepository)
     probationRegionEntityFactory = PersistedFactory({ ProbationRegionEntityFactory() }, probationRegionRepository)
     offenderManagementUnitEntityFactory = PersistedFactory({ OffenderManagementUnitEntityFactory() }, offenderManagementUnitRepository)
     apAreaEntityFactory = PersistedFactory({ ApAreaEntityFactory() }, apAreaRepository)

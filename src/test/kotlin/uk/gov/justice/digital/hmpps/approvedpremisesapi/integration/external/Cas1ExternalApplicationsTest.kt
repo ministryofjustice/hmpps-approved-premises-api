@@ -3,10 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.external
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
@@ -49,20 +53,42 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
             withCrn(crn)
           }
+          val placementApplication = givenAPlacementApplication(
+            crn = crn,
+            createdByUser = user,
+            application = application,
+          )
+
+          val (placementRequest, applicationWithPr) = givenAPlacementRequest(
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = crn,
+            application = application,
+            placementApplication = placementApplication,
+          )
 
           givenACas1SpaceBooking(
             crn = crn,
+            placementRequest = placementRequest,
             premises = premises,
             canonicalArrivalDate = LocalDate.of(2025, 5, 6),
             canonicalDepartureDate = LocalDate.of(2025, 5, 28),
             cancellationOccurredAt = null,
-            application = application,
+            application = applicationWithPr,
           )
 
           val suitableApplication = Cas1SuitableApplication(
-            id = application.id,
+            id = applicationWithPr.id,
             applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
             placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+            requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+            placementHistories = listOf(
+              Cas1PlacementHistory(
+                dateApplied = LocalDate.now(),
+                placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+                requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+              ),
+            ),
           )
 
           val response = webTestClient.get()
