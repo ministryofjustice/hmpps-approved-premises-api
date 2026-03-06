@@ -24,14 +24,14 @@ import kotlin.reflect.jvm.isAccessible
 @Component
 class EnumConverterFactory : ConverterFactory<String, Enum<*>> {
   class EnumConverter<T : Enum<*>>(private val targetType: Class<T>) : Converter<String, T> {
-    override fun convert(source: String): T? = targetType.enumConstants.firstOrNull {
-      it.getOpenApiValueOrDefault() == source
+    override fun convert(source: String): T {
+      return targetType.enumConstants.firstOrNull {
+        it.getOpenApiValueOrDefault() == source
+      } ?: throw IllegalArgumentException("No enum constant ${targetType.canonicalName} with value '$source'")
     }
 
     @Suppress("UNCHECKED_CAST")
     private fun T.getOpenApiValueOrDefault(): String {
-      // OpenAPI-generated enums will have a field named 'value', but not all enums will.
-      // If it's some other enum then default to the name of the enum value.
       val valueProperty = this::class.declaredMemberProperties.firstOrNull { it.name == "value" } as KProperty1<T, String>?
       return if (valueProperty == null) {
         this.name

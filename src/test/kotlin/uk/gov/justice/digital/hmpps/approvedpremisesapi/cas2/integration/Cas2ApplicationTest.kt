@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -56,7 +56,7 @@ import java.util.UUID
 import kotlin.math.sign
 
 class Cas2ApplicationTest : IntegrationTestBase() {
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationRepository: Cas2ApplicationRepository
 
   val schema = """
@@ -1558,7 +1558,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             assertThat(result.responseBody.blockFirst()).matches {
-              it.person.crn == offenderDetails.otherIds.crn &&
+              it!!.person.crn == offenderDetails.otherIds.crn &&
                 it.applicationOrigin == ApplicationOrigin.homeDetentionCurfew &&
                 it.bailHearingDate == null
             }
@@ -1593,7 +1593,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             assertThat(result.responseBody.blockFirst()).matches {
-              it.person.crn == offenderDetails.otherIds.crn
+              it!!.person.crn == offenderDetails.otherIds.crn
             }
           }
         }
@@ -1680,7 +1680,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             assertThat(result.responseBody.blockFirst()).matches {
-              it.person.crn == offenderDetails.otherIds.crn
+              it!!.person.crn == offenderDetails.otherIds.crn
             }
           }
         }

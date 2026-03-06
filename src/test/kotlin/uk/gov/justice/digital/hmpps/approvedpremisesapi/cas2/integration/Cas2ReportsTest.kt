@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import org.assertj.core.api.Assertions
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
@@ -35,7 +35,7 @@ import java.util.UUID
 
 class Cas2ReportsTest : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   private lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   @Nested

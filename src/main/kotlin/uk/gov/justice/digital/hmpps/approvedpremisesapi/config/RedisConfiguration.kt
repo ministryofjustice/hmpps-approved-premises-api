@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer
+import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.boot.info.BuildProperties
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
@@ -31,9 +31,10 @@ import java.time.Duration
 @EnableCaching
 class RedisConfiguration {
   @Bean
-  fun redisCacheManagerBuilderCustomizer(
+  fun redisCacheManager(
     buildProperties: BuildProperties,
     objectMapper: ObjectMapper,
+    connectionFactory: RedisConnectionFactory,
     @Value("\${caches.staffMembers.expiry-seconds}") staffMembersExpirySeconds: Long,
     @Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long,
     @Value("\${caches.userAccess.expiry-seconds}") userAccessExpirySeconds: Long,
@@ -41,48 +42,47 @@ class RedisConfiguration {
     @Value("\${caches.teamManagingCases.expiry-seconds}") teamManagingCasesExpirySeconds: Long,
     @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
     @Value("600") crnGetCaseDetailExpirySeconds: Long,
-  ): RedisCacheManagerBuilderCustomizer? {
-    val uniqueBuildId = buildProperties.time.epochSecond.toString()
+  ): RedisCacheManager {
+    val uniqueBuildId = buildProperties.time?.epochSecond?.toString() ?: "unknown"
 
-    return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
-      builder
-        .clientCacheFor<StaffMembersPage>(
-          cacheName = "qCodeStaffMembersCache",
-          duration = Duration.ofSeconds(staffMembersExpirySeconds),
-          cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
-        )
-        .clientCacheFor<UserOffenderAccess>(
-          cacheName = "userAccessCache",
-          duration = Duration.ofSeconds(userAccessExpirySeconds),
-          cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
-        )
-        .clientCacheFor<StaffDetail>(
-          cacheName = "staffDetailsCache",
-          duration = Duration.ofSeconds(staffDetailsExpirySeconds),
-          cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
-        )
-        .clientCacheFor<ManagingTeamsResponse>(
-          cacheName = "teamsManagingCaseCache",
-          duration = Duration.ofSeconds(teamManagingCasesExpirySeconds),
-          cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
-        )
-        .clientCacheFor<CaseDetail>(
-          cacheName = "crnGetCaseDetailCache",
-          duration = Duration.ofSeconds(crnGetCaseDetailExpirySeconds),
-          cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
-        )
-        .clientCacheFor<UKBankHolidays>(
-          cacheName = "ukBankHolidaysCache",
-          duration = Duration.ofSeconds(ukBankHolidaysExpirySeconds),
-          cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
-        )
-    }
+    return RedisCacheManager.builder(connectionFactory)
+      .clientCacheFor<StaffMembersPage>(
+        cacheName = "qCodeStaffMembersCache",
+        duration = Duration.ofSeconds(staffMembersExpirySeconds),
+        cacheNamePrefix = uniqueBuildId,
+        objectMapper = objectMapper,
+      )
+      .clientCacheFor<UserOffenderAccess>(
+        cacheName = "userAccessCache",
+        duration = Duration.ofSeconds(userAccessExpirySeconds),
+        cacheNamePrefix = uniqueBuildId,
+        objectMapper = objectMapper,
+      )
+      .clientCacheFor<StaffDetail>(
+        cacheName = "staffDetailsCache",
+        duration = Duration.ofSeconds(staffDetailsExpirySeconds),
+        cacheNamePrefix = uniqueBuildId,
+        objectMapper = objectMapper,
+      )
+      .clientCacheFor<ManagingTeamsResponse>(
+        cacheName = "teamsManagingCaseCache",
+        duration = Duration.ofSeconds(teamManagingCasesExpirySeconds),
+        cacheNamePrefix = uniqueBuildId,
+        objectMapper = objectMapper,
+      )
+      .clientCacheFor<CaseDetail>(
+        cacheName = "crnGetCaseDetailCache",
+        duration = Duration.ofSeconds(crnGetCaseDetailExpirySeconds),
+        cacheNamePrefix = uniqueBuildId,
+        objectMapper = objectMapper,
+      )
+      .clientCacheFor<UKBankHolidays>(
+        cacheName = "ukBankHolidaysCache",
+        duration = Duration.ofSeconds(ukBankHolidaysExpirySeconds),
+        cacheNamePrefix = uniqueBuildId,
+        objectMapper = objectMapper,
+      )
+      .build()
   }
 
   @Bean
