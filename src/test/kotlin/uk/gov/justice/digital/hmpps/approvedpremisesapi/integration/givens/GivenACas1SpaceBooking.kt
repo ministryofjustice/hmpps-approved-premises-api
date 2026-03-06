@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -29,6 +30,8 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   expectedDepartureDate: LocalDate = LocalDate.now(),
   canonicalDepartureDate: LocalDate = expectedDepartureDate,
   nonArrivalConfirmedAt: Instant? = null,
+  nonArrivalReason: NonArrivalReasonEntity? = null,
+  nonArrivalNotes: String? = null,
   cancellationOccurredAt: LocalDate? = null,
   actualArrivalDate: LocalDate? = null,
   actualDepartureDate: LocalDate? = null,
@@ -69,6 +72,8 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withPremises(premises ?: givenAnApprovedPremises())
     withCriteria(criteria?.toMutableList() ?: emptyList<CharacteristicEntity>().toMutableList())
     withNonArrivalConfirmedAt(nonArrivalConfirmedAt)
+    withNonArrivalReason(nonArrivalReason)
+    withNonArrivalNotes(nonArrivalNotes)
     withCancellationOccurredAt(cancellationOccurredAt)
     withTransferredFrom(transferredFrom)
     withKeyworkerStaffCode(keyWorkerStaffCode)
