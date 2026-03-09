@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1CruManagem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1DomainEventReplaySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1DuplicateApplicationSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1FurtherInfoBugFixSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1NonArrivalPlacementDataFixSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1OutOfServiceBedSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1RemapBedCodesSeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1RemoveAssessmentDetailsSeedJob
@@ -102,6 +103,7 @@ class SeedService(
         SeedFileType.approvedPremisesUpdateActualArrivalDate -> getBean(Cas1UpdateActualArrivalDateSeedJob::class)
         SeedFileType.approvedPremisesUpdateApplicationContactDetails -> getBean(Cas1UpdateApplicationContactDetailsSeedJob::class)
         SeedFileType.approvedPremisesUpdatePremisesStatus -> getBean(Cas1UpdatePremisesStatusSeedJob::class)
+        SeedFileType.approvedPremisesRemovePlacementNonArrivalData -> getBean(Cas1NonArrivalPlacementDataFixSeedJob::class)
         SeedFileType.shortTermAccommodationCreateOmus -> getBean(ShortTermAccommodationCreateOmusSeedJob::class)
         SeedFileType.temporaryAccommodationAssignApplicationToPdu -> getBean(Cas3AssignApplicationToPduSeedJob::class)
         SeedFileType.Cas2UpdateNomisUserEmailAddress -> getBean(Cas2NomisUserEmailSeedJob::class)
