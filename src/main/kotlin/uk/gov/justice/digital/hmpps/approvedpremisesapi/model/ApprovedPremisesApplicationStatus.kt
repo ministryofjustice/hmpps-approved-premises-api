@@ -7,10 +7,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 
 enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesApplicationStatus) {
+  // initial status and also changed if an unsubmitted app is updated and is not inapplicable
   STARTED(ApiApprovedPremisesApplicationStatus.started),
+
+  // changed when assessment is rejected
   REJECTED(ApiApprovedPremisesApplicationStatus.rejected),
+
+  // assesment created which is allocated to someone
   AWAITING_ASSESSMENT(ApiApprovedPremisesApplicationStatus.awaitingAssesment),
+
+  // assesment created which is unallocated to someone
   UNALLOCATED_ASSESSMENT(ApiApprovedPremisesApplicationStatus.unallocatedAssesment),
+
+  // assessment updated and data is present and decision is null or clarification note updated with a response
   ASSESSMENT_IN_PROGRESS(ApiApprovedPremisesApplicationStatus.assesmentInProgress),
 
   /**
@@ -19,20 +28,26 @@ enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesAp
    * Note - If a [PlacementApplicationEntity] is assessed the application _will not_ enter this state
    * (it will remain as PENDING_PLACEMENT_REQUEST)
    */
+
+  // pr made but no placements as yet
   AWAITING_PLACEMENT(ApiApprovedPremisesApplicationStatus.awaitingPlacement),
+
+  // assessed and needs further clarification
   REQUESTED_FURTHER_INFORMATION(ApiApprovedPremisesApplicationStatus.requestedFurtherInformation),
 
   /**
    * An application has been assessed. Because no arrival date was defined,
    * one or more [PlacementApplicationEntity]s are required
    */
-
+// no Placement requests and release date is null
   PENDING_PLACEMENT_REQUEST(ApiApprovedPremisesApplicationStatus.pendingPlacementRequest),
 
   /**
    * A [BookingEntity] has been created for a [PlacementRequestEntity]
    */
+  // placement created
   PLACEMENT_ALLOCATED(ApiApprovedPremisesApplicationStatus.placementAllocated),
+
   INAPPLICABLE(ApiApprovedPremisesApplicationStatus.inapplicable),
   WITHDRAWN(ApiApprovedPremisesApplicationStatus.withdrawn),
   EXPIRED(ApiApprovedPremisesApplicationStatus.expired),

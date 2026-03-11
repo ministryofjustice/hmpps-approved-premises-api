@@ -6,11 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 
@@ -105,20 +103,5 @@ class RequestForPlacementTransformer(
       releaseType = application.releaseType?.let { ReleaseTypeOption.valueOf(it) },
       situation = application.situation?.let { SituationOption.valueOf(it) },
     )
-  }
-
-  private fun PlacementApplicationEntity.deriveStatus(): RequestForPlacementStatus = when {
-    this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
-    this.placementRequest?.hasActiveBooking() == true -> RequestForPlacementStatus.placementBooked
-    this.decision == PlacementApplicationDecision.REJECTED -> RequestForPlacementStatus.requestRejected
-    this.decision == PlacementApplicationDecision.ACCEPTED -> RequestForPlacementStatus.awaitingMatch
-    this.isSubmitted() -> RequestForPlacementStatus.requestSubmitted
-    else -> RequestForPlacementStatus.requestUnsubmitted
-  }
-
-  private fun PlacementRequestEntity.deriveStatus(): RequestForPlacementStatus = when {
-    this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
-    this.hasActiveBooking() -> RequestForPlacementStatus.placementBooked
-    else -> RequestForPlacementStatus.awaitingMatch
   }
 }

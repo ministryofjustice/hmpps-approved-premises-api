@@ -5,6 +5,8 @@ import org.springframework.data.domain.Limit
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
@@ -14,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -24,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.LocalDate
 import java.util.UUID
 
 @SuppressWarnings("MagicNumber")
@@ -47,10 +51,10 @@ val suitableStatusesAsc = mapOf(
 class Cas1ApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val applicationRepository: ApplicationRepository,
+  private val placementApplicationRepository: PlacementApplicationRepository,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val userRepository: UserRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
-  private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
   private val cas1AssessmentService: Cas1AssessmentService,
@@ -106,16 +110,66 @@ class Cas1ApplicationService(
         .thenBy { it.submittedAt ?: it.createdAt },
     )
     ?.let { application ->
+
+      val placementHistories =
+        placementApplicationRepository
+          .findByApplication(application)
+          .flatMap { placementApplication ->
+
+            val placementRequest = placementApplication.placementRequest
+
+            when {
+              placementRequest == null -> listOf(
+                Cas1PlacementHistory(
+                  dateApplied = placementApplication.expectedArrival
+                    ?: placementApplication.submittedAt?.toLocalDate()
+                    ?: placementApplication.createdAt.toLocalDate(),
+                  requestForPlacementStatus = placementApplication.deriveStatus(),
+                  placementStatus = null,
+                ),
+              )
+
+              placementRequest.spaceBookings.isEmpty() -> listOf(
+                Cas1PlacementHistory(
+                  dateApplied = placementRequest.expectedArrival,
+                  requestForPlacementStatus = placementRequest.deriveStatus(),
+                  placementStatus = null,
+                ),
+              )
+
+              else -> placementRequest.spaceBookings.map { placement ->
+                val placementStatus = placement.getSpaceBookingStatus()
+
+                val dateApplied = when (placementStatus) {
+                  Cas1SpaceBookingStatus.CANCELLED -> placement.cancellationOccurredAt
+                  Cas1SpaceBookingStatus.NOT_ARRIVED -> placement.expectedArrivalDate
+                  Cas1SpaceBookingStatus.DEPARTED -> placement.actualDepartureDate
+                  Cas1SpaceBookingStatus.ARRIVED -> placement.actualArrivalDate
+                  Cas1SpaceBookingStatus.UPCOMING -> placement.expectedArrivalDate
+                }
+
+                Cas1PlacementHistory(
+                  dateApplied = requireNotNull(dateApplied),
+                  requestForPlacementStatus = placementRequest.deriveStatus(),
+                  placementStatus = placementStatus,
+                )
+              }
+            }
+          }
+          .sortedByDescending { it.dateApplied }
+
+      val today = LocalDate.now()
+
+      val currentPlacementHistory =
+        placementHistories.lastOrNull { it.dateApplied >= today }
+          ?: placementHistories.firstOrNull { it.dateApplied < today }
+
       Cas1SuitableApplication(
         id = application.id,
         applicationStatus = application.status,
-        placementStatus = application
-          .takeIf { it.status == ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED }
-          ?.let {
-            cas1SpaceBookingService.getLatestPlacement(it.id)
-              ?.getSpaceBookingStatus()
-              ?: error("Could not find latest placement for application ${application.id} with application status ${application.status}")
-          },
+        requestForPlacementStatus = currentPlacementHistory?.requestForPlacementStatus,
+        placementStatus = currentPlacementHistory?.placementStatus,
+        placementHistories = placementHistories,
       )
     }
 

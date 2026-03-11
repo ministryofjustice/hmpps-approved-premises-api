@@ -22,6 +22,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
@@ -91,94 +92,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   fun findByApplicationId(applicationId: UUID): List<PlacementRequestEntity>
 
   fun findByApplication(application: ApprovedPremisesApplicationEntity): List<PlacementRequestEntity>
-
-  @Query(
-    """
-    SELECT
-      pq.*,
-      application.created_at as application_date,
-      CASE
-        WHEN (pq.is_parole) THEN 'parole'
-        ELSE 'standardRequest'
-      END as request_type,
-      apa.name as person_name,
-      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as person_risks_tier
-    from
-      placement_requests pq
-      left join approved_premises_applications apa on apa.id = pq.application_id
-      left join ap_areas area on area.id = apa.ap_area_id
-      left join applications application on application.id = pq.application_id
-    where
-      (:status IS NULL OR pq.is_withdrawn IS FALSE)
-      AND (:status IS NULL OR (
-        CASE
-          WHEN EXISTS (
-            SELECT
-              1
-            from
-              cancellations c
-              right join bookings booking on c.booking_id = booking.id
-            WHERE
-              booking.id = pq.booking_id
-              AND c.id IS NULL
-          ) THEN 'matched'
-          WHEN EXISTS (
-            SELECT 
-                1 
-            FROM 
-                cas1_space_bookings sb 
-            WHERE
-                sb.placement_request_id = pq.id AND
-                sb.cancellation_occurred_at IS NULL
-          ) THEN 'matched'   
-          WHEN EXISTS (
-            SELECT
-              1
-            from
-              booking_not_mades bnm
-            WHERE
-              bnm.placement_request_id = pq.id
-          ) THEN 'unableToMatch' 
-          ELSE 'notMatched'
-        END
-      ) = :status)
-      AND (:crn IS NULL OR EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)))
-      AND (
-        :crnOrName IS NULL OR 
-        (
-            (EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crnOrName)))
-            OR
-            (EXISTS (SELECT 1 FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.name LIKE UPPER('%' || :crnOrName || '%')))
-        )
-      )
-      AND (:tier IS NULL OR EXISTS (SELECT 1 FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier)) 
-      AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
-      AND (CAST(:arrivalDateTo AS date) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
-      AND (
-        :requestType IS NULL OR 
-        (
-            (:requestType = 'parole' AND pq.is_parole IS TRUE)
-            OR
-            (:requestType = 'standardRelease' AND pq.is_parole IS FALSE)
-        )
-      )
-      AND ((CAST(:apAreaId AS pg_catalog.uuid) IS NULL) OR area.id = :apAreaId)
-      AND ((CAST(:cruManagementAreaId AS pg_catalog.uuid) IS NULL) OR apa.cas1_cru_management_area_id = :cruManagementAreaId)
-  """,
-    nativeQuery = true,
-  )
-  fun allForDashboard(
-    status: String? = null,
-    crn: String? = null,
-    crnOrName: String? = null,
-    tier: String? = null,
-    arrivalDateFrom: LocalDate? = null,
-    arrivalDateTo: LocalDate? = null,
-    requestType: String? = null,
-    apAreaId: UUID? = null,
-    cruManagementAreaId: UUID? = null,
-    pageable: Pageable? = null,
-  ): Page<PlacementRequestEntity>
 
   @Query(
     DASHBOARD_SELECT + DASHBOARD_FROM_CLAUSE,
@@ -263,11 +176,17 @@ data class PlacementRequestEntity(
 ) {
   fun isInWithdrawableState() = isActive()
 
-  fun hasActiveBooking() = (spaceBookings.any { it.isActive() })
+  fun hasActiveBooking() = (spaceBookings.any { !it.isCancelled() })
 
   fun expectedDeparture(): LocalDate = expectedArrival.plusDays(duration.toLong())
 
   fun isActive() = !isWithdrawn
+
+  fun deriveStatus(): RequestForPlacementStatus = when {
+    this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
+    this.hasActiveBooking() -> RequestForPlacementStatus.placementBooked
+    else -> RequestForPlacementStatus.awaitingMatch
+  }
 
   /**
    * Before 26/8/25, if a request for placement was made as part of the original
