@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
@@ -73,10 +75,20 @@ data class Offence(
   val eventId: Long,
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class Registration(
   val code: String,
   val description: String,
   val startDate: LocalDate,
+  val riskNotes: String? = null,
+  // The parser will populate this if the registration has a risk note
+  val riskNotesDetail: List<NoteDetail> = emptyList(),
+)
+
+data class NoteDetail(
+  val note: String,
+  val date: LocalDate?,
 )
 
 data class MappaDetail(

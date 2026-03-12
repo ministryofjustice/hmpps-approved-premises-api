@@ -30,12 +30,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.parser.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -55,6 +58,7 @@ class OffenderServiceTest {
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockOffenderRepository = mockk<Cas1OffenderRepository>()
+  private val mockOffenderRiskNoteParser = mockk<OffenderRiskNoteParser>()
 
   private val adjudicationsConfigBindingModel = PrisonAdjudicationsConfigBindingModel().apply {
     prisonApiPageSize = 2
@@ -68,6 +72,7 @@ class OffenderServiceTest {
     adjudicationsConfigBindingModel,
     mockFeatureFlagService,
     mockOffenderRepository,
+    mockOffenderRiskNoteParser,
   )
 
   @Test
@@ -1358,6 +1363,54 @@ class OffenderServiceTest {
       val result = offenderService.getOffenderBookingDetails(crn)
 
       assertThat(result is CasResult.NotFound).isTrue
+    }
+  }
+
+  @Nested
+  inner class GetCaseDetail {
+    private val crn = "CRN123"
+
+    @Test
+    fun `returns Success with formatted riskNotesDetail when registrations have riskNotes`() {
+      val riskNotes = "Comment added by User One on 11/03/2026 at 09:00${System.lineSeparator()}This is a note."
+      val registration = RegistrationFactory()
+        .withRiskNotes(riskNotes)
+        .produce()
+      val caseDetail = CaseDetailFactory()
+        .withRegistrations(listOf(registration))
+        .produce()
+
+      every { mockApDeliusContextApiClient.getCaseDetail(crn) } returns ClientResult.Success(
+        HttpStatus.OK,
+        caseDetail,
+      )
+
+      every { mockOffenderRiskNoteParser.withParsedRiskNotes(caseDetail) } returns caseDetail
+
+      val result = offenderService.getCaseDetail(crn)
+
+      assertThat(result is CasResult.Success).isTrue
+      val resultValue = (result as CasResult.Success).value
+      assertThat(resultValue).isEqualTo(caseDetail)
+
+      verify { mockOffenderRiskNoteParser.withParsedRiskNotes(caseDetail) }
+    }
+
+    @Test
+    fun `returns NotFound when ApDeliusContext returns 404`() {
+      every { mockApDeliusContextApiClient.getCaseDetail(crn) } returns StatusCode(
+        HttpMethod.GET,
+        "/case-detail/$crn",
+        HttpStatus.NOT_FOUND,
+        null,
+      )
+
+      val result = offenderService.getCaseDetail(crn)
+
+      assertThat(result is CasResult.NotFound).isTrue
+      val notFoundResult = result as CasResult.NotFound
+      assertThat(notFoundResult.entityType).isEqualTo("CaseDetail")
+      assertThat(notFoundResult.id).isEqualTo(crn)
     }
   }
 }
