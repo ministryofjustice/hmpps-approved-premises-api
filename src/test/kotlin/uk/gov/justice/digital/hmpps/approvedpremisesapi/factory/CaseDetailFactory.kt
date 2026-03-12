@@ -114,15 +114,29 @@ class RegistrationFactory : Factory<Registration> {
   var code: Yielded<String> = { randomStringLowerCase(6) }
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var startDate: Yielded<LocalDate> = { LocalDate.now() }
+  var riskNotes: Yielded<String?> = { null }
+
+  fun withCode(code: String) = apply {
+    this.code = { code }
+  }
 
   fun withDescription(description: String) = apply {
     this.description = { description }
+  }
+
+  fun withStartDate(startDate: LocalDate) = apply {
+    this.startDate = { startDate }
+  }
+
+  fun withRiskNotes(riskNotes: String?) = apply {
+    this.riskNotes = { riskNotes }
   }
 
   override fun produce(): Registration = Registration(
     code = this.code(),
     description = this.description(),
     startDate = this.startDate(),
+    riskNotes = this.riskNotes(),
   )
 }
 

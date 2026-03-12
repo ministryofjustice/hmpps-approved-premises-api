@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.parser.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -39,6 +40,7 @@ class OffenderService(
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
   private val featureFlagService: FeatureFlagService,
   private val cas1OffenderRepository: Cas1OffenderRepository,
+  private val offenderRiskNoteParser: OffenderRiskNoteParser,
 ) {
   companion object {
     const val MAX_OFFENDER_REQUEST_COUNT = 500
@@ -374,7 +376,7 @@ class OffenderService(
 
       is ClientResult.Failure -> caseDetailResult.throwException()
     }
-    return CasResult.Success(caseDetail)
+    return CasResult.Success(offenderRiskNoteParser.withParsedRiskNotes(caseDetail))
   }
 
   fun getCsraSummariesForOffender(

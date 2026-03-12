@@ -927,6 +927,8 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
   @Nested
   inner class GetOffenderCaseDetail {
+    private val splitParam = "---------------------------------------------------------" + System.lineSeparator()
+
     @Test
     fun `Getting case detail for a CRN without a JWT returns 401`() {
       webTestClient.get()
@@ -940,6 +942,12 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
     fun `Getting case detail for a CRN returns 200`() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
         val crn = "CRN"
+
+        val note1 = "Comment added by User A on 01/01/2026 at 10:00${System.lineSeparator()}First note"
+        val note2 = "Comment added by User B on 02/01/2026 at 11:00${System.lineSeparator()}Second note"
+        val note3 = "Third note without header"
+
+        val riskNotes = listOf(note1, note2, note3).joinToString(separator = splitParam)
 
         val caseDetail = CaseDetailFactory()
           .withCase(
@@ -985,6 +993,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             listOf(
               RegistrationFactory()
                 .withDescription("Registration Description")
+                .withRiskNotes(riskNotes)
                 .produce(),
             ),
           )
@@ -1038,6 +1047,13 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.offences[0].main").isEqualTo(true)
           .jsonPath("$.offences[0].eventNumber").isEqualTo("1")
           .jsonPath("$.registrations[0].description").isEqualTo("Registration Description")
+          .jsonPath("$.registrations[0].riskNotes").doesNotExist()
+          .jsonPath("$.registrations[0].riskNotesDetail[0].note").isEqualTo("Third note without header")
+          .jsonPath("$.registrations[0].riskNotesDetail[0].date").isEmpty
+          .jsonPath("$.registrations[0].riskNotesDetail[1].note").isEqualTo("Second note")
+          .jsonPath("$.registrations[0].riskNotesDetail[1].date").isEqualTo("2026-01-02")
+          .jsonPath("$.registrations[0].riskNotesDetail[2].note").isEqualTo("First note")
+          .jsonPath("$.registrations[0].riskNotesDetail[2].date").isEqualTo("2026-01-01")
           .jsonPath("$.mappaDetail.levelDescription").isEqualTo("Level 1")
           .jsonPath("$.mappaDetail.categoryDescription").isEqualTo("Category 1")
           .jsonPath("$.sentences[0].typeDescription").isEqualTo("Sentence Type")
