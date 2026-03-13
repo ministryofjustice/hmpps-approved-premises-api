@@ -71,7 +71,7 @@ dependencies {
   testImplementation("io.mockk:mockk:1.14.6")
   testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
   testImplementation("io.jsonwebtoken:jjwt-api:0.12.6")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+  testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
