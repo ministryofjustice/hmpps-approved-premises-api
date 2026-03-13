@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
@@ -480,7 +480,7 @@ class Cas1ApplicationAppealsTest : InitialiseDatabasePerClassTestBase() {
               .isOk
               .returnResult(String::class.java)
 
-            val timeline = objectMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
+            val timeline = jsonMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
             assertThat(timeline).anyMatch {
               it.type == Cas1TimelineEventType.assessmentAppealed &&
@@ -548,7 +548,7 @@ class Cas1ApplicationAppealsTest : InitialiseDatabasePerClassTestBase() {
               .isOk
               .returnResult(String::class.java)
 
-            val timeline = objectMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
+            val timeline = jsonMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
             assertThat(timeline.size).isEqualTo(2)
           }

@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.client
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -11,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.BaseHMPPSClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeyResolver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -197,12 +197,12 @@ class PreemptiveCacheTest : IntegrationTestBase() {
       )
 
       redisTemplate.boundValueOps(qualifiedMetadataKey).set(
-        objectMapper.writeValueAsString(cacheEntry),
+        jsonMapper.writeValueAsString(cacheEntry),
         Duration.ofSeconds(10),
       )
 
       redisTemplate.boundValueOps(qualifiedDataKey).set(
-        objectMapper.writeValueAsString(offenderDetailsResponse),
+        jsonMapper.writeValueAsString(offenderDetailsResponse),
         Duration.ofSeconds(10),
       )
     }.start()
@@ -280,7 +280,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
   private fun getMetadata(key: String): WebClientCache.PreemptiveCacheMetadata? {
     val raw = redisTemplate.boundValueOps(key).get() ?: return null
 
-    return objectMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(raw)
+    return jsonMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(raw)
   }
 
   private fun assertStatusCodeFailure(result: ClientResult<*>, expectedStatus: HttpStatus) {
@@ -299,9 +299,9 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 @Component
 class PreemptivelyCachedClient(
   @Qualifier("prisonsApiWebClient") private val webClient: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClient, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClient, jsonMapper, webClientCache) {
   private val cacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = CACHE_NAME,
     successSoftTtlSeconds = 5,

@@ -478,7 +478,7 @@ class Cas2SubmissionTest(
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2SubmittedApplication::class.java,
             )
@@ -643,7 +643,7 @@ class Cas2SubmissionTest(
                   .responseBody
                   .blockFirst()
 
-                val responseBody = objectMapper.readValue(
+                val responseBody = jsonMapper.readValue(
                   rawResponseBody,
                   Cas2SubmittedApplication::class.java,
                 )
@@ -768,7 +768,7 @@ class Cas2SubmissionTest(
         // verify that generated 'application.submitted' domain event links to the CAS2 domain
         val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
         val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
-        val domainEventFromJson = objectMapper.readValue(
+        val domainEventFromJson = jsonMapper.readValue(
           persistedDomainEvent!!.data,
           Cas2ApplicationSubmittedEvent::class.java,
         )

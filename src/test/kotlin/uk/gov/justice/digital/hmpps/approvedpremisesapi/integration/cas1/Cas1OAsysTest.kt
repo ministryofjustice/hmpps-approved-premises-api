@@ -120,7 +120,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .expectBody()
         .json(
-          objectMapper.writeValueAsString(
+          jsonMapper.writeValueAsString(
             Cas1OASysMetadata(
               oaSysOffenceDetailsTransformer.toAssessmentMetadata(offenceDetails),
               oaSysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails),

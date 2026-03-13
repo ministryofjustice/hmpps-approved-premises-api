@@ -5,9 +5,14 @@ import org.springframework.http.ProblemDetail
 
 class InternalServerErrorProblem(val detail: String) : RuntimeException(detail) {
 
+  val title = "Internal Server Error"
+
   fun toProblemDetail(): ProblemDetail {
     return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, detail).apply {
-      title = "Internal Server Error"
+      title = title
     }
   }
+
+  override val message: String?
+    get() = "$title: $detail"
 }

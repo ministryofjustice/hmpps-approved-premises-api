@@ -1,12 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
@@ -30,11 +29,9 @@ import java.util.UUID
 class Cas1ChangeRequestTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
 
-  private val objectMapper = ObjectMapper().apply {
-//    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+  private val jsonMapper = JsonMapper.builder()
+    .addModule(KotlinModule.Builder().build())
+    .build()
 
   val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
   val personInfoResult = PersonSummaryInfoResult.Success.Full(
@@ -53,7 +50,7 @@ class Cas1ChangeRequestTransformerTest {
     .withDecision(ChangeRequestDecision.APPROVED)
     .produce()
 
-  private val cas1ChangeRequestTransformer = Cas1ChangeRequestTransformer(mockPersonTransformer, objectMapper)
+  private val cas1ChangeRequestTransformer = Cas1ChangeRequestTransformer(mockPersonTransformer, jsonMapper)
 
   @Test
   fun `findOpenResultsToChangeRequestSummary transforms correctly`() {

@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -9,6 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.NullNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
@@ -707,7 +707,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(casApiResult, Cas3Application::class.java)
+            val result = jsonMapper.readValue(casApiResult, Cas3Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
             assertThat(result.data.toString()).isEqualTo("""{thingId=345}""")
@@ -1112,8 +1112,8 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
+    if (serializable is String) return jsonMapper.readTree(serializable)
 
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
   }
 }

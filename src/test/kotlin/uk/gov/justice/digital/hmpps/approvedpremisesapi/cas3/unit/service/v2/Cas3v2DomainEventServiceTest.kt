@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2Do
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -68,6 +69,7 @@ import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
@@ -95,7 +97,8 @@ class Cas3v2DomainEventServiceTest {
   @InjectMockKs
   private lateinit var cas3DomainEventService: Cas3v2DomainEventService
 
-  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  //@MockK(relaxed = true)
+  val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   private val user = UserEntityFactory()
     .withYieldedProbationRegion {
@@ -161,7 +164,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED) },
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
     )
 
     val publishRequestSlot = slot<PublishRequest>()
@@ -170,7 +173,7 @@ class Cas3v2DomainEventServiceTest {
     }
 
     val capturedRequest = publishRequestSlot.captured
-    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
 
     assertAll(
       { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.booking.cancelled") },
@@ -247,7 +250,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED) },
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
     )
 
     verify(exactly = 0) {
@@ -303,7 +306,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED) },
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -351,7 +354,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CONFIRMED) },
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -362,7 +365,7 @@ class Cas3v2DomainEventServiceTest {
     }
 
     val capturedRequest = publishRequestSlot.captured
-    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
     assertAll(
       { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.booking.confirmed") },
       { assertThat(deserializedMessage.version).isEqualTo(1) },
@@ -430,7 +433,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CONFIRMED) },
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -479,7 +482,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CONFIRMED) },
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -539,7 +542,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -549,7 +552,7 @@ class Cas3v2DomainEventServiceTest {
       mockHmppsTopic.snsClient.publish(capture(publishSlot))
     }
 
-    val deserializedMessage = objectMapper.readValue(publishSlot.captured.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(publishSlot.captured.message(), SnsEvent::class.java)
 
     assertAll(
       { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.booking.provisionally-made") },
@@ -633,7 +636,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -694,7 +697,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -753,7 +756,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
     )
 
@@ -763,7 +766,7 @@ class Cas3v2DomainEventServiceTest {
     }
 
     val capturedRequest = publishRequestSlot.captured
-    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
 
     assertAll(
       { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.person.arrived") },
@@ -843,7 +846,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -903,7 +906,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -955,7 +958,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
     )
 
@@ -965,7 +968,7 @@ class Cas3v2DomainEventServiceTest {
     }
 
     val capturedRequest = publishRequestSlot.captured
-    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
 
     assertAll(
       { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.person.departed") },
@@ -1026,7 +1029,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1079,7 +1082,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1121,7 +1124,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1131,7 +1134,7 @@ class Cas3v2DomainEventServiceTest {
       mockHmppsTopic.snsClient.publish(capture(publishedRequestSlot))
     }
 
-    val deserializedMessage = objectMapper.readValue(publishedRequestSlot.captured.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(publishedRequestSlot.captured.message(), SnsEvent::class.java)
     assertAll(
       { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.person.departed.updated") },
       { assertThat(deserializedMessage.version).isEqualTo(1) },
@@ -1192,7 +1195,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1236,7 +1239,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1247,7 +1250,7 @@ class Cas3v2DomainEventServiceTest {
     }
 
     val capturedRequest = publishRequestSlot.captured
-    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
 
     assertAll(
       { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.person.departed.updated") },
@@ -1309,7 +1312,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1351,7 +1354,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1362,7 +1365,7 @@ class Cas3v2DomainEventServiceTest {
     }
 
     val capturedRequest = publishRequestSlot.captured
-    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
 
     assertAll(
       { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.booking.cancelled.updated") },
@@ -1427,7 +1430,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
     )
 
@@ -1437,7 +1440,7 @@ class Cas3v2DomainEventServiceTest {
     }
 
     val capturedRequest = publishRequestSlot.captured
-    val deserializedMessage = objectMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(capturedRequest.message(), SnsEvent::class.java)
 
     assertAll(
       { assertThat(deserializedMessage.eventType).isEqualTo("accommodation.cas3.booking.cancelled.updated") },
@@ -1499,7 +1502,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1540,7 +1543,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.type).isEqualTo(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED) },
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1588,6 +1591,11 @@ class Cas3v2DomainEventServiceTest {
       data = data,
     )
 
+    val domainEventEntity = DomainEventEntityFactory()
+      .withData(jsonMapper.writeValueAsString(createPremisesUnarchiveEvent(
+        premisesId = premises.id, userId = user.id, newStartDate = newStartDate, currentStartDate = currentStartDate, currentEndDate = currentEndDate, transactionId = UUID.randomUUID())
+      )).produce()
+
     every {
       cas3DomainEventBuilderMock.getPremisesUnarchiveEvent(
         eq(premises),
@@ -1598,7 +1606,7 @@ class Cas3v2DomainEventServiceTest {
         any(),
       )
     } returns domainEvent
-//    every { domainEventRepositoryMock.save(any()) } returns null
+    every { domainEventRepositoryMock.save(any()) } returns domainEventEntity
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1625,7 +1633,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.bookingId).isNull() },
       { assertThat(savedEvent.nomsNumber).isNull() },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEvent.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEvent.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEvent.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1679,8 +1687,13 @@ class Cas3v2DomainEventServiceTest {
       data = data,
     )
 
+    val domainEventEntity = DomainEventEntityFactory()
+      .withData(jsonMapper.writeValueAsString(createBedspaceArchiveEvent(
+        premisesId = premises.id, bedspaceId = bedspace.id, userId = user.id, null, endDate = endDate, transactionId = UUID.randomUUID())
+      )).produce()
+
     every { cas3DomainEventBuilderMock.getBedspaceArchiveEvent(eq(bedspace), eq(premises.id), null, eq(user), eq(domainEventTransactionId)) } returns domainEvent
-//    every { domainEventRepositoryMock.save(any()) } returns null
+    every { domainEventRepositoryMock.save(any()) } returns domainEventEntity
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1704,7 +1717,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.bookingId).isNull() },
       { assertThat(savedEvent.nomsNumber).isNull() },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEvent.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEvent.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEvent.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
       { assertThat(savedEvent.cas3TransactionId).isEqualTo(domainEventTransactionId) },
@@ -1754,8 +1767,13 @@ class Cas3v2DomainEventServiceTest {
       data = data,
     )
 
+    val domainEventEntity = DomainEventEntityFactory()
+      .withData(jsonMapper.writeValueAsString(createPremisesArchiveEvent(
+        premisesId = premises.id, userId = user.id, endDate = premisesEndDate, transactionId = UUID.randomUUID())
+      )).produce()
+
     every { cas3DomainEventBuilderMock.getPremisesArchiveEvent(eq(premises), eq(premisesEndDate), eq(user), eq(domainEventTransactionId)) } returns domainEvent
-//    every { domainEventRepositoryMock.save(any()) } returns null
+    every { domainEventRepositoryMock.save(any()) } returns domainEventEntity
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1779,7 +1797,7 @@ class Cas3v2DomainEventServiceTest {
       { assertThat(savedEvent.bookingId).isNull() },
       { assertThat(savedEvent.nomsNumber).isNull() },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEvent.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEvent.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEvent.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -1834,8 +1852,13 @@ class Cas3v2DomainEventServiceTest {
       data = data,
     )
 
+    val domainEventEntity = DomainEventEntityFactory()
+      .withData(jsonMapper.writeValueAsString(createBedspaceUnarchiveEvent(
+        premisesId = premises.id, bedspaceId = bedspace.id, userId = user.id, newStartDate, transactionId = UUID.randomUUID())
+      )).produce()
+
     every { cas3DomainEventBuilderMock.getBedspaceUnarchiveEvent(eq(bedspace), eq(premises.id), eq(currentStartDate), eq(currentEndDate), eq(user), any()) } returns domainEvent
-//    every { domainEventRepositoryMock.save(any()) } returns null
+    every { domainEventRepositoryMock.save(any()) } returns domainEventEntity
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1856,7 +1879,7 @@ class Cas3v2DomainEventServiceTest {
             it.bookingId == null &&
             it.nomsNumber == null &&
             it.occurredAt.toInstant() == domainEvent.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEvent.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1947,4 +1970,85 @@ class Cas3v2DomainEventServiceTest {
         .produce(),
     ),
   )
+
+  private fun createBedspaceUnarchiveEvent(premisesId: UUID, bedspaceId: UUID, userId: UUID, newStartDate: LocalDate, transactionId: UUID): CAS3BedspaceUnarchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3BedspaceUnarchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bedspaceUnarchived,
+      eventDetails = CAS3BedspaceUnarchiveEventDetails(
+        bedspaceId = bedspaceId,
+        premisesId = premisesId,
+        currentStartDate = LocalDate.now(),
+        currentEndDate = LocalDate.now(),
+        newStartDate = newStartDate,
+        userId = userId,
+        transactionId = transactionId,
+      ),
+    )
+  }
+
+  @SuppressWarnings("LongParameterList")
+  private fun createBedspaceArchiveEvent(premisesId: UUID, bedspaceId: UUID, userId: UUID, currentEndDate: LocalDate?, endDate: LocalDate, transactionId: UUID): CAS3BedspaceArchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3BedspaceArchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bedspaceArchived,
+      eventDetails = CAS3BedspaceArchiveEventDetails(
+        bedspaceId = bedspaceId,
+        premisesId = premisesId,
+        currentEndDate = currentEndDate,
+        endDate = endDate,
+        userId = userId,
+        transactionId = transactionId,
+      ),
+    )
+  }
+
+  private fun createPremisesArchiveEvent(premisesId: UUID, userId: UUID, endDate: LocalDate, transactionId: UUID = UUID.randomUUID()): CAS3PremisesArchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3PremisesArchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.premisesArchived,
+      eventDetails = CAS3PremisesArchiveEventDetails(
+        premisesId = premisesId,
+        endDate = endDate,
+        userId = userId,
+        transactionId = transactionId,
+      ),
+    )
+  }
+
+  @SuppressWarnings("LongParameterList")
+  private fun createPremisesUnarchiveEvent(
+    premisesId: UUID,
+    userId: UUID,
+    newStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    currentStartDate: LocalDate = LocalDate.now(),
+    transactionId: UUID = UUID.randomUUID(),
+  ): CAS3PremisesUnarchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3PremisesUnarchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.premisesUnarchived,
+      eventDetails = CAS3PremisesUnarchiveEventDetails(
+        premisesId = premisesId,
+        currentStartDate = currentStartDate,
+        newStartDate = newStartDate,
+        currentEndDate = currentEndDate,
+        userId = userId,
+        transactionId = transactionId,
+      ),
+    )
+  }
+
 }

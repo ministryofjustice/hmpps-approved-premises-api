@@ -15,7 +15,6 @@ class ConnectionPoolConfiguration {
 
   @Bean
   fun getDriverDataSource(
-    //@Qualifier("spring.datasource-org.springframework.boot.autoconfigure.jdbc.DataSourceProperties")
     @Qualifier("spring.datasource-org.springframework.boot.jdbc.autoconfigure.DataSourceProperties") properties: DataSourceProperties,
   ) = properties.initializeDataSourceBuilder().type(SimpleDriverDataSource::class.java).build()
 }

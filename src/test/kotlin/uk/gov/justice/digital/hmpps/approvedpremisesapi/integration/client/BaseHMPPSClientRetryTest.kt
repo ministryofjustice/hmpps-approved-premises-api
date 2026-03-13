@@ -70,7 +70,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
       maxRetries,
       retryOnReadTimeout = false,
     ),
-    objectMapper,
+    jsonMapper,
     webClientCache,
   )
 
@@ -80,7 +80,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
       maxRetries,
       retryOnReadTimeout = true,
     ),
-    objectMapper,
+    jsonMapper,
     webClientCache,
   )
 
@@ -228,7 +228,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(200)
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
 

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -8,7 +7,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
-import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -309,8 +307,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.util.TimeZone
 import java.util.UUID
 
@@ -349,16 +345,13 @@ abstract class IntegrationTestBase {
   }
 
   @Autowired
-  private lateinit var jdbcTemplate: JdbcTemplate
+  lateinit var jdbcTemplate: JdbcTemplate
 
   @Autowired
   private lateinit var cacheManager: CacheManager
 
   @Autowired
-  lateinit var objectMapper: ObjectMapper
-
-  @Autowired
-  lateinit var jsonMapper : JsonMapper
+  lateinit var jsonMapper: JsonMapper
 
   @Autowired
   lateinit var jwtAuthHelper: JwtAuthHelper
@@ -906,7 +899,7 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               StaffMembersPage(
                 content = listOf(staffMember),
               ),
@@ -922,7 +915,7 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(inmateDetail),
+            jsonMapper.writeValueAsString(inmateDetail),
           ),
       ),
   )
@@ -935,7 +928,7 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
             .withBody(
-              objectMapper.writeValueAsString(responseBody),
+              jsonMapper.writeValueAsString(responseBody),
             ),
         ),
     )
@@ -950,7 +943,7 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
             .withBody(
-              objectMapper.writeValueAsString(responseBody),
+              jsonMapper.writeValueAsString(responseBody),
             ),
         ),
     )
@@ -971,7 +964,7 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
             .withBody(
-              objectMapper.writeValueAsString(responseBody),
+              jsonMapper.writeValueAsString(responseBody),
             ),
         )
         .apply(additionalConfig),
@@ -992,7 +985,7 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(responseBody),
+            jsonMapper.writeValueAsString(responseBody),
           ),
       )
       .apply(additionalConfig),

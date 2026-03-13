@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
@@ -12,6 +11,9 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -131,7 +133,7 @@ class Cas1TasksTest {
                 .isOk
                 .expectBody()
                 .json(
-                  objectMapper.writeValueAsString(
+                  jsonMapper.writeValueAsString(
                     expectedTasks,
                   ),
                 )
@@ -193,7 +195,7 @@ class Cas1TasksTest {
                 .isOk
                 .expectBody()
                 .json(
-                  objectMapper.writeValueAsString(
+                  jsonMapper.writeValueAsString(
                     expectedTasks,
                   ),
                 )
@@ -206,7 +208,7 @@ class Cas1TasksTest {
                 .isOk
                 .expectBody()
                 .json(
-                  objectMapper.writeValueAsString(
+                  jsonMapper.writeValueAsString(
                     expectedTasks.reversed(),
                   ),
                 )
@@ -290,7 +292,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -312,7 +314,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -337,7 +339,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -362,7 +364,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -387,7 +389,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -480,7 +482,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -502,7 +504,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -526,7 +528,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -612,7 +614,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -634,7 +636,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -660,7 +662,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -977,7 +979,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -1006,7 +1008,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -1035,7 +1037,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -1131,7 +1133,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               listOf(nameMatchTasks[TaskType.assessment]!!),
             ),
           )
@@ -1152,7 +1154,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               listOf(nameMatchTasks[TaskType.placementApplication]!!),
             ),
           )
@@ -1173,7 +1175,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               listOf(crnMatchTasks[TaskType.assessment]!!),
             ),
           )
@@ -1194,7 +1196,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               listOf(crnMatchTasks[TaskType.placementApplication]!!),
             ),
           )
@@ -1219,7 +1221,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -1244,7 +1246,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               expectedTasks,
             ),
           )
@@ -1341,7 +1343,7 @@ class Cas1TasksTest {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               incompleteTasks,
             ),
           )
@@ -1352,7 +1354,11 @@ class Cas1TasksTest {
       fun `Get all tasks shows allows showing completed tasks`(userRole: UserRole) {
         val (user, jwt) = givenAUser(roles = listOf(userRole))
         val (_, _, completeTasks) = setupForUser(user)
-        objectMapper.setDateFormat(SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss"))
+
+        val jsonMapper: JsonMapper = JsonMapper.builder()
+          .addModule(KotlinModule.Builder().build())
+          .defaultDateFormat(java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"))
+          .build()
 
         val rawResponseBody = webTestClient.get()
           .uri("/cas1/tasks?isCompleted=true")
@@ -1364,7 +1370,7 @@ class Cas1TasksTest {
           .responseBody
           .blockFirst()
 
-        val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Task>>() {})
+        val responseBody = jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Task>>() {})
 
         assertThat(responseBody)
           .usingRecursiveFieldByFieldElementComparator(
@@ -2064,7 +2070,7 @@ class Cas1TasksTest {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 TaskWrapper(
                   task = taskTransformer.transformAssessmentToTask(
                     assessment,
@@ -2116,7 +2122,7 @@ class Cas1TasksTest {
                     .isOk
                     .expectBody()
                     .json(
-                      objectMapper.writeValueAsString(
+                      jsonMapper.writeValueAsString(
                         TaskWrapper(
                           task = taskTransformer.transformAssessmentToTask(
                             assessment,
@@ -2177,7 +2183,7 @@ class Cas1TasksTest {
                   .isOk
                   .expectBody()
                   .json(
-                    objectMapper.writeValueAsString(
+                    jsonMapper.writeValueAsString(
                       TaskWrapper(
                         task = taskTransformer.transformAssessmentToTask(
                           assessment,
@@ -2297,7 +2303,7 @@ class Cas1TasksTest {
         .isOk
         .expectBody()
         .json(
-          objectMapper.writeValueAsString(
+          jsonMapper.writeValueAsString(
             TaskWrapper(
               task = taskTransformer.transformPlacementApplicationToTask(
                 placementApplication,
@@ -2444,7 +2450,7 @@ class Cas1TasksTest {
                   .isCreated
                   .expectBody()
                   .json(
-                    objectMapper.writeValueAsString(
+                    jsonMapper.writeValueAsString(
                       Reallocation(
                         user = userTransformer.transformJpaToApi(
                           assigneeUser,
@@ -2540,7 +2546,7 @@ class Cas1TasksTest {
                   .isCreated
                   .expectBody()
                   .json(
-                    objectMapper.writeValueAsString(
+                    jsonMapper.writeValueAsString(
                       Reallocation(
                         user = userTransformer.transformJpaToApi(
                           assigneeUser,

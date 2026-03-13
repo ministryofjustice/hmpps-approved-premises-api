@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
@@ -9,6 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
@@ -120,7 +120,7 @@ class Cas2AssessmentNotesTest(
           Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
           Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
@@ -192,7 +192,7 @@ class Cas2AssessmentNotesTest(
               Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
               val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
               Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
@@ -305,7 +305,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
                 val responseBody =
-                  objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                  jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
                 Assertions.assertThat(responseBody.body).isEqualTo("New prison note content")
 
@@ -374,7 +374,7 @@ class Cas2AssessmentNotesTest(
               Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
               val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
               Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
@@ -487,7 +487,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
                 val responseBody =
-                  objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                  jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
                 Assertions.assertThat(responseBody.body).isEqualTo("New prison note content")
 

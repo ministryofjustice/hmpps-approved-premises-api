@@ -1,13 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
@@ -26,13 +25,11 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class PlacementApplicationTransformerTest {
-  private val objectMapper = ObjectMapper().apply {
-//    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+  private val jsonMapper = JsonMapper.builder()
+    .addModule(KotlinModule.Builder().build())
+    .build()
 
-  private val placementApplicationTransformer = PlacementApplicationTransformer(objectMapper)
+  private val placementApplicationTransformer = PlacementApplicationTransformer(jsonMapper)
 
   private var user = UserEntityFactory()
     .withYieldedProbationRegion {
@@ -115,8 +112,8 @@ class PlacementApplicationTransformerTest {
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
 
     assertThat(result.id).isEqualTo(placementApplication.id)
-    assertThat(result.data).isEqualTo(objectMapper.readTree(data))
-    assertThat(result.document).isEqualTo(objectMapper.readTree(document))
+    assertThat(result.data).isEqualTo(jsonMapper.readTree(data))
+    assertThat(result.document).isEqualTo(jsonMapper.readTree(document))
     assertThat(result.dates!!.expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
     assertThat(result.dates!!.duration).isEqualTo(30)
 

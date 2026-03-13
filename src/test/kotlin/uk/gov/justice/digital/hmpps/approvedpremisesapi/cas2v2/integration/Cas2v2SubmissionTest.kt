@@ -444,7 +444,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2v2SubmittedApplication::class.java,
             )
@@ -625,7 +625,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2v2SubmittedApplication::class.java,
             )
@@ -771,7 +771,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
                   .responseBody
                   .blockFirst()
 
-                val responseBody = objectMapper.readValue(
+                val responseBody = jsonMapper.readValue(
                   rawResponseBody,
                   Cas2v2SubmittedApplication::class.java,
                 )

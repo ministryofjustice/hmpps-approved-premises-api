@@ -1,3 +1,6 @@
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektCreateBaselineTask
+
 plugins {
   // this adds the appinsights agent (see AppInsightsConfigManager.kt)
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.3"
@@ -10,14 +13,6 @@ plugins {
 kotlin {
   jvmToolchain(25)
 }
-
-//configurations.matching { it.name == "detekt" }.all {
-//  resolutionStrategy.eachDependency {
-//    if (requested.group == "org.jetbrains.kotlin") {
-//      useVersion(detekt)
-//    }
-//  }
-//}
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.2")
@@ -66,7 +61,6 @@ dependencies {
   implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:7.6.0")
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
 
-
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.9")
 
@@ -75,7 +69,6 @@ dependencies {
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
   testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 
-  //testImplementation("org.springframework.boot:spring-boot-starter-security-test")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.2")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
@@ -241,14 +234,14 @@ dependencyCheck {
   suppressionFile = ".dependencycheckignore.xml"
 }
 
-//tasks.withType<dev.Detekt>().configureEach {
-//  source = source.asFileTree.matching {
-//    exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
-//  }
-//}
-//
-//tasks.withType<dev.DetektCreateBaselineTask>().configureEach {
-//  source = source.asFileTree.matching {
-//    exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
-//  }
-//}
+tasks.withType<Detekt>().configureEach {
+  source = source.asFileTree.matching {
+    exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
+  }
+}
+
+tasks.withType<DetektCreateBaselineTask>().configureEach {
+  source = source.asFileTree.matching {
+    exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
+  }
+}

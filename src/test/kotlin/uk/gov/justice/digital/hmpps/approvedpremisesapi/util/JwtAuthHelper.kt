@@ -17,7 +17,7 @@ class JwtAuthHelper {
   private val keyPair = Jwts.SIG.RS256.keyPair().build()
 
   @Autowired
-  protected lateinit var jwtAuthHelper: JwtAuthorisationHelper
+  private lateinit var jwtAuthHelper: JwtAuthorisationHelper
 
   @Bean
   @Primary
@@ -94,8 +94,7 @@ class JwtAuthHelper {
     authSource: String = "delius",
     expiryTime: Duration = Duration.ofHours(1),
     jwtId: String = UUID.randomUUID().toString(),
-  ): String =
-    jwtAuthHelper.createJwtAccessToken(
+  ): String = jwtAuthHelper.createJwtAccessToken(
       grantType = "authorization_code",
       clientId = subject,
       scope = scope,
