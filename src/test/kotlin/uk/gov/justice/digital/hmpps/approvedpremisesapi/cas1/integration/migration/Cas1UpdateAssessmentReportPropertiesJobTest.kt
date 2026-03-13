@@ -39,7 +39,7 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
       withReasonForLateApplication(null)
       withSubmittedAt(OffsetDateTime.now())
       withData(
-        objectMapper.writeValueAsString(
+        jsonMapper.writeValueAsString(
           mapOf(
             "suitability-assessment" to mapOf(
               "application-timeliness" to mapOf(
@@ -60,7 +60,7 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
       withReasonForLateApplication(null)
       withSubmittedAt(OffsetDateTime.now())
       withData(
-        objectMapper.writeValueAsString(
+        jsonMapper.writeValueAsString(
           mapOf(
             "suitability-assessment" to mapOf(
               "application-timeliness" to mapOf(
@@ -81,7 +81,7 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
       withReasonForLateApplication("")
       withSubmittedAt(OffsetDateTime.now())
       withData(
-        objectMapper.writeValueAsString(
+        jsonMapper.writeValueAsString(
           mapOf(
             "suitability-assessment" to emptyMap<String, Any>(),
           ),

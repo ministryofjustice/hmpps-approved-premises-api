@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.every
@@ -17,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.NullNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
@@ -56,7 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1WithdrawalTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -188,7 +187,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(
+            jsonMapper.readValue(
               rawResponseBody,
               object : TypeReference<List<Cas1ApplicationSummary>>() {},
             )
@@ -1056,7 +1055,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          objectMapper.readValue(
+          jsonMapper.readValue(
             rawResponseBody,
             object : TypeReference<List<Cas1TimelineEvent>>() {},
           )
@@ -1096,7 +1095,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       assessmentEntity: ApprovedPremisesAssessmentEntity,
       userEntity: UserEntity,
     ): DomainEventEntity {
-      val domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
+      val domainEventsFactory = Cas1DomainEventsFactory(jsonMapper)
 
       val data = if (type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) {
         val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
@@ -1155,7 +1154,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.id).isEqualTo(applicationEntity.id)
           assertThat(responseBody.person.crn).isEqualTo(applicationEntity.crn)
@@ -1208,7 +1207,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
         }
@@ -1245,7 +1244,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
         }
@@ -1315,7 +1314,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+            val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
             assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
           }
@@ -1343,7 +1342,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+            val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
             assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
           }
@@ -1380,7 +1379,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.person is FullPerson).isTrue
           assertThat(responseBody).matches {
@@ -1421,7 +1420,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.person is FullPerson).isTrue
 
@@ -1467,7 +1466,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody).matches {
             nonUpgradableApplicationEntity.id == it.id &&
@@ -1512,7 +1511,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, OfflineApplication::class.java)
 
           assertThat(responseBody).matches {
             offlineApplicationEntity.id == it.id &&
@@ -1804,7 +1803,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Application::class.java)
+            val result = jsonMapper.readValue(resultBody, Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
@@ -2754,9 +2753,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
+    if (serializable is String) return jsonMapper.readTree(serializable)
 
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
   }
 
   private fun produceAndPersistBasicApplication(

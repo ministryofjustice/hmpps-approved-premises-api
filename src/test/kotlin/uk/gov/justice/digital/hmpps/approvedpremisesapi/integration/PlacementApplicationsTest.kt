@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -11,6 +8,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.NullNode
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
@@ -202,7 +202,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+          val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
 
           assertThat(body.applicationId).isEqualTo(application.id)
           assertThat(body.applicationId).isEqualTo(application.id)
@@ -295,7 +295,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+            val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
 
             assertThat(body.id).isEqualTo(placementApplicationEntity.id)
             assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
@@ -329,7 +329,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+            val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
 
             assertThat(body.id).isEqualTo(placementApplicationEntity.id)
             assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
@@ -367,7 +367,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+          val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
 
           assertThat(body.id).isEqualTo(placementApplicationEntity.id)
           assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
@@ -512,7 +512,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+          val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
           val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
             data = "{\"thingId\":123}",
           )
@@ -773,20 +773,18 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
             assertThat(body).hasSize(1)
 
             val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
               document = "{\"thingId\":123}",
             )
 
-            assertThat(body[0]).matches {
-              expectedUpdatedPlacementApplication.id == it.id &&
-                expectedUpdatedPlacementApplication.application.id == it.applicationId &&
-                expectedUpdatedPlacementApplication.createdByUser.id == it.createdByUserId &&
-                expectedUpdatedPlacementApplication.createdAt.toInstant() == it.createdAt &&
-                serializableToJsonNode(expectedUpdatedPlacementApplication.document) == serializableToJsonNode(it.document)
-            }
+            assertThat(body[0].id).isEqualTo(expectedUpdatedPlacementApplication.id)
+            assertThat(body[0].applicationId).isEqualTo(expectedUpdatedPlacementApplication.application.id)
+            assertThat(body[0].createdByUserId).isEqualTo(expectedUpdatedPlacementApplication.createdByUser.id)
+            assertThat(body[0].createdAt).isEqualTo(expectedUpdatedPlacementApplication.createdAt.toInstant())
+            assertThat(serializableToJsonNode(body[0].document)).isEqualTo(serializableToJsonNode(expectedUpdatedPlacementApplication.document))
 
             val updatedPlacementApplication =
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
@@ -853,20 +851,18 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
             assertThat(body).hasSize(1)
 
             val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
               document = "{\"thingId\":123}",
             )
 
-            assertThat(body[0]).matches {
-              expectedUpdatedPlacementApplication.id == it.id &&
-                expectedUpdatedPlacementApplication.application.id == it.applicationId &&
-                expectedUpdatedPlacementApplication.createdByUser.id == it.createdByUserId &&
-                expectedUpdatedPlacementApplication.createdAt.toInstant() == it.createdAt &&
-                serializableToJsonNode(expectedUpdatedPlacementApplication.document) == serializableToJsonNode(it.document)
-            }
+            assertThat(body[0].id).isEqualTo(expectedUpdatedPlacementApplication.id)
+            assertThat(body[0].applicationId).isEqualTo(expectedUpdatedPlacementApplication.application.id)
+            assertThat(body[0].createdByUserId).isEqualTo(expectedUpdatedPlacementApplication.createdByUser.id)
+            assertThat(body[0].createdAt).isEqualTo(expectedUpdatedPlacementApplication.createdAt.toInstant())
+            assertThat(serializableToJsonNode(body[0].document)).isEqualTo(serializableToJsonNode(expectedUpdatedPlacementApplication.document))
 
             val updatedPlacementApplication =
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
@@ -950,7 +946,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
             assertThat(body).hasSize(3)
 
             val createdApp1Id = body[0].id
@@ -1051,7 +1047,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
             assertThat(body).hasSize(3)
 
             val createdApp1Id = body[0].id
@@ -1435,7 +1431,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+          val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
 
           assertThat(body).matches {
             placementApplicationEntity.id == it.id &&
@@ -1482,7 +1478,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+            val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
 
             assertThat(body).matches {
               placementApplicationEntity.id == it.id &&
@@ -1541,7 +1537,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .responseBody
                 .blockFirst()
 
-              val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+              val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
 
               assertThat(body).matches {
                 placementApplicationEntity.id == it.id &&
@@ -1575,8 +1571,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
+    if (serializable is String) return jsonMapper.readTree(serializable)
 
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
   }
 }

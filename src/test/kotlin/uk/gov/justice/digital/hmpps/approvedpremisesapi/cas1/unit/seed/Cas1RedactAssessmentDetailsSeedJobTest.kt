@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.unit.seed
 
+import com.fasterxml.jackson.module.kotlin.jsonMapper
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -12,7 +13,7 @@ class Cas1RedactAssessmentDetailsSeedJobTest {
 
   val service = Cas1RemoveAssessmentDetailsSeedJob(
     assessmentRepository = mockk<AssessmentRepository>(),
-    objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper(),
+    jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper(),
     cas1ApplicationTimelineNoteService = mockk<Cas1ApplicationTimelineNoteService>(),
   )
 

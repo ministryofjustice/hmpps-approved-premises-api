@@ -33,7 +33,7 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
   fun setup() {
     clock.setToNowWithoutMillis()
 
-    domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
+    domainEventsFactory = Cas1DomainEventsFactory(jsonMapper)
   }
 
   @ParameterizedTest
@@ -101,9 +101,9 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
       .isOk
       .bodyAsObject<String>()
 
-    val responseObject = objectMapper.readValue<(Cas1DomainEventEnvelope<*>)>(
+    val responseObject = jsonMapper.readValue<(Cas1DomainEventEnvelope<*>)>(
       responseJson,
-      objectMapper.typeFactory.constructParametricType(
+      jsonMapper.typeFactory.constructParametricType(
         Cas1DomainEventEnvelope::class.java,
         type.cas1Info!!.payloadType.java,
       ),
@@ -125,7 +125,7 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
     )
 
     val persistedJson = domainEventsFactory.removeEventDetails(
-      objectMapper.writeValueAsString(domainEventAndJson.envelope),
+      jsonMapper.writeValueAsString(domainEventAndJson.envelope),
       listOf("cancelledAtDate", "cancellationRecordedAt"),
     )
 
@@ -146,9 +146,9 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
       .isOk
       .bodyAsObject<String>()
 
-    val response = objectMapper.readValue<(Cas1DomainEventEnvelope<*>)>(
+    val response = jsonMapper.readValue<(Cas1DomainEventEnvelope<*>)>(
       responseJson,
-      objectMapper.typeFactory.constructParametricType(
+      jsonMapper.typeFactory.constructParametricType(
         Cas1DomainEventEnvelope::class.java,
         BookingCancelled::class.java,
       ),
@@ -174,7 +174,7 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
     )
 
     val persistedJson = domainEventsFactory.removeEventDetails(
-      objectMapper.writeValueAsString(domainEventAndJson.envelope),
+      jsonMapper.writeValueAsString(domainEventAndJson.envelope),
       listOf("recordedBy"),
     )
 
@@ -218,7 +218,7 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
     )
 
     val persistedJson = domainEventsFactory.removeEventDetails(
-      objectMapper.writeValueAsString(domainEventAndJson.envelope),
+      jsonMapper.writeValueAsString(domainEventAndJson.envelope),
       listOf("recordedBy"),
     )
 

@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.migration
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType.bookingChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
@@ -24,7 +24,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
       domainEventFactory.produceAndPersist {
         withType(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED)
         withData(
-          objectMapper.writeValueAsString(
+          jsonMapper.writeValueAsString(
             CAS3PersonDepartureUpdatedEvent(
               id = UUID.randomUUID(),
               timestamp = Instant.now().randomDateTimeBefore(14),
@@ -40,7 +40,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
       domainEventFactory.produceAndPersist {
         withType(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED)
         withData(
-          objectMapper.writeValueAsString(
+          jsonMapper.writeValueAsString(
             CAS3PersonDepartureUpdatedEvent(
               id = UUID.randomUUID(),
               timestamp = Instant.now().randomDateTimeBefore(14),
@@ -56,7 +56,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
       domainEventFactory.produceAndPersist {
         withType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
         withData(
-          objectMapper.writeValueAsString(
+          jsonMapper.writeValueAsString(
             BookingChangedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now().randomDateTimeBefore(14),
@@ -73,7 +73,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
     personDepartureUpdatedInvalidDomainEvents.forEach {
       val domainEvent = domainEventRepository.findById(it.id)
       Assertions.assertThat(domainEvent).isNotNull()
-      val departureUpdatedEvent = objectMapper.readValue<CAS3PersonDepartureUpdatedEvent>(domainEvent.get().data!!)
+      val departureUpdatedEvent = jsonMapper.readValue<CAS3PersonDepartureUpdatedEvent>(domainEvent.get().data!!)
       Assertions.assertThat(departureUpdatedEvent.id == it.id)
       Assertions.assertThat(departureUpdatedEvent.eventType == EventType.personDepartureUpdated)
     }
@@ -81,7 +81,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
     personDepartureUpdatedValidDomainEvents.forEach {
       val domainEvent = domainEventRepository.findById(it.id)
       Assertions.assertThat(domainEvent).isNotNull()
-      val departureUpdatedEvent = objectMapper.readValue<CAS3PersonDepartureUpdatedEvent>(domainEvent.get().data!!)
+      val departureUpdatedEvent = jsonMapper.readValue<CAS3PersonDepartureUpdatedEvent>(domainEvent.get().data!!)
       Assertions.assertThat(departureUpdatedEvent.id == it.id)
       Assertions.assertThat(departureUpdatedEvent.eventType == EventType.personDepartureUpdated)
     }
@@ -89,7 +89,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
     approvedPremisesBookingChangedDomainEvents.forEach {
       val domainEvent = domainEventRepository.findById(it.id)
       Assertions.assertThat(domainEvent).isNotNull()
-      val bookingChangedEnvelope = objectMapper.readValue<BookingChangedEnvelope>(domainEvent.get().data!!)
+      val bookingChangedEnvelope = jsonMapper.readValue<BookingChangedEnvelope>(domainEvent.get().data!!)
       Assertions.assertThat(bookingChangedEnvelope.id == it.id)
       Assertions.assertThat(bookingChangedEnvelope.eventType == bookingChanged)
     }

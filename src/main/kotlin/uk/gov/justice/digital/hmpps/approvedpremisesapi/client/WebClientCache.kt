@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpMethod
@@ -11,6 +8,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusRandomSeconds
 import java.time.Clock
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 class WebClientCache(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val redisTemplate: RedisTemplate<String, String>,
   @Value("\${preemptive-cache-key-prefix}") private val preemptiveCacheKeyPrefix: String,
   private val sentryService: SentryService,
@@ -165,7 +165,7 @@ class WebClientCache(
     hardTtlSeconds: Long,
   ) {
     redisTemplate.boundValueOps(cacheKeyResolver.metadataKey).set(
-      objectMapper.writeValueAsString(cacheEntry),
+      jsonMapper.writeValueAsString(cacheEntry),
       Duration.ofSeconds(hardTtlSeconds),
     )
 
@@ -181,7 +181,7 @@ class WebClientCache(
     val stringValue = redisTemplate.boundValueOps(metaDataKey).get()
       ?: return null
 
-    return objectMapper.readValue<PreemptiveCacheMetadata>(
+    return jsonMapper.readValue<PreemptiveCacheMetadata>(
       stringValue,
     )
   }
@@ -217,7 +217,7 @@ class WebClientCache(
     if (metadataEntry.httpStatus.is2xxSuccessful) {
       return ClientResult.Success(
         status = metadataEntry.httpStatus,
-        body = objectMapper.readValue(cachedBody!!, typeReference),
+        body = jsonMapper.readValue(cachedBody!!, typeReference),
         isPreemptivelyCachedResponse = true,
       )
     }
