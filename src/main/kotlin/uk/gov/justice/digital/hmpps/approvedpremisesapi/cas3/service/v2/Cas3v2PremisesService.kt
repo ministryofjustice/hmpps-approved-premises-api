@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
@@ -35,7 +35,7 @@ class Cas3v2PremisesService(
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
   private val cas3UserAccessService: Cas3UserAccessService,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) {
 
   companion object {
@@ -204,7 +204,7 @@ class Cas3v2PremisesService(
       .mapNotNull { domainEventEntity ->
         when (domainEventEntity.type) {
           DomainEventType.CAS3_PREMISES_UNARCHIVED -> {
-            val newStartDate = objectMapper.readValue(domainEventEntity.data, CAS3PremisesUnarchiveEvent::class.java).eventDetails.newStartDate
+            val newStartDate = jsonMapper.readValue(domainEventEntity.data, CAS3PremisesUnarchiveEvent::class.java).eventDetails.newStartDate
             if (newStartDate <= LocalDate.now()) {
               Cas3PremisesArchiveAction(
                 status = Cas3PremisesStatus.online,
@@ -217,7 +217,7 @@ class Cas3v2PremisesService(
 
           DomainEventType.CAS3_PREMISES_ARCHIVED -> {
             val endDate =
-              objectMapper.readValue(domainEventEntity.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate
+              jsonMapper.readValue(domainEventEntity.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate
             if (endDate <= LocalDate.now()) {
               Cas3PremisesArchiveAction(
                 status = Cas3PremisesStatus.archived,

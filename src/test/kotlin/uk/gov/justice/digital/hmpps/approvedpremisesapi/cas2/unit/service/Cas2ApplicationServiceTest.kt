@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -22,6 +21,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
@@ -86,7 +86,7 @@ class Cas2ApplicationServiceTest {
   lateinit var mockAssessmentService: Cas2AssessmentService
 
   @MockK
-  lateinit var mockObjectMapper: ObjectMapper
+  lateinit var mockJsonMapper: JsonMapper
 
   @MockK
   lateinit var mockNotifyConfig: NotifyConfig
@@ -105,7 +105,7 @@ class Cas2ApplicationServiceTest {
       mockEmailNotificationService,
       mockAssessmentService,
       mockNotifyConfig,
-      mockObjectMapper,
+      mockJsonMapper,
       "http://frontend/applications/#id",
       "http://frontend/assess/applications/#applicationId/overview",
     )
@@ -717,7 +717,7 @@ class Cas2ApplicationServiceTest {
         every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(
           UUID.randomUUID(),
         )
-        every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
+        every { mockJsonMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
         every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
       }
 

@@ -1,10 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import io.sentry.Sentry
 import org.hibernate.exception.JDBCConnectionException
 import org.slf4j.LoggerFactory
@@ -22,13 +17,18 @@ import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import org.springframework.web.util.ContentCachingRequestWrapper
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.exc.MismatchedInputException
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.node.ArrayNode
+import tools.jackson.databind.node.ObjectNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeserializationValidationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isTypeInThrowableChain
 
 @ControllerAdvice
 class ExceptionHandling(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val deserializationValidationService: DeserializationValidationService,
   private val sentryService: SentryService,
 ) {
@@ -88,7 +88,7 @@ class ExceptionHandling(
         val mismatchedInputException = exception.cause as MismatchedInputException
 
         val requestBody = request.getNativeRequest(ContentCachingRequestWrapper::class.java)
-        val jsonTree = objectMapper.readTree(String(requestBody!!.contentAsByteArray))
+        val jsonTree = jsonMapper.readTree(String(requestBody!!.contentAsByteArray))
 
         if (expectedArrayButGotObject(jsonTree, mismatchedInputException)) {
           val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Expected an array but got an object")
@@ -103,7 +103,7 @@ class ExceptionHandling(
         }
 
         val badRequestProblem = if (rootIsArray(mismatchedInputException)) {
-          val arrayItemsType = (mismatchedInputException.path[1].from as Class<*>).kotlin
+          val arrayItemsType = (mismatchedInputException.path[1].from() as Class<*>).kotlin
 
           BadRequestProblem(
             invalidParams = deserializationValidationService.validateArray(
@@ -112,7 +112,7 @@ class ExceptionHandling(
             ),
           )
         } else {
-          val objectType = (mismatchedInputException.path[0].from as Class<*>).kotlin
+          val objectType = (mismatchedInputException.path[0].from() as Class<*>).kotlin
 
           BadRequestProblem(
             invalidParams = deserializationValidationService.validateObject(
@@ -224,8 +224,8 @@ class ExceptionHandling(
       return deserializationValidationService.isArrayType(mismatchedInputException.targetType)
     }
 
-    if (mismatchedInputException.path.first().from is Class<*>) {
-      return deserializationValidationService.isArrayType(mismatchedInputException.path.first().from as Class<*>)
+    if (mismatchedInputException.path.first().from() is Class<*>) {
+      return deserializationValidationService.isArrayType(mismatchedInputException.path.first().from() as Class<*>)
     }
 
     return true
@@ -245,5 +245,5 @@ class ExceptionHandling(
 
   private fun expectedArrayButGotObject(jsonNode: JsonNode, mismatchedInputException: MismatchedInputException) = jsonNode is ObjectNode && isInputTypeArray(mismatchedInputException)
   private fun expectedObjectButGotArray(jsonNode: JsonNode, mismatchedInputException: MismatchedInputException) = jsonNode is ArrayNode && !isInputTypeArray(mismatchedInputException)
-  private fun rootIsArray(mismatchedInputException: MismatchedInputException) = mismatchedInputException.path[0].from !is Class<*>
+  private fun rootIsArray(mismatchedInputException: MismatchedInputException) = mismatchedInputException.path[0].from() !is Class<*>
 }

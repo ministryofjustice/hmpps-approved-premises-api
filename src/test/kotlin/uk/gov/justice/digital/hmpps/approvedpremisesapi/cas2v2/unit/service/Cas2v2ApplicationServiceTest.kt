@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.unit.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -21,6 +20,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.domain.Specification
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
@@ -72,7 +72,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
-  private val mockObjectMapper = mockk<ObjectMapper>()
+  private val mockJsonMapper = mockk<JsonMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
   private val mockSentryService = mockk<SentryService>()
 
@@ -86,7 +86,7 @@ class Cas2v2ApplicationServiceTest {
     mockEmailNotificationService,
     mockCas2v2AssessmentService,
     mockNotifyConfig,
-    mockObjectMapper,
+    mockJsonMapper,
     mockSentryService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
@@ -734,7 +734,7 @@ class Cas2v2ApplicationServiceTest {
     @BeforeEach
     fun setup() {
       every { mockCas2LockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(UUID.randomUUID())
-      every { mockObjectMapper.writeValueAsString(submitCas2v2Application.translatedDocument) } returns "{}"
+      every { mockJsonMapper.writeValueAsString(submitCas2v2Application.translatedDocument) } returns "{}"
       every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
     }
 

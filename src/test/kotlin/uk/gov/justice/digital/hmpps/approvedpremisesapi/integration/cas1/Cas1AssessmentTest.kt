@@ -1017,7 +1017,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             .isOk
 
           val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-          assertThat((persistedAssessment.data).toString()).isEqualTo("{\"some text\":5}")
+          assertThat( jsonMapper.readTree(persistedAssessment.data)).isEqualTo(jsonMapper.readTree("""{"some text":5}"""))
         }
       }
     }
@@ -1215,7 +1215,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(jsonMapper.readTree(persistedAssessment.document)).isEqualTo(jsonMapper.readTree("{\"document\":\"value\"}"))
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.agreeWithShortNoticeReason).isTrue
           assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("comments")
@@ -1333,7 +1333,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(jsonMapper.readTree(persistedAssessment.document)).isEqualTo(jsonMapper.readTree("{\"document\":\"value\"}"))
           assertThat(persistedAssessment.submittedAt).isNotNull
 
           val emittedMessage =
@@ -1514,7 +1514,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
-          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
+          assertThat(jsonMapper.readTree(persistedAssessment.document)).isEqualTo(jsonMapper.readTree("{\"document\":\"value\"}"))
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.agreeWithShortNoticeReason).isFalse
           assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("rejection comments")

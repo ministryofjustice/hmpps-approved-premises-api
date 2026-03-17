@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetailsSubmittedBy
@@ -52,7 +52,7 @@ class Cas2v2ApplicationService(
   private val emailNotificationService: EmailNotificationService,
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val sentryService: SentryService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
@@ -253,7 +253,7 @@ class Cas2v2ApplicationService(
     var application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
-    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
+    val serializedTranslatedDocument = jsonMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
 
     if (application.createdByUser != user) {
       return CasResult.Unauthorised()

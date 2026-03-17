@@ -522,12 +522,12 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               expectedUpdatedPlacementApplication.application.id == it.applicationId &&
               expectedUpdatedPlacementApplication.createdByUser.id == it.createdByUserId &&
               expectedUpdatedPlacementApplication.createdAt.toInstant() == it.createdAt &&
-              serializableToJsonNode(expectedUpdatedPlacementApplication.data) == serializableToJsonNode(it.data)
+              serializableToJsonNode(jsonMapper.readTree(expectedUpdatedPlacementApplication.data)) == serializableToJsonNode(it.data)
           }
 
           val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)
 
-          assertThat(updatedPlacementApplication!!.data).isEqualTo(expectedUpdatedPlacementApplication.data)
+          assertThat(jsonMapper.readTree(updatedPlacementApplication!!.data)).isEqualTo(jsonMapper.readTree(expectedUpdatedPlacementApplication.data))
         }
       }
     }
