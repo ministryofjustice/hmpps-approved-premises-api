@@ -28,7 +28,6 @@ class EnumConverterFactory : ConverterFactory<String, Enum<*>> {
       it.getOpenApiValueOrDefault() == source
     } ?: throw IllegalArgumentException("No enum constant ${targetType.canonicalName} with value '$source'")
 
-
     @Suppress("UNCHECKED_CAST")
     private fun T.getOpenApiValueOrDefault(): String {
       val valueProperty = this::class.declaredMemberProperties.firstOrNull { it.name == "value" } as KProperty1<T, String>?

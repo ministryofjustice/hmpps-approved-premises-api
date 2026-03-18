@@ -6,7 +6,9 @@ import org.springframework.http.ProblemDetail
 class UnhandledExceptionProblem(detail: String) : RuntimeException(detail) {
 
   fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(
-    HttpStatus.INTERNAL_SERVER_ERROR, message ?: "There was an unexpected problem").apply {
-      title = "Internal Server Error"
+    HttpStatus.INTERNAL_SERVER_ERROR,
+    message ?: "There was an unexpected problem",
+  ).apply {
+    title = "Internal Server Error"
   }
 }

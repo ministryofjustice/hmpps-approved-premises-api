@@ -1017,7 +1017,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             .isOk
 
           val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-          assertThat( jsonMapper.readTree(persistedAssessment.data)).isEqualTo(jsonMapper.readTree("""{"some text":5}"""))
+          assertThat(jsonMapper.readTree(persistedAssessment.data)).isEqualTo(jsonMapper.readTree("""{"some text":5}"""))
         }
       }
     }

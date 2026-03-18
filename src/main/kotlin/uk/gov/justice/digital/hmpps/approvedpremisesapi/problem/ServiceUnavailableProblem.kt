@@ -5,9 +5,7 @@ import org.springframework.http.ProblemDetail
 
 class ServiceUnavailableProblem(val detail: String) : RuntimeException(detail) {
 
-  fun toProblemDetail(): ProblemDetail {
-    return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, detail).apply {
-      title = "Service Unavailable"
-    }
+  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, detail).apply {
+    title = "Service Unavailable"
   }
 }

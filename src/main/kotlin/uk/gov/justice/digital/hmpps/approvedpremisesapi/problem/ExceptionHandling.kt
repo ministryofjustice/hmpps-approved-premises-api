@@ -72,7 +72,7 @@ class ExceptionHandling(
   fun handleMethodArgumentTypeMismatchException(ex: MethodArgumentTypeMismatchException): ResponseEntity<ProblemDetail> {
     Sentry.captureException(ex)
     val problem = BadRequestProblem(
-      errorDetail = "Invalid type for query parameter ${ex.parameter.parameterName} expected ${ex.parameter.parameterType.name}"
+      errorDetail = "Invalid type for query parameter ${ex.parameter.parameterName} expected ${ex.parameter.parameterType.name}",
     )
     logBadRequestProblem(problem)
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem.toProblemDetail())

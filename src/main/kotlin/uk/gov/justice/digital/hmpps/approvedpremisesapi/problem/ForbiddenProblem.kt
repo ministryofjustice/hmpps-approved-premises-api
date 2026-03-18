@@ -8,12 +8,10 @@ class ForbiddenProblem(detail: String? = null) : RuntimeException(detail ?: "You
   val msg = detail ?: "You are not authorized to access this endpoint"
   val title = "Forbidden"
 
-  fun toProblemDetail(): ProblemDetail {
-    return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, message ?: msg).apply {
-      title = title
-      status = HttpStatus.FORBIDDEN.value()
-      detail = msg
-    }
+  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, message ?: msg).apply {
+    title = title
+    status = HttpStatus.FORBIDDEN.value()
+    detail = msg
   }
 
   override val message: String?

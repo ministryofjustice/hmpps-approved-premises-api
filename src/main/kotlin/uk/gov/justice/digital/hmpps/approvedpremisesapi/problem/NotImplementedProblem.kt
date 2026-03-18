@@ -5,9 +5,7 @@ import org.springframework.http.ProblemDetail
 
 class NotImplementedProblem(val detail: String) : RuntimeException(detail) {
 
-  fun toProblemDetail(): ProblemDetail {
-    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_IMPLEMENTED, detail).apply {
-      title = "Not Implemented"
-    }
+  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_IMPLEMENTED, detail).apply {
+    title = "Not Implemented"
   }
 }

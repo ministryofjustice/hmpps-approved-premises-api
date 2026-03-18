@@ -69,7 +69,6 @@ import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
@@ -97,7 +96,6 @@ class Cas3v2DomainEventServiceTest {
   @InjectMockKs
   private lateinit var cas3DomainEventService: Cas3v2DomainEventService
 
-  //@MockK(relaxed = true)
   val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   private val user = UserEntityFactory()
@@ -1592,9 +1590,18 @@ class Cas3v2DomainEventServiceTest {
     )
 
     val domainEventEntity = DomainEventEntityFactory()
-      .withData(jsonMapper.writeValueAsString(createPremisesUnarchiveEvent(
-        premisesId = premises.id, userId = user.id, newStartDate = newStartDate, currentStartDate = currentStartDate, currentEndDate = currentEndDate, transactionId = UUID.randomUUID())
-      )).produce()
+      .withData(
+        jsonMapper.writeValueAsString(
+          createPremisesUnarchiveEvent(
+            premisesId = premises.id,
+            userId = user.id,
+            newStartDate = newStartDate,
+            currentStartDate = currentStartDate,
+            currentEndDate = currentEndDate,
+            transactionId = UUID.randomUUID(),
+          ),
+        ),
+      ).produce()
 
     every {
       cas3DomainEventBuilderMock.getPremisesUnarchiveEvent(
@@ -1688,9 +1695,18 @@ class Cas3v2DomainEventServiceTest {
     )
 
     val domainEventEntity = DomainEventEntityFactory()
-      .withData(jsonMapper.writeValueAsString(createBedspaceArchiveEvent(
-        premisesId = premises.id, bedspaceId = bedspace.id, userId = user.id, null, endDate = endDate, transactionId = UUID.randomUUID())
-      )).produce()
+      .withData(
+        jsonMapper.writeValueAsString(
+          createBedspaceArchiveEvent(
+            premisesId = premises.id,
+            bedspaceId = bedspace.id,
+            userId = user.id,
+            null,
+            endDate = endDate,
+            transactionId = UUID.randomUUID(),
+          ),
+        ),
+      ).produce()
 
     every { cas3DomainEventBuilderMock.getBedspaceArchiveEvent(eq(bedspace), eq(premises.id), null, eq(user), eq(domainEventTransactionId)) } returns domainEvent
     every { domainEventRepositoryMock.save(any()) } returns domainEventEntity
@@ -1768,9 +1784,16 @@ class Cas3v2DomainEventServiceTest {
     )
 
     val domainEventEntity = DomainEventEntityFactory()
-      .withData(jsonMapper.writeValueAsString(createPremisesArchiveEvent(
-        premisesId = premises.id, userId = user.id, endDate = premisesEndDate, transactionId = UUID.randomUUID())
-      )).produce()
+      .withData(
+        jsonMapper.writeValueAsString(
+          createPremisesArchiveEvent(
+            premisesId = premises.id,
+            userId = user.id,
+            endDate = premisesEndDate,
+            transactionId = UUID.randomUUID(),
+          ),
+        ),
+      ).produce()
 
     every { cas3DomainEventBuilderMock.getPremisesArchiveEvent(eq(premises), eq(premisesEndDate), eq(user), eq(domainEventTransactionId)) } returns domainEvent
     every { domainEventRepositoryMock.save(any()) } returns domainEventEntity
@@ -1853,9 +1876,17 @@ class Cas3v2DomainEventServiceTest {
     )
 
     val domainEventEntity = DomainEventEntityFactory()
-      .withData(jsonMapper.writeValueAsString(createBedspaceUnarchiveEvent(
-        premisesId = premises.id, bedspaceId = bedspace.id, userId = user.id, newStartDate, transactionId = UUID.randomUUID())
-      )).produce()
+      .withData(
+        jsonMapper.writeValueAsString(
+          createBedspaceUnarchiveEvent(
+            premisesId = premises.id,
+            bedspaceId = bedspace.id,
+            userId = user.id,
+            newStartDate,
+            transactionId = UUID.randomUUID(),
+          ),
+        ),
+      ).produce()
 
     every { cas3DomainEventBuilderMock.getBedspaceUnarchiveEvent(eq(bedspace), eq(premises.id), eq(currentStartDate), eq(currentEndDate), eq(user), any()) } returns domainEvent
     every { domainEventRepositoryMock.save(any()) } returns domainEventEntity
@@ -2050,5 +2081,4 @@ class Cas3v2DomainEventServiceTest {
       ),
     )
   }
-
 }

@@ -27,7 +27,7 @@ services:
       - "6377:6379"
 
   localstack:
-    image: localstack/localstack:3.4.0
+    image: localstack/localstack:4
     container_name: approved-premises-api-test-localstack
     ports:
       - "4566:4566"
