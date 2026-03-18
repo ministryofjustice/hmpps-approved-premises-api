@@ -115,6 +115,7 @@ class RegistrationFactory : Factory<Registration> {
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var startDate: Yielded<LocalDate> = { LocalDate.now() }
   var riskNotes: Yielded<String?> = { null }
+  var riskFlagGroupDescription: Yielded<String?> = { null }
 
   fun withCode(code: String) = apply {
     this.code = { code }
@@ -132,11 +133,16 @@ class RegistrationFactory : Factory<Registration> {
     this.riskNotes = { riskNotes }
   }
 
+  fun withRiskFlagGroupDescription(riskFlagGroupDescription: String?) = apply {
+    this.riskFlagGroupDescription = { riskFlagGroupDescription }
+  }
+
   override fun produce(): Registration = Registration(
     code = this.code(),
     description = this.description(),
     startDate = this.startDate(),
     riskNotes = this.riskNotes(),
+    riskFlagGroupDescription = this.riskFlagGroupDescription(),
   )
 }
 
