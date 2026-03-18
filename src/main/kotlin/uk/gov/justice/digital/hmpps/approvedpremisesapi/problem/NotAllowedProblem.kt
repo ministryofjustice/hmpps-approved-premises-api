@@ -5,9 +5,7 @@ import org.springframework.http.ProblemDetail
 
 class NotAllowedProblem(val detail: String) : RuntimeException(detail) {
 
-  fun toProblemDetail(): ProblemDetail {
-    return ProblemDetail.forStatusAndDetail(HttpStatus.METHOD_NOT_ALLOWED, detail).apply {
-      title = "Not Allowed"
-    }
+  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.METHOD_NOT_ALLOWED, detail).apply {
+    title = "Not Allowed"
   }
 }

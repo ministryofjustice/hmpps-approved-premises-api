@@ -79,7 +79,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:5.0.1")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.0.1")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.1.0")
 
   implementation("uk.gov.service.notify:notifications-java-client:6.0.0-RELEASE")
 }

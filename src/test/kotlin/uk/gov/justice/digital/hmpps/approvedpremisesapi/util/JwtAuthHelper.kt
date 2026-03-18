@@ -95,12 +95,12 @@ class JwtAuthHelper {
     expiryTime: Duration = Duration.ofHours(1),
     jwtId: String = UUID.randomUUID().toString(),
   ): String = jwtAuthHelper.createJwtAccessToken(
-      grantType = "authorization_code",
-      clientId = subject,
-      scope = scope,
-      roles = roles,
-      authSource = authSource,
-      expiryTime = expiryTime,
-      jwtId = jwtId,
-    )
+    grantType = "authorization_code",
+    clientId = subject,
+    scope = scope,
+    roles = roles,
+    authSource = authSource,
+    expiryTime = expiryTime,
+    jwtId = jwtId,
+  )
 }

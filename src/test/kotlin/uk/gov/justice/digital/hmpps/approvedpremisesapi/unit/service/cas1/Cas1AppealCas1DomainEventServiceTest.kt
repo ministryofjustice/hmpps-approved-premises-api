@@ -93,22 +93,24 @@ class Cas1AppealCas1DomainEventServiceTest {
     )
 
     verify(exactly = 1) {
-      domainEventService.saveAssessmentAppealedEvent(match { ev ->
-        ev.applicationId == application.id &&
-          ev.assessmentId == null &&
-          ev.bookingId == null &&
-          ev.crn == application.crn &&
-          ev.data.eventDetails.applicationId == application.id &&
-          ev.data.eventDetails.applicationUrl == "http://frontend/applications/${application.id}" &&
-          ev.data.eventDetails.appealUrl.startsWith("http://frontend/applications/${application.id}/appeals/") &&
-          ev.data.eventDetails.personReference.crn == application.crn &&
-          ev.data.eventDetails.personReference.noms == application.nomsNumber &&
-          ev.data.eventDetails.deliusEventNumber == application.eventNumber &&
-          ev.data.eventDetails.createdBy == staffUserDetails.toStaffMember() &&
-          ev.data.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
-          ev.data.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision.accepted &&
-          ev.data.eventDetails.decisionDetail == "Some information about the decision made"
-      })
+      domainEventService.saveAssessmentAppealedEvent(
+        match { ev ->
+          ev.applicationId == application.id &&
+            ev.assessmentId == null &&
+            ev.bookingId == null &&
+            ev.crn == application.crn &&
+            ev.data.eventDetails.applicationId == application.id &&
+            ev.data.eventDetails.applicationUrl == "http://frontend/applications/${application.id}" &&
+            ev.data.eventDetails.appealUrl.startsWith("http://frontend/applications/${application.id}/appeals/") &&
+            ev.data.eventDetails.personReference.crn == application.crn &&
+            ev.data.eventDetails.personReference.noms == application.nomsNumber &&
+            ev.data.eventDetails.deliusEventNumber == application.eventNumber &&
+            ev.data.eventDetails.createdBy == staffUserDetails.toStaffMember() &&
+            ev.data.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
+            ev.data.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision.accepted &&
+            ev.data.eventDetails.decisionDetail == "Some information about the decision made"
+        },
+      )
     }
   }
 

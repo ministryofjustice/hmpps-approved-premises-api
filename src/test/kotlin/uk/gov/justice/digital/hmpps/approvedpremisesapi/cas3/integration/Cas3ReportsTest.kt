@@ -2195,7 +2195,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
       )
       val bedPremisesOne = createBed(roomPremisesOne)
 
-      jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bedPremisesOne.id)
+      jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bedPremisesOne.id)
 
       val (_, roomPremisesTwo) = createPremisesAndRoom(probationRegion, probationDeliveryUnit)
       val bedPremisesTwo = createBed(roomPremisesTwo)
@@ -2207,12 +2207,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
       bedRepository.save(bedPremisesTwo)
 
-      jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-01-09T08:31:00Z"), bedPremisesTwo.id)
+      jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-01-09T08:31:00Z"), bedPremisesTwo.id)
 
       val (_, roomPremisesThree) = createPremisesAndRoom(probationRegion, probationDeliveryUnit)
       val bedPremisesThree = createBed(roomPremisesThree)
 
-      jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-07-11T13:07:00Z"), bedPremisesThree.id)
+      jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-07-11T13:07:00Z"), bedPremisesThree.id)
 
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2260,7 +2260,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2329,7 +2329,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2403,7 +2403,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2529,7 +2529,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
@@ -2659,7 +2659,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2755,7 +2755,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2828,7 +2828,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2902,7 +2902,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2976,7 +2976,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -3154,7 +3154,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -3231,7 +3231,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          jdbcTemplate.update("update beds set created_at = ? where id = ?",  OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 

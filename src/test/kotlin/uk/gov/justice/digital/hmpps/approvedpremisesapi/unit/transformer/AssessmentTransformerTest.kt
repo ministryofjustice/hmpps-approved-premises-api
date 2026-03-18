@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -47,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
@@ -75,11 +73,8 @@ class AssessmentTransformerTest {
   lateinit var userService: UserService
 
   private val risksTransformer = RisksTransformer()
-  private val objectMapper = ObjectMapper().apply {
-//    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+
+  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   @InjectMockKs
   lateinit var assessmentTransformer: AssessmentTransformer
@@ -151,7 +146,7 @@ class AssessmentTransformerTest {
         id = UUID.randomUUID(),
         applicationId = UUID.randomUUID(),
         createdAt = Instant.now(),
-        riskRatings = objectMapper.writeValueAsString(personRisks),
+        riskRatings = jsonMapper.writeValueAsString(personRisks),
         arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).toInstant(),
         completed = false,
         decision = "ACCEPTED",
@@ -218,7 +213,7 @@ class AssessmentTransformerTest {
         id = UUID.randomUUID(),
         applicationId = UUID.randomUUID(),
         createdAt = Instant.now(),
-        riskRatings = objectMapper.writeValueAsString(personRisks),
+        riskRatings = jsonMapper.writeValueAsString(personRisks),
         arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).toInstant(),
         completed = false,
         decision = "ACCEPTED",

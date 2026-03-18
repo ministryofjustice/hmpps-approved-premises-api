@@ -23,7 +23,7 @@ class BadRequestProblem(
             entityId = it.value.entityId,
             value = it.value.value,
           )
-        }
+        },
       )
     }
     return problemDetail
