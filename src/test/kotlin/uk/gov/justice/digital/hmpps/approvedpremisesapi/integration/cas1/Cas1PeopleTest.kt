@@ -994,6 +994,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
               RegistrationFactory()
                 .withDescription("Registration Description")
                 .withRiskNotes(riskNotes)
+                .withRiskFlagGroupDescription("Registration Risk Flag Group")
                 .produce(),
             ),
           )
@@ -1054,6 +1055,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.registrations[0].riskNotesDetail[1].date").isEqualTo("2026-01-02")
           .jsonPath("$.registrations[0].riskNotesDetail[2].note").isEqualTo("First note")
           .jsonPath("$.registrations[0].riskNotesDetail[2].date").isEqualTo("2026-01-01")
+          .jsonPath("$.registrations[0].riskFlagGroupDescription").isEqualTo("Registration Risk Flag Group")
           .jsonPath("$.mappaDetail.levelDescription").isEqualTo("Level 1")
           .jsonPath("$.mappaDetail.categoryDescription").isEqualTo("Category 1")
           .jsonPath("$.sentences[0].typeDescription").isEqualTo("Sentence Type")

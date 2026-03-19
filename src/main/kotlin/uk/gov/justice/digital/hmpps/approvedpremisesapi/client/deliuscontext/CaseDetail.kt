@@ -84,6 +84,7 @@ data class Registration(
   val riskNotes: String? = null,
   // The parser will populate this if the registration has a risk note
   val riskNotesDetail: List<NoteDetail> = emptyList(),
+  val riskFlagGroupDescription: String? = null,
 )
 
 data class NoteDetail(
