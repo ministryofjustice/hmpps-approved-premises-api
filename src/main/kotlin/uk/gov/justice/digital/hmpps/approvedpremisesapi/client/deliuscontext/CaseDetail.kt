@@ -11,6 +11,7 @@ data class CaseDetail(
   val registrations: List<Registration>,
   val mappaDetail: MappaDetail?,
   val sentences: List<Sentence>,
+  val personalContacts: List<PersonalContact> = emptyList(),
 )
 
 data class CaseSummary(
@@ -121,4 +122,28 @@ data class Sentence(
   val startDate: LocalDate? = null,
   val endDate: LocalDate? = null,
   val eventNumber: String? = null,
+)
+
+data class PersonalContact(
+  val relationship: String,
+  val relationshipType: RelationshipType,
+  val name: Name,
+  val telephoneNumber: String?,
+  val mobileNumber: String?,
+  val address: Address?,
+)
+
+data class RelationshipType(
+  val code: String,
+  val description: String,
+)
+
+data class Address(
+  val buildingName: String?,
+  val addressNumber: String?,
+  val streetName: String?,
+  val district: String?,
+  val town: String?,
+  val county: String?,
+  val postcode: String?,
 )

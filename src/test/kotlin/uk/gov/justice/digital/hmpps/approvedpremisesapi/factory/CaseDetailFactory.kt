@@ -3,14 +3,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Address
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.MappaDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Offence
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonalContact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Profile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Registration
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.RelationshipType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Sentence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomLong
@@ -26,6 +29,7 @@ class CaseDetailFactory : Factory<CaseDetail> {
   var registrations: Yielded<List<Registration>> = { listOf(RegistrationFactory().produce()) }
   var mappaDetail: Yielded<MappaDetail?> = { MappaDetailFactory().produce() }
   var sentences: Yielded<List<Sentence>> = { listOf(SentenceFactory().produce()) }
+  var personalContacts: Yielded<List<PersonalContact>> = { listOf(PersonalContactFactory().produce()) }
 
   fun withCase(case: CaseSummary) = apply {
     this.case = { case }
@@ -47,12 +51,17 @@ class CaseDetailFactory : Factory<CaseDetail> {
     this.sentences = { sentences }
   }
 
+  fun withPersonalContacts(personalContacts: List<PersonalContact>) = apply {
+    this.personalContacts = { personalContacts }
+  }
+
   override fun produce(): CaseDetail = CaseDetail(
     case = this.case(),
     offences = this.offences(),
     registrations = this.registrations(),
     mappaDetail = this.mappaDetail(),
     sentences = this.sentences(),
+    personalContacts = this.personalContacts(),
   )
 }
 
@@ -350,5 +359,47 @@ class SentenceFactory : Factory<Sentence> {
     startDate = this.startDate(),
     endDate = this.endDate(),
     eventNumber = this.eventNumber(),
+  )
+}
+
+class PersonalContactFactory : Factory<PersonalContact> {
+  var relationship: Yielded<String> = { randomStringLowerCase(10) }
+  var relationshipType: Yielded<RelationshipType> = { RelationshipType("DOC", "Doctor") }
+  var name: Yielded<Name> = { Name("Jane", "Smith") }
+  var telephoneNumber: Yielded<String?> = { null }
+  var mobileNumber: Yielded<String?> = { null }
+  var address: Yielded<Address?> = { null }
+
+  fun withRelationship(relationship: String) = apply {
+    this.relationship = { relationship }
+  }
+
+  fun withRelationshipType(relationshipType: RelationshipType) = apply {
+    this.relationshipType = { relationshipType }
+  }
+
+  fun withName(name: Name) = apply {
+    this.name = { name }
+  }
+
+  fun withTelephoneNumber(telephoneNumber: String?) = apply {
+    this.telephoneNumber = { telephoneNumber }
+  }
+
+  fun withMobileNumber(mobileNumber: String?) = apply {
+    this.mobileNumber = { mobileNumber }
+  }
+
+  fun withAddress(address: Address?) = apply {
+    this.address = { address }
+  }
+
+  override fun produce(): PersonalContact = PersonalContact(
+    relationship = this.relationship(),
+    relationshipType = this.relationshipType(),
+    name = this.name(),
+    telephoneNumber = this.telephoneNumber(),
+    mobileNumber = this.mobileNumber(),
+    address = this.address(),
   )
 }

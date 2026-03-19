@@ -14,6 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Address
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.RelationshipType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.CodeDescriptionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.ValueWithMetadata
@@ -33,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietaryItemDtoFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonalContactFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
@@ -1014,54 +1019,105 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
                 .produce(),
             ),
           )
+          .withPersonalContacts(
+            listOf(
+              PersonalContactFactory()
+                .withName(Name("John", "Doe", mutableListOf("Middle", "Name")))
+                .withRelationship("Brother")
+                .withRelationshipType(RelationshipType("PERSONAL", "Family contact"))
+                .withTelephoneNumber("01234567890")
+                .withMobileNumber("09876543210")
+                .withAddress(
+                  Address(
+                    buildingName = "Building Name",
+                    addressNumber = "1",
+                    streetName = "The street",
+                    district = "The district",
+                    town = "The town",
+                    county = "The county",
+                    postcode = "ABC 123",
+                  ),
+                )
+                .produce(),
+              PersonalContactFactory()
+                .withName(Name("Jane", "Doe"))
+                .withRelationship("Sister")
+                .withRelationshipType(RelationshipType("FAMILY", "Sibling contact"))
+                .produce(),
+            ),
+          )
           .produce()
 
         apDeliusContextMockSuccessfulCaseDetailCall(crn, caseDetail)
 
-        webTestClient.get()
+        val response = webTestClient.get()
           .uri("/cas1/people/$crn/case-detail")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .jsonPath("$.case.crn").isEqualTo(crn)
-          .jsonPath("$.case.nomsId").isEqualTo("NOMS123")
-          .jsonPath("$.case.pnc").isEqualTo("PNC123")
-          .jsonPath("$.case.name.forename").isEqualTo("Forename")
-          .jsonPath("$.case.name.surname").isEqualTo("Surname")
-          .jsonPath("$.case.name.middleNames[0]").isEqualTo("Middle1")
-          .jsonPath("$.case.name.middleNames[1]").isEqualTo("Middle2")
-          .jsonPath("$.case.dateOfBirth").isEqualTo("1990-01-01")
-          .jsonPath("$.case.gender").isEqualTo("Male")
-          .jsonPath("$.case.profile.ethnicity").isEqualTo("Ethnicity")
-          .jsonPath("$.case.profile.genderIdentity").isEqualTo("Gender Identity")
-          .jsonPath("$.case.profile.nationality").isEqualTo("Nationality")
-          .jsonPath("$.case.profile.religion").isEqualTo("Religion")
-          .jsonPath("$.case.currentExclusion").isEqualTo(true)
-          .jsonPath("$.case.currentRestriction").isEqualTo(true)
-          .jsonPath("$.offences[0].id").isEqualTo("OFF1")
-          .jsonPath("$.offences[0].description").isEqualTo("Offence Description")
-          .jsonPath("$.offences[0].mainCategoryDescription").isEqualTo("Main Category")
-          .jsonPath("$.offences[0].subCategoryDescription").isEqualTo("Sub Category")
-          .jsonPath("$.offences[0].date").isEqualTo("2023-01-01")
-          .jsonPath("$.offences[0].main").isEqualTo(true)
-          .jsonPath("$.offences[0].eventNumber").isEqualTo("1")
-          .jsonPath("$.registrations[0].description").isEqualTo("Registration Description")
-          .jsonPath("$.registrations[0].riskNotes").doesNotExist()
-          .jsonPath("$.registrations[0].riskNotesDetail[0].note").isEqualTo("Third note without header")
-          .jsonPath("$.registrations[0].riskNotesDetail[0].date").isEmpty
-          .jsonPath("$.registrations[0].riskNotesDetail[1].note").isEqualTo("Second note")
-          .jsonPath("$.registrations[0].riskNotesDetail[1].date").isEqualTo("2026-01-02")
-          .jsonPath("$.registrations[0].riskNotesDetail[2].note").isEqualTo("First note")
-          .jsonPath("$.registrations[0].riskNotesDetail[2].date").isEqualTo("2026-01-01")
-          .jsonPath("$.registrations[0].riskFlagGroupDescription").isEqualTo("Registration Risk Flag Group")
-          .jsonPath("$.mappaDetail.levelDescription").isEqualTo("Level 1")
-          .jsonPath("$.mappaDetail.categoryDescription").isEqualTo("Category 1")
-          .jsonPath("$.sentences[0].typeDescription").isEqualTo("Sentence Type")
-          .jsonPath("$.sentences[0].startDate").isEqualTo("2023-02-01")
-          .jsonPath("$.sentences[0].endDate").isEqualTo("2024-02-01")
-          .jsonPath("$.sentences[0].eventNumber").isEqualTo("1")
+          .bodyAsObject<CaseDetail>()
+
+        assertThat(response.case.crn).isEqualTo(crn)
+        assertThat(response.case.nomsId).isEqualTo("NOMS123")
+        assertThat(response.case.pnc).isEqualTo("PNC123")
+        assertThat(response.case.name.forename).isEqualTo("Forename")
+        assertThat(response.case.name.surname).isEqualTo("Surname")
+        assertThat(response.case.name.middleNames).isEqualTo(listOf("Middle1", "Middle2"))
+        assertThat(response.case.dateOfBirth).isEqualTo(LocalDate.of(1990, 1, 1))
+        assertThat(response.case.gender).isEqualTo("Male")
+        assertThat(response.case.profile!!.ethnicity).isEqualTo("Ethnicity")
+        assertThat(response.case.profile.genderIdentity).isEqualTo("Gender Identity")
+        assertThat(response.case.profile.nationality).isEqualTo("Nationality")
+        assertThat(response.case.profile.religion).isEqualTo("Religion")
+        assertThat(response.case.currentExclusion).isEqualTo(true)
+        assertThat(response.case.currentRestriction).isEqualTo(true)
+        assertThat(response.offences[0].id).isEqualTo("OFF1")
+        assertThat(response.offences[0].description).isEqualTo("Offence Description")
+        assertThat(response.offences[0].mainCategoryDescription).isEqualTo("Main Category")
+        assertThat(response.offences[0].subCategoryDescription).isEqualTo("Sub Category")
+        assertThat(response.offences[0].date).isEqualTo(LocalDate.of(2023, 1, 1))
+        assertThat(response.offences[0].main).isEqualTo(true)
+        assertThat(response.offences[0].eventNumber).isEqualTo("1")
+        assertThat(response.registrations[0].description).isEqualTo("Registration Description")
+        assertThat(response.registrations[0].riskNotes).isNull()
+        assertThat(response.registrations[0].riskNotesDetail[0].note).isEqualTo("Third note without header")
+        assertThat(response.registrations[0].riskNotesDetail[0].date).isNull()
+        assertThat(response.registrations[0].riskNotesDetail[1].note).isEqualTo("Second note")
+        assertThat(response.registrations[0].riskNotesDetail[1].date).isEqualTo(LocalDate.of(2026, 1, 2))
+        assertThat(response.registrations[0].riskNotesDetail[2].note).isEqualTo("First note")
+        assertThat(response.registrations[0].riskNotesDetail[2].date).isEqualTo(LocalDate.of(2026, 1, 1))
+        assertThat(response.registrations[0].riskFlagGroupDescription).isEqualTo("Registration Risk Flag Group")
+        assertThat(response.mappaDetail!!.levelDescription).isEqualTo("Level 1")
+        assertThat(response.mappaDetail.categoryDescription).isEqualTo("Category 1")
+        assertThat(response.sentences[0].typeDescription).isEqualTo("Sentence Type")
+        assertThat(response.sentences[0].startDate).isEqualTo(LocalDate.of(2023, 2, 1))
+        assertThat(response.sentences[0].endDate).isEqualTo(LocalDate.of(2024, 2, 1))
+        assertThat(response.sentences[0].eventNumber).isEqualTo("1")
+        assertThat(response.personalContacts[0].name.forename).isEqualTo("John")
+        assertThat(response.personalContacts[0].name.surname).isEqualTo("Doe")
+        assertThat(response.personalContacts[0].name.middleNames).isEqualTo(listOf("Middle", "Name"))
+        assertThat(response.personalContacts[0].relationship).isEqualTo("Brother")
+        assertThat(response.personalContacts[0].relationshipType.code).isEqualTo("PERSONAL")
+        assertThat(response.personalContacts[0].relationshipType.description).isEqualTo("Family contact")
+        assertThat(response.personalContacts[0].telephoneNumber).isEqualTo("01234567890")
+        assertThat(response.personalContacts[0].mobileNumber).isEqualTo("09876543210")
+        assertThat(response.personalContacts[0].address!!.buildingName).isEqualTo("Building Name")
+        assertThat(response.personalContacts[0].address!!.addressNumber).isEqualTo("1")
+        assertThat(response.personalContacts[0].address!!.streetName).isEqualTo("The street")
+        assertThat(response.personalContacts[0].address!!.district).isEqualTo("The district")
+        assertThat(response.personalContacts[0].address!!.town).isEqualTo("The town")
+        assertThat(response.personalContacts[0].address!!.county).isEqualTo("The county")
+        assertThat(response.personalContacts[0].address!!.postcode).isEqualTo("ABC 123")
+        assertThat(response.personalContacts[1].name.forename).isEqualTo("Jane")
+        assertThat(response.personalContacts[1].name.surname).isEqualTo("Doe")
+        assertThat(response.personalContacts[1].name.middleNames).isEmpty()
+        assertThat(response.personalContacts[1].relationship).isEqualTo("Sister")
+        assertThat(response.personalContacts[1].relationshipType.code).isEqualTo("FAMILY")
+        assertThat(response.personalContacts[1].relationshipType.description).isEqualTo("Sibling contact")
+        assertThat(response.personalContacts[1].telephoneNumber).isNull()
+        assertThat(response.personalContacts[1].mobileNumber).isNull()
+        assertThat(response.personalContacts[1].address).isNull()
       }
     }
 
