@@ -253,7 +253,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .exchange()
         .expectBody()
 
-      assertThat(actualBody.returnResult().status).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+      assertThat(actualBody.returnResult().status).isEqualTo(HttpStatus.BAD_REQUEST)
     }
   }
 
@@ -2195,8 +2195,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
       )
       val bedPremisesOne = createBed(roomPremisesOne)
 
-      bedPremisesOne.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-      bedRepository.save(bedPremisesOne)
+      jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bedPremisesOne.id)
 
       val (_, roomPremisesTwo) = createPremisesAndRoom(probationRegion, probationDeliveryUnit)
       val bedPremisesTwo = createBed(roomPremisesTwo)
@@ -2208,11 +2207,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
       bedRepository.save(bedPremisesTwo)
 
+      jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-01-09T08:31:00Z"), bedPremisesTwo.id)
+
       val (_, roomPremisesThree) = createPremisesAndRoom(probationRegion, probationDeliveryUnit)
       val bedPremisesThree = createBed(roomPremisesThree)
 
-      bedPremisesThree.apply { createdAt = OffsetDateTime.parse("2023-07-11T13:07:00+00:00") }
-      bedRepository.save(bedPremisesThree)
+      jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-07-11T13:07:00Z"), bedPremisesThree.id)
 
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2240,7 +2240,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
         effectiveTurnaroundDays = 0,
         voidDays = 0,
         totalBookedDays = 0,
-        bedspaceStartDate = bedPremisesOne.createdAt.toLocalDate(),
+        bedspaceStartDate = LocalDate.parse("2023-02-16"),
         bedspaceEndDate = bedPremisesOne.endDate,
         bedspaceOnlineDays = 30,
         occupancyRate = 0.0,
@@ -2260,8 +2260,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2290,7 +2289,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -2330,8 +2329,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2365,7 +2363,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 17,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.5666666666666667,
@@ -2405,8 +2403,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2492,7 +2489,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 30,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 1.0,
@@ -2532,8 +2529,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
@@ -2623,7 +2619,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 2,
               voidDays = 3,
               totalBookedDays = 20,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.6666666666666666,
@@ -2663,8 +2659,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2720,7 +2715,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 26,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.8666666666666667,
@@ -2760,8 +2755,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2794,7 +2788,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -2834,8 +2828,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2869,7 +2862,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 7,
               voidDays = 0,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -2909,8 +2902,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -2944,7 +2936,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 7,
               voidDays = 0,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -2984,8 +2976,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -3123,7 +3114,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 5,
               voidDays = 0,
               totalBookedDays = 19,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.6333333333333333,
@@ -3163,8 +3154,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -3201,7 +3191,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 10,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
@@ -3241,8 +3231,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          jdbcTemplate.update("update beds set created_at = ? where id = ?", OffsetDateTime.parse("2023-02-16T14:03:00Z"), bed.id)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
@@ -3288,7 +3277,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 7,
               voidDays = 0,
               totalBookedDays = 4,
-              bedspaceStartDate = bed.createdAt.toLocalDate(),
+              bedspaceStartDate = LocalDate.parse("2023-02-16"),
               bedspaceEndDate = bed.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.13333333333333333,

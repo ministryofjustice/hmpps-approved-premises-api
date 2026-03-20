@@ -118,7 +118,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 1,
                 resultsBedspaceCount = 1,
@@ -176,7 +176,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 1,
                 resultsBedspaceCount = 1,
@@ -234,7 +234,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsBedspaceCount = 0,
                 resultsPremisesCount = 0,
@@ -320,7 +320,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 0,
                 resultsBedspaceCount = 0,
@@ -505,7 +505,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 Cas3v2BedspaceSearchResults(
                   resultsPremisesCount = 1,
                   resultsBedspaceCount = 1,
@@ -665,7 +665,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 Cas3v2BedspaceSearchResults(
                   resultsPremisesCount = 2,
                   resultsBedspaceCount = 2,
@@ -770,7 +770,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 1,
                 resultsBedspaceCount = 2,
@@ -870,7 +870,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 Cas3v2BedspaceSearchResults(
                   resultsPremisesCount = 1,
                   resultsBedspaceCount = 2,
@@ -947,7 +947,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 3,
                 resultsBedspaceCount = 4,
@@ -1349,7 +1349,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 4,
                 resultsBedspaceCount = 4,
@@ -1446,7 +1446,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 2,
                 resultsBedspaceCount = 2,
@@ -1579,7 +1579,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 Cas3v2BedspaceSearchResults(
                   resultsPremisesCount = 5,
                   resultsBedspaceCount = 5,
@@ -1761,7 +1761,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 Cas3v2BedspaceSearchResults(
                   resultsPremisesCount = 5,
                   resultsBedspaceCount = 5,
@@ -1934,7 +1934,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 1,
                 resultsBedspaceCount = 1,
@@ -1995,7 +1995,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 1,
                 resultsBedspaceCount = 1,
@@ -2093,7 +2093,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 1,
                 resultsBedspaceCount = 2,
@@ -2192,7 +2192,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               Cas3v2BedspaceSearchResults(
                 resultsPremisesCount = 2,
                 resultsBedspaceCount = 3,
@@ -2256,7 +2256,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .json(
-          objectMapper.writeValueAsString(
+          jsonMapper.writeValueAsString(
             Cas3v2BedspaceSearchResults(
               resultsPremisesCount = 0,
               resultsBedspaceCount = 0,

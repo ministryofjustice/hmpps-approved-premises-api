@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
@@ -13,7 +13,7 @@ import java.util.UUID
 @Component
 class Cas1RemoveAssessmentDetailsSeedJob(
   private val assessmentRepository: AssessmentRepository,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
 ) : SeedJob<Cas1RemoveAssessmentDetailsSeedCsvRow>(
   requiredHeaders = setOf(
@@ -51,13 +51,13 @@ class Cas1RemoveAssessmentDetailsSeedJob(
       return null
     }
 
-    val dataModel: JsonNode = objectMapper.readTree(json)
+    val dataModel: JsonNode = jsonMapper.readTree(json)
 
     dataModel.removeAll {
       it.isObject && !it.has("sufficient-information")
     }
 
-    return objectMapper.writeValueAsString(dataModel)
+    return jsonMapper.writeValueAsString(dataModel)
   }
 }
 

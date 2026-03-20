@@ -339,7 +339,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
             .returnResult<String>()
             .responseBody
             .blockFirst()
-          assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedBedspace))
+          assertThat(responseBody).isEqualTo(jsonMapper.writeValueAsString(expectedBedspace))
         }
       }
     }
@@ -640,7 +640,7 @@ class Cas3v2BedspacesTest : Cas3IntegrationTestBase() {
         .responseBody
         .blockFirst()
 
-      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedBedspaces))
+      assertThat(responseBody).isEqualTo(jsonMapper.writeValueAsString(expectedBedspaces))
 
       return response
     }

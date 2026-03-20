@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 
 @Component
 class RequestForPlacementTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) {
   fun transformPlacementApplicationEntityToApi(
     placementApplicationEntity: PlacementApplicationEntity,
@@ -44,7 +44,7 @@ class RequestForPlacementTransformer(
     },
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
     requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
-    document = placementApplicationEntity.document?.let(objectMapper::readTree),
+    document = placementApplicationEntity.document?.let(jsonMapper::readTree),
     canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
     withdrawalReason = placementApplicationEntity.withdrawalReason?.apiValue,
     status = placementApplicationEntity.deriveStatus(),

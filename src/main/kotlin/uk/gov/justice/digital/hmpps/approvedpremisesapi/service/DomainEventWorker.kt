@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
@@ -20,7 +20,7 @@ interface DomainEventWorkerInterface {
 @Primary
 class ConfiguredDomainEventWorker(
   private val hmppsQueueService: HmppsQueueService,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) : DomainEventWorkerInterface {
   val domainTopic by lazy {
     hmppsQueueService.findByTopicId("domainevents")
@@ -28,13 +28,13 @@ class ConfiguredDomainEventWorker(
   }
 
   override fun emitEvent(snsEvent: SnsEvent, domainEventId: UUID) {
-    SyncDomainEventWorker(this.domainTopic, this.objectMapper).emitEvent(snsEvent, domainEventId)
+    SyncDomainEventWorker(this.domainTopic, this.jsonMapper).emitEvent(snsEvent, domainEventId)
   }
 }
 
 class SyncDomainEventWorker(
   val domainTopic: HmppsTopic,
-  val objectMapper: ObjectMapper,
+  val jsonMapper: JsonMapper,
 ) : DomainEventWorkerInterface {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -42,7 +42,7 @@ class SyncDomainEventWorker(
     val publishRequest =
       PublishRequest.builder()
         .topicArn(domainTopic.arn)
-        .message(objectMapper.writeValueAsString(snsEvent))
+        .message(jsonMapper.writeValueAsString(snsEvent))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),

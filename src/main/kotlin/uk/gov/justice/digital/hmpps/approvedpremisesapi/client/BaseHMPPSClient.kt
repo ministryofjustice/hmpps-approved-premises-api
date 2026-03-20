@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.netty.channel.ConnectTimeoutException
 import io.netty.handler.timeout.ReadTimeoutException
 import org.slf4j.LoggerFactory
@@ -14,13 +10,17 @@ import org.springframework.http.HttpStatusCode
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.Exceptions
 import reactor.util.retry.Retry
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isTypeInThrowableChain
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BaseHMPPSClient(
   private val webClientConfig: WebClientConfig,
-  internal val objectMapper: ObjectMapper,
+  internal val jsonMapper: JsonMapper,
   private val webClientCache: WebClientCache,
 ) {
 
@@ -84,7 +84,7 @@ abstract class BaseHMPPSClient(
         )
         .block()!!
 
-      val deserialized = objectMapper.readValue(result.body, typeReference)
+      val deserialized = jsonMapper.readValue(result.body, typeReference)
 
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
         webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, result)
@@ -207,9 +207,12 @@ sealed interface ClientResult<ResponseType> {
 
       override fun toException(): Throwable = RuntimeException("Unable to complete $method request to $path: $status")
 
-      inline fun <reified ResponseType> deserializeTo(): ResponseType = jacksonObjectMapper()
-        .configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .readValue(body, ResponseType::class.java)
+      val jsonMapper: JsonMapper = JsonMapper.builder()
+        .addModule(KotlinModule.Builder().build())
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .build()
+
+      inline fun <reified ResponseType> deserializeTo(): ResponseType = jsonMapper.readValue(body, object : TypeReference<ResponseType>() {})
     }
 
     data class PreemptiveCacheTimeout<ResponseType>(

@@ -32,12 +32,12 @@ class Cas2v2DomainEventServiceTest {
   private val hmppsQueueServiceMock = mockk<HmppsQueueService>()
   private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()
 
-  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   private val detailUrl = "https://example.com/123"
 
   private val domainEventService = Cas2DomainEventService(
-    objectMapper = objectMapper,
+    jsonMapper = jsonMapper,
     domainEventRepository = domainEventRepositoryMock,
     hmppsQueueService = hmppsQueueServiceMock,
     emitDomainEventsEnabled = true,
@@ -94,7 +94,7 @@ class Cas2v2DomainEventServiceTest {
               it.crn == domainEventToSave.crn &&
               it.nomsNumber == domainEventToSave.nomsNumber &&
               it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-              it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+              it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
               it.triggeredByUserId == null
           },
         )
@@ -103,7 +103,7 @@ class Cas2v2DomainEventServiceTest {
       verify(exactly = 1) {
         mockHmppsTopic.snsClient.publish(
           match<PublishRequest> { publishRequest ->
-            val deserializedMessage = objectMapper.readValue(publishRequest.message(), SnsEvent::class.java)
+            val deserializedMessage = jsonMapper.readValue(publishRequest.message(), SnsEvent::class.java)
 
             deserializedMessage.eventType == "applications.cas2.application.submitted" &&
               deserializedMessage.version == 1 &&

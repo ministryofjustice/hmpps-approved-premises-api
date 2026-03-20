@@ -1,13 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
@@ -23,7 +23,7 @@ import java.util.UUID
 
 class Cas2AssessmentTest : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realAssessmentRepository: Cas2AssessmentRepository
 
   @AfterEach
@@ -122,7 +122,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
+            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
 
           Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(updatedNacroReferralId)
           Assertions.assertThat(responseBody.assessorName).isEqualTo(updatedAssessorName)
@@ -216,7 +216,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
+            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
 
           Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(assessment.nacroReferralId)
           Assertions.assertThat(responseBody.assessorName).isEqualTo(assessment.assessorName)
@@ -251,7 +251,7 @@ class Cas2AssessmentTest : IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
+            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
 
           Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(assessment.nacroReferralId)
           Assertions.assertThat(responseBody.assessorName).isEqualTo(assessment.assessorName)

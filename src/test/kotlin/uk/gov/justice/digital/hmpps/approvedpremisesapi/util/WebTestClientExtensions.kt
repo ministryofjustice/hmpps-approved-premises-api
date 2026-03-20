@@ -5,18 +5,14 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.test.web.reactive.server.WebTestClient
 
 fun WebTestClient.BodyContentSpec.jsonForObject(value: Any): WebTestClient.BodyContentSpec {
-  val objectMapper =
-    ApplicationContextProvider.get().getBean(ObjectMapper::class.java)
-
+  val objectMapper = ApplicationContextProvider.get().getBean(ObjectMapper::class.java)
   return this.json(objectMapper.writeValueAsString(value))
 }
 
-inline fun <reified T> WebTestClient.ResponseSpec.bodyAsObject(): T = this.returnResult(T::class.java).responseBody.blockFirst()!!
+inline fun <reified T : Any> WebTestClient.ResponseSpec.bodyAsObject(): T = this.returnResult(T::class.java).responseBody.blockFirst()!!
 
-inline fun <reified T> WebTestClient.ResponseSpec.bodyAsListOfObjects(): List<T> {
-  val objectMapper =
-    ApplicationContextProvider.get().getBean(ObjectMapper::class.java)
-
+inline fun <reified T : Any> WebTestClient.ResponseSpec.bodyAsListOfObjects(): List<T> {
+  val objectMapper = ApplicationContextProvider.get().getBean(ObjectMapper::class.java)
   val rawResponseBody = this.returnResult(String::class.java)
-  return objectMapper.readValue<List<T>>(rawResponseBody.responseBody.blockFirst()!!)
+  return objectMapper.readValue(rawResponseBody.responseBody.blockFirst()!!)
 }

@@ -16,12 +16,12 @@ class LoggerExtension :
   private val listAppender = ListAppender<ILoggingEvent>()
   private val logger: Logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 
-  override fun beforeEach(context: ExtensionContext?) {
+  override fun beforeEach(context: ExtensionContext) {
     logger.addAppender(listAppender)
     listAppender.start()
   }
 
-  override fun afterEach(context: ExtensionContext?) {
+  override fun afterEach(context: ExtensionContext) {
     listAppender.stop()
     listAppender.list.clear()
     logger.detachAppender(listAppender)

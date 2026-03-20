@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -14,6 +10,8 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
@@ -63,14 +61,12 @@ class ApplicationsTransformersTest {
   private val mockCas1ApplicationUserDetailsTransformer = mockk<Cas1ApplicationUserDetailsTransformer>()
   private val mockCas1CruManagementAreaTransformer = mockk<Cas1CruManagementAreaTransformer>()
 
-  private val objectMapper = ObjectMapper().apply {
-    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+  private val jsonMapper = JsonMapper.builder()
+    .addModule(KotlinModule.Builder().build())
+    .build()
 
   private val applicationsTransformer = ApplicationsTransformer(
-    objectMapper,
+    jsonMapper,
     mockPersonTransformer,
     mockRisksTransformer,
     mockApAreaTransformer,
@@ -402,7 +398,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -449,7 +445,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -476,7 +472,7 @@ class ApplicationsTransformersTest {
   @Test
   fun `transformJpaToApiSummary transforms an in progress Temporary Accommodation application correctly`() {
     val application = object : DomainTemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -502,7 +498,7 @@ class ApplicationsTransformersTest {
   @Test
   fun `transformJpaToApiSummary transforms a submitted Temporary Accommodation application correctly`() {
     val application = object : DomainTemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -538,7 +534,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-01-19T00:00:00+00:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -583,7 +579,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-06-19T00:00:00+00:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -617,7 +613,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = null
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -653,7 +649,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")

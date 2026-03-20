@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -31,10 +31,10 @@ class Cas2v2StatusUpdateTest(
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) : Cas2v2IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realCas2StatusUpdateRepository: Cas2StatusUpdateRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realCas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @AfterEach
@@ -126,7 +126,7 @@ class Cas2v2StatusUpdateTest(
           // to the CAS2 domain
           val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", application.id.toString())
           val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
-          val domainEventFromJson = objectMapper.readValue(
+          val domainEventFromJson = jsonMapper.readValue(
             persistedDomainEvent!!.data,
             Cas2ApplicationStatusUpdatedEvent::class.java,
           )
@@ -265,7 +265,7 @@ class Cas2v2StatusUpdateTest(
               val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", application.id.toString())
               val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
 
-              val domainEventFromJson = objectMapper.readValue(
+              val domainEventFromJson = jsonMapper.readValue(
                 persistedDomainEvent!!.data,
                 Cas2ApplicationStatusUpdatedEvent::class.java,
               )

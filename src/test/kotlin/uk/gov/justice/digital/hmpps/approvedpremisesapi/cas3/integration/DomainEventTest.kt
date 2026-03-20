@@ -67,7 +67,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_BOOKING_CANCELLED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -103,7 +103,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_BOOKING_CANCELLED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -160,7 +160,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_BOOKING_CONFIRMED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -196,7 +196,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_BOOKING_CONFIRMED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -253,7 +253,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -289,7 +289,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -325,7 +325,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -382,7 +382,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_PERSON_ARRIVED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -418,7 +418,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_PERSON_ARRIVED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -475,7 +475,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_PERSON_DEPARTED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -511,7 +511,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_PERSON_DEPARTED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -568,7 +568,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_REFERRAL_SUBMITTED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -625,7 +625,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -661,7 +661,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -718,7 +718,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -754,7 +754,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -811,7 +811,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_PERSON_ARRIVED_UPDATED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()
@@ -847,7 +847,7 @@ class DomainEventTest : IntegrationTestBase() {
     val event = domainEventFactory.produceAndPersist {
       withId(eventId)
       withType(DomainEventType.CAS3_PERSON_ARRIVED_UPDATED)
-      withData(objectMapper.writeValueAsString(envelopedData))
+      withData(jsonMapper.writeValueAsString(envelopedData))
     }
 
     val response = webTestClient.get()

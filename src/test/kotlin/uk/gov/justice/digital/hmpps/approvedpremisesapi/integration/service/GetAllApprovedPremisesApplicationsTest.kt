@@ -467,7 +467,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     (this.getIsEsapApplication() == applicationEntity.isEsapApplication) &&
     (this.getIsPipeApplication() == applicationEntity.isPipeApplication) &&
     (this.getArrivalDate() == Instant.parse(applicationEntity.arrivalDate.toString())) &&
-    (this.getRiskRatings() == objectMapper.writeValueAsString(applicationEntity.riskRatings)) &&
+    (this.getRiskRatings() == jsonMapper.writeValueAsString(applicationEntity.riskRatings)) &&
     (this.getId() == applicationEntity.id) &&
     (this.getCrn() == applicationEntity.crn) &&
     (this.getCreatedByUserId() == applicationEntity.createdByUser.id) &&

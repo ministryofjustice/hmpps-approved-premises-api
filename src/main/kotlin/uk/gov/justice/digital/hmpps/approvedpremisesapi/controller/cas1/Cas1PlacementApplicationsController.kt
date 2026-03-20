@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PlacementApplicationsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
@@ -31,7 +31,7 @@ class Cas1PlacementApplicationsController(
   private val offenderService: OffenderService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val placementApplicationTransformer: PlacementApplicationTransformer,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val withdrawalService: Cas1WithdrawableService,
 ) : PlacementApplicationsCas1Delegate {
 
@@ -67,7 +67,7 @@ class Cas1PlacementApplicationsController(
     id: UUID,
     updatePlacementApplication: UpdatePlacementApplication,
   ): ResponseEntity<PlacementApplication> {
-    val serializedData = objectMapper.writeValueAsString(updatePlacementApplication.data)
+    val serializedData = jsonMapper.writeValueAsString(updatePlacementApplication.data)
 
     val result = cas1PlacementApplicationService.updateApplication(id, serializedData)
 

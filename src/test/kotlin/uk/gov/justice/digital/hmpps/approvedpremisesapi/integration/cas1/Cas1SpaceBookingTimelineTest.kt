@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -132,7 +132,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(
+        jsonMapper.readValue(
           rawResponseBody,
           object : TypeReference<List<Cas1TimelineEvent>>() {},
         )
@@ -171,7 +171,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
     assessmentEntity: ApprovedPremisesAssessmentEntity,
     userEntity: UserEntity,
   ): DomainEventEntity {
-    val domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
+    val domainEventsFactory = Cas1DomainEventsFactory(jsonMapper)
 
     val data = if (type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) {
       val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {

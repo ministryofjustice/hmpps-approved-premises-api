@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.jupiter.api.Nested
@@ -11,6 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBedCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBed
@@ -153,7 +153,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           }
         }
 
-        val expectedJson = objectMapper.writeValueAsString(
+        val expectedJson = jsonMapper.writeValueAsString(
           listOf(
             outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
           ),
@@ -218,7 +218,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         cancelledOutOfServiceBed.cancellation = cancellation
 
-        val expectedJson = objectMapper.writeValueAsString(
+        val expectedJson = jsonMapper.writeValueAsString(
           listOf(
             outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
           ),
@@ -287,7 +287,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           }
         }
 
-        val expectedJson = objectMapper.writeValueAsString(
+        val expectedJson = jsonMapper.writeValueAsString(
           listOf(
             outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
           ),
@@ -356,7 +356,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           }
         }
 
-        val expectedJson = objectMapper.writeValueAsString(
+        val expectedJson = jsonMapper.writeValueAsString(
           listOf(
             outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed),
           ),
@@ -448,7 +448,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas1OutOfServiceBed>>() {})
+          val responseBody = jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas1OutOfServiceBed>>() {})
 
           assertThat(responseBody.count()).isEqualTo(1)
           val oosBed = responseBody[0]
@@ -474,7 +474,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas1OutOfServiceBed>>() {})
+          val responseBody = jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas1OutOfServiceBed>>() {})
 
           assertThat(responseBody.count()).isEqualTo(0)
         }
@@ -496,7 +496,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas1OutOfServiceBed>>() {})
+          val responseBody = jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas1OutOfServiceBed>>() {})
 
           assertThat(responseBody.count()).isEqualTo(0)
         }
@@ -518,7 +518,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas1OutOfServiceBed>>() {})
+          val responseBody = jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas1OutOfServiceBed>>() {})
 
           assertThat(responseBody.count()).isEqualTo(1)
           val oosBed = responseBody[0]
@@ -611,7 +611,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           }
         }
 
-        val expectedJson = objectMapper.writeValueAsString(
+        val expectedJson = jsonMapper.writeValueAsString(
           sortedOutOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi),
         )
 
@@ -657,7 +657,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val expectedOutOfServiceBeds = outOfServiceBeds.slice(5..9)
 
-        val expectedJson = objectMapper.writeValueAsString(
+        val expectedJson = jsonMapper.writeValueAsString(
           expectedOutOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi),
         )
 
@@ -772,7 +772,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           withOutOfServiceBed(cancelledOutOfServiceBed)
         }
 
-        val expectedJson = objectMapper.writeValueAsString(listOf(outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed)))
+        val expectedJson = jsonMapper.writeValueAsString(listOf(outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed)))
 
         webTestClient.get()
           .uri("/cas1/premises/${premises.id}/out-of-service-beds")
@@ -880,7 +880,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           }
         }
 
-        val expectedJson = objectMapper.writeValueAsString(outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed))
+        val expectedJson = jsonMapper.writeValueAsString(outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed))
 
         webTestClient.get()
           .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}")
@@ -2110,7 +2110,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .jsonPath("$.notes").isEqualTo("Some cancellation notes")
-          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
       }
     }
   }

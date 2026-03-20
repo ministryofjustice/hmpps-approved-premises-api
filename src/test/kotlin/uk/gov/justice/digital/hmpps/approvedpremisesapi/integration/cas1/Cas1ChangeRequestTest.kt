@@ -804,8 +804,8 @@ class Cas1ChangeRequestTest {
       assertThat(response.createdAt).isEqualTo(changeRequestEntity.createdAt.toInstant())
       assertThat(response.updatedAt).isEqualTo(changeRequestEntity.updatedAt.toInstant())
       assertThat(response.decision).isEqualTo(Cas1ChangeRequestDecision.APPROVED)
-      assertThat(objectMapper.writeValueAsString(response.decisionJson)).isEqualTo("{\"test\":1}")
-      assertThat(objectMapper.writeValueAsString(response.requestJson)).isEqualTo("\"{}\"")
+      assertThat(jsonMapper.writeValueAsString(response.decisionJson)).isEqualTo("{\"test\":1}")
+      assertThat(jsonMapper.writeValueAsString(response.requestJson)).isEqualTo("\"{}\"")
       assertThat(response.spaceBookingId).isEqualTo(changeRequestEntity.spaceBooking.id)
     }
   }
