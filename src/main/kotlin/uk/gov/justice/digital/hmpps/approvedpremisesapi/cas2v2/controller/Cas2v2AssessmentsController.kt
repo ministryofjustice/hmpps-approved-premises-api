@@ -9,34 +9,34 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationNoteService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2StatusUpdateService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
 
 @Cas2v2Controller
 class Cas2v2AssessmentsController(
-  private val cas2v2AssessmentService: Cas2v2AssessmentService,
-  private val cas2v2ApplicationNoteService: Cas2v2ApplicationNoteService,
+  private val cas2AssessmentService: Cas2AssessmentService,
+  private val cas2AssessmentNoteService: Cas2AssessmentNoteService,
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
   private val cas2v2ApplicationNotesTransformer: Cas2v2ApplicationNotesTransformer,
-  private val cas2v2StatusUpdateService: Cas2v2StatusUpdateService,
-  private val cas2v2UserService: Cas2v2UserService,
+  private val statusUpdateService: StatusUpdateService,
+  private val cas2UserService: Cas2UserService,
 ) {
   @GetMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdGet(
     @PathVariable assessmentId: UUID,
   ): ResponseEntity<Cas2v2Assessment> {
-    val assessmentResult = cas2v2AssessmentService.getAssessment(assessmentId)
+    val assessmentResult = cas2AssessmentService.getAssessment(assessmentId, Cas2ServiceOrigin.BAIL)
     val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity))
   }
@@ -44,9 +44,9 @@ class Cas2v2AssessmentsController(
   @PutMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdPut(
     @PathVariable assessmentId: UUID,
-    @RequestBody updateCas2Assessment: UpdateCas2v2Assessment,
+    @RequestBody updateCas2Assessment: UpdateCas2Assessment,
   ): ResponseEntity<Cas2v2Assessment> {
-    val assessmentResult = cas2v2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment)
+    val assessmentResult = cas2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment, serviceOrigin = Cas2ServiceOrigin.BAIL)
 
     val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(
@@ -57,15 +57,16 @@ class Cas2v2AssessmentsController(
   @PostMapping("/assessments/{assessmentId}/status-updates")
   fun assessmentsAssessmentIdStatusUpdatesPost(
     @PathVariable assessmentId: UUID,
-    @RequestBody cas2v2AssessmentStatusUpdate: Cas2v2AssessmentStatusUpdate,
+    @RequestBody cas2v2AssessmentStatusUpdate: Cas2AssessmentStatusUpdate,
   ): ResponseEntity<Unit> {
-    val result = cas2v2StatusUpdateService.createForAssessment(
+    val result = statusUpdateService.createForAssessment(
       assessmentId = assessmentId,
       statusUpdate = cas2v2AssessmentStatusUpdate,
-      assessor = cas2v2UserService.getUserForRequest(),
+      assessor = cas2UserService.getUserForRequest(Cas2ServiceOrigin.BAIL),
+      serviceOrigin = Cas2ServiceOrigin.BAIL,
     )
 
-    processAuthorisationFor(result).run { processValidation(result) }
+    extractEntityFromCasResult(result)
 
     return ResponseEntity(HttpStatus.CREATED)
   }
@@ -73,9 +74,9 @@ class Cas2v2AssessmentsController(
   @PostMapping("/assessments/{assessmentId}/notes")
   fun assessmentsAssessmentIdNotesPost(
     @PathVariable assessmentId: UUID,
-    @RequestBody body: NewCas2v2ApplicationNote,
+    @RequestBody body: NewCas2ApplicationNote,
   ): ResponseEntity<Cas2v2ApplicationNote> {
-    val noteResult = cas2v2ApplicationNoteService.createAssessmentNote(assessmentId, body)
+    val noteResult = cas2AssessmentNoteService.createAssessmentNote(assessmentId, body, serviceOrigin = Cas2ServiceOrigin.BAIL)
 
     val note = extractEntityFromCasResult(noteResult)
     return ResponseEntity.created(URI.create("/cas2v2/assessments/$assessmentId/notes/${note.id}"))
@@ -83,10 +84,4 @@ class Cas2v2AssessmentsController(
         cas2v2ApplicationNotesTransformer.transformJpaToApi(note),
       )
   }
-
-  private fun <EntityType> processAuthorisationFor(
-    result: CasResult<EntityType>,
-  ): Any? = extractEntityFromCasResult(result)
-
-  private fun <EntityType : Any> processValidation(casResult: CasResult<EntityType>): Any = extractEntityFromCasResult(casResult)
 }

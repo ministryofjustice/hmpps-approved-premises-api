@@ -20,7 +20,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -41,16 +45,17 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
+@Deprecated("Replaced with Cas2ApplicationService")
 @Service("Cas2v2ApplicationService")
 class Cas2v2ApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
   private val cas2LockableApplicationRepository: Cas2LockableApplicationRepository,
   private val cas2ApplicationSummaryRepository: Cas2ApplicationSummaryRepository,
-  private val cas2v2OffenderService: Cas2v2OffenderService,
-  private val cas2v2UserAccessService: Cas2v2UserAccessService,
+  private val cas2OffenderService: Cas2OffenderService,
+  private val cas2UserAccessService: Cas2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
-  private val cas2v2AssessmentService: Cas2v2AssessmentService,
+  private val cas2AssessmentService: Cas2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
   private val sentryService: SentryService,
@@ -125,7 +130,7 @@ class Cas2v2ApplicationService(
       return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
     }
 
-    val canAccess = cas2v2UserAccessService.userCanViewCas2v2Application(user, applicationEntity)
+    val canAccess = cas2UserAccessService.userCanViewCas2v2Application(user, applicationEntity)
 
     return if (canAccess) {
       CasResult.Success(applicationEntity)
@@ -143,13 +148,13 @@ class Cas2v2ApplicationService(
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
   ) = validated<Cas2ApplicationEntity> {
-    val offenderDetailsResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)
+    val offenderDetailsResult = cas2OffenderService.getPersonByNomisIdOrCrn(crn)
 
     val offenderDetails = when (offenderDetailsResult) {
-      is Cas2v2OffenderSearchResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-      is Cas2v2OffenderSearchResult.Forbidden -> return "$.crn" hasSingleValidationError "userPermission"
-      is Cas2v2OffenderSearchResult.Unknown -> return "$.crn" hasSingleValidationError "unknown"
-      is Cas2v2OffenderSearchResult.Success.Full -> offenderDetailsResult.person
+      is Cas2OffenderSearchResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is Cas2OffenderSearchResult.Forbidden -> return "$.crn" hasSingleValidationError "userPermission"
+      is Cas2OffenderSearchResult.Unknown -> return "$.crn" hasSingleValidationError "unknown"
+      is Cas2OffenderSearchResult.Success.Full -> offenderDetailsResult.person
     }
 
     if (validationErrors.any()) {
@@ -359,12 +364,12 @@ class Cas2v2ApplicationService(
   }
 
   fun createAssessment(application: Cas2ApplicationEntity) {
-    cas2v2AssessmentService.createCas2v2Assessment(application)
+    cas2AssessmentService.createCas2Assessment(application)
   }
 
   @SuppressWarnings("ThrowsCount")
   private fun retrievePrisonCode(application: Cas2ApplicationEntity): String {
-    val inmateDetailResult = cas2v2OffenderService.getInmateDetailByNomsNumber(
+    val inmateDetailResult = cas2OffenderService.getInmateDetailByNomsNumber(
       crn = application.crn,
       nomsNumber = application.nomsNumber.toString(),
     )
