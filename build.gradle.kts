@@ -68,7 +68,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
-  testImplementation("io.mockk:mockk:1.14.6")
+  testImplementation("io.mockk:mockk:1.14.9")
   testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
   testImplementation("io.jsonwebtoken:jjwt-api:0.12.6")
   testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
