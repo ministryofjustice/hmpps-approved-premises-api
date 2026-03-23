@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.listener.PlacementApplicationEntityListener
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -73,6 +75,7 @@ interface LockablePlacementApplicationRepository : JpaRepository<LockablePlaceme
  *
  */
 @Entity
+@EntityListeners(PlacementApplicationEntityListener::class)
 @Table(name = "placement_applications")
 data class PlacementApplicationEntity(
   @Id

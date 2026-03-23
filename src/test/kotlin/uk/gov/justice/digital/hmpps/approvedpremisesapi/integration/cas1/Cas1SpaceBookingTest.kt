@@ -78,6 +78,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
@@ -315,6 +316,15 @@ class Cas1SpaceBookingTest {
             .isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
 
           assertThat(cas1SpaceBookingRepository.findAllByApplication(application)).hasSize(2)
+
+          val emittedMessage = snsDomainEventListener.blockForMessage(DomainEventType.CAS1_APPLICATION_STATUS_UPDATED)
+          assertThat(emittedMessage.description).isEqualTo("An application, placement application or placement request has been updated and will effect application statuses")
+          assertThat(emittedMessage.detailUrl).isEqualTo("http://api/cases/${application.crn}/applications/suitable")
+          assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(application.id)
+          assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+            SnsEventPersonReference("CRN", application.crn),
+            SnsEventPersonReference("NOMS", application.nomsNumber!!),
+          )
         }
       }
     }

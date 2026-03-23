@@ -17,6 +17,7 @@ generic-service:
 
   env:
     JAVA_OPTS: "-Xmx2000m"
+    INGRESS_HOST: approved-premises-api-test.hmpps.service.justice.gov.uk
     SPRING_PROFILES_ACTIVE: dev
     APPLICATIONINSIGHTS_ROLE_NAME: approved-premises-api-test
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
