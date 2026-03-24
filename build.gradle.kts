@@ -16,13 +16,14 @@ kotlin {
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.2")
+  implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
   // Removed hypersistence-utils-hibernate-63 due to Spring Boot 3.x / Hibernate 6.6.4 compatibility issues
   // this should match the version of hibernate provided by spring
-  implementation("org.hibernate.orm:hibernate-spatial:7.2.6.Final")
+  implementation("org.hibernate.orm:hibernate-spatial")
   implementation("org.hibernate.orm:hibernate-jcache")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
@@ -42,7 +43,6 @@ dependencies {
   runtimeOnly("org.ehcache:ehcache")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql")
-  runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
   implementation(kotlin("reflect"))
 
@@ -216,8 +216,7 @@ allOpen {
 
 tasks {
   withType<JavaExec> {
-    jvmArgs!!.plus("--add-opens")
-    jvmArgs!!.plus("java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
   }
 }
 

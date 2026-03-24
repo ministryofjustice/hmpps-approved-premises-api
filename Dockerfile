@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM hmpps-eclipse-temurin:25-jre-jammy AS builder
+FROM --platform=$BUILDPLATFORM ghcr.io/ministryofjustice/hmpps-eclipse-temurin:25-jre-jammy AS builder
 
 ARG BUILD_NUMBER
 ENV BUILD_NUMBER=${BUILD_NUMBER:-1_0_0}
@@ -7,7 +7,7 @@ WORKDIR /app
 ADD . .
 RUN ./gradlew --no-daemon assemble
 
-FROM hmpps-eclipse-temurin:25-jre-jammy
+FROM ghcr.io/ministryofjustice/hmpps-eclipse-temurin:25-jre-jammy
 LABEL maintainer="HMPPS Digital Studio <info@digital.justice.gov.uk>"
 
 ARG BUILD_NUMBER
@@ -15,8 +15,7 @@ ENV BUILD_NUMBER=${BUILD_NUMBER:-1_0_0}
 
 RUN apt-get update && \
     apt-get -y upgrade && \
-    apt-get install -y curl && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y curl
 
 ENV TZ=Europe/London
 RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
