@@ -52,9 +52,9 @@ class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
       }"""
 
     assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment1NoJson.id)!!.data).isNull()
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasFormattedJson.id)!!.data).isEqualTo(expectedJson)
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.data).isEqualTo(sampleJson)
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment4FlatJson.id)!!.data).isEqualTo(removeLineBreaks(expectedJson))
+    assertThat(objectMapper.readTree(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasFormattedJson.id)!!.data)).isEqualTo(objectMapper.readTree(expectedJson))
+    assertThat(objectMapper.readTree(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.data)).isEqualTo(objectMapper.readTree(sampleJson))
+    assertThat(objectMapper.readTree(approvedPremisesAssessmentRepository.findByIdOrNull(assessment4FlatJson.id)!!.data)).isEqualTo(objectMapper.readTree(removeLineBreaks(expectedJson)))
   }
 
   fun removeLineBreaks(input: String) = input.replace(Regex("""(\r\n)|\n"""), "")

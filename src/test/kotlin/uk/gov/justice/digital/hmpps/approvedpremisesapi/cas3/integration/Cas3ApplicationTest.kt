@@ -805,7 +805,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
             val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
 
-            assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+            assertThat(objectMapper.readTree(persistedAssessment.summaryData)).isEqualTo(objectMapper.readTree("{\"num\":50,\"text\":\"Hello world!\"}"))
             assertThat(persistedApplication.name).isEqualTo(offenderName)
           }
         }
@@ -874,7 +874,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             val persistedAssessment =
               persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
 
-            assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+            assertThat(objectMapper.readTree(persistedAssessment.summaryData)).isEqualTo(objectMapper.readTree("{\"num\":50,\"text\":\"Hello world!\"}"))
             assertThat(persistedApplication.personReleaseDate).isEqualTo(LocalDate.now())
             assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
             assertThat(persistedApplication.prisonReleaseTypes).isEqualTo("Parole,CRD licence")
@@ -983,7 +983,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
           val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
 
-          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Out of region test!\"}")
+          assertThat(objectMapper.readTree(persistedAssessment.summaryData)).isEqualTo(objectMapper.readTree("{\"num\":50,\"text\":\"Out of region test!\"}"))
           assertThat(persistedApplication.name).isEqualTo(offenderName)
 
           assertThat(persistedApplication.probationRegion.id).isEqualTo(outOfRegionProbationRegion.id)
@@ -1041,7 +1041,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
           val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
 
-          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":42,\"text\":\"Not out of region test!\"}")
+          assertThat(objectMapper.readTree(persistedAssessment.summaryData)).isEqualTo(objectMapper.readTree("{\"num\":42,\"text\":\"Not out of region test!\"}"))
           assertThat(persistedApplication.name).isEqualTo(offenderName)
 
           assertThat(persistedApplication.probationRegion.id).isEqualTo(submittingUser.probationRegion.id)
