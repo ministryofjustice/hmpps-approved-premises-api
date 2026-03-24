@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -27,13 +27,13 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class PlacementApplicationTransformerTest {
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = JsonMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
 
-  private val placementApplicationTransformer = PlacementApplicationTransformer(objectMapper)
+  private val placementApplicationTransformer = PlacementApplicationTransformer(jsonMapper)
 
   private var user = UserEntityFactory()
     .withYieldedProbationRegion {
@@ -116,8 +116,8 @@ class PlacementApplicationTransformerTest {
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
 
     assertThat(result.id).isEqualTo(placementApplication.id)
-    assertThat(result.data).isEqualTo(objectMapper.readTree(data))
-    assertThat(result.document).isEqualTo(objectMapper.readTree(document))
+    assertThat(result.data).isEqualTo(jsonMapper.readTree(data))
+    assertThat(result.document).isEqualTo(jsonMapper.readTree(document))
     assertThat(result.dates!!.expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
     assertThat(result.dates!!.duration).isEqualTo(30)
 

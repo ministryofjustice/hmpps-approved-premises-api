@@ -44,14 +44,14 @@ class Cas3v2BedspaceServiceTest {
   private val mockCas3v2PremisesService = mockk<Cas3v2PremisesService>()
   private val mockCas3v2DomainEventService = mockk<Cas3v2DomainEventService>()
 
-  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   private val cas3v2BedspacesService = Cas3v2BedspacesService(
     mockCharacteristicService,
     mockCas3BedspacesRepository,
     mockCas3v2PremisesService,
     mockCas3v2DomainEventService,
-    objectMapper,
+    jsonMapper,
   )
 
   @Nested
@@ -829,7 +829,7 @@ class Cas3v2BedspaceServiceTest {
     data.eventDetails.premisesId,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    objectMapper.writeValueAsString(data),
+    jsonMapper.writeValueAsString(data),
     CAS3_BEDSPACE_UNARCHIVED,
   )
 
@@ -866,7 +866,7 @@ class Cas3v2BedspaceServiceTest {
     data.eventDetails.premisesId,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    objectMapper.writeValueAsString(data),
+    jsonMapper.writeValueAsString(data),
     CAS3_BEDSPACE_UNARCHIVED,
   )
 
@@ -894,7 +894,7 @@ class Cas3v2BedspaceServiceTest {
     data.eventDetails.premisesId,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    objectMapper.writeValueAsString(data),
+    jsonMapper.writeValueAsString(data),
     CAS3_BEDSPACE_ARCHIVED,
   )
 

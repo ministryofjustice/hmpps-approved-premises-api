@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -81,7 +81,7 @@ class Cas1ApplicationCreationServiceTest {
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
-  private val mockObjectMapper = mockk<ObjectMapper>()
+  private val mockJsonMapper = mockk<JsonMapper>()
   private val mockApAreaRepository = mockk<ApAreaRepository>()
   private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
@@ -100,7 +100,7 @@ class Cas1ApplicationCreationServiceTest {
     mockOfflineApplicationRepository,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
-    mockObjectMapper,
+    mockJsonMapper,
     mockApAreaRepository,
     mockCas1ApplicationDomainEventService,
     mockCas1ApplicationUserDetailsRepository,
@@ -489,7 +489,7 @@ class Cas1ApplicationCreationServiceTest {
     @BeforeEach
     fun setup() {
       every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
-      every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
+      every { mockJsonMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
     }
 
     @Test
@@ -593,7 +593,7 @@ class Cas1ApplicationCreationServiceTest {
         caseManagerIsNotApplicant = true,
       )
 
-      every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
+      every { mockJsonMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
       val result = applicationService.submitApplication(
         applicationId,
@@ -1043,7 +1043,7 @@ class Cas1ApplicationCreationServiceTest {
     }
 
     private fun setupMocksForSuccess(application: ApprovedPremisesApplicationEntity) {
-      every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
+      every { mockJsonMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockOffenderDetailService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(

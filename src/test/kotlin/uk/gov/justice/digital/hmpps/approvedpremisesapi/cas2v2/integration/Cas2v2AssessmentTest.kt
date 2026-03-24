@@ -124,7 +124,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2v2Assessment>() {})
+            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2v2Assessment>() {})
 
           Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(updatedNacroReferralId)
           Assertions.assertThat(responseBody.assessorName).isEqualTo(updatedAssessorName)
@@ -220,7 +220,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2v2Assessment>() {})
+            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2v2Assessment>() {})
 
           Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(assessment.nacroReferralId)
           Assertions.assertThat(responseBody.assessorName).isEqualTo(assessment.assessorName)
@@ -256,7 +256,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2v2Assessment>() {})
+            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2v2Assessment>() {})
 
           Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(assessment.nacroReferralId)
           Assertions.assertThat(responseBody.assessorName).isEqualTo(assessment.assessorName)

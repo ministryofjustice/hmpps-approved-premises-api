@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequests
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.json.JSONObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -19,7 +19,7 @@ import java.time.LocalTime
 
 @Service
 class SubjectAccessRequestService(
-  val objectMapper: ObjectMapper,
+  val jsonMapper: JsonMapper,
   val cas1SubjectAccessRequestRepository: CAS1SubjectAccessRequestRepository,
   val cas2SubjectAccessRequestRepository: Cas2SubjectAccessRequestRepository,
   val cas3SubjectAccessRequestRepository: CAS3SubjectAccessRequestRepository,
@@ -257,8 +257,8 @@ class SubjectAccessRequestService(
   }
   private fun Logger.logDebugMessage(service: String, result: String) {
     if (this.isDebugEnabled) {
-      val prettyPrintJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
-        objectMapper.readValue(result, Any::class.java),
+      val prettyPrintJson = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+        jsonMapper.readValue(result, Any::class.java),
       )
       log.debug("$service SAR Result is $prettyPrintJson")
     }

@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.LoggerFactory
@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 @ConditionalOnProperty(prefix = "feature-flags", name = ["cas2-sqs-listener-enabled"], havingValue = "true")
 @Service
 class Cas2DomainEventListener(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val locationChangedService: Cas2LocationChangedService,
   private val allocationChangedService: Cas2AllocationChangedService,
   private val sentryService: SentryService,
@@ -24,8 +24,8 @@ class Cas2DomainEventListener(
   @SqsListener("castwodomaineventslistenerqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(msg: String) {
     try {
-      val (message) = objectMapper.readValue<SQSMessage>(msg)
-      val event = objectMapper.readValue<HmppsDomainEvent>(message)
+      val (message) = jsonMapper.readValue<SQSMessage>(msg)
+      val event = jsonMapper.readValue<HmppsDomainEvent>(message)
       handleEvent(event)
     } catch (e: Exception) {
       log.error("Exception caught in Cas2DomainEventListener", e)

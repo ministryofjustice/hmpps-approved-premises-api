@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -34,7 +34,7 @@ class AssessmentService(
   private val userService: UserService,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
@@ -65,7 +65,7 @@ class AssessmentService(
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
         completedAt = null,
-        summaryData = objectMapper.writeValueAsString(summaryData),
+        summaryData = jsonMapper.writeValueAsString(summaryData),
         isWithdrawn = false,
         referralRejectionReason = null,
         referralRejectionReasonDetail = null,

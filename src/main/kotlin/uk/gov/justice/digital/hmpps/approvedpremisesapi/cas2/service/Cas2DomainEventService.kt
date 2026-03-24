@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -31,7 +31,7 @@ import kotlin.reflect.KClass
 @SuppressWarnings("TooGenericExceptionThrown")
 @Service
 class Cas2DomainEventService(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas2.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
@@ -53,7 +53,7 @@ class Cas2DomainEventService(
 
     val data = when {
       enumTypeFromDataType(T::class) == domainEventEntity.type ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
+        jsonMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
     return DomainEvent(
@@ -104,7 +104,7 @@ class Cas2DomainEventService(
         createdAt = OffsetDateTime.now(),
         cas3CancelledAt = null,
         cas3TransactionId = null,
-        data = objectMapper.writeValueAsString(domainEvent.data),
+        data = jsonMapper.writeValueAsString(domainEvent.data),
         service = "CAS2",
         triggerSource = null,
         triggeredByUserId = null,
@@ -135,7 +135,7 @@ class Cas2DomainEventService(
       val publishResult = domainTopic.snsClient.publish(
         PublishRequest.builder()
           .topicArn(domainTopic.arn)
-          .message(objectMapper.writeValueAsString(snsEvent))
+          .message(jsonMapper.writeValueAsString(snsEvent))
           .messageAttributes(
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),

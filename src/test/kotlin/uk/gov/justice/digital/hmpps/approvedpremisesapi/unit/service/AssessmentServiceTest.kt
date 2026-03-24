@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
@@ -53,7 +53,7 @@ class AssessmentServiceTest {
   private val userServiceMock = mockk<UserService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
-  private val objectMapperMock = spyk<ObjectMapper>()
+  private val jsonMapperMock = spyk<JsonMapper>()
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
@@ -65,7 +65,7 @@ class AssessmentServiceTest {
     userServiceMock,
     assessmentRepositoryMock,
     assessmentReferralHistoryNoteRepositoryMock,
-    objectMapperMock,
+    jsonMapperMock,
     cas1TaskDeadlineServiceMock,
     cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,

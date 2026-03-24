@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.jpa.domain.Specification
@@ -52,7 +52,7 @@ class Cas2v2ApplicationService(
   private val emailNotificationService: EmailNotificationService,
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val sentryService: SentryService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
@@ -253,7 +253,7 @@ class Cas2v2ApplicationService(
     var application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
-    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
+    val serializedTranslatedDocument = jsonMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
 
     if (application.createdByUser != user) {
       return CasResult.Unauthorised()

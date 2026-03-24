@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -60,7 +60,7 @@ class Cas3v2PremisesServiceTest {
   lateinit var cas3UserAccessService: Cas3UserAccessService
 
   @MockK
-  lateinit var objectMapper: ObjectMapper
+  lateinit var jsonMapper: JsonMapper
 
   @InjectMockKs
   lateinit var cas3v2PremisesService: Cas3v2PremisesService

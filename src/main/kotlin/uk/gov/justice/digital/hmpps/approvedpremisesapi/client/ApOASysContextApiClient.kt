@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetails
@@ -15,9 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class ApOASysContextApiClient(
   @Qualifier("apOASysContextApiWebClient") webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   fun getOffenceDetails(crn: String) = getRequest<OffenceDetails> {
     path = "/offence-details/$crn"
   }

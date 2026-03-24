@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
@@ -19,7 +19,7 @@ import java.util.UUID
 
 @Component()
 class Cas2ApplicationsTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val personTransformer: PersonTransformer,
   private val nomisUserTransformer: NomisUserTransformer,
   private val statusUpdateTransformer: StatusUpdateTransformer,
@@ -38,8 +38,8 @@ class Cas2ApplicationsTransformer(
       createdBy = nomisUserTransformer.transformJpaToApi(jpa),
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
-      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      data = if (jpa.data != null) jsonMapper.readTree(jpa.data) else null,
+      document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
       status = getStatus(jpa),
       type = "CAS2",
       telephoneNumber = jpa.telephoneNumber,

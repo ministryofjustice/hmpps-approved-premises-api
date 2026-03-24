@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -41,14 +41,14 @@ class SubmissionsTransformerTest {
   private val mockOffenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
   private val mockCas2UserService = mockk<Cas2UserService>()
 
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = JsonMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
 
   private val applicationTransformer = SubmissionsTransformer(
-    objectMapper,
+    jsonMapper,
     mockPersonTransformer,
     mockNomisUserTransformer,
     mockTimelineEventsTransformer,

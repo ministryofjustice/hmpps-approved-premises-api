@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -35,7 +35,7 @@ class Cas3ApplicationTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
 
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = JsonMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
@@ -74,7 +74,7 @@ class Cas3ApplicationTransformerTest {
   private val assessmentFactory = TemporaryAccommodationAssessmentEntityFactory()
     .withAllocatedToUser(allocatedToUser)
 
-  private val cas3ApplicationsTransformer = Cas3ApplicationTransformer(objectMapper, mockPersonTransformer, mockRisksTransformer)
+  private val cas3ApplicationsTransformer = Cas3ApplicationTransformer(jsonMapper, mockPersonTransformer, mockRisksTransformer)
 
   @BeforeEach
   fun setup() {
@@ -277,7 +277,7 @@ class Cas3ApplicationTransformerTest {
   @Test
   fun `transformJpaToApiSummary transforms an in progress application correctly`() {
     val application = object : TemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -303,7 +303,7 @@ class Cas3ApplicationTransformerTest {
   @Test
   fun `transformJpaToApiSummary transforms a submitted application correctly`() {
     val application = object : TemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -329,7 +329,7 @@ class Cas3ApplicationTransformerTest {
   @Test
   fun `transformJpaToApiSummary transforms application with rejected assessment correctly`() {
     val application = object : TemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")

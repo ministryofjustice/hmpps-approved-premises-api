@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.sentry.Sentry
@@ -32,7 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isTypeInThrowableCh
 
 @ControllerAdvice
 class ExceptionHandling(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val deserializationValidationService: DeserializationValidationService,
   private val sentryService: SentryService,
 ) : ProblemHandling,
@@ -103,7 +103,7 @@ class ExceptionHandling(
         val mismatchedInputException = exception.cause as MismatchedInputException
 
         val requestBody = request.getNativeRequest(ContentCachingRequestWrapper::class.java)
-        val jsonTree = objectMapper.readTree(String(requestBody.contentAsByteArray))
+        val jsonTree = jsonMapper.readTree(String(requestBody.contentAsByteArray))
 
         if (expectedArrayButGotObject(jsonTree, mismatchedInputException)) {
           responseBuilder.withDetail("Expected an array but got an object")

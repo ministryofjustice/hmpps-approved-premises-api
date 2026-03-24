@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -60,7 +60,7 @@ class Cas3DomainEventServiceConfig(
 @SuppressWarnings("TooManyFunctions", "TooGenericExceptionThrown", "")
 @Service("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.DomainEventService")
 class Cas3DomainEventService(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val domainEventRepository: DomainEventRepository,
   private val cas3DomainEventBuilder: Cas3DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
@@ -115,7 +115,7 @@ class Cas3DomainEventService(
 
     val data = when {
       enumTypeFromDataType(T::class) == domainEventEntity.type ->
-        objectMapper.readValue(domainEventEntity.data, T::class.java)
+        jsonMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
     return DomainEvent(
@@ -328,7 +328,7 @@ class Cas3DomainEventService(
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         cas3CancelledAt = null,
-        data = objectMapper.writeValueAsString(domainEvent.data),
+        data = jsonMapper.writeValueAsString(domainEvent.data),
         service = "CAS3",
         triggeredByUserId = user?.id,
         triggerSource = triggerSourceType,
@@ -373,7 +373,7 @@ class Cas3DomainEventService(
       val publishResult = domainTopic.snsClient.publish(
         PublishRequest.builder()
           .topicArn(domainTopic.arn)
-          .message(objectMapper.writeValueAsString(snsEvent))
+          .message(jsonMapper.writeValueAsString(snsEvent))
           .messageAttributes(
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),

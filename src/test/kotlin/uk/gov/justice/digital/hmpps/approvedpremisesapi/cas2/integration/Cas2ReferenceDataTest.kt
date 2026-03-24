@@ -16,7 +16,7 @@ class Cas2ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `All available application status options are returned`() {
-    val expectedStatusOptions = objectMapper.writeValueAsString(
+    val expectedStatusOptions = jsonMapper.writeValueAsString(
       statusFinder.active().map { status -> statusTransformer.transformModelToApi(status) },
     )
 

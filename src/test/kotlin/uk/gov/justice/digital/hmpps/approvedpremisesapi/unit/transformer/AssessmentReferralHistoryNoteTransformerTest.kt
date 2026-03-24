@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 
 class AssessmentReferralHistoryNoteTransformerTest {
-  private val objectMapper = ObjectMapper().apply {
+  private val objectMapper = JsonMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
