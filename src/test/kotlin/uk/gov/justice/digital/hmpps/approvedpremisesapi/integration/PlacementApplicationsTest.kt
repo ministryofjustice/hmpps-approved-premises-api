@@ -527,7 +527,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
           val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)
 
-          assertThat(objectMapper.readTree(updatedPlacementApplication!!.data)).isEqualTo(objectMapper.readTree(expectedUpdatedPlacementApplication.data))
+          assertThat(updatedPlacementApplication!!.data).isEqualTo(expectedUpdatedPlacementApplication.data)
         }
       }
     }
@@ -791,7 +791,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val updatedPlacementApplication =
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
-            assertThat(objectMapper.readTree(updatedPlacementApplication.document)).isEqualTo(objectMapper.readTree(expectedUpdatedPlacementApplication.document))
+            assertThat(updatedPlacementApplication.document).isEqualTo(expectedUpdatedPlacementApplication.document)
             assertThat(updatedPlacementApplication.submittedAt).isNotNull()
             assertThat(updatedPlacementApplication.allocatedToUser).isNull()
             assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(cas1RequestedPlacementPeriod[0].duration)
@@ -871,7 +871,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val updatedPlacementApplication =
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
-            assertThat(objectMapper.readTree(updatedPlacementApplication.document)).isEqualTo(objectMapper.readTree(expectedUpdatedPlacementApplication.document))
+            assertThat(updatedPlacementApplication.document).isEqualTo(expectedUpdatedPlacementApplication.document)
             assertThat(updatedPlacementApplication.submittedAt).isNotNull()
             assertThat(updatedPlacementApplication.allocatedToUser).isNull()
             assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(placementDates[0].duration)
