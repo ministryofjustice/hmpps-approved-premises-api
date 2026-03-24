@@ -9,9 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class NomisUserRolesForRequesterApiClient(
   @Qualifier("nomisUserRolesForRequesterApiWebClient") webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: ObjectMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
 
   fun getUserDetailsForMe(jwt: String) = getRequest<NomisUserDetail> {
     withHeader("Authorization", "Bearer $jwt")

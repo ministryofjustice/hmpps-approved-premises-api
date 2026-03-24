@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 @ConditionalOnProperty(prefix = "feature-flags", name = ["cas2-sqs-listener-enabled"], havingValue = "true")
 @Service
 class Cas2DomainEventListener(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
   private val locationChangedService: Cas2LocationChangedService,
   private val allocationChangedService: Cas2AllocationChangedService,
   private val sentryService: SentryService,
@@ -24,8 +24,8 @@ class Cas2DomainEventListener(
   @SqsListener("castwodomaineventslistenerqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(msg: String) {
     try {
-      val (message) = objectMapper.readValue<SQSMessage>(msg)
-      val event = objectMapper.readValue<HmppsDomainEvent>(message)
+      val (message) = jsonMapper.readValue<SQSMessage>(msg)
+      val event = jsonMapper.readValue<HmppsDomainEvent>(message)
       handleEvent(event)
     } catch (e: Exception) {
       log.error("Exception caught in Cas2DomainEventListener", e)

@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 
 @Component
 class Cas1AssessmentTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
   private val applicationsTransformer: ApplicationsTransformer,
   private val cas1AssessmentClarificationNoteTransformer: Cas1AssessmentClarificationNoteTransformer,
   private val userTransformer: UserTransformer,
@@ -43,8 +43,8 @@ class Cas1AssessmentTransformer(
     ),
     createdAt = jpa.createdAt.toInstant(),
     allocatedAt = jpa.allocatedAt?.toInstant(),
-    data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+    data = if (jpa.data != null) jsonMapper.readTree(jpa.data) else null,
+    document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
     clarificationNotes = jpa.clarificationNotes.map(cas1AssessmentClarificationNoteTransformer::transformJpaToCas1ClarificationNote),
     allocatedToStaffMember = jpa.allocatedToUser?.let {
       userTransformer.transformCas1JpaToApi(it)
@@ -65,7 +65,7 @@ class Cas1AssessmentTransformer(
     decision = transformDomainSummaryDecisionToApi(ase.decision),
     risks = ase.riskRatings?.let {
       risksTransformer.transformDomainToApi(
-        objectMapper.readValue<PersonRisks>(it),
+        jsonMapper.readValue<PersonRisks>(it),
         ase.crn,
       )
     },

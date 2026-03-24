@@ -82,7 +82,7 @@ class Cas2DomainEventTest : IntegrationTestBase() {
       val event = domainEventFactory.produceAndPersist {
         withId(eventId)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(objectMapper.writeValueAsString(eventToSave))
+        withData(jsonMapper.writeValueAsString(eventToSave))
       }
 
       val response = webTestClient.get()
@@ -175,7 +175,7 @@ class Cas2DomainEventTest : IntegrationTestBase() {
           val event = domainEventFactory.produceAndPersist {
             withId(eventId)
             withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
-            withData(objectMapper.writeValueAsString(eventToSave))
+            withData(jsonMapper.writeValueAsString(eventToSave))
           }
 
           val response = webTestClient.get()
@@ -208,7 +208,7 @@ class Cas2DomainEventTest : IntegrationTestBase() {
           val event = domainEventFactory.produceAndPersist {
             withId(eventId)
             withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
-            withData(objectMapper.writeValueAsString(eventToSave))
+            withData(jsonMapper.writeValueAsString(eventToSave))
           }
 
           val response = webTestClient.get()

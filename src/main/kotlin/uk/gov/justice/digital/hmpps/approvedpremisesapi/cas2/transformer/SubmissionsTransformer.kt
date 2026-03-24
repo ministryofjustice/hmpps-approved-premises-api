@@ -14,7 +14,7 @@ import java.util.UUID
 
 @Component("Cas2SubmittedApplicationTransformer")
 class SubmissionsTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
   private val nomisUserTransformer: NomisUserTransformer,
   private val timelineEventsTransformer: TimelineEventsTransformer,
@@ -35,7 +35,7 @@ class SubmissionsTransformer(
       submittedBy = nomisUserTransformer.transformJpaToApi(jpa),
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
       telephoneNumber = jpa.telephoneNumber,
       timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
       assessment = assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),

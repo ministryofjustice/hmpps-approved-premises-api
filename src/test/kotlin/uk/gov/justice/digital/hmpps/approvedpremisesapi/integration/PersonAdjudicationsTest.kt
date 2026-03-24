@@ -121,7 +121,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(adjudicationTransformer.transformToApi(adjudicationsResponse, false)),
+            jsonMapper.writeValueAsString(adjudicationTransformer.transformToApi(adjudicationsResponse, false)),
           )
       }
     }
@@ -160,7 +160,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(adjudicationTransformer.transformToApi(adjudicationsResponse, false)),
+            jsonMapper.writeValueAsString(adjudicationTransformer.transformToApi(adjudicationsResponse, false)),
           )
       }
     }
@@ -204,7 +204,7 @@ class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(adjudicationTransformer.transformToApi(adjudicationsResponse, true)),
+            jsonMapper.writeValueAsString(adjudicationTransformer.transformToApi(adjudicationsResponse, true)),
           )
       }
     }

@@ -103,7 +103,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedReferrals))
+          assertThat(responseBody).isEqualTo(jsonMapper.writeValueAsString(expectedReferrals))
         }
       }
     }

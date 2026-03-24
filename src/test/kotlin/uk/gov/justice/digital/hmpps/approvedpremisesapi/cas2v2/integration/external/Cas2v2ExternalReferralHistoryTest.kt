@@ -103,7 +103,7 @@ class Cas2v2ExternalReferralHistoryTest : Cas2v2IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedReferrals))
+          assertThat(responseBody).isEqualTo(jsonMapper.writeValueAsString(expectedReferrals))
         }
       }
     }

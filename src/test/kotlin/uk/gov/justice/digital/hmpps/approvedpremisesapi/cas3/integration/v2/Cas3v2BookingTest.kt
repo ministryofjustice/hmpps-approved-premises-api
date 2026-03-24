@@ -112,7 +112,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 bookingTransformer.transformJpaToApi(
                   booking,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
@@ -232,7 +232,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 bookingTransformer.transformJpaToApi(
                   booking,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
@@ -264,7 +264,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               bookingTransformer.transformJpaToApi(
                 booking,
                 PersonInfoResult.NotFound("SOME-CRN"),
@@ -299,7 +299,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 bookingTransformer.transformJpaToApi(
                   booking,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
@@ -426,7 +426,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           }
         }
 
-        val expectedJson = objectMapper.writeValueAsString(
+        val expectedJson = jsonMapper.writeValueAsString(
           bookings.map {
             bookingTransformer.transformJpaToApi(
               it,
@@ -458,7 +458,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
         withBedspace(bedspace)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(
+      val expectedJson = jsonMapper.writeValueAsString(
         listOf(
           bookingTransformer.transformJpaToApi(
             booking,
@@ -492,7 +492,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           withBedspace(bedspace)
         }
 
-        val expectedJson = objectMapper.writeValueAsString(
+        val expectedJson = jsonMapper.writeValueAsString(
           listOf(
             bookingTransformer.transformJpaToApi(
               booking,

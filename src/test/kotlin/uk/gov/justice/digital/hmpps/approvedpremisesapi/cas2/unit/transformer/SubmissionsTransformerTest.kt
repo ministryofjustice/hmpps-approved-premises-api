@@ -41,14 +41,14 @@ class SubmissionsTransformerTest {
   private val mockOffenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
   private val mockCas2UserService = mockk<Cas2UserService>()
 
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
 
   private val applicationTransformer = SubmissionsTransformer(
-    objectMapper,
+    jsonMapper,
     mockPersonTransformer,
     mockNomisUserTransformer,
     mockTimelineEventsTransformer,

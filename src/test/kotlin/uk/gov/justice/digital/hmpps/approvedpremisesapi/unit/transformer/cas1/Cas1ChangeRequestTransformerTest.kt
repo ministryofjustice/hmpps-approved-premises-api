@@ -31,7 +31,7 @@ import java.util.UUID
 class Cas1ChangeRequestTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
 
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
@@ -54,7 +54,7 @@ class Cas1ChangeRequestTransformerTest {
     .withDecision(ChangeRequestDecision.APPROVED)
     .produce()
 
-  private val cas1ChangeRequestTransformer = Cas1ChangeRequestTransformer(mockPersonTransformer, objectMapper)
+  private val cas1ChangeRequestTransformer = Cas1ChangeRequestTransformer(mockPersonTransformer, jsonMapper)
 
   @Test
   fun `findOpenResultsToChangeRequestSummary transforms correctly`() {

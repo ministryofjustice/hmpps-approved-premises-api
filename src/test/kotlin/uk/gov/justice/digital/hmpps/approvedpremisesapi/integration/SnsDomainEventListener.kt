@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import java.time.Duration
 
 @Service
-class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
+class SnsDomainEventListener(private val jsonMapper: ObjectMapper) {
   private val log = LoggerFactory.getLogger(this::class.java)
   private val messages = mutableListOf<SnsEvent>()
 
@@ -28,8 +28,8 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
    */
   @SqsListener(queueNames = ["domaineventsqueue"], factory = "hmppsQueueContainerFactoryProxy", pollTimeoutSeconds = "1")
   fun processMessage(rawMessage: String?) {
-    val (message) = objectMapper.readValue(rawMessage, Message::class.java)
-    val event = objectMapper.readValue(message, SnsEvent::class.java)
+    val (message) = jsonMapper.readValue(rawMessage, Message::class.java)
+    val event = jsonMapper.readValue(message, SnsEvent::class.java)
 
     log.info("Received Domain Event: $event")
     synchronized(messages) {

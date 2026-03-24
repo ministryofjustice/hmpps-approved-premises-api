@@ -23,9 +23,9 @@ import java.io.OutputStream
 @Component
 class ApDeliusContextApiClient(
   @Qualifier("apDeliusContextApiWebClient") private val webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: ObjectMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   @Cacheable(value = ["qCodeStaffMembersCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffMembers(qCode: String) = getRequest<StaffMembersPage> {
     path = "/approved-premises/$qCode/staff"

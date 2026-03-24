@@ -17,7 +17,7 @@ import java.time.temporal.ChronoUnit
 class Cas1CapacityPerformanceTestJob(
   private val cas1PremisesService: Cas1PremisesService,
   private val cas1PremiseCapacitySummaryTransformer: Cas1PremiseCapacitySummaryTransformer,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
   private val cas1PremisesRepository: ApprovedPremisesRepository,
 ) : MigrationJob() {
 
@@ -38,7 +38,7 @@ class Cas1CapacityPerformanceTestJob(
       ),
     )
 
-    val description = objectMapper.writeValueAsString(capacities.results.map { cas1PremiseCapacitySummaryTransformer.toCas1PremiseCapacitySummary(it) })
+    val description = jsonMapper.writeValueAsString(capacities.results.map { cas1PremiseCapacitySummaryTransformer.toCas1PremiseCapacitySummary(it) })
 
     log.info("Capacities are $description")
 

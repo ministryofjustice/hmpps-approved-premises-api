@@ -31,7 +31,7 @@ class Cas2DomainEventListenerTest {
   lateinit var sentryService: SentryService
 
   @SpykBean
-  var objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  var jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   @InjectMockKs
   lateinit var cas2DomainEventListener: Cas2DomainEventListener

@@ -50,7 +50,7 @@ class Cas3ApplicationService(
   private val cas3DomainEventService: Cas3DomainEventService,
   private val offenderService: OffenderService,
   private val offenderRisksService: OffenderRisksService,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
   private val cas3v2BookingService: Cas3v2BookingService,
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
@@ -212,7 +212,7 @@ class Cas3ApplicationService(
       return CasResult.GeneralValidationError("This application has already been deleted")
     }
 
-    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
+    val serializedTranslatedDocument = jsonMapper.writeValueAsString(submitApplication.translatedDocument)
 
     val user = userService.getUserForRequest()
 

@@ -2260,7 +2260,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
           val bed = createBed(room)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
+          bed.createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00")
           bedRepository.save(bed)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
@@ -5636,7 +5636,9 @@ class Cas3ReportsTest : IntegrationTestBase() {
     return Pair(premises, room)
   }
 
-  private fun createBed(room: RoomEntity): BedEntity = bedEntityFactory.produceAndPersist {
+  private fun createBed(room: RoomEntity, createdAt: OffsetDateTime? = null, endDate: LocalDate? = null): BedEntity = bedEntityFactory.produceAndPersist {
+    createdAt?.let { withCreatedAt { createdAt } }
+    endDate?.let { withEndDate(endDate) }
     withRoom(room)
   }
 

@@ -10,9 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class NomisUserRolesApiClient(
   @Qualifier("nomisUserRolesApiWebClient") webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: ObjectMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
 
   fun getUserDetails(username: String) = getRequest<NomisUserDetail> {
     path = "/users/$username"

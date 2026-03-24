@@ -38,14 +38,14 @@ class Cas2v2SubmissionsTransformerTest {
   private val mockCas2v2TimelineEventsTransformer = mockk<Cas2v2TimelineEventsTransformer>()
   private val mockCas2v2AssessmentsTransformer = mockk<Cas2v2AssessmentsTransformer>()
 
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
 
   private val applicationTransformer = Cas2v2SubmissionsTransformer(
-    objectMapper,
+    jsonMapper,
     mockPersonTransformer,
     mockCas2v2UserTransformer,
     mockCas2v2TimelineEventsTransformer,

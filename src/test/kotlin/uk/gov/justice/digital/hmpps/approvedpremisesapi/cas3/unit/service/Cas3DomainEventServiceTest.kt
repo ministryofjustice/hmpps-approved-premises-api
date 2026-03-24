@@ -107,7 +107,7 @@ class Cas3DomainEventServiceTest {
   @InjectMockKs
   private lateinit var cas3DomainEventService: Cas3DomainEventService
 
-  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   private val user = UserEntityFactory()
     .withYieldedProbationRegion {
@@ -198,7 +198,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_BOOKING_CANCELLED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -238,7 +238,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_BOOKING_CANCELLED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -299,7 +299,7 @@ class Cas3DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CANCELLED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data)
         },
       )
     }
@@ -307,7 +307,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.cancelled" &&
             deserializedMessage.version == 1 &&
@@ -371,7 +371,7 @@ class Cas3DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CANCELLED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data)
         },
       )
     }
@@ -426,7 +426,7 @@ class Cas3DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CANCELLED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -468,7 +468,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_BOOKING_CONFIRMED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -508,7 +508,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_BOOKING_CONFIRMED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -569,7 +569,7 @@ class Cas3DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CONFIRMED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -579,7 +579,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.confirmed" &&
             deserializedMessage.version == 1 &&
@@ -643,7 +643,7 @@ class Cas3DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CONFIRMED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -700,7 +700,7 @@ class Cas3DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CONFIRMED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -742,7 +742,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -782,7 +782,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -845,7 +845,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -855,7 +855,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.provisionally-made" &&
             deserializedMessage.version == 1 &&
@@ -921,7 +921,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -980,7 +980,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1022,7 +1022,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_PERSON_ARRIVED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -1062,7 +1062,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_PERSON_ARRIVED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -1124,7 +1124,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1134,7 +1134,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.arrived" &&
             deserializedMessage.version == 1 &&
@@ -1199,7 +1199,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1257,7 +1257,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1299,7 +1299,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_PERSON_DEPARTED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -1361,7 +1361,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id
         },
       )
@@ -1370,7 +1370,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.departed" &&
             deserializedMessage.version == 1 &&
@@ -1435,7 +1435,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1493,7 +1493,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1535,7 +1535,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_REFERRAL_SUBMITTED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -1615,7 +1615,7 @@ class Cas3DomainEventServiceTest {
             it.bookingId == null &&
             it.nomsNumber == null &&
             it.occurredAt.toInstant() == domainEvent.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEvent.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1683,7 +1683,7 @@ class Cas3DomainEventServiceTest {
             it.bookingId == null &&
             it.nomsNumber == null &&
             it.occurredAt.toInstant() == domainEvent.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEvent.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER &&
             it.cas3TransactionId == domainEventTransactionId
@@ -1750,7 +1750,7 @@ class Cas3DomainEventServiceTest {
             it.bookingId == null &&
             it.nomsNumber == null &&
             it.occurredAt.toInstant() == domainEvent.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEvent.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1819,7 +1819,7 @@ class Cas3DomainEventServiceTest {
             it.bookingId == null &&
             it.nomsNumber == null &&
             it.occurredAt.toInstant() == domainEvent.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEvent.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEvent.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1883,7 +1883,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -1893,7 +1893,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.referral.submitted" &&
             deserializedMessage.version == 1 &&
@@ -1969,7 +1969,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id
         },
       )
@@ -2037,7 +2037,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id
         },
       )
@@ -2074,7 +2074,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -2084,7 +2084,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.departed.updated" &&
             deserializedMessage.version == 1 &&
@@ -2130,7 +2130,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -2168,7 +2168,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -2177,7 +2177,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.departed.updated" &&
             deserializedMessage.version == 1 &&
@@ -2228,7 +2228,7 @@ class Cas3DomainEventServiceTest {
       { assertThat(savedEvent.crn).isEqualTo(domainEventToSave.crn) },
       { assertThat(savedEvent.nomsNumber).isEqualTo(domainEventToSave.nomsNumber) },
       { assertThat(savedEvent.occurredAt.toInstant()).isEqualTo(domainEventToSave.occurredAt) },
-      { assertThat(savedEvent.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data)) },
+      { assertThat(savedEvent.data).isEqualTo(jsonMapper.writeValueAsString(domainEventToSave.data)) },
       { assertThat(savedEvent.triggeredByUserId).isEqualTo(user.id) },
       { assertThat(savedEvent.triggerSource).isEqualTo(TriggerSourceType.USER) },
     )
@@ -2266,7 +2266,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -2310,7 +2310,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -2320,7 +2320,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.cancelled.updated" &&
             deserializedMessage.version == 1 &&
@@ -2368,7 +2368,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id
         },
       )
@@ -2377,7 +2377,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.booking.cancelled.updated" &&
             deserializedMessage.version == 1 &&
@@ -2422,7 +2422,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -2459,7 +2459,7 @@ class Cas3DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -2501,7 +2501,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -2545,7 +2545,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber
           it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -2555,7 +2555,7 @@ class Cas3DomainEventServiceTest {
     verify(exactly = 1) {
       mockHmppsTopic.snsClient.publish(
         match<PublishRequest> {
-          val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
 
           deserializedMessage.eventType == "accommodation.cas3.person.arrived.updated" &&
             deserializedMessage.version == 1 &&
@@ -2612,7 +2612,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -2647,7 +2647,7 @@ class Cas3DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.nomsNumber == domainEventToSave.nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
             it.triggerSource == TriggerSourceType.USER
         },
@@ -2686,7 +2686,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_PERSON_ARRIVED_UPDATED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -2726,7 +2726,7 @@ class Cas3DomainEventServiceTest {
       .withCrn(crn)
       .withNomsNumber(nomsNumber)
       .withType(DomainEventType.CAS3_PERSON_ARRIVED_UPDATED)
-      .withData(objectMapper.writeValueAsString(data))
+      .withData(jsonMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
@@ -2767,7 +2767,7 @@ class Cas3DomainEventServiceTest {
     data.id,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    objectMapper.writeValueAsString(data),
+    jsonMapper.writeValueAsString(data),
     DomainEventType.CAS3_BEDSPACE_ARCHIVED,
   )
 
@@ -2794,7 +2794,7 @@ class Cas3DomainEventServiceTest {
     data.id,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    objectMapper.writeValueAsString(data),
+    jsonMapper.writeValueAsString(data),
     DomainEventType.CAS3_BEDSPACE_UNARCHIVED,
   )
 

@@ -14,9 +14,9 @@ import java.time.Duration
 @Component
 class PrisonsApiClient(
   @Qualifier("prisonsApiWebClient") webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: ObjectMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   private val inmateDetailsCacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = "inmateDetails",
     successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),

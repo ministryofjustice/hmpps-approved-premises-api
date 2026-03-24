@@ -349,7 +349,7 @@ abstract class IntegrationTestBase {
   private lateinit var cacheManager: CacheManager
 
   @Autowired
-  lateinit var objectMapper: ObjectMapper
+  lateinit var jsonMapper: ObjectMapper
 
   @Autowired
   lateinit var jwtAuthHelper: JwtAuthHelper
@@ -869,7 +869,7 @@ abstract class IntegrationTestBase {
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 GetTokenResponse(
                   accessToken = jwtAuthHelper.createClientCredentialsJwt(
                     username = username,
@@ -897,7 +897,7 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               StaffMembersPage(
                 content = listOf(staffMember),
               ),
@@ -913,7 +913,7 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(inmateDetail),
+            jsonMapper.writeValueAsString(inmateDetail),
           ),
       ),
   )
@@ -926,7 +926,7 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
             .withBody(
-              objectMapper.writeValueAsString(responseBody),
+              jsonMapper.writeValueAsString(responseBody),
             ),
         ),
     )
@@ -941,7 +941,7 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
             .withBody(
-              objectMapper.writeValueAsString(responseBody),
+              jsonMapper.writeValueAsString(responseBody),
             ),
         ),
     )
@@ -962,7 +962,7 @@ abstract class IntegrationTestBase {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
             .withBody(
-              objectMapper.writeValueAsString(responseBody),
+              jsonMapper.writeValueAsString(responseBody),
             ),
         )
         .apply(additionalConfig),
@@ -983,7 +983,7 @@ abstract class IntegrationTestBase {
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
-            objectMapper.writeValueAsString(responseBody),
+            jsonMapper.writeValueAsString(responseBody),
           ),
       )
       .apply(additionalConfig),

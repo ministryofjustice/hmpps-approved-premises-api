@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ClientResultRedis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 
 class ClientResultRedisSerializerTest {
-  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
-  private val clientResponseRedisSerializer = ClientResultRedisSerializer(objectMapper, object : TypeReference<ClientResponseBody>() {})
+  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val clientResponseRedisSerializer = ClientResultRedisSerializer(jsonMapper, object : TypeReference<ClientResponseBody>() {})
 
   @Test
   fun `ClientResult-StatusCodeFailure responses are serialized and deserialized correctly`() {

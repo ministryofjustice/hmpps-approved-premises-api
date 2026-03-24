@@ -49,14 +49,14 @@ class Cas2ApplicationsTransformerTest {
   private val cas2UserService = mockk<Cas2UserService>()
   private val offenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
 
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
 
   private val cas2ApplicationsTransformer = Cas2ApplicationsTransformer(
-    objectMapper,
+    jsonMapper,
     mockPersonTransformer,
     mockNomisUserTransformer,
     mockStatusUpdateTransformer,

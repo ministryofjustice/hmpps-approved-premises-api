@@ -18,7 +18,7 @@ import java.util.UUID
 
 @Component
 class Cas2v2ApplicationsTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
   private val cas2v2UserTransformer: Cas2v2UserTransformer,
   private val statusUpdateTransformer: Cas2v2StatusUpdateTransformer,
@@ -34,8 +34,8 @@ class Cas2v2ApplicationsTransformer(
     createdBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),
-    data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+    data = if (jpa.data != null) jsonMapper.readTree(jpa.data) else null,
+    document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
     status = getStatus(jpa),
     type = "CAS2V2",
     telephoneNumber = jpa.telephoneNumber,
@@ -50,7 +50,7 @@ class Cas2v2ApplicationsTransformer(
     submittedBy = Cas2v2UserTransformer().transformJpaToApi(jpa.createdByUser),
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),
-    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+    document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
     telephoneNumber = jpa.telephoneNumber,
     assessment = cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
     timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),

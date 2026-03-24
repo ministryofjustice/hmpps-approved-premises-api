@@ -188,7 +188,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(
+            jsonMapper.readValue(
               rawResponseBody,
               object : TypeReference<List<Cas1ApplicationSummary>>() {},
             )
@@ -1056,7 +1056,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          objectMapper.readValue(
+          jsonMapper.readValue(
             rawResponseBody,
             object : TypeReference<List<Cas1TimelineEvent>>() {},
           )
@@ -1096,7 +1096,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       assessmentEntity: ApprovedPremisesAssessmentEntity,
       userEntity: UserEntity,
     ): DomainEventEntity {
-      val domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
+      val domainEventsFactory = Cas1DomainEventsFactory(jsonMapper)
 
       val data = if (type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) {
         val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
@@ -1155,7 +1155,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.id).isEqualTo(applicationEntity.id)
           assertThat(responseBody.person.crn).isEqualTo(applicationEntity.crn)
@@ -1208,7 +1208,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
         }
@@ -1245,7 +1245,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
         }
@@ -1315,7 +1315,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+            val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
             assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
           }
@@ -1343,7 +1343,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+            val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
             assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
           }
@@ -1380,7 +1380,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.person is FullPerson).isTrue
           assertThat(responseBody).matches {
@@ -1421,7 +1421,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody.person is FullPerson).isTrue
 
@@ -1467,7 +1467,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
           assertThat(responseBody).matches {
             nonUpgradableApplicationEntity.id == it.id &&
@@ -1512,7 +1512,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(rawResponseBody, OfflineApplication::class.java)
+          val responseBody = jsonMapper.readValue(rawResponseBody, OfflineApplication::class.java)
 
           assertThat(responseBody).matches {
             offlineApplicationEntity.id == it.id &&
@@ -1804,7 +1804,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Application::class.java)
+            val result = jsonMapper.readValue(resultBody, Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
@@ -2754,9 +2754,9 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
+    if (serializable is String) return jsonMapper.readTree(serializable)
 
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
   }
 
   private fun produceAndPersistBasicApplication(
