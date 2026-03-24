@@ -23,7 +23,7 @@ import java.io.OutputStream
 @Component
 class ApDeliusContextApiClient(
   @Qualifier("apDeliusContextApiWebClient") private val webClientConfig: WebClientConfig,
-  jsonMapper: JsonMapper,
+  objectMapper: JsonMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   @Cacheable(value = ["qCodeStaffMembersCache"], unless = IS_NOT_SUCCESSFUL)

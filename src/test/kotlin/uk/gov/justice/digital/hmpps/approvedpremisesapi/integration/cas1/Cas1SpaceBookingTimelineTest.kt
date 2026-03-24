@@ -132,7 +132,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(
+        objectMapper.readValue(
           rawResponseBody,
           object : TypeReference<List<Cas1TimelineEvent>>() {},
         )

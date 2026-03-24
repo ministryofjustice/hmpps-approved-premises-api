@@ -465,7 +465,7 @@ class Cas1AppealsTest : InitialiseDatabasePerClassTestBase() {
             .isOk
             .returnResult(String::class.java)
 
-          val timeline = jsonMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
+          val timeline = objectMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
           Assertions.assertThat(timeline).anyMatch {
             it.type == Cas1TimelineEventType.assessmentAppealed &&
@@ -533,7 +533,7 @@ class Cas1AppealsTest : InitialiseDatabasePerClassTestBase() {
             .isOk
             .returnResult(String::class.java)
 
-          val timeline = jsonMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
+          val timeline = objectMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
           Assertions.assertThat(timeline.size).isEqualTo(2)
         }

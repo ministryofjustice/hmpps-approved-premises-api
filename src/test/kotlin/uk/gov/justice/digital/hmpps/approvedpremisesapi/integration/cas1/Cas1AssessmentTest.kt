@@ -698,7 +698,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
     inner class AssessmentSummaryMapper(
       private val cas1AssessmentTransformer: Cas1AssessmentTransformer,
-      private val jsonMapper: JsonMapper,
+      private val objectMapper: JsonMapper,
       private val offenderDetails: CaseSummary,
       private val inmateDetails: InmateDetail?,
     ) {
@@ -723,7 +723,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
         createdAt = assessment.createdAt.toInstant(),
 
-        riskRatings = (assessment.application as? ApprovedPremisesApplicationEntity)?.riskRatings?.let { jsonMapper.writeValueAsString(it) },
+        riskRatings = (assessment.application as? ApprovedPremisesApplicationEntity)?.riskRatings?.let { objectMapper.writeValueAsString(it) },
         arrivalDate = (assessment.application as? ApprovedPremisesApplicationEntity)?.arrivalDate?.toInstant(),
 
         completed = assessment.decision != null,
@@ -816,7 +816,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
               .isOk
               .expectBody()
               .json(
-                jsonMapper.writeValueAsString(
+                objectMapper.writeValueAsString(
                   cas1AssessmentTransformer.transformJpaToCas1Assessment(
                     assessment,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
@@ -893,7 +893,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              jsonMapper.writeValueAsString(
+              objectMapper.writeValueAsString(
                 cas1AssessmentTransformer.transformJpaToCas1Assessment(
                   assessment,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
@@ -931,7 +931,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              jsonMapper.writeValueAsString(
+              objectMapper.writeValueAsString(
                 cas1AssessmentTransformer.transformJpaToCas1Assessment(
                   assessment,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
@@ -1708,7 +1708,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
       .responseBody
       .blockFirst()
 
-    assertThat(responseBody).isEqualTo(jsonMapper.writeValueAsString(expectedAssessmentSummaries))
+    assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedAssessmentSummaries))
 
     return response
   }

@@ -131,7 +131,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(risksToTheIndividual.riskToTheIndividual),
+            objectMapper.writeValueAsString(risksToTheIndividual.riskToTheIndividual),
           )
       }
     }
@@ -241,7 +241,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
               .isOk
               .expectBody()
               .json(
-                jsonMapper.writeValueAsString(
+                objectMapper.writeValueAsString(
                   Cas1PersonalTimeline(
                     person = personTransformer.transformModelToPersonApi(personInfoResult),
                     applications = listOf(
@@ -409,7 +409,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             .isOk
             .expectBody()
             .json(
-              jsonMapper.writeValueAsString(
+              objectMapper.writeValueAsString(
                 Cas1PersonalTimeline(
                   person = personTransformer.transformModelToPersonApi(personInfoResult),
                   applications = emptyList(),
@@ -454,7 +454,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
               .isOk
               .expectBody()
               .json(
-                jsonMapper.writeValueAsString(
+                objectMapper.writeValueAsString(
                   Cas1PersonalTimeline(
                     person = personTransformer.transformModelToPersonApi(personInfoResult),
                     applications = listOf(
@@ -560,7 +560,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             .isOk
             .expectBody()
             .json(
-              jsonMapper.writeValueAsString(
+              objectMapper.writeValueAsString(
                 Cas1PersonalTimeline(
                   person = personTransformer.transformModelToPersonApi(personInfoResult),
                   applications = listOf(
@@ -624,7 +624,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             .isOk
             .expectBody()
             .json(
-              jsonMapper.writeValueAsString(
+              objectMapper.writeValueAsString(
                 Cas1PersonalTimeline(
                   person = personTransformer.transformModelToPersonApi(personInfoResult),
                   applications = emptyList(),
@@ -744,7 +744,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .json(jsonMapper.writeValueAsString(csraSummaries))
+          .json(objectMapper.writeValueAsString(csraSummaries))
       }
     }
 
@@ -790,7 +790,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         .expectStatus()
         .isOk
         .expectBody()
-        .json(jsonMapper.writeValueAsString(csraSummaries))
+        .json(objectMapper.writeValueAsString(csraSummaries))
     }
 
     @Test
@@ -886,7 +886,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         .expectStatus()
         .isOk
         .expectBody()
-        .json(jsonMapper.writeValueAsString(bookingDetails))
+        .json(objectMapper.writeValueAsString(bookingDetails))
     }
 
     @Test
@@ -1286,7 +1286,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         .expectStatus()
         .isOk
         .expectBody()
-        .json(jsonMapper.writeValueAsString(response))
+        .json(objectMapper.writeValueAsString(response))
     }
 
     @Test

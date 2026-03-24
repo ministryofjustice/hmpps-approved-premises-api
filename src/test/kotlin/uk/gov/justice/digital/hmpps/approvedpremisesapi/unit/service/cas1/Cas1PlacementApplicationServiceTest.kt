@@ -254,7 +254,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { userService.getUserForRequest() } returns user
       every { cas1TaskDeadlineServiceMock.getDeadline(any<PlacementApplicationEntity>()) } returns dueAt
-      every { jsonMapper.writeValueAsString(any()) } returns "some-json-data"
+      every { objectMapper.writeValueAsString(any()) } returns "some-json-data"
     }
 
     @Test

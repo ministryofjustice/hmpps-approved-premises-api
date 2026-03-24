@@ -707,7 +707,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = jsonMapper.readValue(casApiResult, Cas3Application::class.java)
+            val result = objectMapper.readValue(casApiResult, Cas3Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
             assertThat(result.data.toString()).isEqualTo("""{thingId=345}""")
@@ -1112,8 +1112,8 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return jsonMapper.readTree(serializable)
+    if (serializable is String) return objectMapper.readTree(serializable)
 
-    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
+    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 }

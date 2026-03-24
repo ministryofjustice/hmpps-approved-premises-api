@@ -117,7 +117,7 @@ class PrisonerAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               alerts.content.map(prisonerAlertTransformer::transformToApi),
             ),
           )

@@ -31,7 +31,7 @@ class Cas1PlacementApplicationsController(
   private val offenderService: OffenderService,
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val placementApplicationTransformer: PlacementApplicationTransformer,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val withdrawalService: Cas1WithdrawableService,
 ) : PlacementApplicationsCas1Delegate {
 
@@ -67,7 +67,7 @@ class Cas1PlacementApplicationsController(
     id: UUID,
     updatePlacementApplication: UpdatePlacementApplication,
   ): ResponseEntity<PlacementApplication> {
-    val serializedData = jsonMapper.writeValueAsString(updatePlacementApplication.data)
+    val serializedData = objectMapper.writeValueAsString(updatePlacementApplication.data)
 
     val result = cas1PlacementApplicationService.updateApplication(id, serializedData)
 

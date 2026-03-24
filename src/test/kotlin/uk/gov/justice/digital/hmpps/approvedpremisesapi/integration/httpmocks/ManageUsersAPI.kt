@@ -15,7 +15,7 @@ fun IntegrationTestBase.manageUsersMockSuccessfulExternalUsersCall(
         .withHeader("Content-Type", "application/json")
         .withStatus(200)
         .withBody(
-          jsonMapper.writeValueAsString(externalUserDetails),
+          objectMapper.writeValueAsString(externalUserDetails),
         ),
     ),
 )

@@ -91,7 +91,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               oaSysSectionsTransformer.transformRiskOfSeriousHarm(
                 offenceDetails,
                 rosh,

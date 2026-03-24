@@ -87,8 +87,8 @@ fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(casesAccess: 
 
   if (existingMock != null) {
     val mockId = existingMock.id
-    val responseBody = jsonMapper.readValue(existingMock.response.body, UserAccess::class.java)
-    val requestBody = jsonMapper.readValue(existingMock.request.bodyPatterns[0].expected, object : TypeReference<List<String>>() {}).toMutableList()
+    val responseBody = objectMapper.readValue(existingMock.response.body, UserAccess::class.java)
+    val requestBody = objectMapper.readValue(existingMock.request.bodyPatterns[0].expected, object : TypeReference<List<String>>() {}).toMutableList()
 
     requestBody += casesAccess.map { it.crn }
     responseBody.access += casesAccess
@@ -96,7 +96,7 @@ fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(casesAccess: 
     editGetStubWithBodyAndJsonResponse(
       url = url,
       uuid = mockId,
-      requestBody = WireMock.equalToJson(jsonMapper.writeValueAsString(requestBody), true, true),
+      requestBody = WireMock.equalToJson(objectMapper.writeValueAsString(requestBody), true, true),
       responseBody = responseBody,
     ) {
       withQueryParam("username", WireMock.matching(username))
@@ -107,7 +107,7 @@ fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(casesAccess: 
     mockSuccessfulGetCallWithBodyAndJsonResponse(
       url = url,
       requestBody = WireMock.equalToJson(
-        jsonMapper.writeValueAsString(
+        objectMapper.writeValueAsString(
           requestBody,
         ),
         true,
@@ -127,7 +127,7 @@ fun IntegrationTestBase.apDeliusContextAddSingleResponseToUserAccessCall(caseAcc
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/users/access",
     requestBody = WireMock.equalToJson(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         listOf(caseAccess.crn),
       ),
       false,
@@ -152,8 +152,8 @@ fun IntegrationTestBase.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary:
 
   if (existingMock != null) {
     val mockId = existingMock.id
-    val responseBody = jsonMapper.readValue(existingMock.response.body, CaseSummaries::class.java)
-    val requestBody = jsonMapper.readValue(existingMock.request.bodyPatterns[0].expected, object : TypeReference<List<String>>() {}).toMutableList()
+    val responseBody = objectMapper.readValue(existingMock.response.body, CaseSummaries::class.java)
+    val requestBody = objectMapper.readValue(existingMock.request.bodyPatterns[0].expected, object : TypeReference<List<String>>() {}).toMutableList()
 
     requestBody += caseSummary.crn
     responseBody.cases += caseSummary
@@ -161,7 +161,7 @@ fun IntegrationTestBase.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary:
     editGetStubWithBodyAndJsonResponse(
       url = url,
       uuid = mockId,
-      requestBody = WireMock.equalToJson(jsonMapper.writeValueAsString(requestBody), true, true),
+      requestBody = WireMock.equalToJson(objectMapper.writeValueAsString(requestBody), true, true),
       responseBody = responseBody,
     ) {
       withMetadata(mapOf("bulk" to Unit))
@@ -170,7 +170,7 @@ fun IntegrationTestBase.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary:
     mockSuccessfulGetCallWithBodyAndJsonResponse(
       url = url,
       requestBody = WireMock.equalToJson(
-        jsonMapper.writeValueAsString(
+        objectMapper.writeValueAsString(
           listOf(caseSummary.crn),
         ),
         true,
@@ -189,7 +189,7 @@ fun IntegrationTestBase.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSu
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
     requestBody = WireMock.equalToJson(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         listOf(caseSummary.crn),
       ),
       false,
@@ -203,7 +203,7 @@ fun IntegrationTestBase.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSu
     mockSuccessfulGetCallWithBodyAndJsonResponse(
       url = "/probation-cases/summaries",
       requestBody = WireMock.equalToJson(
-        jsonMapper.writeValueAsString(
+        objectMapper.writeValueAsString(
           listOf(caseSummary.nomsId),
         ),
         false,
@@ -223,7 +223,7 @@ fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
     requestBody = WireMock.equalToJson(
-      jsonMapper.writeValueAsString(crns),
+      objectMapper.writeValueAsString(crns),
       true,
       false,
     ),
@@ -235,7 +235,7 @@ fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(
     mockSuccessfulGetCallWithBodyAndJsonResponse(
       url = "/probation-cases/summaries",
       requestBody = WireMock.equalToJson(
-        jsonMapper.writeValueAsString(it),
+        objectMapper.writeValueAsString(it),
         true,
         false,
       ),
@@ -250,7 +250,7 @@ fun IntegrationTestBase.apDeliusContextEmptyCaseSummaryToBulkResponse(crn: Strin
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
     requestBody = WireMock.equalToJson(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         listOf(crn),
       ),
       false,

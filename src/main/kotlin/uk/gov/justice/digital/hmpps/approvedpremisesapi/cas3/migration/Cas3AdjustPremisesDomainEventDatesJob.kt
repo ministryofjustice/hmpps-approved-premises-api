@@ -20,7 +20,7 @@ class Cas3AdjustPremisesDomainEventDatesJob(
   private val domainEventRepository: DomainEventRepository,
   private val bedRepository: BedRepository,
   private val migrationLogger: MigrationLogger,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   transactionTemplate: TransactionTemplate,
 ) : MigrationInBatchesJob(migrationLogger, transactionTemplate) {
   override val shouldRunInTransaction = false
@@ -82,9 +82,9 @@ class Cas3AdjustPremisesDomainEventDatesJob(
       val newCreatedAt = event.createdAt.minusDays(2)
 
       val updatedData = try {
-        val node = jsonMapper.readTree(event.data)
+        val node = objectMapper.readTree(event.data)
         updateEventJsonDates(node)
-        jsonMapper.writeValueAsString(node)
+        objectMapper.writeValueAsString(node)
       } catch (e: Exception) {
         migrationLogger.error("Failed to update JSON data for domainEventId=${event.id}", e)
         event.data

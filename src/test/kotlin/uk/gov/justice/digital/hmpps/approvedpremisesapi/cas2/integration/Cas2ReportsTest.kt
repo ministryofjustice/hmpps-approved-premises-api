@@ -228,7 +228,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val event1 = domainEventFactory.produceAndPersist {
         withId(event1Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(jsonMapper.writeValueAsString(event1ToSave))
+        withData(objectMapper.writeValueAsString(event1ToSave))
         withOccurredAt(oldSubmitted)
         withApplicationId(applicationId1)
       }
@@ -236,7 +236,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(jsonMapper.writeValueAsString(event2ToSave))
+        withData(objectMapper.writeValueAsString(event2ToSave))
         withOccurredAt(newerSubmitted)
         withApplicationId(applicationId2)
       }
@@ -246,7 +246,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       domainEventFactory.produceAndPersist {
         withId(event3Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(jsonMapper.writeValueAsString(event3ToSave))
+        withData(objectMapper.writeValueAsString(event3ToSave))
         withOccurredAt(tooOldSubmitted)
         withApplicationId(applicationId3)
       }
@@ -403,14 +403,14 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withId(event1Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(jsonMapper.writeValueAsString(event1ToSave))
+        withData(objectMapper.writeValueAsString(event1ToSave))
       }
 
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(jsonMapper.writeValueAsString(event2ToSave))
+        withData(objectMapper.writeValueAsString(event2ToSave))
       }
 
       // we don't expect this event to be included as it relates to an update
@@ -419,14 +419,14 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withId(event3Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(jsonMapper.writeValueAsString(event3ToSave))
+        withData(objectMapper.writeValueAsString(event3ToSave))
       }
 
       val event4 = domainEventFactory.produceAndPersist {
         withId(event4Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(jsonMapper.writeValueAsString(event4ToSave))
+        withData(objectMapper.writeValueAsString(event4ToSave))
       }
 
       val user1 = cas2UserEntityFactory.produceAndPersist {

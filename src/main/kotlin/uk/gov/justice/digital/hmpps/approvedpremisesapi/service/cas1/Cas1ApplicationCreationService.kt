@@ -52,7 +52,7 @@ class Cas1ApplicationCreationService(
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val apAreaRepository: ApAreaRepository,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
@@ -209,7 +209,7 @@ class Cas1ApplicationCreationService(
     }
 
     val now = OffsetDateTime.now(clock)
-    val serializedTranslatedDocument = jsonMapper.writeValueAsString(submitApplication.translatedDocument)
+    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
     val apArea = apAreaRepository.findByIdOrNull(apAreaId)!!
     application.apply {

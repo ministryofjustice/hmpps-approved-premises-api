@@ -132,7 +132,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
 
     val domainEventAfterUpdate = domainEventRepository.findByApplicationId(application.id)[0]
 
-    val unmarshalledData = jsonMapper.readValue(domainEventAfterUpdate.data, ApplicationAssessedEnvelope::class.java)
+    val unmarshalledData = objectMapper.readValue(domainEventAfterUpdate.data, ApplicationAssessedEnvelope::class.java)
     assertThat(unmarshalledData.eventDetails.deliusEventNumber).isEqualTo(NEW_EVENT_NUMBER)
 
     assertThat(domainEventBeforeUpdate.data.replace(OLD_EVENT_NUMBER, NEW_EVENT_NUMBER)).isEqualTo(domainEventAfterUpdate.data)
@@ -190,7 +190,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
 
     val domainEventAfterUpdate = domainEventRepository.findByApplicationId(application.id)[0]
 
-    val unmarshalledData = jsonMapper.readValue(domainEventAfterUpdate.data, ApplicationSubmittedEnvelope::class.java)
+    val unmarshalledData = objectMapper.readValue(domainEventAfterUpdate.data, ApplicationSubmittedEnvelope::class.java)
     assertThat(unmarshalledData.eventDetails.deliusEventNumber).isEqualTo(NEW_EVENT_NUMBER)
 
     assertThat(domainEventBeforeUpdate.data.replace(OLD_EVENT_NUMBER, NEW_EVENT_NUMBER)).isEqualTo(domainEventAfterUpdate.data)
@@ -256,7 +256,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
 
     val domainEventAfterUpdate = domainEventRepository.findByApplicationId(application.id)[0]
 
-    val unmarshalledData = jsonMapper.readValue(domainEventAfterUpdate.data, BookingMadeEnvelope::class.java)
+    val unmarshalledData = objectMapper.readValue(domainEventAfterUpdate.data, BookingMadeEnvelope::class.java)
     assertThat(unmarshalledData.eventDetails.deliusEventNumber).isEqualTo(NEW_EVENT_NUMBER)
 
     assertThat(domainEventBeforeUpdate.data.replace(OLD_EVENT_NUMBER, NEW_EVENT_NUMBER)).isEqualTo(domainEventAfterUpdate.data)

@@ -116,7 +116,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               oaSysSectionsTransformer.transformToApi(
                 offenceDetails,
                 roshSummary,

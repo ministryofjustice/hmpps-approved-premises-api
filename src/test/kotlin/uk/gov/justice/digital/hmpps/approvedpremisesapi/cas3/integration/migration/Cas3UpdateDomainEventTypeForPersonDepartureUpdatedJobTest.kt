@@ -24,7 +24,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
       domainEventFactory.produceAndPersist {
         withType(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED)
         withData(
-          jsonMapper.writeValueAsString(
+          objectMapper.writeValueAsString(
             CAS3PersonDepartureUpdatedEvent(
               id = UUID.randomUUID(),
               timestamp = Instant.now().randomDateTimeBefore(14),
@@ -40,7 +40,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
       domainEventFactory.produceAndPersist {
         withType(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED)
         withData(
-          jsonMapper.writeValueAsString(
+          objectMapper.writeValueAsString(
             CAS3PersonDepartureUpdatedEvent(
               id = UUID.randomUUID(),
               timestamp = Instant.now().randomDateTimeBefore(14),
@@ -56,7 +56,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
       domainEventFactory.produceAndPersist {
         withType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
         withData(
-          jsonMapper.writeValueAsString(
+          objectMapper.writeValueAsString(
             BookingChangedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now().randomDateTimeBefore(14),
@@ -73,7 +73,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
     personDepartureUpdatedInvalidDomainEvents.forEach {
       val domainEvent = domainEventRepository.findById(it.id)
       Assertions.assertThat(domainEvent).isNotNull()
-      val departureUpdatedEvent = jsonMapper.readValue<CAS3PersonDepartureUpdatedEvent>(domainEvent.get().data!!)
+      val departureUpdatedEvent = objectMapper.readValue<CAS3PersonDepartureUpdatedEvent>(domainEvent.get().data!!)
       Assertions.assertThat(departureUpdatedEvent.id == it.id)
       Assertions.assertThat(departureUpdatedEvent.eventType == EventType.personDepartureUpdated)
     }
@@ -81,7 +81,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
     personDepartureUpdatedValidDomainEvents.forEach {
       val domainEvent = domainEventRepository.findById(it.id)
       Assertions.assertThat(domainEvent).isNotNull()
-      val departureUpdatedEvent = jsonMapper.readValue<CAS3PersonDepartureUpdatedEvent>(domainEvent.get().data!!)
+      val departureUpdatedEvent = objectMapper.readValue<CAS3PersonDepartureUpdatedEvent>(domainEvent.get().data!!)
       Assertions.assertThat(departureUpdatedEvent.id == it.id)
       Assertions.assertThat(departureUpdatedEvent.eventType == EventType.personDepartureUpdated)
     }
@@ -89,7 +89,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJobTest : MigrationJobTe
     approvedPremisesBookingChangedDomainEvents.forEach {
       val domainEvent = domainEventRepository.findById(it.id)
       Assertions.assertThat(domainEvent).isNotNull()
-      val bookingChangedEnvelope = jsonMapper.readValue<BookingChangedEnvelope>(domainEvent.get().data!!)
+      val bookingChangedEnvelope = objectMapper.readValue<BookingChangedEnvelope>(domainEvent.get().data!!)
       Assertions.assertThat(bookingChangedEnvelope.id == it.id)
       Assertions.assertThat(bookingChangedEnvelope.eventType == bookingChanged)
     }

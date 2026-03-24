@@ -35,7 +35,7 @@ class Cas1AssessmentsController(
   private val cas1AssessmentService: Cas1AssessmentService,
   private val userService: UserService,
   private val cas1AssessmentTransformer: Cas1AssessmentTransformer,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val cas1AssessmentClarificationNoteTransformer: Cas1AssessmentClarificationNoteTransformer,
   private val offenderDetailService: OffenderDetailService,
 ) : AssessmentsCas1Delegate {
@@ -96,7 +96,7 @@ class Cas1AssessmentsController(
         .updateAssessment(
           user,
           assessmentId,
-          jsonMapper.writeValueAsString(cas1UpdateAssessment.data),
+          objectMapper.writeValueAsString(cas1UpdateAssessment.data),
         ),
     )
 
@@ -152,7 +152,7 @@ class Cas1AssessmentsController(
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val serializedData = jsonMapper.writeValueAsString(cas1AssessmentAcceptance.document)
+    val serializedData = objectMapper.writeValueAsString(cas1AssessmentAcceptance.document)
 
     val assessmentAuthResult = cas1AssessmentService.acceptAssessment(
       acceptingUser = user,
@@ -178,7 +178,7 @@ class Cas1AssessmentsController(
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val serializedData = jsonMapper.writeValueAsString(cas1AssessmentRejection.document)
+    val serializedData = objectMapper.writeValueAsString(cas1AssessmentRejection.document)
 
     val assessmentAuthResult =
       cas1AssessmentService.rejectAssessment(

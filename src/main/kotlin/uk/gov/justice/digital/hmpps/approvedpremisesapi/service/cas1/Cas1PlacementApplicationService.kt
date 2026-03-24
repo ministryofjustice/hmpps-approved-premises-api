@@ -50,7 +50,7 @@ class Cas1PlacementApplicationService(
   private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val clock: Clock,
   private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -342,7 +342,7 @@ class Cas1PlacementApplicationService(
       return CasResult.GeneralValidationError("Please provide at least one of placementType or releaseType.")
     }
 
-    val translatedDocument = jsonMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
+    val translatedDocument = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
 
     val cas1RequestedPlacementPeriod = deriveRequestedPlacementPeriods(submitPlacementApplication)!!
 

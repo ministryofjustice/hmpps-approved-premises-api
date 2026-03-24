@@ -22,7 +22,7 @@ import java.util.UUID
 @Suppress("LongParameterList", "ThrowsCount")
 @RestController
 class AssessmentController(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val userService: UserService,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val cas3AssessmentService: Cas3AssessmentService,
@@ -43,7 +43,7 @@ class AssessmentController(
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val serializedData = jsonMapper.writeValueAsString(assessmentRejection.document)
+    val serializedData = objectMapper.writeValueAsString(assessmentRejection.document)
 
     val assessmentAuthResult =
       cas3AssessmentService.rejectAssessment(

@@ -253,7 +253,7 @@ class Cas1AssessmentTransformerTest {
         id = UUID.randomUUID(),
         applicationId = UUID.randomUUID(),
         createdAt = Instant.now(),
-        riskRatings = jsonMapper.writeValueAsString(personRisks),
+        riskRatings = objectMapper.writeValueAsString(personRisks),
         arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).toInstant(),
         completed = false,
         decision = "ACCEPTED",

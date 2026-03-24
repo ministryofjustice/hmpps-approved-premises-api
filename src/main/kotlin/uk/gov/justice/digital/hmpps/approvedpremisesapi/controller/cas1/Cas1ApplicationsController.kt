@@ -77,7 +77,7 @@ class Cas1ApplicationsController(
   private val offenderDetailService: OffenderDetailService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val httpAuthService: HttpAuthService,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val documentTransformer: DocumentTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val cas1AppealService: Cas1AppealService,
@@ -241,7 +241,7 @@ class Cas1ApplicationsController(
   ): ResponseEntity<ApprovedPremisesApplication> {
     val user = userService.getUserForRequest()
 
-    val serializedData = jsonMapper.writeValueAsString(body.data)
+    val serializedData = objectMapper.writeValueAsString(body.data)
 
     val applicationResult = cas1ApplicationCreationService.updateApplication(
       applicationId = applicationId,

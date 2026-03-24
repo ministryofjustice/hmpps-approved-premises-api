@@ -202,7 +202,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
+          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
 
           assertThat(body.applicationId).isEqualTo(application.id)
           assertThat(body.applicationId).isEqualTo(application.id)
@@ -295,7 +295,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
 
             assertThat(body.id).isEqualTo(placementApplicationEntity.id)
             assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
@@ -329,7 +329,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
 
             assertThat(body.id).isEqualTo(placementApplicationEntity.id)
             assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
@@ -367,7 +367,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
+          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
 
           assertThat(body.id).isEqualTo(placementApplicationEntity.id)
           assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
@@ -512,7 +512,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
+          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
           val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
             data = "{\"thingId\":123}",
           )
@@ -522,7 +522,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               expectedUpdatedPlacementApplication.application.id == it.applicationId &&
               expectedUpdatedPlacementApplication.createdByUser.id == it.createdByUserId &&
               expectedUpdatedPlacementApplication.createdAt.toInstant() == it.createdAt &&
-              serializableToJsonNode(jsonMapper.readTree(expectedUpdatedPlacementApplication.data)) == serializableToJsonNode(it.data)
+              serializableToJsonNode(objectMapper.readTree(expectedUpdatedPlacementApplication.data)) == serializableToJsonNode(it.data)
           }
 
           val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)
@@ -773,7 +773,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
             assertThat(body).hasSize(1)
 
             val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
@@ -851,7 +851,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
             assertThat(body).hasSize(1)
 
             val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
@@ -946,7 +946,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
             assertThat(body).hasSize(3)
 
             val createdApp1Id = body[0].id
@@ -1047,7 +1047,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
             assertThat(body).hasSize(3)
 
             val createdApp1Id = body[0].id
@@ -1431,7 +1431,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
+          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
 
           assertThat(body).matches {
             placementApplicationEntity.id == it.id &&
@@ -1478,7 +1478,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
 
             assertThat(body).matches {
               placementApplicationEntity.id == it.id &&
@@ -1537,7 +1537,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .responseBody
                 .blockFirst()
 
-              val body = jsonMapper.readValue(rawResult, PlacementApplication::class.java)
+              val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
 
               assertThat(body).matches {
                 placementApplicationEntity.id == it.id &&
@@ -1571,8 +1571,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return jsonMapper.readTree(serializable)
+    if (serializable is String) return objectMapper.readTree(serializable)
 
-    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
+    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 }

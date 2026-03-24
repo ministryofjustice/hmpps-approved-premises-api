@@ -33,7 +33,7 @@ class RedisConfiguration {
   @Bean
   fun redisCacheManager(
     buildProperties: BuildProperties,
-    jsonMapper: JsonMapper,
+    objectMapper: JsonMapper,
     connectionFactory: RedisConnectionFactory,
     @Value("\${caches.staffMembers.expiry-seconds}") staffMembersExpirySeconds: Long,
     @Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long,
@@ -97,7 +97,7 @@ class RedisConfiguration {
     cacheName: String,
     duration: Duration,
     cacheNamePrefix: String,
-    jsonMapper: JsonMapper,
+    objectMapper: JsonMapper,
   ) = this.withCacheConfiguration(
     cacheName,
     RedisCacheConfiguration.defaultCacheConfig()
@@ -108,7 +108,7 @@ class RedisConfiguration {
 }
 
 class ClientResultRedisSerializer(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val typeReference: TypeReference<*>,
 ) : RedisSerializer<ClientResult<*>> {
   override fun serialize(clientResult: ClientResult<*>?): ByteArray {
@@ -141,7 +141,7 @@ class ClientResultRedisSerializer(
         SerializableClientResult(
           discriminator = ClientResultDiscriminator.SUCCESS,
           status = clientResult.status,
-          body = jsonMapper.writeValueAsString(clientResult.body),
+          body = objectMapper.writeValueAsString(clientResult.body),
           exceptionMessage = null,
           type = clientResult.body!!::class.java.typeName,
           method = null,
@@ -151,16 +151,16 @@ class ClientResultRedisSerializer(
       else -> null
     }
 
-    return jsonMapper.writeValueAsBytes(toSerialize)
+    return objectMapper.writeValueAsBytes(toSerialize)
   }
 
   override fun deserialize(bytes: ByteArray?): ClientResult<Any> {
-    val deserializedWrapper = jsonMapper.readValue(bytes, SerializableClientResult::class.java)
+    val deserializedWrapper = objectMapper.readValue(bytes, SerializableClientResult::class.java)
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.SUCCESS) {
       return ClientResult.Success(
         status = deserializedWrapper.status!!,
-        body = jsonMapper.readValue(deserializedWrapper.body, typeReference),
+        body = objectMapper.readValue(deserializedWrapper.body, typeReference),
       )
     }
 

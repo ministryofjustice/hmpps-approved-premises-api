@@ -273,7 +273,7 @@ class Cas3ApplicationTransformerTest {
   @Test
   fun `transformJpaToApiSummary transforms an in progress application correctly`() {
     val application = object : TemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -299,7 +299,7 @@ class Cas3ApplicationTransformerTest {
   @Test
   fun `transformJpaToApiSummary transforms a submitted application correctly`() {
     val application = object : TemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -325,7 +325,7 @@ class Cas3ApplicationTransformerTest {
   @Test
   fun `transformJpaToApiSummary transforms application with rejected assessment correctly`() {
     val application = object : TemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")

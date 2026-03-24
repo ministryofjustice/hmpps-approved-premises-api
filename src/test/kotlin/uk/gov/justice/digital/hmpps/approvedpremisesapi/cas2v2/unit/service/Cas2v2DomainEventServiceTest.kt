@@ -94,7 +94,7 @@ class Cas2v2DomainEventServiceTest {
               it.crn == domainEventToSave.crn &&
               it.nomsNumber == domainEventToSave.nomsNumber &&
               it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-              it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
+              it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
               it.triggeredByUserId == null
           },
         )
@@ -103,7 +103,7 @@ class Cas2v2DomainEventServiceTest {
       verify(exactly = 1) {
         mockHmppsTopic.snsClient.publish(
           match<PublishRequest> { publishRequest ->
-            val deserializedMessage = jsonMapper.readValue(publishRequest.message(), SnsEvent::class.java)
+            val deserializedMessage = objectMapper.readValue(publishRequest.message(), SnsEvent::class.java)
 
             deserializedMessage.eventType == "applications.cas2.application.submitted" &&
               deserializedMessage.version == 1 &&

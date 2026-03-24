@@ -228,7 +228,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(200)
-            .withBody(jsonMapper.writeValueAsString(response)),
+            .withBody(objectMapper.writeValueAsString(response)),
         ),
     )
 

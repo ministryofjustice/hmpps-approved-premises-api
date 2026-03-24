@@ -80,7 +80,7 @@ class InmateDetailsCacheRefreshServiceTest : IntegrationTestBase() {
 
   private fun isInmateDetailNowInRedis(inmateDetail: InmateDetail) {
     val keys = CacheKeyResolver(preemptiveCacheKeyPrefix, CACHE_NAME, inmateDetail.offenderNo)
-    val cachedResult = jsonMapper.readValue<InmateDetail>(
+    val cachedResult = objectMapper.readValue<InmateDetail>(
       redisTemplate.boundValueOps(keys.dataKey).get()!!,
     )
     assertThat(cachedResult).isEqualTo(inmateDetail)

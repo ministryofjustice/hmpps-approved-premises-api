@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 
 @Component
 class AssessmentTransformer(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
@@ -70,7 +70,7 @@ class AssessmentTransformer(
       decision = transformDomainSummaryDecisionToApi(ase.decision),
       risks = ase.riskRatings?.let {
         risksTransformer.transformDomainToApi(
-          jsonMapper.readValue<PersonRisks>(it),
+          objectMapper.readValue<PersonRisks>(it),
           ase.crn,
         )
       },
@@ -88,7 +88,7 @@ class AssessmentTransformer(
       decision = transformDomainSummaryDecisionToApi(ase.decision),
       risks = ase.riskRatings?.let {
         risksTransformer.transformDomainToApi(
-          jsonMapper.readValue<PersonRisks>(it),
+          objectMapper.readValue<PersonRisks>(it),
           ase.crn,
         )
       },
@@ -114,7 +114,7 @@ class AssessmentTransformer(
     decision = transformDomainSummaryDecisionToApi(ase.decision),
     risks = ase.riskRatings?.let {
       risksTransformer.transformDomainToApi(
-        jsonMapper.readValue<PersonRisks>(it),
+        objectMapper.readValue<PersonRisks>(it),
         ase.crn,
       )
     },

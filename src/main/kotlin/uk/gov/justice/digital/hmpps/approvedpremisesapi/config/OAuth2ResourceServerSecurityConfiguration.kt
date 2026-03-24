@@ -41,7 +41,7 @@ class OAuth2ResourceServerSecurityConfiguration {
   @Bean
   @Suppress("MaxLineLength")
   @Throws(Exception::class)
-  fun securityFilterChain(http: HttpSecurity, @Autowired jsonMapper: JsonMapper): SecurityFilterChain {
+  fun securityFilterChain(http: HttpSecurity, @Autowired objectMapper: JsonMapper): SecurityFilterChain {
     http {
       csrf { disable() }
 
@@ -112,7 +112,7 @@ class OAuth2ResourceServerSecurityConfiguration {
             characterEncoding = "UTF-8"
 
             writer.write(
-              jsonMapper.writeValueAsString(
+              objectMapper.writeValueAsString(
                 object {
                   val title = "Unauthenticated"
                   val status = 401
@@ -197,7 +197,7 @@ class AuthAwareAuthenticationToken(
 class AuthorizedClientServiceConfiguration(
   @Value("\${log-client-credentials-jwt-info}") private val logClintCredentialsJwtInfo: Boolean,
   private val clientRegistrationRepository: ClientRegistrationRepository,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
 ) {
   @Bean
   fun inMemoryOAuth2AuthorizedClientService(): OAuth2AuthorizedClientService {
@@ -207,7 +207,7 @@ class AuthorizedClientServiceConfiguration(
   }
 }
 
-class LoggingInMemoryOAuth2AuthorizedClientService(clientRegistrationRepository: ClientRegistrationRepository, private val jsonMapper: JsonMapper) : OAuth2AuthorizedClientService {
+class LoggingInMemoryOAuth2AuthorizedClientService(clientRegistrationRepository: ClientRegistrationRepository, private val objectMapper: JsonMapper) : OAuth2AuthorizedClientService {
   private val backingImplementation = InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository)
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -223,7 +223,7 @@ class LoggingInMemoryOAuth2AuthorizedClientService(clientRegistrationRepository:
       try {
         val tokenBodyBase64 = tokenValue.split(".")[1]
         val tokenBodyRaw = Base64.getDecoder().decode(tokenBodyBase64)
-        val info = jsonMapper.readValue(tokenBodyRaw, JwtLogInfo::class.java)
+        val info = objectMapper.readValue(tokenBodyRaw, JwtLogInfo::class.java)
         log.info("Retrieved a client_credentials JWT for service->service calls for client ${authorizedClient.clientRegistration.clientId} with authorities: ${info.authorities}, scopes: ${info.scope}, expiry: ${info.exp}")
       } catch (exception: Exception) {
         // Deliberately not logging exception message

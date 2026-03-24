@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosecondsToN
 @Service
 class Cas1ChangeRequestTransformer(
   private val personTransformer: PersonTransformer,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
 ) {
 
   fun findOpenResultsToChangeRequestSummary(
@@ -47,7 +47,7 @@ class Cas1ChangeRequestTransformer(
     ),
     updatedAt = entity.updatedAt.toInstant(),
     decision = entity.decision?.name?.let { Cas1ChangeRequestDecision.valueOf(it) },
-    decisionJson = entity.decisionJson?.let { jsonMapper.readTree(it) },
+    decisionJson = entity.decisionJson?.let { objectMapper.readTree(it) },
     rejectionReason = entity.rejectionReason?.let {
       NamedId(
         id = it.id,

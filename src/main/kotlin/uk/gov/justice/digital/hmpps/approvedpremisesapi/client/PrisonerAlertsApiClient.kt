@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class PrisonerAlertsApiClient(
   @Qualifier("prisonerAlertsApiWebClient") webClientConfig: WebClientConfig,
-  jsonMapper: JsonMapper,
+  objectMapper: JsonMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   fun getAlerts(nomsNumber: String, alertCode: String) = getRequest<AlertsPage> {

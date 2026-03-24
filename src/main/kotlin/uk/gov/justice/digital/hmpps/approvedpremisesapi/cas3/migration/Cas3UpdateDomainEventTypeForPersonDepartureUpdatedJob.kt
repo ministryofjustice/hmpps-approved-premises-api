@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogge
 @Component
 class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(
   private val domainEventRepository: DomainEventRepository,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val migrationLogger: MigrationLogger,
 ) : MigrationJob() {
   override val shouldRunInTransaction = true
@@ -27,12 +27,12 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(
         val domainEvent = domainEventRepository.findById(it.id)
         val domainEventData = domainEvent.get().data
         if (!domainEventData.contains("accommodation.cas3.person.departed.updated")) {
-          val departureEvent = jsonMapper.readValue<CAS3PersonDepartedEvent>(domainEventData)
+          val departureEvent = objectMapper.readValue<CAS3PersonDepartedEvent>(domainEventData)
           if (departureEvent.eventType == EventType.personDeparted) {
             val updatedDepartureEvent = departureEvent.copy(
               eventType = EventType.personDepartureUpdated,
             )
-            domainEventRepository.updateData(it.id, jsonMapper.writeValueAsString(updatedDepartureEvent))
+            domainEventRepository.updateData(it.id, objectMapper.writeValueAsString(updatedDepartureEvent))
           }
         }
       } catch (exception: Exception) {

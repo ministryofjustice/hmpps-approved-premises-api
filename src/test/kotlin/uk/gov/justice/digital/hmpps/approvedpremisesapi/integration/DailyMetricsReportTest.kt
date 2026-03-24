@@ -99,7 +99,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
           )
           withType(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
           withData(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               ApplicationSubmittedEnvelope(
                 id = UUID.randomUUID(),
                 timestamp = LocalDate.of(year, month, 1).toLocalDateTime().toInstant(),
@@ -124,7 +124,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
           )
           withType(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
           withData(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               ApplicationAssessedEnvelope(
                 id = UUID.randomUUID(),
                 timestamp = LocalDate.of(year, month, 1).toLocalDateTime().toInstant(),
@@ -152,7 +152,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
           )
           withType(DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
           withData(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               BookingMadeEnvelope(
                 id = UUID.randomUUID(),
                 timestamp = LocalDate.of(year, month, 1).toLocalDateTime().toInstant(),

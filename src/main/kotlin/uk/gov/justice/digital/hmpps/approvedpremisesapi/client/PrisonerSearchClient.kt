@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class PrisonerSearchClient(
   @Qualifier("prisonerSearchWebClient") webClientConfig: WebClientConfig,
-  jsonMapper: JsonMapper,
+  objectMapper: JsonMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
 

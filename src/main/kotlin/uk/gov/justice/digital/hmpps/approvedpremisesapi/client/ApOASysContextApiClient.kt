@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class ApOASysContextApiClient(
   @Qualifier("apOASysContextApiWebClient") webClientConfig: WebClientConfig,
-  jsonMapper: JsonMapper,
+  objectMapper: JsonMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   fun getOffenceDetails(crn: String) = getRequest<OffenceDetails> {

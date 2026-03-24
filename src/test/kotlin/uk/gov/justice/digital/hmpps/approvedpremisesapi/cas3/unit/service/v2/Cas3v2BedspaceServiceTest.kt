@@ -829,7 +829,7 @@ class Cas3v2BedspaceServiceTest {
     data.eventDetails.premisesId,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    jsonMapper.writeValueAsString(data),
+    objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_UNARCHIVED,
   )
 
@@ -866,7 +866,7 @@ class Cas3v2BedspaceServiceTest {
     data.eventDetails.premisesId,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    jsonMapper.writeValueAsString(data),
+    objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_UNARCHIVED,
   )
 
@@ -894,7 +894,7 @@ class Cas3v2BedspaceServiceTest {
     data.eventDetails.premisesId,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    jsonMapper.writeValueAsString(data),
+    objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_ARCHIVED,
   )
 

@@ -197,12 +197,12 @@ class PreemptiveCacheTest : IntegrationTestBase() {
       )
 
       redisTemplate.boundValueOps(qualifiedMetadataKey).set(
-        jsonMapper.writeValueAsString(cacheEntry),
+        objectMapper.writeValueAsString(cacheEntry),
         Duration.ofSeconds(10),
       )
 
       redisTemplate.boundValueOps(qualifiedDataKey).set(
-        jsonMapper.writeValueAsString(offenderDetailsResponse),
+        objectMapper.writeValueAsString(offenderDetailsResponse),
         Duration.ofSeconds(10),
       )
     }.start()
@@ -280,7 +280,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
   private fun getMetadata(key: String): WebClientCache.PreemptiveCacheMetadata? {
     val raw = redisTemplate.boundValueOps(key).get() ?: return null
 
-    return jsonMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(raw)
+    return objectMapper.readValue<WebClientCache.PreemptiveCacheMetadata>(raw)
   }
 
   private fun assertStatusCodeFailure(result: ClientResult<*>, expectedStatus: HttpStatus) {
@@ -299,7 +299,7 @@ class PreemptiveCacheTest : IntegrationTestBase() {
 @Component
 class PreemptivelyCachedClient(
   @Qualifier("prisonsApiWebClient") private val webClient: WebClientConfig,
-  jsonMapper: JsonMapper,
+  objectMapper: JsonMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClient, jsonMapper, webClientCache) {
   private val cacheConfig = WebClientCache.PreemptiveCacheConfig(

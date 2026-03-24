@@ -49,7 +49,7 @@ import kotlin.reflect.KClass
 @SuppressWarnings("TooManyFunctions", "TooGenericExceptionThrown", "")
 @Service
 class Cas3v2DomainEventService(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val domainEventRepository: DomainEventRepository,
   private val cas3v2DomainEventBuilder: Cas3v2DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
@@ -208,7 +208,7 @@ class Cas3v2DomainEventService(
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         cas3CancelledAt = null,
-        data = jsonMapper.writeValueAsString(domainEvent.data),
+        data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS3",
         triggeredByUserId = user?.id,
         triggerSource = triggerSourceType,
@@ -253,7 +253,7 @@ class Cas3v2DomainEventService(
       val publishResult = domainTopic.snsClient.publish(
         PublishRequest.builder()
           .topicArn(domainTopic.arn)
-          .message(jsonMapper.writeValueAsString(snsEvent))
+          .message(objectMapper.writeValueAsString(snsEvent))
           .messageAttributes(
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),

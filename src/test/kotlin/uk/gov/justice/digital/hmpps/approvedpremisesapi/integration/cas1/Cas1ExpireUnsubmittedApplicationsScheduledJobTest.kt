@@ -87,7 +87,7 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJobTest : IntegrationTestBase() 
           assertThat(persistedApplicationExpiredEvent.service).isEqualTo("CAS1")
           assertThat(persistedApplicationExpiredEvent.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
 
-          val eventEnvelope: Cas1DomainEventEnvelope<ApplicationExpired> = jsonMapper.readValue(
+          val eventEnvelope: Cas1DomainEventEnvelope<ApplicationExpired> = objectMapper.readValue(
             persistedApplicationExpiredEvent.data,
             object : TypeReference<Cas1DomainEventEnvelope<ApplicationExpired>>() {},
           )

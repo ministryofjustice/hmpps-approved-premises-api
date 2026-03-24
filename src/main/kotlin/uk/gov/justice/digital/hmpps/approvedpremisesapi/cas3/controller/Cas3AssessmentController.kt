@@ -38,7 +38,7 @@ import java.util.UUID
 
 @Cas3Controller
 class Cas3AssessmentController(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val cas3AssessmentService: Cas3AssessmentService,
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
@@ -121,7 +121,7 @@ class Cas3AssessmentController(
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val serializedData = jsonMapper.writeValueAsString(assessmentAcceptance.document)
+    val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
 
     val assessmentAuthResult = cas3AssessmentService.acceptAssessment(
       acceptingUser = user,
@@ -142,7 +142,7 @@ class Cas3AssessmentController(
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val serializedData = jsonMapper.writeValueAsString(assessmentRejection.document)
+    val serializedData = objectMapper.writeValueAsString(assessmentRejection.document)
 
     val assessmentAuthResult =
       cas3AssessmentService.rejectAssessment(

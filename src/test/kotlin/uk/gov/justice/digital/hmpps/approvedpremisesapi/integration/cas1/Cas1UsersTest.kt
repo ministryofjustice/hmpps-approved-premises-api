@@ -445,7 +445,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectHeader().doesNotExist("X-Pagination-PageSize")
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(requestUser, userWithNoRole, cruMember, manager).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
@@ -493,7 +493,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectHeader().doesNotExist("X-Pagination-PageSize")
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(userOne, userTwo).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
@@ -543,7 +543,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectHeader().doesNotExist("X-Pagination-PageSize")
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(userOne, userTwo).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
@@ -601,7 +601,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectHeader().doesNotExist("X-Pagination-PageSize")
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(userOne, userTwo).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
@@ -670,7 +670,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .isOk
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(reportViewer, futureManager).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
@@ -752,7 +752,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .isOk
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(emergencyUser).map {
                       userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                     },
@@ -788,7 +788,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                   .isOk
                   .expectBody()
                   .json(
-                    jsonMapper.writeValueAsString(
+                    objectMapper.writeValueAsString(
                       listOf(emergencyAssessor1, emergencyAssessor2).map {
                         userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                       },
@@ -841,7 +841,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectHeader().doesNotExist("X-Pagination-PageSize")
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(requestUser, userWithNoRole, cruMember, manager).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
@@ -887,7 +887,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectHeader().doesNotExist("X-Pagination-PageSize")
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(userOne, userTwo).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
@@ -935,7 +935,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .expectHeader().doesNotExist("X-Pagination-PageSize")
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(userOne, userTwo).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
@@ -1004,7 +1004,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .isOk
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(reportViewer, future_manager).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
@@ -1107,7 +1107,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                 .isOk
                 .expectBody()
                 .json(
-                  jsonMapper.writeValueAsString(
+                  objectMapper.writeValueAsString(
                     listOf(emergencyUser).map {
                       userTransformer.transformJpaToSummaryApi(it)
                     },
@@ -1143,7 +1143,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
                   .isOk
                   .expectBody()
                   .json(
-                    jsonMapper.writeValueAsString(
+                    objectMapper.writeValueAsString(
                       listOf(emergencyAssessor1, emergencyAssessor2).map {
                         userTransformer.transformJpaToSummaryApi(it)
                       },
@@ -1207,7 +1207,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               .isOk
               .expectBody()
               .json(
-                jsonMapper.writeValueAsString(
+                objectMapper.writeValueAsString(
                   listOf(user).map {
                     userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
                   },
@@ -1269,7 +1269,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
               .isOk
               .expectBody()
               .json(
-                jsonMapper.writeValueAsString(
+                objectMapper.writeValueAsString(
                   userTransformer.transformJpaToApi(user, ServiceName.approvedPremises),
                 ),
               )

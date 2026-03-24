@@ -37,7 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 
 @Component
 class ApplicationsTransformer(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   private val apAreaTransformer: ApAreaTransformer,
@@ -60,8 +60,8 @@ class ApplicationsTransformer(
         createdAt = applicationEntity.createdAt.toInstant(),
         submittedAt = applicationEntity.submittedAt?.toInstant(),
         arrivalDate = applicationEntity.arrivalDate?.toInstant(),
-        data = if (applicationEntity.data != null) jsonMapper.readTree(applicationEntity.data) else null,
-        document = if (applicationEntity.document != null) jsonMapper.readTree(applicationEntity.document) else null,
+        data = if (applicationEntity.data != null) objectMapper.readTree(applicationEntity.data) else null,
+        document = if (applicationEntity.document != null) objectMapper.readTree(applicationEntity.document) else null,
         risks = if (applicationEntity.riskRatings != null) {
           risksTransformer.transformDomainToApi(
             applicationEntity.riskRatings!!,
@@ -95,8 +95,8 @@ class ApplicationsTransformer(
       submittedAt = applicationEntity.submittedAt?.toInstant(),
       isWomensApplication = applicationEntity.isWomensApplication,
       arrivalDate = applicationEntity.arrivalDate?.toInstant(),
-      data = if (applicationEntity.data != null) jsonMapper.readTree(applicationEntity.data) else null,
-      document = if (applicationEntity.document != null) jsonMapper.readTree(applicationEntity.document) else null,
+      data = if (applicationEntity.data != null) objectMapper.readTree(applicationEntity.data) else null,
+      document = if (applicationEntity.document != null) objectMapper.readTree(applicationEntity.document) else null,
       risks = if (applicationEntity.riskRatings != null) {
         risksTransformer.transformDomainToApi(
           applicationEntity.riskRatings!!,
@@ -144,7 +144,7 @@ class ApplicationsTransformer(
   ): ApiApplicationSummary = when (domain) {
     is DomainApprovedPremisesApplicationSummary -> {
       val riskRatings =
-        if (domain.getRiskRatings() != null) jsonMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
+        if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
 
       ApiApprovedPremisesApplicationSummary(
         id = domain.getId(),
@@ -166,7 +166,7 @@ class ApplicationsTransformer(
 
     is DomainTemporaryAccommodationApplicationSummary -> {
       val riskRatings =
-        if (domain.getRiskRatings() != null) jsonMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
+        if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
 
       ApiTemporaryAccommodationApplicationSummary(
         id = domain.getId(),
@@ -188,7 +188,7 @@ class ApplicationsTransformer(
     personInfo: PersonInfoResult,
   ): Cas1ApplicationSummary {
     val riskRatings =
-      if (domain.getRiskRatings() != null) jsonMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
+      if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
 
     return Cas1ApplicationSummary(
       id = domain.getId(),
@@ -222,8 +222,8 @@ class ApplicationsTransformer(
       isWomensApplication = applicationEntity.isWomensApplication,
       isPipeApplication = applicationEntity.isPipeApplication,
       arrivalDate = applicationEntity.arrivalDate?.toInstant(),
-      data = if (applicationEntity.data != null) jsonMapper.readTree(applicationEntity.data) else null,
-      document = if (applicationEntity.document != null) jsonMapper.readTree(applicationEntity.document) else null,
+      data = if (applicationEntity.data != null) objectMapper.readTree(applicationEntity.data) else null,
+      document = if (applicationEntity.document != null) objectMapper.readTree(applicationEntity.document) else null,
       risks = if (applicationEntity.riskRatings != null) {
         risksTransformer.transformDomainToApi(
           applicationEntity.riskRatings!!,

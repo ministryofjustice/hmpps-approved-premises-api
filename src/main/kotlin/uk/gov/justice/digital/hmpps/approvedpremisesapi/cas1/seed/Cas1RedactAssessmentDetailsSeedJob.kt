@@ -13,7 +13,7 @@ import java.util.UUID
 @Component
 class Cas1RemoveAssessmentDetailsSeedJob(
   private val assessmentRepository: AssessmentRepository,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
 ) : SeedJob<Cas1RemoveAssessmentDetailsSeedCsvRow>(
   requiredHeaders = setOf(
@@ -51,13 +51,13 @@ class Cas1RemoveAssessmentDetailsSeedJob(
       return null
     }
 
-    val dataModel: JsonNode = jsonMapper.readTree(json)
+    val dataModel: JsonNode = objectMapper.readTree(json)
 
     dataModel.removeAll {
       it.isObject && !it.has("sufficient-information")
     }
 
-    return jsonMapper.writeValueAsString(dataModel)
+    return objectMapper.writeValueAsString(dataModel)
   }
 }
 

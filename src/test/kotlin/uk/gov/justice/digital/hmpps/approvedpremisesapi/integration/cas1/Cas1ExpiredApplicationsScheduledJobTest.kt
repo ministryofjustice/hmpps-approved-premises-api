@@ -84,7 +84,7 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
           assertThat(persistedApplicationExpiredEvent.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
 
           val envelope =
-            jsonMapper.readValue(persistedApplicationExpiredEvent.data, ApplicationExpiredEnvelope::class.java)
+            objectMapper.readValue(persistedApplicationExpiredEvent.data, ApplicationExpiredEnvelope::class.java)
           assertThat(envelope.eventDetails.previousStatus).isEqualTo(it.status.name)
           assertThat(envelope.eventDetails.updatedStatus).isEqualTo(ApprovedPremisesApplicationStatus.EXPIRED.name)
         }
@@ -116,7 +116,7 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          jsonMapper.readValue(
+          objectMapper.readValue(
             rawResponseBody,
             object : TypeReference<List<Cas1TimelineEvent>>() {},
           )
@@ -165,7 +165,7 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
         withType(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
         withApplicationId(application.id)
         withData(
-          jsonMapper.writeValueAsString(
+          objectMapper.writeValueAsString(
             ApplicationAssessedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),

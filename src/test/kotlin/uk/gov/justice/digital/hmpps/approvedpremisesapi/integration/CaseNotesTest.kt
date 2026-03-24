@@ -147,7 +147,7 @@ class CaseNotesTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(caseNotes.map(caseNoteTransformer::transformModelToApi)),
+            objectMapper.writeValueAsString(caseNotes.map(caseNoteTransformer::transformModelToApi)),
           )
       }
     }
@@ -203,7 +203,7 @@ class CaseNotesTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(listOf(caseNoteWithType, caseNoteWithTypeDescription).map(caseNoteTransformer::transformModelToApi)),
+            objectMapper.writeValueAsString(listOf(caseNoteWithType, caseNoteWithTypeDescription).map(caseNoteTransformer::transformModelToApi)),
           )
       }
     }
@@ -271,7 +271,7 @@ class CaseNotesTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString((page1 + page2).map(caseNoteTransformer::transformModelToApi)),
+            objectMapper.writeValueAsString((page1 + page2).map(caseNoteTransformer::transformModelToApi)),
           )
       }
     }

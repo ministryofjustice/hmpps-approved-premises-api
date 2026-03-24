@@ -48,7 +48,7 @@ class Cas2ApplicationService(
   private val emailNotificationService: EmailNotificationService,
   private val assessmentService: Cas2AssessmentService,
   private val notifyConfig: NotifyConfig,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -232,7 +232,7 @@ class Cas2ApplicationService(
     var application = applicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
-    val serializedTranslatedDocument = jsonMapper.writeValueAsString(submitApplication.translatedDocument)
+    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
     if (!application.isCreatedBy(user)) {
       return CasResult.Unauthorised()

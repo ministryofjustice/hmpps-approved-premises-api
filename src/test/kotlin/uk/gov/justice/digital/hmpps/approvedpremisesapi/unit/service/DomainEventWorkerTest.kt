@@ -110,7 +110,7 @@ class DomainEventWorkerTest {
   }
 
   private fun matchingPublishRequest(publishRequest: PublishRequest, snsEvent: SnsEvent): Boolean {
-    val deserializedMessage = jsonMapper.readValue(publishRequest.message(), SnsEvent::class.java)
+    val deserializedMessage = objectMapper.readValue(publishRequest.message(), SnsEvent::class.java)
 
     return deserializedMessage.eventType == snsEvent.eventType &&
       deserializedMessage.version == snsEvent.version &&

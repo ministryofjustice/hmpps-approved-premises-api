@@ -19,7 +19,7 @@ import java.time.LocalTime
 
 @Service
 class SubjectAccessRequestService(
-  val jsonMapper: JsonMapper,
+  val objectMapper: JsonMapper,
   val cas1SubjectAccessRequestRepository: CAS1SubjectAccessRequestRepository,
   val cas2SubjectAccessRequestRepository: Cas2SubjectAccessRequestRepository,
   val cas3SubjectAccessRequestRepository: CAS3SubjectAccessRequestRepository,
@@ -257,8 +257,8 @@ class SubjectAccessRequestService(
   }
   private fun Logger.logDebugMessage(service: String, result: String) {
     if (this.isDebugEnabled) {
-      val prettyPrintJson = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
-        jsonMapper.readValue(result, Any::class.java),
+      val prettyPrintJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+        objectMapper.readValue(result, Any::class.java),
       )
       log.debug("$service SAR Result is $prettyPrintJson")
     }

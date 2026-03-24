@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 
 @Component
 class RequestForPlacementTransformer(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
 ) {
   fun transformPlacementApplicationEntityToApi(
     placementApplicationEntity: PlacementApplicationEntity,

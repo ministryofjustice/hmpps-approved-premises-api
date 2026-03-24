@@ -807,7 +807,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
         .responseBody
         .blockFirst()
 
-      assertThat(responseBody).isEqualTo(jsonMapper.writeValueAsString(expectedAssessmentSummaries))
+      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedAssessmentSummaries))
 
       return response
     }
@@ -915,7 +915,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              jsonMapper.writeValueAsString(
+              objectMapper.writeValueAsString(
                 cas3AssessmentTransformer.transformJpaToApi(
                   assessment,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
@@ -1496,7 +1496,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
   class AssessmentSummaryMapper(
     private val cas3AssessmentTransformer: Cas3AssessmentTransformer,
-    private val jsonMapper: JsonMapper,
+    private val objectMapper: JsonMapper,
     private val offenderDetails: OffenderDetailSummary,
     private val inmateDetails: InmateDetail?,
   ) {
@@ -1531,7 +1531,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
         id = assessment.id,
         applicationId = assessment.application.id,
         createdAt = assessment.createdAt.toInstant(),
-        riskRatings = application?.riskRatings?.let { jsonMapper.writeValueAsString(it) },
+        riskRatings = application?.riskRatings?.let { objectMapper.writeValueAsString(it) },
         arrivalDate = application?.arrivalDate?.toInstant(),
         completed = assessment.completedAt != null,
         decision = assessment.decision?.name,

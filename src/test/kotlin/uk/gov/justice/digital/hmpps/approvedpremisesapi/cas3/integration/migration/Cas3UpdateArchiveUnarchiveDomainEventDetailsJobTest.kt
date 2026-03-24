@@ -45,7 +45,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
     val premisesFourId = UUID.randomUUID()
 
     val premisesOneArchiveDomainEventData = createPremisesArchiveEventData(premisesOneId, user.id, LocalDate.now().minusDays(15), UUID.randomUUID())
-    val premisesOneArchiveDomainEvent = createPremisesArchiveDomainEvent(premisesOneId, jsonMapper.writeValueAsString(premisesOneArchiveDomainEventData))
+    val premisesOneArchiveDomainEvent = createPremisesArchiveDomainEvent(premisesOneId, objectMapper.writeValueAsString(premisesOneArchiveDomainEventData))
 
     val premisesOneUnarchiveDomainEventData = createPremisesUnarchiveEventData(
       premisesOneId,
@@ -55,14 +55,14 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
       LocalDate.now().minusDays(15),
       UUID.randomUUID(),
     )
-    val premisesOneUnarchiveDomainEvent = createPremisesUnarchiveDomainEvent(premisesOneId, jsonMapper.writeValueAsString(premisesOneUnarchiveDomainEventData))
+    val premisesOneUnarchiveDomainEvent = createPremisesUnarchiveDomainEvent(premisesOneId, objectMapper.writeValueAsString(premisesOneUnarchiveDomainEventData))
 
     val premisesTwoArchiveDomainEventData = createPremisesArchiveEventDataV1(premisesTwoId, user.id, LocalDate.now().minusDays(10), UUID.randomUUID())
-    val premisesTwoArchiveDomainEvent = createPremisesArchiveDomainEvent(premisesTwoId, jsonMapper.writeValueAsString(premisesTwoArchiveDomainEventData))
+    val premisesTwoArchiveDomainEvent = createPremisesArchiveDomainEvent(premisesTwoId, objectMapper.writeValueAsString(premisesTwoArchiveDomainEventData))
 
     val premisesThreeArchiveTransactionId = UUID.randomUUID()
     val premisesThreeArchiveDomainEventData = createPremisesArchiveEventData(premisesThreeId, user.id, LocalDate.now().minusDays(7), premisesThreeArchiveTransactionId)
-    createPremisesArchiveDomainEvent(premisesThreeId, jsonMapper.writeValueAsString(premisesThreeArchiveDomainEventData), OffsetDateTime.now().minusDays(3))
+    createPremisesArchiveDomainEvent(premisesThreeId, objectMapper.writeValueAsString(premisesThreeArchiveDomainEventData), OffsetDateTime.now().minusDays(3))
 
     val premisesThreeUnarchiveDomainEventData = createPremisesUnarchiveEventDataV1(
       premisesThreeId,
@@ -72,7 +72,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
       LocalDate.now().minusDays(7),
       UUID.randomUUID(),
     )
-    val premisesThreeUnarchiveDomainEvent = createPremisesUnarchiveDomainEvent(premisesThreeId, jsonMapper.writeValueAsString(premisesThreeUnarchiveDomainEventData))
+    val premisesThreeUnarchiveDomainEvent = createPremisesUnarchiveDomainEvent(premisesThreeId, objectMapper.writeValueAsString(premisesThreeUnarchiveDomainEventData))
 
     val bedspaceOnePremisesThreeId = UUID.randomUUID()
     val bedspaceOnePremisesThreeArchiveDomainEventData = createBedspaceArchiveEventData(
@@ -86,7 +86,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
     val bedspaceOnePremisesThreeArchiveDomainEvent = createBedspaceArchiveDomainEvent(
       bedspaceOnePremisesThreeId,
       premisesThreeId,
-      jsonMapper.writeValueAsString(bedspaceOnePremisesThreeArchiveDomainEventData),
+      objectMapper.writeValueAsString(bedspaceOnePremisesThreeArchiveDomainEventData),
       null,
     )
 
@@ -102,7 +102,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
     val bedspaceOnePremisesThreeUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(
       bedspaceOnePremisesThreeId,
       premisesThreeId,
-      jsonMapper.writeValueAsString(bedspaceOnePremisesThreeUnarchiveDomainEventData),
+      objectMapper.writeValueAsString(bedspaceOnePremisesThreeUnarchiveDomainEventData),
     )
 
     val bedspaceTwoPremisesThreeId = UUID.randomUUID()
@@ -117,7 +117,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
     val bedspaceTwoPremisesThreeArchiveDomainEvent = createBedspaceArchiveDomainEvent(
       bedspaceTwoPremisesThreeId,
       premisesThreeId,
-      jsonMapper.writeValueAsString(bedspaceTwoPremisesThreeArchiveDomainEventData),
+      objectMapper.writeValueAsString(bedspaceTwoPremisesThreeArchiveDomainEventData),
     )
 
     val bedspaceOnePremisesFourId = UUID.randomUUID()
@@ -131,7 +131,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
     val bedspaceOnePremisesFourArchiveDomainEvent = createBedspaceArchiveDomainEvent(
       bedspaceOnePremisesFourId,
       premisesFourId,
-      jsonMapper.writeValueAsString(bedspaceOnePremisesFourArchiveDomainEventData),
+      objectMapper.writeValueAsString(bedspaceOnePremisesFourArchiveDomainEventData),
     )
 
     val bedspaceOnePremisesFourUnarchiveDomainEventData = createBedspaceUnarchiveEventDataV1(
@@ -146,13 +146,13 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
     val bedspaceOnePremisesFourUnarchiveDomainEvent = createBedspaceUnarchiveDomainEvent(
       bedspaceOnePremisesFourId,
       premisesFourId,
-      jsonMapper.writeValueAsString(bedspaceOnePremisesFourUnarchiveDomainEventData),
+      objectMapper.writeValueAsString(bedspaceOnePremisesFourUnarchiveDomainEventData),
     )
 
     val premisesFourArchiveDomainEventData = createPremisesArchiveEventData(premisesFourId, user.id, LocalDate.now().plusDays(7), null)
     val premisesFourArchiveDomainEvent = createPremisesArchiveDomainEvent(
       premisesFourId,
-      jsonMapper.writeValueAsString(premisesFourArchiveDomainEventData),
+      objectMapper.writeValueAsString(premisesFourArchiveDomainEventData),
     )
 
     val premisesFourUnarchiveDomainEventData = createPremisesUnarchiveEventData(
@@ -163,7 +163,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
       LocalDate.now().minusDays(15),
       null,
     )
-    val premisesFourUnarchiveDomainEvent = createPremisesUnarchiveDomainEvent(premisesFourId, jsonMapper.writeValueAsString(premisesFourUnarchiveDomainEventData))
+    val premisesFourUnarchiveDomainEvent = createPremisesUnarchiveDomainEvent(premisesFourId, objectMapper.writeValueAsString(premisesFourUnarchiveDomainEventData))
 
     migrationJobService.runMigrationJob(MigrationJobType.updateCas3ArchiveUnarchiveDomainEventDetails, 10)
 
@@ -195,7 +195,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
   private fun assertPremisesArchiveDomainEvent(updatedDomainEvents: List<DomainEventEntity>, originalDomainEvent: DomainEventEntity) {
     val updatedDomainEvent = updatedDomainEvents.firstOrNull { it.id == originalDomainEvent.id }
     assertThat(updatedDomainEvent).isNotNull()
-    val updatedDomainEventData = jsonMapper.readValue(updatedDomainEvent?.data, CAS3PremisesArchiveEvent::class.java)
+    val updatedDomainEventData = objectMapper.readValue(updatedDomainEvent?.data, CAS3PremisesArchiveEvent::class.java)
     assertThat(updatedDomainEvent?.id).isEqualTo(originalDomainEvent.id)
     assertThat(updatedDomainEvent?.type).isEqualTo(originalDomainEvent.type)
     assertThat(updatedDomainEvent?.cas3PremisesId).isEqualTo(originalDomainEvent.cas3PremisesId)
@@ -207,7 +207,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
   private fun assertPremisesUnarchiveDomainEvent(updatedDomainEvents: List<DomainEventEntity>, originalDomainEvent: DomainEventEntity) {
     val updatedDomainEvent = updatedDomainEvents.firstOrNull { it.id == originalDomainEvent.id }
     assertThat(updatedDomainEvent).isNotNull()
-    val updatedDomainEventData = jsonMapper.readValue(updatedDomainEvent?.data, CAS3PremisesUnarchiveEvent::class.java)
+    val updatedDomainEventData = objectMapper.readValue(updatedDomainEvent?.data, CAS3PremisesUnarchiveEvent::class.java)
     assertThat(updatedDomainEvent?.id).isEqualTo(originalDomainEvent.id)
     assertThat(updatedDomainEvent?.type).isEqualTo(originalDomainEvent.type)
     assertThat(updatedDomainEvent?.cas3PremisesId).isEqualTo(originalDomainEvent.cas3PremisesId)
@@ -219,7 +219,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
   private fun assertBedspaceArchiveDomainEvent(updatedDomainEvents: List<DomainEventEntity>, originalDomainEvent: DomainEventEntity) {
     val updatedDomainEvent = updatedDomainEvents.firstOrNull { it.id == originalDomainEvent.id }
     assertThat(updatedDomainEvent).isNotNull()
-    val updatedDomainEventData = jsonMapper.readValue(updatedDomainEvent?.data, CAS3BedspaceArchiveEvent::class.java)
+    val updatedDomainEventData = objectMapper.readValue(updatedDomainEvent?.data, CAS3BedspaceArchiveEvent::class.java)
     assertThat(updatedDomainEvent?.id).isEqualTo(originalDomainEvent.id)
     assertThat(updatedDomainEvent?.type).isEqualTo(originalDomainEvent.type)
     assertThat(updatedDomainEvent?.cas3PremisesId).isEqualTo(originalDomainEvent.cas3PremisesId)
@@ -233,7 +233,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJobTest : MigrationJobTestBase
   private fun assertBedspaceUnarchiveDomainEvent(updatedDomainEvents: List<DomainEventEntity>, originalDomainEvent: DomainEventEntity) {
     val updatedDomainEvent = updatedDomainEvents.firstOrNull { it.id == originalDomainEvent.id }
     assertThat(updatedDomainEvent).isNotNull()
-    val updatedDomainEventData = jsonMapper.readValue(updatedDomainEvent?.data, CAS3BedspaceUnarchiveEvent::class.java)
+    val updatedDomainEventData = objectMapper.readValue(updatedDomainEvent?.data, CAS3BedspaceUnarchiveEvent::class.java)
     assertThat(updatedDomainEvent?.id).isEqualTo(originalDomainEvent.id)
     assertThat(updatedDomainEvent?.type).isEqualTo(originalDomainEvent.type)
     assertThat(updatedDomainEvent?.cas3PremisesId).isEqualTo(originalDomainEvent.cas3PremisesId)

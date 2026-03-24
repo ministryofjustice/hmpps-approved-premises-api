@@ -14,7 +14,7 @@ import java.time.Duration
 @Component
 class PrisonsApiClient(
   @Qualifier("prisonsApiWebClient") webClientConfig: WebClientConfig,
-  jsonMapper: JsonMapper,
+  objectMapper: JsonMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   private val inmateDetailsCacheConfig = WebClientCache.PreemptiveCacheConfig(

@@ -70,7 +70,7 @@ class SeedCas1UpdateActualArrivalDateTest : SeedTestBase() {
 
     val domainEventAfterUpdate = domainEventRepository.findByApplicationId(spaceBooking.application!!.id)[0]
 
-    val unmarshalledData = jsonMapper.readValue(domainEventAfterUpdate.data, PersonArrivedEnvelope::class.java)
+    val unmarshalledData = objectMapper.readValue(domainEventAfterUpdate.data, PersonArrivedEnvelope::class.java)
     assertThat(unmarshalledData.eventDetails.arrivedAt).isEqualTo(Instant.parse("2025-07-01T12:00:00.00Z"))
   }
 

@@ -16,7 +16,7 @@ fun IntegrationTestBase.nomisUserRolesMockSuccessfulGetMeCall(
         .withHeader("authorization", "Bearer $jwt")
         .withStatus(200)
         .withBody(
-          jsonMapper.writeValueAsString(nomisUserDetails),
+          objectMapper.writeValueAsString(nomisUserDetails),
         ),
     ),
 )

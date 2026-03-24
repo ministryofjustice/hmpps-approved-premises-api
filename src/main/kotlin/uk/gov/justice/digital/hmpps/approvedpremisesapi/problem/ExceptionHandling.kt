@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isTypeInThrowableCh
 
 @ControllerAdvice
 class ExceptionHandling(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val deserializationValidationService: DeserializationValidationService,
   private val sentryService: SentryService,
 ) {
@@ -88,7 +88,7 @@ class ExceptionHandling(
         val mismatchedInputException = exception.cause as MismatchedInputException
 
         val requestBody = request.getNativeRequest(ContentCachingRequestWrapper::class.java)
-        val jsonTree = jsonMapper.readTree(String(requestBody!!.contentAsByteArray))
+        val jsonTree = objectMapper.readTree(String(requestBody!!.contentAsByteArray))
 
         if (expectedArrayButGotObject(jsonTree, mismatchedInputException)) {
           val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Expected an array but got an object")

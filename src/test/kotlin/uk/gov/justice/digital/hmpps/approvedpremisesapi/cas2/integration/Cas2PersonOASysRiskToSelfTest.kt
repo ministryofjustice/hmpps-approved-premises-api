@@ -91,7 +91,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               oaSysSectionsTransformer.transformRiskToIndividual(
                 offenceDetails,
                 risksToTheIndividual,

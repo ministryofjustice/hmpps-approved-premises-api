@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 
 fun IntegrationTestBase.caseNotesAPIMockSuccessfulCaseNotesCall(personIdentifier: String, request: CaseNotesRequest, result: CaseNotesPage) {
-  val requestBodyString = jsonMapper.writeValueAsString(request)
+  val requestBodyString = objectMapper.writeValueAsString(request)
 
   mockSuccessfulPostCallWithJsonResponse(
     url = "/search/case-notes/$personIdentifier",

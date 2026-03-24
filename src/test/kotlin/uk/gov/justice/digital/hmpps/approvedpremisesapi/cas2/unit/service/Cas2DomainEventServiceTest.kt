@@ -88,7 +88,7 @@ class Cas2DomainEventServiceTest {
           .withApplicationId(applicationId)
           .withCrn(crn)
           .withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-          .withData(jsonMapper.writeValueAsString(data))
+          .withData(objectMapper.writeValueAsString(data))
           .withOccurredAt(occurredAt)
           .withNomsNumber(nomsNumber)
           .produce()
@@ -152,7 +152,7 @@ class Cas2DomainEventServiceTest {
                 it.crn == domainEventToSave.crn &&
                 it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
             },
           )
@@ -161,7 +161,7 @@ class Cas2DomainEventServiceTest {
         verify(exactly = 1) {
           mockHmppsTopic.snsClient.publish(
             match<PublishRequest> {
-              val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
+              val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
               deserializedMessage.eventType == "applications.cas2.application.submitted" &&
                 deserializedMessage.version == 1 &&
@@ -222,7 +222,7 @@ class Cas2DomainEventServiceTest {
                 it.crn == domainEventToSave.crn &&
                 it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
             },
           )
@@ -279,7 +279,7 @@ class Cas2DomainEventServiceTest {
                 it.crn == domainEventToSave.crn &&
                 it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
             },
           )
@@ -340,7 +340,7 @@ class Cas2DomainEventServiceTest {
                 it.crn == domainEventToSave.crn &&
                 it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
             },
           )
@@ -349,7 +349,7 @@ class Cas2DomainEventServiceTest {
         verify(exactly = 1) {
           mockHmppsTopic.snsClient.publish(
             match<PublishRequest> {
-              val deserializedMessage = jsonMapper.readValue(it.message(), SnsEvent::class.java)
+              val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
 
               deserializedMessage.eventType == "applications.cas2.application.status-updated" &&
                 deserializedMessage.version == 1 &&
@@ -414,7 +414,7 @@ class Cas2DomainEventServiceTest {
                 it.crn == domainEventToSave.crn &&
                 it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
             },
           )
@@ -467,7 +467,7 @@ class Cas2DomainEventServiceTest {
                 it.crn == domainEventToSave.crn &&
                 it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == jsonMapper.writeValueAsString(domainEventToSave.data) &&
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
             },
           )
@@ -511,7 +511,7 @@ class Cas2DomainEventServiceTest {
           .withCrn(crn)
           .withNomsNumber(nomsNumber)
           .withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
-          .withData(jsonMapper.writeValueAsString(data))
+          .withData(objectMapper.writeValueAsString(data))
           .withOccurredAt(occurredAt)
           .produce()
 

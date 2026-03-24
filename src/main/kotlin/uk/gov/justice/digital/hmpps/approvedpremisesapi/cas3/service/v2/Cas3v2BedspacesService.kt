@@ -34,7 +34,7 @@ class Cas3v2BedspacesService(
   private val cas3BedspacesRepository: Cas3BedspacesRepository,
   private val cas3PremisesService: Cas3v2PremisesService,
   private val cas3v2DomainEventService: Cas3v2DomainEventService,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
 ) {
 
   fun getBedspace(premisesId: UUID, bedspaceId: UUID): CasResult<Cas3BedspacesEntity> = validatedCasResult {
@@ -163,7 +163,7 @@ class Cas3v2BedspacesService(
         when (domainEventEntity.type) {
           DomainEventType.CAS3_BEDSPACE_UNARCHIVED -> {
             val eventDetails =
-              jsonMapper.readValue(domainEventEntity.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails
+              objectMapper.readValue(domainEventEntity.data, CAS3BedspaceUnarchiveEvent::class.java).eventDetails
             val restartDate = eventDetails.newStartDate
             if (restartDate <= today) {
               Cas3BedspaceArchiveAction(
@@ -177,7 +177,7 @@ class Cas3v2BedspacesService(
 
           DomainEventType.CAS3_BEDSPACE_ARCHIVED -> {
             val eventDetails =
-              jsonMapper.readValue(domainEventEntity.data, CAS3BedspaceArchiveEvent::class.java).eventDetails
+              objectMapper.readValue(domainEventEntity.data, CAS3BedspaceArchiveEvent::class.java).eventDetails
             val endDate = eventDetails.endDate
             if (endDate <= today) {
               Cas3BedspaceArchiveAction(

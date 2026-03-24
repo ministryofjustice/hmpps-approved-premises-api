@@ -112,8 +112,8 @@ class PlacementApplicationTransformerTest {
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
 
     assertThat(result.id).isEqualTo(placementApplication.id)
-    assertThat(result.data).isEqualTo(jsonMapper.readTree(data))
-    assertThat(result.document).isEqualTo(jsonMapper.readTree(document))
+    assertThat(result.data).isEqualTo(objectMapper.readTree(data))
+    assertThat(result.document).isEqualTo(objectMapper.readTree(document))
     assertThat(result.dates!!.expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
     assertThat(result.dates!!.duration).isEqualTo(30)
 

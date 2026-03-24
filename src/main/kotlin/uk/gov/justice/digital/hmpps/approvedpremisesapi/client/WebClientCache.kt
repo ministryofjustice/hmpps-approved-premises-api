@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 class WebClientCache(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val redisTemplate: RedisTemplate<String, String>,
   @Value("\${preemptive-cache-key-prefix}") private val preemptiveCacheKeyPrefix: String,
   private val sentryService: SentryService,
@@ -165,7 +165,7 @@ class WebClientCache(
     hardTtlSeconds: Long,
   ) {
     redisTemplate.boundValueOps(cacheKeyResolver.metadataKey).set(
-      jsonMapper.writeValueAsString(cacheEntry),
+      objectMapper.writeValueAsString(cacheEntry),
       Duration.ofSeconds(hardTtlSeconds),
     )
 
@@ -181,7 +181,7 @@ class WebClientCache(
     val stringValue = redisTemplate.boundValueOps(metaDataKey).get()
       ?: return null
 
-    return jsonMapper.readValue<PreemptiveCacheMetadata>(
+    return objectMapper.readValue<PreemptiveCacheMetadata>(
       stringValue,
     )
   }
@@ -217,7 +217,7 @@ class WebClientCache(
     if (metadataEntry.httpStatus.is2xxSuccessful) {
       return ClientResult.Success(
         status = metadataEntry.httpStatus,
-        body = jsonMapper.readValue(cachedBody!!, typeReference),
+        body = objectMapper.readValue(cachedBody!!, typeReference),
         isPreemptivelyCachedResponse = true,
       )
     }

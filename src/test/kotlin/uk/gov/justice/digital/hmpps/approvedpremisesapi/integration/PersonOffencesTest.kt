@@ -113,7 +113,7 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(offenceTransformer.transformToApi(caseDetail)),
+            objectMapper.writeValueAsString(offenceTransformer.transformToApi(caseDetail)),
           )
       }
     }

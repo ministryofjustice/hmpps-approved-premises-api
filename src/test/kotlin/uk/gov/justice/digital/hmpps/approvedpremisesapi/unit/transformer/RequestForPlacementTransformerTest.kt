@@ -38,7 +38,7 @@ class RequestForPlacementTransformerTest {
 
   @BeforeEach
   fun setupObjectMapperMock() {
-    every { jsonMapper.readTree(any<String>()) } returns mockk()
+    every { objectMapper.readTree(any<String>()) } returns mockk()
   }
 
   companion object {
@@ -95,7 +95,7 @@ class RequestForPlacementTransformerTest {
       assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
       assertThat(result.placementDates[0].duration).isEqualTo(49)
 
-      verify(exactly = 1) { jsonMapper.readTree(placementApplication.document) }
+      verify(exactly = 1) { objectMapper.readTree(placementApplication.document) }
     }
 
     @Test

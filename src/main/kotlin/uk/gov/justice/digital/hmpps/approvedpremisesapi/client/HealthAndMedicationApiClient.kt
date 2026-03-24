@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class HealthAndMedicationApiClient(
   @Qualifier("healthAndMedicationApiWebClient") val webClientConfig: WebClientConfig,
-  jsonMapper: JsonMapper,
+  objectMapper: JsonMapper,
   weClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, jsonMapper, weClientCache) {
 

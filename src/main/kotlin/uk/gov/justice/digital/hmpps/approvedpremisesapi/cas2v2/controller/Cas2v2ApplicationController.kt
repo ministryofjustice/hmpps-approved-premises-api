@@ -41,7 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Applicat
 class Cas2v2ApplicationController(
   private val cas2v2ApplicationService: Cas2v2ApplicationService,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val cas2v2OffenderService: Cas2v2OffenderService,
   private val cas2OffenderService: Cas2OffenderService,
   private val userService: Cas2v2UserService,
@@ -141,7 +141,7 @@ class Cas2v2ApplicationController(
   ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
-    val serializedData = jsonMapper.writeValueAsString(body.data)
+    val serializedData = objectMapper.writeValueAsString(body.data)
 
     val applicationResult = when (body) {
       is UpdateCas2v2Application -> cas2v2ApplicationService.updateCas2v2Application(

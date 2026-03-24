@@ -31,7 +31,7 @@ import kotlin.reflect.KClass
 @SuppressWarnings("TooGenericExceptionThrown")
 @Service
 class Cas2DomainEventService(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas2.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
@@ -53,7 +53,7 @@ class Cas2DomainEventService(
 
     val data = when {
       enumTypeFromDataType(T::class) == domainEventEntity.type ->
-        jsonMapper.readValue(domainEventEntity.data, T::class.java)
+        objectMapper.readValue(domainEventEntity.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
     return DomainEvent(
@@ -104,7 +104,7 @@ class Cas2DomainEventService(
         createdAt = OffsetDateTime.now(),
         cas3CancelledAt = null,
         cas3TransactionId = null,
-        data = jsonMapper.writeValueAsString(domainEvent.data),
+        data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS2",
         triggerSource = null,
         triggeredByUserId = null,
@@ -135,7 +135,7 @@ class Cas2DomainEventService(
       val publishResult = domainTopic.snsClient.publish(
         PublishRequest.builder()
           .topicArn(domainTopic.arn)
-          .message(jsonMapper.writeValueAsString(snsEvent))
+          .message(objectMapper.writeValueAsString(snsEvent))
           .messageAttributes(
             mapOf(
               "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),

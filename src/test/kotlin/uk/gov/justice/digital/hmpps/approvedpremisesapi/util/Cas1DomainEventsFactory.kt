@@ -33,7 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import java.time.Instant
 import java.util.UUID
 
-class Cas1DomainEventsFactory(val jsonMapper: JsonMapper) {
+class Cas1DomainEventsFactory(val objectMapper: JsonMapper) {
 
   fun createEnvelopeLatestVersion(
     type: DomainEventType,
@@ -50,7 +50,7 @@ class Cas1DomainEventsFactory(val jsonMapper: JsonMapper) {
 
     return DomainEventEnvelopeAndPersistedJson(
       envelope = envelope,
-      persistedJson = jsonMapper.writeValueAsString(envelope),
+      persistedJson = objectMapper.writeValueAsString(envelope),
       schemaVersion = type.cas1Info!!.schemaVersions.last(),
     )
   }
@@ -100,11 +100,11 @@ class Cas1DomainEventsFactory(val jsonMapper: JsonMapper) {
   }
 
   fun removeEventDetails(json: String, fields: List<String>): String {
-    val dataModel: JsonNode = jsonMapper.readTree(json)
+    val dataModel: JsonNode = objectMapper.readTree(json)
     fields.forEach {
       (dataModel["eventDetails"] as ObjectNode).remove(it)
     }
-    return jsonMapper.writeValueAsString(dataModel)
+    return objectMapper.writeValueAsString(dataModel)
   }
 }
 

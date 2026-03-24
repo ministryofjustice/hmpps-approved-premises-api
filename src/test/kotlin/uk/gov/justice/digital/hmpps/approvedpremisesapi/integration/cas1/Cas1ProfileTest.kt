@@ -101,7 +101,7 @@ class Cas1ProfileTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               Cas1ProfileResponse(
                 deliusUsername = deliusUsername,
                 loadError = null,
@@ -354,7 +354,7 @@ class Cas1ProfileTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .json(
-          jsonMapper.writeValueAsString(
+          objectMapper.writeValueAsString(
             Cas1ProfileResponse(
               deliusUsername = "nonStaffUser",
               loadError = Cas1ProfileResponse.Cas1LoadError.staffRecordNotFound,

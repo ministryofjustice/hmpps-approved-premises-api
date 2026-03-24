@@ -234,7 +234,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         CAS3PremisesUnarchiveEvent(
           id = UUID.randomUUID(),
           timestamp = Instant.now(),
@@ -269,7 +269,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         CAS3PremisesUnarchiveEvent(
           id = UUID.randomUUID(),
           timestamp = Instant.now(),
@@ -301,7 +301,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         CAS3PremisesArchiveEvent(
           id = UUID.randomUUID(),
           timestamp = Instant.now(),
@@ -331,7 +331,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         CAS3PremisesArchiveEvent(
           id = UUID.randomUUID(),
           timestamp = Instant.now(),
@@ -466,7 +466,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         CAS3BedspaceArchiveEvent(
           id = UUID.randomUUID(),
           timestamp = OffsetDateTime.now().toInstant(),
@@ -500,7 +500,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         CAS3BedspaceUnarchiveEvent(
           id = UUID.randomUUID(),
           timestamp = OffsetDateTime.now().toInstant(),
@@ -535,7 +535,7 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
     withCas3TransactionId(transactionId)
     withCas3CancelledAt(cancelledAt)
     withData(
-      jsonMapper.writeValueAsString(
+      objectMapper.writeValueAsString(
         CAS3BedspaceUnarchiveEvent(
           id = UUID.randomUUID(),
           timestamp = OffsetDateTime.now().toInstant(),

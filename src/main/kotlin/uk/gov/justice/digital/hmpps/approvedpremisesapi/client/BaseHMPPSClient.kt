@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BaseHMPPSClient(
   private val webClientConfig: WebClientConfig,
-  internal val jsonMapper: JsonMapper,
+  internal val objectMapper: JsonMapper,
   private val webClientCache: WebClientCache,
 ) {
 
@@ -84,7 +84,7 @@ abstract class BaseHMPPSClient(
         )
         .block()!!
 
-      val deserialized = jsonMapper.readValue(result.body, typeReference)
+      val deserialized = objectMapper.readValue(result.body, typeReference)
 
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
         webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, result)
@@ -207,12 +207,12 @@ sealed interface ClientResult<ResponseType> {
 
       override fun toException(): Throwable = RuntimeException("Unable to complete $method request to $path: $status")
 
-      val jsonMapper: JsonMapper = JsonMapper.builder()
+      val objectMapper: JsonMapper = JsonMapper.builder()
         .addModule(KotlinModule.Builder().build())
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .build()
 
-      inline fun <reified ResponseType> deserializeTo(): ResponseType = jsonMapper.readValue(body, object : TypeReference<ResponseType>() {})
+      inline fun <reified ResponseType> deserializeTo(): ResponseType = objectMapper.readValue(body, object : TypeReference<ResponseType>() {})
     }
 
     data class PreemptiveCacheTimeout<ResponseType>(

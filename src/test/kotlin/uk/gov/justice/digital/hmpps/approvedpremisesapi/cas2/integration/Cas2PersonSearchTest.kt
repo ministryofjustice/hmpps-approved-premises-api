@@ -188,7 +188,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              jsonMapper.writeValueAsString(
+              objectMapper.writeValueAsString(
                 FullPerson(
                   type = PersonType.fullPerson,
                   crn = "CRN",

@@ -257,7 +257,7 @@ class Cas2SubmissionTest(
               .blockFirst()
 
             val responseBody =
-              jsonMapper.readValue(
+              objectMapper.readValue(
                 rawResponseBody,
                 object : TypeReference<List<Cas2SubmittedApplicationSummary>>() {},
               )
@@ -478,7 +478,7 @@ class Cas2SubmissionTest(
               .responseBody
               .blockFirst()
 
-            val responseBody = jsonMapper.readValue(
+            val responseBody = objectMapper.readValue(
               rawResponseBody,
               Cas2SubmittedApplication::class.java,
             )
@@ -643,7 +643,7 @@ class Cas2SubmissionTest(
                   .responseBody
                   .blockFirst()
 
-                val responseBody = jsonMapper.readValue(
+                val responseBody = objectMapper.readValue(
                   rawResponseBody,
                   Cas2SubmittedApplication::class.java,
                 )
@@ -768,7 +768,7 @@ class Cas2SubmissionTest(
         // verify that generated 'application.submitted' domain event links to the CAS2 domain
         val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
         val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
-        val domainEventFromJson = jsonMapper.readValue(
+        val domainEventFromJson = objectMapper.readValue(
           persistedDomainEvent!!.data,
           Cas2ApplicationSubmittedEvent::class.java,
         )
@@ -916,8 +916,8 @@ class Cas2SubmissionTest(
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return jsonMapper.readTree(serializable)
+    if (serializable is String) return objectMapper.readTree(serializable)
 
-    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
+    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 }

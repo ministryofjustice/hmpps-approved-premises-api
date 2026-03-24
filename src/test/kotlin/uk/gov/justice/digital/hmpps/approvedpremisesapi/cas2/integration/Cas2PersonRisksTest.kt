@@ -99,7 +99,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               PersonRisks(
                 crn = offenderDetails.otherIds.crn,
                 roshRisks = RoshRisksEnvelope(

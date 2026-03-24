@@ -16,7 +16,7 @@ This is tested by the DomainEventTest integration test
  */
 @Service
 class Cas1DomainEventMigrationService(
-  val jsonMapper: JsonMapper,
+  val objectMapper: JsonMapper,
   val userService: UserService,
 ) {
 
@@ -36,12 +36,12 @@ class Cas1DomainEventMigrationService(
   }
 
   private fun bookingCancelledV1JsonToV2Json(domainEventEntity: DomainEventEntity): String = modifyEventDetails(domainEventEntity) { eventDetailsNode ->
-    val cancellationRecordedAt = jsonMapper.convertValue(domainEventEntity.occurredAt, StringNode::class.java)
+    val cancellationRecordedAt = objectMapper.convertValue(domainEventEntity.occurredAt, StringNode::class.java)
     eventDetailsNode.set("cancellationRecordedAt", cancellationRecordedAt)
 
     val cancelledAt =
-      jsonMapper.convertValue(eventDetailsNode["cancelledAt"], java.time.Instant::class.java)
-    val cancelledAtDate = jsonMapper.convertValue(cancelledAt.toLocalDate(), StringNode::class.java)
+      objectMapper.convertValue(eventDetailsNode["cancelledAt"], java.time.Instant::class.java)
+    val cancelledAtDate = objectMapper.convertValue(cancelledAt.toLocalDate(), StringNode::class.java)
     eventDetailsNode.set("cancelledAtDate", cancelledAtDate)
   }
 
@@ -57,7 +57,7 @@ class Cas1DomainEventMigrationService(
        */
     eventDetailsNode.set(
       "recordedBy",
-      jsonMapper.convertValue(
+      objectMapper.convertValue(
         StaffMember(
           staffCode = triggeredByUser?.deliusStaffCode ?: "unknown",
           forenames = triggeredByUser?.name ?: "unknown",
@@ -72,9 +72,9 @@ class Cas1DomainEventMigrationService(
     domainEventEntity: DomainEventEntity,
     mutator: (eventDetailsNode: ObjectNode) -> Unit,
   ): String {
-    val dataModel: JsonNode = jsonMapper.readTree(domainEventEntity.data)
+    val dataModel: JsonNode = objectMapper.readTree(domainEventEntity.data)
     val eventDetails = dataModel["eventDetails"] as ObjectNode
     mutator(eventDetails)
-    return jsonMapper.writeValueAsString(dataModel)
+    return objectMapper.writeValueAsString(dataModel)
   }
 }

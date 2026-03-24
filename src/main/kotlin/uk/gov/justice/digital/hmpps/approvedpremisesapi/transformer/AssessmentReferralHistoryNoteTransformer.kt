@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 
 @Component
 class AssessmentReferralHistoryNoteTransformer(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
 ) {
 
   fun transformJpaToApi(jpa: AssessmentReferralHistoryNoteEntity): ReferralHistoryNote = when (jpa) {
@@ -54,7 +54,7 @@ class AssessmentReferralHistoryNoteTransformer(
   fun transformToReferralHistoryDomainEventNote(domainEventEntity: DomainEventEntity, user: UserEntity) = ReferralHistoryDomainEventNote(
     id = domainEventEntity.id,
     createdAt = domainEventEntity.createdAt.toInstant(),
-    messageDetails = ReferralHistoryNoteMessageDetails(domainEvent = jsonMapper.readTree(domainEventEntity.data)),
+    messageDetails = ReferralHistoryNoteMessageDetails(domainEvent = objectMapper.readTree(domainEventEntity.data)),
     createdByUserName = user.name,
     type = "domainEvent",
   )

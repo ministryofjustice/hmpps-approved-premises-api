@@ -119,7 +119,7 @@ class ProfileTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .json(
-            jsonMapper.writeValueAsString(
+            objectMapper.writeValueAsString(
               ProfileResponse(
                 deliusUsername = deliusUsername,
                 loadError = null,
@@ -225,7 +225,7 @@ class ProfileTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .json(
-          jsonMapper.writeValueAsString(
+          objectMapper.writeValueAsString(
             ProfileResponse(
               deliusUsername = deliusUsername,
               loadError = null,
@@ -470,7 +470,7 @@ class ProfileTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .json(
-          jsonMapper.writeValueAsString(
+          objectMapper.writeValueAsString(
             ProfileResponse(
               deliusUsername = deliusUsername,
               loadError = null,
@@ -547,7 +547,7 @@ class ProfileTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .json(
-          jsonMapper.writeValueAsString(
+          objectMapper.writeValueAsString(
             ProfileResponse(
               deliusUsername = "nonStaffUser",
               loadError = ProfileResponse.LoadError.staffRecordNotFound,

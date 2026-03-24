@@ -40,7 +40,7 @@ class Cas3ApplicationsController(
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
   private val cas3ApplicationTransformer: Cas3ApplicationTransformer,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
 ) {
 
   @GetMapping("/applications")
@@ -123,7 +123,7 @@ class Cas3ApplicationsController(
   ): ResponseEntity<Cas3Application> {
     val user = userService.getUserForRequest()
 
-    val serializedData = jsonMapper.writeValueAsString(body.data)
+    val serializedData = objectMapper.writeValueAsString(body.data)
 
     val applicationResult = cas3ApplicationService.updateApplication(
       applicationId = applicationId,

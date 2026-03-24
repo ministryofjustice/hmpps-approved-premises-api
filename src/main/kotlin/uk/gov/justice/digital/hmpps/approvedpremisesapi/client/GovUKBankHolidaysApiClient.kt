@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class GovUKBankHolidaysApiClient(
   @Qualifier("govUKBankHolidaysApiWebClient") webClientConfig: WebClientConfig,
-  jsonMapper: JsonMapper,
+  objectMapper: JsonMapper,
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   @Cacheable(value = ["ukBankHolidaysCache"], unless = IS_NOT_SUCCESSFUL)

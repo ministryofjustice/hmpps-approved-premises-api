@@ -673,7 +673,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBodyPage1 =
-              jsonMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+              objectMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             assertThat(responseBodyPage1).size().isEqualTo(10)
 
@@ -695,7 +695,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBodyPage2 =
-              jsonMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+              objectMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             assertThat(responseBodyPage2).size().isEqualTo(2)
           }
@@ -1232,7 +1232,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = jsonMapper.readValue(
+            val responseBody = objectMapper.readValue(
               rawResponseBody,
               Cas2Application::class.java,
             )
@@ -1275,7 +1275,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = jsonMapper.readValue(
+            val responseBody = objectMapper.readValue(
               rawResponseBody,
               Cas2Application::class.java,
             )
@@ -1314,7 +1314,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = jsonMapper.readValue(
+            val responseBody = objectMapper.readValue(
               rawResponseBody,
               Cas2Application::class.java,
             )
@@ -1362,7 +1362,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 .responseBody
                 .blockFirst()
 
-              val responseBody = jsonMapper.readValue(
+              val responseBody = objectMapper.readValue(
                 rawResponseBody,
                 Cas2Application::class.java,
               )
@@ -1485,7 +1485,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 .responseBody
                 .blockFirst()
 
-              val responseBody = jsonMapper.readValue(
+              val responseBody = objectMapper.readValue(
                 rawResponseBody,
                 Cas2Application::class.java,
               )
@@ -1742,7 +1742,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = jsonMapper.readValue(resultBody, Cas2Application::class.java)
+            val result = objectMapper.readValue(resultBody, Cas2Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
             assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
@@ -1782,7 +1782,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = jsonMapper.readValue(resultBody, Cas2Application::class.java)
+            val result = objectMapper.readValue(resultBody, Cas2Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
@@ -1820,7 +1820,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val result = jsonMapper.readValue(resultBody, Cas2Application::class.java)
+            val result = objectMapper.readValue(resultBody, Cas2Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
@@ -1831,9 +1831,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return jsonMapper.readTree(serializable)
+    if (serializable is String) return objectMapper.readTree(serializable)
 
-    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
+    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 
   private fun produceAndPersistBasicApplication(

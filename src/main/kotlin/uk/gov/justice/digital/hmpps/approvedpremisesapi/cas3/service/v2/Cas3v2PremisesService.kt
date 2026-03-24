@@ -35,7 +35,7 @@ class Cas3v2PremisesService(
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas3PremisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
   private val cas3UserAccessService: Cas3UserAccessService,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
 ) {
 
   companion object {
@@ -204,7 +204,7 @@ class Cas3v2PremisesService(
       .mapNotNull { domainEventEntity ->
         when (domainEventEntity.type) {
           DomainEventType.CAS3_PREMISES_UNARCHIVED -> {
-            val newStartDate = jsonMapper.readValue(domainEventEntity.data, CAS3PremisesUnarchiveEvent::class.java).eventDetails.newStartDate
+            val newStartDate = objectMapper.readValue(domainEventEntity.data, CAS3PremisesUnarchiveEvent::class.java).eventDetails.newStartDate
             if (newStartDate <= LocalDate.now()) {
               Cas3PremisesArchiveAction(
                 status = Cas3PremisesStatus.online,
@@ -217,7 +217,7 @@ class Cas3v2PremisesService(
 
           DomainEventType.CAS3_PREMISES_ARCHIVED -> {
             val endDate =
-              jsonMapper.readValue(domainEventEntity.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate
+              objectMapper.readValue(domainEventEntity.data, CAS3PremisesArchiveEvent::class.java).eventDetails.endDate
             if (endDate <= LocalDate.now()) {
               Cas3PremisesArchiveAction(
                 status = Cas3PremisesStatus.archived,

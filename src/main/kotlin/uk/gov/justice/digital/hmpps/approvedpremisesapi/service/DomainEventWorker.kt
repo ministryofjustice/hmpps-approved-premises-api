@@ -20,7 +20,7 @@ interface DomainEventWorkerInterface {
 @Primary
 class ConfiguredDomainEventWorker(
   private val hmppsQueueService: HmppsQueueService,
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
 ) : DomainEventWorkerInterface {
   val domainTopic by lazy {
     hmppsQueueService.findByTopicId("domainevents")
@@ -34,7 +34,7 @@ class ConfiguredDomainEventWorker(
 
 class SyncDomainEventWorker(
   val domainTopic: HmppsTopic,
-  val jsonMapper: JsonMapper,
+  val objectMapper: JsonMapper,
 ) : DomainEventWorkerInterface {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -42,7 +42,7 @@ class SyncDomainEventWorker(
     val publishRequest =
       PublishRequest.builder()
         .topicArn(domainTopic.arn)
-        .message(jsonMapper.writeValueAsString(snsEvent))
+        .message(objectMapper.writeValueAsString(snsEvent))
         .messageAttributes(
           mapOf(
             "eventType" to MessageAttributeValue.builder().dataType("String").stringValue(snsEvent.eventType).build(),

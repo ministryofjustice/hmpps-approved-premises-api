@@ -506,11 +506,11 @@ class Cas3v2ArchiveServiceTest {
       )
 
       val premisesDomainEvent = DomainEventEntityFactory()
-        .withData(jsonMapper.writeValueAsString(premisesUnarchiveEvent))
+        .withData(objectMapper.writeValueAsString(premisesUnarchiveEvent))
         .produce()
 
       val bedspaceDomainEvent = DomainEventEntityFactory()
-        .withData(jsonMapper.writeValueAsString(bedspaceUnarchiveEvent))
+        .withData(objectMapper.writeValueAsString(bedspaceUnarchiveEvent))
         .produce()
 
       every { cas3PremisesRepositoryMock.findByIdOrNull(premises.id) } returns premises
@@ -2049,7 +2049,7 @@ class Cas3v2ArchiveServiceTest {
     data.eventDetails.premisesId,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    jsonMapper.writeValueAsString(data),
+    objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_ARCHIVED,
     data.eventDetails.transactionId!!,
   )
@@ -2104,7 +2104,7 @@ class Cas3v2ArchiveServiceTest {
   private fun createPremisesArchiveDomainEvent(data: CAS3PremisesArchiveEvent) = createDomainEvent(
     id = data.id,
     occurredAt = data.timestamp.atOffset(ZoneOffset.UTC),
-    data = jsonMapper.writeValueAsString(data),
+    data = objectMapper.writeValueAsString(data),
     type = CAS3_PREMISES_ARCHIVED,
     premisesId = data.eventDetails.premisesId,
     transactionId = data.eventDetails.transactionId!!,
@@ -2139,7 +2139,7 @@ class Cas3v2ArchiveServiceTest {
   private fun createPremisesUnarchiveDomainEvent(data: CAS3PremisesUnarchiveEvent) = createDomainEvent(
     id = data.id,
     occurredAt = data.timestamp.atOffset(ZoneOffset.UTC),
-    data = jsonMapper.writeValueAsString(data),
+    data = objectMapper.writeValueAsString(data),
     type = CAS3_PREMISES_UNARCHIVED,
     premisesId = data.eventDetails.premisesId,
     transactionId = data.eventDetails.transactionId!!,
@@ -2178,7 +2178,7 @@ class Cas3v2ArchiveServiceTest {
     data.eventDetails.premisesId,
     data.eventDetails.bedspaceId,
     data.timestamp.atOffset(ZoneOffset.UTC),
-    jsonMapper.writeValueAsString(data),
+    objectMapper.writeValueAsString(data),
     CAS3_BEDSPACE_UNARCHIVED,
     data.eventDetails.transactionId!!,
   )

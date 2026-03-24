@@ -19,7 +19,7 @@ import java.util.UUID
 
 @Component()
 class Cas2ApplicationsTransformer(
-  private val jsonMapper: JsonMapper,
+  private val objectMapper: JsonMapper,
   private val personTransformer: PersonTransformer,
   private val nomisUserTransformer: NomisUserTransformer,
   private val statusUpdateTransformer: StatusUpdateTransformer,
@@ -38,8 +38,8 @@ class Cas2ApplicationsTransformer(
       createdBy = nomisUserTransformer.transformJpaToApi(jpa),
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
-      data = if (jpa.data != null) jsonMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
+      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       status = getStatus(jpa),
       type = "CAS2",
       telephoneNumber = jpa.telephoneNumber,
