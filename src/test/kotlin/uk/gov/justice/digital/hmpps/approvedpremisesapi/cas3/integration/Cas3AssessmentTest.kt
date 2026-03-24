@@ -1125,7 +1125,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-          assertThat(persistedAssessment.document).isEqualTo("""{"document": "value"}""")
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.completedAt).isNull()
 
@@ -1184,7 +1184,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
-          assertThat(persistedAssessment.document).isEqualTo("""{"document": "value"}""")
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.completedAt).isNull()
           assertThat(persistedAssessment.referralRejectionReason).isEqualTo(referralRejectionReason)
@@ -1237,7 +1237,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
-          assertThat(persistedAssessment.document).isEqualTo("""{"document": "value"}""")
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.completedAt).isNull()
           assertThat(persistedAssessment.referralRejectionReason).isEqualTo(referralRejectionReason2)
