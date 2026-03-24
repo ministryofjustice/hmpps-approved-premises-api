@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.DiscriminatorColumn
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
@@ -16,7 +15,8 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.Type
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -216,10 +216,10 @@ abstract class AssessmentEntity(
   @JoinColumn(name = "application_id")
   val application: ApplicationEntity,
 
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   var data: String?,
 
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   var document: String?,
 
   @ManyToOne
@@ -340,7 +340,7 @@ class TemporaryAccommodationAssessmentEntity(
   clarificationNotes: MutableList<AssessmentClarificationNoteEntity>,
   referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
   var completedAt: OffsetDateTime?,
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   var summaryData: String,
   isWithdrawn: Boolean,
   @ManyToOne

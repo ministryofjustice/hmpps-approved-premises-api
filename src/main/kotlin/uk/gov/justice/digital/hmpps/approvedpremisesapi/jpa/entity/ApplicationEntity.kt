@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Convert
 import jakarta.persistence.DiscriminatorColumn
 import jakarta.persistence.DiscriminatorValue
@@ -20,7 +19,8 @@ import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.Type
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import org.springframework.data.domain.Limit
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -309,10 +309,10 @@ abstract class ApplicationEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: UserEntity,
 
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   var data: String?,
 
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   var document: String?,
 
   val createdAt: OffsetDateTime,
@@ -358,7 +358,7 @@ class ApprovedPremisesApplicationEntity(
   val eventNumber: String,
   val offenceId: String,
   nomsNumber: String?,
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   @Convert(disableConversion = true)
   val riskRatings: PersonRisks?,
   @OneToMany(mappedBy = "application")
@@ -485,7 +485,7 @@ class TemporaryAccommodationApplicationEntity(
   val convictionId: Long,
   val eventNumber: String,
   val offenceId: String,
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   @Convert(disableConversion = true)
   val riskRatings: PersonRisks?,
   @ManyToOne
