@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransfo
 
 @Component
 class Cas3ApplicationTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
 ) {
@@ -31,8 +31,8 @@ class Cas3ApplicationTransformer(
       createdAt = applicationEntity.createdAt.toInstant(),
       submittedAt = applicationEntity.submittedAt?.toInstant(),
       arrivalDate = applicationEntity.arrivalDate?.toInstant(),
-      data = if (applicationEntity.data != null) objectMapper.readTree(applicationEntity.data) else null,
-      document = if (applicationEntity.document != null) objectMapper.readTree(applicationEntity.document) else null,
+      data = if (applicationEntity.data != null) jsonMapper.readTree(applicationEntity.data) else null,
+      document = if (applicationEntity.document != null) jsonMapper.readTree(applicationEntity.document) else null,
       risks = if (applicationEntity.riskRatings != null) {
         risksTransformer.transformDomainToApi(
           applicationEntity.riskRatings!!,
@@ -53,7 +53,7 @@ class Cas3ApplicationTransformer(
     personInfo: PersonInfoResult,
   ): Cas3ApplicationSummary {
     val riskRatings =
-      if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
+      if (domain.getRiskRatings() != null) jsonMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
 
     return Cas3ApplicationSummary(
       id = domain.getId(),

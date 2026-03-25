@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BaseHMPPSClient(
   private val webClientConfig: WebClientConfig,
-  internal val objectMapper: ObjectMapper,
+  internal val jsonMapper: ObjectMapper,
   private val webClientCache: WebClientCache,
 ) {
 
@@ -84,7 +84,7 @@ abstract class BaseHMPPSClient(
         )
         .block()!!
 
-      val deserialized = objectMapper.readValue(result.body, typeReference)
+      val deserialized = jsonMapper.readValue(result.body, typeReference)
 
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
         webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, result)

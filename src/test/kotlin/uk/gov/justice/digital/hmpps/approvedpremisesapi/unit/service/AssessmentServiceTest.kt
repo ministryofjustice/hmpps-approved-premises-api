@@ -53,7 +53,7 @@ class AssessmentServiceTest {
   private val userServiceMock = mockk<UserService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
-  private val objectMapperMock = spyk<ObjectMapper>()
+  private val jsonMapperMock = spyk<ObjectMapper>()
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val cas1AssessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
   private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
@@ -65,7 +65,7 @@ class AssessmentServiceTest {
     userServiceMock,
     assessmentRepositoryMock,
     assessmentReferralHistoryNoteRepositoryMock,
-    objectMapperMock,
+    jsonMapperMock,
     cas1TaskDeadlineServiceMock,
     cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,

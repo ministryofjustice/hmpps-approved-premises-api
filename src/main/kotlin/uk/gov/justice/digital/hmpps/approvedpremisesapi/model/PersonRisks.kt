@@ -43,16 +43,16 @@ data class RiskTier(
 
 @Converter(autoApply = true)
 class PersonRisksConverter : AttributeConverter<PersonRisks, String?> {
-  private val objectMapper = jacksonObjectMapper()
+  private val jsonMapper = jacksonObjectMapper()
 
   override fun convertToDatabaseColumn(domainForm: PersonRisks?): String? = try {
-    objectMapper.writeValueAsString(domainForm)
+    jsonMapper.writeValueAsString(domainForm)
   } catch (exception: Exception) {
     throw RuntimeException("Unable to serialize PersonRisks to JSON string for database", exception)
   }
 
   override fun convertToEntityAttribute(dbData: String?): PersonRisks? = try {
-    objectMapper.readValue(dbData, PersonRisks::class.java)
+    jsonMapper.readValue(dbData, PersonRisks::class.java)
   } catch (exception: Exception) {
     throw RuntimeException("Unable to deserialize PersonRisks from JSON string", exception)
   }

@@ -78,24 +78,24 @@ import java.util.UUID
 class Cas1DomainEventServiceTest {
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
   private val domainEventWorkerMock = mockk<ConfiguredDomainEventWorker>()
-  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
   private val userService = mockk<UserService>()
   private val user = UserEntityFactory().withDefaultProbationRegion().produce()
   private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()
   private val sentryService = mockk<SentryService>()
-  private val domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
+  private val domainEventsFactory = Cas1DomainEventsFactory(jsonMapper)
 
   private val domainEventService = buildService(emitDomainEventsEnabled = true)
   private val domainEventServiceEmitDisabled = buildService(emitDomainEventsEnabled = false)
 
   private fun buildService(emitDomainEventsEnabled: Boolean) = Cas1DomainEventService(
-    objectMapper = objectMapper,
+    jsonMapper = jsonMapper,
     domainEventRepository = domainEventRepositoryMock,
     domainEventWorker = domainEventWorkerMock,
     userService = userService,
     emitDomainEventsEnabled = emitDomainEventsEnabled,
     mockDomainEventUrlConfig,
-    Cas1DomainEventMigrationService(objectMapper, userService),
+    Cas1DomainEventMigrationService(jsonMapper, userService),
     sentryService,
   )
 

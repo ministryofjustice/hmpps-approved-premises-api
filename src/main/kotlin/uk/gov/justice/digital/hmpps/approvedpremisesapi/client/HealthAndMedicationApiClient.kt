@@ -9,9 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class HealthAndMedicationApiClient(
   @Qualifier("healthAndMedicationApiWebClient") val webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: ObjectMapper,
   weClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, weClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, weClientCache) {
 
   fun getDietAndAllergyDetails(prisonerNumber: String) = getRequest<DietAndAllergyResponse> {
     path = "/prisoners/$prisonerNumber"

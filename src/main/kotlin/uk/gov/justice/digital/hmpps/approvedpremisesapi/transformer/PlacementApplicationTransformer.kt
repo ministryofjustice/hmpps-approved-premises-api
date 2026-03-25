@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 
 @Component
 class PlacementApplicationTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
 ) {
   fun transformJpaToApi(jpa: PlacementApplicationEntity): PlacementApplication {
     val assessment = jpa.application.getLatestAssessment()!!
@@ -28,8 +28,8 @@ class PlacementApplicationTransformer(
       assessmentCompletedAt = assessment.submittedAt!!.toInstant(),
       createdByUserId = jpa.createdByUser.id,
       createdAt = jpa.createdAt.toInstant(),
-      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      data = if (jpa.data != null) jsonMapper.readTree(jpa.data) else null,
+      document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
       submittedAt = jpa.submittedAt?.toInstant(),
       canBeWithdrawn = jpa.isInWithdrawableState(),
       isWithdrawn = jpa.isWithdrawn,

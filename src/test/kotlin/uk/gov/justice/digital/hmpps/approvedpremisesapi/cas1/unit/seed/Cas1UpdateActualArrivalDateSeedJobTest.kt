@@ -36,7 +36,7 @@ class Cas1UpdateActualArrivalDateSeedJobTest {
   private lateinit var domainEventService: DomainEventRepository
 
   @MockK
-  private lateinit var objectMapper: ObjectMapper
+  private lateinit var jsonMapper: ObjectMapper
 
   @InjectMockKs
   private lateinit var seedJob: Cas1UpdateActualArrivalDateSeedJob

@@ -27,7 +27,7 @@ import java.util.UUID
 class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
   private val domainEventRepository: DomainEventRepository,
   private val migrationLogger: MigrationLogger,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
 ) : MigrationJob() {
   override val shouldRunInTransaction = true
 
@@ -51,7 +51,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
         when (domainEvent.type) {
           CAS3_PREMISES_ARCHIVED -> {
             try {
-              val domainEventData = objectMapper.readValue(domainEvent.data, CAS3PremisesArchiveEventV1::class.java)
+              val domainEventData = jsonMapper.readValue(domainEvent.data, CAS3PremisesArchiveEventV1::class.java)
 
               val updatedDomainEvent = CAS3PremisesArchiveEvent(
                 id = domainEventData.id,
@@ -66,12 +66,12 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
               )
               domainEventRepository.updateData(
                 domainEvent.id,
-                objectMapper.writeValueAsString(updatedDomainEvent),
+                jsonMapper.writeValueAsString(updatedDomainEvent),
               )
             } catch (exception: Exception) {
               migrationLogger.error("Domain events with Id $domainEvent.id is not v1", exception)
 
-              val domainEventData = objectMapper.readValue(domainEvent.data, CAS3PremisesArchiveEvent::class.java)
+              val domainEventData = jsonMapper.readValue(domainEvent.data, CAS3PremisesArchiveEvent::class.java)
 
               val updatedDomainEvent = CAS3PremisesArchiveEvent(
                 id = domainEventData.id,
@@ -86,13 +86,13 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
               )
               domainEventRepository.updateData(
                 domainEvent.id,
-                objectMapper.writeValueAsString(updatedDomainEvent),
+                jsonMapper.writeValueAsString(updatedDomainEvent),
               )
             }
           }
           CAS3_PREMISES_UNARCHIVED -> {
             try {
-              val domainEventData = objectMapper.readValue(domainEvent.data, CAS3PremisesUnarchiveEventV1::class.java)
+              val domainEventData = jsonMapper.readValue(domainEvent.data, CAS3PremisesUnarchiveEventV1::class.java)
 
               val updatedDomainEvent = CAS3PremisesUnarchiveEvent(
                 id = domainEventData.id,
@@ -109,12 +109,12 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
               )
               domainEventRepository.updateData(
                 domainEvent.id,
-                objectMapper.writeValueAsString(updatedDomainEvent),
+                jsonMapper.writeValueAsString(updatedDomainEvent),
               )
             } catch (exception: Exception) {
               migrationLogger.error("Domain events with Id $domainEvent.id is not v1", exception)
 
-              val domainEventData = objectMapper.readValue(domainEvent.data, CAS3PremisesUnarchiveEvent::class.java)
+              val domainEventData = jsonMapper.readValue(domainEvent.data, CAS3PremisesUnarchiveEvent::class.java)
 
               val updatedDomainEvent = CAS3PremisesUnarchiveEvent(
                 id = domainEventData.id,
@@ -131,13 +131,13 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
               )
               domainEventRepository.updateData(
                 domainEvent.id,
-                objectMapper.writeValueAsString(updatedDomainEvent),
+                jsonMapper.writeValueAsString(updatedDomainEvent),
               )
             }
           }
           CAS3_BEDSPACE_ARCHIVED -> {
             try {
-              val domainEventData = objectMapper.readValue(domainEvent.data, CAS3BedspaceArchiveEventV1::class.java)
+              val domainEventData = jsonMapper.readValue(domainEvent.data, CAS3BedspaceArchiveEventV1::class.java)
               val updatedDomainEvent = CAS3BedspaceArchiveEvent(
                 id = domainEventData.id,
                 timestamp = domainEventData.timestamp,
@@ -153,12 +153,12 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
               )
               domainEventRepository.updateData(
                 domainEvent.id,
-                objectMapper.writeValueAsString(updatedDomainEvent),
+                jsonMapper.writeValueAsString(updatedDomainEvent),
               )
             } catch (exception: Exception) {
               migrationLogger.error("Domain events with Id $domainEvent.id is not v1", exception)
 
-              val domainEventData = objectMapper.readValue(domainEvent.data, CAS3BedspaceArchiveEvent::class.java)
+              val domainEventData = jsonMapper.readValue(domainEvent.data, CAS3BedspaceArchiveEvent::class.java)
               val updatedDomainEvent = CAS3BedspaceArchiveEvent(
                 id = domainEventData.id,
                 timestamp = domainEventData.timestamp,
@@ -174,13 +174,13 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
               )
               domainEventRepository.updateData(
                 domainEvent.id,
-                objectMapper.writeValueAsString(updatedDomainEvent),
+                jsonMapper.writeValueAsString(updatedDomainEvent),
               )
             }
           }
           CAS3_BEDSPACE_UNARCHIVED -> {
             try {
-              val domainEventData = objectMapper.readValue(domainEvent.data, CAS3BedspaceUnarchiveEventV1::class.java)
+              val domainEventData = jsonMapper.readValue(domainEvent.data, CAS3BedspaceUnarchiveEventV1::class.java)
               val updatedDomainEvent = CAS3BedspaceUnarchiveEvent(
                 id = domainEventData.id,
                 timestamp = domainEventData.timestamp,
@@ -197,11 +197,11 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
               )
               domainEventRepository.updateData(
                 domainEvent.id,
-                objectMapper.writeValueAsString(updatedDomainEvent),
+                jsonMapper.writeValueAsString(updatedDomainEvent),
               )
             } catch (exception: Exception) {
               migrationLogger.error("Domain events with Id $domainEvent.id is not v1", exception)
-              val domainEventData = objectMapper.readValue(domainEvent.data, CAS3BedspaceUnarchiveEvent::class.java)
+              val domainEventData = jsonMapper.readValue(domainEvent.data, CAS3BedspaceUnarchiveEvent::class.java)
 
               val updatedDomainEvent = CAS3BedspaceUnarchiveEvent(
                 id = domainEventData.id,
@@ -219,7 +219,7 @@ class Cas3UpdateArchiveUnarchiveDomainEventDetailsJob(
               )
               domainEventRepository.updateData(
                 domainEvent.id,
-                objectMapper.writeValueAsString(updatedDomainEvent),
+                jsonMapper.writeValueAsString(updatedDomainEvent),
               )
             }
           }

@@ -9,9 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class HMPPSTierApiClient(
   @Qualifier("hmppsTierApiWebClient") webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: ObjectMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   fun getTier(crn: String) = getRequest<Tier> {
     path = "/crn/$crn/tier"
   }

@@ -8,9 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class ManagePomCasesClient(
   @Qualifier("managePomCasesWebClient") webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: ObjectMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
 
   fun getPomAllocation(detailUrl: String) = getRequest<PomAllocation> {
     path = detailUrl

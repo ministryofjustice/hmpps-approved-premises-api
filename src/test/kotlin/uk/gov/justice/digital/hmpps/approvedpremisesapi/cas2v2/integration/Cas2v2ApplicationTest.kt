@@ -289,7 +289,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
         val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
@@ -408,7 +408,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
         // check transformers were able to return all fields
         Assertions.assertThat(responseBody).anyMatch {
@@ -491,7 +491,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               .blockFirst()
 
             val responseBody =
-              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+              jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
             Assertions.assertThat(responseBody.count()).isEqualTo(2)
             Assertions.assertThat(responseBody).anyMatch {
@@ -549,7 +549,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           .blockFirst()
 
         val responseBodyPage1 =
-          objectMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
         Assertions.assertThat(responseBodyPage1).size().isEqualTo(10)
 
@@ -571,7 +571,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           .blockFirst()
 
         val responseBodyPage2 =
-          objectMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
         Assertions.assertThat(responseBodyPage2).size().isEqualTo(2)
       }
@@ -799,7 +799,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
       Assertions.assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
@@ -823,7 +823,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
       Assertions.assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
@@ -850,7 +850,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds)
@@ -873,7 +873,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(unSubmittedIds)
@@ -1066,7 +1066,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
       val uuids = responseBody.map { it.id }.toSet()
       return uuids
     }
@@ -1137,7 +1137,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2v2Application::class.java,
             )
@@ -1194,7 +1194,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2v2Application::class.java,
             )
@@ -1296,7 +1296,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .responseBody
                 .blockFirst()
 
-              val responseBody = objectMapper.readValue(
+              val responseBody = jsonMapper.readValue(
                 rawResponseBody,
                 Cas2v2Application::class.java,
               )
@@ -1576,7 +1576,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           .responseBody
           .blockFirst()
 
-        val result = objectMapper.readValue(resultBody, Cas2v2Application::class.java)
+        val result = jsonMapper.readValue(resultBody, Cas2v2Application::class.java)
 
         Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
       }
@@ -1665,7 +1665,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
         Assertions.assertThat(responseBody.size).isEqualTo(6)
         Assertions.assertThat(
@@ -1687,7 +1687,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(
+          val responseBody = jsonMapper.readValue(
             rawResponseBody,
             Cas2v2Application::class.java,
           )
@@ -1721,7 +1721,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             .responseBody
             .blockFirst()
 
-          val responseBody = objectMapper.readValue(
+          val responseBody = jsonMapper.readValue(
             rawResponseBody,
             Application::class.java,
           )
@@ -1738,9 +1738,9 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
+    if (serializable is String) return jsonMapper.readTree(serializable)
 
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
   }
 
   private fun produceAndPersistBasicApplication(

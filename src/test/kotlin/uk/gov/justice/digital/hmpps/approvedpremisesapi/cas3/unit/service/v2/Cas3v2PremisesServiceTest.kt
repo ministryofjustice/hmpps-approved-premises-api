@@ -60,7 +60,7 @@ class Cas3v2PremisesServiceTest {
   lateinit var cas3UserAccessService: Cas3UserAccessService
 
   @MockK
-  lateinit var objectMapper: ObjectMapper
+  lateinit var jsonMapper: ObjectMapper
 
   @InjectMockKs
   lateinit var cas3v2PremisesService: Cas3v2PremisesService

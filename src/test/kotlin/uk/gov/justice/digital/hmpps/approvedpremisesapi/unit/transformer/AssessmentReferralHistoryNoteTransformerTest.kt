@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 
 class AssessmentReferralHistoryNoteTransformerTest {
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
@@ -54,7 +54,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withCreatedBy(user)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note)
+    val result = AssessmentReferralHistoryNoteTransformer(jsonMapper).transformJpaToApi(note)
 
     assertThat(result is ReferralHistoryUserNote).isTrue
     result as ReferralHistoryUserNote
@@ -91,7 +91,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withType(noteType)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note)
+    val result = AssessmentReferralHistoryNoteTransformer(jsonMapper).transformJpaToApi(note)
 
     assertThat(result is ReferralHistorySystemNote).isTrue
     result as ReferralHistorySystemNote
@@ -144,7 +144,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withType(ReferralHistorySystemNoteType.REJECTED)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note, assessment, true)
+    val result = AssessmentReferralHistoryNoteTransformer(jsonMapper).transformJpaToApi(note, assessment, true)
 
     assertThat(result is ReferralHistorySystemNote).isTrue
     result as ReferralHistorySystemNote
@@ -194,7 +194,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withType(noteType)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note, assessment, true)
+    val result = AssessmentReferralHistoryNoteTransformer(jsonMapper).transformJpaToApi(note, assessment, true)
 
     assertThat(result is ReferralHistorySystemNote).isTrue
     result as ReferralHistorySystemNote

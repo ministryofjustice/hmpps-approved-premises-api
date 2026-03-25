@@ -52,7 +52,7 @@ class Cas1ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .json(objectMapper.writeValueAsString(documentTransformer.transformToApi(documents)))
+            .json(jsonMapper.writeValueAsString(documentTransformer.transformToApi(documents)))
         }
       }
     }

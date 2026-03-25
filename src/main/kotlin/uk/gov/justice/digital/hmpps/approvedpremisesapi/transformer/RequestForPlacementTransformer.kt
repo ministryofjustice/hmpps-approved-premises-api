@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 
 @Component
 class RequestForPlacementTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
 ) {
   fun transformPlacementApplicationEntityToApi(
     placementApplicationEntity: PlacementApplicationEntity,
@@ -44,7 +44,7 @@ class RequestForPlacementTransformer(
     },
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
     requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
-    document = placementApplicationEntity.document?.let(objectMapper::readTree),
+    document = placementApplicationEntity.document?.let(jsonMapper::readTree),
     canBeDirectlyWithdrawn = canBeDirectlyWithdrawn,
     withdrawalReason = placementApplicationEntity.withdrawalReason?.apiValue,
     status = placementApplicationEntity.deriveStatus(),

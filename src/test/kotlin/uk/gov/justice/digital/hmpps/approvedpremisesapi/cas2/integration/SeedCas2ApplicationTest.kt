@@ -244,9 +244,9 @@ class SeedCas2ApplicationTest : SeedTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
+    if (serializable is String) return jsonMapper.readTree(serializable)
 
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
   }
 }
 

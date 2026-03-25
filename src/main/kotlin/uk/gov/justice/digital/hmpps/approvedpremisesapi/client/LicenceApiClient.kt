@@ -10,9 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class LicenceApiClient(
   @Qualifier("licenceApiWebClient") webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: ObjectMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
 
   fun getLicenceDetails(licenceId: Long) = getRequest<Licence> {
     path = "/public/licences/id/$licenceId"

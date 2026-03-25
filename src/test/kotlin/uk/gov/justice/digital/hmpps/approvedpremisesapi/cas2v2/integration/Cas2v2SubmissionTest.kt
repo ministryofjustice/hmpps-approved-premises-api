@@ -250,7 +250,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
               .blockFirst()
 
             val responseBody =
-              objectMapper.readValue(
+              jsonMapper.readValue(
                 rawResponseBody,
                 object : TypeReference<List<Cas2v2SubmittedApplicationSummary>>() {},
               )
@@ -444,7 +444,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2v2SubmittedApplication::class.java,
             )
@@ -625,7 +625,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
+            val responseBody = jsonMapper.readValue(
               rawResponseBody,
               Cas2v2SubmittedApplication::class.java,
             )
@@ -771,7 +771,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
                   .responseBody
                   .blockFirst()
 
-                val responseBody = objectMapper.readValue(
+                val responseBody = jsonMapper.readValue(
                   rawResponseBody,
                   Cas2v2SubmittedApplication::class.java,
                 )
@@ -956,8 +956,8 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
-    if (serializable is String) return objectMapper.readTree(serializable)
+    if (serializable is String) return jsonMapper.readTree(serializable)
 
-    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
+    return jsonMapper.readTree(jsonMapper.writeValueAsString(serializable))
   }
 }

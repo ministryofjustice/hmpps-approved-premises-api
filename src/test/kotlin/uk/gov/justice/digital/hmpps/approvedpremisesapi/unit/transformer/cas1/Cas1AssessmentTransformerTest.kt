@@ -72,7 +72,7 @@ class Cas1AssessmentTransformerTest {
   lateinit var approvedPremisesUser: ApprovedPremisesUser
 
   private val risksTransformer = RisksTransformer()
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
@@ -256,7 +256,7 @@ class Cas1AssessmentTransformerTest {
         id = UUID.randomUUID(),
         applicationId = UUID.randomUUID(),
         createdAt = Instant.now(),
-        riskRatings = objectMapper.writeValueAsString(personRisks),
+        riskRatings = jsonMapper.writeValueAsString(personRisks),
         arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).toInstant(),
         completed = false,
         decision = "ACCEPTED",

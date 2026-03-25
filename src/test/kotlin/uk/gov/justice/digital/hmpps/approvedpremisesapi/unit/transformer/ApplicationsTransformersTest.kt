@@ -63,14 +63,14 @@ class ApplicationsTransformersTest {
   private val mockCas1ApplicationUserDetailsTransformer = mockk<Cas1ApplicationUserDetailsTransformer>()
   private val mockCas1CruManagementAreaTransformer = mockk<Cas1CruManagementAreaTransformer>()
 
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
 
   private val applicationsTransformer = ApplicationsTransformer(
-    objectMapper,
+    jsonMapper,
     mockPersonTransformer,
     mockRisksTransformer,
     mockApAreaTransformer,
@@ -402,7 +402,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -449,7 +449,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -476,7 +476,7 @@ class ApplicationsTransformersTest {
   @Test
   fun `transformJpaToApiSummary transforms an in progress Temporary Accommodation application correctly`() {
     val application = object : DomainTemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -502,7 +502,7 @@ class ApplicationsTransformersTest {
   @Test
   fun `transformJpaToApiSummary transforms a submitted Temporary Accommodation application correctly`() {
     val application = object : DomainTemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -538,7 +538,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-01-19T00:00:00+00:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -583,7 +583,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-06-19T00:00:00+00:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -617,7 +617,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = null
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
@@ -653,7 +653,7 @@ class ApplicationsTransformersTest {
       override fun getIsEsapApplication() = true
       override fun getIsPipeApplication() = true
       override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
-      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
       override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
       override fun getCrn() = randomStringMultiCaseWithNumbers(6)
       override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")

@@ -377,7 +377,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalResults", totalResults.toLong())
             .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
             .expectBody()
-            .json(objectMapper.writeValueAsString(expectedPageResponse), true)
+            .json(jsonMapper.writeValueAsString(expectedPageResponse), true)
         }
       }
     }
@@ -590,7 +590,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
           .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
           .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
-          .json(objectMapper.writeValueAsString(expectedFirstPageResponse))
+          .json(jsonMapper.writeValueAsString(expectedFirstPageResponse))
 
         webTestClient.get()
           .uri("/cas3/v2/bookings/search?sortDirection=$sortDirection&sortField=${bookingSearchSort.value}&page=2")
@@ -604,7 +604,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
           .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
           .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
-          .json(objectMapper.writeValueAsString(expectedSecondPageResponse))
+          .json(jsonMapper.writeValueAsString(expectedSecondPageResponse))
       }
     }
   }
@@ -670,7 +670,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
         .expectHeader().valueEquals("X-Pagination-PageSize", 10)
         .expectBody()
-        .json(objectMapper.writeValueAsString(expectedResponse), true)
+        .json(jsonMapper.writeValueAsString(expectedResponse), true)
 
       // Assert bookings page 2
       mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, userEntity.deliusUsername, sortDirection, 5, 10)
@@ -697,7 +697,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
         .expectHeader().valueEquals("X-Pagination-PageSize", 10)
         .expectBody()
-        .json(objectMapper.writeValueAsString(expectedResponse), true)
+        .json(jsonMapper.writeValueAsString(expectedResponse), true)
     }
   }
 
@@ -762,7 +762,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
         .expectHeader().valueEquals("X-Pagination-PageSize", 10)
         .expectBody()
-        .json(objectMapper.writeValueAsString(expectedResponse), true)
+        .json(jsonMapper.writeValueAsString(expectedResponse), true)
 
       // Assert bookings page 2
       mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, userEntity.deliusUsername, sortDirection, 5, 10)
@@ -789,7 +789,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
         .expectHeader().valueEquals("X-Pagination-PageSize", 10)
         .expectBody()
-        .json(objectMapper.writeValueAsString(expectedResponse), true)
+        .json(jsonMapper.writeValueAsString(expectedResponse), true)
     }
   }
 
@@ -813,7 +813,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
           .expectHeader().valueEquals("X-Pagination-TotalResults", 10)
           .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse), true)
+          .json(jsonMapper.writeValueAsString(expectedResponse), true)
       }
     }
   }
@@ -883,7 +883,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
         .expectHeader().valueEquals("X-Pagination-PageSize", 10)
         .expectBody()
-        .json(objectMapper.writeValueAsString(expectedResponse), true)
+        .json(jsonMapper.writeValueAsString(expectedResponse), true)
 
       // Assert bookings page 2
       mockApDeliusContextCasesSummary(temporaryAccommodationApplications, offendersCrnAndName, userEntity.deliusUsername, sortDirection, 5, 10)
@@ -910,7 +910,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
         .expectHeader().valueEquals("X-Pagination-PageSize", 10)
         .expectBody()
-        .json(objectMapper.writeValueAsString(expectedResponse), true)
+        .json(jsonMapper.writeValueAsString(expectedResponse), true)
     }
   }
 
@@ -933,7 +933,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
           .expectHeader().valueEquals("X-Pagination-TotalResults", 0)
           .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
-          .json(objectMapper.writeValueAsString(expectedResponse), true)
+          .json(jsonMapper.writeValueAsString(expectedResponse), true)
       }
     }
   }
@@ -1182,7 +1182,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody()
-      .json(objectMapper.writeValueAsString(expectedResponse), jsonStrictMatch)
+      .json(jsonMapper.writeValueAsString(expectedResponse), jsonStrictMatch)
   }
 
   private fun mockApDeliusContextCasesSummary(

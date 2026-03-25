@@ -33,7 +33,7 @@ import java.util.UUID
 class Cas2ApplicationsController(
   private val applicationService: Cas2ApplicationService,
   private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
   private val offenderService: Cas2OffenderService,
   private val userService: Cas2UserService,
 ) {
@@ -89,7 +89,7 @@ class Cas2ApplicationsController(
   ): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
 
-    val serializedData = objectMapper.writeValueAsString(body.data)
+    val serializedData = jsonMapper.writeValueAsString(body.data)
 
     val applicationResult = applicationService.updateApplication(
       applicationId =

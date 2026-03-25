@@ -71,7 +71,7 @@ import kotlin.reflect.KClass
 @SuppressWarnings("TooManyFunctions")
 @Service
 class Cas1DomainEventService(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
   val domainEventWorker: ConfiguredDomainEventWorker,
   private val userService: UserService,
@@ -127,9 +127,9 @@ class Cas1DomainEventService(
       else -> entity.data
     }
 
-    val data = objectMapper.readValue<Cas1DomainEventEnvelope<T>>(
+    val data = jsonMapper.readValue<Cas1DomainEventEnvelope<T>>(
       dataJson,
-      objectMapper.typeFactory.constructParametricType(
+      jsonMapper.typeFactory.constructParametricType(
         Cas1DomainEventEnvelope::class.java,
         payloadType.java,
       ),
@@ -322,7 +322,7 @@ class Cas1DomainEventService(
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         cas3CancelledAt = null,
-        data = objectMapper.writeValueAsString(domainEvent.data),
+        data = jsonMapper.writeValueAsString(domainEvent.data),
         service = "CAS1",
         triggerSource = domainEvent.triggerSource,
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
