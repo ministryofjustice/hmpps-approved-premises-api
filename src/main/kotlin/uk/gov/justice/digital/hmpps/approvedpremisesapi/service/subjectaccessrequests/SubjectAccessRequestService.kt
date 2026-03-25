@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.json.JsonMapper
 import org.json.JSONObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Service
+import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
@@ -24,6 +27,9 @@ class SubjectAccessRequestService(
   val cas2SubjectAccessRequestRepository: Cas2SubjectAccessRequestRepository,
   val cas3SubjectAccessRequestRepository: CAS3SubjectAccessRequestRepository,
   val cas2v2SubjectAccessRequestRepository: Cas2v2SubjectAccessRequestRepository,
+  private val resourceLoader: ResourceLoader,
+  @Value("\${hmpps.sar.template.path}") private val templatePath: String,
+  @Value("\${hmpps.sar.template.enabled}") private val templateEnabled: Boolean,
 ) : HmppsPrisonProbationSubjectAccessRequestService {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -255,6 +261,19 @@ class SubjectAccessRequestService(
         .toMap().entries,
     )
   }
+
+  @SuppressWarnings("TooGenericExceptionThrown")
+  fun getTemplate(): String {
+    if (!templateEnabled) {
+      throw RuntimeException("SAR template is not enabled")
+    }
+
+    val resource = resourceLoader.getResource("classpath:templates/$templatePath")
+    return resource.inputStream.use { inputStream ->
+      String(FileCopyUtils.copyToByteArray(inputStream), Charsets.UTF_8)
+    }
+  }
+
   private fun Logger.logDebugMessage(service: String, result: String) {
     if (this.isDebugEnabled) {
       val prettyPrintJson = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(

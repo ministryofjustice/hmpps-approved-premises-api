@@ -83,6 +83,8 @@ dependencies {
     exclude(module = "mockito-core")
   }
 
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:1.8.2")
+
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.6.3")

@@ -92,7 +92,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize("/cas2v2/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
 
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
-        authorize(HttpMethod.GET, "/subject-access-request", hasAnyRole("SAR_DATA_ACCESS"))
+        authorize(HttpMethod.GET, "/subject-access-request/**", hasRole("SAR_DATA_ACCESS"))
 
         authorize(HttpMethod.GET, "/cas1/external/**", hasRole("APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
         authorize(HttpMethod.GET, "/cas3/external/**", hasRole("APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
