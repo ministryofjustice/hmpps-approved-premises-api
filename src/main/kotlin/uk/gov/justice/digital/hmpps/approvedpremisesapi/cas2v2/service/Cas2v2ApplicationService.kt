@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetailsSubmittedBy

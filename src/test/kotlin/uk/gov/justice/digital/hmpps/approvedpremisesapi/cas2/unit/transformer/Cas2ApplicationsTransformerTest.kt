@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.transformer
 
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -35,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Timelin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -49,11 +46,7 @@ class Cas2ApplicationsTransformerTest {
   private val cas2UserService = mockk<Cas2UserService>()
   private val offenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
 
-  private val objectMapper = JsonMapper().apply {
-    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+  private val objectMapper = createRuntimeLikeObjectMapper()
 
   private val cas2ApplicationsTransformer = Cas2ApplicationsTransformer(
     objectMapper,

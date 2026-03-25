@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Allocat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2LocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 
 @ExtendWith(MockKExtension::class)
 class Cas2DomainEventListenerTest {
@@ -29,7 +29,7 @@ class Cas2DomainEventListenerTest {
   @MockK
   lateinit var sentryService: SentryService
 
-  val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  val jsonMapper = createRuntimeLikeObjectMapper()
 
   @InjectMockKs
   lateinit var cas2DomainEventListener: Cas2DomainEventListener

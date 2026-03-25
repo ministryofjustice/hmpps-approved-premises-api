@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -12,6 +11,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField

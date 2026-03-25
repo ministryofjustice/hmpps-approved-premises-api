@@ -522,12 +522,12 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               expectedUpdatedPlacementApplication.application.id == it.applicationId &&
               expectedUpdatedPlacementApplication.createdByUser.id == it.createdByUserId &&
               expectedUpdatedPlacementApplication.createdAt.toInstant() == it.createdAt &&
-              serializableToJsonNode(jsonMapper.readTree(expectedUpdatedPlacementApplication.data)) == serializableToJsonNode(it.data)
+              serializableToJsonNode(expectedUpdatedPlacementApplication.data) == serializableToJsonNode(it.data)
           }
 
           val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)
 
-          assertThat(jsonMapper.readTree(updatedPlacementApplication!!.data)).isEqualTo(jsonMapper.readTree(expectedUpdatedPlacementApplication.data))
+          assertThat(updatedPlacementApplication!!.data).isEqualTo(expectedUpdatedPlacementApplication.data)
         }
       }
     }
@@ -789,7 +789,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val updatedPlacementApplication =
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
-            assertThat(jsonMapper.readTree(updatedPlacementApplication.document)).isEqualTo(jsonMapper.readTree(expectedUpdatedPlacementApplication.document))
+            assertThat(updatedPlacementApplication.document).isEqualTo(expectedUpdatedPlacementApplication.document)
             assertThat(updatedPlacementApplication.submittedAt).isNotNull()
             assertThat(updatedPlacementApplication.allocatedToUser).isNull()
             assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(cas1RequestedPlacementPeriod[0].duration)
@@ -867,7 +867,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val updatedPlacementApplication =
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
-            assertThat(jsonMapper.readTree(updatedPlacementApplication.document)).isEqualTo(jsonMapper.readTree(expectedUpdatedPlacementApplication.document))
+            assertThat(updatedPlacementApplication.document).isEqualTo(expectedUpdatedPlacementApplication.document)
             assertThat(updatedPlacementApplication.submittedAt).isNotNull()
             assertThat(updatedPlacementApplication.allocatedToUser).isNull()
             assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(placementDates[0].duration)

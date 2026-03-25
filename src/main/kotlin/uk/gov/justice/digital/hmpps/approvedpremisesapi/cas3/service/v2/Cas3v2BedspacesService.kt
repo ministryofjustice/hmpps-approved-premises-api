@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository

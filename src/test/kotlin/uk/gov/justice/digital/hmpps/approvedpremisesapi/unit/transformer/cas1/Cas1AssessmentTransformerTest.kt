@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -43,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.AssessmentTransformerTest.DomainAssessmentSummaryImpl
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
@@ -72,11 +69,7 @@ class Cas1AssessmentTransformerTest {
   lateinit var approvedPremisesUser: ApprovedPremisesUser
 
   private val risksTransformer = RisksTransformer()
-  private val jsonMapper = JsonMapper().apply {
-    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+  private val jsonMapper = createRuntimeLikeObjectMapper()
 
   @InjectMockKs
   lateinit var cas1AssessmentTransformer: Cas1AssessmentTransformer

@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SyncDomainEventWorker
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture
 
 @Suppress("SwallowedException")
 class DomainEventWorkerTest {
-  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = createRuntimeLikeObjectMapper()
   private val hmppsTopicMock = mockk<HmppsTopic>()
 
   private val syncDomainEventWorker = SyncDomainEventWorker(

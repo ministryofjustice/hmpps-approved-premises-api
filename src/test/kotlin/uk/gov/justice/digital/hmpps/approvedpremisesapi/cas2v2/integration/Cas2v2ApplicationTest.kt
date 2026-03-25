@@ -1142,6 +1142,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               Cas2v2Application::class.java,
             )
 
+            Assertions.assertThat(responseBody.id).isEqualTo(applicationEntity.id)
             Assertions.assertThat(responseBody.person.crn).isEqualTo(applicationEntity.crn)
             Assertions.assertThat(responseBody.createdAt).isEqualTo(applicationEntity.createdAt.toInstant())
             Assertions.assertThat(responseBody.createdBy.id).isEqualTo(applicationEntity.createdByUser.id)

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
+import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -12,8 +13,7 @@ import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.type.SqlTypes
+import org.hibernate.annotations.Type
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
@@ -95,12 +95,12 @@ data class Cas1ChangeRequestEntity(
   val spaceBooking: Cas1SpaceBookingEntity,
   @Enumerated(EnumType.STRING)
   val type: ChangeRequestType,
-  @JdbcTypeCode(SqlTypes.JSON)
+  @Type(JsonType::class)
   val requestJson: String,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_change_request_reason_id")
   val requestReason: Cas1ChangeRequestReasonEntity,
-  @JdbcTypeCode(SqlTypes.JSON)
+  @Type(JsonType::class)
   var decisionJson: String?,
   @Enumerated(EnumType.STRING)
   var decision: ChangeRequestDecision?,

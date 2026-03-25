@@ -73,7 +73,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
@@ -107,7 +107,7 @@ class Cas3DomainEventServiceTest {
   @InjectMockKs
   private lateinit var cas3DomainEventService: Cas3DomainEventService
 
-  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = createRuntimeLikeObjectMapper()
 
   private val user = UserEntityFactory()
     .withYieldedProbationRegion {

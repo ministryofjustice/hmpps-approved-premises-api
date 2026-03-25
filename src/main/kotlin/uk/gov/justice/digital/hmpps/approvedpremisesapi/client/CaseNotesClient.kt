@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig

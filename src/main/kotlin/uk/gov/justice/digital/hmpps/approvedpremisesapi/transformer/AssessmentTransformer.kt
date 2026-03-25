@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary

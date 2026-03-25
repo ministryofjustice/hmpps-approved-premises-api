@@ -21,7 +21,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
-  // Removed hypersistence-utils-hibernate-63 due to Spring Boot 3.x / Hibernate 6.6.4 compatibility issues
+  implementation("io.hypersistence:hypersistence-utils-hibernate-71:3.15.2")
+
   // this should match the version of hibernate provided by spring
   implementation("org.hibernate.orm:hibernate-spatial")
   implementation("org.hibernate.orm:hibernate-jcache")

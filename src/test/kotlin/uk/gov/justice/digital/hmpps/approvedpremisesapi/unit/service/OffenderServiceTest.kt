@@ -46,7 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailureArgumentsProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import java.time.LocalDate
@@ -159,7 +159,7 @@ class OffenderServiceTest {
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
-      ObjectMapperFactory.createRuntimeLikeObjectMapper().writeValueAsString(accessBody),
+      createRuntimeLikeObjectMapper().writeValueAsString(accessBody),
     )
 
     assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue

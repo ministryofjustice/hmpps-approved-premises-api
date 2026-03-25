@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -16,6 +15,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails

@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryDomainEventNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNoteMessageDetails
