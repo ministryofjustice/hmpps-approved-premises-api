@@ -21,12 +21,12 @@ import java.util.concurrent.CompletableFuture
 
 @Suppress("SwallowedException")
 class DomainEventWorkerTest {
-  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
   private val hmppsTopicMock = mockk<HmppsTopic>()
 
   private val syncDomainEventWorker = SyncDomainEventWorker(
     domainTopic = hmppsTopicMock,
-    objectMapper = objectMapper,
+    jsonMapper = jsonMapper,
   )
 
   @BeforeEach
@@ -110,7 +110,7 @@ class DomainEventWorkerTest {
   }
 
   private fun matchingPublishRequest(publishRequest: PublishRequest, snsEvent: SnsEvent): Boolean {
-    val deserializedMessage = objectMapper.readValue(publishRequest.message(), SnsEvent::class.java)
+    val deserializedMessage = jsonMapper.readValue(publishRequest.message(), SnsEvent::class.java)
 
     return deserializedMessage.eventType == snsEvent.eventType &&
       deserializedMessage.version == snsEvent.version &&

@@ -120,7 +120,7 @@ class Cas2AssessmentNotesTest(
           Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
           Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
@@ -192,7 +192,7 @@ class Cas2AssessmentNotesTest(
               Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
               val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
               Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
@@ -305,7 +305,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
                 val responseBody =
-                  objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                  jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
                 Assertions.assertThat(responseBody.body).isEqualTo("New prison note content")
 
@@ -374,7 +374,7 @@ class Cas2AssessmentNotesTest(
               Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
               val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
               Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
@@ -487,7 +487,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
                 val responseBody =
-                  objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                  jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
                 Assertions.assertThat(responseBody.body).isEqualTo("New prison note content")
 

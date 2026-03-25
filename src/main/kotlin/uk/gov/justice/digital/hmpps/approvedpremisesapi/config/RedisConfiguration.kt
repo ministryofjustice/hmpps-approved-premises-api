@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer
 import org.springframework.boot.info.BuildProperties
@@ -33,7 +33,7 @@ class RedisConfiguration {
   @Bean
   fun redisCacheManagerBuilderCustomizer(
     buildProperties: BuildProperties,
-    objectMapper: ObjectMapper,
+    jsonMapper: JsonMapper,
     @Value("\${caches.staffMembers.expiry-seconds}") staffMembersExpirySeconds: Long,
     @Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long,
     @Value("\${caches.userAccess.expiry-seconds}") userAccessExpirySeconds: Long,
@@ -50,37 +50,37 @@ class RedisConfiguration {
           cacheName = "qCodeStaffMembersCache",
           duration = Duration.ofSeconds(staffMembersExpirySeconds),
           cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
+          jsonMapper = jsonMapper,
         )
         .clientCacheFor<UserOffenderAccess>(
           cacheName = "userAccessCache",
           duration = Duration.ofSeconds(userAccessExpirySeconds),
           cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
+          jsonMapper = jsonMapper,
         )
         .clientCacheFor<StaffDetail>(
           cacheName = "staffDetailsCache",
           duration = Duration.ofSeconds(staffDetailsExpirySeconds),
           cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
+          jsonMapper = jsonMapper,
         )
         .clientCacheFor<ManagingTeamsResponse>(
           cacheName = "teamsManagingCaseCache",
           duration = Duration.ofSeconds(teamManagingCasesExpirySeconds),
           cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
+          jsonMapper = jsonMapper,
         )
         .clientCacheFor<CaseDetail>(
           cacheName = "crnGetCaseDetailCache",
           duration = Duration.ofSeconds(crnGetCaseDetailExpirySeconds),
           cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
+          jsonMapper = jsonMapper,
         )
         .clientCacheFor<UKBankHolidays>(
           cacheName = "ukBankHolidaysCache",
           duration = Duration.ofSeconds(ukBankHolidaysExpirySeconds),
           cacheNamePrefix = uniqueBuildId,
-          objectMapper = objectMapper,
+          jsonMapper = jsonMapper,
         )
     }
   }
@@ -97,18 +97,18 @@ class RedisConfiguration {
     cacheName: String,
     duration: Duration,
     cacheNamePrefix: String,
-    objectMapper: ObjectMapper,
+    jsonMapper: JsonMapper,
   ) = this.withCacheConfiguration(
     cacheName,
     RedisCacheConfiguration.defaultCacheConfig()
       .entryTtl(duration)
-      .serializeValuesWith(SerializationPair.fromSerializer(ClientResultRedisSerializer(objectMapper, object : TypeReference<T>() {})))
+      .serializeValuesWith(SerializationPair.fromSerializer(ClientResultRedisSerializer(jsonMapper, object : TypeReference<T>() {})))
       .prefixCacheNameWith(cacheNamePrefix),
   )
 }
 
 class ClientResultRedisSerializer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val typeReference: TypeReference<*>,
 ) : RedisSerializer<ClientResult<*>> {
   override fun serialize(clientResult: ClientResult<*>?): ByteArray {
@@ -141,7 +141,7 @@ class ClientResultRedisSerializer(
         SerializableClientResult(
           discriminator = ClientResultDiscriminator.SUCCESS,
           status = clientResult.status,
-          body = objectMapper.writeValueAsString(clientResult.body),
+          body = jsonMapper.writeValueAsString(clientResult.body),
           exceptionMessage = null,
           type = clientResult.body!!::class.java.typeName,
           method = null,
@@ -151,16 +151,16 @@ class ClientResultRedisSerializer(
       else -> null
     }
 
-    return objectMapper.writeValueAsBytes(toSerialize)
+    return jsonMapper.writeValueAsBytes(toSerialize)
   }
 
   override fun deserialize(bytes: ByteArray?): ClientResult<Any> {
-    val deserializedWrapper = objectMapper.readValue(bytes, SerializableClientResult::class.java)
+    val deserializedWrapper = jsonMapper.readValue(bytes, SerializableClientResult::class.java)
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.SUCCESS) {
       return ClientResult.Success(
         status = deserializedWrapper.status!!,
-        body = objectMapper.readValue(deserializedWrapper.body, typeReference),
+        body = jsonMapper.readValue(deserializedWrapper.body, typeReference),
       )
     }
 

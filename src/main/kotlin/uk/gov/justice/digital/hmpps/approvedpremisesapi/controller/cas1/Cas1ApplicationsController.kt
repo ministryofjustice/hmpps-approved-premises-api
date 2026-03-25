@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.transaction.Transactional
@@ -77,7 +77,7 @@ class Cas1ApplicationsController(
   private val offenderDetailService: OffenderDetailService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val httpAuthService: HttpAuthService,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val documentTransformer: DocumentTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val cas1AppealService: Cas1AppealService,
@@ -241,7 +241,7 @@ class Cas1ApplicationsController(
   ): ResponseEntity<ApprovedPremisesApplication> {
     val user = userService.getUserForRequest()
 
-    val serializedData = objectMapper.writeValueAsString(body.data)
+    val serializedData = jsonMapper.writeValueAsString(body.data)
 
     val applicationResult = cas1ApplicationCreationService.updateApplication(
       applicationId = applicationId,

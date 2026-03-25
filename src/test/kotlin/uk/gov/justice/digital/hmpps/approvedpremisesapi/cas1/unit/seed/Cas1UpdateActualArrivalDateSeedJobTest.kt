@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.unit.seed
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -36,7 +36,7 @@ class Cas1UpdateActualArrivalDateSeedJobTest {
   private lateinit var domainEventService: DomainEventRepository
 
   @MockK
-  private lateinit var objectMapper: ObjectMapper
+  private lateinit var jsonMapper: JsonMapper
 
   @InjectMockKs
   private lateinit var seedJob: Cas1UpdateActualArrivalDateSeedJob

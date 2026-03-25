@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
@@ -11,9 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 @Component
 class GovUKBankHolidaysApiClient(
   @Qualifier("govUKBankHolidaysApiWebClient") webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   @Cacheable(value = ["ukBankHolidaysCache"], unless = IS_NOT_SUCCESSFUL)
   fun getUKBankHolidays() = getRequest<UKBankHolidays> {
     path = "/bank-holidays.json"

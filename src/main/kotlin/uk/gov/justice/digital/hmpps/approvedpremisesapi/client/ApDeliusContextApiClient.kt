@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.io.buffer.DataBuffer
@@ -23,9 +23,9 @@ import java.io.OutputStream
 @Component
 class ApDeliusContextApiClient(
   @Qualifier("apDeliusContextApiWebClient") private val webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   @Cacheable(value = ["qCodeStaffMembersCache"], unless = IS_NOT_SUCCESSFUL)
   fun getStaffMembers(qCode: String) = getRequest<StaffMembersPage> {
     path = "/approved-premises/$qCode/staff"

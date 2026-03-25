@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -21,7 +21,7 @@ class Cas1UpdateActualArrivalDateSeedJob(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val domainEventRepository: DomainEventRepository,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) : SeedJob<Cas1UpdateActualArrivalDateSeedJobCsvRow>(
   requiredHeaders = setOf(
     "space_booking_id",
@@ -80,11 +80,11 @@ class Cas1UpdateActualArrivalDateSeedJob(
     }
 
     log.info("Updating domain event ${arrivalDomainEvent.id} of type APPROVED_PREMISES_PERSON_ARRIVED")
-    val envelope = objectMapper.readValue(arrivalDomainEvent.data, PersonArrivedEnvelope::class.java)
+    val envelope = jsonMapper.readValue(arrivalDomainEvent.data, PersonArrivedEnvelope::class.java)
     val updatedEnvelope = envelope.copy(
       eventDetails = envelope.eventDetails.copy(arrivedAt = actualArrivalDateTime),
     )
-    domainEventRepository.updateData(arrivalDomainEvent.id, objectMapper.writeValueAsString(updatedEnvelope))
+    domainEventRepository.updateData(arrivalDomainEvent.id, jsonMapper.writeValueAsString(updatedEnvelope))
   }
 }
 

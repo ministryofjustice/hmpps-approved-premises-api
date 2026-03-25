@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -32,13 +32,13 @@ import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 
 class RequestForPlacementTransformerTest {
-  private val objectMapper = mockk<ObjectMapper>()
+  private val jsonMapper = mockk<JsonMapper>()
 
-  private val requestForPlacementTransformer = RequestForPlacementTransformer(objectMapper)
+  private val requestForPlacementTransformer = RequestForPlacementTransformer(jsonMapper)
 
   @BeforeEach
   fun setupObjectMapperMock() {
-    every { objectMapper.readTree(any<String>()) } returns mockk()
+    every { jsonMapper.readTree(any<String>()) } returns mockk()
   }
 
   companion object {
@@ -95,7 +95,7 @@ class RequestForPlacementTransformerTest {
       assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2012, 9, 9))
       assertThat(result.placementDates[0].duration).isEqualTo(49)
 
-      verify(exactly = 1) { objectMapper.readTree(placementApplication.document) }
+      verify(exactly = 1) { jsonMapper.readTree(placementApplication.document) }
     }
 
     @Test

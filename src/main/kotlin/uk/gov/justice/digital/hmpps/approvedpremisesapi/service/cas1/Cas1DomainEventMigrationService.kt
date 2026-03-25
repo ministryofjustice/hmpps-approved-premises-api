@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
@@ -17,7 +17,7 @@ This is tested by the DomainEventTest integration test
  */
 @Service
 class Cas1DomainEventMigrationService(
-  val objectMapper: ObjectMapper,
+  val jsonMapper: JsonMapper,
   val userService: UserService,
 ) {
 
@@ -37,12 +37,12 @@ class Cas1DomainEventMigrationService(
   }
 
   private fun bookingCancelledV1JsonToV2Json(domainEventEntity: DomainEventEntity): String = modifyEventDetails(domainEventEntity) { eventDetailsNode ->
-    val cancellationRecordedAt = objectMapper.convertValue(domainEventEntity.occurredAt, TextNode::class.java)
+    val cancellationRecordedAt = jsonMapper.convertValue(domainEventEntity.occurredAt, TextNode::class.java)
     eventDetailsNode.set<TextNode>("cancellationRecordedAt", cancellationRecordedAt)
 
     val cancelledAt =
-      objectMapper.convertValue(eventDetailsNode["cancelledAt"], java.time.Instant::class.java)
-    val cancelledAtDate = objectMapper.convertValue(cancelledAt.toLocalDate(), TextNode::class.java)
+      jsonMapper.convertValue(eventDetailsNode["cancelledAt"], java.time.Instant::class.java)
+    val cancelledAtDate = jsonMapper.convertValue(cancelledAt.toLocalDate(), TextNode::class.java)
     eventDetailsNode.set<ArrayNode>("cancelledAtDate", cancelledAtDate)
   }
 
@@ -58,7 +58,7 @@ class Cas1DomainEventMigrationService(
        */
     eventDetailsNode.set<ObjectNode>(
       "recordedBy",
-      objectMapper.convertValue(
+      jsonMapper.convertValue(
         StaffMember(
           staffCode = triggeredByUser?.deliusStaffCode ?: "unknown",
           forenames = triggeredByUser?.name ?: "unknown",
@@ -73,9 +73,9 @@ class Cas1DomainEventMigrationService(
     domainEventEntity: DomainEventEntity,
     mutator: (eventDetailsNode: ObjectNode) -> Unit,
   ): String {
-    val dataModel: JsonNode = objectMapper.readTree(domainEventEntity.data)
+    val dataModel: JsonNode = jsonMapper.readTree(domainEventEntity.data)
     val eventDetails = dataModel["eventDetails"] as ObjectNode
     mutator(eventDetails)
-    return objectMapper.writeValueAsString(dataModel)
+    return jsonMapper.writeValueAsString(dataModel)
   }
 }

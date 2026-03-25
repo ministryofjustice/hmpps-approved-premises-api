@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 
 @Component
 class AssessmentTransformer(
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
@@ -70,7 +70,7 @@ class AssessmentTransformer(
       decision = transformDomainSummaryDecisionToApi(ase.decision),
       risks = ase.riskRatings?.let {
         risksTransformer.transformDomainToApi(
-          objectMapper.readValue<PersonRisks>(it),
+          jsonMapper.readValue<PersonRisks>(it),
           ase.crn,
         )
       },
@@ -88,7 +88,7 @@ class AssessmentTransformer(
       decision = transformDomainSummaryDecisionToApi(ase.decision),
       risks = ase.riskRatings?.let {
         risksTransformer.transformDomainToApi(
-          objectMapper.readValue<PersonRisks>(it),
+          jsonMapper.readValue<PersonRisks>(it),
           ase.crn,
         )
       },
@@ -114,7 +114,7 @@ class AssessmentTransformer(
     decision = transformDomainSummaryDecisionToApi(ase.decision),
     risks = ase.riskRatings?.let {
       risksTransformer.transformDomainToApi(
-        objectMapper.readValue<PersonRisks>(it),
+        jsonMapper.readValue<PersonRisks>(it),
         ase.crn,
       )
     },

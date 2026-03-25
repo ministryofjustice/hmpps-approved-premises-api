@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AdjudicationsPage
@@ -14,9 +14,9 @@ import java.time.Duration
 @Component
 class PrisonsApiClient(
   @Qualifier("prisonsApiWebClient") webClientConfig: WebClientConfig,
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   webClientCache: WebClientCache,
-) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
+) : BaseHMPPSClient(webClientConfig, jsonMapper, webClientCache) {
   private val inmateDetailsCacheConfig = WebClientCache.PreemptiveCacheConfig(
     cacheName = "inmateDetails",
     successSoftTtlSeconds = Duration.ofHours(6).toSeconds().toInt(),

@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -40,7 +40,7 @@ class Cas3ApplicationsController(
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
   private val cas3ApplicationTransformer: Cas3ApplicationTransformer,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) {
 
   @GetMapping("/applications")
@@ -123,7 +123,7 @@ class Cas3ApplicationsController(
   ): ResponseEntity<Cas3Application> {
     val user = userService.getUserForRequest()
 
-    val serializedData = objectMapper.writeValueAsString(body.data)
+    val serializedData = jsonMapper.writeValueAsString(body.data)
 
     val applicationResult = cas3ApplicationService.updateApplication(
       applicationId = applicationId,

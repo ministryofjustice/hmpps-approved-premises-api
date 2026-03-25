@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
@@ -73,7 +73,7 @@ class Cas1PlacementApplicationServiceTest {
   private val cas1PlacementApplicationDomainEventService = mockk<Cas1PlacementApplicationDomainEventService>()
   private val cas1TaskDeadlineServiceMock = mockk<Cas1TaskDeadlineService>()
   private val lockablePlacementApplicationRepository = mockk<LockablePlacementApplicationRepository>()
-  private val objectMapper = mockk<ObjectMapper>()
+  private val jsonMapper = mockk<JsonMapper>()
 
   private val cas1PlacementApplicationService = Cas1PlacementApplicationService(
     placementApplicationRepository,
@@ -86,7 +86,7 @@ class Cas1PlacementApplicationServiceTest {
     cas1TaskDeadlineServiceMock,
     Clock.systemDefaultZone(),
     lockablePlacementApplicationRepository,
-    objectMapper,
+    jsonMapper,
   )
 
   @Nested
@@ -254,7 +254,7 @@ class Cas1PlacementApplicationServiceTest {
 
       every { userService.getUserForRequest() } returns user
       every { cas1TaskDeadlineServiceMock.getDeadline(any<PlacementApplicationEntity>()) } returns dueAt
-      every { objectMapper.writeValueAsString(any()) } returns "some-json-data"
+      every { jsonMapper.writeValueAsString(any()) } returns "some-json-data"
     }
 
     @Test

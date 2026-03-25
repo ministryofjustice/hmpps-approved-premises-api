@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import com.fasterxml.jackson.core.util.DefaultIndenter.SYSTEM_LINEFEED_INSTANCE
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.nio.file.Files
@@ -24,13 +24,13 @@ class Cas1UserRoleJsonFileGenerator {
         )
       }
 
-    val objectMapper = ObjectMapper()
-    objectMapper.enable(SerializationFeature.INDENT_OUTPUT)
+    val jsonMapper = JsonMapper()
+    jsonMapper.enable(SerializationFeature.INDENT_OUTPUT)
 
     val prettyPrinter = DefaultPrettyPrinter()
     prettyPrinter.indentArraysWith(SYSTEM_LINEFEED_INSTANCE)
 
-    objectMapper.writer(prettyPrinter).writeValue(outputPath.toFile(), roles)
+    jsonMapper.writer(prettyPrinter).writeValue(outputPath.toFile(), roles)
   }
 
   companion object {

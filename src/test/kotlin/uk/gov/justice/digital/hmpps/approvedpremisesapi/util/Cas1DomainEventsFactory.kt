@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
@@ -33,7 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import java.time.Instant
 import java.util.UUID
 
-class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
+class Cas1DomainEventsFactory(val jsonMapper: JsonMapper) {
 
   fun createEnvelopeLatestVersion(
     type: DomainEventType,
@@ -50,7 +50,7 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
 
     return DomainEventEnvelopeAndPersistedJson(
       envelope = envelope,
-      persistedJson = objectMapper.writeValueAsString(envelope),
+      persistedJson = jsonMapper.writeValueAsString(envelope),
       schemaVersion = type.cas1Info!!.schemaVersions.last(),
     )
   }
@@ -100,11 +100,11 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
   }
 
   fun removeEventDetails(json: String, fields: List<String>): String {
-    val dataModel: JsonNode = objectMapper.readTree(json)
+    val dataModel: JsonNode = jsonMapper.readTree(json)
     fields.forEach {
       (dataModel["eventDetails"] as ObjectNode).remove(it)
     }
-    return objectMapper.writeValueAsString(dataModel)
+    return jsonMapper.writeValueAsString(dataModel)
   }
 }
 

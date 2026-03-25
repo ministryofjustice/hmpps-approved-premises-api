@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.netty.channel.ConnectTimeoutException
 import io.netty.handler.timeout.ReadTimeoutException
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BaseHMPPSClient(
   private val webClientConfig: WebClientConfig,
-  internal val objectMapper: ObjectMapper,
+  internal val jsonMapper: JsonMapper,
   private val webClientCache: WebClientCache,
 ) {
 
@@ -84,7 +84,7 @@ abstract class BaseHMPPSClient(
         )
         .block()!!
 
-      val deserialized = objectMapper.readValue(result.body, typeReference)
+      val deserialized = jsonMapper.readValue(result.body, typeReference)
 
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
         webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, result)

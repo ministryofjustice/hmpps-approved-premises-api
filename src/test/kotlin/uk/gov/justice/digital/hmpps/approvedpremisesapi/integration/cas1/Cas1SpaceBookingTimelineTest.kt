@@ -132,7 +132,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(
+        jsonMapper.readValue(
           rawResponseBody,
           object : TypeReference<List<Cas1TimelineEvent>>() {},
         )
@@ -171,7 +171,7 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
     assessmentEntity: ApprovedPremisesAssessmentEntity,
     userEntity: UserEntity,
   ): DomainEventEntity {
-    val domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
+    val domainEventsFactory = Cas1DomainEventsFactory(jsonMapper)
 
     val data = if (type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) {
       val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {

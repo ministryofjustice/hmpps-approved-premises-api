@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
@@ -39,7 +39,7 @@ class Cas1UpdateEventNumberSeedJob(
   private val cas1ApplicationTimelineNoteService: Cas1ApplicationTimelineNoteService,
   private val applicationRepository: ApplicationRepository,
   private val domainEventRepository: DomainEventRepository,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
 ) : SeedJob<Cas1UpdateEventNumberSeedJobCsvRow>(
   requiredHeaders = setOf(
@@ -102,33 +102,33 @@ class Cas1UpdateEventNumberSeedJob(
       it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
     }.forEach {
       log.info("Updating domain event ${it.id} of type APPROVED_PREMISES_APPLICATION_SUBMITTED")
-      val envelope = objectMapper.readValue(it.data, ApplicationSubmittedEnvelope::class.java)
+      val envelope = jsonMapper.readValue(it.data, ApplicationSubmittedEnvelope::class.java)
       val updatedEnvelope = envelope.copy(
         eventDetails = envelope.eventDetails.copy(deliusEventNumber = updatedEventNumber.toString()),
       )
-      domainEventRepository.updateData(it.id, objectMapper.writeValueAsString(updatedEnvelope))
+      domainEventRepository.updateData(it.id, jsonMapper.writeValueAsString(updatedEnvelope))
     }
 
     domainEvents.filter {
       it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
     }.forEach {
       log.info("Updating domain event ${it.id} of type APPROVED_PREMISES_APPLICATION_ASSESSED")
-      val envelope = objectMapper.readValue(it.data, ApplicationAssessedEnvelope::class.java)
+      val envelope = jsonMapper.readValue(it.data, ApplicationAssessedEnvelope::class.java)
       val updatedEnvelope = envelope.copy(
         eventDetails = envelope.eventDetails.copy(deliusEventNumber = updatedEventNumber.toString()),
       )
-      domainEventRepository.updateData(it.id, objectMapper.writeValueAsString(updatedEnvelope))
+      domainEventRepository.updateData(it.id, jsonMapper.writeValueAsString(updatedEnvelope))
     }
 
     domainEvents.filter {
       it.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE
     }.forEach {
       log.info("Updating domain event ${it.id} of type APPROVED_PREMISES_BOOKING_MADE")
-      val envelope = objectMapper.readValue(it.data, BookingMadeEnvelope::class.java)
+      val envelope = jsonMapper.readValue(it.data, BookingMadeEnvelope::class.java)
       val updatedEnvelope = envelope.copy(
         eventDetails = envelope.eventDetails.copy(deliusEventNumber = updatedEventNumber.toString()),
       )
-      domainEventRepository.updateData(it.id, objectMapper.writeValueAsString(updatedEnvelope))
+      domainEventRepository.updateData(it.id, jsonMapper.writeValueAsString(updatedEnvelope))
     }
   }
 }

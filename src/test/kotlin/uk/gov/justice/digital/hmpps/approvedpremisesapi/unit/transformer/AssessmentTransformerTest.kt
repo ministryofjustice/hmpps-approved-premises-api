@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -76,7 +76,7 @@ class AssessmentTransformerTest {
   lateinit var userService: UserService
 
   private val risksTransformer = RisksTransformer()
-  private val objectMapper = ObjectMapper().apply {
+  private val jsonMapper = JsonMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
@@ -152,7 +152,7 @@ class AssessmentTransformerTest {
         id = UUID.randomUUID(),
         applicationId = UUID.randomUUID(),
         createdAt = Instant.now(),
-        riskRatings = objectMapper.writeValueAsString(personRisks),
+        riskRatings = jsonMapper.writeValueAsString(personRisks),
         arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).toInstant(),
         completed = false,
         decision = "ACCEPTED",
@@ -219,7 +219,7 @@ class AssessmentTransformerTest {
         id = UUID.randomUUID(),
         applicationId = UUID.randomUUID(),
         createdAt = Instant.now(),
-        riskRatings = objectMapper.writeValueAsString(personRisks),
+        riskRatings = jsonMapper.writeValueAsString(personRisks),
         arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).toInstant(),
         completed = false,
         decision = "ACCEPTED",

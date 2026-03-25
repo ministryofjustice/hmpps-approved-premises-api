@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import arrow.core.Either
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
 import jakarta.transaction.Transactional
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -50,7 +50,7 @@ class Cas1PlacementApplicationService(
   private val cas1TaskDeadlineService: Cas1TaskDeadlineService,
   private val clock: Clock,
   private val lockablePlacementApplicationRepository: LockablePlacementApplicationRepository,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -342,7 +342,7 @@ class Cas1PlacementApplicationService(
       return CasResult.GeneralValidationError("Please provide at least one of placementType or releaseType.")
     }
 
-    val translatedDocument = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
+    val translatedDocument = jsonMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
 
     val cas1RequestedPlacementPeriod = deriveRequestedPlacementPeriods(submitPlacementApplication)!!
 

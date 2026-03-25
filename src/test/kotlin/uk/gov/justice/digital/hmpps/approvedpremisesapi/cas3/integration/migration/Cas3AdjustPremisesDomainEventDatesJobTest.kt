@@ -77,7 +77,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
       withType(DomainEventType.CAS3_PREMISES_ARCHIVED)
       withOccurredAt(occurredAt)
       withCreatedAt(createdAt)
-      withData(objectMapper.writeValueAsString(archivePayloadBefore))
+      withData(jsonMapper.writeValueAsString(archivePayloadBefore))
     }
 
     val e2 = domainEventFactory.produceAndPersist {
@@ -87,7 +87,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
       withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
       withOccurredAt(occurredAt)
       withCreatedAt(createdAt)
-      withData(objectMapper.writeValueAsString(unarchivePayloadBefore))
+      withData(jsonMapper.writeValueAsString(unarchivePayloadBefore))
     }
 
     migrationJobService.runMigrationJob(MigrationJobType.updateCas3PremisesDomainEventDates, 50)
@@ -104,12 +104,12 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
     assertThat(updated2.occurredAt.toLocalDate()).isEqualTo(expectedDate)
     assertThat(updated2.createdAt.toLocalDate()).isEqualTo(expectedDate)
 
-    val archiveAfter = objectMapper.readValue(updated1.data, CAS3PremisesArchiveEvent::class.java)
+    val archiveAfter = jsonMapper.readValue(updated1.data, CAS3PremisesArchiveEvent::class.java)
     assertThat(archiveAfter.timestamp.toLocalDate()).isEqualTo(expectedDate)
 
     assertThat(archiveAfter.eventDetails.endDate).isEqualTo(expectedDate)
 
-    val unarchiveAfter = objectMapper.readValue(updated2.data, CAS3PremisesUnarchiveEvent::class.java)
+    val unarchiveAfter = jsonMapper.readValue(updated2.data, CAS3PremisesUnarchiveEvent::class.java)
     assertThat(unarchiveAfter.timestamp.toLocalDate()).isEqualTo(expectedDate)
     assertThat(unarchiveAfter.eventDetails.currentStartDate).isEqualTo(expectedDate)
     assertThat(unarchiveAfter.eventDetails.newStartDate).isEqualTo(expectedDate)
@@ -154,7 +154,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
       withType(DomainEventType.CAS3_PREMISES_ARCHIVED)
       withOccurredAt(occurredAt)
       withCreatedAt(createdAt)
-      withData(objectMapper.writeValueAsString(archiveEvent))
+      withData(jsonMapper.writeValueAsString(archiveEvent))
     }
 
     val originalUnarchive = domainEventFactory.produceAndPersist {
@@ -164,7 +164,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
       withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
       withOccurredAt(occurredAt)
       withCreatedAt(createdAt)
-      withData(objectMapper.writeValueAsString(unarchiveEvent))
+      withData(jsonMapper.writeValueAsString(unarchiveEvent))
     }
 
     migrationJobService.runMigrationJob(MigrationJobType.updateCas3PremisesDomainEventDates, 50)
@@ -175,7 +175,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
     assertThat(afterArchive.createdAt.toLocalDate()).isEqualTo(expectedDate)
     assertThat(afterArchive.occurredAt.toLocalDate()).isEqualTo(expectedDate)
 
-    val afterArchivePayload = objectMapper.readValue(afterArchive.data, CAS3PremisesArchiveEvent::class.java)
+    val afterArchivePayload = jsonMapper.readValue(afterArchive.data, CAS3PremisesArchiveEvent::class.java)
     assertThat(afterArchivePayload.timestamp.toLocalDate()).isEqualTo(expectedDate)
     assertThat(afterArchivePayload.eventDetails.endDate).isEqualTo(expectedDate)
 
@@ -183,7 +183,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
     assertThat(afterUnarchive.createdAt.toLocalDate()).isEqualTo(expectedDate)
     assertThat(afterUnarchive.occurredAt.toLocalDate()).isEqualTo(expectedDate)
 
-    val afterUnarchivePayload = objectMapper.readValue(afterUnarchive.data, CAS3PremisesUnarchiveEvent::class.java)
+    val afterUnarchivePayload = jsonMapper.readValue(afterUnarchive.data, CAS3PremisesUnarchiveEvent::class.java)
     assertThat(afterUnarchivePayload.timestamp.toLocalDate()).isEqualTo(expectedDate)
     assertThat(afterUnarchivePayload.eventDetails.newStartDate).isEqualTo(expectedDate)
     assertThat(afterUnarchivePayload.eventDetails.currentStartDate).isEqualTo(expectedDate)
@@ -216,7 +216,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
       withType(DomainEventType.CAS3_PREMISES_ARCHIVED)
       withOccurredAt(occurredAt)
       withCreatedAt(createdAt)
-      withData(objectMapper.writeValueAsString(payload))
+      withData(jsonMapper.writeValueAsString(payload))
     }
 
     migrationJobService.runMigrationJob(MigrationJobType.updateCas3PremisesDomainEventDates, 50)
@@ -225,7 +225,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
     assertThat(after.createdAt).isEqualTo(createdAt)
     assertThat(after.occurredAt).isEqualTo(occurredAt)
 
-    val afterPayload = objectMapper.readValue(after.data, CAS3PremisesArchiveEvent::class.java)
+    val afterPayload = jsonMapper.readValue(after.data, CAS3PremisesArchiveEvent::class.java)
     assertThat(afterPayload.timestamp).isEqualTo(payload.timestamp)
     assertThat(afterPayload.eventDetails.endDate).isEqualTo(payload.eventDetails.endDate)
   }
@@ -258,7 +258,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
       withType(DomainEventType.CAS3_PREMISES_UNARCHIVED)
       withOccurredAt(occurredAt)
       withCreatedAt(createdAt)
-      withData(objectMapper.writeValueAsString(payload))
+      withData(jsonMapper.writeValueAsString(payload))
     }
 
     migrationJobService.runMigrationJob(MigrationJobType.updateCas3PremisesDomainEventDates, 50)
@@ -267,7 +267,7 @@ class Cas3AdjustPremisesDomainEventDatesJobTest : MigrationJobTestBase() {
     assertThat(after.createdAt).isEqualTo(createdAt)
     assertThat(after.occurredAt).isEqualTo(occurredAt)
 
-    val afterPayload = objectMapper.readValue(after.data, CAS3PremisesUnarchiveEvent::class.java)
+    val afterPayload = jsonMapper.readValue(after.data, CAS3PremisesUnarchiveEvent::class.java)
     assertThat(afterPayload.timestamp).isEqualTo(payload.timestamp)
     assertThat(afterPayload.eventDetails.currentStartDate).isEqualTo(payload.eventDetails.currentStartDate)
     assertThat(afterPayload.eventDetails.newStartDate).isEqualTo(payload.eventDetails.newStartDate)
