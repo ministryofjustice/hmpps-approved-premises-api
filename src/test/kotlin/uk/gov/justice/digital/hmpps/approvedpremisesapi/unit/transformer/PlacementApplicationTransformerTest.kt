@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
@@ -25,9 +27,11 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class PlacementApplicationTransformerTest {
-  private val jsonMapper = JsonMapper.builder()
-    .addModule(KotlinModule.Builder().build())
-    .build()
+  private val jsonMapper = JsonMapper().apply {
+    registerModule(Jdk8Module())
+    registerModule(JavaTimeModule())
+    registerKotlinModule()
+  }
 
   private val placementApplicationTransformer = PlacementApplicationTransformer(jsonMapper)
 

@@ -1,5 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -10,8 +14,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.NullSource
-import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
@@ -61,9 +63,11 @@ class ApplicationsTransformersTest {
   private val mockCas1ApplicationUserDetailsTransformer = mockk<Cas1ApplicationUserDetailsTransformer>()
   private val mockCas1CruManagementAreaTransformer = mockk<Cas1CruManagementAreaTransformer>()
 
-  private val jsonMapper = JsonMapper.builder()
-    .addModule(KotlinModule.Builder().build())
-    .build()
+  private val jsonMapper = JsonMapper().apply {
+    registerModule(Jdk8Module())
+    registerModule(JavaTimeModule())
+    registerKotlinModule()
+  }
 
   private val applicationsTransformer = ApplicationsTransformer(
     jsonMapper,

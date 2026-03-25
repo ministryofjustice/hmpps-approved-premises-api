@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.fasterxml.jackson.databind.json.JsonMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -23,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
-import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.cache.CacheManager
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpHeaders
@@ -31,7 +31,6 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
-import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2ApplicationEntityFactory
@@ -315,7 +314,6 @@ import java.util.UUID
 @ContextConfiguration(initializers = [TestPropertiesInitializer::class])
 @ActiveProfiles("test")
 @Tag("integration")
-@AutoConfigureWebTestClient
 abstract class IntegrationTestBase {
   @Autowired
   lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
@@ -345,7 +343,7 @@ abstract class IntegrationTestBase {
   }
 
   @Autowired
-  lateinit var jdbcTemplate: JdbcTemplate
+  private lateinit var jdbcTemplate: JdbcTemplate
 
   @Autowired
   private lateinit var cacheManager: CacheManager
@@ -884,7 +882,7 @@ abstract class IntegrationTestBase {
                   sub = username?.uppercase() ?: "integration-test-client-id",
                   authSource = authSource,
                   jti = UUID.randomUUID().toString(),
-                  iss = "http://localhost:${wiremockServer.port()}/auth/issuer",
+                  iss = "http://localhost:9092/auth/issuer",
                 ),
               ),
             ),

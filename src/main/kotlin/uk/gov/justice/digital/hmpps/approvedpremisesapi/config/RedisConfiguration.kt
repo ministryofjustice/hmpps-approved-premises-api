@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer
 import org.springframework.boot.info.BuildProperties
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.cache.RedisCacheConfiguration
-import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.data.redis.cache.RedisCacheManager.RedisCacheManagerBuilder
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
@@ -14,8 +16,6 @@ import org.springframework.data.redis.serializer.RedisSerializationContext.Seria
 import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.http.HttpStatus
-import tools.jackson.core.type.TypeReference
-import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.bankholidaysapi.UKBankHolidays
@@ -31,10 +31,9 @@ import java.time.Duration
 @EnableCaching
 class RedisConfiguration {
   @Bean
-  fun redisCacheManager(
+  fun redisCacheManagerBuilderCustomizer(
     buildProperties: BuildProperties,
     jsonMapper: JsonMapper,
-    connectionFactory: RedisConnectionFactory,
     @Value("\${caches.staffMembers.expiry-seconds}") staffMembersExpirySeconds: Long,
     @Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long,
     @Value("\${caches.userAccess.expiry-seconds}") userAccessExpirySeconds: Long,
@@ -42,47 +41,48 @@ class RedisConfiguration {
     @Value("\${caches.teamManagingCases.expiry-seconds}") teamManagingCasesExpirySeconds: Long,
     @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
     @Value("600") crnGetCaseDetailExpirySeconds: Long,
-  ): RedisCacheManager {
-    val uniqueBuildId = buildProperties.time?.epochSecond?.toString() ?: "unknown"
+  ): RedisCacheManagerBuilderCustomizer? {
+    val uniqueBuildId = buildProperties.time.epochSecond.toString()
 
-    return RedisCacheManager.builder(connectionFactory)
-      .clientCacheFor<StaffMembersPage>(
-        cacheName = "qCodeStaffMembersCache",
-        duration = Duration.ofSeconds(staffMembersExpirySeconds),
-        cacheNamePrefix = uniqueBuildId,
-        jsonMapper = jsonMapper,
-      )
-      .clientCacheFor<UserOffenderAccess>(
-        cacheName = "userAccessCache",
-        duration = Duration.ofSeconds(userAccessExpirySeconds),
-        cacheNamePrefix = uniqueBuildId,
-        jsonMapper = jsonMapper,
-      )
-      .clientCacheFor<StaffDetail>(
-        cacheName = "staffDetailsCache",
-        duration = Duration.ofSeconds(staffDetailsExpirySeconds),
-        cacheNamePrefix = uniqueBuildId,
-        jsonMapper = jsonMapper,
-      )
-      .clientCacheFor<ManagingTeamsResponse>(
-        cacheName = "teamsManagingCaseCache",
-        duration = Duration.ofSeconds(teamManagingCasesExpirySeconds),
-        cacheNamePrefix = uniqueBuildId,
-        jsonMapper = jsonMapper,
-      )
-      .clientCacheFor<CaseDetail>(
-        cacheName = "crnGetCaseDetailCache",
-        duration = Duration.ofSeconds(crnGetCaseDetailExpirySeconds),
-        cacheNamePrefix = uniqueBuildId,
-        jsonMapper = jsonMapper,
-      )
-      .clientCacheFor<UKBankHolidays>(
-        cacheName = "ukBankHolidaysCache",
-        duration = Duration.ofSeconds(ukBankHolidaysExpirySeconds),
-        cacheNamePrefix = uniqueBuildId,
-        jsonMapper = jsonMapper,
-      )
-      .build()
+    return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
+      builder
+        .clientCacheFor<StaffMembersPage>(
+          cacheName = "qCodeStaffMembersCache",
+          duration = Duration.ofSeconds(staffMembersExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          jsonMapper = jsonMapper,
+        )
+        .clientCacheFor<UserOffenderAccess>(
+          cacheName = "userAccessCache",
+          duration = Duration.ofSeconds(userAccessExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          jsonMapper = jsonMapper,
+        )
+        .clientCacheFor<StaffDetail>(
+          cacheName = "staffDetailsCache",
+          duration = Duration.ofSeconds(staffDetailsExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          jsonMapper = jsonMapper,
+        )
+        .clientCacheFor<ManagingTeamsResponse>(
+          cacheName = "teamsManagingCaseCache",
+          duration = Duration.ofSeconds(teamManagingCasesExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          jsonMapper = jsonMapper,
+        )
+        .clientCacheFor<CaseDetail>(
+          cacheName = "crnGetCaseDetailCache",
+          duration = Duration.ofSeconds(crnGetCaseDetailExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          jsonMapper = jsonMapper,
+        )
+        .clientCacheFor<UKBankHolidays>(
+          cacheName = "ukBankHolidaysCache",
+          duration = Duration.ofSeconds(ukBankHolidaysExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          jsonMapper = jsonMapper,
+        )
+    }
   }
 
   @Bean

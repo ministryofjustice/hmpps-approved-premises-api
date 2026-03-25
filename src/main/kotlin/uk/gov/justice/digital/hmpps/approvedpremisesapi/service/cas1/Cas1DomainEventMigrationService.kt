@@ -1,11 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import org.springframework.stereotype.Service
-import tools.jackson.databind.JsonNode
-import tools.jackson.databind.json.JsonMapper
-import tools.jackson.databind.node.ObjectNode
-import tools.jackson.databind.node.StringNode
-import tools.jackson.module.kotlin.convertValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -36,13 +37,13 @@ class Cas1DomainEventMigrationService(
   }
 
   private fun bookingCancelledV1JsonToV2Json(domainEventEntity: DomainEventEntity): String = modifyEventDetails(domainEventEntity) { eventDetailsNode ->
-    val cancellationRecordedAt = jsonMapper.convertValue(domainEventEntity.occurredAt, StringNode::class.java)
-    eventDetailsNode.set("cancellationRecordedAt", cancellationRecordedAt)
+    val cancellationRecordedAt = jsonMapper.convertValue(domainEventEntity.occurredAt, TextNode::class.java)
+    eventDetailsNode.set<TextNode>("cancellationRecordedAt", cancellationRecordedAt)
 
     val cancelledAt =
       jsonMapper.convertValue(eventDetailsNode["cancelledAt"], java.time.Instant::class.java)
-    val cancelledAtDate = jsonMapper.convertValue(cancelledAt.toLocalDate(), StringNode::class.java)
-    eventDetailsNode.set("cancelledAtDate", cancelledAtDate)
+    val cancelledAtDate = jsonMapper.convertValue(cancelledAt.toLocalDate(), TextNode::class.java)
+    eventDetailsNode.set<ArrayNode>("cancelledAtDate", cancelledAtDate)
   }
 
   private fun personArrivedDepartedV1JsonToV2Json(domainEventEntity: DomainEventEntity) = modifyEventDetails(domainEventEntity) { eventDetailsNode ->
@@ -55,7 +56,7 @@ class Cas1DomainEventMigrationService(
       `recordedBy` is not used to render the timeline, and these old domain events
       will not be consumed externally, so the imperfect nature of the back-fill is acceptable
        */
-    eventDetailsNode.set(
+    eventDetailsNode.set<ObjectNode>(
       "recordedBy",
       jsonMapper.convertValue(
         StaffMember(

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
 
+import com.fasterxml.jackson.databind.json.JsonMapper
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -31,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -59,8 +59,8 @@ class Cas3v2PremisesServiceTest {
   @MockK
   lateinit var cas3UserAccessService: Cas3UserAccessService
 
-  @InjectMockKs
-  var jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  @MockK
+  lateinit var jsonMapper: JsonMapper
 
   @InjectMockKs
   lateinit var cas3v2PremisesService: Cas3v2PremisesService

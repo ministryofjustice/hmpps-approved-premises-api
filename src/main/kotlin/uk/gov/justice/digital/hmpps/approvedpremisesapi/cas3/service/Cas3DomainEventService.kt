@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
+import com.fasterxml.jackson.databind.json.JsonMapper
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -7,7 +8,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
-import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
@@ -97,17 +97,17 @@ class Cas3DomainEventService(
 
   fun getBedspaceActiveDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findCas3BedspacesActiveDomainEventsByType(
     listOf(id),
-    bedspaceDomainEventTypes,
+    bedspaceDomainEventTypes.map { it.toString() },
   )
 
   fun getBedspacesActiveDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findCas3BedspacesActiveDomainEventsByType(
     ids,
-    bedspaceDomainEventTypes,
+    bedspaceDomainEventTypes.map { it.toString() },
   )
 
   fun getPremisesActiveDomainEvents(id: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findPremisesActiveDomainEventsByType(
     id,
-    premisesDomainEventTypes,
+    premisesDomainEventTypes.map { it.toString() },
   )
 
   private inline fun <reified T : CAS3Event> get(id: UUID): DomainEvent<T>? {

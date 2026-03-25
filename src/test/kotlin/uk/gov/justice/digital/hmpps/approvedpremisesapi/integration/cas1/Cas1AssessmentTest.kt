@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
+import com.fasterxml.jackson.databind.json.JsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -11,7 +12,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
-import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
@@ -1017,7 +1017,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             .isOk
 
           val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-          assertThat(jsonMapper.readTree(persistedAssessment.data)).isEqualTo(jsonMapper.readTree("""{"some text":5}"""))
+          assertThat((persistedAssessment.data).toString()).isEqualTo("{\"some text\":5}")
         }
       }
     }
@@ -1215,7 +1215,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-          assertThat(jsonMapper.readTree(persistedAssessment.document)).isEqualTo(jsonMapper.readTree("{\"document\":\"value\"}"))
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.agreeWithShortNoticeReason).isTrue
           assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("comments")
@@ -1333,7 +1333,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
-          assertThat(jsonMapper.readTree(persistedAssessment.document)).isEqualTo(jsonMapper.readTree("{\"document\":\"value\"}"))
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
           assertThat(persistedAssessment.submittedAt).isNotNull
 
           val emittedMessage =
@@ -1514,7 +1514,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
           val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
-          assertThat(jsonMapper.readTree(persistedAssessment.document)).isEqualTo(jsonMapper.readTree("{\"document\":\"value\"}"))
+          assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
           assertThat(persistedAssessment.submittedAt).isNotNull
           assertThat(persistedAssessment.agreeWithShortNoticeReason).isFalse
           assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("rejection comments")

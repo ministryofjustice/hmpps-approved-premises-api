@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
-import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.KotlinModule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistorySystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
@@ -22,9 +24,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 
 class AssessmentReferralHistoryNoteTransformerTest {
-  private val jsonMapper = JsonMapper.builder()
-    .addModule(KotlinModule.Builder().build())
-    .build()
+  private val objectMapper = JsonMapper().apply {
+    registerModule(Jdk8Module())
+    registerModule(JavaTimeModule())
+    registerKotlinModule()
+  }
 
   @Test
   fun `transformJpaToApi transforms correctly for a user note`() {
@@ -50,7 +54,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withCreatedBy(user)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(jsonMapper).transformJpaToApi(note)
+    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note)
 
     assertThat(result is ReferralHistoryUserNote).isTrue
     result as ReferralHistoryUserNote
@@ -87,7 +91,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withType(noteType)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(jsonMapper).transformJpaToApi(note)
+    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note)
 
     assertThat(result is ReferralHistorySystemNote).isTrue
     result as ReferralHistorySystemNote
@@ -140,7 +144,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withType(ReferralHistorySystemNoteType.REJECTED)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(jsonMapper).transformJpaToApi(note, assessment, true)
+    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note, assessment, true)
 
     assertThat(result is ReferralHistorySystemNote).isTrue
     result as ReferralHistorySystemNote
@@ -190,7 +194,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withType(noteType)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(jsonMapper).transformJpaToApi(note, assessment, true)
+    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note, assessment, true)
 
     assertThat(result is ReferralHistorySystemNote).isTrue
     result as ReferralHistorySystemNote
