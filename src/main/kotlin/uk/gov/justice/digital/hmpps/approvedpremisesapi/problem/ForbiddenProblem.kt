@@ -1,15 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 
-import org.zalando.problem.AbstractThrowableProblem
-import org.zalando.problem.Exceptional
-import org.zalando.problem.Status
+import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 
-class ForbiddenProblem(detail: String? = null) :
-  AbstractThrowableProblem(
-    null,
-    "Forbidden",
-    Status.FORBIDDEN,
-    detail ?: "You are not authorized to access this endpoint",
-  ) {
-  override fun getCause(): Exceptional? = null
+class ForbiddenProblem(detail: String? = null) : RuntimeException(detail ?: "You are not authorized to access this endpoint") {
+
+  val msg = detail ?: "You are not authorized to access this endpoint"
+  val title = "Forbidden"
+
+  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, message ?: msg).apply {
+    title = this@ForbiddenProblem.title
+    status = HttpStatus.FORBIDDEN.value()
+    detail = msg
+  }
+
+  override val message: String?
+    get() = "$title: $msg"
 }
