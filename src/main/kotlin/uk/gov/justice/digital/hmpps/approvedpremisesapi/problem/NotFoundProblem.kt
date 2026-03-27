@@ -1,9 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 
-import org.zalando.problem.AbstractThrowableProblem
-import org.zalando.problem.Exceptional
-import org.zalando.problem.Status
+import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 
-class NotFoundProblem(id: Any, entityType: String, identifier: String? = null) : AbstractThrowableProblem(null, "Not Found", Status.NOT_FOUND, "No $entityType with ${identifier ?: "an ID"} of $id could be found") {
-  override fun getCause(): Exceptional? = null
+class NotFoundProblem(id: Any, entityType: String, identifier: String? = null) : RuntimeException("No $entityType with ${identifier ?: "an ID"} of $id could be found") {
+
+  val title = "Not Found"
+  val msg = "No $entityType with ${identifier ?: "an ID"} of $id could be found"
+
+  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(
+    HttpStatus.NOT_FOUND,
+    message ?: "Not Found",
+  ).apply {
+    title = this@NotFoundProblem.title
+    status = HttpStatus.NOT_FOUND.value()
+    detail = msg
+  }
+
+  override val message: String?
+    get() = "$title: $msg"
 }
