@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -21,14 +17,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ReferralRejectio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 
 class AssessmentReferralHistoryNoteTransformerTest {
-  private val objectMapper = JsonMapper().apply {
-    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+  private val objectMapper = createRuntimeLikeObjectMapper()
 
   @Test
   fun `transformJpaToApi transforms correctly for a user note`() {

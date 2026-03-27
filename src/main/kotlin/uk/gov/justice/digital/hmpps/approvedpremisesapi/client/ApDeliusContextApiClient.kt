@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.core.io.buffer.DataBuffer
@@ -9,6 +8,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries

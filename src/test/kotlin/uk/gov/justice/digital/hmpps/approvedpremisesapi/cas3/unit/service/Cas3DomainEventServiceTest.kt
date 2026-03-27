@@ -73,7 +73,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
@@ -107,7 +107,7 @@ class Cas3DomainEventServiceTest {
   @InjectMockKs
   private lateinit var cas3DomainEventService: Cas3DomainEventService
 
-  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = createRuntimeLikeObjectMapper()
 
   private val user = UserEntityFactory()
     .withYieldedProbationRegion {
@@ -150,7 +150,7 @@ class Cas3DomainEventServiceTest {
     every {
       domainEventRepositoryMock.findCas3BedspacesActiveDomainEventsByType(
         listOf(bedspaceId),
-        listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED.toString(), DomainEventType.CAS3_BEDSPACE_UNARCHIVED.toString()),
+        listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
       )
     } returns listOf(
       domainEventEntityYesterday,
@@ -1593,8 +1593,21 @@ class Cas3DomainEventServiceTest {
       data = data,
     )
 
+    val domainEventEntity = DomainEventEntityFactory()
+      .withData(
+        jsonMapper.writeValueAsString(
+          createBedspaceUnarchiveEvent(
+            premisesId = premises.id,
+            bedspaceId = bedspace.id,
+            userId = user.id,
+            newStartDate,
+            transactionId = UUID.randomUUID(),
+          ),
+        ),
+      ).produce()
+
     every { cas3DomainEventBuilderMock.getBedspaceUnarchiveEvent(eq(bedspace), eq(premises.id), eq(currentStartDate), eq(currentEndDate), eq(user), any()) } returns domainEvent
-    every { domainEventRepositoryMock.save(any()) } returns null
+    every { domainEventRepositoryMock.save(any<DomainEventEntity>()) } returns domainEventEntity
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1661,8 +1674,22 @@ class Cas3DomainEventServiceTest {
       data = data,
     )
 
+    val domainEventEntity = DomainEventEntityFactory()
+      .withData(
+        jsonMapper.writeValueAsString(
+          createBedspaceArchiveEvent(
+            premisesId = premises.id,
+            bedspaceId = bedspace.id,
+            userId = user.id,
+            null,
+            endDate = endDate,
+            transactionId = UUID.randomUUID(),
+          ),
+        ),
+      ).produce()
+
     every { cas3DomainEventBuilderMock.getBedspaceArchiveEvent(eq(bedspace), eq(premises.id), null, eq(user), eq(domainEventTransactionId)) } returns domainEvent
-    every { domainEventRepositoryMock.save(any()) } returns null
+    every { domainEventRepositoryMock.save(any<DomainEventEntity>()) } returns domainEventEntity
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1728,8 +1755,20 @@ class Cas3DomainEventServiceTest {
       data = data,
     )
 
+    val domainEventEntity = DomainEventEntityFactory()
+      .withData(
+        jsonMapper.writeValueAsString(
+          createPremisesArchiveEvent(
+            premisesId = premises.id,
+            userId = user.id,
+            endDate = premisesEndDate,
+            transactionId = UUID.randomUUID(),
+          ),
+        ),
+      ).produce()
+
     every { cas3DomainEventBuilderMock.getPremisesArchiveEvent(eq(premises), eq(premisesEndDate), eq(user), eq(domainEventTransactionId)) } returns domainEvent
-    every { domainEventRepositoryMock.save(any()) } returns null
+    every { domainEventRepositoryMock.save(any<DomainEventEntity>()) } returns domainEventEntity
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -1797,8 +1836,22 @@ class Cas3DomainEventServiceTest {
       data = data,
     )
 
+    val domainEventEntity = DomainEventEntityFactory()
+      .withData(
+        jsonMapper.writeValueAsString(
+          createPremisesUnarchiveEvent(
+            premisesId = premises.id,
+            userId = user.id,
+            newStartDate = newStartDate,
+            currentStartDate = currentStartDate,
+            currentEndDate = currentEndDate,
+            transactionId = UUID.randomUUID(),
+          ),
+        ),
+      ).produce()
+
     every { cas3DomainEventBuilderMock.getPremisesUnarchiveEvent(eq(premises), eq(currentStartDate), eq(newStartDate), eq(currentEndDate), eq(user), eq(domainEventTransactionId)) } returns domainEvent
-    every { domainEventRepositoryMock.save(any()) } returns null
+    every { domainEventRepositoryMock.save(any<DomainEventEntity>()) } returns domainEventEntity
     every { userService.getUserForRequest() } returns user
     every { userService.getUserForRequestOrNull() } returns user
 
@@ -2936,4 +2989,46 @@ class Cas3DomainEventServiceTest {
         .produce(),
     ),
   )
+
+  private fun createPremisesArchiveEvent(premisesId: UUID, userId: UUID, endDate: LocalDate, transactionId: UUID = UUID.randomUUID()): CAS3PremisesArchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3PremisesArchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.premisesArchived,
+      eventDetails = CAS3PremisesArchiveEventDetails(
+        premisesId = premisesId,
+        endDate = endDate,
+        userId = userId,
+        transactionId = transactionId,
+      ),
+    )
+  }
+
+  @SuppressWarnings("LongParameterList")
+  private fun createPremisesUnarchiveEvent(
+    premisesId: UUID,
+    userId: UUID,
+    newStartDate: LocalDate,
+    currentEndDate: LocalDate,
+    currentStartDate: LocalDate = LocalDate.now(),
+    transactionId: UUID = UUID.randomUUID(),
+  ): CAS3PremisesUnarchiveEvent {
+    val eventId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
+    return CAS3PremisesUnarchiveEvent(
+      id = eventId,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.premisesUnarchived,
+      eventDetails = CAS3PremisesUnarchiveEventDetails(
+        premisesId = premisesId,
+        currentStartDate = currentStartDate,
+        newStartDate = newStartDate,
+        currentEndDate = currentEndDate,
+        userId = userId,
+        transactionId = transactionId,
+      ),
+    )
+  }
 }

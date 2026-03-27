@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
@@ -17,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.NullNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
@@ -56,7 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1WithdrawalTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -113,10 +112,10 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   @Autowired
   lateinit var applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationTeamCodeRepository: ApplicationTeamCodeRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationRepository: ApplicationRepository
 
   @AfterEach
@@ -1631,7 +1630,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           assertThat(result.responseBody.blockFirst()).matches {
-            it.person.crn == offenderDetails.otherIds.crn &&
+            it!!.person.crn == offenderDetails.otherIds.crn &&
               cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
         }
@@ -1672,7 +1671,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           assertThat(result.responseBody.blockFirst()).matches {
-            it.person.crn == offenderDetails.otherIds.crn
+            it!!.person.crn == offenderDetails.otherIds.crn
             cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
         }
@@ -1715,7 +1714,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           assertThat(result.responseBody.blockFirst()).matches {
-            it.person.crn == offenderDetails.otherIds.crn
+            it!!.person.crn == offenderDetails.otherIds.crn
             cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
         }
@@ -1760,7 +1759,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           assertThat(result.responseBody.blockFirst()).matches {
-            it.person.crn == offenderDetails.otherIds.crn &&
+            it!!.person.crn == offenderDetails.otherIds.crn &&
               cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
         }

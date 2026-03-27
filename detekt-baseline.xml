@@ -2,198 +2,154 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:BookingService.kt$BookingService$@Transactional fun createApprovedPremisesBookingFromPlacementRequest( user: UserEntity, placementRequestId: UUID, bedId: UUID?, premisesId: UUID?, arrivalDate: LocalDate, departureDate: LocalDate, ): AuthorisableActionResult&lt;ValidatableActionResult&lt;BookingEntity&gt;&gt;</ID>
-    <ID>CyclomaticComplexMethod:BookingTransformer.kt$BookingTransformer$private fun determineTemporaryAccommodationStatus(jpa: BookingEntity): BookingStatus</ID>
-    <ID>CyclomaticComplexMethod:DeserializationValidationService.kt$DeserializationValidationService$fun validateObject(path: String = "$", targetType: KClass&lt;*&gt;, jsonObject: ObjectNode): Map&lt;String, String&gt;</ID>
-    <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventId(domainEventType: DomainEventType, eventId: UUID): String</ID>
-    <ID>CyclomaticComplexMethod:GetAllApprovedPremisesApplicationsTest.kt$GetAllApprovedPremisesApplicationsTest$private fun ApprovedPremisesApplicationSummary.matches(applicationEntity: ApprovedPremisesApplicationEntity): Boolean</ID>
-    <ID>CyclomaticComplexMethod:PremisesController.kt$PremisesController$@Transactional override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity&lt;Booking&gt;</ID>
-    <ID>CyclomaticComplexMethod:PremisesController.kt$PremisesController$@Transactional override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity&lt;Premises&gt;</ID>
-    <ID>CyclomaticComplexMethod:PremisesService.kt$PremisesService$fun createNewPremises( addressLine1: String, addressLine2: String?, town: String?, postcode: String, latitude: Double?, longitude: Double?, service: String, localAuthorityAreaId: UUID?, probationRegionId: UUID, name: String, notes: String?, characteristicIds: List&lt;UUID&gt;, status: PropertyStatus, probationDeliveryUnitIdentifier: Either&lt;String, UUID&gt;?, turnaroundWorkingDayCount: Int?, )</ID>
-    <ID>CyclomaticComplexMethod:SeedUtils.kt$fun getCanonicalRegionName(regionName: String): String</ID>
-    <ID>ForbiddenComment:PremisesEntity.kt$ApprovedPremisesEntity$// TODO: Make not-null once Premises have had point added in all environments</ID>
-    <ID>ForbiddenComment:UserAccessService.kt$UserAccessService$// TODO: Revisit if Approved Premises introduces region-limited access</ID>
-    <ID>ForbiddenComment:UserAccessService.kt$UserAccessService$// TODO: Revisit once Temporary Accommodation introduces user roles</ID>
-    <ID>InvalidPackageDeclaration:UserSpecifications.kt$package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification</ID>
-    <ID>LargeClass:BookingTest.kt$BookingTest : IntegrationTestBase</ID>
-    <ID>LargeClass:BookingTransformerTest.kt$BookingTransformerTest</ID>
-    <ID>LongMethod:BookingTransformerTest.kt$BookingTransformerTest$@Test fun `Temporary Accommodation Entity with edited departure is correctly transformed`()</ID>
-    <ID>LongMethod:BookingTransformerTest.kt$BookingTransformerTest$@Test fun `Temporary Accommodation entity with non-zero day turnaround period and departure with turnaround period in past is correctly transformed to closed status`()</ID>
-    <ID>LongMethod:BookingTransformerTest.kt$BookingTransformerTest$@Test fun `Temporary Accommodation entity with non-zero day turnaround period and departure within turnaround period is correctly transformed to departed status`()</ID>
-    <ID>LongMethod:SeedUtils.kt$@Suppress("CyclomaticComplexMethod") fun getCanonicalLocalAuthorityName(localAuthorityName: String): String</ID>
-    <ID>LongParameterList:AssessmentEntity.kt$TemporaryAccommodationAssessmentEntity$( id: UUID, application: ApplicationEntity, data: String?, document: String?, schemaVersion: JsonSchemaEntity, allocatedToUser: UserEntity?, allocatedAt: OffsetDateTime?, reallocatedAt: OffsetDateTime?, createdAt: OffsetDateTime, submittedAt: OffsetDateTime?, decision: AssessmentDecision?, rejectionRationale: String?, clarificationNotes: MutableList&lt;AssessmentClarificationNoteEntity&gt;, referralHistoryNotes: MutableList&lt;AssessmentReferralHistoryNoteEntity&gt;, schemaUpToDate: Boolean, var completedAt: OffsetDateTime?, @Type(JsonType::class) var summaryData: String, isWithdrawn: Boolean, @ManyToOne @JoinColumn(name = "referral_rejection_reason_id") var referralRejectionReason: ReferralRejectionReasonEntity?, var referralRejectionReasonDetail: String?, dueAt: OffsetDateTime?, var releaseDate: LocalDate?, var accommodationRequiredFromDate: LocalDate?, )</ID>
-    <ID>LongParameterList:AssessmentInfo.kt$AssessmentInfo$( val assessmentId: Long, val assessmentType: String, val dateCompleted: OffsetDateTime?, val assessorSignedDate: OffsetDateTime?, val initiationDate: OffsetDateTime, val assessmentStatus: String, val superStatus: String?, val limitedAccessOffender: Boolean, )</ID>
-    <ID>LongParameterList:OffenceDetails.kt$OffenceDetails$( assessmentId: Long, assessmentType: String, dateCompleted: OffsetDateTime?, assessorSignedDate: OffsetDateTime?, initiationDate: OffsetDateTime, assessmentStatus: String, superStatus: String?, limitedAccessOffender: Boolean, val offence: OffenceDetailsInner?, )</ID>
-    <ID>LongParameterList:PlacementRequestRepositoryTest.kt$PlacementRequestRepositoryTest$(count: Int, isWithdrawn: Boolean, isReallocated: Boolean, isParole: Boolean, crn: String? = null, name: String? = null, expectedArrival: LocalDate? = null, tier: String? = null)</ID>
-    <ID>LongParameterList:RiskManagementPlan.kt$RiskManagementPlan$( assessmentId: Long, assessmentType: String, dateCompleted: OffsetDateTime?, assessorSignedDate: OffsetDateTime?, initiationDate: OffsetDateTime, assessmentStatus: String, superStatus: String?, limitedAccessOffender: Boolean, val riskManagementPlan: RiskManagementPlanInner?, )</ID>
-    <ID>LongParameterList:RiskToTheIndividual.kt$RisksToTheIndividual$( assessmentId: Long, assessmentType: String, dateCompleted: OffsetDateTime?, assessorSignedDate: OffsetDateTime?, initiationDate: OffsetDateTime, assessmentStatus: String, superStatus: String?, limitedAccessOffender: Boolean, val riskToTheIndividual: RiskToTheIndividualInner?, )</ID>
-    <ID>LongParameterList:RoshRatings.kt$RoshRatings$( assessmentId: Long, assessmentType: String, dateCompleted: OffsetDateTime?, assessorSignedDate: OffsetDateTime?, initiationDate: OffsetDateTime, assessmentStatus: String, superStatus: String?, limitedAccessOffender: Boolean, val rosh: RoshRatingsInner, )</ID>
-    <ID>LongParameterList:RoshSummary.kt$RoshSummary$( assessmentId: Long, assessmentType: String, dateCompleted: OffsetDateTime?, assessorSignedDate: OffsetDateTime?, initiationDate: OffsetDateTime, assessmentStatus: String, superStatus: String?, limitedAccessOffender: Boolean, val roshSummary: RoshSummaryInner?, )</ID>
-    <ID>MagicNumber:BaseHMPPSClient.kt$BaseHMPPSClient.HMPPSRequestConfiguration$10000</ID>
-    <ID>MagicNumber:MigrationJobService.kt$MigrationJobService$50</ID>
-    <ID>MagicNumber:NomisUsersSeedJob.kt$NomisUsersSeedJob$100000</ID>
-    <ID>MagicNumber:NomisUsersSeedJob.kt$NomisUsersSeedJob$900000</ID>
-    <ID>MagicNumber:OASysSectionsTransformer.kt$OASysSectionsTransformer$10</ID>
-    <ID>MagicNumber:OASysSectionsTransformer.kt$OASysSectionsTransformer$11</ID>
-    <ID>MagicNumber:OASysSectionsTransformer.kt$OASysSectionsTransformer$12</ID>
-    <ID>MagicNumber:OASysSectionsTransformer.kt$OASysSectionsTransformer$3</ID>
-    <ID>MagicNumber:OASysSectionsTransformer.kt$OASysSectionsTransformer$4</ID>
-    <ID>MagicNumber:OASysSectionsTransformer.kt$OASysSectionsTransformer$5</ID>
-    <ID>MagicNumber:OASysSectionsTransformer.kt$OASysSectionsTransformer$6</ID>
-    <ID>MagicNumber:OASysSectionsTransformer.kt$OASysSectionsTransformer$7</ID>
-    <ID>MagicNumber:OAuth2ResourceServerSecurityConfiguration.kt$OAuth2ResourceServerSecurityConfiguration$401</ID>
-    <ID>MagicNumber:OAuth2ResourceServerSecurityConfiguration.kt$OAuth2ResourceServerSecurityConfiguration.&lt;no name provided&gt;$401</ID>
-    <ID>MagicNumber:PrisonsApiClient.kt$PrisonsApiClient$10</ID>
-    <ID>MagicNumber:PrisonsApiClient.kt$PrisonsApiClient$12</ID>
-    <ID>MagicNumber:PrisonsApiClient.kt$PrisonsApiClient$30</ID>
-    <ID>MagicNumber:PrisonsApiClient.kt$PrisonsApiClient$5</ID>
-    <ID>MagicNumber:PrisonsApiClient.kt$PrisonsApiClient$6</ID>
-    <ID>MaxLineLength:AssessmentSummaryQueryTest.kt$AssessmentSummaryQueryTest$assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")</ID>
-    <ID>MaxLineLength:AuthTest.kt$AuthTest$val jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhcHByb3ZlZC1wcmVtaXNlcy1hcGkiLCJncmFudF90eXBlIjoiY2xpZW50X2NyZWRlbnRpYWxzIiwic2NvcGUiOlsicmVhZCJdLCJhdXRoX3NvdXJjZSI6Im5vbmUiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjkwOTEvYXV0aC9pc3N1ZXIiLCJleHAiOjI2NTk3MDQ5NDAsImF1dGhvcml0aWVzIjpbIlJPTEVfSU5URVJWRU5USU9OUyIsIlJPTEVfT0FTWVNfUkVBRF9PTkxZIiwiUk9MRV9DT01NVU5JVFkiLCJST0xFX0dMT0JBTF9TRUFSQ0giLCJST0xFX0NPTU1VTklUWV9VU0VSUyIsIlJPTEVfUklTS19TVU1NQVJZIl0sImp0aSI6ImlTSEtsTXJ1aXFUNjF0dTNXVFFqckE2WWJfTSIsImNsaWVudF9pZCI6ImFwcHJvdmVkLXByZW1pc2VzLWFwaSJ9.Cr7Nl09vjUpyieddsJwyQF02nmqhR6PbM4xePA47ukkyhhctE4SwqpOAO5D5OIstr9ePnlmF_Tug7HZ6-SLF8lBnN9C_M2-74d8127gPkQxjWsGnAKIxAGDnwLjtwV1UpSvS0p-Phg3cBTGiq6_HABEuh2JSD67eJS0ZaqNPUXXp2kTfi1ZJXA1ysxFKvAP5qYHbBpYWfvFq9Wkpsrq4sM41yjzS7hmkpaEUAYvKUdYefeRAT6nMCU6pfkEOoCmXkMTf6n6rJ1HxxTvkucZwEQk1dOKZUH0d_AOjZy5RAXiSRzgiYsMfB02gvn2T0FfOyjkjKXgVDsFc2yf3bd6P0g"</ID>
-    <ID>MaxLineLength:ExceptionHandling.kt$ExceptionHandling$private fun logBadRequestProblem(problem: BadRequestProblem)</ID>
-    <ID>MaxLineLength:OAuth2ResourceServerSecurityConfiguration.kt$LoggingInMemoryOAuth2AuthorizedClientService$log.info("Retrieved a client_credentials JWT for service-&gt;service calls for client ${authorizedClient.clientRegistration.clientId} with authorities: ${info.authorities}, scopes: ${info.scope}, expiry: ${info.exp}")</ID>
-    <ID>MaxLineLength:PlacementRequestRepositoryTest.kt$PlacementRequestRepositoryTest$private</ID>
-    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"CHE,1 CherryTree Lane,,Sheffield,SH7 4PB,Yorkshire and the Humber,Sheffield,Sheffield,FALSE,FALSE,FALSE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,\"Property is located on the same road as a primary school and a park.\",che@emailaddress.com\n"</ID>
-    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"Property reference,Address Line 1,Address Line 2 (optional),City/Town,Postcode,Region,Local authority / Borough,Probation delivery unit (PDU),Floor level access?,Wheelchair accessible?,Pub nearby?,Park nearby?,School nearby?,Women only?,Men only?,Not suitable for RSO?,Not suitable for arson offenders?,Optional notes,Email Address\n"</ID>
-    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"Property reference,Bedspace reference,Single bed?,Double bed?,Shared kitchen?,Floor level access?,Lift access?,Wheelchair accessible?,Not suitable for RSO?,Not suitable for arson offenders?,Optional notes about the bedspace,Email address\n"</ID>
-    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"SIL,12 Silverhill Lane,Broadheath,Bath,BA3 0EZ,South West,Bath and North East Somerset,Bath and North Somerset (Bath and North East Somerset and North Somerset),FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,TRUE,\"This property has 3 bedspaces, with shared kitchen facilities.\",sil@emailaddress.com\n"</ID>
-    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"STR,24 Strawberry Road,City Centre,Newport,NP1 0PA,Wales,Newport,\"Gwent (Blaenau Gwent, Caerphilly, Monmouthshire, Newport, Torfaen)\",FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,\"Not suitable to those who hold addictive behaviours.\",str@emailaddress.com\n"</ID>
-    <ID>MaxLineLength:SeedTemporaryAccommodationSmokeTest.kt$SeedTemporaryAccommodationSmokeTest$"WED,1 Wednesday Street,,Westminster,SE19 4EP,London,Lewisham,Lewisham and Bromley,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,\"Property is located in a block of flats. Bedspace is accessible for wheelchair users, as has ground floor access and a lift up to the property. Cleaning turn around is 7 days.\",wed@emailaddress.com\n"</ID>
-    <ID>MaxLineLength:UnauthenticatedProblem.kt$UnauthenticatedProblem$class</ID>
-    <ID>NestedBlockDepth:DeserializationValidationService.kt$DeserializationValidationService$fun validateObject(path: String = "$", targetType: KClass&lt;*&gt;, jsonObject: ObjectNode): Map&lt;String, String&gt;</ID>
-    <ID>ReturnCount:ExceptionHandling.kt$ExceptionHandling$override fun toProblem(throwable: Throwable, status: StatusType): ThrowableProblem?</ID>
-    <ID>SpreadOperator:UserService.kt$UserService$(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())</ID>
-    <ID>SpreadOperator:UserSpecifications.kt$(*predicates.toTypedArray())</ID>
-    <ID>SwallowedException:DeserializationValidationService.kt$e: Exception</ID>
-    <ID>SwallowedException:OffenderService.kt$OffenderService$exception: Exception</ID>
-    <ID>SwallowedException:PlacementRequestTransformer.kt$PlacementRequestTransformer$exception: Exception</ID>
-    <ID>SwallowedException:SeedService.kt$SeedService$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:BaseHMPPSClient.kt$BaseHMPPSClient$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:DeserializationValidationService.kt$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:ExternalUsersSeedJob.kt$ExternalUsersSeedJob$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:MigrationJobService.kt$MigrationJobService$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:NomisUsersSeedJob.kt$NomisUsersSeedJob$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:OAuth2ResourceServerSecurityConfiguration.kt$LoggingInMemoryOAuth2AuthorizedClientService$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:OffenderService.kt$OffenderService$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:PersonRisks.kt$PersonRisksConverter$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:PlacementRequestTransformer.kt$PlacementRequestTransformer$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:SeedService.kt$SeedService$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:SeedService.kt$SeedService$exception: RuntimeException</ID>
-    <ID>TooGenericExceptionThrown:AdjudicationTransformer.kt$AdjudicationTransformer$throw RuntimeException("Agency ${result.agencyId} not found")</ID>
-    <ID>TooGenericExceptionThrown:ApplicationTeamCodeEntityFactory.kt$ApplicationTeamCodeEntityFactory$throw RuntimeException("Must provide an Application")</ID>
-    <ID>TooGenericExceptionThrown:ApplicationsController.kt$ApplicationsController$throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:ApplicationsController.kt$ApplicationsController$throw RuntimeException("Unsupported SubmitApplication type: ${submitApplication::class.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:ApplicationsController.kt$ApplicationsController$throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:ApplicationsTransformer.kt$ApplicationsTransformer$throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:ApprovedPremisesApplicationEntityFactory.kt$ApprovedPremisesApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
-    <ID>TooGenericExceptionThrown:ApprovedPremisesAssessmentEntityFactory.kt$ApprovedPremisesAssessmentEntityFactory$throw RuntimeException("Must provide an application")</ID>
-    <ID>TooGenericExceptionThrown:ApprovedPremisesEntityFactory.kt$ApprovedPremisesEntityFactory$throw RuntimeException("Must provide a local authority area")</ID>
-    <ID>TooGenericExceptionThrown:ApprovedPremisesEntityFactory.kt$ApprovedPremisesEntityFactory$throw RuntimeException("Must provide a probation region")</ID>
-    <ID>TooGenericExceptionThrown:ArrivalEntityFactory.kt$ArrivalEntityFactory$throw RuntimeException("Booking must be provided")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentClarificationNoteEntityFactory.kt$AssessmentClarificationNoteEntityFactory$throw RuntimeException("Must provide a createdBy")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentClarificationNoteEntityFactory.kt$AssessmentClarificationNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentReferralHistoryNoteTransformer.kt$AssessmentReferralHistoryNoteTransformer$throw RuntimeException("Unsupported ReferralHistoryNote type: ${jpa::class.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentReferralHistorySystemNoteEntityFactory.kt$AssessmentReferralHistorySystemNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentReferralHistoryUserNoteEntityFactory.kt$AssessmentReferralHistoryUserNoteEntityFactory$throw RuntimeException("Must provide a createdBy")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentReferralHistoryUserNoteEntityFactory.kt$AssessmentReferralHistoryUserNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentService.kt$AssessmentService$throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentService.kt$AssessmentService$throw RuntimeException("Only CAS3 Assessments are currently supported")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentService.kt$AssessmentService$throw RuntimeException("Only CAS3 assessments are currently supported")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentService.kt$AssessmentService$throw RuntimeException("Only CAS3 is currently supported")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentService.kt$AssessmentService$throw RuntimeException("Reallocating an assessment of type '${currentAssessment::class.qualifiedName}' has not been implemented.")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentService.kt$AssessmentService$throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentService.kt$AssessmentService$throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentTransformer.kt$AssessmentTransformer$throw RuntimeException("Unsupported Application type when transforming Assessment: ${jpa.application::class.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:AssessmentTransformer.kt$AssessmentTransformer$throw RuntimeException("Unsupported type: ${ase.type}")</ID>
-    <ID>TooGenericExceptionThrown:BookingEntityFactory.kt$BookingEntityFactory$throw RuntimeException("Must provide a Premises")</ID>
-    <ID>TooGenericExceptionThrown:BookingNotMadeEntityFactory.kt$BookingNotMadeEntityFactory$throw RuntimeException("Must provide a Placement Request")</ID>
-    <ID>TooGenericExceptionThrown:BookingSearchResultTransformer.kt$BookingSearchResultTransformer$throw RuntimeException("Unknown booking status ${result.bookingStatus}")</ID>
-    <ID>TooGenericExceptionThrown:BookingTransformer.kt$BookingTransformer$throw RuntimeException("Could not determine service for Booking ${jpa.id}")</ID>
-    <ID>TooGenericExceptionThrown:BookingTransformer.kt$BookingTransformer$throw RuntimeException("Could not determine status for Booking ${jpa.id}")</ID>
-    <ID>TooGenericExceptionThrown:CAS3DomainEventFactory.kt$CAS3DomainEventFactory$throw RuntimeException("Must provide event data")</ID>
-    <ID>TooGenericExceptionThrown:CAS3DomainEventFactory.kt$CAS3DomainEventFactory$throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:CacheClearTest.kt$CacheClearTest$throw RuntimeException("Upstream endpoint was never called by OffenderDetailsCacheRefreshWorker", throwable)</ID>
-    <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt$CancellationEntityFactory$throw RuntimeException("Booking must be provided")</ID>
-    <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt$CancellationEntityFactory$throw RuntimeException("Reason must be provided")</ID>
-    <ID>TooGenericExceptionThrown:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$throw RuntimeException("Could not create application ${row.id}", exception)</ID>
-    <ID>TooGenericExceptionThrown:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$throw RuntimeException("Could not find applicant with nomisUsername ${row.createdBy}")</ID>
-    <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt$Cas2DomainEventFactory$throw RuntimeException("Must provide event data")</ID>
-    <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt$Cas2DomainEventFactory$throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:CharacteristicTransformer.kt$CharacteristicTransformer$throw RuntimeException("Unsupported service scope: ${jpa.modelScope}")</ID>
-    <ID>TooGenericExceptionThrown:CharacteristicTransformer.kt$CharacteristicTransformer$throw RuntimeException("Unsupported service scope: ${jpa.serviceScope}")</ID>
-    <ID>TooGenericExceptionThrown:CharacteristicsSeedJob.kt$CharacteristicsSeedJob$throw RuntimeException("The field: '$requiredField' is required")</ID>
-    <ID>TooGenericExceptionThrown:CharacteristicsSeedJob.kt$CharacteristicsSeedJob$throw RuntimeException("Your '$requiredField' value: '$value' is not recognised")</ID>
-    <ID>TooGenericExceptionThrown:DateChangeEntityFactory.kt$DateChangeEntityFactory$throw RuntimeException("Must provide a booking")</ID>
-    <ID>TooGenericExceptionThrown:DateChangeEntityFactory.kt$DateChangeEntityFactory$throw RuntimeException("Must provide a changedByUser")</ID>
-    <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt$DepartureEntityFactory$throw RuntimeException("Booking must be provided")</ID>
-    <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt$DepartureEntityFactory$throw RuntimeException("MoveOnCategory must be provided")</ID>
-    <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt$DepartureEntityFactory$throw RuntimeException("Reason must be provided")</ID>
-    <ID>TooGenericExceptionThrown:ExtensionEntityFactory.kt$ExtensionEntityFactory$throw RuntimeException("Booking must be provided")</ID>
-    <ID>TooGenericExceptionThrown:ExternalUsersSeedJob.kt$ExternalUsersSeedJob$throw RuntimeException("Could not create external user ${row.username}", exception)</ID>
-    <ID>TooGenericExceptionThrown:NomisUsersSeedJob.kt$NomisUsersSeedJob$throw RuntimeException("Could not create user ${row.nomisUsername}", exception)</ID>
-    <ID>TooGenericExceptionThrown:NonArrivalEntityFactory.kt$NonArrivalEntityFactory$throw RuntimeException("Booking must be provided")</ID>
-    <ID>TooGenericExceptionThrown:NonArrivalEntityFactory.kt$NonArrivalEntityFactory$throw RuntimeException("Reason must be provided")</ID>
-    <ID>TooGenericExceptionThrown:OAuth2ResourceServerSecurityConfiguration.kt$AuthAwareTokenConverter$throw RuntimeException("Unable to find a claim to identify Subject by")</ID>
-    <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No category provided for prison-case-notes.excluded-categories at index $index")</ID>
-    <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided")</ID>
-    <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No prison-api-page-size configuration provided")</ID>
-    <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No prison-case-notes.excluded-categories provided")</ID>
-    <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No prison-case-notes.lookback-days configuration provided")</ID>
-    <ID>TooGenericExceptionThrown:PersistedFactory.kt$PersistedFactory$throw RuntimeException("Unreachable")</ID>
-    <ID>TooGenericExceptionThrown:PersonRisks.kt$PersonRisksConverter$throw RuntimeException("Unable to deserialize PersonRisks from JSON string", exception)</ID>
-    <ID>TooGenericExceptionThrown:PersonRisks.kt$PersonRisksConverter$throw RuntimeException("Unable to serialize PersonRisks to JSON string for database", exception)</ID>
-    <ID>TooGenericExceptionThrown:PlacementApplicationEntityFactory.kt$PlacementApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
-    <ID>TooGenericExceptionThrown:PlacementApplicationEntityFactory.kt$PlacementApplicationEntityFactory$throw RuntimeException("Must provide an application")</ID>
-    <ID>TooGenericExceptionThrown:PlacementDateEntityFactory.kt$PlacementDateEntityFactory$throw RuntimeException("Must provide a placementApplication")</ID>
-    <ID>TooGenericExceptionThrown:PlacementRequestEntityFactory.kt$PlacementRequestEntityFactory$throw RuntimeException("Must provide Placement Requirements")</ID>
-    <ID>TooGenericExceptionThrown:PlacementRequestEntityFactory.kt$PlacementRequestEntityFactory$throw RuntimeException("Must provide an Application")</ID>
-    <ID>TooGenericExceptionThrown:PlacementRequestEntityFactory.kt$PlacementRequestEntityFactory$throw RuntimeException("Must provide an Assessment")</ID>
-    <ID>TooGenericExceptionThrown:PlacementRequestTransformer.kt$PlacementRequestTransformer$throw RuntimeException("Unrecognised releaseType: $releaseType")</ID>
-    <ID>TooGenericExceptionThrown:PlacementRequirementsEntityFactory.kt$PlacementRequirementsEntityFactory$throw RuntimeException("Must provide an Application")</ID>
-    <ID>TooGenericExceptionThrown:PlacementRequirementsEntityFactory.kt$PlacementRequirementsEntityFactory$throw RuntimeException("Must provide an Assessment")</ID>
-    <ID>TooGenericExceptionThrown:PremisesController.kt$PremisesController$throw RuntimeException("Unsupported NewArrival type: ${body::class.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:PremisesService.kt$PremisesService$throw RuntimeException("startDate must be before endDate when calculating availability for range")</ID>
-    <ID>TooGenericExceptionThrown:PremisesTransformer.kt$PremisesTransformer$throw RuntimeException("Unsupported PremisesEntity type: ${jpa::class.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:ProbationAreaProbationRegionMappingEntityFactory.kt$ProbationAreaProbationRegionMappingEntityFactory$throw RuntimeException("Must provide a Probation Region")</ID>
-    <ID>TooGenericExceptionThrown:ProbationDeliveryUnitEntityFactory.kt$ProbationDeliveryUnitEntityFactory$throw RuntimeException("Must provide a Probation Region")</ID>
-    <ID>TooGenericExceptionThrown:RedisConfiguration.kt$ClientResultRedisSerializer$throw RuntimeException("Preemptively cached requests should not be annotated with @Cacheable")</ID>
-    <ID>TooGenericExceptionThrown:RedisConfiguration.kt$ClientResultRedisSerializer$throw RuntimeException("Unhandled discriminator type: ${deserializedWrapper.discriminator}")</ID>
-    <ID>TooGenericExceptionThrown:RoomEntityFactory.kt$RoomEntityFactory$throw RuntimeException("Must provide a premises")</ID>
-    <ID>TooGenericExceptionThrown:RoshRatings.kt$RoshRatingsInner$throw RuntimeException("No RiskLevels found")</ID>
-    <ID>TooGenericExceptionThrown:SeedJob.kt$SeedJob$throw RuntimeException("required headers: $missingHeaders")</ID>
-    <ID>TooGenericExceptionThrown:SeedService.kt$SeedService$throw RuntimeException("The headers provided: $headerRow did not include ${exception.message}")</ID>
-    <ID>TooGenericExceptionThrown:SeedService.kt$SeedService$throw RuntimeException("There was an issue opening the CSV file", exception)</ID>
-    <ID>TooGenericExceptionThrown:SeedService.kt$SeedService$throw RuntimeException("There were issues deserializing the CSV:\n${errors.joinToString(", \n")}")</ID>
-    <ID>TooGenericExceptionThrown:TemporaryAccommodationApplicationEntityFactory.kt$TemporaryAccommodationApplicationEntityFactory$throw RuntimeException("A probation region must be provided")</ID>
-    <ID>TooGenericExceptionThrown:TemporaryAccommodationApplicationEntityFactory.kt$TemporaryAccommodationApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
-    <ID>TooGenericExceptionThrown:TemporaryAccommodationAssessmentEntityFactory.kt$TemporaryAccommodationAssessmentEntityFactory$throw RuntimeException("Must provide an application")</ID>
-    <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesEntityFactory.kt$TemporaryAccommodationPremisesEntityFactory$throw RuntimeException("Must provide a probation region")</ID>
-    <ID>TooGenericExceptionThrown:UserEntityFactory.kt$UserEntityFactory$throw RuntimeException("A probation region must be provided")</ID>
-    <ID>TooGenericExceptionThrown:UserQualificationAssignmentEntityFactory.kt$UserQualificationAssignmentEntityFactory$throw RuntimeException("Must provide a User")</ID>
-    <ID>TooGenericExceptionThrown:UserRoleAssignmentEntityFactory.kt$UserRoleAssignmentEntityFactory$throw RuntimeException("Must provide a User")</ID>
-    <ID>TooGenericExceptionThrown:WebClientCache.kt$WebClientCache$throw RuntimeException("Must provide a preemptiveCacheKey")</ID>
-    <ID>TooManyFunctions:AssessmentService.kt$AssessmentService</ID>
-    <ID>TooManyFunctions:Dates.kt$uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Dates.kt</ID>
-    <ID>TooManyFunctions:OffenderService.kt$OffenderService</ID>
-    <ID>TooManyFunctions:PremisesController.kt$PremisesController : PremisesApiDelegate</ID>
-    <ID>TooManyFunctions:UserAccessService.kt$UserAccessService</ID>
-    <ID>TooManyFunctions:UserService.kt$UserService</ID>
-    <ID>UnusedParameter:APOASysContext.kt$response: NeedsDetails</ID>
-    <ID>UnusedParameter:APOASysContext.kt$response: RisksToTheIndividual</ID>
-    <ID>UnusedParameter:APOASysContext.kt$response: RoshSummary</ID>
-    <ID>UnusedParameter:OAuth2ResourceServerSecurityConfiguration.kt$JwksCacheConfig$applicationContext: ApplicationContext</ID>
-    <ID>UnusedParameter:PremisesService.kt$PremisesService$latitude: Double?</ID>
-    <ID>UnusedParameter:PremisesService.kt$PremisesService$longitude: Double?</ID>
-    <ID>UnusedParameter:RedisConfiguration.kt$RedisConfiguration$@Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long</ID>
-    <ID>UnusedParameter:WebClientConfiguration.kt$WebClientConfiguration$authorizedClients: OAuth2AuthorizedClientRepository</ID>
-    <ID>UnusedParameter:WebClientConfiguration.kt$WebClientConfiguration$clientRegistrations: ClientRegistrationRepository</ID>
-    <ID>UnusedPrivateMember:OAuth2ResourceServerSecurityConfiguration.kt$AuthAwareTokenConverter$private fun extractAuthSource(claims: Map&lt;String, Any?&gt;): String</ID>
-    <ID>UnusedPrivateProperty:ApplicationTimelinessTest.kt$ApplicationTimelinessTest$val unSubmittedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist { withCreatedByUser(user) withApplicationSchema(applicationSchema) withSubmittedAt(null) withRiskRatings(risks) }</ID>
-    <ID>UnusedPrivateProperty:CancellationQueryTest.kt$CancellationQueryTest$val otherCancellations = listOf( cancellationEntityFactory.produceAndPersist { withBooking( bookingEntityFactory.produceAndPersist { withPremises(premises) }, ) withReason(cancellationReasonEntityFactory.produceAndPersist()) }, cancellationEntityFactory.produceAndPersist { withBooking( bookingEntityFactory.produceAndPersist { withPremises(premises) }, ) withReason(cancellationReasonEntityFactory.produceAndPersist()) }, )</ID>
-    <ID>UnusedPrivateProperty:CharacteristicQueryTest.kt$CharacteristicQueryTest$var otherCharacteristics = mutableListOf( characteristicEntityFactory.produceAndPersist(), characteristicEntityFactory.produceAndPersist(), )</ID>
-    <ID>UnusedPrivateProperty:ClientResultRedisSerializerTest.kt$ClientResultRedisSerializerTest$val cachedString = String(cachedByteArray)</ID>
-    <ID>UnusedPrivateProperty:IntegrationTestBase.kt$IntegrationTestBase$@Autowired private lateinit var jdbcTemplate: JdbcTemplate</ID>
-    <ID>UseCheckOrError:DomainEventUrlConfig.kt$DomainEventUrlConfig$throw IllegalStateException("Missing URL for $domainEventType")</ID>
+    <ID>CyclomaticComplexMethod:BookingTransformer.kt:BookingTransformer$private fun determineTemporaryAccommodationStatus: BookingStatus</ID>
+    <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt:DomainEventUrlConfig$fun getUrlForDomainEventId: String</ID>
+    <ID>CyclomaticComplexMethod:GetAllApprovedPremisesApplicationsTest.kt:GetAllApprovedPremisesApplicationsTest$private fun ApprovedPremisesApplicationSummary.matches: Boolean</ID>
+    <ID>CyclomaticComplexMethod:SeedUtils.kt:fun getCanonicalRegionName: String</ID>
+    <ID>ForbiddenComment:PremisesEntity.kt:ApprovedPremisesEntity$// TODO: Make not-null once Premises have had point added in all environments</ID>
+    <ID>ForbiddenComment:UserAccessService.kt:UserAccessService$// TODO: Revisit if Approved Premises introduces region-limited access</ID>
+    <ID>ForbiddenComment:UserAccessService.kt:UserAccessService$// TODO: Revisit once Temporary Accommodation introduces user roles</ID>
+    <ID>InvalidPackageDeclaration:UserSpecifications.kt:package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification</ID>
+    <ID>LargeClass:BookingTransformerTest.kt:BookingTransformerTest</ID>
+    <ID>LongMethod:BookingTransformerTest.kt:BookingTransformerTest$@Test fun `Temporary Accommodation Entity with edited departure is correctly transformed`</ID>
+    <ID>LongMethod:BookingTransformerTest.kt:BookingTransformerTest$@Test fun `Temporary Accommodation entity with non-zero day turnaround period and departure with turnaround period in past is correctly transformed to closed status`</ID>
+    <ID>LongMethod:BookingTransformerTest.kt:BookingTransformerTest$@Test fun `Temporary Accommodation entity with non-zero day turnaround period and departure within turnaround period is correctly transformed to departed status`</ID>
+    <ID>LongMethod:SeedUtils.kt:@Suppress("CyclomaticComplexMethod") fun getCanonicalLocalAuthorityName: String</ID>
+    <ID>MagicNumber:BaseHMPPSClient.kt:BaseHMPPSClient.HMPPSRequestConfiguration$10000</ID>
+    <ID>MagicNumber:MigrationJobService.kt:MigrationJobService$50</ID>
+    <ID>MagicNumber:NomisUsersSeedJob.kt:NomisUsersSeedJob$100000</ID>
+    <ID>MagicNumber:NomisUsersSeedJob.kt:NomisUsersSeedJob$900000</ID>
+    <ID>MagicNumber:OASysSectionsTransformer.kt:OASysSectionsTransformer$10</ID>
+    <ID>MagicNumber:OASysSectionsTransformer.kt:OASysSectionsTransformer$11</ID>
+    <ID>MagicNumber:OASysSectionsTransformer.kt:OASysSectionsTransformer$12</ID>
+    <ID>MagicNumber:OASysSectionsTransformer.kt:OASysSectionsTransformer$3</ID>
+    <ID>MagicNumber:OASysSectionsTransformer.kt:OASysSectionsTransformer$4</ID>
+    <ID>MagicNumber:OASysSectionsTransformer.kt:OASysSectionsTransformer$5</ID>
+    <ID>MagicNumber:OASysSectionsTransformer.kt:OASysSectionsTransformer$6</ID>
+    <ID>MagicNumber:OASysSectionsTransformer.kt:OASysSectionsTransformer$7</ID>
+    <ID>MagicNumber:OAuth2ResourceServerSecurityConfiguration.kt:OAuth2ResourceServerSecurityConfiguration$401</ID>
+    <ID>MagicNumber:OAuth2ResourceServerSecurityConfiguration.kt:OAuth2ResourceServerSecurityConfiguration.&lt;no name provided&gt;$401</ID>
+    <ID>MagicNumber:PrisonsApiClient.kt:PrisonsApiClient$10</ID>
+    <ID>MagicNumber:PrisonsApiClient.kt:PrisonsApiClient$12</ID>
+    <ID>MagicNumber:PrisonsApiClient.kt:PrisonsApiClient$30</ID>
+    <ID>MagicNumber:PrisonsApiClient.kt:PrisonsApiClient$5</ID>
+    <ID>MagicNumber:PrisonsApiClient.kt:PrisonsApiClient$6</ID>
+    <ID>MaxLineLength:AssessmentSummaryQueryTest.kt:AssessmentSummaryQueryTest$assertThat(jsonMapper.readTree(summary.riskRatings)).isEqualTo(jsonMapper.readTree("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}"""))</ID>
+    <ID>MaxLineLength:AuthTest.kt:AuthTest$val jwt = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhcHByb3ZlZC1wcmVtaXNlcy1hcGkiLCJncmFudF90eXBlIjoiY2xpZW50X2NyZWRlbnRpYWxzIiwic2NvcGUiOlsicmVhZCJdLCJhdXRoX3NvdXJjZSI6Im5vbmUiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjkwOTEvYXV0aC9pc3N1ZXIiLCJleHAiOjI2NTk3MDQ5NDAsImF1dGhvcml0aWVzIjpbIlJPTEVfSU5URVJWRU5USU9OUyIsIlJPTEVfT0FTWVNfUkVBRF9PTkxZIiwiUk9MRV9DT01NVU5JVFkiLCJST0xFX0dMT0JBTF9TRUFSQ0giLCJST0xFX0NPTU1VTklUWV9VU0VSUyIsIlJPTEVfUklTS19TVU1NQVJZIl0sImp0aSI6ImlTSEtsTXJ1aXFUNjF0dTNXVFFqckE2WWJfTSIsImNsaWVudF9pZCI6ImFwcHJvdmVkLXByZW1pc2VzLWFwaSJ9.Cr7Nl09vjUpyieddsJwyQF02nmqhR6PbM4xePA47ukkyhhctE4SwqpOAO5D5OIstr9ePnlmF_Tug7HZ6-SLF8lBnN9C_M2-74d8127gPkQxjWsGnAKIxAGDnwLjtwV1UpSvS0p-Phg3cBTGiq6_HABEuh2JSD67eJS0ZaqNPUXXp2kTfi1ZJXA1ysxFKvAP5qYHbBpYWfvFq9Wkpsrq4sM41yjzS7hmkpaEUAYvKUdYefeRAT6nMCU6pfkEOoCmXkMTf6n6rJ1HxxTvkucZwEQk1dOKZUH0d_AOjZy5RAXiSRzgiYsMfB02gvn2T0FfOyjkjKXgVDsFc2yf3bd6P0g"</ID>
+    <ID>MaxLineLength:ExceptionHandling.kt:ExceptionHandling$private fun logBadRequestProblem</ID>
+    <ID>MaxLineLength:OAuth2ResourceServerSecurityConfiguration.kt:LoggingInMemoryOAuth2AuthorizedClientService$log.info("Retrieved a client_credentials JWT for service-&gt;service calls for client ${authorizedClient.clientRegistration.clientId} with authorities: ${info.authorities}, scopes: ${info.scope}, expiry: ${info.exp}")</ID>
+    <ID>SwallowedException:Cas1TasksController.kt:Cas1TasksController$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:DeserializationValidationService.kt:e: Exception</ID>
+    <ID>SwallowedException:OffenderService.kt:OffenderService$exception: Exception</ID>
+    <ID>SwallowedException:PlacementRequestTransformer.kt:PlacementRequestTransformer$exception: Exception</ID>
+    <ID>SwallowedException:SeedService.kt:SeedService$exception: Exception</ID>
+    <ID>ThrowsCount:AbstractUsersSeedJob.kt:AbstractUsersSeedJob$override fun processRow</ID>
+    <ID>ThrowsCount:Cas1PlacementApplicationsController.kt:Cas1PlacementApplicationsController$override fun placementApplicationsIdWithdrawPost: ResponseEntity&lt;PlacementApplication&gt;</ID>
+    <ID>ThrowsCount:Cas1PlacementRequestsController.kt:Cas1PlacementRequestsController$override fun withdrawPlacementRequest: ResponseEntity&lt;Cas1PlacementRequestDetail&gt;</ID>
+    <ID>ThrowsCount:Cas1ReportsController.kt:Cas1ReportsController$@SuppressWarnings("CyclomaticComplexMethod") override fun getReportByName: ResponseEntity&lt;StreamingResponseBody&gt;</ID>
+    <ID>ThrowsCount:Cas2ApplicationsSeedJob.kt:Cas2ApplicationsSeedJob$override fun processRow</ID>
+    <ID>ThrowsCount:Cas2UpdateAssessmentStatusSeedJob.kt:Cas2UpdateAssessmentStatusSeedJob$override fun processRow</ID>
+    <ID>ThrowsCount:PremisesController.kt:PremisesController$@Transactional override fun premisesPremisesIdPut: ResponseEntity&lt;Premises&gt;</ID>
+    <ID>ThrowsCount:PremisesController.kt:PremisesController$override fun premisesPremisesIdBookingsBookingIdGet: ResponseEntity&lt;Booking&gt;</ID>
+    <ID>ThrowsCount:PremisesController.kt:PremisesController$override fun premisesPremisesIdGet: ResponseEntity&lt;Premises&gt;</ID>
+    <ID>ThrowsCount:UsersBasicSeedJob.kt:UsersBasicSeedJob$@SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught") override fun processRow</ID>
+    <ID>TooGenericExceptionCaught:BaseHMPPSClient.kt:BaseHMPPSClient$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:Cas2ApplicationsSeedJob.kt:Cas2ApplicationsSeedJob$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:DeserializationValidationService.kt:e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ExternalUsersSeedJob.kt:ExternalUsersSeedJob$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:MigrationJobService.kt:MigrationJobService$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:NomisUsersSeedJob.kt:NomisUsersSeedJob$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:OAuth2ResourceServerSecurityConfiguration.kt:LoggingInMemoryOAuth2AuthorizedClientService$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:OffenderService.kt:OffenderService$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:PersonRisks.kt:PersonRisksConverter$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:PlacementRequestTransformer.kt:PlacementRequestTransformer$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:SeedService.kt:SeedService$exception: Exception</ID>
+    <ID>TooGenericExceptionCaught:SeedService.kt:SeedService$exception: RuntimeException</ID>
+    <ID>TooGenericExceptionThrown:AdjudicationTransformer.kt:AdjudicationTransformer$throw RuntimeException("Agency ${result.agencyId} not found")</ID>
+    <ID>TooGenericExceptionThrown:ApplicationTeamCodeEntityFactory.kt:ApplicationTeamCodeEntityFactory$throw RuntimeException("Must provide an Application")</ID>
+    <ID>TooGenericExceptionThrown:ApplicationsTransformer.kt:ApplicationsTransformer$throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")</ID>
+    <ID>TooGenericExceptionThrown:ApprovedPremisesApplicationEntityFactory.kt:ApprovedPremisesApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
+    <ID>TooGenericExceptionThrown:ApprovedPremisesAssessmentEntityFactory.kt:ApprovedPremisesAssessmentEntityFactory$throw RuntimeException("Must provide an application")</ID>
+    <ID>TooGenericExceptionThrown:ApprovedPremisesEntityFactory.kt:ApprovedPremisesEntityFactory$throw RuntimeException("Must provide a local authority area")</ID>
+    <ID>TooGenericExceptionThrown:ApprovedPremisesEntityFactory.kt:ApprovedPremisesEntityFactory$throw RuntimeException("Must provide a probation region")</ID>
+    <ID>TooGenericExceptionThrown:ArrivalEntityFactory.kt:ArrivalEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentClarificationNoteEntityFactory.kt:AssessmentClarificationNoteEntityFactory$throw RuntimeException("Must provide a createdBy")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentClarificationNoteEntityFactory.kt:AssessmentClarificationNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentReferralHistoryNoteTransformer.kt:AssessmentReferralHistoryNoteTransformer$throw RuntimeException("Unsupported ReferralHistoryNote type: ${jpa::class.qualifiedName}")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentReferralHistorySystemNoteEntityFactory.kt:AssessmentReferralHistorySystemNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentReferralHistoryUserNoteEntityFactory.kt:AssessmentReferralHistoryUserNoteEntityFactory$throw RuntimeException("Must provide a createdBy")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentReferralHistoryUserNoteEntityFactory.kt:AssessmentReferralHistoryUserNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentService.kt:AssessmentService$throw RuntimeException("Only CAS3 Assessments are currently supported")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentService.kt:AssessmentService$throw RuntimeException("Reallocating an assessment of type '${currentAssessment::class.qualifiedName}' has not been implemented.")</ID>
+    <ID>TooGenericExceptionThrown:AssessmentTransformer.kt:AssessmentTransformer$throw RuntimeException("Unsupported type: ${ase.type}")</ID>
+    <ID>TooGenericExceptionThrown:BookingEntityFactory.kt:BookingEntityFactory$throw RuntimeException("Must provide a Premises")</ID>
+    <ID>TooGenericExceptionThrown:BookingNotMadeEntityFactory.kt:BookingNotMadeEntityFactory$throw RuntimeException("Must provide a Placement Request")</ID>
+    <ID>TooGenericExceptionThrown:BookingSearchResultTransformer.kt:BookingSearchResultTransformer$throw RuntimeException("Unknown booking status ${result.bookingStatus}")</ID>
+    <ID>TooGenericExceptionThrown:BookingTransformer.kt:BookingTransformer$throw RuntimeException("Could not determine service for Booking ${jpa.id}")</ID>
+    <ID>TooGenericExceptionThrown:BookingTransformer.kt:BookingTransformer$throw RuntimeException("Could not determine status for Booking ${jpa.id}")</ID>
+    <ID>TooGenericExceptionThrown:CAS3DomainEventFactory.kt:CAS3DomainEventFactory$throw RuntimeException("Must provide event data")</ID>
+    <ID>TooGenericExceptionThrown:CAS3DomainEventFactory.kt:CAS3DomainEventFactory$throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")</ID>
+    <ID>TooGenericExceptionThrown:CacheClearTest.kt:CacheClearTest$throw RuntimeException("Upstream endpoint was never called by OffenderDetailsCacheRefreshWorker", throwable)</ID>
+    <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt:CancellationEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt:CancellationEntityFactory$throw RuntimeException("Reason must be provided")</ID>
+    <ID>TooGenericExceptionThrown:Cas2ApplicationsSeedJob.kt:Cas2ApplicationsSeedJob$throw RuntimeException("Could not create application ${row.id}", exception)</ID>
+    <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt:Cas2DomainEventFactory$throw RuntimeException("Must provide event data")</ID>
+    <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt:Cas2DomainEventFactory$throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")</ID>
+    <ID>TooGenericExceptionThrown:CharacteristicTransformer.kt:CharacteristicTransformer$throw RuntimeException("Unsupported service scope: ${jpa.modelScope}")</ID>
+    <ID>TooGenericExceptionThrown:CharacteristicTransformer.kt:CharacteristicTransformer$throw RuntimeException("Unsupported service scope: ${jpa.serviceScope}")</ID>
+    <ID>TooGenericExceptionThrown:CharacteristicsSeedJob.kt:CharacteristicsSeedJob$throw RuntimeException("The field: '$requiredField' is required")</ID>
+    <ID>TooGenericExceptionThrown:CharacteristicsSeedJob.kt:CharacteristicsSeedJob$throw RuntimeException("Your '$requiredField' value: '$value' is not recognised")</ID>
+    <ID>TooGenericExceptionThrown:DateChangeEntityFactory.kt:DateChangeEntityFactory$throw RuntimeException("Must provide a booking")</ID>
+    <ID>TooGenericExceptionThrown:DateChangeEntityFactory.kt:DateChangeEntityFactory$throw RuntimeException("Must provide a changedByUser")</ID>
+    <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt:DepartureEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt:DepartureEntityFactory$throw RuntimeException("MoveOnCategory must be provided")</ID>
+    <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt:DepartureEntityFactory$throw RuntimeException("Reason must be provided")</ID>
+    <ID>TooGenericExceptionThrown:ExtensionEntityFactory.kt:ExtensionEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:ExternalUsersSeedJob.kt:ExternalUsersSeedJob$throw RuntimeException("Could not create external user ${row.username}", exception)</ID>
+    <ID>TooGenericExceptionThrown:NomisUsersSeedJob.kt:NomisUsersSeedJob$throw RuntimeException("Could not create user ${row.nomisUsername}", exception)</ID>
+    <ID>TooGenericExceptionThrown:NonArrivalEntityFactory.kt:NonArrivalEntityFactory$throw RuntimeException("Booking must be provided")</ID>
+    <ID>TooGenericExceptionThrown:NonArrivalEntityFactory.kt:NonArrivalEntityFactory$throw RuntimeException("Reason must be provided")</ID>
+    <ID>TooGenericExceptionThrown:OAuth2ResourceServerSecurityConfiguration.kt:AuthAwareTokenConverter$throw RuntimeException("Unable to find a claim to identify Subject by")</ID>
+    <ID>TooGenericExceptionThrown:OffenderService.kt:OffenderService$throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided")</ID>
+    <ID>TooGenericExceptionThrown:PersistedFactory.kt:PersistedFactory$throw RuntimeException("Unreachable")</ID>
+    <ID>TooGenericExceptionThrown:PersonRisks.kt:PersonRisksConverter$throw RuntimeException("Unable to deserialize PersonRisks from JSON string", exception)</ID>
+    <ID>TooGenericExceptionThrown:PersonRisks.kt:PersonRisksConverter$throw RuntimeException("Unable to serialize PersonRisks to JSON string for database", exception)</ID>
+    <ID>TooGenericExceptionThrown:PlacementApplicationEntityFactory.kt:PlacementApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
+    <ID>TooGenericExceptionThrown:PlacementApplicationEntityFactory.kt:PlacementApplicationEntityFactory$throw RuntimeException("Must provide an application")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequestEntityFactory.kt:PlacementRequestEntityFactory$throw RuntimeException("Must provide Placement Requirements")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequestEntityFactory.kt:PlacementRequestEntityFactory$throw RuntimeException("Must provide an Application")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequestEntityFactory.kt:PlacementRequestEntityFactory$throw RuntimeException("Must provide an Assessment")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequestTransformer.kt:PlacementRequestTransformer$throw RuntimeException("Unrecognised releaseType: $releaseType")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequirementsEntityFactory.kt:PlacementRequirementsEntityFactory$throw RuntimeException("Must provide an Application")</ID>
+    <ID>TooGenericExceptionThrown:PlacementRequirementsEntityFactory.kt:PlacementRequirementsEntityFactory$throw RuntimeException("Must provide an Assessment")</ID>
+    <ID>TooGenericExceptionThrown:PremisesService.kt:PremisesService$throw RuntimeException("startDate must be before endDate when calculating availability for range")</ID>
+    <ID>TooGenericExceptionThrown:PremisesTransformer.kt:PremisesTransformer$throw RuntimeException("Unsupported PremisesEntity type: ${jpa::class.qualifiedName}")</ID>
+    <ID>TooGenericExceptionThrown:ProbationAreaProbationRegionMappingEntityFactory.kt:ProbationAreaProbationRegionMappingEntityFactory$throw RuntimeException("Must provide a Probation Region")</ID>
+    <ID>TooGenericExceptionThrown:RedisConfiguration.kt:ClientResultRedisSerializer$throw RuntimeException("Preemptively cached requests should not be annotated with @Cacheable")</ID>
+    <ID>TooGenericExceptionThrown:RedisConfiguration.kt:ClientResultRedisSerializer$throw RuntimeException("Unhandled discriminator type: ${deserializedWrapper.discriminator}")</ID>
+    <ID>TooGenericExceptionThrown:RoomEntityFactory.kt:RoomEntityFactory$throw RuntimeException("Must provide a premises")</ID>
+    <ID>TooGenericExceptionThrown:RoshRatings.kt:RoshRatingsInner$throw RuntimeException("No RiskLevels found")</ID>
+    <ID>TooGenericExceptionThrown:SeedJob.kt:SeedJob$throw RuntimeException("required headers: $missingHeaders")</ID>
+    <ID>TooGenericExceptionThrown:SeedService.kt:SeedService$throw RuntimeException("The headers provided: $headerRow did not include ${exception.message}")</ID>
+    <ID>TooGenericExceptionThrown:SeedService.kt:SeedService$throw RuntimeException("There was an issue opening the CSV file", exception)</ID>
+    <ID>TooGenericExceptionThrown:SeedService.kt:SeedService$throw RuntimeException("There were issues deserializing the CSV:\n${errors.joinToString(", \n")}")</ID>
+    <ID>TooGenericExceptionThrown:TemporaryAccommodationApplicationEntityFactory.kt:TemporaryAccommodationApplicationEntityFactory$throw RuntimeException("A probation region must be provided")</ID>
+    <ID>TooGenericExceptionThrown:TemporaryAccommodationApplicationEntityFactory.kt:TemporaryAccommodationApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
+    <ID>TooGenericExceptionThrown:TemporaryAccommodationAssessmentEntityFactory.kt:TemporaryAccommodationAssessmentEntityFactory$throw RuntimeException("Must provide an application")</ID>
+    <ID>TooGenericExceptionThrown:TemporaryAccommodationPremisesEntityFactory.kt:TemporaryAccommodationPremisesEntityFactory$throw RuntimeException("Must provide a probation region")</ID>
+    <ID>TooGenericExceptionThrown:UserEntityFactory.kt:UserEntityFactory$throw RuntimeException("A probation region must be provided")</ID>
+    <ID>TooGenericExceptionThrown:UserQualificationAssignmentEntityFactory.kt:UserQualificationAssignmentEntityFactory$throw RuntimeException("Must provide a User")</ID>
+    <ID>TooGenericExceptionThrown:UserRoleAssignmentEntityFactory.kt:UserRoleAssignmentEntityFactory$throw RuntimeException("Must provide a User")</ID>
+    <ID>TooGenericExceptionThrown:WebClientCache.kt:WebClientCache$throw RuntimeException("Must provide a preemptiveCacheKey")</ID>
+    <ID>TooManyFunctions:Dates.kt:uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Dates.kt</ID>
+    <ID>TooManyFunctions:ExceptionHandling.kt:ExceptionHandling</ID>
+    <ID>TooManyFunctions:OffenderService.kt:OffenderService</ID>
+    <ID>TooManyFunctions:UserAccessService.kt:UserAccessService</ID>
+    <ID>TooManyFunctions:UserService.kt:UserService</ID>
+    <ID>UnusedParameter:APOASysContext.kt:response: NeedsDetails</ID>
+    <ID>UnusedParameter:APOASysContext.kt:response: RisksToTheIndividual</ID>
+    <ID>UnusedParameter:APOASysContext.kt:response: RoshSummary</ID>
+    <ID>UnusedParameter:OAuth2ResourceServerSecurityConfiguration.kt:JwksCacheConfig$applicationContext: ApplicationContext</ID>
+    <ID>UnusedParameter:RedisConfiguration.kt:RedisConfiguration$@Value("\${caches.staffMember.expiry-seconds}") staffMemberExpirySeconds: Long</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic

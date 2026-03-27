@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
@@ -12,6 +11,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -52,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -1352,7 +1351,6 @@ class Cas1TasksTest {
       fun `Get all tasks shows allows showing completed tasks`(userRole: UserRole) {
         val (user, jwt) = givenAUser(roles = listOf(userRole))
         val (_, _, completeTasks) = setupForUser(user)
-        jsonMapper.setDateFormat(SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss"))
 
         val rawResponseBody = webTestClient.get()
           .uri("/cas1/tasks?isCompleted=true")

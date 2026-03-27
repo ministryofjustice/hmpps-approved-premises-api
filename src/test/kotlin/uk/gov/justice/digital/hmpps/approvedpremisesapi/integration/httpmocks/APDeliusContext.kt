@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.github.tomakehurst.wiremock.client.WireMock
+import tools.jackson.core.type.TypeReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail

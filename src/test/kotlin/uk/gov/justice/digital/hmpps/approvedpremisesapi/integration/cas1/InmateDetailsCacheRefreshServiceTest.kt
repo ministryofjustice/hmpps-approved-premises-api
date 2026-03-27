@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeyResolver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus

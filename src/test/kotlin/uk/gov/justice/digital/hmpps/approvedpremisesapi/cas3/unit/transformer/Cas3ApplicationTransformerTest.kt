@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -24,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
@@ -35,11 +32,7 @@ class Cas3ApplicationTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
 
-  private val jsonMapper = JsonMapper().apply {
-    registerModule(Jdk8Module())
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-  }
+  private val jsonMapper = createRuntimeLikeObjectMapper()
 
   private val user = UserEntityFactory()
     .withYieldedProbationRegion {

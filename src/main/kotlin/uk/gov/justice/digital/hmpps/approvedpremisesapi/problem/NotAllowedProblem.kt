@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 
-import org.zalando.problem.AbstractThrowableProblem
-import org.zalando.problem.Exceptional
-import org.zalando.problem.Status
+import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 
-class NotAllowedProblem(detail: String) : AbstractThrowableProblem(null, "Not Allowed", Status.METHOD_NOT_ALLOWED, detail) {
-  override fun getCause(): Exceptional? = null
+class NotAllowedProblem(val detail: String) : RuntimeException(detail) {
+
+  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.METHOD_NOT_ALLOWED, detail).apply {
+    title = "Not Allowed"
+  }
 }

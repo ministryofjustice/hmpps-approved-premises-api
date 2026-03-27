@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
@@ -13,6 +10,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.NullNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
@@ -48,7 +48,7 @@ import kotlin.math.sign
 
 class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationRepository: ApplicationRepository
 
   val schema = """
@@ -1142,14 +1142,12 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               Cas2v2Application::class.java,
             )
 
-            Assertions.assertThat(responseBody).matches {
-              applicationEntity.id == it.id &&
-                applicationEntity.crn == it.person.crn &&
-                applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByUser.id == it.createdBy.id &&
-                applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
-            }
+            Assertions.assertThat(responseBody.id).isEqualTo(applicationEntity.id)
+            Assertions.assertThat(responseBody.person.crn).isEqualTo(applicationEntity.crn)
+            Assertions.assertThat(responseBody.createdAt).isEqualTo(applicationEntity.createdAt.toInstant())
+            Assertions.assertThat(responseBody.createdBy.id).isEqualTo(applicationEntity.createdByUser.id)
+            Assertions.assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
+            Assertions.assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))
           }
         }
       }
@@ -1493,7 +1491,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         }
 
         Assertions.assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn
+          it!!.person.crn == offenderDetails.otherIds.crn
         }
       }
     }

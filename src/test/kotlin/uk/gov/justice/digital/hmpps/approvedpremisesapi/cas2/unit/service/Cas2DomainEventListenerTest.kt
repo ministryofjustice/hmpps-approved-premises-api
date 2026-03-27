@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.service
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.ninjasquad.springmockk.SpykBean
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -12,11 +10,12 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import tools.jackson.core.exc.StreamReadException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AllocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2LocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 
 @ExtendWith(MockKExtension::class)
 class Cas2DomainEventListenerTest {
@@ -30,8 +29,7 @@ class Cas2DomainEventListenerTest {
   @MockK
   lateinit var sentryService: SentryService
 
-  @SpykBean
-  var objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  val jsonMapper = createRuntimeLikeObjectMapper()
 
   @InjectMockKs
   lateinit var cas2DomainEventListener: Cas2DomainEventListener
@@ -39,7 +37,7 @@ class Cas2DomainEventListenerTest {
   @Test
   fun `POM Allocation changed message is processed`() {
     every { cas2AllocationChangedService.process(any()) } returns Unit
-    val msg = """{"Message": "{\"eventType\":\"offender-management.allocation.changed\",\"additionalInformation\":{\"staffCode\":123456,\"prisonId\":\"PPP\"}}"}"""
+    val msg = """{"Message": "{\"eventType\":\"offender-management.allocation.changed\",\"additionalInformation\":{\"staffCode\":123456,\"prisonId\":\"PPP\"},\"version\":1}"}"""
     cas2DomainEventListener.processMessage(msg)
     verify(exactly = 1) { cas2AllocationChangedService.process(any()) }
   }
@@ -56,7 +54,7 @@ class Cas2DomainEventListenerTest {
   @Test
   fun `exceptions are captured by sentry and still thrown`() {
     every { sentryService.captureException(any()) } just Runs
-    assertThrows<JsonParseException> { cas2DomainEventListener.processMessage("invalid") }
+    assertThrows<StreamReadException> { cas2DomainEventListener.processMessage("invalid") }
     verify { sentryService.captureException(any()) }
   }
 }

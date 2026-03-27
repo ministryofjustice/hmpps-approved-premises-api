@@ -29,7 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory.ObjectMapperFactory.createRuntimeLikeObjectMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -44,7 +44,7 @@ class Cas3v2BedspaceServiceTest {
   private val mockCas3v2PremisesService = mockk<Cas3v2PremisesService>()
   private val mockCas3v2DomainEventService = mockk<Cas3v2DomainEventService>()
 
-  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = createRuntimeLikeObjectMapper()
 
   private val cas3v2BedspacesService = Cas3v2BedspacesService(
     mockCharacteristicService,

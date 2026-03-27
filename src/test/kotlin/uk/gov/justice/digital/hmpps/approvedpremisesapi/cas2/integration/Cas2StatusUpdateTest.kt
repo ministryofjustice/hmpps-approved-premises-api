@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -30,10 +30,10 @@ class Cas2StatusUpdateTest(
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realStatusUpdateRepository: Cas2StatusUpdateRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realStatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @AfterEach

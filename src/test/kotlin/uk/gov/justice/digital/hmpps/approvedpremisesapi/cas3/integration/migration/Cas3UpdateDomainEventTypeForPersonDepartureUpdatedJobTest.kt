@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.migration
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType.bookingChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
