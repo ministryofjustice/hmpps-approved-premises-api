@@ -303,17 +303,17 @@ class Cas3v2DomainEventService(
 
   fun getBedspacesActiveDomainEvents(ids: List<UUID>, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findCas3BedspacesActiveDomainEventsByType(
     cas3BedspaceIds = ids,
-    bedspaceDomainEventTypes = bedspaceDomainEventTypes.map { it.toString() },
+    bedspaceDomainEventTypes = bedspaceDomainEventTypes,
   )
 
   fun getBedspaceActiveDomainEvents(id: UUID, bedspaceDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findCas3BedspacesActiveDomainEventsByType(
     listOf(id),
-    bedspaceDomainEventTypes.map { it.toString() },
+    bedspaceDomainEventTypes,
   )
 
   fun getPremisesActiveDomainEvents(id: UUID, premisesDomainEventTypes: List<DomainEventType>): List<DomainEventEntity> = domainEventRepository.findPremisesActiveDomainEventsByType(
     id,
-    premisesDomainEventTypes.map { it.toString() },
+    premisesDomainEventTypes,
   )
 
   @Transactional

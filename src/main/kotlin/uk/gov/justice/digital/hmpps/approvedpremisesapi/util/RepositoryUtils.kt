@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport
 import org.springframework.stereotype.Component
 
-inline fun <reified T, ID> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>): List<T> = findAllByIdOrdered(ids, T::class.java)
+inline fun <reified T : Any, ID : Any> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>): List<T> = findAllByIdOrdered(ids, T::class.java)
 
-fun <T, ID> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>, cls: Class<T>): List<T> {
+fun <T : Any, ID : Any> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>, cls: Class<T>): List<T> {
   if (!RepositoryUtilHelper.instanceExists()) {
     return this.findAllById(ids)
   }
@@ -21,7 +21,7 @@ fun <T, ID> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>, cls: Class<T>
 
   val resultsMap = resultsUnordered.associateBy {
     @Suppress("UNCHECKED_CAST")
-    entityInformation.getId(it!!)!! as ID
+    entityInformation.getId(it)!! as ID
   }
 
   return ids.map { resultsMap[it]!! }
