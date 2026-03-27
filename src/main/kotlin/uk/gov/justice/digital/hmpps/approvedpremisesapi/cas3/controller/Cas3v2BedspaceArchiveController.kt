@@ -88,7 +88,7 @@ class Cas3v2BedspaceArchiveController(
   fun canArchiveBedspace(
     @PathVariable premisesId: UUID,
     @PathVariable bedspaceId: UUID,
-  ): ResponseEntity<Cas3ValidationResult?> {
+  ): ResponseEntity<Cas3ValidationResult> {
     val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
 
     val result = extractEntityFromCasResult(

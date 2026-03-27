@@ -150,7 +150,7 @@ class Cas3DomainEventServiceTest {
     every {
       domainEventRepositoryMock.findCas3BedspacesActiveDomainEventsByType(
         listOf(bedspaceId),
-        listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED.toString(), DomainEventType.CAS3_BEDSPACE_UNARCHIVED.toString()),
+        listOf(DomainEventType.CAS3_BEDSPACE_ARCHIVED, DomainEventType.CAS3_BEDSPACE_UNARCHIVED),
       )
     } returns listOf(
       domainEventEntityYesterday,
