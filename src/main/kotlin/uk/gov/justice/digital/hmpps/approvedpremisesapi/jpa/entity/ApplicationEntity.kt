@@ -5,6 +5,7 @@ import jakarta.persistence.Convert
 import jakarta.persistence.DiscriminatorColumn
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
@@ -16,6 +17,7 @@ import jakarta.persistence.LockModeType
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
+import jakarta.persistence.PostLoad
 import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
 import jakarta.persistence.Version
@@ -33,6 +35,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.listener.ApprovedPremisesApplicationEntityListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -332,6 +335,7 @@ abstract class ApplicationEntity(
 
 @SuppressWarnings("LongParameterList")
 @Entity
+@EntityListeners(ApprovedPremisesApplicationEntityListener::class)
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_applications")
 @PrimaryKeyJoinColumn(name = "id")
@@ -450,6 +454,16 @@ class ApprovedPremisesApplicationEntity(
   """,
   )
   fun isShortNoticeApplication() = this.arrivalDate?.let { Duration.between(this.createdAt, this.arrivalDate).toKotlinDuration() < 28.days }
+
+  @Transient
+  var postLoadStatus: ApprovedPremisesApplicationStatus? = null
+
+  @PostLoad
+  fun loadPreviousState() {
+    postLoadStatus = status
+  }
+
+  fun isStatusChanged(): Boolean = postLoadStatus != status
 }
 
 @Repository

@@ -1023,7 +1023,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
       domainEvents = DomainEventType.entries
         .filter { it.cas == DomainEventCas.CAS1 }
-        .filter { it != DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED }.map {
+        .filter { it != DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED && it != DomainEventType.CAS1_APPLICATION_STATUS_UPDATED }
+        .map {
           createDomainEvent(it, otherApplication, otherAssessment, user)
           return@map createDomainEvent(it, application, assessment, user)
         }

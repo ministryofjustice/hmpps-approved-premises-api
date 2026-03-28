@@ -644,6 +644,11 @@ enum class DomainEventType(
     Cas3EventType.premisesUnarchived.value,
     "A premises for a Transitional Accommodation has been unarchived",
   ),
+  CAS1_APPLICATION_STATUS_UPDATED(
+    DomainEventCas.CAS1,
+    Cas1EventType.applicationStatusUpdated.value,
+    "An application, placement application or placement request has been updated and will effect application statuses",
+  ),
 }
 
 data class Cas1DomainEventTypeInfo(
