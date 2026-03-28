@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity
 
-import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -14,8 +13,9 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.SQLOrder
-import org.hibernate.annotations.Type
+import org.hibernate.type.SqlTypes
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
@@ -89,10 +89,10 @@ data class Cas2ApplicationEntity(
   @JoinColumn(name = "created_by_cas2_user_id")
   val createdByUser: Cas2UserEntity,
 
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   var data: String?,
 
-  @Type(JsonType::class)
+  @JdbcTypeCode(SqlTypes.JSON)
   var document: String?,
 
   val createdAt: OffsetDateTime,
