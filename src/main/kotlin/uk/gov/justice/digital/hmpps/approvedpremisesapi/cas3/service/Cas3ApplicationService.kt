@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.time.Clock
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -52,20 +53,27 @@ class Cas3ApplicationService(
   private val offenderRisksService: OffenderRisksService,
   private val jsonMapper: JsonMapper,
   private val cas3v2BookingService: Cas3v2BookingService,
+  private val clock: Clock,
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
 
   fun getSuitableApplicationByCrn(crn: String): Cas3SuitableApplication? = temporaryAccommodationApplicationRepository.findByCrn(crn)
+    .filter { application ->
+      val now = OffsetDateTime.now(clock)
+      when {
+        application.arrivalDate != null -> application.arrivalDate!! >= now
+        application.personReleaseDate != null -> application.personReleaseDate!! >= now.toLocalDate()
+        else -> application.createdAt >= now.minusMonths(2)
+      }
+    }
     .maxWithOrNull(
-      compareBy(
-        { it.getStatus().priority },
-        { it.submittedAt ?: it.createdAt },
-      ),
+      compareBy { it.createdAt },
     )
     ?.let { application ->
       Cas3SuitableApplication(
         id = application.id,
         applicationStatus = application.getStatus(),
+        assessmentStatus = application.getLatestAssessment()?.deriveAssessmentStatus(),
         bookingStatus = cas3v2BookingService.getLatestBookingStatus(application.id),
       )
     }
@@ -265,7 +273,7 @@ class Cas3ApplicationService(
       previousReferralProbationDeliveryUnit = submitApplication.outOfRegionPduId?.let { probationDeliveryUnitRepository.findByIdOrNull(submitApplication.probationDeliveryUnitId)!! }
     }
 
-    assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData!!)
+    assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData)
 
     application = applicationRepository.save(application)
 
