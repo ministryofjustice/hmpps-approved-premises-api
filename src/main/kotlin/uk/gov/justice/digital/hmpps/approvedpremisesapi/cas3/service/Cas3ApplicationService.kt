@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
+import java.time.LocalDate
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
@@ -56,17 +57,26 @@ class Cas3ApplicationService(
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
 
   fun getSuitableApplicationByCrn(crn: String): Cas3SuitableApplication? = temporaryAccommodationApplicationRepository.findByCrn(crn)
+    .filter { application ->
+      if(application.arrivalDate == null) {
+        if(application.personReleaseDate == null) {
+          application.createdAt >= OffsetDateTime.now().minusMonths(2)
+        } else {
+          application.personReleaseDate!! >= LocalDate.now()
+        }
+      } else {
+        application.arrivalDate!! >= OffsetDateTime.now()
+      }
+    }
     .maxWithOrNull(
-      compareBy(
-        { it.getStatus().priority },
-        { it.submittedAt ?: it.createdAt },
-      ),
+      compareBy { it.createdAt },
     )
     ?.let { application ->
       Cas3SuitableApplication(
         id = application.id,
         applicationStatus = application.getStatus(),
-        bookingStatus = cas3v2BookingService.getLatestBookingStatus(application.id),
+        assessmentStatus = application.getLatestAssessment()?.deriveAssessmentStatus(),
+        placementStatus = cas3v2BookingService.getLatestBookingStatus(application.id),
       )
     }
 

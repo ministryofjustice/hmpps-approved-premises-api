@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ReferralH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -56,7 +55,7 @@ class Cas3AssessmentTransformer(
     submittedAt = jpa.submittedAt?.toInstant(),
     decision = transformJpaDecisionToApi(jpa.decision),
     rejectionRationale = jpa.rejectionRationale,
-    status = getAssessmentStatus(jpa),
+    status = jpa.deriveAssessmentStatus(),
     summaryData = objectMapper.readTree(jpa.summaryData),
     releaseDate = jpa.releaseDate ?: jpa.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate,
     accommodationRequiredFromDate = jpa.accommodationRequiredFromDate ?: LocalDate.from(jpa.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate),
@@ -83,7 +82,7 @@ class Cas3AssessmentTransformer(
     id = a.id,
     applicationId = a.application.id,
     createdAt = a.createdAt.toInstant(),
-    status = getAssessmentStatus(a),
+    status = a.deriveAssessmentStatus(),
     type = ServiceType.CAS3,
   )
 
@@ -105,15 +104,6 @@ class Cas3AssessmentTransformer(
     ase.decision == "ACCEPTED" && ase.completed -> TemporaryAccommodationAssessmentStatus.closed
     ase.decision == "ACCEPTED" -> TemporaryAccommodationAssessmentStatus.readyToPlace
     ase.allocated -> TemporaryAccommodationAssessmentStatus.inReview
-    else -> TemporaryAccommodationAssessmentStatus.unallocated
-  }
-
-  private fun getAssessmentStatus(entity: TemporaryAccommodationAssessmentEntity) = when {
-    entity.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.rejected
-    entity.decision == AssessmentDecision.ACCEPTED && (entity as TemporaryAccommodationAssessmentEntity).completedAt != null ->
-      TemporaryAccommodationAssessmentStatus.closed
-    entity.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.readyToPlace
-    entity.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.inReview
     else -> TemporaryAccommodationAssessmentStatus.unallocated
   }
 

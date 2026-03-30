@@ -26,6 +26,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -367,6 +368,15 @@ class TemporaryAccommodationAssessmentEntity(
   isWithdrawn,
   dueAt,
 ) {
+  fun deriveAssessmentStatus() = when {
+    this.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.rejected
+    this.decision == AssessmentDecision.ACCEPTED && (this as TemporaryAccommodationAssessmentEntity).completedAt != null ->
+      TemporaryAccommodationAssessmentStatus.closed
+    this.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.readyToPlace
+    this.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.inReview
+    else -> TemporaryAccommodationAssessmentStatus.unallocated
+  }
+
   fun currentReleaseDate(): LocalDate = this.releaseDate
     ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate!!
 
