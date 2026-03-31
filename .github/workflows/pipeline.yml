@@ -4,17 +4,18 @@ on:
     branches:
       - 'main'
 
-permissions:
-  contents: read
-  packages: write
-
 jobs:
   test:
+    permissions:
+      contents: read
     name: Test
     uses: ./.github/workflows/test.yml
     secrets: inherit
 
   docker_build:
+    permissions:
+      contents: read
+      packages: write
     name: Build docker image from hmpps-github-actions
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
     with:
@@ -24,6 +25,9 @@ jobs:
       docker_multiplatform: false
 
   deploy_dev:
+    permissions:
+      contents: read
+      packages: write
     name: Deploy to the development environment
     needs:
       - test
@@ -35,6 +39,8 @@ jobs:
       app_version: '${{ needs.docker_build.outputs.app_version }}'
 
   e2e:
+    permissions:
+      contents: read
     name: E2E tests
     needs:
       - deploy_dev
@@ -42,30 +48,41 @@ jobs:
     secrets: inherit
 
   cas1_generate_types:
+    permissions:
+      contents: read
     needs: e2e
     name: Run the generate types job for the CAS1 UI
     uses: ./.github/workflows/generate-cas1-ui-types.yml
     secrets: inherit
 
   cas2_generate_types:
+    permissions:
+      contents: read
     needs: e2e
     name: Run the generate types job for the CAS2 UI
     uses: ./.github/workflows/generate-cas2-ui-types.yml
     secrets: inherit
 
   cas2v2_generate_types:
+    permissions:
+      contents: read
     needs: e2e
     name: Run the generate types job for the CAS2v2 UI
     uses: ./.github/workflows/generate-cas2v2-ui-types.yml
     secrets: inherit
 
   cas3_generate_types:
+    permissions:
+      contents: read
     needs: e2e
     name: Run the generate types job for the CAS3 UI
     uses: ./.github/workflows/generate-cas3-ui-types.yml
     secrets: inherit
 
   deploy_preprod:
+    permissions:
+      contents: read
+      packages: write
     name: Deploy to pre-production environment
     needs:
       - docker_build
@@ -78,6 +95,9 @@ jobs:
       slack_notification: 'true'
 
   deploy_prod:
+    permissions:
+      contents: read
+      packages: write
     name: Deploy to production environment
     needs:
       - docker_build
