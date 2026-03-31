@@ -1,9 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base",
-    ":disableDependencyDashboard"
-  ],
+  "extends": ["github>ministryofjustice/hmpps-renovate-config:node"],
   "assigneesFromCodeOwners": true,
   "timezone": "Europe/London",
   "schedule": [
@@ -12,6 +9,18 @@
   ],
   "enabledManagers": ["gradle", "gradle-wrapper", "dockerfile", "docker-compose", "helmv3", "helm-values", "circleci"],
   "packageRules": [
+    {
+      "matchUpdateTypes": ["patch"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "minimumReleaseAge": "30 days"
+    },
     {
       "matchDatasources": ["docker"],
       "allowedVersions": "17-slim"
