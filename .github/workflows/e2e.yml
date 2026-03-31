@@ -7,20 +7,20 @@ on:
 jobs:
   cas1_e2e_test:
     name: "CAS1 E2E"
-    uses: ministryofjustice/hmpps-approved-premises-ui/.github/workflows/e2e_tests.yml@be120bcd43880df01f4fd9693e3773092501e2b9
+    uses: ministryofjustice/hmpps-approved-premises-ui/.github/workflows/e2e_tests.yml@main
     secrets: inherit
 
   cas2_e2e_test:
     name: "CAS2 E2E"
-    uses: ministryofjustice/hmpps-community-accommodation-tier-2-ui/.github/workflows/e2e_tests.yml@2cca64b770d7857c08f7cd522c7cc97507b5d905
+    uses: ministryofjustice/hmpps-community-accommodation-tier-2-ui/.github/workflows/e2e_tests.yml@main
     secrets: inherit
 
   cas2_bail_e2e_test:
     name: "CAS2 Bail E2E"
-    uses: ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/.github/workflows/e2e_tests.yml@c650fed899fe2af45a7a80e5e75661d11df4aae9
+    uses: ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/.github/workflows/e2e_tests.yml@main
     secrets: inherit
 
   cas3_e2e_test:
     name: "CAS3 E2E"
-    uses: ministryofjustice/hmpps-temporary-accommodation-ui/.github/workflows/e2e_tests.yml@3c605b6b62b9abaa9780e007f5835d4213398cf3
+    uses: ministryofjustice/hmpps-temporary-accommodation-ui/.github/workflows/e2e_tests.yml@main
     secrets: inherit

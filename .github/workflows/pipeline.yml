@@ -16,7 +16,7 @@ jobs:
 
   docker_build:
     name: Build docker image from hmpps-github-actions
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@95c48db64a6d50acd1f8f8a0f93d1019727e5b4d
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
     with:
       docker_registry: 'ghcr.io'
       registry_org: 'ministryofjustice'
@@ -28,7 +28,7 @@ jobs:
     needs:
       - test
       - docker_build
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@95c48db64a6d50acd1f8f8a0f93d1019727e5b4d
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
       environment: 'development'
@@ -70,7 +70,7 @@ jobs:
     needs:
       - docker_build
       - e2e
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@95c48db64a6d50acd1f8f8a0f93d1019727e5b4d
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
       environment: 'preprod'
@@ -82,7 +82,7 @@ jobs:
     needs:
       - docker_build
       - deploy_preprod
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@95c48db64a6d50acd1f8f8a0f93d1019727e5b4d
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
     with:
       environment: 'prod'
