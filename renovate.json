@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>ministryofjustice/hmpps-renovate-config:node"],
+  "extends": ["github>ministryofjustice/hmpps-renovate-config:jvm"],
   "assigneesFromCodeOwners": true,
   "timezone": "Europe/London",
   "schedule": [
