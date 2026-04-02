@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPlacementAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
@@ -1898,6 +1899,78 @@ class Cas1SpaceBookingTest {
         .jsonPath("invalid-params[0].propertyName").isEqualTo("arrivalTime")
         .jsonPath("invalid-params[0].errorType").isEqualTo("must be in the past")
     }
+
+    @Test
+    fun `Recording arrival returns conflict error when booking already marked as non-arrival`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      // departed, ignored when checking existing residence
+      givenACas1SpaceBooking(
+        crn = offender.otherIds.crn,
+        actualArrivalDate = LocalDate.parse("2020-01-01"),
+        expectedDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.plusDays(1),
+        actualDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.plusDays(2),
+      )
+
+      // not departed but departure is before UPCOMING_EXPECTED_DEPARTURE_THRESHOLD, ignored when checking existing residence
+      givenACas1SpaceBooking(
+        crn = offender.otherIds.crn,
+        actualArrivalDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.minusDays(10),
+        expectedDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.minusDays(1),
+        actualDepartureDate = null,
+      )
+
+      // not departed but cancelled (legacy booking state), ignored when checking existing residence
+      givenACas1SpaceBooking(
+        crn = offender.otherIds.crn,
+        actualArrivalDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.minusDays(1),
+        expectedDepartureDate = UPCOMING_EXPECTED_DEPARTURE_THRESHOLD_DATE.plusDays(10),
+        actualDepartureDate = null,
+        cancellationOccurredAt = LocalDate.now(),
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerName(user.name)
+        withKeyworkerStaffCode(user.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("25")
+        withTransferType(null)
+        withNonArrivalConfirmedAt(Instant.now())
+        withNonArrivalReason(
+          nonArrivalReasonEntityFactory.produceAndPersist {
+            withName("nonArrivalName")
+            withLegacyDeliusReasonCode("legacyDeliusCode")
+          },
+        )
+      }
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
+            arrivalDate = LocalDate.now().minusDays(1),
+            arrivalTime = "12:00:00",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT)
+    }
   }
 
   @Nested
@@ -2052,6 +2125,51 @@ class Cas1SpaceBookingTest {
       assertThat(updatedSpaceBooking.nonArrivalNotes).isEqualTo("non arrival reason notes")
       assertThat(updatedSpaceBooking.nonArrivalReason).isEqualTo(nonArrivalReason)
       assertThat(updatedSpaceBooking.nonArrivalConfirmedAt).isWithinTheLastMinute()
+    }
+
+    @Test
+    fun `Recording non-arrival returns conflicts error when the booking already has a arrival`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withKeyworkerName(user.name)
+        withKeyworkerStaffCode(user.deliusStaffCode)
+        withKeyworkerAssignedAt(Instant.now())
+        withDeliusEventNumber("25")
+        withActualArrivalDate(LocalDate.now())
+      }
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/non-arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NonArrival(
+            reason = nonArrivalReason.id,
+            notes = "non arrival reason notes",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT)
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+      assertThat(updatedSpaceBooking.nonArrivalNotes).isNull()
+      assertThat(updatedSpaceBooking.nonArrivalReason).isNull()
+      assertThat(updatedSpaceBooking.nonArrivalConfirmedAt).isNull()
     }
   }
 
