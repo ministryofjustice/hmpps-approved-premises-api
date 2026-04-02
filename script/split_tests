@@ -1,0 +1,11 @@
+#!/bin/sh
+
+SPLIT_INDEX=$1
+SPLIT_TOTAL=$2
+
+TESTS="$(find src/test/kotlin -type d -name integration | \
+  xargs -I{} find "{}" -type f -name "*Test.kt" | \
+  awk -v splitTotal=$SPLIT_TOTAL -v splitIndex=$SPLIT_INDEX 'NR % splitTotal == $SPLIT_INDEX % splitTotal' | \
+  tr '\n' ',' | sed 's/,$//')"
+
+echo "test-suite=$TESTS" >> "$GITHUB_OUTPUT"
