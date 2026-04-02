@@ -59,6 +59,12 @@ There is are linting and static analysis checks in the build pipeline. You can l
 ./gradlew ktlintFormat && ./gradlew detekt
 ```
 
+Alternatively, you can use [prek](https://github.com/j178/prek) to automatically run the baseline check on every commit. To set up prek, run:
+
+```bash
+prek install
+```
+
 ## Infrastructure
 
 The service is deployed to the [MoJ Cloud Platform](https://user-guide.cloud-platform.service.justice.gov.uk). This is 
