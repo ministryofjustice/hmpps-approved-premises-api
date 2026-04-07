@@ -34,7 +34,7 @@ jobs:
     strategy:
       matrix:
         environments: ['development', 'test', 'preprod', 'prod']
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2 # WORKFLOW VERSION
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@d79e83be2cc392b981dd92c8f6f85007d18032e9 # v2
     secrets: inherit
     with:
       environment: ${{ matrix.environments }}
@@ -189,17 +189,13 @@ jobs:
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a
 
       - name: Determine tests splitting
-        uses: chaosaffe/split-tests@4f1ca766cb93923ca216e02f1aefed20944e313f
         id: split-tests
-        with:
-          glob: src/test/kotlin/**/integration/**/*Test.kt
-          split-index: ${{ strategy.job-index }}
-          split-total: ${{ strategy.job-total }}
+        run: ./script/split_tests ${{ strategy.job-index }} ${{ strategy.job-total }}
 
       - name: Run integration test
         run: |
           # Format the arguments to "./gradlew integrationTest"
-          SPECS_LIST=$(echo  ${{ steps.split-tests.outputs.test-suite }} | sed 's/src\/test\/kotlin\///g;s/\//./g;s/\.kt/ /g' | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
+          SPECS_LIST=$(echo  ${{ steps.split-tests.outputs.test-suite }} | sed 's/src\/test\/kotlin\///g;s/\//./g;s/\.kt/ /g;s/,/ /g' | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
           echo "Prepared arguments for Gradle: $SPECS_LIST"
           ./gradlew integrationTest $SPECS_LIST
 
