@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity
 
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.JsonStringDbConverter
 
 @Suppress("TooManyFunctions")
 @Repository
@@ -89,9 +91,11 @@ data class Cas2ApplicationEntity(
   val createdByUser: Cas2UserEntity,
 
   @Column(columnDefinition = "json")
+  @Convert(converter = JsonStringDbConverter::class)
   var data: String?,
 
   @Column(columnDefinition = "json")
+  @Convert(converter = JsonStringDbConverter::class)
   var document: String?,
 
   val createdAt: OffsetDateTime,

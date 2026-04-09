@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.DiscriminatorColumn
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
@@ -31,6 +32,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.JsonStringDbConverter
 
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
@@ -218,9 +220,11 @@ abstract class AssessmentEntity(
   val application: ApplicationEntity,
 
   @Column(columnDefinition = "json")
+  @Convert(converter = JsonStringDbConverter::class)
   var data: String?,
 
   @Column(columnDefinition = "json")
+  @Convert(converter = JsonStringDbConverter::class)
   var document: String?,
 
   @ManyToOne

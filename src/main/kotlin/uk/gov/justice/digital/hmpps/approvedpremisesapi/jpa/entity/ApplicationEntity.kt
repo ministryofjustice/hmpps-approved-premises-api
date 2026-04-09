@@ -44,6 +44,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
 import kotlin.time.toKotlinDuration
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.JsonStringDbConverter
 
 @Repository
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
@@ -311,9 +312,11 @@ abstract class ApplicationEntity(
   val createdByUser: UserEntity,
 
   @Column(columnDefinition = "json")
+  @Convert(converter = JsonStringDbConverter::class)
   var data: String?,
 
   @Column(columnDefinition = "json")
+  @Convert(converter = JsonStringDbConverter::class)
   var document: String?,
 
   val createdAt: OffsetDateTime,
