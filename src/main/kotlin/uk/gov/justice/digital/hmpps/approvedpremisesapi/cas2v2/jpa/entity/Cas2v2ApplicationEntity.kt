@@ -12,9 +12,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.SQLOrder
-import org.hibernate.type.SqlTypes.VARCHAR
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
@@ -59,11 +57,9 @@ data class Cas2v2ApplicationEntity(
   val createdByUser: Cas2v2UserEntity,
 
   @Column(columnDefinition = "json")
-  @JdbcTypeCode(VARCHAR)
   var data: String?,
 
   @Column(columnDefinition = "json")
-  @JdbcTypeCode(VARCHAR)
   var document: String?,
 
   val createdAt: OffsetDateTime,

@@ -17,9 +17,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.Type
-import org.hibernate.type.SqlTypes.VARCHAR
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -220,11 +218,9 @@ abstract class AssessmentEntity(
   val application: ApplicationEntity,
 
   @Column(columnDefinition = "json")
-  @JdbcTypeCode(VARCHAR)
   var data: String?,
 
   @Column(columnDefinition = "json")
-  @JdbcTypeCode(VARCHAR)
   var document: String?,
 
   @ManyToOne

@@ -21,9 +21,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.Type
-import org.hibernate.type.SqlTypes.VARCHAR
 import org.springframework.data.domain.Limit
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -313,11 +311,9 @@ abstract class ApplicationEntity(
   val createdByUser: UserEntity,
 
   @Column(columnDefinition = "json")
-  @JdbcTypeCode(VARCHAR)
   var data: String?,
 
   @Column(columnDefinition = "json")
-  @JdbcTypeCode(VARCHAR)
   var document: String?,
 
   val createdAt: OffsetDateTime,
