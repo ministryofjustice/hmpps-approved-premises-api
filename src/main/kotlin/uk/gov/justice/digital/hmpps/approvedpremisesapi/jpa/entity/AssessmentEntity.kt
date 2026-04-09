@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import io.hypersistence.utils.hibernate.type.json.JsonType
+import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorColumn
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
@@ -16,7 +17,9 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.Type
+import org.hibernate.type.SqlTypes.VARCHAR
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -216,10 +219,12 @@ abstract class AssessmentEntity(
   @JoinColumn(name = "application_id")
   val application: ApplicationEntity,
 
-  @Type(JsonType::class)
+  @Column(columnDefinition = "json")
+  @JdbcTypeCode(VARCHAR)
   var data: String?,
 
-  @Type(JsonType::class)
+  @Column(columnDefinition = "json")
+  @JdbcTypeCode(VARCHAR)
   var document: String?,
 
   @ManyToOne
