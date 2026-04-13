@@ -223,6 +223,33 @@ class Cas1BookingManagementServiceTest {
     }
 
     @Test
+    fun `Returns conflict error if the space booking record already has a non arrival recorded`() {
+      val existingSpaceBookingWithNonArrival = existingSpaceBooking.copy(
+        nonArrivalConfirmedAt = java.time.Instant.now(),
+      )
+
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithNonArrival
+      every { spaceBookingRepository.findResidentSpaceBookingsForCrn(any(), any()) } returns emptyList()
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        arrivalDate = arrivalDate,
+        arrivalTime = arrivalTime,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.message).isEqualTo("A non-arrival is already recorded for this Space Booking")
+    }
+
+    @Test
     fun `Returns conflict error if the space booking has already been cancelled`() {
       val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(
         cancellationOccurredAt = LocalDate.now().minusDays(10),
@@ -489,6 +516,33 @@ class Cas1BookingManagementServiceTest {
       result as CasResult.ConflictError
 
       assertThat(result.message).isEqualTo("A non-arrival is already recorded for this Space Booking")
+    }
+
+    @Test
+    fun `Returns conflict error if the space booking record already has an arrival recorded`() {
+      val existingSpaceBookingWithArrival = existingSpaceBooking.copy(
+        actualArrivalDate = LocalDate.now(),
+      )
+
+      every { cas1PremisesService.findPremisesById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrival
+      every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns NonArrivalReasonEntityFactory().produce()
+
+      val result = service.recordNonArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NonArrival = cas1NonArrival,
+        recordedBy = recordedBy,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.message).isEqualTo("An arrival is already recorded for this Space Booking")
     }
 
     @Test

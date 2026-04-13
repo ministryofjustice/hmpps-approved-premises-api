@@ -54,7 +54,7 @@ dependencies {
   }
   implementation("org.apache.poi:poi-ooxml:5.5.1")
 
-  implementation("io.arrow-kt:arrow-core:2.2.1.1")
+  implementation("io.arrow-kt:arrow-core:2.2.2")
 
   implementation("com.opencsv:opencsv:5.12.0")
 

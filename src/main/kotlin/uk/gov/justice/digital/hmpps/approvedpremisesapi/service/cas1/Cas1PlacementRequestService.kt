@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -59,18 +60,25 @@ class Cas1PlacementRequestService(
     searchCriteria: AllActiveSearchCriteria,
     pageCriteria: PageCriteria<PlacementRequestSortField>,
   ): Pair<List<Cas1PlacementRequestSummary>, PaginationMetadata?> {
-    val pageable = pageCriteria.toPageable(
-      when (pageCriteria.sortBy) {
-        PlacementRequestSortField.applicationSubmittedAt -> "applicationSubmittedDate"
-        PlacementRequestSortField.createdAt -> "created_at"
-        PlacementRequestSortField.expectedArrival -> "requestedPlacementArrivalDate"
-        PlacementRequestSortField.duration -> "requestedPlacementDuration"
-        PlacementRequestSortField.requestType -> "requestType"
-        PlacementRequestSortField.personName -> "personName"
-        PlacementRequestSortField.personRisksTier -> "personTier"
-        PlacementRequestSortField.firstBookingPremisesName -> "bookingPremisesName"
-        PlacementRequestSortField.firstBookingArrivalDate -> "bookingArrivalDate"
-      },
+    val pageable = getPageableOrAllPages(
+      sortBy = listOf(
+        when (pageCriteria.sortBy) {
+          PlacementRequestSortField.applicationSubmittedAt -> "applicationSubmittedDate"
+          PlacementRequestSortField.createdAt -> "created_at"
+          PlacementRequestSortField.expectedArrival -> "requestedPlacementArrivalDate"
+          PlacementRequestSortField.duration -> "requestedPlacementDuration"
+          PlacementRequestSortField.requestType -> "requestType"
+          PlacementRequestSortField.personName -> "personName"
+          PlacementRequestSortField.personRisksTier -> "personTier"
+          PlacementRequestSortField.firstBookingPremisesName -> "bookingPremisesName"
+          PlacementRequestSortField.firstBookingArrivalDate -> "bookingArrivalDate"
+        },
+        "id",
+      ),
+      sortDirection = pageCriteria.sortDirection,
+      page = pageCriteria.page,
+      pageSize = pageCriteria.perPage,
+      unsafe = true,
     )
 
     val response = placementRequestRepository.allForCas1Dashboard(

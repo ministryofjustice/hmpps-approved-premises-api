@@ -53,6 +53,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val suitableApplication = Cas3SuitableApplication(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
+            assessmentStatus = null,
             bookingStatus = null,
           )
 
@@ -85,6 +86,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val suitableApplication = Cas3SuitableApplication(
             id = application.id,
             applicationStatus = ApplicationStatus.inProgress,
+            null,
             bookingStatus = null,
           )
 
@@ -137,6 +139,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
           val suitableApplication = Cas3SuitableApplication(
             id = application.id,
             applicationStatus = ApplicationStatus.submitted,
+            assessmentStatus = null,
             bookingStatus = Cas3BookingStatus.confirmed,
           )
 

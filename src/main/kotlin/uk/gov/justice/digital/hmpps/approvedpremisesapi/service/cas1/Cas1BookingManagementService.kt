@@ -73,6 +73,10 @@ class Cas1BookingManagementService(
       return existingCas1SpaceBooking.id hasConflictError "The booking has already been cancelled"
     }
 
+    if (existingCas1SpaceBooking.hasNonArrival()) {
+      return existingCas1SpaceBooking.id hasConflictError "A non-arrival is already recorded for this Space Booking"
+    }
+
     if (existingCas1SpaceBooking.hasArrival()) {
       return if (existingCas1SpaceBooking.hasSameActualArrivalDateTime(arrivalDate, arrivalTime)) {
         success(existingCas1SpaceBooking)
@@ -138,6 +142,10 @@ class Cas1BookingManagementService(
 
     if (existingCas1SpaceBooking.isCancelled()) {
       return existingCas1SpaceBooking.id hasConflictError "The booking has already been cancelled"
+    }
+
+    if (existingCas1SpaceBooking.hasArrival()) {
+      return existingCas1SpaceBooking.id hasConflictError "An arrival is already recorded for this Space Booking"
     }
 
     if (existingCas1SpaceBooking.nonArrivalConfirmedAt != null) {
