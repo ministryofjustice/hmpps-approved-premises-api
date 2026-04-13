@@ -12,8 +12,8 @@ jobs:
         uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3
         id: generate-token
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - name: Trigger CAS-2 UI Type Generation Workflow
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410
