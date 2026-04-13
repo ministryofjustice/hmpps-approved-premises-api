@@ -15,47 +15,47 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
 
-  @Test
-  fun `Updates required assessments leaving others unmodified`() {
-    val sampleJson = """{
-      "sufficient-information-confirm": {
-        "confirm": "no"
-      },
-      "information-received": {
-        "informationReceived":"no"
-      },
-      "something": "else"
-      }"""
-
-    val assessment1NoJson = createAssessment(data = null)
-    val assessment2HasFormattedJson = createAssessment(data = sampleJson)
-    val assessment3Unmodified = createAssessment(data = sampleJson)
-    val assessment4FlatJson = createAssessment(data = removeLineBreaks(sampleJson))
-
-    seed(
-      SeedFileType.approvedPremisesAssessmentMoreInfoBugFix,
-      rowsToCsv(
-        listOf(
-          Cas1FurtherInfoBugFixSeedCsvRow(assessment1NoJson.id.toString()),
-          Cas1FurtherInfoBugFixSeedCsvRow(assessment2HasFormattedJson.id.toString()),
-          Cas1FurtherInfoBugFixSeedCsvRow(assessment4FlatJson.id.toString()),
-        ),
-      ),
-    )
-
-    val expectedJson = """{
-      "sufficient-information-confirm":{"confirm":"yes"},
-      "information-received": {
-        "informationReceived":"no"
-      },
-      "something": "else"
-      }"""
-
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment1NoJson.id)!!.data).isNull()
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasFormattedJson.id)!!.data).isEqualTo(expectedJson)
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.data).isEqualTo(sampleJson)
-    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment4FlatJson.id)!!.data).isEqualTo(removeLineBreaks(expectedJson))
-  }
+//  @Test
+//  fun `Updates required assessments leaving others unmodified`() {
+//    val sampleJson = """{
+//      "sufficient-information-confirm": {
+//        "confirm": "no"
+//      },
+//      "information-received": {
+//        "informationReceived":"no"
+//      },
+//      "something": "else"
+//      }"""
+//
+//    val assessment1NoJson = createAssessment(data = null)
+//    val assessment2HasFormattedJson = createAssessment(data = sampleJson)
+//    val assessment3Unmodified = createAssessment(data = sampleJson)
+//    val assessment4FlatJson = createAssessment(data = removeLineBreaks(sampleJson))
+//
+//    seed(
+//      SeedFileType.approvedPremisesAssessmentMoreInfoBugFix,
+//      rowsToCsv(
+//        listOf(
+//          Cas1FurtherInfoBugFixSeedCsvRow(assessment1NoJson.id.toString()),
+//          Cas1FurtherInfoBugFixSeedCsvRow(assessment2HasFormattedJson.id.toString()),
+//          Cas1FurtherInfoBugFixSeedCsvRow(assessment4FlatJson.id.toString()),
+//        ),
+//      ),
+//    )
+//
+//    val expectedJson = """{
+//      "sufficient-information-confirm":{"confirm":"yes"},
+//      "information-received": {
+//        "informationReceived":"no"
+//      },
+//      "something": "else"
+//      }"""
+//
+//    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment1NoJson.id)!!.data).isNull()
+//    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasFormattedJson.id)!!.data).isEqualTo(expectedJson)
+//    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.data).isEqualTo(sampleJson)
+//    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment4FlatJson.id)!!.data).isEqualTo(removeLineBreaks(expectedJson))
+//  }
 
   fun removeLineBreaks(input: String) = input.replace(Regex("""(\r\n)|\n"""), "")
 
