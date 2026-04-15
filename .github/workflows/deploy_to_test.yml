@@ -3,6 +3,10 @@ name: Deploy to test
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   docker_build:
     name: Build docker image from hmpps-github-actions
