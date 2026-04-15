@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.time.OffsetDateTime
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Suppress("LongParameterList")
 abstract class AssessmentInfo(
   val assessmentId: Long,
   val assessmentType: String,
