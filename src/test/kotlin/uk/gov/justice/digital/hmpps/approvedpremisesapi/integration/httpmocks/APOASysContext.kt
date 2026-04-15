@@ -63,6 +63,12 @@ fun IntegrationTestBase.apOASysContextMockSuccessfulHealthDetailsCall(crn: Strin
   responseBody = response,
 )
 
+fun IntegrationTestBase.apOASysContextMockHealthDetails404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
+  url = "/health-details/$crn",
+  responseStatus = 404,
+  delayMs = 0,
+)
+
 fun IntegrationTestBase.apOASysContextMockNeedsDetails404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
   url = "/needs-details/$crn",
   responseStatus = 404,

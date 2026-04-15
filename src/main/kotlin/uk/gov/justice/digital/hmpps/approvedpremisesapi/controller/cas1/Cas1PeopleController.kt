@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetailsInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.BookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
@@ -114,6 +115,20 @@ class Cas1PeopleController(
       ?: throw NotFoundProblem(crn, "RiskToTheIndividual")
 
     return ResponseEntity.ok(riskToTheIndividual)
+  }
+
+  @Operation(summary = "Returns OASys health details for a Person.")
+  @GetMapping("/people/{crn}/oasys/health-details")
+  fun getOasysHealthDetails(@PathVariable crn: String): ResponseEntity<HealthDetailsInner> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val healthDetailsWrapper = extractEntityFromCasResult(
+      oasysService.getOASysHealthDetails(crn),
+    )
+
+    val healthDetails = healthDetailsWrapper.health
+
+    return ResponseEntity.ok(healthDetails)
   }
 
   @Operation(summary = "Returns booking details for a Person.")
