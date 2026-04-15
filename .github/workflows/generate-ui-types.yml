@@ -1,0 +1,29 @@
+name: Generate CAS UI Types
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cas1_generate_types:
+    name: "Generate CAS1 UI types"
+    uses: ministryofjustice/hmpps-approved-premises-ui/.github/workflows/generate-types.yml@main
+    secrets: inherit
+
+  cas2_generate_types:
+    name: "Generate CAS2 UI types"
+    uses: ministryofjustice/hmpps-community-accommodation-tier-2-ui/.github/workflows/generate-types.yml@main
+    secrets: inherit
+
+  cas2_bail_generate_types:
+    name: "Generate CAS2 Bail UI types"
+    uses: ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/.github/workflows/generate-types.yml@main
+    secrets: inherit
+
+  cas3_generate_types:
+    name: "Generate CAS3 UI types"
+    uses: ministryofjustice/hmpps-temporary-accommodation-ui/.github/workflows/generate-types.yml@main
+    secrets: inherit
