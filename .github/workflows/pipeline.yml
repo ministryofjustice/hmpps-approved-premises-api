@@ -50,6 +50,7 @@ jobs:
   ui_generate_types:
     permissions:
       contents: read
+      pull-requests: write
     needs: e2e
     name: Run the generate types job for all the CAS UIs
     uses: ./.github/workflows/generate-ui-types.yml
