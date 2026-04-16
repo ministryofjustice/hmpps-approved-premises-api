@@ -16,6 +16,8 @@ abstract class AssessmentInfoFactory<T : AssessmentInfo> : Factory<T> {
   protected var assessmentStatus: Yielded<String> = { "OPEN" }
   protected var superStatus: Yielded<String> = { "WIP" }
   protected var limitedAccessOffender: Yielded<Boolean> = { false }
+  protected var laterWIPAssessmentExists: Yielded<Boolean?> = { null }
+  protected var lastUpdatedDate: Yielded<OffsetDateTime?> = { null }
 
   fun withAssessmentId(assessmentId: Long) = apply {
     this.assessmentId = { assessmentId }
@@ -47,5 +49,13 @@ abstract class AssessmentInfoFactory<T : AssessmentInfo> : Factory<T> {
 
   fun withLimitedAccessOffender(limitedAccessOffender: Boolean) = apply {
     this.limitedAccessOffender = { limitedAccessOffender }
+  }
+
+  fun withLaterWIPAssessmentExists(laterWIPAssessmentExists: Boolean?) = apply {
+    this.laterWIPAssessmentExists = { laterWIPAssessmentExists }
+  }
+
+  fun withLastUpdatedDate(lastUpdatedDate: OffsetDateTime?) = apply {
+    this.lastUpdatedDate = { lastUpdatedDate }
   }
 }

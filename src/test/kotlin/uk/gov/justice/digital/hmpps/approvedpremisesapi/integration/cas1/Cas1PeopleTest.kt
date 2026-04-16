@@ -22,6 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.CodeDescri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.ValueWithMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetailsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthIssue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
@@ -34,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietAndAllergyDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietAndAllergyResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietaryItemDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.HealthDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
@@ -54,7 +57,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccesfullCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockHealthDetails404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskToTheIndividual404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulHealthDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockForbiddenDietAndAllergyCall
@@ -1338,6 +1343,78 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isForbidden
+    }
+  }
+
+  @Nested
+  inner class GetOasysHealthDetails {
+    @Test
+    fun `Getting OASys health details without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/people/CRN/oasys/health-details")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Getting OASys health details returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+        val crn = "CRN"
+        val drugsMisuse = HealthIssue(
+          community = "drugs community",
+          electronicMonitoring = "drugs em",
+          programme = "drugs programme",
+        )
+        val alcoholMisuse = HealthIssue(
+          community = "alcohol community",
+          electronicMonitoring = "alcohol em",
+          programme = "alcohol programme",
+        )
+
+        val healthDetails = HealthDetailsFactory()
+          .withGeneralHealth(true, "some health issues")
+          .withDrugsMisuse(drugsMisuse)
+          .withAlcoholMisuse(alcoholMisuse)
+          .produce()
+
+        apOASysContextMockSuccessfulHealthDetailsCall(crn, healthDetails)
+
+        val response = webTestClient.get()
+          .uri("/cas1/people/$crn/oasys/health-details")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody(HealthDetailsInner::class.java)
+          .returnResult()
+          .responseBody!!
+
+        assertThat(response.generalHealth).isEqualTo(healthDetails.health.generalHealth)
+        assertThat(response.generalHealthSpecify).isEqualTo(healthDetails.health.generalHealthSpecify)
+        assertThat(response.drugsMisuse!!.community).isEqualTo(drugsMisuse.community)
+        assertThat(response.drugsMisuse.electronicMonitoring).isEqualTo(drugsMisuse.electronicMonitoring)
+        assertThat(response.drugsMisuse.programme).isEqualTo(drugsMisuse.programme)
+        assertThat(response.alcoholMisuse!!.community).isEqualTo(alcoholMisuse.community)
+        assertThat(response.alcoholMisuse.electronicMonitoring).isEqualTo(alcoholMisuse.electronicMonitoring)
+        assertThat(response.alcoholMisuse.programme).isEqualTo(alcoholMisuse.programme)
+      }
+    }
+
+    @Test
+    fun `Getting OASys health details returns 404 when OASys returns 404`() {
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+        val crn = "CRN"
+
+        apOASysContextMockHealthDetails404Call(crn)
+
+        webTestClient.get()
+          .uri("/cas1/people/$crn/oasys/health-details")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
     }
   }
 }
