@@ -343,7 +343,7 @@ abstract class IntegrationTestBase {
   }
 
   @Autowired
-  private lateinit var jdbcTemplate: JdbcTemplate
+  lateinit var jdbcTemplate: JdbcTemplate
 
   @Autowired
   private lateinit var cacheManager: CacheManager
