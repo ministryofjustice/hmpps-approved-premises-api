@@ -54,6 +54,10 @@ dependencies {
 
   implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.10.0")
 
+  // This is purely to fix slack notifications as part of OWASP
+  // once we have spring boot 4 we can remove this.
+  implementation("org.webjars:swagger-ui:5.32.2")
+
   implementation("org.jetbrains.kotlinx:dataframe:0.15.0") {
     exclude(group = "org.jetbrains.kotlinx", module = "dataframe-openapi")
   }
