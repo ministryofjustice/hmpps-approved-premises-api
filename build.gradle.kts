@@ -179,16 +179,29 @@ tasks.withType<Test> {
 tasks.register<Test>("integrationTest") {
   group = "verification"
 
+  testClassesDirs = sourceSets["test"].output.classesDirs
+  classpath = sourceSets["test"].runtimeClasspath
+
   useJUnitPlatform {
     includeTags("integration")
+  }
+
+  reports {
+    junitXml.outputLocation.set(file("$buildDir/test-results/integrationTest"))
   }
 }
 
 tasks.register<Test>("unitTest") {
   group = "verification"
+  testClassesDirs = sourceSets["test"].output.classesDirs
+  classpath = sourceSets["test"].runtimeClasspath
 
   useJUnitPlatform {
     excludeTags("integration")
+  }
+
+  reports {
+    junitXml.outputLocation.set(file("$buildDir/test-results/unitTest"))
   }
 }
 tasks.register<JavaExec>("generateCas1Roles") {
