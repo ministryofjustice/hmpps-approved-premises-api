@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.ApprovedPremisesRoomsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1CancelOutOfServiceBedsByPremisesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1CreateTestApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1CruManagementAreaSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1DomainEventReplaySeedJob
@@ -112,6 +113,7 @@ class SeedService(
         SeedFileType.temporaryAccommodationAssignApplicationToPdu -> getBean(Cas3AssignApplicationToPduSeedJob::class)
         SeedFileType.Cas2UpdateNomisUserEmailAddress -> getBean(Cas2NomisUserEmailSeedJob::class)
         SeedFileType.cas2UpdateAssessmentStatus -> getBean(Cas2UpdateAssessmentStatusSeedJob::class)
+        SeedFileType.approvedPremisesCancelOutOfServiceBeds -> getBean(Cas1CancelOutOfServiceBedsByPremisesJob::class)
       }
 
       val seedStarted = LocalDateTime.now()
