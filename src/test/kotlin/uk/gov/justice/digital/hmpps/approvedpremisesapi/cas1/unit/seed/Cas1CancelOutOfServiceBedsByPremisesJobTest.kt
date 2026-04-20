@@ -68,7 +68,7 @@ class Cas1CancelOutOfServiceBedsByPremisesJobTest {
     @Test
     fun `Throws exception if no Premises with given premises ID exists`() {
       val premisesId = UUID.randomUUID()
-      val row = uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1CancelOutOfServiceBedsByPremisesSeedCsvRow(
+      val row = uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1CancelOutOfServiceBedsByPremisesCsvRow(
         premisesId = premisesId,
         notes = "Some notes",
       )
@@ -90,7 +90,7 @@ class Cas1CancelOutOfServiceBedsByPremisesJobTest {
     fun `Cancels all active out-of-service beds for the premises`() {
       val premisesId = UUID.randomUUID()
       val notes = "Cancellation notes"
-      val row = uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1CancelOutOfServiceBedsByPremisesSeedCsvRow(
+      val row = uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1CancelOutOfServiceBedsByPremisesCsvRow(
         premisesId = premisesId,
         notes = notes,
       )

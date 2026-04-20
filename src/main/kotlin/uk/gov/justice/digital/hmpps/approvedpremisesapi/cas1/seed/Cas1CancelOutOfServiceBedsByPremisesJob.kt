@@ -13,18 +13,18 @@ import java.util.UUID
 class Cas1CancelOutOfServiceBedsByPremisesJob(
   private val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
   private val premisesService: PremisesService,
-) : SeedJob<Cas1CancelOutOfServiceBedsByPremisesSeedCsvRow>(
+) : SeedJob<Cas1CancelOutOfServiceBedsByPremisesCsvRow>(
   requiredHeaders = setOf(
     "premisesId",
     "notes",
   ),
 ) {
-  override fun deserializeRow(columns: Map<String, String>) = Cas1CancelOutOfServiceBedsByPremisesSeedCsvRow(
+  override fun deserializeRow(columns: Map<String, String>) = Cas1CancelOutOfServiceBedsByPremisesCsvRow(
     premisesId = UUID.fromString(columns["premisesId"]!!.trim()),
     notes = columns["notes"].trimToNull(),
   )
 
-  override fun processRow(row: Cas1CancelOutOfServiceBedsByPremisesSeedCsvRow) {
+  override fun processRow(row: Cas1CancelOutOfServiceBedsByPremisesCsvRow) {
     premisesService.getPremises(row.premisesId)
       ?: throw SeedException("No Premises with ID ${row.premisesId} exists.")
 
@@ -37,7 +37,7 @@ class Cas1CancelOutOfServiceBedsByPremisesJob(
   }
 }
 
-data class Cas1CancelOutOfServiceBedsByPremisesSeedCsvRow(
+data class Cas1CancelOutOfServiceBedsByPremisesCsvRow(
   val premisesId: UUID,
   val notes: String?,
 )

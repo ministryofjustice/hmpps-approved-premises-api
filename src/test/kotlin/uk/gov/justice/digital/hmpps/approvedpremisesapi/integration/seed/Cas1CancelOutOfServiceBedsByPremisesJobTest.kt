@@ -33,7 +33,7 @@ class Cas1CancelOutOfServiceBedsByPremisesJobTest : SeedTestBase() {
       SeedFileType.approvedPremisesCancelOutOfServiceBeds,
       rowsToCsv(
         listOf(
-          CancelOutOfServiceBedsByPremisesSeedRow(
+          CancelOutOfServiceBedsByPremisesCsvRow(
             premisesId = premises.id,
             notes = "Cancelled via seed job",
           ),
@@ -60,7 +60,7 @@ class Cas1CancelOutOfServiceBedsByPremisesJobTest : SeedTestBase() {
       SeedFileType.approvedPremisesCancelOutOfServiceBeds,
       rowsToCsv(
         listOf(
-          CancelOutOfServiceBedsByPremisesSeedRow(
+          CancelOutOfServiceBedsByPremisesCsvRow(
             premisesId = randomId,
             notes = "Notes",
           ),
@@ -71,7 +71,7 @@ class Cas1CancelOutOfServiceBedsByPremisesJobTest : SeedTestBase() {
     assertError(1, "No Premises with ID $randomId exists.")
   }
 
-  private fun rowsToCsv(rows: List<CancelOutOfServiceBedsByPremisesSeedRow>): String {
+  private fun rowsToCsv(rows: List<CancelOutOfServiceBedsByPremisesCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
         "premisesId",
@@ -89,5 +89,5 @@ class Cas1CancelOutOfServiceBedsByPremisesJobTest : SeedTestBase() {
     return builder.build()
   }
 
-  data class CancelOutOfServiceBedsByPremisesSeedRow(val premisesId: UUID, val notes: String?)
+  data class CancelOutOfServiceBedsByPremisesCsvRow(val premisesId: UUID, val notes: String?)
 }
