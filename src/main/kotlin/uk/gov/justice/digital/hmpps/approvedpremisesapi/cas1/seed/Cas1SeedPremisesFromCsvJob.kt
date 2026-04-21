@@ -201,6 +201,7 @@ class Cas1SeedPremisesFromCsvJob(
         managerDetails = row.managerDetails,
         fullAddress = row.fullAddress,
         cruManagementArea = cruManagementAreaRepository.findByName(row.cruManagementAreaName) ?: error("Could not find management area with name ${row.cruManagementAreaName}"),
+        allowNewSpaceBookings = true,
       ),
     )
 

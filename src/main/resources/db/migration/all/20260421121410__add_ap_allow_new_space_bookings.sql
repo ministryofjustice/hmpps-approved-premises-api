@@ -1,0 +1,1 @@
+ALTER TABLE approved_premises ADD allow_new_space_bookings boolean NOT NULL DEFAULT true;

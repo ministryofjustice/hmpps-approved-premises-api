@@ -92,7 +92,8 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(createdPremise.gender).isEqualTo(ApprovedPremisesGender.MAN)
     assertThat(createdPremise.supportsSpaceBookings).isEqualTo(true)
     assertThat(createdPremise.managerDetails).isNull()
-    assertThat(createdPremise.cruManagementArea!!.name).isEqualTo("North East")
+    assertThat(createdPremise.cruManagementArea.name).isEqualTo("North East")
+    assertThat(createdPremise.allowNewSpaceBookings).isTrue
 
     assertThat(createdPremise.characteristics).hasSize(19)
 
@@ -188,6 +189,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(createdPremise.supportsSpaceBookings).isEqualTo(true)
     assertThat(createdPremise.managerDetails).isNull()
     assertThat(createdPremise.cruManagementArea.name).isEqualTo("Women's AP's")
+    assertThat(createdPremise.allowNewSpaceBookings).isTrue
 
     assertThat(createdPremise.characteristics).isEmpty()
   }
@@ -417,6 +419,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(createdPremise.supportsSpaceBookings).isEqualTo(true)
     assertThat(createdPremise.managerDetails).isEqualTo("some manager details")
     assertThat(createdPremise.cruManagementArea.name).isEqualTo("North East")
+    assertThat(createdPremise.allowNewSpaceBookings).isTrue
 
     assertThat(createdPremise.characteristics).hasSize(2)
 

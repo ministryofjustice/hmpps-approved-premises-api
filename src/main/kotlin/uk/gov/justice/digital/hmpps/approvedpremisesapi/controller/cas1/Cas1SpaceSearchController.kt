@@ -31,7 +31,8 @@ class Cas1SpaceSearchController(
 
   @Operation(
     tags = ["space searches"],
-    summary = "Search for accommodation \"spaces\" which are available and match the given requirements",
+    summary = """Search for accommodation \"spaces\" which are available and match the given requirements. 
+      |Will exclude premises that are archived, do not support space bookings, or do not allow new space bookings""",
     operationId = "spaceSearch",
     description = """""",
     responses = [

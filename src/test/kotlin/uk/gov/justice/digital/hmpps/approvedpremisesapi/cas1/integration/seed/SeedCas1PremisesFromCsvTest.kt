@@ -261,6 +261,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.supportsSpaceBookings).isTrue()
     assertThat(persistedApprovedPremises.managerDetails).isEqualTo("manager details")
     assertThat(persistedApprovedPremises.cruManagementArea.name).isEqualTo("North East")
+    assertThat(persistedApprovedPremises.allowNewSpaceBookings).isTrue
   }
 
   @Test
@@ -307,6 +308,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.longitude).isEqualTo(csvRow.longitude!!)
     assertThat(persistedApprovedPremises.point).isEqualTo(GisUtil.createPoint(csvRow.latitude, csvRow.longitude))
     assertThat(persistedApprovedPremises.supportsSpaceBookings).isFalse()
+    assertThat(persistedApprovedPremises.allowNewSpaceBookings).isTrue
   }
 
   private fun approvedPremisesSeedCsvRowsToCsv(rows: List<ApprovedPremisesSeedCsvRow>): String {

@@ -175,14 +175,14 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Ignore premises that are archived or don't support space bookings`() {
-    val premisesLat = 0.08
-    val premisesLon = 51.49
+  fun `Ignore premises that are archived, don't support space bookings or don't support new bookings`() {
+    val searchLat = 0.08
+    val searchLon = 51.49
 
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
-      withLatitude(premisesLat - 0.01)
-      withLongitude(premisesLon - 0.01)
+      withLatitude(searchLat - 0.01)
+      withLongitude(searchLon - 0.01)
     }
 
     val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
@@ -190,26 +190,37 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
     val premises = (0..1).map {
       givenAnApprovedPremises(
-        latitude = premisesLat,
-        longitude = premisesLon,
+        latitude = (it * -0.01) - searchLat,
+        longitude = (it * 0.01) + searchLon,
         supportsSpaceBookings = true,
         status = PropertyStatus.active,
       )
     }
 
+    // doesn't allow new space bookings
+    givenAnApprovedPremises(
+      latitude = searchLat,
+      longitude = searchLon,
+      supportsSpaceBookings = true,
+      allowNewSpaceBookings = false,
+      status = PropertyStatus.active,
+    )
+
     // doesn't support space bookings
     givenAnApprovedPremises(
-      latitude = premisesLat,
-      longitude = premisesLon,
+      latitude = searchLat,
+      longitude = searchLon,
       supportsSpaceBookings = false,
+      allowNewSpaceBookings = true,
       status = PropertyStatus.active,
     )
 
     // archived
     givenAnApprovedPremises(
-      latitude = premisesLat,
-      longitude = premisesLon,
+      latitude = searchLat,
+      longitude = searchLon,
       supportsSpaceBookings = true,
+      allowNewSpaceBookings = true,
       status = PropertyStatus.archived,
     )
 
