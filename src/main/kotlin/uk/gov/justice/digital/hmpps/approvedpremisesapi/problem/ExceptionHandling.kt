@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import io.sentry.Sentry
 import org.hibernate.exception.JDBCConnectionException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -40,7 +39,7 @@ class ExceptionHandling(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun toProblem(throwable: Throwable, status: StatusType): ThrowableProblem? {
-    Sentry.captureException(throwable)
+    sentryService.captureException(throwable)
 
     if (throwable is AuthenticationCredentialsNotFoundException) {
       return UnauthenticatedProblem()
