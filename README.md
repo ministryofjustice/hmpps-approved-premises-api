@@ -6,6 +6,16 @@ This is the shared backend for the Community Accommodation User Interfaces
 - [CAS2 - Short-Term Accommodation](https://github.com/ministryofjustice/hmpps-community-accommodation-tier-2-ui)
 - [CAS3 - Temporary Accommodation ](https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui)
 
+### Java install
+
+To install Java you can use sdkman:
+
+* Uninstall/unconfigure any other tool used to manage JDKs (e.g. jenv)
+* Install sdkman using the instructions on the website
+* Add source "$HOME/.sdkman/bin/sdkman-init.sh into .zshrc to ensure it's available in all terminals
+* In the project root run sdk env install to install the correct version of java
+* It's advised to set the project java version as system-wide default, allowing ap-tools to be run from anywhere e.g. sdk default java <installed-version-here>
+
 ## Running Tests
 
 To run tests, you'll need to start a few docker dependencies using:
