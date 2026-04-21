@@ -72,7 +72,6 @@ class ExceptionHandling(
     }
 
     if (isTypeInThrowableChain(throwable, JDBCConnectionException::class.java)) {
-      sentryService.captureException(throwable)
       return ServiceUnavailableProblem(
         detail = "Error acquiring a database connection",
       )
