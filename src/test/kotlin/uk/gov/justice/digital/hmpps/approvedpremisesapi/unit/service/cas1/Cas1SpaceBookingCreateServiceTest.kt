@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
@@ -93,12 +92,7 @@ class Cas1SpaceBookingCreateServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.premisesId" && value == "doesNotExist"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "doesNotExist")
     }
 
     @Test
@@ -126,12 +120,7 @@ class Cas1SpaceBookingCreateServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.premisesId" && value == "doesNotSupportSpaceBookings"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "doesNotSupportSpaceBookings")
     }
 
     @Test
@@ -183,12 +172,7 @@ class Cas1SpaceBookingCreateServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.placementRequestId" && value == "doesNotExist"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.placementRequestId", "doesNotExist")
     }
 
     @Test
@@ -211,12 +195,7 @@ class Cas1SpaceBookingCreateServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.departureDate" && value == "shouldBeAfterArrivalDate"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.departureDate", "shouldBeAfterArrivalDate")
     }
 
     @Test
