@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1SoftDelete
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateActualArrivalDateSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateApplicationContactDetailsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateEventNumberSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateOutOfServiceBedsByPremisesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdatePremisesEmailSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdatePremisesStatusSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdatePremisesSupportSpaceBookingSeedJob
@@ -114,6 +115,7 @@ class SeedService(
         SeedFileType.Cas2UpdateNomisUserEmailAddress -> getBean(Cas2NomisUserEmailSeedJob::class)
         SeedFileType.cas2UpdateAssessmentStatus -> getBean(Cas2UpdateAssessmentStatusSeedJob::class)
         SeedFileType.approvedPremisesCancelOutOfServiceBeds -> getBean(Cas1CancelOutOfServiceBedsByPremisesJob::class)
+        SeedFileType.approvedPremisesUpdateOutOfServiceBeds -> getBean(Cas1UpdateOutOfServiceBedsByPremisesJob::class)
       }
 
       val seedStarted = LocalDateTime.now()
