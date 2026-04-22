@@ -2,12 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>ministryofjustice/hmpps-renovate-config:jvm"],
   "assigneesFromCodeOwners": true,
-  "timezone": "Europe/London",
-  "schedule": [
-    "after 9am every weekday",
-    "before 5pm every weekday"
-  ],
-  "enabledManagers": ["gradle", "gradle-wrapper", "dockerfile", "docker-compose", "helmv3", "helm-values", "circleci"],
   "packageRules": [
     {
       "matchUpdateTypes": ["patch"],
@@ -38,6 +32,5 @@
       ]
     }
   ],
-  "rebaseWhen": "conflicted",
   "ignoreDeps": ["org.hibernate:hibernate-spatial"]
 }
