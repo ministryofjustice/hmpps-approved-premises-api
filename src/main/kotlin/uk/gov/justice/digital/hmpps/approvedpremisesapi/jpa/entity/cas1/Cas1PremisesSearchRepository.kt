@@ -103,7 +103,7 @@ ORDER BY
 class Cas1SpaceSearchRepository(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
-  fun findAllPremisesWithCharacteristicsByDistance(
+  fun findPremisesForNewSpaceBookingByDistance(
     targetPostcodeDistrict: String?,
     gender: ApprovedPremisesGender?,
     premisesCharacteristics: List<UUID>,

@@ -21,10 +21,10 @@ class Cas1PremisesSearchService(
     val cruManagementAreaIds: Set<UUID> = emptySet(),
   )
 
-  fun findPremises(searchCriteria: Cas1PremisesSearchCriteria): List<CandidatePremises> {
+  fun findPremisesForNewSpaceBooking(searchCriteria: Cas1PremisesSearchCriteria): List<CandidatePremises> {
     val groupedCharacteristics = getGroupedCharacteristics(searchCriteria)
 
-    return spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
+    return spaceSearchRepository.findPremisesForNewSpaceBookingByDistance(
       targetPostcodeDistrict = searchCriteria.targetPostcodeDistrict,
       gender = searchCriteria.gender,
       premisesCharacteristics = groupedCharacteristics.premisesCharacteristics,

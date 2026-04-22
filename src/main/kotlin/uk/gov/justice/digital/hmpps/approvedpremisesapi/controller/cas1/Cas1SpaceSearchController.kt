@@ -53,7 +53,7 @@ class Cas1SpaceSearchController(
     val application = cas1ApplicationService.getApplication(applicationId)
       ?: throw BadRequestProblem(errorDetail = "Cannot find application with ID $applicationId")
 
-    val results = spaceSearchService.findPremises(
+    val results = spaceSearchService.findPremisesForNewSpaceBooking(
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
         gender = if (application.isWomensApplication == true) {
           ApprovedPremisesGender.WOMAN
