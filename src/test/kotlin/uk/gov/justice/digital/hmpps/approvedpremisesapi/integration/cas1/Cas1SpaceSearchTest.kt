@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
@@ -74,7 +75,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Search for Spaces returns only premises supporting space bookings, ignoring archived`() {
+  fun `Returned premises are correctly populated`() {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
       withLatitude(-0.07)
@@ -133,21 +134,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withArchived(true)
       }
 
-      // premise that doesn't support space bookings
-      givenAnApprovedPremises(
-        latitude = (-0.01) - 0.08,
-        longitude = (0.01) + 51.49,
-        supportsSpaceBookings = false,
-      )
-
-      // archived
-      givenAnApprovedPremises(
-        latitude = (-0.01) - 0.08,
-        longitude = (0.01) + 51.49,
-        supportsSpaceBookings = true,
-        status = PropertyStatus.archived,
-      )
-
       val searchParameters = Cas1SpaceSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.now(),
@@ -163,7 +149,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult<Cas1SpaceSearchResults>()
 
       val results = response.responseBody.blockFirst()!!
 
@@ -186,6 +172,81 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         localRestrictions = listOf("No child rso", "No hate based offences"),
       )
     }
+  }
+
+  @Test
+  fun `Ignore premises that are archived, don't support space bookings or don't support new bookings`() {
+    val searchLat = 0.08
+    val searchLon = 51.49
+
+    postCodeDistrictFactory.produceAndPersist {
+      withOutcode("SE1")
+      withLatitude(searchLat - 0.01)
+      withLongitude(searchLon - 0.01)
+    }
+
+    val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+    val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
+
+    val premises = (0..1).map {
+      givenAnApprovedPremises(
+        latitude = (it * -0.01) - searchLat,
+        longitude = (it * 0.01) + searchLon,
+        supportsSpaceBookings = true,
+        status = PropertyStatus.active,
+      )
+    }
+
+    // doesn't allow new space bookings
+    givenAnApprovedPremises(
+      latitude = searchLat,
+      longitude = searchLon,
+      supportsSpaceBookings = true,
+      allowNewSpaceBookings = false,
+      status = PropertyStatus.active,
+    )
+
+    // doesn't support space bookings
+    givenAnApprovedPremises(
+      latitude = searchLat,
+      longitude = searchLon,
+      supportsSpaceBookings = false,
+      allowNewSpaceBookings = true,
+      status = PropertyStatus.active,
+    )
+
+    // archived
+    givenAnApprovedPremises(
+      latitude = searchLat,
+      longitude = searchLon,
+      supportsSpaceBookings = true,
+      allowNewSpaceBookings = true,
+      status = PropertyStatus.archived,
+    )
+
+    val searchParameters = Cas1SpaceSearchParameters(
+      applicationId = application.id,
+      startDate = LocalDate.now(),
+      durationInDays = 14,
+      targetPostcodeDistrict = "SE1",
+      spaceCharacteristics = null,
+    )
+
+    val response = webTestClient.post()
+      .uri("/cas1/spaces/search")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(searchParameters)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult<Cas1SpaceSearchResults>()
+
+    val results = response.responseBody.blockFirst()!!
+
+    assertThat(results.resultsCount).isEqualTo(2)
+
+    assertThatResultMatches(results.results[0], premises[0], expectedCharacteristics = emptyList())
+    assertThatResultMatches(results.results[1], premises[1], expectedCharacteristics = emptyList())
   }
 
   @ParameterizedTest
@@ -233,7 +294,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult<Cas1SpaceSearchResults>()
 
       val results = response.responseBody.blockFirst()!!
 
@@ -392,7 +453,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult<Cas1SpaceSearchResults>()
 
       val results = response.responseBody.blockFirst()!!
 
@@ -468,7 +529,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult<Cas1SpaceSearchResults>()
 
       val results = response.responseBody.blockFirst()!!
 
@@ -480,18 +541,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       assertThatResultMatches(results.results[3], expectedPremises[3])
       assertThatResultMatches(results.results[4], expectedPremises[4])
     }
-  }
-
-  private fun ApType.asCharacteristicProperty() = when (this) {
-    ApType.normal -> null
-    ApType.pipe -> "isPIPE"
-    ApType.esap -> "isESAP"
-    ApType.rfap -> "isRecoveryFocussed"
-    ApType.mhapStJosephs, ApType.mhapElliottHouse -> "isSemiSpecialistMentalHealth"
-  }
-
-  private fun ApType.asCharacteristicEntity() = this.asCharacteristicProperty()?.let {
-    getCharacteristic(it)
   }
 
   private fun getCharacteristics(vararg propertyNames: String) = propertyNames.map {

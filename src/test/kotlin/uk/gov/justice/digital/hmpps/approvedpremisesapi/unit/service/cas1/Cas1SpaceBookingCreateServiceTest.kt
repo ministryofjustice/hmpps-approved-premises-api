@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
@@ -80,7 +79,7 @@ class Cas1SpaceBookingCreateServiceTest {
       LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.validate(
-        Cas1SpaceBookingCreateService.CreateBookingDetails(
+        CreateBookingDetails(
           premisesId = UUID.randomUUID(),
           placementRequestId = placementRequest.id,
           expectedArrivalDate = LocalDate.now(),
@@ -93,12 +92,7 @@ class Cas1SpaceBookingCreateServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.premisesId" && value == "doesNotExist"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "doesNotExist")
     }
 
     @Test
@@ -113,7 +107,7 @@ class Cas1SpaceBookingCreateServiceTest {
       LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.validate(
-        Cas1SpaceBookingCreateService.CreateBookingDetails(
+        CreateBookingDetails(
           premisesId = premisesDoesntSupportSpaceBookings.id,
           placementRequestId = placementRequest.id,
           expectedArrivalDate = LocalDate.now(),
@@ -126,12 +120,36 @@ class Cas1SpaceBookingCreateServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "doesNotSupportSpaceBookings")
+    }
 
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.premisesId" && value == "doesNotSupportSpaceBookings"
-      }
+    @Test
+    fun `Error if premises supplied does not allow new space bookings`() {
+      val premisesDoesntSupportSpaceBookings = ApprovedPremisesEntityFactory()
+        .withSupportsSpaceBookings(true)
+        .withAllowNewSpaceBookings(false)
+        .withDefaults()
+        .produce()
+
+      every { cas1PremisesService.findPremisesById(any()) } returns premisesDoesntSupportSpaceBookings
+      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+      LockablePlacementRequestEntity(placementRequest.id)
+
+      val result = service.validate(
+        CreateBookingDetails(
+          premisesId = premisesDoesntSupportSpaceBookings.id,
+          placementRequestId = placementRequest.id,
+          expectedArrivalDate = LocalDate.now(),
+          expectedDepartureDate = LocalDate.now().plusDays(1),
+          createdBy = user,
+          characteristics = emptyList(),
+          transferredFrom = null,
+          additionalInformation = null,
+          transferReason = null,
+        ),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.premisesId", "doesNotAllowNewSpaceBookings")
     }
 
     @Test
@@ -141,7 +159,7 @@ class Cas1SpaceBookingCreateServiceTest {
       LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.validate(
-        Cas1SpaceBookingCreateService.CreateBookingDetails(
+        CreateBookingDetails(
           premisesId = premises.id,
           placementRequestId = UUID.randomUUID(),
           expectedArrivalDate = LocalDate.now(),
@@ -154,12 +172,7 @@ class Cas1SpaceBookingCreateServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.placementRequestId" && value == "doesNotExist"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.placementRequestId", "doesNotExist")
     }
 
     @Test
@@ -169,7 +182,7 @@ class Cas1SpaceBookingCreateServiceTest {
       LockablePlacementRequestEntity(placementRequest.id)
 
       val result = service.validate(
-        Cas1SpaceBookingCreateService.CreateBookingDetails(
+        CreateBookingDetails(
           premisesId = premises.id,
           placementRequestId = placementRequest.id,
           expectedArrivalDate = LocalDate.now().plusDays(1),
@@ -182,12 +195,7 @@ class Cas1SpaceBookingCreateServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
-
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.departureDate" && value == "shouldBeAfterArrivalDate"
-      }
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.departureDate", "shouldBeAfterArrivalDate")
     }
 
     @Test

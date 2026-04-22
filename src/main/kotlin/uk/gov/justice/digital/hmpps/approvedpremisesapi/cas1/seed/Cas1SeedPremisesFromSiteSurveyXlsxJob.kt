@@ -197,6 +197,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
         // A new row is required in site surveys to capture this
         managerDetails = null,
         cruManagementArea = cruManagementArea,
+        allowNewSpaceBookings = true,
       ),
     )
 

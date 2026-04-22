@@ -45,6 +45,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var supportsSpaceBookings: Yielded<Boolean> = { false }
   private var managerDetails: Yielded<String> = { randomStringUpperCase(10) }
   private var cruManagementArea = { Cas1CruManagementAreaEntityFactory().produce() }
+  private var allowNewSpaceBookings: Yielded<Boolean> = { true }
 
   fun withDefaults() = apply {
     withDefaultProbationRegion()
@@ -187,6 +188,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.cruManagementArea = { cruManagementArea }
   }
 
+  fun withAllowNewSpaceBookings(allowNewSpaceBookings: Boolean) = apply {
+    this.allowNewSpaceBookings = { allowNewSpaceBookings }
+  }
+
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
     id = this.id(),
     name = this.name(),
@@ -213,5 +218,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     managerDetails = this.managerDetails(),
     fullAddress = this.fullAddress(),
     cruManagementArea = this.cruManagementArea(),
+    allowNewSpaceBookings = this.allowNewSpaceBookings(),
   )
 }

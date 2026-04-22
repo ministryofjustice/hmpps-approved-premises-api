@@ -289,6 +289,7 @@ class ApprovedPremisesEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_cru_management_area_id")
   var cruManagementArea: Cas1CruManagementAreaEntity,
+  var allowNewSpaceBookings: Boolean,
 ) : PremisesEntity(
   id,
   name,

@@ -32,6 +32,7 @@ fun IntegrationTestBase.givenAnApprovedPremises(
   gender: ApprovedPremisesGender = ApprovedPremisesGender.MAN,
   id: UUID = UUID.randomUUID(),
   cruManagementArea: Cas1CruManagementAreaEntity? = null,
+  allowNewSpaceBookings: Boolean = true,
 ): ApprovedPremisesEntity = approvedPremisesEntityFactory
   .produceAndPersist {
     withId(id)
@@ -50,4 +51,5 @@ fun IntegrationTestBase.givenAnApprovedPremises(
     withCharacteristics(characteristics.toMutableList())
     withGender(gender)
     withCruManagementArea(cruManagementArea ?: givenACas1CruManagementArea())
+    withAllowNewSpaceBookings(allowNewSpaceBookings)
   }

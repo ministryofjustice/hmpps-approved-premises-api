@@ -118,7 +118,7 @@ class Cas1PremisesController(
   ): ResponseEntity<Cas1NationalOccupancy> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_NATIONAL_OCCUPANCY_VIEW)
 
-    val premisesSearchResult = cas1PremisesSearchService.findPremises(
+    val premisesSearchResult = cas1PremisesSearchService.findPremisesForNewSpaceBooking(
       Cas1PremisesSearchCriteria(
         gender = null,
         targetPostcodeDistrict = parameters.postcodeArea,

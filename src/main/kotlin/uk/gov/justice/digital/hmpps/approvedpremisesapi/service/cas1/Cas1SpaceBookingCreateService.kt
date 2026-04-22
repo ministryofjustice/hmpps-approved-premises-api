@@ -86,6 +86,10 @@ class Cas1SpaceBookingCreateService(
       "$.premisesId" hasValidationError "doesNotSupportSpaceBookings"
     }
 
+    if (!premises.allowNewSpaceBookings) {
+      "$.premisesId" hasValidationError "doesNotAllowNewSpaceBookings"
+    }
+
     if (details.expectedArrivalDate >= details.expectedDepartureDate) {
       "$.departureDate" hasValidationError "shouldBeAfterArrivalDate"
     }

@@ -102,7 +102,7 @@ class Cas1PremisesSearchServiceTest {
     )
 
     every {
-      spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
+      spaceSearchRepository.findPremisesForNewSpaceBookingByDistance(
         any(),
         any(),
         any(),
@@ -111,7 +111,7 @@ class Cas1PremisesSearchServiceTest {
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
-    val result = service.findPremises(
+    val result = service.findPremisesForNewSpaceBooking(
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
         gender = ApprovedPremisesGender.MAN,
         targetPostcodeDistrict = "TB1",
@@ -135,7 +135,7 @@ class Cas1PremisesSearchServiceTest {
     }
 
     verify(exactly = 1) {
-      spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
+      spaceSearchRepository.findPremisesForNewSpaceBookingByDistance(
         "TB1",
         gender = ApprovedPremisesGender.MAN,
         spaceCharacteristics.filter { it.modelMatches("premises") }.map { it.id },
@@ -210,7 +210,7 @@ class Cas1PremisesSearchServiceTest {
     )
 
     every {
-      spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
+      spaceSearchRepository.findPremisesForNewSpaceBookingByDistance(
         any(),
         any(),
         any(),
@@ -219,7 +219,7 @@ class Cas1PremisesSearchServiceTest {
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
-    service.findPremises(
+    service.findPremisesForNewSpaceBooking(
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
         gender = gender,
         spaceCharacteristics = Cas1SpaceCharacteristic.entries.toSet(),
@@ -228,7 +228,7 @@ class Cas1PremisesSearchServiceTest {
     )
 
     verify(exactly = 1) {
-      spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
+      spaceSearchRepository.findPremisesForNewSpaceBookingByDistance(
         any(),
         gender = gender,
         any(),
@@ -306,7 +306,7 @@ class Cas1PremisesSearchServiceTest {
     )
 
     every {
-      spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
+      spaceSearchRepository.findPremisesForNewSpaceBookingByDistance(
         any(),
         any(),
         any(),
@@ -315,7 +315,7 @@ class Cas1PremisesSearchServiceTest {
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
-    service.findPremises(
+    service.findPremisesForNewSpaceBooking(
       Cas1PremisesSearchService.Cas1PremisesSearchCriteria(
         gender = ApprovedPremisesGender.MAN,
         targetPostcodeDistrict = "TB1",
@@ -329,7 +329,7 @@ class Cas1PremisesSearchServiceTest {
         ServiceName.approvedPremises,
       )
 
-      spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
+      spaceSearchRepository.findPremisesForNewSpaceBookingByDistance(
         any(),
         ApprovedPremisesGender.MAN,
         spaceCharacteristicEntities.filter { it.modelMatches("premises") }.map { it.id },
