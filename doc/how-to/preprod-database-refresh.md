@@ -78,3 +78,24 @@ If the container is in an error state and you want to re-run, you may have to st
 ```sh
 kubectl -n hmpps-community-accommodation-prod delete job db-refresh-job-adhoc
 ```
+
+## Stopping recurring alerting for failed jobs
+
+Should the job fail, an alert is sent to the `#cas-events` Slack channel. These alerts will keep appearing until the failed process pod is deleted. First, find out if any job is showing the status `Failed`:
+
+```shell
+$ kubectl -n hmpps-community-accommodation-prod get jobs
+NAME                      STATUS     COMPLETIONS   DURATION   AGE
+db-refresh-job-12345678   Complete   1/1           18m        108d
+db-refresh-job-12345679   Complete   1/1           19m        66d
+db-refresh-job-12345680   Complete   1/1           19m        59d
+db-refresh-job-adhoc      Failed     0/1           43m        44m
+```
+
+Then delete the failed job:
+
+```shell
+kubectl -n hmpps-community-accommodation-prod delete jobs db-refresh-job-adhoc
+```
+
+Jobs marked as `Complete` should be automatically deleted after a period of time, and do not need to be deleted manually.
