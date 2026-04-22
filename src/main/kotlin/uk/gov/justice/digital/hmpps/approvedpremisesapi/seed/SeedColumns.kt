@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 data class SeedColumns(
@@ -19,23 +17,6 @@ data class SeedColumns(
   fun getLocalDateOrNull(label: String): LocalDate? {
     val rawValue = getStringOrNull(label) ?: return null
     return LocalDate.parse(rawValue)
-  }
-
-  fun getLastDateTimeFromListOrNull(label: String, formatter: DateTimeFormatter): LocalDateTime? {
-    val rawValue = getStringOrNull(label) ?: return null
-
-    val lastDateTime = rawValue.split(",").last()
-    return LocalDateTime.parse(lastDateTime, formatter)
-  }
-
-  fun getDateTimeFromUtcDateTimeOrNull(label: String, formatter: DateTimeFormatter): LocalDateTime? {
-    val rawValue = getStringOrNull(label) ?: return null
-    return LocalDateTime.parse(rawValue, formatter)
-  }
-
-  fun getDateFromUtcDateTimeOrNull(label: String): LocalDate? {
-    val rawValue = getStringOrNull(label) ?: return null
-    return LocalDate.parse(rawValue.substring(startIndex = 0, endIndex = 10))
   }
 
   fun getCommaSeparatedValues(label: String): List<String> {
