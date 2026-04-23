@@ -212,13 +212,17 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
         assertThat(summary.type).isEqualTo("approved-premises")
         assertThat(summary.completed).isEqualTo(assessment.decision != null)
         assertThat(summary.arrivalDate).isEqualTo(application.arrivalDate?.toInstant())
-        assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")
+        assertThat(summary.riskRatings).isEqualTo(
+          """{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""",
+        )
       }
 
       is TemporaryAccommodationApplicationEntity -> {
         assertThat(summary.type).isEqualTo("temporary-accommodation")
         assertThat(summary.completed).isEqualTo((assessment as TemporaryAccommodationAssessmentEntity).completedAt != null)
-        assertThat(summary.riskRatings).isEqualTo("""{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""")
+        assertThat(summary.riskRatings).isEqualTo(
+          """{"roshRisks":{"status":"NotFound","value":null},"mappa":{"status":"NotFound","value":null},"tier":{"status":"NotFound","value":null},"flags":{"status":"NotFound","value":null}}""",
+        )
       }
     }
   }

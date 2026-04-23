@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.migration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
@@ -16,7 +16,7 @@ import java.util.UUID
 
 class Cas2MigrateNotesTest : MigrationJobTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realNotesRepository: Cas2ApplicationNoteRepository
 
   @AfterEach

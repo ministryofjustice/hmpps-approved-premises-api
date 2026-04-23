@@ -46,7 +46,7 @@ class RequestResponseLoggingFilter(
 
     request.setAttribute(ATTRIBUTE_RECEIVED_TIMESTAMP, System.currentTimeMillis())
 
-    val requestWrapper = ContentCachingRequestWrapper(request)
+    val requestWrapper = ContentCachingRequestWrapper(request, Int.MAX_VALUE)
     val responseWrapper = ContentCachingResponseWrapper(response)
 
     filterChain.doFilter(requestWrapper, responseWrapper)

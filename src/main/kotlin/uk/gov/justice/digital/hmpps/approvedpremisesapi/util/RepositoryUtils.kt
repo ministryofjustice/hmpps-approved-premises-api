@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport
 import org.springframework.stereotype.Component
+import kotlin.collections.get
 
 inline fun <reified T : Any, ID : Any> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>): List<T> = findAllByIdOrdered(ids, T::class.java)
 

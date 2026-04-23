@@ -83,7 +83,7 @@ class Cas1ReportsTest : IntegrationTestBase() {
         .header("X-Service-Name", approvedPremisesServiceName)
         .exchange()
         .expectStatus()
-        .is5xxServerError
+        .is4xxClientError
     }
   }
 

@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -29,11 +31,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isTypeInThrowableCh
 @ControllerAdvice
 @Suppress("TooManyFunctions")
 class ExceptionHandling(
-  private val jsonMapper: JsonMapper,
+  private val jsonMapper: JsonMapper = JsonMapper().apply {
+    disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+    disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    findAndRegisterModules()
+  },
   private val deserializationValidationService: DeserializationValidationService,
   private val sentryService: SentryService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
+
 
   @ExceptionHandler(AuthenticationCredentialsNotFoundException::class)
   fun handleAuthenticationCredentialsNotFoundException(ex: AuthenticationCredentialsNotFoundException): ResponseEntity<ProblemDetail> {

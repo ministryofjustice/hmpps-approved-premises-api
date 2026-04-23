@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.convert
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 
@@ -27,8 +28,8 @@ class EnumConverterTest {
   fun `The enum converter doesn't use the constant names if the String value is defined`() {
     val converter = EnumConverterFactory().getConverter(OpenApiLike::class.java)
 
-    assertThat(converter.convert("OPTION_ONE")).isNull()
-    assertThat(converter.convert("OPTION_TWO")).isNull()
+    assertThatIllegalArgumentException().isThrownBy { converter.convert("OPTION_ONE") }
+    assertThatIllegalArgumentException().isThrownBy { converter.convert("OPTION_TWO") }
   }
 
   @Test
@@ -44,7 +45,7 @@ class EnumConverterTest {
     val openApiLikeConverter = EnumConverterFactory().getConverter(OpenApiLike::class.java)
     val standardConverter = EnumConverterFactory().getConverter(Standard::class.java)
 
-    assertThat(openApiLikeConverter.convert("the-third-option")).isNull()
-    assertThat(standardConverter.convert("the-third-option")).isNull()
+    assertThatIllegalArgumentException().isThrownBy { openApiLikeConverter.convert("the-third-option") }
+    assertThatIllegalArgumentException().isThrownBy { standardConverter.convert("the-third-option") }
   }
 }

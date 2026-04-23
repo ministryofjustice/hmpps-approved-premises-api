@@ -82,7 +82,7 @@ class ExceptionHandlingTest {
 
   @Test
   fun `Returns NotFoundResourceProblem problem when exception is NoResourceFoundException and exception captured in Sentry`() {
-    val throwable = NoResourceFoundException(HttpMethod.GET, "")
+    val throwable = NoResourceFoundException(HttpMethod.GET, "", "")
 
     val problem = exceptionHandling.handleNoResourceFoundException(throwable).body!!
 
@@ -226,8 +226,8 @@ class ExceptionHandlingTest {
     val response = exceptionHandling.handleMessageNotReadableException(throwable, mockRequest)
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body.title).isEqualTo("Bad Request")
-    assertThat(response.body.detail).isEqualTo("Expected an object but got an array")
+    assertThat(response.body!!.title).isEqualTo("Bad Request")
+    assertThat(response.body!!.detail).isEqualTo("Expected an object but got an array")
   }
 
   @Test
@@ -259,8 +259,8 @@ class ExceptionHandlingTest {
     loggerExtension.assertContains("Bad Request. Error Detail: None, Invalid Params: [key=ParamDetails(errorType=arrayErrorType, entityId=arrayEntityId, value=arrayValue)]")
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body.title).isEqualTo("Bad Request")
-    assertThat(response.body.detail).isEqualTo("There is a problem with your request")
+    assertThat(response.body!!.title).isEqualTo("Bad Request")
+    assertThat(response.body!!.detail).isEqualTo("There is a problem with your request")
   }
 
   @Test
@@ -290,8 +290,8 @@ class ExceptionHandlingTest {
     loggerExtension.assertContains("Bad Request. Error Detail: None, Invalid Params: [key=ParamDetails(errorType=objectErrorType, entityId=objectEntityId, value=objectValue)]")
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body.title).isEqualTo("Bad Request")
-    assertThat(response.body.detail).isEqualTo("There is a problem with your request")
+    assertThat(response.body!!.title).isEqualTo("Bad Request")
+    assertThat(response.body!!.detail).isEqualTo("There is a problem with your request")
   }
 
   @Test
@@ -302,7 +302,7 @@ class ExceptionHandlingTest {
     val response = exceptionHandling.handleMessageNotReadableException(throwable, mockRequest)
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body.title).isEqualTo("Bad Request")
-    assertThat(response.body.detail).isEqualTo("Exception caused by IllegalArgumentException")
+    assertThat(response.body!!.title).isEqualTo("Bad Request")
+    assertThat(response.body!!.detail).isEqualTo("Exception caused by IllegalArgumentException")
   }
 }

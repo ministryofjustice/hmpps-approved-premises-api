@@ -16,6 +16,6 @@ class ContentCachingFilter : OncePerRequestFilter() {
     httpServletResponse: HttpServletResponse,
     filterChain: FilterChain,
   ) {
-    filterChain.doFilter(ContentCachingRequestWrapper(httpServletRequest), httpServletResponse)
+    filterChain.doFilter(ContentCachingRequestWrapper(httpServletRequest, Int.MAX_VALUE), httpServletResponse)
   }
 }

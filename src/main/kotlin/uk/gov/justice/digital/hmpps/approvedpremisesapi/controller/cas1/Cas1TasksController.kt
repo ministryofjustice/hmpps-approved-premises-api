@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCa
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 
+@SuppressWarnings("SwallowedException")
 @Cas1Controller
 @Tag(name = "CAS1 Tasks")
 class Cas1TasksController(
@@ -310,7 +311,11 @@ class Cas1TasksController(
     user.cas1LaoStrategy(),
   )
 
-  private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(
-    type.kebabCaseToPascalCase(),
-  ) ?: throw NotFoundProblem(type, "TaskType")
+  private fun toTaskType(type: String) = try {
+    enumConverterFactory.getConverter(TaskType::class.java).convert(
+      type.kebabCaseToPascalCase(),
+    ) ?: throw NotFoundProblem(type, "TaskType")
+  } catch (e: IllegalArgumentException) {
+    throw NotFoundProblem(type, "TaskType")
+  }
 }

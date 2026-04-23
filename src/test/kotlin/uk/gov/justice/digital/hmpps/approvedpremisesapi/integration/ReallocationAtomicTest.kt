@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.every
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 
 class ReallocationAtomicTest : IntegrationTestBase() {
-  @SpykBean
+  @MockkSpyBean
   lateinit var realAssessmentRepository: AssessmentRepository
 
   @Test

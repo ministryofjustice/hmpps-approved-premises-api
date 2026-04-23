@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
@@ -296,7 +296,7 @@ class Cas1AppealsTest : InitialiseDatabasePerClassTestBase() {
             .expectBody()
             .jsonPath("$.appealDate").isEqualTo("2024-01-01")
             .jsonPath("$.appealDetail").isEqualTo("Some details about the appeal.")
-            .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+            .jsonPath("$.createdAt").value(OffsetDateTime::class.java, withinSeconds(5L))
             .jsonPath("$.applicationId").isEqualTo(application.id.toString())
             .jsonPath("$.decision").isEqualTo(AppealDecision.rejected.value)
             .jsonPath("$.decisionDetail").isEqualTo("Some details about the decision.")

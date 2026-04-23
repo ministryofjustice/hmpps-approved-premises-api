@@ -1,9 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
@@ -14,6 +11,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.NullNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
@@ -50,7 +50,7 @@ import kotlin.math.sign
 
 class Cas2v2ApplicationTest : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationRepository: ApplicationRepository
 
   val schema = """
@@ -1493,7 +1493,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         }
 
         Assertions.assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn
+          it!!.person.crn == offenderDetails.otherIds.crn
         }
       }
     }
