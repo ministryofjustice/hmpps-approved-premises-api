@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.listener.Cas1SpaceBookingEntityListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.commaSeparatedToList
 import java.time.Instant
 import java.time.LocalDate
@@ -463,6 +465,7 @@ class LockableCas1SpaceBookingEntity(
 )
 
 @Entity
+@EntityListeners(Cas1SpaceBookingEntityListener::class)
 @Table(name = "cas1_space_bookings")
 data class Cas1SpaceBookingEntity(
   @Id

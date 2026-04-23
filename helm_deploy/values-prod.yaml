@@ -17,6 +17,7 @@ generic-service:
 
   env:
     JAVA_OPTS: "-Xmx2000m"
+    INGRESS_HOST: approved-premises-api.hmpps.service.justice.gov.uk
     SPRING_PROFILES_ACTIVE: prod
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     HMPPS_AUTH_URL: https://sign-in.hmpps.service.justice.gov.uk/auth

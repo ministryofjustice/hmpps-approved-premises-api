@@ -32,6 +32,7 @@ enum class EventType(@get:JsonValue val value: String) {
   plannedTransferRequestRejected("approved-premises.planned-transfer-request.rejected"),
   requestForPlacementCreated("approved-premises.request-for-placement.created"),
   requestForPlacementAssessed("approved-premises.request-for-placement.assessed"),
+  applicationStatusUpdated("approved-premises.application.status-updated"),
   ;
 
   companion object {

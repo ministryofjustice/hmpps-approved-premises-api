@@ -83,4 +83,5 @@ logging:
     # allows us to see the request URL and method for upstream requests
     reactor.netty.http.client.HttpClientConnect: DEBUG
 
-
+ingress:
+  host: http://localhost:${server.port}
