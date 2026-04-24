@@ -5,11 +5,11 @@ on:
       - 'main'
 
 jobs:
-  test:
+  verify:
     permissions:
       contents: read
     name: Test
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/verify.yml
     secrets: inherit
 
   docker_build:
@@ -30,7 +30,7 @@ jobs:
       packages: write
     name: Deploy to the development environment
     needs:
-      - test
+      - verify
       - docker_build
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
     secrets: inherit
