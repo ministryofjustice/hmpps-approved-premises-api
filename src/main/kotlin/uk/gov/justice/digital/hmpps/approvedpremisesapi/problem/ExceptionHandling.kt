@@ -79,8 +79,6 @@ class ExceptionHandling(
 
     log.error("Unhandled exception type, returning generic 500 response", throwable)
 
-    sentryService.captureException(throwable)
-
     // We throw this instead of an InternalServerErrorProblem to avoid the Sentry Alert
     // being raised again by [ExceptionHandling.logInternalServerErrorProblem]
     return UnhandledExceptionProblem(
