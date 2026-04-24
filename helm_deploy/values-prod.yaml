@@ -16,7 +16,7 @@ generic-service:
     tlsSecretName: hmpps-approved-premises-api-prod-cert
 
   env:
-    JAVA_OPTS: "-Xmx2000m"
+    JAVA_TOOL_OPTIONS: "-Xmx800m"
     SPRING_PROFILES_ACTIVE: prod
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     HMPPS_AUTH_URL: https://sign-in.hmpps.service.justice.gov.uk/auth
