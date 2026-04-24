@@ -46,4 +46,5 @@ enum class SeedFileType(@get:JsonValue val value: String) {
   cas2UpdateAssessmentStatus("cas2_update_assessment_status"),
   approvedPremisesCancelOutOfServiceBeds("approved_premises_cancel_out_of_service_beds"),
   approvedPremisesUpdateOutOfServiceBeds("approved_premises_update_out_of_service_beds"),
+  approvedPremisesClosePremises("approved_premises_close_premises"),
 }
