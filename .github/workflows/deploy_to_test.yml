@@ -9,14 +9,12 @@ permissions:
 
 jobs:
   docker_build:
-    name: Build docker image from hmpps-github-actions
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
-    with:
-      docker_registry: 'ghcr.io'
-      registry_org: 'ministryofjustice'
-      push: true
-      docker_multiplatform: false
-      tag_latest: false
+    permissions:
+      contents: read
+      packages: write
+    name: Build docker image
+    uses: ./.github/workflows/docker_build.yml
+    secrets: inherit
 
   deploy_test:
     name: Deploy to the test environment
