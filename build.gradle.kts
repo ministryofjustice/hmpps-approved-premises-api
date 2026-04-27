@@ -3,7 +3,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.7.0"
   kotlin("plugin.spring") version "2.2.21"
   kotlin("plugin.jpa") version "2.2.21"
-  id("io.gitlab.arturbosch.detekt") version "1.23.8"
+  id("dev.detekt") version "2.0.0-alpha.2"
   id("org.owasp.dependencycheck") version "12.2.1"
 }
 
@@ -11,10 +11,12 @@ kotlin {
   jvmToolchain(21)
 }
 
+// detekt must use a specific kotlin version when running, this block ensures it's using the correct version
+// this is variation on https://detekt.dev/docs/gettingstarted/gradle/#gradle-runtime-dependencies
 configurations.matching { it.name == "detekt" }.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "org.jetbrains.kotlin") {
-      useVersion(io.gitlab.arturbosch.detekt.getSupportedKotlinVersion())
+      useVersion("2.3.0")
     }
   }
 }
@@ -239,13 +241,13 @@ dependencyCheck {
   suppressionFile = ".dependencycheckignore.xml"
 }
 
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
   source = source.asFileTree.matching {
     exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
   }
 }
 
-tasks.withType<io.gitlab.arturbosch.detekt.DetektCreateBaselineTask>().configureEach {
+tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
   source = source.asFileTree.matching {
     exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
   }
