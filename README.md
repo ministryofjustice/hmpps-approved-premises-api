@@ -12,9 +12,9 @@ To install Java you can use sdkman:
 
 * Uninstall/unconfigure any other tool used to manage JDKs (e.g. jenv)
 * Install sdkman using the instructions on the website
-* Add source "$HOME/.sdkman/bin/sdkman-init.sh into .zshrc to ensure it's available in all terminals
-* In the project root run sdk env install to install the correct version of java
-* It's advised to set the project java version as system-wide default, allowing ap-tools to be run from anywhere e.g. sdk default java <installed-version-here>
+* Add source `"$HOME/.sdkman/bin/sdkman-init.sh` into `.zshrc` to ensure it's available in all terminals
+* In the project root run `sdk env install` to install the correct version of java
+* It's advised to set the project java version as system-wide default, allowing ap-tools to be run from anywhere e.g. `sdk default java <installed-version-here>`
 
 ## Running Tests
 

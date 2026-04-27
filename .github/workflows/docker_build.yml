@@ -25,7 +25,7 @@ jobs:
       gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew assemble'
       upload-build-artifacts: true
       upload-test-artifacts: false
-      java-version: "21"
+      java-version: "25"
     needs:
       - app_version
 
