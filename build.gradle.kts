@@ -1,4 +1,3 @@
-
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.7.0"
   kotlin("plugin.spring") version "2.2.21"
@@ -94,8 +93,8 @@ springBoot {
   mainClass.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.ApplicationKt")
 }
 
-java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+kotlin {
+  jvmToolchain(25)
 }
 
 kotlin.compilerOptions.freeCompilerArgs.add("-Xannotation-default-target=param-property")
@@ -106,7 +105,7 @@ val buildDir = layout.buildDirectory.asFile.get()
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
     finalizedBy("generateCas1Roles")
     getByName("check") {
       dependsOn(":ktlintCheck", "detekt")
