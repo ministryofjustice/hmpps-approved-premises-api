@@ -1,24 +1,35 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.JDBCConnectionException
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
 import org.springframework.test.web.reactive.server.returnResult
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.InvalidParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 import java.sql.SQLException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
+import org.springframework.security.access.AccessDeniedException as SpringAccessDeniedException
 
 class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
 
@@ -233,6 +244,384 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
+  @Nested
+  inner class RawJsonTests {
+
+    @Test
+    fun `Returns 401 unauthenticated when AuthenticationCredentialsNotFoundException is thrown`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.get()
+        .uri("/authentication-credentials-not-found-exception")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {
+        "title" : "Unauthenticated",
+        "status" : 401,
+        "detail" : "A valid HMPPS Auth JWT must be supplied via bearer authentication to access this endpoint"
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
+    }
+
+    @Test
+    fun `Returns 403 Forbidden when AccessDeniedException is thrown`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.get()
+        .uri("/access-denied-exception")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {
+        "title" : "Forbidden",
+        "status" : 403,
+        "detail" : "You are not authorized to access this endpoint"
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
+    }
+
+    @Test
+    fun `Returns 404 Not Found when NoResourceFoundException is thrown`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.get()
+        .uri("/no-resource-found-exception")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {
+        "title" : "Not Found",
+        "status" : 404,
+        "detail" : "Resource not found"
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
+    }
+
+    @Test
+    fun `Returns 400 Bad Request when MissingRequestHeaderException is thrown`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.get()
+        .uri("/missing-request-header-exception")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {
+        "title" : "Bad Request",
+        "status" : 400,
+        "detail" : "Missing required header X-Required-Header",
+        "invalid-params" : []
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
+    }
+
+    @Test
+    fun `Returns 400 Bad Request when MissingServletRequestParameterException is thrown`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.get()
+        .uri("/missing-servlet-request-parameter-exception")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {
+        "title" : "Bad Request",
+        "status" : 400,
+        "detail" : "Missing required query parameter requiredProperty",
+        "invalid-params": []
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
+    }
+
+    @Test
+    fun `Returns 400 Bad Request when MethodArgumentTypeMismatchException is thrown`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.get()
+        .uri("/method-argument-type-mismatch-exception")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .returnResult<JsonNode>()
+
+      val prettyJsonResponse = """
+      {
+        "timestamp" : "2026-04-24T08:11:54.563+00:00",
+        "status" : 400,
+        "error" : "Bad Request",
+        "message" : "Method parameter 'requiredProperty': Failed to convert value of type 'java.lang.String' to required type 'int'",
+        "path" : "/method-argument-type-mismatch-exception"
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      val objectNode = validationResult.responseBody.blockFirst() as? ObjectNode
+      if (objectNode != null && objectNode.has("timestamp")) {
+        objectNode.replace("timestamp", objectNode.textNode("2026-04-24T08:11:54.563+00:00"))
+      } else {
+        error("timestamp field does not exist in the response")
+      }
+
+      assertJsonEquals(jsonMapper.writeValueAsString(objectNode), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+    }
+
+    @Test
+    fun `Returns 503 Service Unavailable when JDBCConnectionException is thrown`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.get()
+        .uri("/jdbc-connection-exception")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {        
+        "detail" : "Error acquiring a database connection",
+        "title" : "Service Unavailable",
+        "status" : 503
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
+    }
+
+    @Test
+    fun `Returns 500 Internal Server Error when IllegalArgumentException is thrown`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.get()
+        .uri("/illegal-argument-exception")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {        
+        "detail" : "There was an unexpected problem",
+        "title" : "Internal Server Error",
+        "status" : 500
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
+    }
+
+    @Test
+    fun `Returns 400 Bad Request when expected body root is an array and an object is provided`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/array")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue("{}")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {        
+        "title" : "Bad Request",
+        "status" : 400,
+        "detail" : "Expected an array but got an object"
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+    }
+
+    @Test
+    fun `Returns 400 Bad Request when expected body root is an object and an array is provided`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/object")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue("[]")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {        
+        "title" : "Bad Request",
+        "status" : 400,
+        "detail" : "Expected an object but got an array"
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+    }
+
+    @Test
+    fun `Returns 400 Bad Request when expected body root is an array and request body has an invalid property`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/array")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue(
+          """
+          [{
+             "requiredInt": "not an int",
+             "requiredObject": {
+                "requiredString": "a string",
+                "aLocalDate": "2026-04-26",
+                "aLocalDateTime": "2026-04-26T16:03:56.871",
+                "anOffsetDateTime": "2026-04-26T16:03:56.871+00:00",
+                "anInstant": "2026-04-26T16:03:56.871Z",
+                "aUUID": "f55976f6-fd15-4c07-8044-51f806cf4c7c"
+             },
+             "requiredListOfInts": [1, 2, 3],
+             "requiredListOfObjects": [],
+             "aLocalDate": "2026-04-26",
+             "aLocalDateTime": "2026-04-26T16:03:56.871",
+             "anOffsetDateTime": "2026-04-26T16:03:56.871+00:00",
+             "anInstant": "2026-04-26T16:03:56.871Z",
+             "aUUID": "f55976f6-fd15-4c07-8044-51f806cf4c7c"
+          }]
+        """,
+        )
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {        
+        "title" : "Bad Request",
+        "status" : 400,
+        "detail" : "There is a problem with your request",
+        "invalid-params" : [{
+          "propertyName" : "$[0].requiredInt",
+          "errorType" : "expectedNumber",
+          "entityId" : null, 
+          "value" : null
+        }]
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+    }
+
+    @Test
+    fun `Returns 400 Bad Request when expected body root is an object and request body has an invalid property`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/object")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue(
+          """
+          {
+             "requiredInt": "not an int",
+             "requiredObject": {
+                "requiredString": "a string",
+                "aLocalDate": "2026-04-26",
+                "aLocalDateTime": "2026-04-26T16:03:56.871",
+                "anOffsetDateTime": "2026-04-26T16:03:56.871+00:00",
+                "anInstant": "2026-04-26T16:03:56.871Z",
+                "aUUID": "f55976f6-fd15-4c07-8044-51f806cf4c7c"
+             },
+             "requiredListOfInts": [1, 2, 3],
+             "requiredListOfObjects": [],
+             "aLocalDate": "2026-04-26",
+             "aLocalDateTime": "2026-04-26T16:03:56.871",
+             "anOffsetDateTime": "2026-04-26T16:03:56.871+00:00",
+             "anInstant": "2026-04-26T16:03:56.871Z",
+             "aUUID": "f55976f6-fd15-4c07-8044-51f806cf4c7c"
+          }
+        """,
+        )
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {        
+        "title" : "Bad Request",
+        "status" : 400,
+        "detail" : "There is a problem with your request",
+        "invalid-params" : [{
+          "propertyName" : "$.requiredInt",
+          "errorType" : "expectedNumber",
+          "entityId" : null, 
+          "value" : null
+        }]
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+    }
+
+    @Test
+    fun `Returns 400 Bad Request when cause is not MismatchedInputException`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val validationResult = webTestClient.post()
+        .uri("/deserialization-test/object")
+        .header("Authorization", "Bearer $jwt")
+        .header("Content-Type", "application/json")
+        .bodyValue("{ invalid json }")
+        .exchange()
+        .returnResult<String>()
+
+      val prettyJsonResponse = """
+      {        
+        "title" : "Bad Request",
+        "status" : 400,
+        "detail" : "JSON parse error: Unexpected character ('i' (code 105)): was expecting double-quote to start field name"
+      }
+      """.trimIndent()
+      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+
+      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+    }
+  }
+
   @Test
   fun `An unhandled exception will not return a problem response with the exception message in the detail property`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
@@ -348,6 +737,30 @@ class ExceptionHandlingTestController {
   fun jdbcConnectionExceptionInCause(): ResponseEntity<Unit> = throw RuntimeException(
     JDBCConnectionException("Oh dear", SQLException("")),
   )
+
+  @GetMapping(path = ["authentication-credentials-not-found-exception"])
+  fun authenticationCredentialsNotFoundException(): ResponseEntity<Unit> = throw AuthenticationCredentialsNotFoundException(
+    "Credentials not found",
+    SQLException(""),
+  )
+
+  @GetMapping(path = ["access-denied-exception"])
+  fun accessDeniedException(): ResponseEntity<Unit> = throw SpringAccessDeniedException("Forbidden")
+
+  @GetMapping(path = ["no-resource-found-exception"])
+  fun noResourceFoundException(): ResponseEntity<Unit> = throw NoResourceFoundException(HttpMethod.GET, "/path")
+
+  @GetMapping(path = ["missing-request-header-exception"])
+  fun missingRequestHeaderException(@RequestHeader("X-Required-Header") header: String): ResponseEntity<Unit> = ResponseEntity.ok().build()
+
+  @GetMapping(path = ["missing-servlet-request-parameter-exception"])
+  fun missingServletRequestParameterException(): ResponseEntity<Unit> = throw MissingServletRequestParameterException("requiredProperty", "int")
+
+  @GetMapping(path = ["method-argument-type-mismatch-exception"])
+  fun methodArgumentTypeMismatchException(): ResponseEntity<Unit> = throw MethodArgumentTypeMismatchException("notanint", Int::class.java, "requiredProperty", null, null)
+
+  @GetMapping(path = ["illegal-argument-exception"])
+  fun illegalArgumentException(): ResponseEntity<Unit> = throw IllegalArgumentException()
 }
 
 data class DeserializationTestBody(
