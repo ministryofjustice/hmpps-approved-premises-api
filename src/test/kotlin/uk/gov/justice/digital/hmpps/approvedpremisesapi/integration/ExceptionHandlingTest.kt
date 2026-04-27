@@ -257,16 +257,17 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {
-        "title" : "Unauthenticated",
-        "status" : 401,
-        "detail" : "A valid HMPPS Auth JWT must be supplied via bearer authentication to access this endpoint"
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {
+            "title" : "Unauthenticated",
+            "status" : 401,
+            "detail" : "A valid HMPPS Auth JWT must be supplied via bearer authentication to access this endpoint"
+          }
+          """,
+      )
 
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
@@ -280,16 +281,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {
-        "title" : "Forbidden",
-        "status" : 403,
-        "detail" : "You are not authorized to access this endpoint"
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {
+            "title" : "Forbidden",
+            "status" : 403,
+            "detail" : "You are not authorized to access this endpoint"
+          }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
@@ -303,16 +304,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {
-        "title" : "Not Found",
-        "status" : 404,
-        "detail" : "Resource not found"
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {
+            "title" : "Not Found",
+            "status" : 404,
+            "detail" : "Resource not found"
+          }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
@@ -326,17 +327,17 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {
-        "title" : "Bad Request",
-        "status" : 400,
-        "detail" : "Missing required header X-Required-Header",
-        "invalid-params" : []
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {
+            "title" : "Bad Request",
+            "status" : 400,
+            "detail" : "Missing required header X-Required-Header",
+            "invalid-params" : []
+          }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
@@ -350,17 +351,17 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {
-        "title" : "Bad Request",
-        "status" : 400,
-        "detail" : "Missing required query parameter requiredProperty",
-        "invalid-params": []
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+            {
+              "title" : "Bad Request",
+              "status" : 400,
+              "detail" : "Missing required query parameter requiredProperty",
+              "invalid-params": []
+            }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
@@ -374,17 +375,6 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<JsonNode>()
 
-      val prettyJsonResponse = """
-      {
-        "timestamp" : "2026-04-24T08:11:54.563+00:00",
-        "status" : 400,
-        "error" : "Bad Request",
-        "message" : "Method parameter 'requiredProperty': Failed to convert value of type 'java.lang.String' to required type 'int'",
-        "path" : "/method-argument-type-mismatch-exception"
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
       val objectNode = validationResult.responseBody.blockFirst() as? ObjectNode
       if (objectNode != null && objectNode.has("timestamp")) {
         objectNode.replace("timestamp", objectNode.textNode("2026-04-24T08:11:54.563+00:00"))
@@ -392,7 +382,19 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         error("timestamp field does not exist in the response")
       }
 
-      assertJsonEquals(jsonMapper.writeValueAsString(objectNode), compactJsonResponse)
+      assertJsonEquals(
+        actual = jsonMapper.writeValueAsString(objectNode),
+        expected = """
+          {
+            "timestamp" : "2026-04-24T08:11:54.563+00:00",
+            "status" : 400,
+            "error" : "Bad Request",
+            "message" : "Method parameter 'requiredProperty': Failed to convert value of type 'java.lang.String' to required type 'int'",
+            "path" : "/method-argument-type-mismatch-exception"
+          }
+        """,
+      )
+
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
     }
 
@@ -406,16 +408,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {        
-        "detail" : "Error acquiring a database connection",
-        "title" : "Service Unavailable",
-        "status" : 503
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {        
+            "detail" : "Error acquiring a database connection",
+            "title" : "Service Unavailable",
+            "status" : 503
+          }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
@@ -429,16 +431,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {        
-        "detail" : "There was an unexpected problem",
-        "title" : "Internal Server Error",
-        "status" : 500
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+           {        
+            "detail" : "There was an unexpected problem",
+            "title" : "Internal Server Error",
+            "status" : 500
+           }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
@@ -454,16 +456,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {        
-        "title" : "Bad Request",
-        "status" : 400,
-        "detail" : "Expected an array but got an object"
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {        
+            "title" : "Bad Request",
+            "status" : 400,
+            "detail" : "Expected an array but got an object"
+          }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
     }
 
@@ -479,16 +481,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {        
-        "title" : "Bad Request",
-        "status" : 400,
-        "detail" : "Expected an object but got an array"
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {        
+            "title" : "Bad Request",
+            "status" : 400,
+            "detail" : "Expected an object but got an array"
+          }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
     }
 
@@ -525,22 +527,23 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {        
-        "title" : "Bad Request",
-        "status" : 400,
-        "detail" : "There is a problem with your request",
-        "invalid-params" : [{
-          "propertyName" : "$[0].requiredInt",
-          "errorType" : "expectedNumber",
-          "entityId" : null, 
-          "value" : null
-        }]
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {        
+            "title" : "Bad Request",
+            "status" : 400,
+            "detail" : "There is a problem with your request",
+            "invalid-params" : [{
+              "propertyName" : "$[0].requiredInt",
+              "errorType" : "expectedNumber",
+              "entityId" : null, 
+              "value" : null
+            }]
+          }
+          """,
+      )
 
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
     }
 
@@ -577,22 +580,22 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {        
-        "title" : "Bad Request",
-        "status" : 400,
-        "detail" : "There is a problem with your request",
-        "invalid-params" : [{
-          "propertyName" : "$.requiredInt",
-          "errorType" : "expectedNumber",
-          "entityId" : null, 
-          "value" : null
-        }]
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {        
+            "title" : "Bad Request",
+            "status" : 400,
+            "detail" : "There is a problem with your request",
+            "invalid-params" : [{
+              "propertyName" : "$.requiredInt",
+              "errorType" : "expectedNumber",
+              "entityId" : null, 
+              "value" : null
+            }]
+          }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
     }
 
@@ -608,16 +611,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .returnResult<String>()
 
-      val prettyJsonResponse = """
-      {        
-        "title" : "Bad Request",
-        "status" : 400,
-        "detail" : "JSON parse error: Unexpected character ('i' (code 105)): was expecting double-quote to start field name"
-      }
-      """.trimIndent()
-      val compactJsonResponse = jsonMapper.writeValueAsString(jsonMapper.readTree(prettyJsonResponse))
-
-      assertJsonEquals(validationResult.responseBody.blockFirst(), compactJsonResponse)
+      assertJsonEquals(
+        actual = validationResult.responseBody.blockFirst(),
+        expected = """
+          {        
+            "title" : "Bad Request",
+            "status" : 400,
+            "detail" : "JSON parse error: Unexpected character ('i' (code 105)): was expecting double-quote to start field name"
+          }
+          """,
+      )
       assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
     }
   }

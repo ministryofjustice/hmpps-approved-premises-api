@@ -1,14 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import org.assertj.core.api.Assertions.assertThat
 import org.skyscreamer.jsonassert.JSONAssert
 import org.skyscreamer.jsonassert.JSONCompareMode
 
 fun assertJsonEquals(
-  expected: String,
-  actual: String,
+  expected: String?,
+  actual: String?,
 ) {
+  assertThat(expected).isNotNull()
+  assertThat(actual).isNotNull()
+
   JSONAssert.assertEquals(
-    expected.trimMargin(),
+    expected!!.trimMargin(),
     actual,
     JSONCompareMode.NON_EXTENSIBLE,
   )
