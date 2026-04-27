@@ -214,7 +214,8 @@ class ExceptionHandling(
     }
 
     log.error("Unhandled exception type, returning generic 500 response", ex)
-    throw ex
+    val problem = UnhandledExceptionProblem(detail = "There was an unexpected problem")
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem.toProblemDetail())
   }
 
   private fun isInputTypeArray(mismatchedInputException: MismatchedInputException): Boolean {
