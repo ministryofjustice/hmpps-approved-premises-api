@@ -255,15 +255,19 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/authentication-credentials-not-found-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .returnResult<String>()
+        .expectBody()
+        .returnResult()
 
       assertJsonEquals(
-        actual = validationResult.responseBody.blockFirst(),
+        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
         expected = """
           {
+            "type" : "about:blank",
             "title" : "Unauthenticated",
             "status" : 401,
-            "detail" : "A valid HMPPS Auth JWT must be supplied via bearer authentication to access this endpoint"
+            "detail" : "A valid HMPPS Auth JWT must be supplied via bearer authentication to access this endpoint",
+            "instance" : "/authentication-credentials-not-found-exception",
+            "properties" : null
           }
           """,
       )
@@ -279,15 +283,19 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/access-denied-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .returnResult<String>()
+        .expectBody()
+        .returnResult()
 
       assertJsonEquals(
-        actual = validationResult.responseBody.blockFirst(),
+        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
         expected = """
           {
+            "type" : "about:blank",
             "title" : "Forbidden",
             "status" : 403,
-            "detail" : "You are not authorized to access this endpoint"
+            "detail" : "You are not authorized to access this endpoint",
+            "instance" : "/access-denied-exception",
+            "properties" : null
           }
           """,
       )
@@ -302,15 +310,19 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/no-resource-found-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .returnResult<String>()
+        .expectBody()
+        .returnResult()
 
       assertJsonEquals(
-        actual = validationResult.responseBody.blockFirst(),
+        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
         expected = """
           {
+            "type" : "about:blank",
             "title" : "Not Found",
             "status" : 404,
-            "detail" : "Resource not found"
+            "detail" : "Resource not found",
+            "instance" : "/no-resource-found-exception",
+            "properties" : null
           }
           """,
       )
@@ -325,16 +337,19 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/missing-request-header-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .returnResult<String>()
+        .expectBody()
+        .returnResult()
 
       assertJsonEquals(
-        actual = validationResult.responseBody.blockFirst(),
+        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
         expected = """
           {
-            "title" : "Bad Request",
             "status" : 400,
             "detail" : "Missing required header X-Required-Header",
-            "invalid-params" : []
+            "type" : "about:blank",
+            "title" : "Bad Request",
+            "instance" : "/missing-request-header-exception",
+            "properties" : null
           }
           """,
       )
@@ -354,11 +369,13 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
       assertJsonEquals(
         actual = validationResult.responseBody.blockFirst(),
         expected = """
-            {
-              "title" : "Bad Request",
+            {              
               "status" : 400,
               "detail" : "Missing required query parameter requiredProperty",
-              "invalid-params": []
+              "type" : "about:blank",
+              "title" : "Bad Request",
+              "instance" : "/missing-servlet-request-parameter-exception",
+              "properties" : null
             }
           """,
       )
@@ -406,15 +423,19 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/jdbc-connection-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .returnResult<String>()
+        .expectBody()
+        .returnResult()
 
       assertJsonEquals(
-        actual = validationResult.responseBody.blockFirst(),
+        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
         expected = """
           {        
-            "detail" : "Error acquiring a database connection",
+            "type" : "about:blank",
             "title" : "Service Unavailable",
-            "status" : 503
+            "status" : 503,
+            "detail" : "Error acquiring a database connection",
+            "instance" : "/jdbc-connection-exception",
+            "properties" : null
           }
           """,
       )
@@ -435,9 +456,12 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
            {        
-            "detail" : "There was an unexpected problem",
+            "type":"about:blank",
             "title" : "Internal Server Error",
-            "status" : 500
+            "status" : 500,
+            "detail" : "There was an unexpected problem",
+            "instance" : "/illegal-argument-exception",
+            "properties" : null
            }
           """,
       )
@@ -460,13 +484,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
+            "type" : "about:blank",
             "title" : "Bad Request",
             "status" : 400,
-            "detail" : "Expected an array but got an object"
+            "detail" : "Expected an array but got an object",
+            "instance" : "/deserialization-test/array",
+            "properties" : null
           }
           """,
       )
-      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
     @Test
@@ -485,13 +512,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
+            "type" : "about:blank",
             "title" : "Bad Request",
             "status" : 400,
-            "detail" : "Expected an object but got an array"
+            "detail" : "Expected an object but got an array",
+            "instance" : "/deserialization-test/object",
+            "properties" : null
           }
           """,
       )
-      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
     @Test
@@ -531,9 +561,19 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
-            "title" : "Bad Request",
             "status" : 400,
             "detail" : "There is a problem with your request",
+            "type" : "about:blank",
+            "title" : "Bad Request",
+            "instance" : "/deserialization-test/array",
+            "properties" : {
+              "invalid-params" : [{
+                "propertyName" : "$[0].requiredInt",
+                "errorType" : "expectedNumber",
+                "entityId" : null, 
+                "value" : null
+              }]
+            },
             "invalid-params" : [{
               "propertyName" : "$[0].requiredInt",
               "errorType" : "expectedNumber",
@@ -544,7 +584,7 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
           """,
       )
 
-      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
     @Test
@@ -584,9 +624,19 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
-            "title" : "Bad Request",
             "status" : 400,
             "detail" : "There is a problem with your request",
+            "type":"about:blank",
+            "title" : "Bad Request",
+            "instance":"/deserialization-test/object",
+            "properties" : {
+              "invalid-params" : [{
+                "propertyName" : "$.requiredInt",
+                "errorType" : "expectedNumber",
+                "entityId" : null, 
+                "value" : null
+              }]
+            },
             "invalid-params" : [{
               "propertyName" : "$.requiredInt",
               "errorType" : "expectedNumber",
@@ -596,7 +646,7 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
           }
           """,
       )
-      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
     @Test
@@ -615,13 +665,16 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
+            "type" : "about:blank",
             "title" : "Bad Request",
             "status" : 400,
-            "detail" : "JSON parse error: Unexpected character ('i' (code 105)): was expecting double-quote to start field name"
+            "detail" : "JSON parse error: Unexpected character ('i' (code 105)): was expecting double-quote to start field name",
+            "instance" : "/deserialization-test/object",
+            "properties" : null
           }
           """,
       )
-      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
   }
 

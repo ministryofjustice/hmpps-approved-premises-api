@@ -24,7 +24,6 @@ import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import org.springframework.web.util.ContentCachingRequestWrapper
-import org.zalando.problem.Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ExceptionHandling
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -52,13 +51,12 @@ class ExceptionHandlingTest {
   @Test
   fun `Returns UnauthenticatedProblem when exception is AuthenticationCredentialsNotFoundException and exception captured in Sentry`() {
     val throwable = AuthenticationCredentialsNotFoundException("")
-    val statusType = Status.UNAUTHORIZED
 
-    val problem = exceptionHandling.toProblem(throwable, statusType)
+    val problem = exceptionHandling.handleAuthenticationCredentialsNotFoundException(throwable).body!!
 
-    val expectedProblem = UnauthenticatedProblem()
+    val expectedProblem = UnauthenticatedProblem().toProblemDetail()
 
-    assertThat(problem!!.type).isEqualTo(expectedProblem.type)
+    assertThat(problem.type).isEqualTo(expectedProblem.type)
     assertThat(problem.title).isEqualTo(expectedProblem.title)
     assertThat(problem.status).isEqualTo(expectedProblem.status)
     assertThat(problem.detail).isEqualTo(expectedProblem.detail)
@@ -69,13 +67,12 @@ class ExceptionHandlingTest {
   @Test
   fun `Returns ForbiddenProblem problem when exception is AccessDeniedException and exception captured in Sentry`() {
     val throwable = SpringAccessDeniedException("")
-    val statusType = Status.FORBIDDEN
 
-    val problem = exceptionHandling.toProblem(throwable, statusType)
+    val problem = exceptionHandling.handleAccessDeniedException(throwable).body!!
 
-    val expectedProblem = ForbiddenProblem()
+    val expectedProblem = ForbiddenProblem().toProblemDetail()
 
-    assertThat(problem!!.type).isEqualTo(expectedProblem.type)
+    assertThat(problem.type).isEqualTo(expectedProblem.type)
     assertThat(problem.title).isEqualTo(expectedProblem.title)
     assertThat(problem.status).isEqualTo(expectedProblem.status)
     assertThat(problem.detail).isEqualTo(expectedProblem.detail)
@@ -86,11 +83,10 @@ class ExceptionHandlingTest {
   @Test
   fun `Returns NotFoundResourceProblem problem when exception is NoResourceFoundException and exception captured in Sentry`() {
     val throwable = NoResourceFoundException(HttpMethod.GET, "")
-    val statusType = Status.NOT_FOUND
 
-    val problem = exceptionHandling.toProblem(throwable, statusType)
+    val problem = exceptionHandling.handleNoResourceFoundException(throwable).body!!
 
-    val expectedProblem = NotFoundResourceProblem()
+    val expectedProblem = NotFoundResourceProblem().toProblemDetail()
 
     assertThat(problem!!.type).isEqualTo(expectedProblem.type)
     assertThat(problem.title).isEqualTo(expectedProblem.title)
@@ -103,13 +99,12 @@ class ExceptionHandlingTest {
   @Test
   fun `Returns BadRequestProblem problem when exception is MissingRequestHeaderException and exception captured in Sentry`() {
     val throwable = MissingRequestHeaderException("Authorisation", mockk<MethodParameter>())
-    val statusType = Status.BAD_REQUEST
 
-    val problem = exceptionHandling.toProblem(throwable, statusType)
+    val problem = exceptionHandling.handleMissingRequestHeaderException(throwable).body!!
 
-    val expectedProblem = BadRequestProblem()
+    val expectedProblem = BadRequestProblem().toProblemDetail()
 
-    assertThat(problem!!.type).isEqualTo(expectedProblem.type)
+    assertThat(problem.type).isEqualTo(expectedProblem.type)
     assertThat(problem.title).isEqualTo(expectedProblem.title)
     assertThat(problem.status).isEqualTo(expectedProblem.status)
     assertThat(problem.detail).isEqualTo("Missing required header Authorisation")
@@ -120,13 +115,12 @@ class ExceptionHandlingTest {
   @Test
   fun `Returns BadRequestProblem problem when exception is MissingServletRequestParameterException and exception captured in Sentry`() {
     val throwable = MissingServletRequestParameterException("id", "")
-    val statusType = Status.BAD_REQUEST
 
-    val problem = exceptionHandling.toProblem(throwable, statusType)
+    val problem = exceptionHandling.handleMissingServletRequestParameterException(throwable).body!!
 
-    val expectedProblem = BadRequestProblem()
+    val expectedProblem = BadRequestProblem().toProblemDetail()
 
-    assertThat(problem!!.type).isEqualTo(expectedProblem.type)
+    assertThat(problem.type).isEqualTo(expectedProblem.type)
     assertThat(problem.title).isEqualTo(expectedProblem.title)
     assertThat(problem.status).isEqualTo(expectedProblem.status)
     assertThat(problem.detail).isEqualTo("Missing required query parameter id")
@@ -141,13 +135,12 @@ class ExceptionHandlingTest {
     every { methodParameter.parameterType } returns Int::class.java
 
     val throwable = MethodArgumentTypeMismatchException(null, null, "", methodParameter, null)
-    val statusType = Status.BAD_REQUEST
 
-    val problem = exceptionHandling.toProblem(throwable, statusType)
+    val problem = exceptionHandling.handleMethodArgumentTypeMismatchException(throwable).body!!
 
-    val expectedProblem = BadRequestProblem()
+    val expectedProblem = BadRequestProblem().toProblemDetail()
 
-    assertThat(problem!!.type).isEqualTo(expectedProblem.type)
+    assertThat(problem.type).isEqualTo(expectedProblem.type)
     assertThat(problem.title).isEqualTo(expectedProblem.title)
     assertThat(problem.status).isEqualTo(expectedProblem.status)
     assertThat(problem.detail).isEqualTo("Invalid type for query parameter id expected int")
@@ -158,13 +151,12 @@ class ExceptionHandlingTest {
   @Test
   fun `Returns ServiceUnavailableProblem problem when exception is cause chain of JDBCConnectionException and exception captured in Sentry`() {
     val throwable = RuntimeException("wrapper", JDBCConnectionException("", SQLException()))
-    val statusType = Status.SERVICE_UNAVAILABLE
 
-    val problem = exceptionHandling.toProblem(throwable, statusType)
+    val problem = exceptionHandling.handleGenericException(throwable).body!!
 
-    val expectedProblem = ServiceUnavailableProblem("Error acquiring a database connection")
+    val expectedProblem = ServiceUnavailableProblem("Error acquiring a database connection").toProblemDetail()
 
-    assertThat(problem!!.type).isEqualTo(expectedProblem.type)
+    assertThat(problem.type).isEqualTo(expectedProblem.type)
     assertThat(problem.title).isEqualTo(expectedProblem.title)
     assertThat(problem.status).isEqualTo(expectedProblem.status)
     assertThat(problem.detail).isEqualTo("Error acquiring a database connection")
@@ -175,13 +167,12 @@ class ExceptionHandlingTest {
   @Test
   fun `Returns UnhandledExceptionProblem problem when exception is unhandled (IllegalStateException), logs error and exception captured in Sentry`() {
     val throwable = IllegalStateException()
-    val statusType = Status.INTERNAL_SERVER_ERROR
 
-    val problem = exceptionHandling.toProblem(throwable, statusType)
+    val problem = exceptionHandling.handleGenericException(throwable).body!!
 
-    val expectedProblem = UnhandledExceptionProblem("There was an unexpected problem")
+    val expectedProblem = UnhandledExceptionProblem("There was an unexpected problem").toProblemDetail()
 
-    assertThat(problem!!.type).isEqualTo(expectedProblem.type)
+    assertThat(problem.type).isEqualTo(expectedProblem.type)
     assertThat(problem.title).isEqualTo(expectedProblem.title)
     assertThat(problem.status).isEqualTo(expectedProblem.status)
     assertThat(problem.detail).isEqualTo("There was an unexpected problem")
@@ -211,8 +202,8 @@ class ExceptionHandlingTest {
     val response = exceptionHandling.handleMessageNotReadableException(throwable, mockRequest)
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body.title).isEqualTo("Bad Request")
-    assertThat(response.body.detail).isEqualTo("Expected an array but got an object")
+    assertThat(response.body!!.title).isEqualTo("Bad Request")
+    assertThat(response.body!!.detail).isEqualTo("Expected an array but got an object")
   }
 
   @Test
