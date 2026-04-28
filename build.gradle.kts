@@ -74,13 +74,8 @@ dependencies {
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.9")
   testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
-  testImplementation("io.jsonwebtoken:jjwt-api:0.12.6")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
-  testImplementation("org.springframework.boot:spring-boot-starter-test") {
-    exclude(module = "mockito-core")
-  }
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
 
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
