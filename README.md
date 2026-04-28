@@ -109,3 +109,6 @@ Confluence](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4330226204/Environ
 Our release process aligns with the other CAS teams and as such [lives in Confluence](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4247847062/Release+process). 
 The steps are also available in the pull request checklist[PULL_REQUEST_TEMPLATE](/.github/PULL_REQUEST_TEMPLATE/full_template.md).
 
+## Docker Build
+
+We follow the docker build process/workflow established by the hmpps-template-kotlin. For information on how to build docker image locally, see that project's [README](https://github.com/ministryofjustice/hmpps-template-kotlin/blob/main/README.md)
