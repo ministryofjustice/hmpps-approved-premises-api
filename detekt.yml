@@ -23,10 +23,13 @@ style:
 
 complexity:
   LongMethod:
-    threshold: 200
+    active: true
+    allowedLines: 200
   LargeClass:
-    threshold: 1000
+    active: true
+    allowedLines: 1000
   LongParameterList:
+    active: true
     ignoreAnnotated:
       # Spring annotations like @Service, @Component, etc.
       # Classes with these annotations can't have their dependencies grouped into parameter objects easily due to how
@@ -41,5 +44,9 @@ complexity:
     excludes:
       - '**/givens/**'
   TooManyFunctions:
-    thresholdInInterfaces: 20
-    thresholdInClasses: 20
+    active: true
+    allowedFunctionsPerFile: 20
+    allowedFunctionsPerClass: 20
+    allowedFunctionsPerInterface: 20
+    allowedFunctionsPerObject: 20
+    allowedFunctionsPerEnum: 20
