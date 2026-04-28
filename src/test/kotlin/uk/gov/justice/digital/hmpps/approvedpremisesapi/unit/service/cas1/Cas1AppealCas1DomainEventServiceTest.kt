@@ -4,8 +4,9 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -23,8 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.util.UUID
 
@@ -81,77 +82,71 @@ class Cas1AppealCas1DomainEventServiceTest {
 
   @Test
   fun `appealRecordCreated creates domain event`() {
-    mockkStatic(UUID::class) {
-      every { UUID.randomUUID() } returns appealId
+    service.appealRecordCreated(
+      AppealEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAppealDate(now)
+        .withDecision(AppealDecision.accepted)
+        .withCreatedBy(createdByUser)
+        .withAppealDetail("Some information about why the appeal is being made")
+        .withDecisionDetail("Some information about the decision made")
+        .produce(),
+    )
 
-      service.appealRecordCreated(
-        AppealEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .withAppealDate(now)
-          .withDecision(AppealDecision.accepted)
-          .withCreatedBy(createdByUser)
-          .withAppealDetail("Some information about why the appeal is being made")
-          .withDecisionDetail("Some information about the decision made")
-          .produce(),
-      )
-
-      verify(exactly = 1) {
-        domainEventService.saveAssessmentAppealedEvent(
-          match {
-            it.matches()
-          },
-        )
-      }
+    val domainEventSlot = slot<SaveCas1DomainEvent<AssessmentAppealedEnvelope>>()
+    verify(exactly = 1) {
+      domainEventService.saveAssessmentAppealedEvent(capture(domainEventSlot))
     }
+
+    val domainEvent = domainEventSlot.captured
+    assertCommonFields(domainEvent)
+    assertThat(domainEvent.data.eventDetails.personReference.noms).isEqualTo(application.nomsNumber)
   }
 
   @Test
   fun `appealRecordCreated noms is optional`() {
     application.nomsNumber = null
 
-    mockkStatic(UUID::class) {
-      every { UUID.randomUUID() } returns appealId
+    service.appealRecordCreated(
+      AppealEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAppealDate(now)
+        .withDecision(AppealDecision.accepted)
+        .withCreatedBy(createdByUser)
+        .withAppealDetail("Some information about why the appeal is being made")
+        .withDecisionDetail("Some information about the decision made")
+        .produce(),
+    )
 
-      service.appealRecordCreated(
-        AppealEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .withAppealDate(now)
-          .withDecision(AppealDecision.accepted)
-          .withCreatedBy(createdByUser)
-          .withAppealDetail("Some information about why the appeal is being made")
-          .withDecisionDetail("Some information about the decision made")
-          .produce(),
-      )
-
-      verify(exactly = 1) {
-        domainEventService.saveAssessmentAppealedEvent(
-          match {
-            it.data.eventDetails.personReference.noms == "Unknown NOMS Number"
-          },
-        )
-      }
+    val domainEventSlot = slot<SaveCas1DomainEvent<AssessmentAppealedEnvelope>>()
+    verify(exactly = 1) {
+      domainEventService.saveAssessmentAppealedEvent(capture(domainEventSlot))
     }
+
+    val domainEvent = domainEventSlot.captured
+    assertCommonFields(domainEvent)
+    assertThat(domainEvent.data.eventDetails.personReference.noms).isEqualTo("Unknown NOMS Number")
   }
 
-  fun SaveCas1DomainEvent<AssessmentAppealedEnvelope>.matches() = this.applicationId == application.id &&
-    this.assessmentId == null &&
-    this.bookingId == null &&
-    this.crn == application.crn &&
-    withinSeconds(10).matches(this.occurredAt.toString()) &&
-    this.data.matches()
+  private fun assertCommonFields(domainEvent: SaveCas1DomainEvent<AssessmentAppealedEnvelope>) {
+    assertThat(domainEvent.applicationId).isEqualTo(application.id)
+    assertThat(domainEvent.assessmentId).isNull()
+    assertThat(domainEvent.bookingId).isNull()
+    assertThat(domainEvent.crn).isEqualTo(application.crn)
+    assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
 
-  private fun AssessmentAppealedEnvelope.matches() = this.eventDetails.applicationId == application.id &&
-    this.eventDetails.applicationUrl == "http://frontend/applications/${application.id}" &&
-    this.eventDetails.appealId == appealId &&
-    this.eventDetails.appealUrl == "http://frontend/applications/${application.id}/appeals/$appealId" &&
-    this.eventDetails.personReference.crn == application.crn &&
-    this.eventDetails.personReference.noms == application.nomsNumber &&
-    this.eventDetails.deliusEventNumber == application.eventNumber &&
-    withinSeconds(10).matches(this.eventDetails.createdAt.toString()) &&
-    this.eventDetails.createdBy == staffUserDetails.toStaffMember() &&
-    this.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
-    this.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision.accepted &&
-    this.eventDetails.decisionDetail == "Some information about the decision made"
+    val eventDetails = domainEvent.data.eventDetails
+    assertThat(eventDetails.applicationId).isEqualTo(application.id)
+    assertThat(eventDetails.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+    assertThat(eventDetails.appealUrl).startsWith("http://frontend/applications/${application.id}")
+    assertThat(eventDetails.personReference.crn).isEqualTo(application.crn)
+    assertThat(eventDetails.deliusEventNumber).isEqualTo(application.eventNumber)
+    assertThat(eventDetails.createdAt).isWithinTheLastMinute()
+    assertThat(eventDetails.createdBy).isEqualTo(staffUserDetails.toStaffMember())
+    assertThat(eventDetails.appealDetail).isEqualTo("Some information about why the appeal is being made")
+    assertThat(eventDetails.decision).isEqualTo(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision.accepted)
+    assertThat(eventDetails.decisionDetail).isEqualTo("Some information about the decision made")
+  }
 }
