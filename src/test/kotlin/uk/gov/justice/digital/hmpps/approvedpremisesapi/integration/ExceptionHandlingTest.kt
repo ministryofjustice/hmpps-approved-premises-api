@@ -255,11 +255,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/authentication-credentials-not-found-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .expectBody()
-        .returnResult()
+        .returnResult<String>()
 
       assertJsonEquals(
-        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
+        actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
             "type" : "about:blank",
@@ -283,11 +282,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/access-denied-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .expectBody()
-        .returnResult()
+        .returnResult<String>()
 
       assertJsonEquals(
-        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
+        actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
             "type" : "about:blank",
@@ -310,11 +308,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/no-resource-found-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .expectBody()
-        .returnResult()
+        .returnResult<String>()
 
       assertJsonEquals(
-        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
+        actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
             "type" : "about:blank",
@@ -337,11 +334,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/missing-request-header-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .expectBody()
-        .returnResult()
+        .returnResult<String>()
 
       assertJsonEquals(
-        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
+        actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
             "status" : 400,
@@ -423,11 +419,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/jdbc-connection-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .expectBody()
-        .returnResult()
+        .returnResult<String>()
 
       assertJsonEquals(
-        actual = validationResult.responseBody?.toString(Charsets.UTF_8),
+        actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
             "type" : "about:blank",
