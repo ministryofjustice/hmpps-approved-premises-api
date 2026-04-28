@@ -3,11 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 
-class ConflictProblem(id: Any, conflictReason: String) : RuntimeException("$conflictReason: $id") {
+class ConflictProblem(id: Any, conflictReason: String) : ApiProblem("$conflictReason: $id") {
 
-  val msg = "$conflictReason: $id"
-
-  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, message ?: msg).apply {
+  override fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, message).apply {
     title = "Conflict"
   }
 }

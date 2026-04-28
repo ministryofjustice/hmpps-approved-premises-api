@@ -7,9 +7,9 @@ import org.springframework.http.ProblemDetail
 class BadRequestProblem(
   @JsonIgnore val invalidParams: Map<String, ParamDetails>? = null,
   @JsonIgnore val errorDetail: String? = null,
-) : RuntimeException(listOfNotNull("Bad Request", errorDetail, invalidParams).joinToString(": ")) {
+) : ApiProblem(listOfNotNull("Bad Request", errorDetail, invalidParams).joinToString(": ")) {
 
-  fun toProblemDetail(): ProblemDetail {
+  override fun toProblemDetail(): ProblemDetail {
     val detail = errorDetail ?: "There is a problem with your request"
     val problemDetail = FlattenedProblemDetail(HttpStatus.BAD_REQUEST, detail)
     problemDetail.title = "Bad Request"

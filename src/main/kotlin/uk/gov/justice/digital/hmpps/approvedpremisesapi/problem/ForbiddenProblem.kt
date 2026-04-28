@@ -3,17 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 
-class ForbiddenProblem(detail: String? = null) : RuntimeException(detail ?: "You are not authorized to access this endpoint") {
+class ForbiddenProblem(detail: String? = null) : ApiProblem(detail ?: "You are not authorized to access this endpoint") {
 
-  val msg = detail ?: "You are not authorized to access this endpoint"
   val title = "Forbidden"
 
-  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, message ?: msg).apply {
+  override fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, message).apply {
     title = this@ForbiddenProblem.title
     status = HttpStatus.FORBIDDEN.value()
-    detail = msg
+    detail = message
   }
-
-  override val message: String?
-    get() = "$title: $msg"
 }

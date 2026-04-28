@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 
-class NotFoundResourceProblem : RuntimeException("Resource not found") {
+class NotFoundResourceProblem : ApiProblem("Resource not found") {
 
-  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Resource not found").apply {
+  override fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Resource not found").apply {
     title = "Not Found"
   }
 }

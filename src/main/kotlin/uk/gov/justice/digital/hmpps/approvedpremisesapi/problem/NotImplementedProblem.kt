@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 
-class NotImplementedProblem(val detail: String) : RuntimeException(detail) {
+class NotImplementedProblem(detail: String) : ApiProblem(detail) {
 
-  fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_IMPLEMENTED, detail).apply {
+  override fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_IMPLEMENTED, message).apply {
     title = "Not Implemented"
   }
 }
