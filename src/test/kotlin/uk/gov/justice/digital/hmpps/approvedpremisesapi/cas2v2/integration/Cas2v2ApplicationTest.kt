@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -1142,14 +1143,12 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               Cas2v2Application::class.java,
             )
 
-            Assertions.assertThat(responseBody).matches {
-              applicationEntity.id == it.id &&
-                applicationEntity.crn == it.person.crn &&
-                applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByUser.id == it.createdBy.id &&
-                applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data)
-            }
+            assertThat(responseBody.id).isEqualTo(applicationEntity.id)
+            assertThat(responseBody.person.crn).isEqualTo(applicationEntity.crn)
+            assertThat(responseBody.createdAt).isEqualTo(applicationEntity.createdAt.toInstant())
+            assertThat(responseBody.createdBy.id).isEqualTo(applicationEntity.createdByUser.id)
+            assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
+            assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))
           }
         }
       }
