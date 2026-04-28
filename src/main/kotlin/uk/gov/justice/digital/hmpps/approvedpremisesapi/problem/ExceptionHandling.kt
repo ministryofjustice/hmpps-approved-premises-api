@@ -204,13 +204,21 @@ class ExceptionHandling(
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).contentType(APPLICATION_PROBLEM_JSON).body(problem.toProblemDetail())
   }
 
+  @ExceptionHandler(UnauthenticatedProblem::class)
+  fun handleUnauthenticatedProblemException(ex: UnauthenticatedProblem): ResponseEntity<ProblemDetail> {
+    sentryService.captureException(ex)
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(APPLICATION_PROBLEM_JSON).body(
+      UnauthenticatedProblem().toProblemDetail(),
+    )
+  }
+
   @ExceptionHandler(Throwable::class)
   fun handleGenericException(ex: Throwable): ResponseEntity<ProblemDetail> {
     sentryService.captureException(ex)
     // Check if JDBCConnectionException is in the cause chain
     if (isTypeInThrowableChain(ex, JDBCConnectionException::class.java)) {
       val problem = ServiceUnavailableProblem(detail = "Error acquiring a database connection")
-      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(problem.toProblemDetail())
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).contentType(APPLICATION_PROBLEM_JSON).body(problem.toProblemDetail())
     }
 
     log.error("Unhandled exception type, returning generic 500 response", ex)
