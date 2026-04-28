@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -134,7 +133,7 @@ fun IntegrationTestBase.givenACas2PomUser(
 }
 
 @SuppressWarnings("LongParameterList")
-fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
+fun IntegrationTestBase.givenACas2v2DeliusUser(
   id: UUID = UUID.randomUUID(),
   staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
   roles: List<UserRole> = emptyList(),
@@ -169,7 +168,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
   block(user, jwt)
 }
 
-fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
+fun IntegrationTestBase.givenACas2v2PomUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (userEntity: Cas2UserEntity, jwt: String) -> Unit,
@@ -198,7 +197,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
   block(user, jwt)
 }
 
-fun Cas2v2IntegrationTestBase.givenACas2v2NomisUser(
+fun IntegrationTestBase.givenACas2v2NomisUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (userEntity: Cas2UserEntity, jwt: String) -> Unit,
@@ -270,7 +269,7 @@ fun IntegrationTestBase.givenACas2Assessor(
   block(user, jwt)
 }
 
-fun Cas2v2IntegrationTestBase.givenACas2v2Assessor(
+fun IntegrationTestBase.givenACas2v2Assessor(
   id: UUID = UUID.randomUUID(),
   block: (userEntity: Cas2UserEntity, jwt: String) -> Unit,
 ) {
