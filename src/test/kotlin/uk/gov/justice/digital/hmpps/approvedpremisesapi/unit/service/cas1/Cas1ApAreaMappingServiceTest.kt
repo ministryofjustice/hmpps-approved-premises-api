@@ -154,7 +154,7 @@ class Cas1ApAreaMappingServiceTest {
           username,
         )
       }.hasMessage(
-        "Internal Server Error: Could not find a delius team mapping for delius user J_ALUCARD " +
+        "Could not find a delius team mapping for delius user J_ALUCARD " +
           "with probation region PR1 and teams " +
           "[CODE_NOT_IN_MAPPING, OTHER_CODE_NOT_IN_MAPPING]",
       )
@@ -183,7 +183,7 @@ class Cas1ApAreaMappingServiceTest {
           staffUserDetails.username!!,
         )
       }.hasMessage(
-        "Internal Server Error: Could not find AP Area for code Mids",
+        "Could not find AP Area for code Mids",
       )
     }
   }

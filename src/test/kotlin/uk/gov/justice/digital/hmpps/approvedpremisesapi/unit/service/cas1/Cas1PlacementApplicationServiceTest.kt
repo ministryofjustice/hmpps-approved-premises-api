@@ -1089,7 +1089,7 @@ class Cas1PlacementApplicationServiceTest {
             placementApplication.id,
           ),
         )
-      }.hasMessage("Internal Server Error: Withdrawing a ${triggeringEntity.name} should not cascade to PlacementApplications")
+      }.hasMessage("Withdrawing a ${triggeringEntity.name} should not cascade to PlacementApplications")
     }
 
     @Test

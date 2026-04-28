@@ -324,7 +324,7 @@ class OffenderServiceTest {
       assertThatThrownBy {
         offenderService.canAccessOffenders("distinguished.name", (0..500).map { "$it" })
       }.isInstanceOf(InternalServerErrorProblem::class.java)
-        .hasMessage("Internal Server Error: Cannot request access details for more than 500 CRNs. 501 have been provided.")
+        .hasMessage("Cannot request access details for more than 500 CRNs. 501 have been provided.")
     }
 
     @Test
@@ -996,7 +996,7 @@ class OffenderServiceTest {
           laoStrategy = LaoStrategy.NeverRestricted,
         )
       }.isInstanceOf(InternalServerErrorProblem::class.java)
-        .hasMessage("Internal Server Error: Cannot request more than 500 CRNs. A batch size of 501 has been requested.")
+        .hasMessage("Cannot request more than 500 CRNs. A batch size of 501 has been requested.")
     }
 
     @Test
