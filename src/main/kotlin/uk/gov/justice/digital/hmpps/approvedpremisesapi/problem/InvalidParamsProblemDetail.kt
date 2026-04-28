@@ -14,11 +14,16 @@ import org.springframework.http.ProblemDetail
  * leaving it in twice seems the most appropriate thing to do - this meets the spec and guidance but also means we don't need to change
  * existing logic and potentially client (UI) logic.
  */
-class FlattenedProblemDetail(status: HttpStatus, detail: String) : ProblemDetail(status.value()) {
+class InvalidParamsProblemDetail(
+  status: HttpStatus,
+  detail: String,
+  private val invalidParams: List<ParamError>? = null,
+) : ProblemDetail(status.value()) {
+
   init {
     this.detail = detail
   }
 
   @JsonAnyGetter
-  fun getFlattenedProperties(): Map<String, Any>? = properties
+  fun getAdditionalTopLevelProperties() = invalidParams?.let { mapOf("invalid-params" to it) }
 }
