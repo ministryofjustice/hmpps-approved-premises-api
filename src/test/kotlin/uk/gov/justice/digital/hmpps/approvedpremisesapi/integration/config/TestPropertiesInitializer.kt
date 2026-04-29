@@ -10,15 +10,15 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.WiremockPortManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 
-class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext?> {
-  override fun initialize(applicationContext: ConfigurableApplicationContext?) {
+class TestPropertiesInitializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
+  override fun initialize(applicationContext: ConfigurableApplicationContext) {
     val wiremockPort = WiremockPortManager.reserveFreePort()
 
     val databaseConfigMap = IntegrationTestDbManager.initialiseDatabase()
 
     val upstreamServiceUrlsToOverride = mutableMapOf<String, String>()
 
-    applicationContext!!.environment.propertySources
+    applicationContext.environment.propertySources
       .filterIsInstance<OriginTrackedMapPropertySource>()
       .filter { it.name.contains("application-test.yml") }
       .forEach { propertyFile ->
