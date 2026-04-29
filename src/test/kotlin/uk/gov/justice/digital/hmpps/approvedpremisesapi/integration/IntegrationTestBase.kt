@@ -866,7 +866,7 @@ abstract class IntegrationTestBase {
                   sub = username?.uppercase() ?: "integration-test-client-id",
                   authSource = authSource,
                   jti = UUID.randomUUID().toString(),
-                  iss = "http://localhost:9092/auth/issuer",
+                  iss = "http://localhost:${wiremockServer.port()}/auth/issuer",
                 ),
               ),
             ),
