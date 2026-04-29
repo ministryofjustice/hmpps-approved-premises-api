@@ -7,7 +7,7 @@ plugins {
 }
 
 kotlin {
-  jvmToolchain(21)
+  jvmToolchain(25)
 }
 
 // detekt must use a specific kotlin version when running, this block ensures it's using the correct version
@@ -86,10 +86,6 @@ dependencies {
 
 springBoot {
   mainClass.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.ApplicationKt")
-}
-
-kotlin {
-  jvmToolchain(25)
 }
 
 kotlin.compilerOptions.freeCompilerArgs.add("-Xannotation-default-target=param-property")
