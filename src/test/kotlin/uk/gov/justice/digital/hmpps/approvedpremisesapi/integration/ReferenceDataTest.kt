@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCatego
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
+import java.util.Optional
 import java.util.UUID
 
 class ReferenceDataTest : IntegrationTestBase() {
@@ -80,7 +81,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       return webTestClient.get()
         .uri { uriBuilder ->
           uriBuilder.path("/reference-data/characteristics")
-            .queryParam("modelScope", modelScope)
+            .queryParamIfPresent("modelScope", Optional.ofNullable(modelScope))
             .build()
         }
         .header("Authorization", "Bearer $jwt")

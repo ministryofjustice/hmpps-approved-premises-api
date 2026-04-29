@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jsonMapper
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.JDBCConnectionException
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.core.MethodParameter
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
@@ -50,7 +50,7 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .isBadRequest
         .returnResult<ValidationError>()
         .responseBody
-        .blockFirst()
+        .blockFirst()!!
 
       assertThat(validationResult.detail).isEqualTo("Expected an object but got an array")
     }
@@ -69,7 +69,7 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .isBadRequest
         .returnResult<ValidationError>()
         .responseBody
-        .blockFirst()
+        .blockFirst()!!
 
       assertThat(validationResult.detail).isEqualTo("Expected an array but got an object")
     }
@@ -261,12 +261,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
-            "type" : "about:blank",
             "title" : "Unauthenticated",
             "status" : 401,
             "detail" : "A valid HMPPS Auth JWT must be supplied via bearer authentication to access this endpoint",
-            "instance" : "/authentication-credentials-not-found-exception",
-            "properties" : null
+            "instance" : "/authentication-credentials-not-found-exception"
           }
           """,
       )
@@ -288,12 +286,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
-            "type" : "about:blank",
             "title" : "Forbidden",
             "status" : 403,
             "detail" : "You are not authorized to access this endpoint",
-            "instance" : "/access-denied-exception",
-            "properties" : null
+            "instance" : "/access-denied-exception"
           }
           """,
       )
@@ -314,12 +310,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
-            "type" : "about:blank",
             "title" : "Not Found",
             "status" : 404,
             "detail" : "Resource not found",
-            "instance" : "/no-resource-found-exception",
-            "properties" : null
+            "instance" : "/no-resource-found-exception"
           }
           """,
       )
@@ -342,10 +336,8 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
           {
             "status" : 400,
             "detail" : "Missing required header X-Required-Header",
-            "type" : "about:blank",
             "title" : "Bad Request",
-            "instance" : "/missing-request-header-exception",
-            "properties" : null
+            "instance" : "/missing-request-header-exception"
           }
           """,
       )
@@ -368,10 +360,8 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
             {              
               "status" : 400,
               "detail" : "Missing required query parameter requiredProperty",
-              "type" : "about:blank",
               "title" : "Bad Request",
-              "instance" : "/missing-servlet-request-parameter-exception",
-              "properties" : null
+              "instance" : "/missing-servlet-request-parameter-exception"
             }
           """,
       )
@@ -386,29 +376,21 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/method-argument-type-mismatch-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .returnResult<JsonNode>()
-
-      val objectNode = validationResult.responseBody.blockFirst() as? ObjectNode
-      if (objectNode != null && objectNode.has("timestamp")) {
-        objectNode.replace("timestamp", objectNode.textNode("2026-04-24T08:11:54.563+00:00"))
-      } else {
-        error("timestamp field does not exist in the response")
-      }
+        .returnResult<String>()
 
       assertJsonEquals(
-        actual = jsonMapper.writeValueAsString(objectNode),
+        actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
-            "timestamp" : "2026-04-24T08:11:54.563+00:00",
-            "status" : 400,
-            "error" : "Bad Request",
-            "message" : "Method parameter 'requiredProperty': Failed to convert value of type 'java.lang.String' to required type 'int'",
-            "path" : "/method-argument-type-mismatch-exception"
+              "detail": "Invalid type for query parameter id expected int",
+              "instance": "/method-argument-type-mismatch-exception",
+              "status": 400,
+              "title": "Bad Request"
           }
         """,
       )
 
-      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
     @Test
@@ -425,12 +407,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
-            "type" : "about:blank",
             "title" : "Service Unavailable",
             "status" : 503,
             "detail" : "Error acquiring a database connection",
-            "instance" : "/jdbc-connection-exception",
-            "properties" : null
+            "instance" : "/jdbc-connection-exception"
           }
           """,
       )
@@ -451,12 +431,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
            {        
-            "type":"about:blank",
             "title" : "Internal Server Error",
             "status" : 500,
             "detail" : "There was an unexpected problem",
-            "instance" : "/illegal-argument-exception",
-            "properties" : null
+            "instance" : "/illegal-argument-exception"
            }
           """,
       )
@@ -479,12 +457,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
-            "type" : "about:blank",
             "title" : "Bad Request",
             "status" : 400,
             "detail" : "Expected an array but got an object",
-            "instance" : "/deserialization-test/array",
-            "properties" : null
+            "instance" : "/deserialization-test/array"
           }
           """,
       )
@@ -507,12 +483,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
-            "type" : "about:blank",
             "title" : "Bad Request",
             "status" : 400,
             "detail" : "Expected an object but got an array",
-            "instance" : "/deserialization-test/object",
-            "properties" : null
+            "instance" : "/deserialization-test/object"
           }
           """,
       )
@@ -558,17 +532,8 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
           {        
             "status" : 400,
             "detail" : "There is a problem with your request",
-            "type" : "about:blank",
             "title" : "Bad Request",
             "instance" : "/deserialization-test/array",
-            "properties" : {
-              "invalid-params" : [{
-                "propertyName" : "$[0].requiredInt",
-                "errorType" : "expectedNumber",
-                "entityId" : null, 
-                "value" : null
-              }]
-            },
             "invalid-params" : [{
               "propertyName" : "$[0].requiredInt",
               "errorType" : "expectedNumber",
@@ -621,17 +586,8 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
           {        
             "status" : 400,
             "detail" : "There is a problem with your request",
-            "type":"about:blank",
             "title" : "Bad Request",
             "instance":"/deserialization-test/object",
-            "properties" : {
-              "invalid-params" : [{
-                "propertyName" : "$.requiredInt",
-                "errorType" : "expectedNumber",
-                "entityId" : null, 
-                "value" : null
-              }]
-            },
             "invalid-params" : [{
               "propertyName" : "$.requiredInt",
               "errorType" : "expectedNumber",
@@ -660,12 +616,10 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         actual = validationResult.responseBody.blockFirst(),
         expected = """
           {        
-            "type" : "about:blank",
             "title" : "Bad Request",
             "status" : 400,
-            "detail" : "JSON parse error: Unexpected character ('i' (code 105)): was expecting double-quote to start field name",
-            "instance" : "/deserialization-test/object",
-            "properties" : null
+            "detail" : "JSON parse error: Unexpected character ('i' (code 105)): was expecting double-quote to start property name",
+            "instance" : "/deserialization-test/object"
           }
           """,
       )
@@ -799,7 +753,7 @@ class ExceptionHandlingTestController {
   fun accessDeniedException(): ResponseEntity<Unit> = throw SpringAccessDeniedException("Forbidden")
 
   @GetMapping(path = ["no-resource-found-exception"])
-  fun noResourceFoundException(): ResponseEntity<Unit> = throw NoResourceFoundException(HttpMethod.GET, "/path")
+  fun noResourceFoundException(): ResponseEntity<Unit> = throw NoResourceFoundException(HttpMethod.GET, "localhost", "/path")
 
   @GetMapping(path = ["missing-request-header-exception"])
   fun missingRequestHeaderException(@RequestHeader("X-Required-Header") header: String): ResponseEntity<Unit> = ResponseEntity.ok().build()
@@ -808,7 +762,12 @@ class ExceptionHandlingTestController {
   fun missingServletRequestParameterException(): ResponseEntity<Unit> = throw MissingServletRequestParameterException("requiredProperty", "int")
 
   @GetMapping(path = ["method-argument-type-mismatch-exception"])
-  fun methodArgumentTypeMismatchException(): ResponseEntity<Unit> = throw MethodArgumentTypeMismatchException("notanint", Int::class.java, "requiredProperty", null, null)
+  fun methodArgumentTypeMismatchException(): ResponseEntity<Unit> {
+    val methodParameter = mockk<MethodParameter>()
+    every { methodParameter.parameterName } returns "id"
+    every { methodParameter.parameterType } returns Int::class.java
+    throw MethodArgumentTypeMismatchException("notanint", Int::class.java, "requiredProperty", methodParameter, null)
+  }
 
   @GetMapping(path = ["illegal-argument-exception"])
   fun illegalArgumentException(): ResponseEntity<Unit> = throw IllegalArgumentException()

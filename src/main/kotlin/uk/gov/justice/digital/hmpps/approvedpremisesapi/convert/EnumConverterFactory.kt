@@ -23,7 +23,7 @@ import kotlin.reflect.jvm.isAccessible
  */
 @Component
 class EnumConverterFactory : ConverterFactory<String, Enum<*>> {
-  class EnumConverter<T : Enum<*>>(private val targetType: Class<T>) : Converter<String, T> {
+  class EnumConverter<T : Enum<*>>(private val targetType: Class<T>) : Converter<String, T?> {
     override fun convert(source: String): T? = targetType.enumConstants.firstOrNull {
       it.getOpenApiValueOrDefault() == source
     }
@@ -45,5 +45,5 @@ class EnumConverterFactory : ConverterFactory<String, Enum<*>> {
     }
   }
 
-  override fun <T : Enum<*>> getConverter(targetType: Class<T>): Converter<String, T> = EnumConverter(targetType)
+  override fun <T : Enum<*>> getConverter(targetType: Class<T>): Converter<String, T?> = EnumConverter(targetType)
 }

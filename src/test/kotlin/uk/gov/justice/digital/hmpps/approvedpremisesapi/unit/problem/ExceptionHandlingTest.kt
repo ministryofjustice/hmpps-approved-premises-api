@@ -1,10 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.problem
 
-import com.fasterxml.jackson.databind.JsonMappingException
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -24,6 +19,11 @@ import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import org.springframework.web.util.ContentCachingRequestWrapper
+import tools.jackson.core.JacksonException
+import tools.jackson.databind.exc.MismatchedInputException
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.node.ArrayNode
+import tools.jackson.databind.node.ObjectNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ExceptionHandling
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -82,7 +82,7 @@ class ExceptionHandlingTest {
 
   @Test
   fun `Returns NotFoundResourceProblem problem when exception is NoResourceFoundException and exception captured in Sentry`() {
-    val throwable = NoResourceFoundException(HttpMethod.GET, "")
+    val throwable = NoResourceFoundException(HttpMethod.GET, "", "")
 
     val problem = exceptionHandling.handleNoResourceFoundException(throwable).body!!
 
@@ -226,17 +226,17 @@ class ExceptionHandlingTest {
     val response = exceptionHandling.handleMessageNotReadableException(throwable, mockRequest)
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body.title).isEqualTo("Bad Request")
-    assertThat(response.body.detail).isEqualTo("Expected an object but got an array")
+    assertThat(response.body?.title).isEqualTo("Bad Request")
+    assertThat(response.body?.detail).isEqualTo("Expected an object but got an array")
   }
 
   @Test
   fun `Returns ResponseEntity_BadRequestProblem_ problem when exception is HttpMessageNotReadableException caused by MismatchedInputException and root is array`() {
     val cause = mockk<MismatchedInputException>()
-    val mockReference0 = mockk<JsonMappingException.Reference>()
-    every { mockReference0.from } returns "notAClass"
-    val mockReference1 = mockk<JsonMappingException.Reference>()
-    every { mockReference1.from } returns String::class.java
+    val mockReference0 = mockk<JacksonException.Reference>()
+    every { mockReference0.from() } returns "notAClass"
+    val mockReference1 = mockk<JacksonException.Reference>()
+    every { mockReference1.from() } returns String::class.java
     every { cause.path } returns listOf(mockReference0, mockReference1)
     every { cause.targetType } returns List::class.java
     every { mockDeserializationValidationService.isArrayType(any<Class<*>>()) } returns false
@@ -259,15 +259,15 @@ class ExceptionHandlingTest {
     loggerExtension.assertContains("Bad Request. Error Detail: None, Invalid Params: [key=ParamDetails(errorType=arrayErrorType, entityId=arrayEntityId, value=arrayValue)]")
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body.title).isEqualTo("Bad Request")
-    assertThat(response.body.detail).isEqualTo("There is a problem with your request")
+    assertThat(response.body?.title).isEqualTo("Bad Request")
+    assertThat(response.body?.detail).isEqualTo("There is a problem with your request")
   }
 
   @Test
   fun `Returns ResponseEntity_BadRequestProblem_ problem when exception is HttpMessageNotReadableException caused by MismatchedInputException and root is object`() {
     val cause = mockk<MismatchedInputException>()
-    val mockReference0 = mockk<JsonMappingException.Reference>()
-    every { mockReference0.from } returns String::class.java
+    val mockReference0 = mockk<JacksonException.Reference>()
+    every { mockReference0.from() } returns String::class.java
     every { cause.path } returns listOf(mockReference0)
     every { cause.targetType } returns List::class.java
     every { mockDeserializationValidationService.isArrayType(any<Class<*>>()) } returns false
@@ -290,8 +290,8 @@ class ExceptionHandlingTest {
     loggerExtension.assertContains("Bad Request. Error Detail: None, Invalid Params: [key=ParamDetails(errorType=objectErrorType, entityId=objectEntityId, value=objectValue)]")
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body.title).isEqualTo("Bad Request")
-    assertThat(response.body.detail).isEqualTo("There is a problem with your request")
+    assertThat(response.body?.title).isEqualTo("Bad Request")
+    assertThat(response.body?.detail).isEqualTo("There is a problem with your request")
   }
 
   @Test
@@ -302,7 +302,7 @@ class ExceptionHandlingTest {
     val response = exceptionHandling.handleMessageNotReadableException(throwable, mockRequest)
 
     assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
-    assertThat(response.body.title).isEqualTo("Bad Request")
-    assertThat(response.body.detail).isEqualTo("Exception caused by IllegalArgumentException")
+    assertThat(response.body?.title).isEqualTo("Bad Request")
+    assertThat(response.body?.detail).isEqualTo("Exception caused by IllegalArgumentException")
   }
 }

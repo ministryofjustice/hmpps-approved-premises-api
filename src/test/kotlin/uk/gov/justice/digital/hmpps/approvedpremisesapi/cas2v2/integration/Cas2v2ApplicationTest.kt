@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
@@ -50,7 +50,7 @@ import kotlin.math.sign
 
 class Cas2v2ApplicationTest : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationRepository: ApplicationRepository
 
   val schema = """
@@ -78,7 +78,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
   @AfterEach
   fun afterEach() {
-    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
+    // SpringMockK does not correctly clear mocks for @MockkSpyBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationRepository)
@@ -1492,7 +1492,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           it.matches(Regex("/cas2v2/applications/.+"))
         }
 
-        Assertions.assertThat(result.responseBody.blockFirst()).matches {
+        Assertions.assertThat(result.responseBody.blockFirst()!!).matches {
           it.person.crn == offenderDetails.otherIds.crn
         }
       }

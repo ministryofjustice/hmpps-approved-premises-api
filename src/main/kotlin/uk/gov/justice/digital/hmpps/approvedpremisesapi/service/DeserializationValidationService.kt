@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.JsonNodeType
-import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
 import org.springframework.stereotype.Service
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ArrayNode
+import tools.jackson.databind.node.JsonNodeType
+import tools.jackson.databind.node.NullNode
+import tools.jackson.databind.node.ObjectNode
+import tools.jackson.databind.node.StringNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import java.math.BigDecimal
 import java.time.Instant
@@ -80,7 +80,7 @@ class DeserializationValidationService {
         }
 
         if ((it.returnType.jvmErasure.java as Class<*>).isEnum) {
-          if (jsonObject.get(it.name) !is TextNode) {
+          if (jsonObject.get(it.name) !is StringNode) {
             result["$path.${it.name}"] = ParamDetails("expectedString")
           }
           return@forEach
