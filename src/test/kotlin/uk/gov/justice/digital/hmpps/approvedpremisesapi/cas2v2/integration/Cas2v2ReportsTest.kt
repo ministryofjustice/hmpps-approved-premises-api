@@ -461,7 +461,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           newStatus = event1Details.newStatus.name,
           updatedAt = event1Details.updatedAt.toString().split(".").first(),
           updatedBy = event1Details.updatedBy.username,
-          statusDetails = "personalInformation|riskOfSeriousHarm|hdcAndCpp",
+          statusDetails = "hdcAndCpp|personalInformation|riskOfSeriousHarm",
         ),
       )
         .toDataFrame()
@@ -553,7 +553,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           personCrn = application2.crn,
           applicationOrigin = application2.applicationOrigin,
           personNoms = application2.nomsNumber.toString(),
-          startedAt = application2.createdAt.toString().split(".").first() + 'Z',
+          startedAt = application2.createdAt.toString().split(".").first(),
           startedBy = application2.createdByUser.username,
         ),
       )
