@@ -11,6 +11,8 @@ spring:
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
+    ## TODO: can remove this but first need to check where our jackson
+    ## 2 mappers are coming from and ensuring that this is set correctly
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
 
