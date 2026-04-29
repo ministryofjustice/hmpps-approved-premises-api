@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
 
-import org.zalando.problem.AbstractThrowableProblem
-import org.zalando.problem.Exceptional
-import org.zalando.problem.Status
+import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 
-class ServiceUnavailableProblem(detail: String) : AbstractThrowableProblem(null, "Service Unavailable", Status.SERVICE_UNAVAILABLE, detail) {
-  override fun getCause(): Exceptional? = null
+class ServiceUnavailableProblem(detail: String) : ApiProblem(detail) {
+
+  override fun toProblemDetail(): ProblemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, message).apply {
+    title = "Service Unavailable"
+  }
 }

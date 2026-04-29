@@ -484,7 +484,7 @@ class Cas2OffenderServiceTest {
       )
 
       val error = assertThrows<ForbiddenProblem> { offenderService.getFullInfoForPersonOrThrow(crn) }
-      assertThat(error.message).isEqualTo("Forbidden: Offender $crn is Restricted.")
+      assertThat(error.message).isEqualTo("Offender $crn is Restricted.")
     }
 
     @Test

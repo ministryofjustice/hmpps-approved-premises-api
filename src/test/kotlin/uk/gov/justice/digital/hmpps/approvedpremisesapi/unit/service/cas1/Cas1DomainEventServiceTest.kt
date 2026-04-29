@@ -676,7 +676,7 @@ class Cas1DomainEventServiceTest {
 
       assertThatThrownBy {
         domainEventService.replay(id)
-      }.hasMessage("Not Found: No DomainEvent with an ID of d37c9dd3-8ec8-4362-9525-1e85bcb36e79 could be found")
+      }.hasMessage("No DomainEvent with an ID of d37c9dd3-8ec8-4362-9525-1e85bcb36e79 could be found")
     }
 
     @Test

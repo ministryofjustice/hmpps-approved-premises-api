@@ -324,7 +324,7 @@ class UserTransformerTest {
 
       assertThatThrownBy {
         userTransformer.transformJpaToApi(user, approvedPremises)
-      }.hasMessage("Internal Server Error: CAS1 user ${user.id} should have AP Area Set")
+      }.hasMessage("CAS1 user ${user.id} should have AP Area Set")
     }
 
     @Test
