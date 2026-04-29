@@ -539,7 +539,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .expectBody(Cas3Application::class.java)
         .returnResult()
-        .responseBody
+        .responseBody!!
 
       assertThat(responseBody).matches {
         applicationEntity.id == it.id &&
@@ -649,7 +649,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         it.matches(Regex("/cas3/applications/.+"))
       }
 
-      val blockFirst = result.responseBody.blockFirst()
+      val blockFirst = result.responseBody.blockFirst()!!
       assertThat(blockFirst).matches {
         it.person.crn == crn &&
           it.offenceId == offenceId

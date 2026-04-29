@@ -11,9 +11,9 @@ fun WebTestClient.BodyContentSpec.jsonForObject(value: Any): WebTestClient.BodyC
   return this.json(jsonMapper.writeValueAsString(value))
 }
 
-inline fun <reified T> WebTestClient.ResponseSpec.bodyAsObject(): T = this.returnResult(T::class.java).responseBody.blockFirst()!!
+inline fun <reified T : Any> WebTestClient.ResponseSpec.bodyAsObject(): T = this.returnResult(T::class.java).responseBody.blockFirst()!!
 
-inline fun <reified T> WebTestClient.ResponseSpec.bodyAsListOfObjects(): List<T> {
+inline fun <reified T : Any> WebTestClient.ResponseSpec.bodyAsListOfObjects(): List<T> {
   val jsonMapper =
     ApplicationContextProvider.get().getBean(JsonMapper::class.java)
 
