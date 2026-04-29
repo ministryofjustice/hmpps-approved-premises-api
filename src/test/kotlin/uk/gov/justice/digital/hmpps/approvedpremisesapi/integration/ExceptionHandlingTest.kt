@@ -3,10 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jsonMapper
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.hibernate.exception.JDBCConnectionException
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.core.MethodParameter
 import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
@@ -799,7 +802,7 @@ class ExceptionHandlingTestController {
   fun accessDeniedException(): ResponseEntity<Unit> = throw SpringAccessDeniedException("Forbidden")
 
   @GetMapping(path = ["no-resource-found-exception"])
-  fun noResourceFoundException(): ResponseEntity<Unit> = throw NoResourceFoundException(HttpMethod.GET, "/path")
+  fun noResourceFoundException(): ResponseEntity<Unit> = throw NoResourceFoundException(HttpMethod.GET, "localhost", "/path")
 
   @GetMapping(path = ["missing-request-header-exception"])
   fun missingRequestHeaderException(@RequestHeader("X-Required-Header") header: String): ResponseEntity<Unit> = ResponseEntity.ok().build()
@@ -808,7 +811,12 @@ class ExceptionHandlingTestController {
   fun missingServletRequestParameterException(): ResponseEntity<Unit> = throw MissingServletRequestParameterException("requiredProperty", "int")
 
   @GetMapping(path = ["method-argument-type-mismatch-exception"])
-  fun methodArgumentTypeMismatchException(): ResponseEntity<Unit> = throw MethodArgumentTypeMismatchException("notanint", Int::class.java, "requiredProperty", null, null)
+  fun methodArgumentTypeMismatchException(): ResponseEntity<Unit> {
+    val methodParameter = mockk<MethodParameter>()
+    every { methodParameter.parameterName } returns "id"
+    every { methodParameter.parameterType } returns Int::class.java
+    throw MethodArgumentTypeMismatchException("notanint", Int::class.java, "requiredProperty",methodParameter, null)
+  }
 
   @GetMapping(path = ["illegal-argument-exception"])
   fun illegalArgumentException(): ResponseEntity<Unit> = throw IllegalArgumentException()
