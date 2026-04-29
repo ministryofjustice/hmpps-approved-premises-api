@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer
+import org.springframework.boot.cache.autoconfigure.RedisCacheManagerBuilderCustomizer
 import org.springframework.boot.info.BuildProperties
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
@@ -42,7 +42,7 @@ class RedisConfiguration {
     @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
     @Value("600") crnGetCaseDetailExpirySeconds: Long,
   ): RedisCacheManagerBuilderCustomizer? {
-    val uniqueBuildId = buildProperties.time.epochSecond.toString()
+    val uniqueBuildId = buildProperties.time!!.epochSecond.toString()
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
       builder
