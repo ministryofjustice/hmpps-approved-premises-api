@@ -50,7 +50,7 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .isBadRequest
         .returnResult<ValidationError>()
         .responseBody
-        .blockFirst()
+        .blockFirst()!!
 
       assertThat(validationResult.detail).isEqualTo("Expected an object but got an array")
     }
@@ -69,7 +69,7 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .isBadRequest
         .returnResult<ValidationError>()
         .responseBody
-        .blockFirst()
+        .blockFirst()!!
 
       assertThat(validationResult.detail).isEqualTo("Expected an array but got an object")
     }
