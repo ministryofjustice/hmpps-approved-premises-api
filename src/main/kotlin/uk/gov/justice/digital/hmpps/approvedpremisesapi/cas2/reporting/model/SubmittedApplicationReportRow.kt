@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import java.time.LocalDate
 
 data class SubmittedApplicationReportRow(
   val eventId: String,
@@ -9,8 +10,8 @@ data class SubmittedApplicationReportRow(
   val personNoms: String,
   val referringPrisonCode: String,
   val preferredAreas: String?,
-  val hdcEligibilityDate: String?,
-  val conditionalReleaseDate: String?,
+  val hdcEligibilityDate: LocalDate?,
+  val conditionalReleaseDate: LocalDate?,
   val submittedAt: String,
   val submittedBy: String,
   val startedAt: String,

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
+import java.time.LocalDate
 import java.util.UUID
 
 @Repository
@@ -60,8 +61,8 @@ interface Cas2SubmittedApplicationReportRow {
   fun getPersonCrn(): String
   fun getReferringPrisonCode(): String
   fun getPreferredAreas(): String?
-  fun getHdcEligibilityDate(): String?
-  fun getConditionalReleaseDate(): String?
+  fun getHdcEligibilityDate(): LocalDate?
+  fun getConditionalReleaseDate(): LocalDate?
   fun getStartedAt(): String
   fun getNumberOfLocationTransfers(): String
   fun getNumberOfPomTransfers(): String
