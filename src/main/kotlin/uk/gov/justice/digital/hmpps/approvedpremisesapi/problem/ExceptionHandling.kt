@@ -137,50 +137,30 @@ class ExceptionHandling(
 
   @ExceptionHandler(BadRequestProblem::class)
   fun handleBadRequestProblem(ex: BadRequestProblem): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
     logBadRequestProblem(ex)
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
   }
 
   @ExceptionHandler(NotFoundProblem::class)
-  fun handleNotFoundProblem(ex: NotFoundProblem): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
-  }
+  fun handleNotFoundProblem(ex: NotFoundProblem): ResponseEntity<ProblemDetail> = ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
 
   @ExceptionHandler(ForbiddenProblem::class)
-  fun handleForbiddenProblem(ex: ForbiddenProblem): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
-    return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
-  }
+  fun handleForbiddenProblem(ex: ForbiddenProblem): ResponseEntity<ProblemDetail> = ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
 
   @ExceptionHandler(ConflictProblem::class)
-  fun handleConflictProblem(ex: ConflictProblem): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
-    return ResponseEntity.status(HttpStatus.CONFLICT).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
-  }
+  fun handleConflictProblem(ex: ConflictProblem): ResponseEntity<ProblemDetail> = ResponseEntity.status(HttpStatus.CONFLICT).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
 
   @ExceptionHandler(NotAllowedProblem::class)
-  fun handleNotAllowedProblem(ex: NotAllowedProblem): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
-    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
-  }
+  fun handleNotAllowedProblem(ex: NotAllowedProblem): ResponseEntity<ProblemDetail> = ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
 
   @ExceptionHandler(NotFoundResourceProblem::class)
-  fun handleNotFoundResourceProblem(ex: NotFoundResourceProblem): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
-  }
+  fun handleNotFoundResourceProblem(ex: NotFoundResourceProblem): ResponseEntity<ProblemDetail> = ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
 
   @ExceptionHandler(ServiceUnavailableProblem::class)
-  fun handleServiceUnavailableProblem(ex: ServiceUnavailableProblem): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
-    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
-  }
+  fun handleServiceUnavailableProblem(ex: ServiceUnavailableProblem): ResponseEntity<ProblemDetail> = ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
 
   @ExceptionHandler(NotImplementedProblem::class)
   fun handleNotImplementedProblem(ex: NotImplementedProblem): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
     logNotImplementedProblem(ex)
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).contentType(APPLICATION_PROBLEM_JSON).body(ex.toProblemDetail())
   }
@@ -205,12 +185,9 @@ class ExceptionHandling(
   }
 
   @ExceptionHandler(UnauthenticatedProblem::class)
-  fun handleUnauthenticatedProblemException(ex: UnauthenticatedProblem): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(APPLICATION_PROBLEM_JSON).body(
-      UnauthenticatedProblem().toProblemDetail(),
-    )
-  }
+  fun handleUnauthenticatedProblemException(): ResponseEntity<ProblemDetail> = ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(APPLICATION_PROBLEM_JSON).body(
+    UnauthenticatedProblem().toProblemDetail(),
+  )
 
   @ExceptionHandler(Throwable::class)
   fun handleGenericException(ex: Throwable): ResponseEntity<ProblemDetail> {
