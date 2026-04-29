@@ -89,13 +89,13 @@ fun getPageableOrAllPages(sortBy: List<String>, sortDirection: SortDirection?, p
     PageRequest.of(
       page - 1,
       resolvePageSize(pageSize),
-      sort,
+      sort ?: Sort.unsorted(),
     )
   } else {
     PageRequest.of(
       0,
       Int.MAX_VALUE,
-      sort,
+      sort ?: Sort.unsorted(),
     )
   }
 }
@@ -108,11 +108,11 @@ fun getPageableOrAllPages(criteria: PageCriteria<String>, unsafe: Boolean = fals
   unsafe,
 )
 
-fun <T> getMetadata(response: Page<T>, pageCriteria: PageCriteria<*>): PaginationMetadata? = getMetadataWithSize(response, pageCriteria.page, pageCriteria.perPage)
+fun <T : Any> getMetadata(response: Page<T>, pageCriteria: PageCriteria<*>): PaginationMetadata? = getMetadataWithSize(response, pageCriteria.page, pageCriteria.perPage)
 
-fun <T> getMetadata(response: Page<T>, page: Int?, size: Int? = 10): PaginationMetadata? = getMetadataWithSize(response, page, size)
+fun <T : Any> getMetadata(response: Page<T>, page: Int?, size: Int? = 10): PaginationMetadata? = getMetadataWithSize(response, page, size)
 
-fun <T> getMetadataWithSize(response: Page<T>, page: Int?, pageSize: Int?): PaginationMetadata? = if (page != null) {
+fun <T : Any> getMetadataWithSize(response: Page<T>, page: Int?, pageSize: Int?): PaginationMetadata? = if (page != null) {
   PaginationMetadata(page, response.totalPages, response.totalElements, resolvePageSize(pageSize))
 } else {
   null
