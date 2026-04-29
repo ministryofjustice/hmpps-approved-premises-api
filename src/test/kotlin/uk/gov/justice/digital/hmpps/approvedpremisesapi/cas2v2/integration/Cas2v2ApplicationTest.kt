@@ -1492,7 +1492,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           it.matches(Regex("/cas2v2/applications/.+"))
         }
 
-        Assertions.assertThat(result.responseBody.blockFirst()).matches {
+        Assertions.assertThat(result.responseBody.blockFirst()!!).matches {
           it.person.crn == offenderDetails.otherIds.crn
         }
       }

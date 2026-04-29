@@ -1630,7 +1630,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             it.matches(Regex("/cas1/applications/.+"))
           }
 
-          assertThat(result.responseBody.blockFirst()).matches {
+          assertThat(result.responseBody.blockFirst()!!).matches {
             it.person.crn == offenderDetails.otherIds.crn &&
               cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
@@ -1671,7 +1671,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             it.matches(Regex("/cas1/applications/.+"))
           }
 
-          assertThat(result.responseBody.blockFirst()).matches {
+          assertThat(result.responseBody.blockFirst()!!).matches {
             it.person.crn == offenderDetails.otherIds.crn
             cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
@@ -1714,7 +1714,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             it.matches(Regex("/cas1/applications/.+"))
           }
 
-          assertThat(result.responseBody.blockFirst()).matches {
+          assertThat(result.responseBody.blockFirst()!!).matches {
             it.person.crn == offenderDetails.otherIds.crn
             cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
@@ -1759,7 +1759,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             it.matches(Regex("/cas1/applications/.+"))
           }
 
-          assertThat(result.responseBody.blockFirst()).matches {
+          assertThat(result.responseBody.blockFirst()!!).matches {
             it.person.crn == offenderDetails.otherIds.crn &&
               cas1OffenderRepository.findByCrn(it.person.crn) != null
           }

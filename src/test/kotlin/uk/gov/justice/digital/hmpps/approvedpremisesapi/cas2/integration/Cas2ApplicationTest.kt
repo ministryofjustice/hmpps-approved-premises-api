@@ -1557,7 +1557,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               it.matches(Regex("/cas2/applications/.+"))
             }
 
-            assertThat(result.responseBody.blockFirst()).matches {
+            assertThat(result.responseBody.blockFirst()!!).matches {
               it.person.crn == offenderDetails.otherIds.crn &&
                 it.applicationOrigin == ApplicationOrigin.homeDetentionCurfew &&
                 it.bailHearingDate == null
@@ -1592,7 +1592,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               it.matches(Regex("/cas2/applications/.+"))
             }
 
-            assertThat(result.responseBody.blockFirst()).matches {
+            assertThat(result.responseBody.blockFirst()!!).matches {
               it.person.crn == offenderDetails.otherIds.crn
             }
           }
@@ -1679,7 +1679,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               it.matches(Regex("/cas2/applications/.+"))
             }
 
-            assertThat(result.responseBody.blockFirst()).matches {
+            assertThat(result.responseBody.blockFirst()!!).matches {
               it.person.crn == offenderDetails.otherIds.crn
             }
           }
