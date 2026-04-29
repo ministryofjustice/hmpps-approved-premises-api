@@ -306,7 +306,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     return toJsonString(result)
   }
 
-  protected fun toJsonString(result: Map<String, Any>) = (result["json"] as PGobject?)?.value
+  protected fun toJsonString(result: Map<String, Any?>) = (result["json"] as PGobject?)?.value
   protected fun MapSqlParameterSource.addSarParameters(
     crn: String?,
     nomsNumber: String?,
