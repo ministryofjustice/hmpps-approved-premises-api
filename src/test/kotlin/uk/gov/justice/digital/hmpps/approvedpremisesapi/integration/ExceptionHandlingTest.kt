@@ -815,7 +815,7 @@ class ExceptionHandlingTestController {
     val methodParameter = mockk<MethodParameter>()
     every { methodParameter.parameterName } returns "id"
     every { methodParameter.parameterType } returns Int::class.java
-    throw MethodArgumentTypeMismatchException("notanint", Int::class.java, "requiredProperty",methodParameter, null)
+    throw MethodArgumentTypeMismatchException("notanint", Int::class.java, "requiredProperty", methodParameter, null)
   }
 
   @GetMapping(path = ["illegal-argument-exception"])
