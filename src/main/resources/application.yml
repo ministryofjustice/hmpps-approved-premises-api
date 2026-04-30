@@ -350,3 +350,4 @@ scheduling:
 
 feature-flags:
   cas2-sqs-listener-enabled: false
+  cas1-disable-short-notice-and-emergency-assessment-allocations: true

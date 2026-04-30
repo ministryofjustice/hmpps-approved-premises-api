@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -60,6 +61,7 @@ class Cas1AssessmentService(
   private val cas1PlacementApplicationService: Cas1PlacementApplicationService,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
   private val clock: Clock,
+  private val featureFlagService: FeatureFlagService,
 ) {
 
   fun createAssessment(application: ApprovedPremisesApplicationEntity, createdFromAppeal: Boolean = false): ApprovedPremisesAssessmentEntity {
@@ -86,7 +88,13 @@ class Cas1AssessmentService(
 
     assessment.dueAt = taskDeadlineService.getDeadline(assessment)
 
-    val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
+    val shouldAllocate = when (application.noticeType) {
+      Cas1ApplicationTimelinessCategory.emergency, Cas1ApplicationTimelinessCategory.shortNotice ->
+        !featureFlagService.getBooleanFlag("cas1-disable-short-notice-and-emergency-assessment-allocations")
+      else -> true
+    }
+    val allocatedUser = if (shouldAllocate) userAllocator.getUserForAssessmentAllocation(assessment) else null
+
     assessment.allocatedToUser = allocatedUser
 
     applicationStatusService.assessmentCreated(assessment)
