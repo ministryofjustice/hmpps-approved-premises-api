@@ -7,10 +7,10 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ClientResultRedisSerializer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 
 class ClientResultRedisSerializerTest {
-  private val jsonMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = JsonMapperFactory.createRuntimeLikeObjectMapper()
   private val clientResponseRedisSerializer = ClientResultRedisSerializer(jsonMapper, object : TypeReference<ClientResponseBody>() {})
 
   @Test
