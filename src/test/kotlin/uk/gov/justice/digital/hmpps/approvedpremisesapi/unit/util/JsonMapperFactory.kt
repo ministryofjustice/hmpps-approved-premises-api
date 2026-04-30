@@ -7,8 +7,12 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
-object ObjectMapperFactory {
-  fun createRuntimeLikeObjectMapper() = JsonMapper().apply {
+object JsonMapperFactory {
+  /**
+   * Creates a Jackson2 Json Mapper that matches the
+   * mapper provided by Spring at runtime
+   */
+  fun createJackson2JsonMapper() = JsonMapper().apply {
     disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
     disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     registerModule(Jdk8Module())

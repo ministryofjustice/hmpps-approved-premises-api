@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Allocat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2LocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 
 @ExtendWith(MockKExtension::class)
 class Cas2DomainEventListenerTest {
@@ -31,7 +31,7 @@ class Cas2DomainEventListenerTest {
   lateinit var sentryService: SentryService
 
   @SpykBean
-  var objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  var objectMapper = JsonMapperFactory.createJackson2JsonMapper()
 
   @InjectMockKs
   lateinit var cas2DomainEventListener: Cas2DomainEventListener
