@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
@@ -13,6 +12,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
@@ -709,7 +709,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
     private fun assessmentSummaryMapper(
       offenderDetails: OffenderDetailSummary,
       inmateDetails: InmateDetail?,
-    ) = AssessmentSummaryMapper(cas3AssessmentTransformer, jsonMapper, offenderDetails, inmateDetails)
+    ) = AssessmentSummaryMapper(cas3AssessmentTransformer, jackson3JsonMapper, offenderDetails, inmateDetails)
 
     private fun createAssessmentForStatus(
       user: UserEntity,
@@ -807,7 +807,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
         .responseBody
         .blockFirst()
 
-      assertThat(responseBody).isEqualTo(jsonMapper.writeValueAsString(expectedAssessmentSummaries))
+      assertThat(responseBody).isEqualTo(jackson3JsonMapper.writeValueAsString(expectedAssessmentSummaries))
 
       return response
     }
@@ -915,7 +915,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .isOk
             .expectBody()
             .json(
-              jsonMapper.writeValueAsString(
+              jackson3JsonMapper.writeValueAsString(
                 cas3AssessmentTransformer.transformJpaToApi(
                   assessment,
                   PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
