@@ -76,6 +76,7 @@ dependencies {
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
 
   testImplementation("com.ninja-squad:springmockk:4.0.2")
+  testImplementation("org.zalando:logbook-spring-boot-starter:4.0.3")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.6.3")
 
