@@ -348,6 +348,9 @@ abstract class IntegrationTestBase {
   lateinit var jsonMapper: JsonMapper
 
   @Autowired
+  lateinit var jackson3JsonMapper: tools.jackson.databind.json.JsonMapper
+
+  @Autowired
   lateinit var jwtAuthHelper: JwtAuthHelper
 
   @Autowired
