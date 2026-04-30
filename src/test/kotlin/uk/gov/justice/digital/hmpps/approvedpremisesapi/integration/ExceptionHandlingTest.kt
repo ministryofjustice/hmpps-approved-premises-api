@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jsonMapper
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
@@ -379,29 +376,21 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
         .uri("/method-argument-type-mismatch-exception")
         .header("Authorization", "Bearer $jwt")
         .exchange()
-        .returnResult<JsonNode>()
-
-      val objectNode = validationResult.responseBody.blockFirst() as? ObjectNode
-      if (objectNode != null && objectNode.has("timestamp")) {
-        objectNode.replace("timestamp", objectNode.textNode("2026-04-24T08:11:54.563+00:00"))
-      } else {
-        error("timestamp field does not exist in the response")
-      }
+        .returnResult<String>()
 
       assertJsonEquals(
-        actual = jsonMapper.writeValueAsString(objectNode),
+        actual = validationResult.responseBody.blockFirst(),
         expected = """
           {
-            "timestamp" : "2026-04-24T08:11:54.563+00:00",
-            "status" : 400,
-            "error" : "Bad Request",
-            "message" : "Method parameter 'requiredProperty': Failed to convert value of type 'java.lang.String' to required type 'int'",
-            "path" : "/method-argument-type-mismatch-exception"
+              "detail": "Invalid type for query parameter id expected int",
+              "instance": "/method-argument-type-mismatch-exception",
+              "status": 400,
+              "title": "Bad Request"
           }
         """,
       )
 
-      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/json")
+      assertThat(validationResult.responseHeaders.contentType?.toString()).isEqualTo("application/problem+json")
     }
 
     @Test
