@@ -30,8 +30,6 @@ dependencies {
   implementation("io.hypersistence:hypersistence-utils-hibernate-71:3.15.2")
   implementation("org.hibernate.orm:hibernate-spatial")
   implementation("org.hibernate.orm:hibernate-jcache")
-  // TOOD: do we need this anymore?
-  //implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
