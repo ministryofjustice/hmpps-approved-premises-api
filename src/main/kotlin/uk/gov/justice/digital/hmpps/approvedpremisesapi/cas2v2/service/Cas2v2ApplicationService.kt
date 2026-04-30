@@ -17,11 +17,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationSummarySpecifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -71,26 +71,26 @@ class Cas2v2ApplicationService(
       Specification { _, _, cb -> cb.conjunction() } // Start with no-op
 
     if (limitByUser) {
-      spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasUserId(user.id.toString()))
+      spec = spec.and(Cas2ApplicationSummarySpecifications.hasUserId(user.id.toString()))
     }
 
     if (crnOrNomsNumber != null) {
-      spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasCrnOrNomsNumber(crnOrNomsNumber))
+      spec = spec.and(Cas2ApplicationSummarySpecifications.hasCrnOrNomsNumber(crnOrNomsNumber))
     }
 
     if (prisonCode != null) {
-      spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasPrisonCode(prisonCode))
+      spec = spec.and(Cas2ApplicationSummarySpecifications.hasPrisonCode(prisonCode))
     }
 
     if (applicationOrigin != null) {
-      spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasApplicationOrigin(applicationOrigin))
+      spec = spec.and(Cas2ApplicationSummarySpecifications.hasApplicationOrigin(applicationOrigin))
     }
 
     if (isSubmitted != null) {
-      spec = spec.and(Cas2v2ApplicationSummarySpecifications.isSubmitted(isSubmitted))
+      spec = spec.and(Cas2ApplicationSummarySpecifications.isSubmitted(isSubmitted))
     }
 
-    spec = spec.and(Cas2v2ApplicationSummarySpecifications.hasServiceOrigin(Cas2ServiceOrigin.BAIL.toString()))
+    spec = spec.and(Cas2ApplicationSummarySpecifications.hasServiceOrigin(Cas2ServiceOrigin.BAIL.toString()))
 
     val response = cas2ApplicationSummaryRepository.findAll(spec, getPageableOrAllPages(pageCriteria))
 
