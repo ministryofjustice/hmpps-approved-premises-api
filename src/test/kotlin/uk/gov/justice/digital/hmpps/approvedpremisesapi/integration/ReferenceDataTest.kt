@@ -931,7 +931,7 @@ class ReferenceDataTest : IntegrationTestBase() {
       {"id":"155ee6dc-ac2a-40d2-a350-90b63fb34a06","name":"No bedspace available in PDU","isActive":true},
       {"id":"21b8569c-ef2e-4059-8676-323098d16aa5","name":"No recourse to public funds (NRPF)","isActive":true},
       {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d474","name":"Not eligible (e.g. already released into the community, HDC)","isActive":true},
-      {"id":"88c3b8d5-77c8-4c52-84f0-ec9073e4df50","name":"Not enough time on their licence or post-sentence supervision (PSS)","isActive":true},
+      {"id":"88c3b8d5-77c8-4c52-84f0-ec9073e4df50","name":"Not enough time on their licence","isActive":true},
       {"id":"a1c7d402-77b5-4335-a67b-eba6a71c70bf","name":"Not enough time to place","isActive":true},
       {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d475","name":"Other alternative accommodation provided (e.g. friends or family)","isActive":true},
       {"id":"f47ac10b-58cc-4372-a567-0e02b2c3d476","name":"Out of region referral","isActive":true},
