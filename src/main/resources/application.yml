@@ -11,7 +11,10 @@ spring:
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
-    ## TODO: can remove this but first need to check where our jackson
+
+  # we're temporarily retaining jackson2 as part of the spring boot 4 upgrade to minimise change
+  jackson2:
+    date-format: "yyyy-MM-dd HH:mm:ss"
     ## 2 mappers are coming from and ensuring that this is set correctly
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
