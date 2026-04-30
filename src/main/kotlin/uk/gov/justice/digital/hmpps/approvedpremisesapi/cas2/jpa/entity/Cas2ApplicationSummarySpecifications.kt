@@ -1,13 +1,12 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity
 
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import java.time.OffsetDateTime
 
 @Component
-object Cas2v2ApplicationSummarySpecifications {
+object Cas2ApplicationSummarySpecifications {
 
   fun hasUserId(userId: String): Specification<Cas2ApplicationSummaryEntity> = Specification { root, _, criteriaBuilder ->
     criteriaBuilder.equal(root.get<String>("userId"), userId)
