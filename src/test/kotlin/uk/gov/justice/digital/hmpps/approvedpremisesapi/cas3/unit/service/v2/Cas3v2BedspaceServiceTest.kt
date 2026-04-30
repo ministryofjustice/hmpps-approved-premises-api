@@ -44,7 +44,7 @@ class Cas3v2BedspaceServiceTest {
   private val mockCas3v2PremisesService = mockk<Cas3v2PremisesService>()
   private val mockCas3v2DomainEventService = mockk<Cas3v2DomainEventService>()
 
-  private val jsonMapper = JsonMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
 
   private val cas3v2BedspacesService = Cas3v2BedspacesService(
     mockCharacteristicService,

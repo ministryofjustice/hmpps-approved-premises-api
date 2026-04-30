@@ -159,7 +159,7 @@ class OffenderServiceTest {
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
-      JsonMapperFactory.createRuntimeLikeObjectMapper().writeValueAsString(accessBody),
+      JsonMapperFactory.createJackson2JsonMapper().writeValueAsString(accessBody),
     )
 
     assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue

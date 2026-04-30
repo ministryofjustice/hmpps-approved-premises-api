@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ClientResultRedis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 
 class ClientResultRedisSerializerTest {
-  private val jsonMapper = JsonMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
   private val clientResponseRedisSerializer = ClientResultRedisSerializer(jsonMapper, object : TypeReference<ClientResponseBody>() {})
 
   @Test

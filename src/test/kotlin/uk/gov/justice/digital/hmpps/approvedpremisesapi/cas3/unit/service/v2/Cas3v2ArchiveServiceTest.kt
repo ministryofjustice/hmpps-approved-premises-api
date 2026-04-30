@@ -70,7 +70,7 @@ class Cas3v2ArchiveServiceTest {
   private val cas3BedspaceRepositoryMock = mockk<Cas3BedspacesRepository>()
   private val workingDayServiceMock = mockk<WorkingDayService>()
   private val cas3DomainEventServiceMock = mockk<Cas3v2DomainEventService>()
-  private val jsonMapper = JsonMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
 
   private val cas3v2ArchiveService = Cas3v2ArchiveService(
     cas3BedspaceRepositoryMock,

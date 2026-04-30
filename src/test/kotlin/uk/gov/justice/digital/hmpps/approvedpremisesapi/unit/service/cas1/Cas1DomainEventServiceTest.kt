@@ -78,7 +78,7 @@ import java.util.UUID
 class Cas1DomainEventServiceTest {
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
   private val domainEventWorkerMock = mockk<ConfiguredDomainEventWorker>()
-  private val jsonMapper = JsonMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
   private val userService = mockk<UserService>()
   private val user = UserEntityFactory().withDefaultProbationRegion().produce()
   private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()

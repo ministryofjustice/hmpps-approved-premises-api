@@ -107,7 +107,7 @@ class Cas3DomainEventServiceTest {
   @InjectMockKs
   private lateinit var cas3DomainEventService: Cas3DomainEventService
 
-  private val jsonMapper = JsonMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
 
   private val user = UserEntityFactory()
     .withYieldedProbationRegion {

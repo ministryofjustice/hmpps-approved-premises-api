@@ -12,7 +12,7 @@ class Cas1RedactAssessmentDetailsSeedJobTest {
 
   val service = Cas1RemoveAssessmentDetailsSeedJob(
     assessmentRepository = mockk<AssessmentRepository>(),
-    jsonMapper = JsonMapperFactory.createRuntimeLikeObjectMapper(),
+    jsonMapper = JsonMapperFactory.createJackson2JsonMapper(),
     cas1ApplicationTimelineNoteService = mockk<Cas1ApplicationTimelineNoteService>(),
   )
 

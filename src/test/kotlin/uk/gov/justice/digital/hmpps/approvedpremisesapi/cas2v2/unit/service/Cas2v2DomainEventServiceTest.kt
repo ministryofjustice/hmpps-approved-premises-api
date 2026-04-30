@@ -32,7 +32,7 @@ class Cas2v2DomainEventServiceTest {
   private val hmppsQueueServiceMock = mockk<HmppsQueueService>()
   private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()
 
-  private val jsonMapper = JsonMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
 
   private val detailUrl = "https://example.com/123"
 

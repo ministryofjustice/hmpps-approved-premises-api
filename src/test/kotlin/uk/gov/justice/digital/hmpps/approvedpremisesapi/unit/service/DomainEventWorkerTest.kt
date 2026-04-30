@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture
 
 @Suppress("SwallowedException")
 class DomainEventWorkerTest {
-  private val jsonMapper = JsonMapperFactory.createRuntimeLikeObjectMapper()
+  private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
   private val hmppsTopicMock = mockk<HmppsTopic>()
 
   private val syncDomainEventWorker = SyncDomainEventWorker(
