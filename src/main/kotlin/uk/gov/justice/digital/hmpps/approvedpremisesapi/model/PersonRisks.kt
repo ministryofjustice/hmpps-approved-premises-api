@@ -4,16 +4,26 @@ import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter
+import java.io.Serializable
 import java.time.LocalDate
 
-data class RiskWithStatus<T>(val status: RiskStatus, val value: T? = null) {
+data class RiskWithStatus<T>(val status: RiskStatus, val value: T? = null) : Serializable {
+  companion object {
+    private const val serialVersionUID: Long = 1L
+  }
+
   constructor(value: T?) : this(RiskStatus.Retrieved, value)
 }
 
-enum class RiskStatus {
+enum class RiskStatus : Serializable {
   Retrieved,
   NotFound,
   Error,
+  ;
+
+  companion object {
+    private const val serialVersionUID: Long = 1L
+  }
 }
 
 data class PersonRisks(
@@ -21,7 +31,11 @@ data class PersonRisks(
   val mappa: RiskWithStatus<Mappa>,
   val tier: RiskWithStatus<RiskTier>,
   val flags: RiskWithStatus<List<String>>,
-)
+) : Serializable {
+  companion object {
+    private const val serialVersionUID: Long = 1L
+  }
+}
 
 data class RoshRisks(
   val overallRisk: String,
@@ -30,17 +44,29 @@ data class RoshRisks(
   val riskToKnownAdult: String,
   val riskToStaff: String,
   val lastUpdated: LocalDate?,
-)
+) : Serializable {
+  companion object {
+    private const val serialVersionUID: Long = 1L
+  }
+}
 
 data class Mappa(
   val level: String,
   val lastUpdated: LocalDate,
-)
+) : Serializable {
+  companion object {
+    private const val serialVersionUID: Long = 1L
+  }
+}
 
 data class RiskTier(
   val level: String,
   val lastUpdated: LocalDate,
-)
+) : Serializable {
+  companion object {
+    private const val serialVersionUID: Long = 1L
+  }
+}
 
 @Converter(autoApply = true)
 class PersonRisksConverter : AttributeConverter<PersonRisks, String?> {
