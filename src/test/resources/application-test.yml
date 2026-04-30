@@ -224,7 +224,14 @@ notify:
 scheduling:
   enable: false
 
-logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
+logbook:
+  format:
+    style: json
+
+logging:
+  level:
+    logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
+    org.zalando.logbook: TRACE
 
 refresh-inmate-details-cache:
   lock-at-least-for: 1s
