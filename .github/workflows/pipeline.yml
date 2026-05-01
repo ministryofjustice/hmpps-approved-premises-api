@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'feature/FM-496-upgrade-to-spring-boot-4'
 
 jobs:
   verify:
