@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -11,11 +11,10 @@ then
   exit 1
 fi
 
-curl --fail --show-error --location --request POST 'http://127.0.0.1:8080/seedFromExcel/directory' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "seedType": "'"$SEED_JOB_ID"'",
-    "directoryName": "'"$DIRECTORY_NAME"'"
-}'
+cd "$(dirname "$0")"
+script_dir="$(pwd)"
+. "$script_dir"/invoke_admin_command
+
+invoke_admin_command "uk.gov.justice.digital.hmpps.approvedpremisesapi.cmd.RunSeedFromExcelDirectoryJobCommand $1 $2"
 
 echo "Requested job - check the application logs for processing status"
