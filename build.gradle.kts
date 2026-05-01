@@ -241,3 +241,7 @@ tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
     exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
   }
 }
+
+tasks.register("printRuntimeClasspath") {
+  println(sourceSets.main.get().runtimeClasspath.asPath)
+}

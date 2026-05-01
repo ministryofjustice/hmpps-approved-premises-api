@@ -28,6 +28,7 @@ COPY --chown=appuser:appgroup /script/run_seed_from_excel_job ./
 COPY --chown=appuser:appgroup /script/run_seed_from_excel_directory_job ./
 COPY --chown=appuser:appgroup /script/run_migration_job ./
 COPY --chown=appuser:appgroup /script/clear_cache ./
+COPY --chown=appuser:appgroup /script/invoke_admin_command ./
 RUN mkdir /tmp/seed && chown appuser:appgroup /tmp/seed && chmod +x /app/run_seed_job && chmod +x /app/run_seed_from_excel_job && chmod +x /app/run_seed_from_excel_directory_job && chmod +x /app/run_migration_job && chmod +x /app/clear_cache
 
 ENTRYPOINT ["java", "-XX:+ExitOnOutOfMemoryError", "-XX:+AlwaysActAsServerClassMachine", "-javaagent:agent.jar", "-jar", "app.jar"]

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+invoke_admin_command() {
+  COMMAND="$1"
+  JAVA_TOOL_OPTIONS="-Xmx50m"
+
+  if [[ "$OSTYPE" =~ ^darwin ]]; then
+      cd $script_dir/..
+      java -cp "../build/classes/kotlin/main:$( ./gradlew --quiet printRuntimeClasspath )" $COMMAND
+  else
+      java -cp app.jar $COMMAND
+  fi
+}
