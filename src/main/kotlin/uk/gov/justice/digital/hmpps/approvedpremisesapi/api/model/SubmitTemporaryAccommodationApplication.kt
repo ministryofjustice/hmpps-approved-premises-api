@@ -1,47 +1,46 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class SubmitTemporaryAccommodationApplication(
 
-  @get:JsonProperty("arrivalDate", required = true) val arrivalDate: java.time.LocalDate,
+  val arrivalDate: java.time.LocalDate,
 
-  @get:JsonProperty("probationDeliveryUnitId", required = true) val probationDeliveryUnitId: java.util.UUID,
+  val probationDeliveryUnitId: java.util.UUID,
 
-  @get:JsonProperty("summaryData", required = true) val summaryData: kotlin.Any,
+  val summaryData: kotlin.Any,
 
-  @get:JsonProperty("type", required = true) override val type: kotlin.String,
+  override val type: kotlin.String,
 
-  @get:JsonProperty("isRegisteredSexOffender") val isRegisteredSexOffender: kotlin.Boolean? = null,
+  val isRegisteredSexOffender: kotlin.Boolean? = null,
 
-  @get:JsonProperty("needsAccessibleProperty") val needsAccessibleProperty: kotlin.Boolean? = null,
+  val needsAccessibleProperty: kotlin.Boolean? = null,
 
-  @get:JsonProperty("hasHistoryOfArson") val hasHistoryOfArson: kotlin.Boolean? = null,
+  val hasHistoryOfArson: kotlin.Boolean? = null,
 
-  @get:JsonProperty("isDutyToReferSubmitted") val isDutyToReferSubmitted: kotlin.Boolean? = null,
+  val isDutyToReferSubmitted: kotlin.Boolean? = null,
 
-  @get:JsonProperty("dutyToReferSubmissionDate") val dutyToReferSubmissionDate: java.time.LocalDate? = null,
+  val dutyToReferSubmissionDate: java.time.LocalDate? = null,
 
   @Schema(example = "Pending", description = "")
-  @get:JsonProperty("dutyToReferOutcome") val dutyToReferOutcome: kotlin.String? = null,
+  val dutyToReferOutcome: kotlin.String? = null,
 
-  @get:JsonProperty("isApplicationEligible") val isApplicationEligible: kotlin.Boolean? = null,
+  val isApplicationEligible: kotlin.Boolean? = null,
 
-  @get:JsonProperty("eligibilityReason") val eligibilityReason: kotlin.String? = null,
+  val eligibilityReason: kotlin.String? = null,
 
-  @get:JsonProperty("dutyToReferLocalAuthorityAreaName") val dutyToReferLocalAuthorityAreaName: kotlin.String? = null,
+  val dutyToReferLocalAuthorityAreaName: kotlin.String? = null,
 
   @Schema(example = "Wed Feb 21 00:00:00 GMT 2024", description = "")
-  @get:JsonProperty("personReleaseDate") val personReleaseDate: java.time.LocalDate? = null,
+  val personReleaseDate: java.time.LocalDate? = null,
 
-  @get:JsonProperty("isHistoryOfSexualOffence") val isHistoryOfSexualOffence: kotlin.Boolean? = null,
+  val isHistoryOfSexualOffence: kotlin.Boolean? = null,
 
-  @get:JsonProperty("isConcerningSexualBehaviour") val isConcerningSexualBehaviour: kotlin.Boolean? = null,
+  val isConcerningSexualBehaviour: kotlin.Boolean? = null,
 
-  @get:JsonProperty("isConcerningArsonBehaviour") val isConcerningArsonBehaviour: kotlin.Boolean? = null,
+  val isConcerningArsonBehaviour: kotlin.Boolean? = null,
 
-  @get:JsonProperty("prisonReleaseTypes") val prisonReleaseTypes: kotlin.collections.List<kotlin.String>? = null,
+  val prisonReleaseTypes: kotlin.collections.List<kotlin.String>? = null,
 
-  @get:JsonProperty("translatedDocument") override val translatedDocument: kotlin.Any? = null,
+  override val translatedDocument: kotlin.Any? = null,
 ) : SubmitApplication

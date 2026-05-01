@@ -1,29 +1,28 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 import java.util.UUID
 
 data class SubmitCas2v2Application(
 
-  @get:JsonProperty("translatedDocument", required = true) val translatedDocument: Any,
+  val translatedDocument: Any,
 
   @Schema(example = "null", required = true, description = "Id of the application being submitted")
-  @get:JsonProperty("applicationId", required = true) val applicationId: UUID,
+  val applicationId: UUID,
 
-  @get:JsonProperty("telephoneNumber", required = true) val telephoneNumber: String,
+  val telephoneNumber: String,
 
-  @get:JsonProperty("applicationOrigin", required = true) val applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
+  val applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
 
   @Schema(example = "Leeds | Bradford", description = "First and second preferences for where the accommodation should be located, pipe-separated")
-  @get:JsonProperty("preferredAreas") val preferredAreas: String? = null,
+  val preferredAreas: String? = null,
 
   @Schema(example = "Thu Mar 30 01:00:00 BST 2023", description = "")
-  @get:JsonProperty("hdcEligibilityDate") val hdcEligibilityDate: LocalDate? = null,
+  val hdcEligibilityDate: LocalDate? = null,
 
   @Schema(example = "Sun Apr 30 01:00:00 BST 2023", description = "")
-  @get:JsonProperty("conditionalReleaseDate") val conditionalReleaseDate: LocalDate? = null,
+  val conditionalReleaseDate: LocalDate? = null,
 
-  @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+  val bailHearingDate: LocalDate? = null,
 )

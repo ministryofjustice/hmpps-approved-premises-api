@@ -1,14 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class NonArrivalReason(
 
-  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+  val id: java.util.UUID,
 
   @Schema(example = "Recall", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  val name: kotlin.String,
 
-  @get:JsonProperty("isActive", required = true) val isActive: kotlin.Boolean,
+  val isActive: kotlin.Boolean,
 )
