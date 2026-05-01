@@ -7,6 +7,14 @@ generic-service:
   livenessProbe:
     initialDelaySeconds: 60
 
+  startupProbe:
+    httpGet:
+      path: /health/liveness
+      port: http
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 10 # allow 100 seconds to start
+
   image:
     repository: ghcr.io/ministryofjustice/hmpps-approved-premises-api
     tag: app_version    # override at deployment time
