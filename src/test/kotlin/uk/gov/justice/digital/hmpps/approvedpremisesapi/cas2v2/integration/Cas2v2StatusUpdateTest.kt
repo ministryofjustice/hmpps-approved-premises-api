@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
@@ -29,17 +30,17 @@ import java.util.UUID
 class Cas2v2StatusUpdateTest(
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
-) : Cas2v2IntegrationTestBase() {
+) : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realCas2StatusUpdateRepository: Cas2StatusUpdateRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realCas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @AfterEach
   fun afterEach() {
-    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
+    // SpringMockK does not correctly clear mocks for @MockkSpyBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(realCas2StatusUpdateRepository)

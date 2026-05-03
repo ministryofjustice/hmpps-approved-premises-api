@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
@@ -52,16 +52,16 @@ class Cas2SubmissionTest(
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) : IntegrationTestBase() {
-  @SpykBean
+  @MockkSpyBean
   lateinit var realApplicationRepository: Cas2ApplicationRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realAssessmentRepository: Cas2AssessmentRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realStatusUpdateRepository: Cas2StatusUpdateRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realStatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @Autowired
@@ -89,7 +89,7 @@ class Cas2SubmissionTest(
 
   @AfterEach
   fun afterEach() {
-    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
+    // SpringMockK does not correctly clear mocks for @MockkSpyBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationRepository)

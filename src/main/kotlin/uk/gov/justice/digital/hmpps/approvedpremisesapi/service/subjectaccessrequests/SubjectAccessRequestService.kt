@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subjectaccessrequests
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import org.json.JSONObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2SubjectAccessRequestRepository

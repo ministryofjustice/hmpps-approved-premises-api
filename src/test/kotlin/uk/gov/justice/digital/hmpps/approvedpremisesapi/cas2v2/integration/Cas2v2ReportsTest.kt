@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.UnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.SubmittedApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.io.ByteArrayInputStream
@@ -36,7 +37,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
+class Cas2v2ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class ControlsOnExternalUsers {
@@ -460,7 +461,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           newStatus = event1Details.newStatus.name,
           updatedAt = event1Details.updatedAt.toString().split(".").first(),
           updatedBy = event1Details.updatedBy.username,
-          statusDetails = "personalInformation|riskOfSeriousHarm|hdcAndCpp",
+          statusDetails = "hdcAndCpp|personalInformation|riskOfSeriousHarm",
         ),
       )
         .toDataFrame()
@@ -552,7 +553,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           personCrn = application2.crn,
           applicationOrigin = application2.applicationOrigin,
           personNoms = application2.nomsNumber.toString(),
-          startedAt = application2.createdAt.toString().split(".").first() + 'Z',
+          startedAt = application2.createdAt.toString().split(".").first(),
           startedBy = application2.createdByUser.username,
         ),
       )

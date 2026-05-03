@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.zalando.problem.AbstractThrowableProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
@@ -124,17 +123,15 @@ class Cas2AssessmentsController(
     assessmentId: UUID,
     result: AuthorisableActionResult<ValidatableActionResult<EntityType>>,
   ): Any = when (result) {
-    is AuthorisableActionResult.NotFound -> throwProblem(NotFoundProblem(assessmentId, "Cas2Application"))
-    is AuthorisableActionResult.Unauthorised -> throwProblem(ForbiddenProblem())
+    is AuthorisableActionResult.NotFound -> throw(NotFoundProblem(assessmentId, "Cas2Application"))
+    is AuthorisableActionResult.Unauthorised -> throw(ForbiddenProblem())
     is AuthorisableActionResult.Success -> result.entity
   }
 
-  private fun throwProblem(problem: AbstractThrowableProblem): Unit = throw problem
-
   private fun <EntityType : Any> processValidation(validationResult: ValidatableActionResult<EntityType>): Any = when (validationResult) {
-    is ValidatableActionResult.GeneralValidationError -> throwProblem(BadRequestProblem(errorDetail = validationResult.message))
-    is ValidatableActionResult.FieldValidationError -> throwProblem(BadRequestProblem(invalidParams = validationResult.validationMessages.mapValues { ParamDetails(it.value) }))
-    is ValidatableActionResult.ConflictError -> throwProblem(ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message))
+    is ValidatableActionResult.GeneralValidationError -> throw(BadRequestProblem(errorDetail = validationResult.message))
+    is ValidatableActionResult.FieldValidationError -> throw(BadRequestProblem(invalidParams = validationResult.validationMessages.mapValues { ParamDetails(it.value) }))
+    is ValidatableActionResult.ConflictError -> throw(ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message))
     is ValidatableActionResult.Success -> validationResult.entity
   }
 }

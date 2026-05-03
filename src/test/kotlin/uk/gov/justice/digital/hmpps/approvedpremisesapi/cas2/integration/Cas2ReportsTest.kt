@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import org.assertj.core.api.Assertions
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
@@ -21,11 +21,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationAssignmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.UnsubmittedApplicationsReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.Instant
@@ -35,7 +36,7 @@ import java.util.UUID
 
 class Cas2ReportsTest : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   private lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   @Nested
@@ -259,8 +260,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personNoms = event2Details.personReference.noms,
           referringPrisonCode = event2Details.referringPrisonCode.toString(),
           preferredAreas = event2Details.preferredAreas.toString(),
-          hdcEligibilityDate = event2Details.hdcEligibilityDate.toString(),
-          conditionalReleaseDate = event2Details.conditionalReleaseDate.toString(),
+          hdcEligibilityDate = event2Details.hdcEligibilityDate,
+          conditionalReleaseDate = event2Details.conditionalReleaseDate,
           submittedAt = event2.occurredAt.toString().split(".").first(),
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
@@ -276,8 +277,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personNoms = event1Details.personReference.noms,
           referringPrisonCode = event1Details.referringPrisonCode.toString(),
           preferredAreas = event1Details.preferredAreas.toString(),
-          hdcEligibilityDate = event1Details.hdcEligibilityDate.toString(),
-          conditionalReleaseDate = event1Details.conditionalReleaseDate.toString(),
+          hdcEligibilityDate = event1Details.hdcEligibilityDate,
+          conditionalReleaseDate = event1Details.conditionalReleaseDate,
           submittedAt = event1.occurredAt.toString().split(".").first(),
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
@@ -433,9 +434,10 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withUsername("NOMIS_USER_1")
       }
 
-      val user2v2 = cas2v2UserEntityFactory.produceAndPersist {
+      val user2v2 = cas2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_1")
-        withUserType(Cas2v2UserType.NOMIS)
+        withUserType(Cas2UserType.NOMIS)
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
@@ -465,13 +467,14 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withReferringPrisonCode("NEW")
       }
 
-      cas2v2ApplicationEntityFactory.produceAndPersist {
+      cas2ApplicationEntityFactory.produceAndPersist {
         withId(event4.applicationId!!)
         withCreatedByUser(user2v2)
         withCrn(event4Details.personReference.crn.toString())
         withNomsNumber(event2Details.personReference.noms)
         withData("{}")
         withReferringPrisonCode("NEW")
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       val user3 = cas2UserEntityFactory.produceAndPersist {

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ghcr.io/ministryofjustice/hmpps-eclipse-temurin:21-jre-jammy
+ARG BASE_IMAGE=ghcr.io/ministryofjustice/hmpps-eclipse-temurin:25-jre-jammy
 FROM --platform=$BUILDPLATFORM ${BASE_IMAGE} AS builder
 
 ARG BUILD_NUMBER
@@ -27,8 +27,7 @@ COPY --chown=appuser:appgroup /script/run_seed_job ./
 COPY --chown=appuser:appgroup /script/run_seed_from_excel_job ./
 COPY --chown=appuser:appgroup /script/run_seed_from_excel_directory_job ./
 COPY --chown=appuser:appgroup /script/run_migration_job ./
-COPY --chown=appuser:appgroup /script/hard_delete ./
 COPY --chown=appuser:appgroup /script/clear_cache ./
-RUN mkdir /tmp/seed && chown appuser:appgroup /tmp/seed && chmod +x /app/run_seed_job && chmod +x /app/run_seed_from_excel_job && chmod +x /app/run_seed_from_excel_directory_job && chmod +x /app/run_migration_job && chmod +x /app/hard_delete && chmod +x /app/clear_cache
+RUN mkdir /tmp/seed && chown appuser:appgroup /tmp/seed && chmod +x /app/run_seed_job && chmod +x /app/run_seed_from_excel_job && chmod +x /app/run_seed_from_excel_directory_job && chmod +x /app/run_migration_job && chmod +x /app/clear_cache
 
 ENTRYPOINT ["java", "-XX:+ExitOnOutOfMemoryError", "-XX:+AlwaysActAsServerClassMachine", "-javaagent:agent.jar", "-jar", "app.jar"]

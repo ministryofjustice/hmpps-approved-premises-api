@@ -1,14 +1,13 @@
-
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.7.0"
-  kotlin("plugin.spring") version "2.2.21"
-  kotlin("plugin.jpa") version "2.2.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.2.3"
+  kotlin("plugin.spring") version "2.3.20"
+  kotlin("plugin.jpa") version "2.3.20"
   id("dev.detekt") version "2.0.0-alpha.2"
   id("org.owasp.dependencycheck") version "12.2.1"
 }
 
 kotlin {
-  jvmToolchain(21)
+  jvmToolchain(25)
 }
 
 // detekt must use a specific kotlin version when running, this block ensures it's using the correct version
@@ -22,31 +21,28 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.2.0")
+  implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.3")
-  // this should match the version of hibernate provided by spring
-  implementation("org.hibernate:hibernate-spatial:6.6.4.Final")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-71:3.15.2")
+  implementation("org.hibernate.orm:hibernate-spatial")
   implementation("org.hibernate.orm:hibernate-jcache")
-  implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
-  implementation("com.google.guava:guava:33.4.8-jre")
+  implementation("com.google.guava:guava:33.5.0-jre")
   implementation("org.postgresql:postgresql:42.7.10")
-  implementation("org.javers:javers-core:7.8.0")
+  implementation("org.javers:javers-core:7.10.0")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
-
-  implementation("org.zalando:problem-spring-web-starter:0.29.1")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.33.0")
+  implementation("io.sentry:sentry-spring-boot-4:8.40.0")
 
   runtimeOnly("org.ehcache:ehcache")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
@@ -55,9 +51,10 @@ dependencies {
 
   implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.10.0")
 
-  // This is purely to fix slack notifications as part of OWASP
-  // once we have spring boot 4 we can remove this.
-  implementation("org.webjars:swagger-ui:5.32.2")
+  // as advised by https://github.com/ministryofjustice/hmpps-gradle-spring-boot/blob/main/release-notes/10.x.md#1021
+  constraints {
+    implementation("org.webjars:swagger-ui:5.32.2")
+  }
 
   implementation("org.jetbrains.kotlinx:dataframe:0.15.0") {
     exclude(group = "org.jetbrains.kotlinx", module = "dataframe-openapi")
@@ -68,36 +65,27 @@ dependencies {
 
   implementation("com.opencsv:opencsv:5.12.0")
 
-  implementation("net.javacrumbs.shedlock:shedlock-spring:6.9.2")
-  implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:6.9.2")
+  implementation("net.javacrumbs.shedlock:shedlock-spring:7.7.0")
+  implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:7.7.0")
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.9")
-  testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
-  testImplementation("io.jsonwebtoken:jjwt-api:0.12.6")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+  testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.1")
 
-  testImplementation("org.springframework.boot:spring-boot-starter-test") {
-    exclude(module = "mockito-core")
-  }
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.2.0")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:1.8.2")
+  testImplementation("com.ninja-squad:springmockk:5.0.1")
+  testImplementation("org.springframework.boot:spring-boot-webtestclient")
+  testImplementation("org.zalando:logbook-spring-boot-starter:4.0.3")
 
-  testImplementation("com.ninja-squad:springmockk:4.0.2")
-
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.6.3")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.1")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
 }
 
 springBoot {
   mainClass.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.ApplicationKt")
-}
-
-java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 kotlin.compilerOptions.freeCompilerArgs.add("-Xannotation-default-target=param-property")
@@ -108,7 +96,7 @@ val buildDir = layout.buildDirectory.asFile.get()
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
     finalizedBy("generateCas1Roles")
     getByName("check") {
       dependsOn(":ktlintCheck", "detekt")

@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions
@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Assign
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
@@ -43,17 +44,17 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
-  @SpykBean
+class Cas2v2SubmissionTest : IntegrationTestBase() {
+  @MockkSpyBean
   lateinit var cas2RealApplicationRepository: Cas2ApplicationRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var cas2RealAssessmentRepository: Cas2AssessmentRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var cas2RealStatusUpdateRepository: Cas2StatusUpdateRepository
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var cas2RealStatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @Autowired
@@ -78,7 +79,7 @@ class Cas2v2SubmissionTest : Cas2v2IntegrationTestBase() {
 
   @AfterEach
   fun afterEach() {
-    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
+    // SpringMockK does not correctly clear mocks for @MockkSpyBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(cas2RealApplicationRepository)

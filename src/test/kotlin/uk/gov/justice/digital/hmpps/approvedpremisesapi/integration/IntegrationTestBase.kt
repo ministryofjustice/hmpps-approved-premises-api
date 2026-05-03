@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.cache.CacheManager
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpHeaders
@@ -58,11 +59,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.NomisUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.Cas2StatusUpdateTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.ExternalUserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.repository.NomisUserTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.factory.Cas2v2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
@@ -281,7 +277,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedDetailsTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DestinationProviderTestRepository
@@ -314,6 +309,7 @@ import java.util.UUID
 @ContextConfiguration(initializers = [TestPropertiesInitializer::class])
 @ActiveProfiles("test")
 @Tag("integration")
+@AutoConfigureWebTestClient
 abstract class IntegrationTestBase {
   @Autowired
   lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
@@ -350,6 +346,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var jsonMapper: JsonMapper
+
+  @Autowired
+  lateinit var jackson3JsonMapper: tools.jackson.databind.json.JsonMapper
 
   @Autowired
   lateinit var jwtAuthHelper: JwtAuthHelper
@@ -460,9 +459,6 @@ abstract class IntegrationTestBase {
   lateinit var cas2ApplicationRepository: Cas2ApplicationRepository
 
   @Autowired
-  lateinit var cas2v2ApplicationRepository: Cas2v2ApplicationTestRepository
-
-  @Autowired
   lateinit var cas2ApplicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   @Autowired
@@ -491,9 +487,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var cas2UserRepository: Cas2UserRepository
-
-  @Autowired
-  lateinit var cas2v2UserRepository: Cas2v2UserRepository
 
   @Autowired
   lateinit var externalUserRepository: ExternalUserTestRepository
@@ -679,7 +672,6 @@ abstract class IntegrationTestBase {
   lateinit var nonArrivalReasonEntityFactory: PersistedFactory<NonArrivalReasonEntity, UUID, NonArrivalReasonEntityFactory>
   lateinit var approvedPremisesApplicationEntityFactory: PersistedFactory<ApprovedPremisesApplicationEntity, UUID, ApprovedPremisesApplicationEntityFactory>
   lateinit var cas2ApplicationEntityFactory: PersistedFactory<Cas2ApplicationEntity, UUID, Cas2ApplicationEntityFactory>
-  lateinit var cas2v2ApplicationEntityFactory: PersistedFactory<Cas2v2ApplicationEntity, UUID, Cas2v2ApplicationEntityFactory>
   lateinit var cas2AssessmentEntityFactory: PersistedFactory<Cas2AssessmentEntity, UUID, Cas2AssessmentEntityFactory>
   lateinit var cas2StatusUpdateEntityFactory: PersistedFactory<Cas2StatusUpdateEntity, UUID, Cas2StatusUpdateEntityFactory>
   lateinit var cas2StatusUpdateDetailEntityFactory: PersistedFactory<Cas2StatusUpdateDetailEntity, UUID, Cas2StatusUpdateDetailEntityFactory>
@@ -689,7 +681,6 @@ abstract class IntegrationTestBase {
   lateinit var userEntityFactory: PersistedFactory<UserEntity, UUID, UserEntityFactory>
   lateinit var nomisUserEntityFactory: PersistedFactory<NomisUserEntity, UUID, NomisUserEntityFactory>
   lateinit var cas2UserEntityFactory: PersistedFactory<Cas2UserEntity, UUID, Cas2UserEntityFactory>
-  lateinit var cas2v2UserEntityFactory: PersistedFactory<Cas2v2UserEntity, UUID, Cas2v2UserEntityFactory>
   lateinit var externalUserEntityFactory: PersistedFactory<ExternalUserEntity, UUID, ExternalUserEntityFactory>
   lateinit var userRoleAssignmentEntityFactory: PersistedFactory<UserRoleAssignmentEntity, UUID, UserRoleAssignmentEntityFactory>
   lateinit var userQualificationAssignmentEntityFactory: PersistedFactory<UserQualificationAssignmentEntity, UUID, UserQualificationAssignmentEntityFactory>
@@ -806,7 +797,6 @@ abstract class IntegrationTestBase {
     nonArrivalReasonEntityFactory = PersistedFactory({ NonArrivalReasonEntityFactory() }, nonArrivalReasonRepository)
     approvedPremisesApplicationEntityFactory = PersistedFactory({ ApprovedPremisesApplicationEntityFactory() }, approvedPremisesApplicationRepository)
     cas2ApplicationEntityFactory = PersistedFactory({ Cas2ApplicationEntityFactory() }, cas2ApplicationRepository)
-    cas2v2ApplicationEntityFactory = PersistedFactory({ Cas2v2ApplicationEntityFactory() }, cas2v2ApplicationRepository)
     cas2AssessmentEntityFactory = PersistedFactory({ Cas2AssessmentEntityFactory() }, cas2AssessmentRepository)
     cas2StatusUpdateEntityFactory = PersistedFactory({ Cas2StatusUpdateEntityFactory() }, cas2StatusUpdateRepository)
     cas2StatusUpdateDetailEntityFactory = PersistedFactory({ Cas2StatusUpdateDetailEntityFactory() }, cas2StatusUpdateDetailRepository)
@@ -814,7 +804,6 @@ abstract class IntegrationTestBase {
     temporaryAccommodationApplicationEntityFactory = PersistedFactory({ TemporaryAccommodationApplicationEntityFactory() }, temporaryAccommodationApplicationRepository)
     offlineApplicationEntityFactory = PersistedFactory({ OfflineApplicationEntityFactory() }, offlineApplicationRepository)
     nomisUserEntityFactory = PersistedFactory({ NomisUserEntityFactory() }, nomisUserRepository)
-    cas2v2UserEntityFactory = PersistedFactory({ Cas2v2UserEntityFactory() }, cas2v2UserRepository)
     cas2UserEntityFactory = PersistedFactory({ Cas2UserEntityFactory() }, cas2UserRepository)
     externalUserEntityFactory = PersistedFactory({ ExternalUserEntityFactory() }, externalUserRepository)
     userEntityFactory = PersistedFactory({ UserEntityFactory() }, userRepository)
@@ -882,7 +871,7 @@ abstract class IntegrationTestBase {
                   sub = username?.uppercase() ?: "integration-test-client-id",
                   authSource = authSource,
                   jti = UUID.randomUUID().toString(),
-                  iss = "http://localhost:9092/auth/issuer",
+                  iss = "http://localhost:${wiremockServer.port()}/auth/issuer",
                 ),
               ),
             ),

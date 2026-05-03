@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationStatusUpdatesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2SubmittedApplicationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UnsubmittedApplicationsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.UnsubmittedApplicationsReportRow
 import java.io.OutputStream
+import java.time.format.DateTimeFormatter
 
 @Service
 class Cas2ReportsService(
@@ -20,7 +22,7 @@ class Cas2ReportsService(
 ) {
 
   fun createSubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = submittedApplicationReportRepository.generateSubmittedApplicationReportRows().map { row ->
+    val reportData = submittedApplicationReportRepository.generateSubmittedApplicationReportRows(Cas2ServiceOrigin.HDC.name).map { row ->
       SubmittedApplicationReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
@@ -36,7 +38,7 @@ class Cas2ReportsService(
         numberOfLocationTransfers = row.getNumberOfLocationTransfers(),
         numberOfPomTransfers = row.getNumberOfPomTransfers(),
         applicationOrigin = row.getApplicationOrigin(),
-        bailHearingDate = row.getBailHearingDate(),
+        bailHearingDate = row.getBailHearingDate()?.format(DateTimeFormatter.ISO_LOCAL_DATE),
       )
     }
 
@@ -48,7 +50,7 @@ class Cas2ReportsService(
   }
 
   fun createApplicationStatusUpdatesReport(outputStream: OutputStream) {
-    val reportData = applicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows().map { row ->
+    val reportData = applicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows(Cas2ServiceOrigin.HDC.name).map { row ->
       ApplicationStatusUpdatesReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
@@ -71,14 +73,13 @@ class Cas2ReportsService(
   }
 
   fun createUnsubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = unsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows().map { row ->
+    val reportData = unsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows(Cas2ServiceOrigin.HDC.name).map { row ->
       UnsubmittedApplicationsReportRow(
         applicationId = row.getApplicationId(),
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
         startedBy = row.getStartedBy(),
         startedAt = row.getStartedAt(),
-        applicationOrigin = row.getApplicationOrigin(),
       )
     }
 

@@ -14,7 +14,7 @@ jobs:
       upload-build-artifacts: true
       build-artifact-name: 'build-results'
       upload-test-artifacts: false
-      java-version: "21"
+      java-version: "25"
     permissions:
       contents: read
       actions: read
@@ -28,6 +28,7 @@ jobs:
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/security_veracode_policy_scan.yml@v2 # WORKFLOW_VERSION
     with:
       channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
+      java_version: "25"
       veracode_package_artifact_name: 'build-results'
       veracode_artifact_name: 'approved-premises-api-veracode.jar'
     secrets: inherit
