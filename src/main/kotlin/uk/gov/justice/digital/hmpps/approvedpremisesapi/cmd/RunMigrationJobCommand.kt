@@ -10,7 +10,7 @@ object RunMigrationJobCommand {
       exitProcess(1)
     }
 
-    InvokeAdminJobEndpoint.invokeEndpoint(
+    AdminJobClient.invokeEndpoint(
       "migration-job",
       mapOf(
         "jobType" to args[0],

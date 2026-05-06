@@ -10,7 +10,7 @@ object RunSeedJobCommand {
       exitProcess(1)
     }
 
-    InvokeAdminJobEndpoint.invokeEndpoint(
+    AdminJobClient.invokeEndpoint(
       "seed",
       mapOf(
         "seedType" to args[0],

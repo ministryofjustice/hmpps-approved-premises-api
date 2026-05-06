@@ -19,7 +19,7 @@ cd "$(dirname "$0")"
 script_dir="$(pwd)"
 . "$script_dir"/invoke_admin_command
 
-invoke_admin_command "uk.gov.justice.digital.hmpps.approvedpremisesapi.cmd.RunSeedFromExcelJobCommand $1 $2"
+invoke_admin_command uk.gov.justice.digital.hmpps.approvedpremisesapi.cmd.RunSeedFromExcelJobCommand "$1" "$2"
 
 echo "Requested job - check the application logs for processing status"
 
