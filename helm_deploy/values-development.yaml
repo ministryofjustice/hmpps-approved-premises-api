@@ -11,12 +11,12 @@ generic-service:
 
   resources:
     limits:
-      memory: 1.5Gi
+      memory: 2Gi
     requests:
-      memory: 1Gi
+      memory: 1.5Gi
 
   env:
-    JAVA_TOOL_OPTIONS: "-Xmx400m"
+    JAVA_TOOL_OPTIONS: "-Xmx800m"
     SPRING_PROFILES_ACTIVE: dev
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
     HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
