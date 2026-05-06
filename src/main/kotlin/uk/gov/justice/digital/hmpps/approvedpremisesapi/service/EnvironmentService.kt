@@ -13,7 +13,7 @@ class EnvironmentService(
 
   @PostConstruct
   fun logProfiles() {
-    log.info("Active profiles are ${environment.activeProfiles}")
+    log.info("Active profiles are ${environment.activeProfiles.toList()}")
   }
 
   fun isLocalDev() = profileActive("localdev")
