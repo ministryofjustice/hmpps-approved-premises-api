@@ -58,7 +58,7 @@ interface Cas2SubmittedApplicationReportRow {
   fun getSubmittedAt(): String
   fun getPersonNoms(): String
   fun getPersonCrn(): String
-  fun getReferringPrisonCode(): String
+  fun getReferringPrisonCode(): String?
   fun getPreferredAreas(): String?
   fun getHdcEligibilityDate(): LocalDate?
   fun getConditionalReleaseDate(): LocalDate?
