@@ -9,7 +9,7 @@ import java.time.Duration
 import kotlin.system.exitProcess
 
 @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught")
-object InvokeAdminJobEndpoint {
+object AdminJobClient {
 
   fun invokeEndpoint(
     path: String,

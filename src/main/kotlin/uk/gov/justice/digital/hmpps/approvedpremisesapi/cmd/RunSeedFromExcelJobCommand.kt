@@ -10,7 +10,7 @@ object RunSeedFromExcelJobCommand {
       exitProcess(1)
     }
 
-    InvokeAdminJobEndpoint.invokeEndpoint(
+    AdminJobClient.invokeEndpoint(
       "seedFromExcel/file",
       mapOf(
         "seedType" to args[0],
