@@ -12,8 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -44,7 +42,6 @@ class Cas1PlacementRequestService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val bookingNotMadeRepository: BookingNotMadeRepository,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
-  private val cancellationRepository: CancellationRepository,
   private val userAccessService: Cas1UserAccessService,
   @Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
@@ -109,21 +106,6 @@ class Cas1PlacementRequestService(
     }
 
     return CasResult.Success(placementRequest)
-  }
-
-  @Deprecated("Use getPlacementRequest instead")
-  fun getPlacementRequestForUser(
-    user: UserEntity,
-    id: UUID,
-  ): CasResult<PlacementRequestAndCancellations> {
-    val placementRequest = placementRequestRepository.findByIdOrNull(id)
-      ?: return CasResult.NotFound("PlacementRequest", id.toString())
-
-    if (!offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LaoStrategy())) {
-      return CasResult.Unauthorised()
-    }
-
-    return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
   fun createPlacementRequestsFromPlacementApplication(
@@ -232,7 +214,7 @@ class Cas1PlacementRequestService(
     placementRequestId: UUID,
     userProvidedReason: PlacementRequestWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
-  ): CasResult<PlacementRequestAndCancellations> {
+  ): CasResult<PlacementRequestEntity> {
     /*Load with a pessimistic write lock to guarantee we work on the latest state and to block
       concurrent updates. This prevents stale managed instances (loaded earlier when building
       the withdrawable tree) from triggering optimistic locking failures.
@@ -241,7 +223,7 @@ class Cas1PlacementRequestService(
       ?: return CasResult.NotFound("PlacementRequest", placementRequestId.toString())
 
     if (placementRequest.isWithdrawn) {
-      return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
+      return CasResult.Success(placementRequest)
     }
 
     placementRequest.isWithdrawn = true
@@ -262,7 +244,7 @@ class Cas1PlacementRequestService(
     cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest, withdrawalContext.withdrawalTriggeredBy)
     cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
 
-    return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
+    return CasResult.Success(placementRequest)
   }
 
   /**
@@ -301,11 +283,6 @@ class Cas1PlacementRequestService(
     }
   }
 
-  private fun toPlacementRequestAndCancellations(placementRequest: PlacementRequestEntity): PlacementRequestAndCancellations {
-    val cancellations = cancellationRepository.getCancellationsForApplicationId(placementRequest.application.id)
-    return PlacementRequestAndCancellations(placementRequest, cancellations)
-  }
-
   data class AllActiveSearchCriteria(
     val status: PlacementRequestStatus? = null,
     val crnOrName: String? = null,
@@ -314,11 +291,5 @@ class Cas1PlacementRequestService(
     val arrivalDateEnd: LocalDate? = null,
     val requestType: PlacementRequestRequestType? = null,
     val cruManagementAreaId: UUID? = null,
-  )
-
-  data class PlacementRequestAndCancellations(
-    val placementRequest: PlacementRequestEntity,
-    @Deprecated("This is not currently used by the UI and does not cater for SpaceBooking cancellations")
-    val cancellations: List<CancellationEntity>,
   )
 }

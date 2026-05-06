@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason.ArrivalRecordedInCas1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
@@ -157,7 +158,7 @@ class Cas1WithdrawableTreeOperationsTest {
 
     every {
       mockPlacementRequestService.withdrawPlacementRequest(any(), any(), any())
-    } returns CasResult.Success(mockk<Cas1PlacementRequestService.PlacementRequestAndCancellations>())
+    } returns CasResult.Success(mockk<PlacementRequestEntity>())
 
     every {
       mockCas1SpaceBookingService.withdraw(any(), any(), any(), any(), any(), any())
@@ -304,7 +305,7 @@ class Cas1WithdrawableTreeOperationsTest {
 
     every {
       mockPlacementRequestService.withdrawPlacementRequest(any(), any(), any())
-    } returns CasResult.Success(mockk<Cas1PlacementRequestService.PlacementRequestAndCancellations>())
+    } returns CasResult.Success(mockk<PlacementRequestEntity>())
 
     service.withdrawDescendantsOfRootNode(tree, context)
 
