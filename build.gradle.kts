@@ -37,7 +37,14 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.10")
   implementation("org.javers:javers-core:7.11.0")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+  // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
+  // generated schema, making it incompatible with the typescript generators and in some
+  // places it was incorrect. We're pinning version 3.0.2 until a new version is available
+  // reverting this change, as proposed by https://github.com/springdoc/springdoc-openapi/pull/3276
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
+  // this is a transitive dependency of uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-autoconfigure
+  // so we need to force a different version
+  implementation("org.springdoc:springdoc-openapi-starter-common:3.0.2")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -50,11 +57,6 @@ dependencies {
   implementation(kotlin("reflect"))
 
   implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.10.0")
-
-  // as advised by https://github.com/ministryofjustice/hmpps-gradle-spring-boot/blob/main/release-notes/10.x.md#1021
-  constraints {
-    implementation("org.webjars:swagger-ui:5.32.2")
-  }
 
   implementation("org.jetbrains.kotlinx:dataframe:0.15.0") {
     exclude(group = "org.jetbrains.kotlinx", module = "dataframe-openapi")
