@@ -421,12 +421,7 @@ class Cas1WithdrawableServiceTest {
 
       every {
         placementRequestService.withdrawPlacementRequest(any(), any(), any())
-      } returns CasResult.Success(
-        Cas1PlacementRequestService.PlacementRequestAndCancellations(
-          placementRequest,
-          emptyList(),
-        ),
-      )
+      } returns CasResult.Success(placementRequest)
 
       val context = WithdrawalContext(WithdrawalTriggeredByUser(user), WithdrawableEntityType.PlacementRequest, placementRequest.id)
 

@@ -94,7 +94,7 @@ class Cas1WithdrawableService(
     placementRequestId: UUID,
     user: UserEntity,
     userProvidedReason: PlacementRequestWithdrawalReason?,
-  ): CasResult<Cas1PlacementRequestService.PlacementRequestAndCancellations> {
+  ): CasResult<PlacementRequestEntity> {
     val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)
       ?: return CasResult.NotFound(entityType = "PlacementRequest", id = placementRequestId.toString())
 
