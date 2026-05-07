@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.util.UUID
 
+@Deprecated("See deprecations-bookings.md")
 @Service
 class BookingService(
   private val offenderDetailService: OffenderDetailService,

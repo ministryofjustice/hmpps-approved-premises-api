@@ -9,6 +9,7 @@ import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 
+@Deprecated("See deprecations-bookings.md")
 @Entity
 @Table(name = "departures")
 data class DepartureEntity(
