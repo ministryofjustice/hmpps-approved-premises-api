@@ -31,6 +31,10 @@ inline fun <EntityType> validated(scope: ValidatedScope<EntityType>.() -> Valida
 class CasResultValidatedScope<EntityType> {
   val validationErrors = ValidationErrors()
 
+  companion object {
+    const val NDELIUS_MAX_POSTCODE_LENGTH = 8
+  }
+
   fun hasErrors() = validationErrors.any()
   fun errors() = fieldValidationError
 

@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope.Companion.NDELIUS_MAX_POSTCODE_LENGTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.LocalDate
@@ -97,6 +98,8 @@ class Cas3v2PremisesService(
     val probationDeliveryUnit =
       probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
 
+    val trimmedPostcode = postcode.trim()
+
     validatePremises(
       probationDeliveryUnit?.probationRegion,
       localAuthorityAreaId,
@@ -104,7 +107,7 @@ class Cas3v2PremisesService(
       probationDeliveryUnit,
       reference,
       addressLine1,
-      postcode,
+      trimmedPostcode,
       turnaroundWorkingDays,
     ) {
       isUniqueName(reference = reference, probationDeliveryUnitId = probationDeliveryUnitId)
@@ -122,7 +125,7 @@ class Cas3v2PremisesService(
       addressLine1 = addressLine1,
       addressLine2 = addressLine2,
       town = town,
-      postcode = postcode,
+      postcode = trimmedPostcode,
       localAuthorityArea = localAuthorityArea,
       notes = notes.orEmpty(),
       status = Cas3PremisesStatus.online,
@@ -161,6 +164,8 @@ class Cas3v2PremisesService(
     val probationDeliveryUnit =
       probationDeliveryUnitRepository.findByIdAndProbationRegionId(probationDeliveryUnitId, probationRegionId)
 
+    val trimmedPostcode = postcode.trim()
+
     validatePremises(
       probationDeliveryUnit?.probationRegion,
       localAuthorityAreaId,
@@ -168,7 +173,7 @@ class Cas3v2PremisesService(
       probationDeliveryUnit,
       reference,
       addressLine1,
-      postcode,
+      trimmedPostcode,
       turnaroundWorkingDays,
     ) {
       isUniqueName(reference = reference, probationDeliveryUnitId = probationDeliveryUnitId, premisesId = premisesId)
@@ -185,7 +190,7 @@ class Cas3v2PremisesService(
         premises.addressLine1 = addressLine1
         premises.addressLine2 = addressLine2
         premises.town = town
-        premises.postcode = postcode
+        premises.postcode = trimmedPostcode
         premises.localAuthorityArea = localAuthorityArea
         premises.characteristics = validatedPremisesCharacteristics.toMutableList()
         premises.notes = notes.orEmpty()
@@ -296,6 +301,10 @@ fun <T> CasResultValidatedScope<T>.validatePremises(
 
   if (postcode.isEmpty()) {
     "$.postcode" hasValidationError "empty"
+  }
+
+  if (postcode.length > NDELIUS_MAX_POSTCODE_LENGTH) {
+    "$.postcode" hasValidationError "isNot8OrLessCharacters"
   }
 
   if (turnaroundWorkingDays != null && turnaroundWorkingDays < 0) {
