@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Deprecated("See deprecations-bookings.md")
 class DepartureEntityFactory : Factory<DepartureEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var dateTime: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeAfter(14) }

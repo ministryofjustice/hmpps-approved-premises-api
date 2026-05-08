@@ -26,6 +26,7 @@ interface CancellationRepository : JpaRepository<CancellationEntity, UUID> {
   fun getCancellationsForApplicationId(applicationId: UUID): List<CancellationEntity>
 }
 
+@Deprecated("See deprecations-bookings.md")
 @Entity
 @Table(name = "cancellations")
 data class CancellationEntity(

@@ -11,9 +11,11 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Deprecated("See deprecations-bookings.md")
 @Repository
 interface DateChangeRepository : JpaRepository<DateChangeEntity, UUID>
 
+@Deprecated("See deprecations-bookings.md")
 @Entity
 @Table(name = "date_changes")
 data class DateChangeEntity(
