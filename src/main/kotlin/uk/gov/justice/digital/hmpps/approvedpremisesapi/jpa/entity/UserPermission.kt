@@ -3,7 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 
-enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?, val experimental: Boolean = false) {
+enum class UserPermission(
+  val cas1ApiValue: ApprovedPremisesUserPermission?,
+  /**
+   * If a permission is experimental it will not be available in prod
+   * i.e. when listing user permissions it will not be included
+   */
+  val experimental: Boolean = false,
+) {
   /**
    * If the user can be allocated and assess an appealed application
    * If given this role the user must also have CAS1_ASSESS_APPLICATION
