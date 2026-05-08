@@ -156,7 +156,7 @@ class Cas3v2DomainEventBuilderTest {
     val notes = "Some notes about the arrival"
 
     val probationRegion = probationRegionEntity()
-    val premises = cas3PremisesEntity(probationRegion)
+    val premises = cas3PremisesEntity(probationRegion, postcode = "dk8 4ag ")
     val user = userEntity(probationRegion)
     val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
@@ -178,7 +178,7 @@ class Cas3v2DomainEventBuilderTest {
       assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/${premises.id}/bookings/${booking.id}")
       assertThat(data.premises.addressLine1).isEqualTo(premises.addressLine1)
       assertThat(data.premises.addressLine2).isEqualTo(premises.addressLine2)
-      assertThat(data.premises.postcode).isEqualTo(premises.postcode)
+      assertThat(data.premises.postcode).isEqualTo("DK8 4AG")
       assertThat(data.premises.town).isEqualTo(premises.town)
       assertThat(data.premises.region).isEqualTo(premises.probationDeliveryUnit.probationRegion.name)
       assertThat(data.arrivedAt).isEqualTo(arrivalDateTime)
@@ -237,7 +237,7 @@ class Cas3v2DomainEventBuilderTest {
     val moveOnCategoryLabel = "RTC"
 
     val probationRegion = probationRegionEntity()
-    val premises = cas3PremisesEntity(probationRegion)
+    val premises = cas3PremisesEntity(probationRegion, postcode = "dk8 4ag ")
     val user = userEntity(probationRegion)
     val application = temporaryAccommodationApplicationEntity(user, probationRegion)
     val booking = cas3BookingEntity(premises, application)
@@ -261,7 +261,7 @@ class Cas3v2DomainEventBuilderTest {
       assertThat(data.bookingUrl.toString()).isEqualTo("http://api/premises/${premises.id}/bookings/${booking.id}")
       assertThat(data.premises.addressLine1).isEqualTo(premises.addressLine1)
       assertThat(data.premises.addressLine2).isEqualTo(premises.addressLine2)
-      assertThat(data.premises.postcode).isEqualTo(premises.postcode)
+      assertThat(data.premises.postcode).isEqualTo("DK8 4AG")
       assertThat(data.premises.town).isEqualTo(premises.town)
       assertThat(data.premises.region).isEqualTo(premises.probationDeliveryUnit.probationRegion.name)
       assertThat(data.departedAt).isEqualTo(departureDateTime.toInstant())
@@ -552,13 +552,14 @@ class Cas3v2DomainEventBuilderTest {
     .withProbationRegion(probationRegion)
     .produce()
 
-  private fun cas3PremisesEntity(probationRegion: ProbationRegionEntity) = Cas3PremisesEntityFactory()
+  private fun cas3PremisesEntity(probationRegion: ProbationRegionEntity, postcode: String? = null) = Cas3PremisesEntityFactory()
     .withProbationDeliveryUnit(
       ProbationDeliveryUnitEntityFactory()
         .withProbationRegion(probationRegion)
         .produce(),
     )
     .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
+    .apply { if (postcode != null) withPostcode(postcode) }
     .produce()
 
   private fun probationRegionEntity() = ProbationRegionEntityFactory()
