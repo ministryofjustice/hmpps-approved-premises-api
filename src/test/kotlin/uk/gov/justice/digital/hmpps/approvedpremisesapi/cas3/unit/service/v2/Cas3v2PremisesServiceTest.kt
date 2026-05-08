@@ -137,7 +137,7 @@ class Cas3v2PremisesServiceTest {
         addressLine1 = "asd1",
         addressLine2 = "asd2",
         town = "asd3",
-        postcode = "asd4",
+        postcode = " asd4bdh6 ",
         localAuthorityAreaId = laa.id,
         probationRegionId = pdu.probationRegion.id,
         probationDeliveryUnitId = pdu.id,
@@ -153,7 +153,7 @@ class Cas3v2PremisesServiceTest {
         assertThat(capturedPremises.addressLine1).isEqualTo("asd1")
         assertThat(capturedPremises.addressLine2).isEqualTo("asd2")
         assertThat(capturedPremises.town).isEqualTo("asd3")
-        assertThat(capturedPremises.postcode).isEqualTo("asd4")
+        assertThat(capturedPremises.postcode).isEqualTo("asd4bdh6")
         assertThat(capturedPremises.localAuthorityArea).isEqualTo(laa)
         assertThat(capturedPremises.notes).isEqualTo("some new notes")
         assertThat(capturedPremises.status).isEqualTo(Cas3PremisesStatus.online)
@@ -247,6 +247,28 @@ class Cas3v2PremisesServiceTest {
 
       assertThatCasResult(result).isFieldValidationError()
         .hasMessage("$.reference", "notUnique")
+        .withNumberOfMessages(1)
+    }
+
+    @Test
+    fun `has validation error when post code is greater than 8 characters`() {
+      val result = cas3v2PremisesService.updatePremises(
+        premisesId = premises.id,
+        reference = premises.name,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = " abcde1234 ",
+        localAuthorityAreaId = laa.id,
+        probationRegionId = pdu.probationRegion.id,
+        probationDeliveryUnitId = pdu.id,
+        characteristicIds = listOf(cas3PremisesCharacteristic.id),
+        notes = null,
+        turnaroundWorkingDays = 2,
+      )
+
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.postcode", "isNot8OrLessCharacters")
         .withNumberOfMessages(1)
     }
 
@@ -351,6 +373,42 @@ class Cas3v2PremisesServiceTest {
     }
 
     @Test
+    fun `has validation error when post code is greater than 8 characters`() {
+      val laa = LocalAuthorityEntityFactory().produce()
+      val pdu = ProbationDeliveryUnitEntityFactory().withDefaults().produce()
+      val cas3PremisesCharacteristic = Cas3PremisesCharacteristicEntityFactory().produce()
+
+      val premisesName = "newName"
+
+      every { localAuthorityAreaRepository.findByIdOrNull(laa.id) } returns laa
+      every { probationDeliveryUnitRepository.findByIdAndProbationRegionId(pdu.id, pdu.probationRegion.id) } returns pdu
+      every {
+        cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(premisesName, pdu.id)
+      } returns false
+      every { cas3PremisesCharacteristicRepository.findActiveCharacteristicsByIdIn(listOf(cas3PremisesCharacteristic.id)) } returns mutableListOf(cas3PremisesCharacteristic)
+
+      val result = cas3v2PremisesService.createNewPremises(
+        reference = premisesName,
+        addressLine1 = "asd1",
+        addressLine2 = "asd2",
+        town = "asd3",
+        postcode = " asd4bte56 ",
+        localAuthorityAreaId = laa.id,
+        probationRegionId = pdu.probationRegion.id,
+        probationDeliveryUnitId = pdu.id,
+        characteristicIds = listOf(cas3PremisesCharacteristic.id),
+        notes = "some new notes",
+        turnaroundWorkingDays = 9,
+      )
+
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.postcode", "isNot8OrLessCharacters")
+        .withNumberOfMessages(1)
+
+      verify(exactly = 1) { cas3PremisesRepository.existsByNameIgnoreCaseAndProbationDeliveryUnitId(premisesName, pdu.id) }
+    }
+
+    @Test
     fun `returns CasResult-Success when validation is passed`() {
       val laa = LocalAuthorityEntityFactory().produce()
       val pdu = ProbationDeliveryUnitEntityFactory().withDefaults().produce()
@@ -375,7 +433,7 @@ class Cas3v2PremisesServiceTest {
         addressLine1 = "asd1",
         addressLine2 = "asd2",
         town = "asd3",
-        postcode = "asd4",
+        postcode = " asd4 ",
         localAuthorityAreaId = laa.id,
         probationRegionId = pdu.probationRegion.id,
         probationDeliveryUnitId = pdu.id,
