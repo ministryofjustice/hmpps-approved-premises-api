@@ -93,15 +93,22 @@ do
                 if [[ $type == '"array"' ]]
                 then
                   ref=$( echo $contentJson | jq -c '."application/json".schema.items."$ref"' )
-                  [[ $ref =~ ^.*\/([0-9,a-z,A-Z]+)\"$ ]]
-                  response="array of ${BASH_REMATCH[1]}"
+                  if [[ $ref =~ ^.*\/([0-9,a-z,A-Z]+)\"$ ]]; then
+                    response="array of ${BASH_REMATCH[1]}"
+                  else
+                    response=""
+                  fi
                 else
                   response=$strippedType
                 fi
               else
                 ref=$( echo $contentJson | jq -c '."application/json".schema."$ref"' )
-                [[ $ref =~ ^.*\/([0-9,a-z,A-Z]+)\"$ ]]
-                response="${BASH_REMATCH[1]}"
+
+                if [[ $ref =~ ^.*\/([A-Za-z0-9]+)\"$ ]]; then
+                  response=${BASH_REMATCH[1]}
+                else
+                  response=""
+                fi
               fi
             else
               response=$applicationType
@@ -180,4 +187,4 @@ do
   done
 done
 rm $apis_json_file
-echo "done"
+echo "done. results are in $output_file"
