@@ -89,14 +89,18 @@ class Cas3v2PremisesServiceTest {
 
     @Test
     fun `returns CasResult-Success when user can access premises`() {
-      val premises = Cas3PremisesEntityFactory().withDefaults().produce()
+      val premises = Cas3PremisesEntityFactory().withDefaults().withPostcode("DY7 9EY ").produce()
       every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
       every { cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id) } returns true
 
       val result = cas3v2PremisesService.getValidatedPremises(premises.id)
 
       assertThatCasResult(result).isSuccess().with {
-        assertThat(it).isEqualTo(premises)
+        assertThat(it)
+          .usingRecursiveComparison()
+          .ignoringFields("postcode")
+          .isEqualTo(premises)
+        assertThat(it.postcode).isEqualTo("DY7 9EY")
       }
     }
   }
