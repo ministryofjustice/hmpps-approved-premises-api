@@ -170,6 +170,7 @@ class Cas2v2StatusUpdateService(
         ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_STATUS_UPDATED_COURT_BAIL
         ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_STATUS_UPDATED_PRISON_BAIL
         ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_APPLICATION_STATUS_UPDATED
+        ApplicationOrigin.other -> throw NotImplementedError("Support for 'other' application origin is not yet implemented")
       }
 
       emailNotificationService.sendCas2Email(

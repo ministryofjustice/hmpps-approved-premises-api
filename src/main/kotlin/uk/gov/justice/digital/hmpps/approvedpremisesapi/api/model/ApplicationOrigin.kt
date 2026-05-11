@@ -9,6 +9,7 @@ enum class ApplicationOrigin(@get:JsonValue val value: kotlin.String) {
   courtBail("courtBail"),
   prisonBail("prisonBail"),
   homeDetentionCurfew("homeDetentionCurfew"),
+  other("other"),
   ;
 
   companion object {

@@ -383,6 +383,7 @@ class Cas2v2ApplicationService(
     val templateId = when (applicationOrigin) {
       ApplicationOrigin.courtBail.toString() -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_SUBMITTED_COURT_BAIL
       ApplicationOrigin.prisonBail.toString() -> Cas2NotifyTemplates.CAS2_V2_APPLICATION_SUBMITTED_PRISON_BAIL
+      ApplicationOrigin.other.toString() -> throw NotImplementedError("Support for 'other' application origin is not yet implemented")
       else -> Cas2NotifyTemplates.CAS2_APPLICATION_SUBMITTED
     }
 

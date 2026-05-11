@@ -74,16 +74,13 @@ class Cas2v2ApplicationsTransformer(
     nomsNumber = jpaSummary.nomsNumber,
     personName = personName,
     prisonCode = jpaSummary.prisonCode,
-    applicationOrigin = when (jpaSummary.applicationOrigin) {
-      "courtBail" -> ApplicationOrigin.courtBail
-      "prisonBail" -> ApplicationOrigin.prisonBail
-      else -> ApplicationOrigin.homeDetentionCurfew
-    },
+    applicationOrigin = jpaSummary.applicationOrigin?.let { ApplicationOrigin.forValue(it) } ?: ApplicationOrigin.homeDetentionCurfew,
   )
 
   fun applicationOriginFromText(applicationOrigin: String): ApplicationOrigin = when (applicationOrigin) {
     "courtBail" -> ApplicationOrigin.courtBail
     "prisonBail" -> ApplicationOrigin.prisonBail
+    "other" -> throw NotImplementedError("Support for 'other' application origin is not yet implemented")
     else -> ApplicationOrigin.homeDetentionCurfew
   }
 
