@@ -1,7 +1,8 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar
 
 import com.fasterxml.jackson.annotation.JsonProperty
-
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.DomainEventMetadata
 
 data class Cas1SarData(
   @JsonProperty("Applications") val applications: List<Cas1Application>? = null,

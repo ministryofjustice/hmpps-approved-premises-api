@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

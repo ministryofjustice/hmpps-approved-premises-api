@@ -73,6 +73,8 @@ dependencies {
   testImplementation("io.mockk:mockk:1.14.9")
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.1")
 
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.1.4")
+
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.2.0")
 
   testImplementation("com.ninja-squad:springmockk:5.0.1")

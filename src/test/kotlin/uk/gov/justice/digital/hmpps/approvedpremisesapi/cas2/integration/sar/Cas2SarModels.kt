@@ -1,6 +1,8 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.sar
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.DomainEventMetadata
 
 // --- CAS2 (Short Term Accommodation) & CAS2v2 (Bail Accommodation) ---
 
