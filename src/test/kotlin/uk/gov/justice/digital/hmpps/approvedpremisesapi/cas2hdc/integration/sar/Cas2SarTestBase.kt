@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
@@ -73,24 +74,31 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
   """.trimIndent()
 
   protected fun cas2ApplicationsJson(application: Cas2ApplicationEntity): String = """
-    {
-      "crn": "${application.crn}",
-      "noms_number": "${application.nomsNumber}",
-      "document": ${application.document},
-      "data": ${application.data},
-      "created_by_user": "${application.createdByUser.name}",
-      "created_at": "$CREATED_AT",
-      "submitted_at": "$SUBMITTED_AT",
-      "referring_prison_code": "${application.referringPrisonCode}",
-      "preferred_areas": "${application.preferredAreas}",
-      "telephone_number": "${application.telephoneNumber}",
-      "hdc_eligibility_date": "$arrivedAtDateOnly",
-      "conditional_release_date": "$arrivedAtDateOnly",
-      "abandoned_at": null,
-      "application_origin": "${application.applicationOrigin}",
-      "service_origin": "${application.serviceOrigin}",
-      "bail_hearing_date": ${if (application.serviceOrigin == Cas2ServiceOrigin.BAIL) "\"${application.bailHearingDate}\"" else "null"},
+{
+  "crn": "${application.crn}",
+  "noms_number": "${application.nomsNumber}",
+  "document": ${application.document},
+  "data": ${application.data},
+  "created_by_user": "${application.createdByUser.name}",
+  "created_at": "$CREATED_AT",
+  "submitted_at": "$SUBMITTED_AT",
+  "referring_prison_code": "${application.referringPrisonCode}",
+  "preferred_areas": "${application.preferredAreas}",
+  "telephone_number": "${application.telephoneNumber}",
+  "hdc_eligibility_date": "$arrivedAtDateOnly",
+  "conditional_release_date": "$arrivedAtDateOnly",
+  "abandoned_at": null,
+  "application_origin": "${application.applicationOrigin}",
+  "service_origin": "${application.serviceOrigin}",
+  "bail_hearing_date": ${if (application.serviceOrigin == Cas2ServiceOrigin.BAIL) "\"${application.bailHearingDate}\"" else "null"}
+  ${
+    if (application.serviceOrigin == Cas2ServiceOrigin.BAIL) {
+      ",\n  \"cohort_long_display_name\": ${application.cohort?.longDisplayName?.let { "\"$it\"" } ?: "null"}"
+    } else {
+      ""
     }
+  }
+}
   """.trimIndent()
 
   protected fun cas2ApplicationNoteEntity(
@@ -147,6 +155,7 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
     telephoneNumber: String = randomStringMultiCaseWithNumbers(7),
     data: String = DATA_JSON_SIMPLE,
     document: String = DOCUMENT_JSON_SIMPLE,
+    cohort: Cas2Cohort? = null,
   ) = cas2ApplicationEntityFactory.produceAndPersist {
     withCrn(offenderDetails.otherIds.crn)
     withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
@@ -161,6 +170,7 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
     withHdcEligibilityDate(LocalDate.parse(arrivedAtDateOnly))
     if (serviceOrigin == Cas2ServiceOrigin.BAIL) {
       withBailHearingDate(LocalDate.parse(arrivedAtDateOnly))
+      withCohort(cohort)
     }
     withPreferredAreas("some areas")
     withServiceOrigin(serviceOrigin)

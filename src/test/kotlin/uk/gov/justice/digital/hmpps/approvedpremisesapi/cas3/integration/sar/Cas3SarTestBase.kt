@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -21,30 +19,6 @@ open class Cas3SarTestBase : SubjectAccessRequestServiceTestBase() {
     val CAS3_APPLICATION_DATA by lazy { readResource("$CAS3_DATA_PATH/application_data.json") }
     val CAS3_APPLICATION_DOCUMENT by lazy { readResource("$CAS3_DATA_PATH/application_document.json") }
   }
-
-  protected fun assessmentReferralHistoryNotesJson(
-    assessmentReferralHistoryNoteSystem: AssessmentReferralHistorySystemNoteEntity,
-    assessmentReferralHistoryNoteUser: AssessmentReferralHistoryUserNoteEntity,
-  ) = """
-    {
-      "crn": "${assessmentReferralHistoryNoteSystem.assessment.application.crn}",
-      "noms_number": "${assessmentReferralHistoryNoteSystem.assessment.application.nomsNumber}",
-      "message": "${assessmentReferralHistoryNoteSystem.message}",
-      "created_at": "$CREATED_AT",
-      "created_by_user": "${assessmentReferralHistoryNoteSystem.createdByUser.name}",
-      "note_type":  "System",
-      "system_note_type": "${assessmentReferralHistoryNoteSystem.type}"
-    },
-    { 
-      "crn": "${assessmentReferralHistoryNoteUser.assessment.application.crn}",
-      "noms_number": "${assessmentReferralHistoryNoteUser.assessment.application.nomsNumber}",
-      "message": "${assessmentReferralHistoryNoteUser.message}",
-      "created_at": "$CREATED_AT",
-      "created_by_user": "${assessmentReferralHistoryNoteUser.createdByUser.name}",
-      "note_type":  "User",
-      "system_note_type": null
-      }
-  """.trimIndent()
 
   protected fun assessmentReferralHistoryUserNoteEntity(
     temporaryAccomodationAssessment: TemporaryAccommodationAssessmentEntity,
@@ -66,71 +40,6 @@ open class Cas3SarTestBase : SubjectAccessRequestServiceTestBase() {
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withCreatedBy(user)
   }
-
-  protected fun temporaryAccommodationAssessmentJson(
-    assessment: TemporaryAccommodationAssessmentEntity,
-  ): String =
-    """
-      {
-         "crn": "${assessment.application.crn}",
-         "noms_number": "${assessment.application.nomsNumber}",
-         "assessor_name": "${assessment.allocatedToUser?.name}",
-         "data": $DATA_JSON_SIMPLE,
-         "document": $DOCUMENT_JSON_SIMPLE,
-         "created_at": "$CREATED_AT",
-         "allocated_at": "$ALLOCATED_AT",
-         "submitted_at": "$SUBMITTED_AT",
-         "reallocated_at": null,
-         "due_at": "$DUE_AT",
-         "decision": "${AssessmentDecision.REJECTED}",
-         "rejection_rationale": "${assessment.rejectionRationale}",
-         "is_withdrawn": ${assessment.isWithdrawn},
-         "summary_data": $DATA_JSON_SIMPLE,
-         "completed_at": "$SUBMITTED_AT",
-         "referral_rejection_reason_category": "${assessment.referralRejectionReason?.name}",
-         "referral_rejection_reason_detail": "${assessment.referralRejectionReasonDetail}",
-         "release_date": "$arrivedAtDateOnly",
-         "accommodation_required_from_date": "$arrivedAtDateOnly"      
-      }
-    """.trimIndent()
-
-  protected fun temporaryAccommodationApplicationJson(
-    temporaryAccommodationApplication: TemporaryAccommodationApplicationEntity,
-  ): String =
-    """
-    {
-        "crn": "${temporaryAccommodationApplication.crn}",
-        "noms_number": "${temporaryAccommodationApplication.nomsNumber}",
-        "offender_name": "${temporaryAccommodationApplication.name}",
-        "document": ${temporaryAccommodationApplication.document},
-        "data": ${temporaryAccommodationApplication.data},
-        "created_at": "$CREATED_AT",
-        "submitted_at": "$SUBMITTED_AT",
-        "applications_user_name": "${temporaryAccommodationApplication.createdByUser.name}",
-        "conviction_id": ${temporaryAccommodationApplication.convictionId},
-        "event_number": "${temporaryAccommodationApplication.eventNumber}",
-        "offence_id": "${temporaryAccommodationApplication.offenceId}",
-        "probation_region": "${temporaryAccommodationApplication.probationRegion.name}",
-        "risk_ratings":${risksJson()},
-        "arrival_date": "$ARRIVED_AT",
-        "is_duty_to_refer_submitted": ${temporaryAccommodationApplication.isDutyToReferSubmitted},
-        "duty_to_refer_submission_date": "$submittedAtDateOnly",
-        "duty_to_refer_outcome": null,
-        "duty_to_refer_local_authority_area_name": "${temporaryAccommodationApplication.dutyToReferLocalAuthorityAreaName}",
-        "is_eligible": ${temporaryAccommodationApplication.isEligible},
-        "eligibility_reason": "${temporaryAccommodationApplication.eligibilityReason}",
-        "prison_name_on_creation": "${temporaryAccommodationApplication.prisonNameOnCreation}",
-        "prison_release_types": "${temporaryAccommodationApplication.prisonReleaseTypes}",
-        "person_release_date": "$arrivedAtDateOnly",
-        "pdu": "${temporaryAccommodationApplication.probationDeliveryUnit?.name}",
-        "needs_accessible_property": ${temporaryAccommodationApplication.needsAccessibleProperty},
-        "has_history_of_arson": ${temporaryAccommodationApplication.hasHistoryOfArson},
-        "is_registered_sex_offender": ${temporaryAccommodationApplication.isRegisteredSexOffender},
-        "is_history_of_sexual_offence": ${temporaryAccommodationApplication.isHistoryOfSexualOffence},
-        "is_concerning_sexual_behaviour": ${temporaryAccommodationApplication.isConcerningSexualBehaviour},
-        "is_concerning_arson_behaviour": ${temporaryAccommodationApplication.isConcerningArsonBehaviour}
-    }
-    """.trimIndent()
 
   protected fun temporaryAccommodationAssessmentEntity(
     application: TemporaryAccommodationApplicationEntity,

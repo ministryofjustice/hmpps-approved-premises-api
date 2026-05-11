@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
@@ -12,27 +10,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -43,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelper
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -55,7 +41,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
 
   @Autowired
   lateinit var sarIntegrationTestHelper: SarIntegrationTestHelper
-  lateinit var premises: ApprovedPremisesEntity
   companion object {
     const val CREATED_AT = "2021-09-18T16:00:00+00:00"
     const val SUBMITTED_AT = "2021-10-19T16:00:00+00:00"
@@ -165,67 +150,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     withNewDepartureDate(LocalDate.parse(newDepartureDateOnly))
   }
 
-  @SuppressWarnings("LongParameterList")
-  protected fun spaceBookingEntity(
-    offenderDetails: OffenderDetailSummary,
-    application: ApprovedPremisesApplicationEntity? = null,
-    nonArrivalReason: NonArrivalReasonEntity? = null,
-    departureReason: DepartureReasonEntity? = null,
-    moveOnCategory: MoveOnCategoryEntity? = null,
-    cancellationReason: CancellationReasonEntity? = null,
-    offlineApplication: OfflineApplicationEntity? = null,
-    transferType: TransferType? = null,
-    additionalInformation: String? = null,
-    transferReason: TransferReason? = null,
-  ): Cas1SpaceBookingEntity {
-    val (user, _) = givenAUser()
-    val (placementRequest) = givenAPlacementRequest(
-      assessmentAllocatedTo = user,
-      createdByUser = user,
-    )
-    val spaceBooking =
-      cas1SpaceBookingEntityFactory.produceAndPersist {
-        withPlacementRequest(placementRequest)
-        withCrn(offenderDetails.otherIds.crn)
-        withPremises(premises)
-        withApplication(application)
-        withCanonicalArrivalDate(LocalDate.parse(arrivedAtDateOnly))
-        withCanonicalDepartureDate(LocalDate.parse(departedAtDateOnly))
-        withExpectedArrivalDate(LocalDate.parse(arrivedAtDateOnly))
-        withExpectedDepartureDate(LocalDate.parse(departedAtDateOnly))
-        withActualArrivalDate(LocalDate.parse(arrivedAtDateOnly))
-        withActualArrivalTime(LocalTime.parse(arrivedAtTime))
-        withActualDepartureDate(LocalDate.parse(departedAtDateOnly))
-        withActualDepartureTime(LocalTime.parse(departedAtTime))
-        withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-        withKeyworkerStaffCode("KEYWORKERSTAFFCODE")
-        withKeyworkerName("KEYWORKERNAME")
-        withKeyworkerAssignedAt(OffsetDateTime.parse(CREATED_AT).toInstant())
-        withCreatedBy(user)
-        withDeliusEventNumber("DELIUSEVENTNUMBER")
-        withNonArrivalConfirmedAt(OffsetDateTime.parse(CREATED_AT).toInstant())
-        withNonArrivalNotes("NONARRIVALNOTES")
-        withNonArrivalReason(nonArrivalReason)
-        withDepartureNotes("DEPARTURENOTES")
-        withDepartureReason(departureReason)
-        withMoveOnCategory(moveOnCategory)
-        withCancellationOccurredAt(LocalDate.parse(cancellationDateOnly))
-        withCancellationRecordedAt(OffsetDateTime.parse(CANCELLATION_DATE).toInstant())
-        withCancellationReason(cancellationReason)
-        withCancellationReasonNotes("CANCELLATIONREASONNOTES")
-        withCriteria(
-          mutableListOf(
-            cas1CharacteristicEntityFactory.produceAndPersist(),
-          ),
-        )
-        withOfflineApplication(offlineApplication)
-        withTransferType(transferType)
-        withAdditionalInformation(additionalInformation)
-        withTransferReason(transferReason)
-      }
-    return spaceBooking
-  }
-
   protected fun bookingEntity(
     offenderDetails: OffenderDetailSummary,
     application: ApplicationEntity,
@@ -311,7 +235,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
         "created_at": "$CREATED_AT",
         "data": ${domainEvent.data},
         "triggered_by_user": ${user?.let {"\"${it.name}\""} ?: "null"},
-        "noms_number": "${domainEvent.nomsNumber}",
+        "noms_number": "${domainEvent.nomsNumber}"
       }
     """.trimIndent()
 

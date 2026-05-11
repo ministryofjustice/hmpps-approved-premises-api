@@ -155,7 +155,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.bailHearingDate = { bailHearingDate }
   }
 
-  fun withCohort(cohort: Cas2Cohort) = apply {
+  fun withCohort(cohort: Cas2Cohort?) = apply {
     this.cohort = { cohort }
   }
 

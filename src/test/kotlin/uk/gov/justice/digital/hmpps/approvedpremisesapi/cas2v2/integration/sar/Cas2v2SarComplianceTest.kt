@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration.sar.Cas2SarTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -36,8 +37,8 @@ class Cas2v2SarComplianceTest : Cas2SarTestBase() {
 
     const val EXPECTED_API_RESPONSE_PATH = "/sar/cas2v2-expected-api-response.json"
     const val EXPECTED_REPORT_PATH = "/sar/cas2v2-expected-report.html"
-    const val GENERATED_API_RESPONSE_FILENAME = "cas2v2-sar-api-response.json.log"
-    const val GENERATED_REPORT_FILENAME = "cas2v2-sar-report.html.log"
+    const val GENERATED_API_RESPONSE_FILENAME = "sar/cas2v2-expected-api-response.json"
+    const val GENERATED_REPORT_FILENAME = "sar/cas2v2-expected-report.html"
   }
 
   private val asserter by lazy {
@@ -85,6 +86,7 @@ class Cas2v2SarComplianceTest : Cas2SarTestBase() {
       telephoneNumber = TEST_TELEPHONE_NUMBER,
       data = CAS2V2_APPLICATION_DATA,
       document = CAS2V2_APPLICATION_DOCUMENT,
+      cohort = Cas2Cohort.ATCR,
     )
     val assessment = cas2AssessmentEntity(
       application,

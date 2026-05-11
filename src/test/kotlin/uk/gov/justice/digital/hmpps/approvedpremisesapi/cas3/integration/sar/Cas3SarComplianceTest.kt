@@ -59,7 +59,6 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     assessmentReferralSystemNoteRepository.deleteAll()
     assessmentReferralUserNoteRepository.deleteAll()
     temporaryAccommodationAssessmentRepository.deleteAll()
-    bookingRepository.deleteAll()
     temporaryAccommodationApplicationRepository.deleteAll()
     domainEventRepository.deleteAll()
   }
@@ -109,7 +108,6 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
     val booking = bookingEntity(
       offenderDetails,
       temporaryAccommodationApplication,
-      ServiceName.temporaryAccommodation,
     )
     bookingExtensionEntity(booking)
     cancellationEntity(booking)

@@ -84,9 +84,8 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     bedRepository.deleteAll()
     roomRepository.deleteAll()
     approvedPremisesRepository.deleteAll()
-    characteristicRepository.deleteAll()
+    cas1CharacteristicRepository.deleteAll()
     nonArrivalReasonRepository.deleteAll()
-    departureReasonRepository.deleteAll()
     moveOnCategoryRepository.deleteAll()
     cancellationReasonRepository.deleteAll()
   }
