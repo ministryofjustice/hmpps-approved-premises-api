@@ -18,6 +18,7 @@ class CAS3SubjectAccessRequestRepository(
         select
              a.crn,
              a.noms_number,
+             a."data",
              taa."name" as offender_name,
              a."document",
              a.created_at,
