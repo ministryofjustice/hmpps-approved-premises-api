@@ -87,6 +87,7 @@ class Cas2v2ApplicationNoteService(
         ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_REFERRER_COURT_BAIL
         ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_REFERRER_PRISON_BAIL
         ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_REFERRER
+        ApplicationOrigin.other -> throw NotImplementedError("Support for 'other' application origin is not yet implemented")
       }
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = application.createdByUser.email!!,
@@ -117,6 +118,7 @@ class Cas2v2ApplicationNoteService(
       ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_COURT_BAIL
       ApplicationOrigin.prisonBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_PRISON_BAIL
       ApplicationOrigin.homeDetentionCurfew -> Cas2NotifyTemplates.CAS2_NOTE_ADDED_FOR_ASSESSOR
+      ApplicationOrigin.other -> throw NotImplementedError("Support for 'other' application origin is not yet implemented")
     }
 
     emailNotificationService.sendCas2Email(

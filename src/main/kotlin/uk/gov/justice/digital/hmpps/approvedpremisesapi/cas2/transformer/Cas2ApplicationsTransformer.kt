@@ -78,12 +78,7 @@ class Cas2ApplicationsTransformer(
     crn = jpaSummary.crn,
     nomsNumber = jpaSummary.nomsNumber,
     personName = personName,
-    applicationOrigin = when (jpaSummary.applicationOrigin) {
-      "courtBail" -> ApplicationOrigin.courtBail
-      "prisonBail" -> ApplicationOrigin.prisonBail
-      "homeDetentionCurfew" -> ApplicationOrigin.homeDetentionCurfew
-      else -> error("Unexpected original value ${jpaSummary.applicationOrigin}")
-    },
+    applicationOrigin = jpaSummary.applicationOrigin?.let { ApplicationOrigin.forValue(it) },
     bailHearingDate = jpaSummary.bailHearingDate,
   )
 
