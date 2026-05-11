@@ -255,6 +255,7 @@ class SubjectAccessRequestService(
         .toMap().entries,
     )
   }
+
   private fun Logger.logDebugMessage(service: String, result: String) {
     if (this.isDebugEnabled) {
       val prettyPrintJson = jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
