@@ -1,0 +1,34 @@
+{
+  "request-a-placement": [
+    {
+      "Has the sentence or release type changed?": "Yes",
+      "Application sentence type": "Standard determinate custody",
+      "Application release type": "Licence"
+    },
+    {
+      "Which sentence type does the person have?": "Standard determinate custody"
+    },
+    {
+      "What is the release type?": "Release on Temporary Licence (ROTL)"
+    },
+    {
+      "Has this person previously had a placement at an Approved Premises for ROTL?": "No"
+    },
+    {
+      "Dates of placement": [
+        {
+          "When will the person arrive?": "Sat 2 Jan 2027",
+          "Is the date flexible?": "Yes",
+          "How long should the Approved Premises placement last?": "12 weeks"
+        }
+      ]
+    },
+    {
+      "Have there been any significant events since the application was assessed?": "No",
+      "Has the person's circumstances changed which affect the planned AP placement?": "No",
+      "Has the person's risk factors changed since the application was assessed?": "No",
+      "Has the person's access or healthcare needs changed since the application was assessed?": "No",
+      "Has the person's location factors changed since the application was assessed?": "No"
+    }
+  ]
+}

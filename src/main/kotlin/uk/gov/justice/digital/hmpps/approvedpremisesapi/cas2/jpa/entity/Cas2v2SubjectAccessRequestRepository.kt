@@ -24,6 +24,7 @@ class Cas2v2SubjectAccessRequestRepository(
         select
         	ca.crn,
         	ca.noms_number,
+        	ca."data",
         	ca."document",
         	nu."name" as created_by_user,
         	ca.created_at,
