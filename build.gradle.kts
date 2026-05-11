@@ -33,11 +33,18 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
-  implementation("com.google.guava:guava:33.5.0-jre")
+  implementation("com.google.guava:guava:33.6.0-jre")
   implementation("org.postgresql:postgresql:42.7.10")
-  implementation("org.javers:javers-core:7.10.0")
+  implementation("org.javers:javers-core:7.11.0")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+  // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
+  // generated schema, making it incompatible with the typescript generators and in some
+  // places it was incorrect. We're pinning version 3.0.2 until a new version is available
+  // reverting this change, as proposed by https://github.com/springdoc/springdoc-openapi/pull/3276
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
+  // this is a transitive dependency of uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-autoconfigure
+  // so we need to force a different version
+  implementation("org.springdoc:springdoc-openapi-starter-common:3.0.2")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -50,11 +57,6 @@ dependencies {
   implementation(kotlin("reflect"))
 
   implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.10.0")
-
-  // as advised by https://github.com/ministryofjustice/hmpps-gradle-spring-boot/blob/main/release-notes/10.x.md#1021
-  constraints {
-    implementation("org.webjars:swagger-ui:5.32.2")
-  }
 
   implementation("org.jetbrains.kotlinx:dataframe:0.15.0") {
     exclude(group = "org.jetbrains.kotlinx", module = "dataframe-openapi")
@@ -76,6 +78,7 @@ dependencies {
   testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.1.4")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.2.0")
+
 
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
@@ -116,20 +119,6 @@ sourceSets {
       srcDirs("src/main/kotlin", "$buildDir/generated/src/main/kotlin")
     }
   }
-}
-
-// this is deprecated in favour of bootRunDebug, which does not set an active profile
-// it will be removed once ap-tools has been updated to use bootRunDebug
-tasks.register("bootRunLocal") {
-  group = "application"
-  description = "Runs this project as a Spring Boot application with the local profile"
-  doFirst {
-    tasks.bootRun.configure {
-      systemProperty("spring.profiles.active", "local")
-      jvmArgs("-Xmx512m", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=32323")
-    }
-  }
-  finalizedBy("bootRun")
 }
 
 tasks.register("bootRunDebug") {
@@ -243,4 +232,8 @@ tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
   source = source.asFileTree.matching {
     exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
   }
+}
+
+tasks.register("printRuntimeClasspath") {
+  println(sourceSets.main.get().runtimeClasspath.asPath)
 }

@@ -19,14 +19,11 @@ import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.locationtech.jts.geom.Point
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity.Companion.resolveFullAddress
@@ -36,56 +33,6 @@ import java.util.UUID
 
 @Repository
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
-  @Query(
-    """
-SELECT
-          p.id as id,
-          p.name as name,
-          p.address_line1 as addressLine1,
-          p.address_line2 as addressLine2,
-          p.postcode as postcode,
-          pdu.name as pdu,
-          p.town as town,
-          la.name as localAuthorityAreaName,
-          beds.id as bedspaceId,
-          rooms.name as bedspaceReference,
-          CASE 
-            WHEN beds.end_date <= CURRENT_DATE THEN 'archived' 
-            WHEN beds.start_date IS NOT NULL AND beds.start_date > CURRENT_DATE THEN 'upcoming' 
-            WHEN beds.id IS NOT NULL THEN 'online'
-            ELSE NULL END as bedspaceStatus
-      FROM
-          temporary_accommodation_premises tap
-          INNER JOIN premises p on tap.premises_id = p.id
-          INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
-          INNER JOIN probation_delivery_units pdu ON tap.probation_delivery_unit_id = pdu.id
-          LEFT JOIN local_authority_areas la ON p.local_authority_area_id = la.id
-          LEFT JOIN rooms on rooms.premises_id = tap.premises_id
-          LEFT JOIN beds ON rooms.id = beds.room_id
-      WHERE pr.id = :regionId
-        AND (:postcodeOrAddress is null
-          OR lower(p.town) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
-          OR lower(p.postcode) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
-          OR lower(p.address_line1) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
-          OR lower(p.address_line2) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
-          OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
-          )
-        AND (
-          (:premisesStatus = 'active' AND (tap.end_date IS NULL OR tap.end_date > CURRENT_DATE) AND tap.start_date <= CURRENT_DATE)
-          OR (:premisesStatus = 'archived' AND ((tap.end_date IS NOT NULL AND tap.end_date <= CURRENT_DATE) OR tap.start_date > CURRENT_DATE))
-          OR (:premisesStatus IS NULL)
-        )
-      """,
-    nativeQuery = true,
-  )
-  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?, premisesStatus: String?): List<Cas3PremisesSummaryResult>
-
-  @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE p.name = :name AND TYPE(p) = :type AND (p.id != :id OR :id is null)")
-  fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>, id: UUID? = null): Boolean
-
-  @Query("SELECT p FROM TemporaryAccommodationPremisesEntity p WHERE p.id = :id")
-  fun findTemporaryAccommodationPremisesByIdOrNull(id: UUID): TemporaryAccommodationPremisesEntity?
-
   @Query("SELECT p FROM PremisesEntity p WHERE p.name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> findByName(name: String, type: Class<T>): PremisesEntity?
 
@@ -94,30 +41,6 @@ SELECT
 
   @Query("SELECT CAST(COUNT(b) as int) FROM PremisesEntity p JOIN p.rooms r JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) WHERE r.premises = :premises")
   fun getBedCount(premises: PremisesEntity): Int
-
-  @Query(
-    """
-    SELECT * FROM temporary_accommodation_premises tap
-    INNER JOIN premises p ON tap.premises_id = p.id
-    WHERE p.service = :service
-    ORDER BY p.id
-    """,
-    nativeQuery = true,
-  )
-  fun findTemporaryAccommodationPremisesByService(service: String, pageable: Pageable): Slice<TemporaryAccommodationPremisesEntity>
-
-  @Query(
-    """
-    SELECT *
-    FROM temporary_accommodation_premises tap
-    INNER JOIN premises p ON tap.premises_id = p.id
-    WHERE p.status = 'archived'
-    AND tap.end_date IS NULL
-    ORDER BY p.id
-    """,
-    nativeQuery = true,
-  )
-  fun findCas3ArchivedPremisesWithoutEndDate(pageable: Pageable): Slice<TemporaryAccommodationPremisesEntity>
 }
 
 @Repository
@@ -384,8 +307,6 @@ class TemporaryAccommodationPremisesEntity(
   characteristics,
   status,
 ) {
-  fun isPremisesArchived(): Boolean = (endDate != null && endDate!! <= LocalDate.now()) || startDate.isAfter(LocalDate.now())
-  fun isPremisesScheduledToArchive(): Boolean = status == PropertyStatus.archived && endDate != null && endDate!! > LocalDate.now()
   val cas3PremisesStatus: Cas3PremisesStatus
     get() = when (this.status) {
       PropertyStatus.active -> Cas3PremisesStatus.online

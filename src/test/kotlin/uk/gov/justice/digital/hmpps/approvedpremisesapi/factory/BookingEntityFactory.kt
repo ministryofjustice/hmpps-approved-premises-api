@@ -26,6 +26,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Deprecated("See deprecations-bookings.md")
 class BookingEntityFactory : Factory<BookingEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var crn: Yielded<String> = { randomStringUpperCase(6) }

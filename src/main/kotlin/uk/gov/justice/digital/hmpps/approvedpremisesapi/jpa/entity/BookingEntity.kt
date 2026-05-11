@@ -126,32 +126,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findAllCas3bookingsWithNullStatus(pageable: Pageable?): Slice<BookingEntity>
 
   @Query(
-    "SELECT b FROM BookingEntity b " +
-      "WHERE b.bed.id = :bedId " +
-      "AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b ) " +
-      "AND b.departureDate >= :date " +
-      "AND SIZE(b.cancellations) = 0 ",
-  )
-  fun findActiveOverlappingBookingByBed(bedId: UUID, date: LocalDate): List<BookingEntity>
-
-  @Query(
-    """
-      SELECT b FROM BookingEntity b
-      JOIN PremisesEntity p ON b.premises.id = p.id
-      WHERE p.id = :premisesId
-      AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b )
-      AND b.departureDate >= :date
-      AND SIZE(b.cancellations) = 0 
-    """,
-  )
-  fun findActiveOverlappingBookingByPremisesId(premisesId: UUID, date: LocalDate): List<BookingEntity>
-
-  @Query(
-    "SELECT b FROM BookingEntity b WHERE b.service = :serviceName AND b.premises.id = :premisesId AND b.departureDate >= :date AND b.status in :statuses",
-  )
-  fun findFutureBookingsByPremisesIdAndStatus(serviceName: String, premisesId: UUID, date: LocalDate, statuses: List<BookingStatus>): List<BookingEntity>
-
-  @Query(
     "SELECT b FROM BookingEntity b WHERE b.bed.id = :bedId ORDER BY b.arrivalDate ASC limit 1",
   )
   fun findFirstBookingByBedId(bedId: UUID): BookingEntity?

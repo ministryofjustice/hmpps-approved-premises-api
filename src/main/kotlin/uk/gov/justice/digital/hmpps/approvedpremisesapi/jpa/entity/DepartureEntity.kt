@@ -5,15 +5,11 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 
-@Repository
-interface DepartureRepository : JpaRepository<DepartureEntity, UUID>
-
+@Deprecated("See deprecations-bookings.md")
 @Entity
 @Table(name = "departures")
 data class DepartureEntity(

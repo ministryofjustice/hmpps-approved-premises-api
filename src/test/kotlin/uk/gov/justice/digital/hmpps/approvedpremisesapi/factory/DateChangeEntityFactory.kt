@@ -12,6 +12,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Deprecated("See deprecations-bookings.md")
 class DateChangeEntityFactory : Factory<DateChangeEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var changedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }

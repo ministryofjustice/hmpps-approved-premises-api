@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed.Cas2v2Applic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed.Cas2v2UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3AssignApplicationToPduSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3ReferralRejectionSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UpdatePremisesPostcodeSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
@@ -120,6 +121,7 @@ class SeedService(
         SeedFileType.approvedPremisesCancelOutOfServiceBeds -> getBean(Cas1CancelOutOfServiceBedsByPremisesJob::class)
         SeedFileType.approvedPremisesUpdateOutOfServiceBeds -> getBean(Cas1UpdateOutOfServiceBedsByPremisesJob::class)
         SeedFileType.approvedPremisesClosePremises -> getBean(Cas1ClosePremisesSeedJob::class)
+        SeedFileType.cas3UpdatePremisesPostcode -> getBean(Cas3UpdatePremisesPostcodeSeedJob::class)
       }
 
       val seedStarted = LocalDateTime.now()

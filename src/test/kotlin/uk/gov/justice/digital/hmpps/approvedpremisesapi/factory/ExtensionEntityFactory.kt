@@ -11,6 +11,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Deprecated("See deprecations-bookings.md")
 class ExtensionEntityFactory : Factory<ExtensionEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var previousDepartureDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(14) }

@@ -12,6 +12,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Deprecated("See deprecations-bookings.md")
 class CancellationEntityFactory : Factory<CancellationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var date: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(14) }

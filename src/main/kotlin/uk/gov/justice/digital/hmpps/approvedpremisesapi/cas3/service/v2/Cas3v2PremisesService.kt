@@ -52,6 +52,7 @@ class Cas3v2PremisesService(
   fun getValidatedPremises(premisesId: UUID): CasResult<Cas3PremisesEntity> {
     val premises = cas3PremisesRepository.findByIdOrNull(premisesId)
     if (premises == null) return CasResult.NotFound("Cas3Premises", premisesId.toString())
+    premises.postcode = premises.postcode.trim()
     if (!cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id)) return CasResult.Unauthorised()
     return CasResult.Success(premises)
   }

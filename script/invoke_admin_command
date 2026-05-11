@@ -1,0 +1,15 @@
+#!/bin/bash
+
+invoke_admin_command() {
+  # shellcheck disable=SC2034
+  JAVA_TOOL_OPTIONS="-Xmx50m"
+
+  echo "Invoke java with $*"
+
+  if [[ "$OSTYPE" =~ ^darwin ]]; then
+      cd $script_dir/.. || exit
+      java -cp "../build/classes/kotlin/main:$( ./gradlew --quiet printRuntimeClasspath )" "$@"
+  else
+      java -cp app.jar "$@"
+  fi
+}
