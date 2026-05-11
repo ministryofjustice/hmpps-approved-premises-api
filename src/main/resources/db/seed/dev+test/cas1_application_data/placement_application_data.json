@@ -1,0 +1,50 @@
+{
+  "request-a-placement": {
+    "sentence-type-check": {
+      "sentenceTypeCheck": "yes",
+      "applicationSentenceType": "standardDeterminate",
+      "applicationReleaseType": "licence"
+    },
+    "sentence-type": {
+      "sentenceType": "standardDeterminate"
+    },
+    "release-type": {
+      "releaseType": "rotl"
+    },
+    "previous-rotl-placement": {
+      "previousRotlPlacement": "no",
+      "lastAp": "",
+      "_csrf": "79b669da1b881dba6b3c2600c0597f887088539821a49e1f885c936cd1bdce2209f7a994e2a777da6116fdd5f095e9b35adb44a8481f01bc0d15b66476b36ddb0c2695f66e5ff21010c9084bddf1e4104e6efdf30f776f09f8b7add503b5ffc01a867fcda151b9f56b709f9662c6bd1bbdae5c44819007b6922a5983f1552acc",
+      "lastPlacementDate-day": "",
+      "lastPlacementDate-month": "",
+      "lastPlacementDate-year": "",
+      "details": ""
+    },
+    "dates-of-placement": {
+      "datesOfPlacement": [
+        {
+          "arrivalDate-day": "10",
+          "arrivalDate-month": "01",
+          "arrivalDate-year": "2027",
+          "isFlexible": "yes",
+          "durationWeeks": "12",
+          "durationDays": "0",
+          "duration": "84",
+          "arrivalDate": "2027-01-10"
+        }
+      ]
+    },
+    "updates-to-application": {
+      "significantEvents": "no",
+      "significantEventsDetail": "",
+      "changedCirumstances": "no",
+      "changedCirumstancesDetail": "",
+      "riskFactors": "no",
+      "riskFactorsDetail": "",
+      "accessOrHealthcareNeeds": "no",
+      "accessOrHealthcareNeedsDetail": "",
+      "locationFactors": "no",
+      "locationFactorsDetail": ""
+    }
+  }
+}

@@ -75,7 +75,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             b.actual_departure_time,
             b.non_arrival_confirmed_at,
             b.non_arrival_notes,
-            b.non_arrival_reason_id,
+            nar.name as non_arrival_reason,
             apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
             b.created_at,
             b.key_worker_staff_code,
@@ -107,6 +107,8 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             END as person_name
             FROM 
               cas1_space_bookings b
+            LEFT JOIN non_arrival_reasons nar ON 
+              b.non_arrival_reason_id = nar.id           
             LEFT JOIN premises p ON
               b.premises_id = p.id            
             LEFT OUTER JOIN approved_premises_applications apa ON 

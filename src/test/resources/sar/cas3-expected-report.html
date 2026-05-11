@@ -1,0 +1,1383 @@
+<style>
+    * {
+        font-family: "HelveticaNeue", "Helvetica Neue", "Arial", "Helvetica", sans-serif;
+        font-size: 12pt;
+        color: #0b0c0c;
+    }
+    /* --- HEADINGS --- */
+
+    .title {
+        font-size: 20pt;
+        text-align: center;
+    }
+
+    h1, h2, h3 {
+        color: #0b0c0c;
+        font-weight: 700;
+        display: block;
+        margin-top: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    h1 {
+        font-size: 18pt;
+        line-height: 1.09375;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        margin-block-start: 0.67em;
+        margin-block-end: 0.67em;
+    }
+
+    h2 {
+        font-size: 17pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h3 {
+        font-size: 16pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h4 {
+        font-size: 15pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h5 {
+        font-size: 14pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    /* --- SUMMARY LIST --- */
+
+    table.summary-list {
+        display: table;
+        width: 700px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin: 0 0 5px;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    table.summary-list tr {
+        display: table-row;
+        margin: 0 0 20px;
+    }
+
+    table.summary-list tr td {
+        border-bottom: 1px solid #b1b4b6;
+        /*margin-bottom: 5px;*/
+        overflow-wrap: break-word;
+        display: table-cell;
+        /*padding-top: 2px;*/
+        /*padding-bottom: 2px;*/
+        /*padding-right: 0;*/
+        margin-inline-start: 40px;
+        width: 70%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        line-height: 1.25;
+        font-weight: 400;
+        white-space: normal;
+        vertical-align: top;
+    }
+
+    table.summary-list tr td:first-child {
+        font-size: 12pt;
+        width: 30%;
+        font-weight: 700;
+        padding-right: 20px;
+        vertical-align: top;
+    }
+
+    /* --- DATA TABLE --- */
+
+    table.data-table {
+        display: table;
+        width: 700px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin: 0 0 5px;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    table.data-table tr {
+        display: table-row;
+        margin: 0 0 20px;
+    }
+
+    table.data-table tr td {
+        border-bottom: 1px solid #b1b4b6;
+        margin-bottom: 5px;
+        overflow-wrap: break-word;
+        display: table-cell;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        padding-right: 0;
+        margin-inline-start: 40px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        line-height: 1.25;
+        font-weight: 400;
+        white-space: pre-wrap;
+        vertical-align: top;
+    }
+
+    table.data-table tr:first-child td {
+        font-size: 12pt;
+        width: 30%;
+        font-weight: 700;
+        padding-right: 20px;
+        border-bottom: none;
+        vertical-align: top;
+    }
+
+    table.data-table tr td.data-column-5 { width: 5% }
+    table.data-table tr td.data-column-10 { width: 10% }
+    table.data-table tr td.data-column-15 { width: 15% }
+    table.data-table tr td.data-column-20 { width: 20% }
+    table.data-table tr td.data-column-25 { width: 25% }
+    table.data-table tr td.data-column-30 { width: 30% }
+    table.data-table tr td.data-column-35 { width: 35% }
+    table.data-table tr td.data-column-40 { width: 40% }
+    table.data-table tr td.data-column-45 { width: 45% }
+    table.data-table tr td.data-column-50 { width: 50% }
+    table.data-table tr td.data-column-55 { width: 55% }
+    table.data-table tr td.data-column-60 { width: 60% }
+    table.data-table tr td.data-column-65 { width: 65% }
+    table.data-table tr td.data-column-70 { width: 70% }
+    table.data-table tr td.data-column-75 { width: 75% }
+    table.data-table tr td.data-column-80 { width: 80% }
+    table.data-table tr td.data-column-85 { width: 85% }
+    table.data-table tr td.data-column-90 { width: 90% }
+    table.data-table tr td.data-column-95 { width: 95% }
+
+    table tr td.data-column-5 { width: 5% }
+    table tr td.data-column-10 { width: 10% }
+    table tr td.data-column-15 { width: 15% }
+    table tr td.data-column-20 { width: 20% }
+    table tr td.data-column-25 { width: 25% }
+    table tr td.data-column-30 { width: 30% }
+    table tr td.data-column-35 { width: 35% }
+    table tr td.data-column-40 { width: 40% }
+    table tr td.data-column-45 { width: 45% }
+    table tr td.data-column-50 { width: 50% }
+    table tr td.data-column-55 { width: 55% }
+    table tr td.data-column-60 { width: 60% }
+    table tr td.data-column-65 { width: 65% }
+    table tr td.data-column-70 { width: 70% }
+    table tr td.data-column-75 { width: 75% }
+    table tr td.data-column-80 { width: 80% }
+    table tr td.data-column-85 { width: 85% }
+    table tr td.data-column-90 { width: 90% }
+    table tr td.data-column-95 { width: 95% }
+
+    table.summary-list tr td.data-column-5 { width: 5% }
+    table.summary-list tr td.data-column-10 { width: 10% }
+    table.summary-list tr td.data-column-15 { width: 15% }
+    table.summary-list tr td.data-column-20 { width: 20% }
+    table.summary-list tr td.data-column-25 { width: 25% }
+    table.summary-list tr td.data-column-30 { width: 30% }
+    table.summary-list tr td.data-column-35 { width: 35% }
+    table.summary-list tr td.data-column-40 { width: 40% }
+    table.summary-list tr td.data-column-45 { width: 45% }
+    table.summary-list tr td.data-column-50 { width: 50% }
+    table.summary-list tr td.data-column-55 { width: 55% }
+    table.summary-list tr td.data-column-60 { width: 60% }
+    table.summary-list tr td.data-column-65 { width: 65% }
+    table.summary-list tr td.data-column-70 { width: 70% }
+    table.summary-list tr td.data-column-75 { width: 75% }
+    table.summary-list tr td.data-column-80 { width: 80% }
+    table.summary-list tr td.data-column-85 { width: 85% }
+    table.summary-list tr td.data-column-90 { width: 90% }
+    table.summary-list tr td.data-column-95 { width: 95% }
+
+    ul {
+        padding: 0 0 0 10px;
+    }
+
+</style>
+
+§<h1 class="title">Community Accommodation</h1>
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+    <h2>Temporary Accommodation</h2>
+
+        <h3>Booking Extensions</h3>
+        
+            <h4>Booking Extension</h4>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">New departure date</td>
+                    <td class="data-column-25">Previous departure date</td>
+                    <td class="data-column-25">Created at</td>
+                </tr>
+                <tr>
+                    <td>24 September 2021</td>
+                    <td>23 September 2021</td>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                </tr>
+            </table>
+            <table class="summary-list">
+                <tr><td>Notes</td><td>some notes</td></tr>
+            </table>
+        
+        
+
+        <h3>Applications</h3>
+        
+            <h4>Application</h4>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Probation Delivery Unit</td>
+                    <td class="data-column-25">Offence id</td>
+                    <td class="data-column-25">Offender name</td>
+                    <td class="data-column-25">Submitted at</td>
+                </tr>
+                <tr>
+                    <td>SAR-TEST-PDU-1</td>
+                    <td>BEING_BAD</td>
+                    <td>Jeffity Jeff</td>
+                    <td>19 October 2021, 5:00:00 pm</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Created at</td>
+                    <td class="data-column-25">Prison name on creation</td>
+                    <td class="data-column-25">Has history of arson</td>
+                    <td class="data-column-25">Is registered sex offender</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>HMP Birmingham</td>
+                    <td>No</td>
+                    <td>No</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Is concerning arson behaviour</td>
+                    <td class="data-column-25">Needs accessible property</td>
+                    <td class="data-column-25">Is history of sexual offence</td>
+                    <td class="data-column-25">Is concerning sexual behaviour</td>
+                </tr>
+                <tr>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>No Data Held</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Is duty to refer submitted</td>
+                    <td class="data-column-25">Duty to refer submission date</td>
+                    <td class="data-column-25">Duty to refer outcome</td>
+                    <td class="data-column-25">Duty to refer local authority area name</td>
+                </tr>
+                <tr>
+                    <td>No Data Held</td>
+                    <td>19 October 2021</td>
+                    <td>No Data Held</td>
+                    <td>SAR-TEST-LAA</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Probation region</td>
+                    <td class="data-column-25">Arrival date</td>
+                    <td class="data-column-25">Is eligible</td>
+                    <td class="data-column-25">Eligibility reason</td>
+                </tr>
+                <tr>
+                    <td>SAR-TEST-REGION</td>
+                    <td>20 September 2021, 5:00:00 pm</td>
+                    <td>No</td>
+                    <td>Not eligible</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Applications user name</td>
+                    <td class="data-column-25">Prison release types</td>
+                    <td class="data-column-25">Person release date</td>
+                </tr>
+                <tr>
+                    <td>SAR-TEST-CREATED-BY-USER</td>
+                    <td>ANY</td>
+                    <td>20 September 2021</td>
+                </tr>
+            </table>
+
+            <h5>Risk Ratings</h5>
+            
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-50">Multi-Agency Public Protection Arrangements value</td>
+                        <td class="data-column-50">Multi-Agency Public Protection Arrangements status</td>
+                    </tr>
+                    <tr>
+                        <td>No Data Held</td>
+                        <td>NotFound</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">Tier level</td>
+                        <td class="data-column-25">Tier status</td>
+                        <td class="data-column-25">Tier last updated</td>
+                    </tr>
+                    <tr>
+                        <td>M1</td>
+                        <td>Retrieved</td>
+                        <td>26 June 2023</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">Risk of Serious Harm overall risk</td>
+                        <td class="data-column-25">Risk to Children</td>
+                        <td class="data-column-25">Risk to Public</td>
+                        <td class="data-column-25">Risk to Known Adult</td>
+                    </tr>
+                    <tr>
+                        <td>No Data Held</td>
+                        <td>No Data Held</td>
+                        <td>No Data Held</td>
+                        <td>No Data Held</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">Risk to Staff</td>
+                        <td class="data-column-25">Risk of Serious Harm status</td>
+                        <td class="data-column-25">Risk of Serious Harm last updated</td>
+                    </tr>
+                    <tr>
+                        <td>No Data Held</td>
+                        <td>NotFound</td>
+                        <td>No Data Held</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-50">Flags</td>
+                        <td class="data-column-50">Flags status</td>
+                    </tr>
+                    <tr>
+                        <td>No Data Held</td>
+                        <td>NotFound</td>
+                    </tr>
+                </table>
+            
+            
+
+            <h5>Unsubmitted Document</h5>
+            
+                
+                    <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
+                    <table class="summary-list">
+                        
+                            <tr><td class="data-column-50">safeguarding-and-support</td><td class="data-column-50">{safeguarding-and-vulnerability&#x3D;{concerns&#x3D;yes, concernsDetail&#x3D;Concerns A, B, and C}, caring-responsibilities&#x3D;{caringResponsibilities&#x3D;yes, caringResponsibilitiesDetail&#x3D;Caring responsibilities X, Y, and Z}, support-in-the-community&#x3D;{support&#x3D;Community support details}, local-connections&#x3D;{localConnections&#x3D;Local connection details}}</td></tr>
+                        
+                            <tr><td class="data-column-50">placement-location</td><td class="data-column-50">{alternative-pdu-reason&#x3D;{reason&#x3D;Reasons X, Y, Z}, alternative-pdu&#x3D;{alternativePdu&#x3D;yes, pduId&#x3D;ce1ee6e6-f510-4442-b9af-a658b94d3a82, pduName&#x3D;Bedfordshire (includes Bedford, Central Bedfordshire and Luton)}, alternative-region&#x3D;{regionName&#x3D;East of England, alternativeRegion&#x3D;yes}, different-region&#x3D;{}, placement-pdu&#x3D;{}}</td></tr>
+                        
+                            <tr><td class="data-column-50">licence-conditions</td><td class="data-column-50">{additional-licence-conditions&#x3D;{exclusionZoneDetail&#x3D;, nonAssociationDetail&#x3D;Non association detail, initmateRelationshipsDetail&#x3D;, civilOrdersDetail&#x3D;Civil orders detail, otherDetail&#x3D;Other detail, programmesDetail&#x3D;, drugTestingDetail&#x3D;, curfewDetail&#x3D;, noContactWithChildrenDetail&#x3D;, nonContactDetail&#x3D;Non contact detail, conditions&#x3D;[civilOrders, nonAssociation, nonContact, other], engagementWithServicesDetail&#x3D;, alcoholMonitoringDetail&#x3D;, residencyRestrictionDetail&#x3D;}}</td></tr>
+                        
+                            <tr><td class="data-column-50">offence-and-behaviour-summary</td><td class="data-column-50">{history-of-arson-offence&#x3D;{historyOfArsonOffence&#x3D;no}, history-of-sexual-offence&#x3D;{historyOfSexualOffence&#x3D;no}, concerning-arson-behaviour&#x3D;{concerningArsonBehaviourDetail&#x3D;Arson behaviour concerns details, concerningArsonBehaviour&#x3D;yes}, concerning-sexual-behaviour&#x3D;{concerningSexualBehaviour&#x3D;yes, concerningSexualBehaviourDetail&#x3D;Sexual behaviour concerns details}}</td></tr>
+                        
+                            <tr><td class="data-column-50">move-on-plan</td><td class="data-column-50">{move-on-plan&#x3D;{plan&#x3D;A move on plan}}</td></tr>
+                        
+                            <tr><td class="data-column-50">accommodation-referral-details</td><td class="data-column-50">{other-accommodation-options&#x3D;{otherOptions&#x3D;yes, otherOptionsDetail&#x3D;Other accommodation details}, dtr-details&#x3D;{reference&#x3D;ABC123, date-year&#x3D;2022, date&#x3D;2022-04-12, dutyToReferOutcome&#x3D;acceptedPreventionAndReliefDuty, date-day&#x3D;12, date-month&#x3D;4, dutyToReferOutcomeOtherDetails&#x3D;, localAuthorityAreaName&#x3D;Barking and Dagenham}, dtr-submitted&#x3D;{dtrSubmitted&#x3D;yes}, crs-submitted&#x3D;{crsSubmitted&#x3D;yes}}</td></tr>
+                        
+                            <tr><td class="data-column-50">eligibility</td><td class="data-column-50">{release-date&#x3D;{releaseDate-month&#x3D;7, releaseDate&#x3D;2026-07-13, releaseDate-year&#x3D;2026, releaseDate-day&#x3D;13}, eligibility-reason&#x3D;{reason&#x3D;homelessFromApprovedPremises}, accommodation-required-from-date&#x3D;{accommodationRequiredFromDate-month&#x3D;7, accommodationRequiredFromDate-year&#x3D;2026, accommodationRequiredFromDate&#x3D;2026-07-15, accommodationRequiredFromDate-day&#x3D;15}}</td></tr>
+                        
+                            <tr><td class="data-column-50">sentence-information</td><td class="data-column-50">{sentence-type&#x3D;{sentenceType&#x3D;extendedDeterminate}, sentence-expiry&#x3D;{sentenceExpiryDate&#x3D;2124-01-19, sentenceExpiryDate-year&#x3D;2124, sentenceExpiryDate-day&#x3D;19, sentenceExpiryDate-month&#x3D;1}, sentence-length&#x3D;{months&#x3D;, weeks&#x3D;, days&#x3D;4, years&#x3D;2}, release-type&#x3D;{fixedTermRecallEndDate&#x3D;2024-07-09, crdLicenceStartDate-year&#x3D;2122, fixedTermRecallStartDate-month&#x3D;1, crdLicenceEndDate-month&#x3D;7, crdLicenceEndDate-day&#x3D;18, fixedTermRecallEndDate-month&#x3D;7, crdLicenceStartDate&#x3D;2122-04-01, releaseTypes&#x3D;[crdLicence, fixedTermRecall], crdLicenceEndDate&#x3D;2122-07-18, fixedTermRecallEndDate-year&#x3D;2024, fixedTermRecallStartDate&#x3D;2024-01-19, fixedTermRecallStartDate-day&#x3D;19, crdLicenceEndDate-year&#x3D;2122, crdLicenceStartDate-month&#x3D;4, fixedTermRecallEndDate-day&#x3D;9, crdLicenceStartDate-day&#x3D;1, fixedTermRecallStartDate-year&#x3D;2024}, offending-summary&#x3D;{summary&#x3D;A brief summary of offending history}}</td></tr>
+                        
+                            <tr><td class="data-column-50">consent</td><td class="data-column-50">{consent-given&#x3D;{consentGiven&#x3D;yes}}</td></tr>
+                        
+                            <tr><td class="data-column-50">check-your-answers</td><td class="data-column-50">{review&#x3D;{reviewed&#x3D;1}}</td></tr>
+                        
+                            <tr><td class="data-column-50">disability-cultural-and-specific-needs</td><td class="data-column-50">{needs&#x3D;{needs&#x3D;[hearingImpairment, neurodivergence, physicalHealth, other], languageDetail&#x3D;, hearingImpairmentDetail&#x3D;Hearing impairment detail, mentalHealthDetail&#x3D;, otherDetail&#x3D;Other needs detail, learningDisabilityDetail&#x3D;, visualImpairmentDetail&#x3D;, physicalHealthDetail&#x3D;Physical health detail, mobilityDetail&#x3D;, neurodivergenceDetail&#x3D;Neurodivergence detail}, religious-or-cultural-needs&#x3D;{religiousOrCulturalNeedsDetail&#x3D;Religious needs detail, religiousOrCulturalNeeds&#x3D;yes}, property-attributes-or-adaptations&#x3D;{propertyAttributesOrAdaptations&#x3D;yes, propertyAttributesOrAdaptationsDetail&#x3D;Adaptation requirements detail}}</td></tr>
+                        
+                            <tr><td class="data-column-50">prison-information</td><td class="data-column-50">{adjudications&#x3D;{adjudications&#x3D;[{reportedAt&#x3D;2025-06-25T12:13:00Z, establishment&#x3D;Moorland (HMP &amp; YOI), id&#x3D;1531418, finding&#x3D;PROVED, offenceDescription&#x3D;Commits any assault - all assault on other person, hearingHeld&#x3D;true}]}, acct-alerts&#x3D;{acctAlerts&#x3D;[]}}</td></tr>
+                        
+                            <tr><td class="data-column-50">approvals-for-specific-risks</td><td class="data-column-50">{approvals-for-specific-risks&#x3D;{approvals&#x3D;yes, approvalsDetail&#x3D;Approvals detail}}</td></tr>
+                        
+                            <tr><td class="data-column-50">behaviour-in-cas</td><td class="data-column-50">{previous-stays-details&#x3D;{cas1Detail&#x3D;Approved Premises detail, cas3Detail&#x3D;CAS3 detail, accommodationTypes&#x3D;[cas1, cas3], cas2Detail&#x3D;}, previous-stays&#x3D;{previousStays&#x3D;yes}}</td></tr>
+                        
+                            <tr><td class="data-column-50">contact-details</td><td class="data-column-50">{practitioner-email&#x3D;{email&#x3D;name@example.gov.uk}, backup-contact&#x3D;{phone&#x3D;09876 54321, name&#x3D;Backup Name, email&#x3D;backup-name@example.gov.uk}, practitioner-pdu&#x3D;{name&#x3D;Suffolk, id&#x3D;3fa6a349-5f48-4c42-8d96-938bda727c35}, practitioner-phone&#x3D;{phone&#x3D;01234 56780}, probation-practitioner&#x3D;{pdu&#x3D;{name&#x3D;Suffolk, id&#x3D;3fa6a349-5f48-4c42-8d96-938bda727c35}, phone&#x3D;01234 56780, name&#x3D;Practitioner Name, email&#x3D;name@example.gov.uk}, pop-phone-number&#x3D;{phone&#x3D;01235 467890}, practitioner-name&#x3D;{name&#x3D;Practitioner Name}}</td></tr>
+                        
+                            <tr><td class="data-column-50">food-allergies</td><td class="data-column-50">{food-allergies&#x3D;{foodAllergiesDetail&#x3D;Allergic to X, Y, Z, foodAllergies&#x3D;yes}}</td></tr>
+                        
+                            <tr><td class="data-column-50">placement-considerations</td><td class="data-column-50">{rosh-level&#x3D;{riskToSelf&#x3D;Risk to self detail, riskToChildren&#x3D;Risk to children detail, riskToPublic&#x3D;Risk to public detail, riskToKnownAdult&#x3D;Risk to known adult detail, riskToStaff&#x3D;Risk to staff detail, safetyPlanCompleted&#x3D;yesAndConsentToShareHasBeenGiven, riskToSelfConcerns&#x3D;yes}, risk-management-plan&#x3D;{oasysImported&#x3D;2026-05-20, riskManagementSummaries&#x3D;[{answer&#x3D;There is a Restraining Order in place to protect xx xxx:
+
+You are prohibited from: 
+1. Contacting xxx xxx directly or indirectly including via social media 
+2. Entering any part of any premises occupied by xxx xxx for the time being as their usual place of residence, this is in place until 16/11/23
+
+There is also a Restraining Order in place to protect a previous victim xxx xxx:
+
+You are prohibited from:- 
+1. Contacting directly or indirectly xxx xxx, this is in place until further order.
+
+Consideration of multi agency meetings to further protect victims will need to be considered before release. 
+
+Blocks are on place at HMP Cardiff to prevent contact and safeguard victims. , label&#x3D;Victim safety planning, questionNumber&#x3D;RM33}, {answer&#x3D;Motivational work will be undertaken with Mr Davies and will underpin all interventions. Work will be undertaken on a face to face basis with POM, 
+
+Practical Support will be provided by Prison Officers - relating to practical daily issues - they will be available on the wing at all times.  
+
+Prison Offender Manager will see Mr Davies on a fortnightly basis to assess progress with the supervision plan.
+
+Mr Davies screens into the PD Pathway - and a consultation with the POM will take place. This will be arranged with Forensic Psychology. 
+
+Mr Davies has commenced in cell work through RES which will be monitored by the POM. .
+
+Mr Davies&#x27; contact with the mental heaalth team will need to be confirmed. , label&#x3D;Interventions and treatment, questionNumber&#x3D;RM32}, {answer&#x3D;In custody - 
+
+Mr Davies will be managed by HMP Berwyn within the prison regime. 
+His behaviour will be managed through the IEP and adjudications system.
+If his behaviour is concerning he will be referred to CSIP or IRMT for risk management -he will be removed to the CASU. 
+
+Mr Davies is subject to PPRC protocol - no contact with anyone under 18 years old without prior assessment-should he be suspected of contact or any increase in risk detected via Intel he will be subject to phone monitoring., label&#x3D;Monitoring and control, questionNumber&#x3D;RM31}, {answer&#x3D;Mr Davies is currently at HMP Berwyn
+
+xxx xxx Prison Offender Manager at HMP Berwynf - he will be seen as required in line with National Standards and as required by OMU. 
+
+Key Worker - To be confirmed with SMS in HMP Berwyn. - to be seen in line with key worker protocol. 
+
+OMIC - Prison Offender Manager has responsibility for this case, but this will be transferred to the COM at the appropriate juncture as per OMIC guidance. A handover will be completed at that juncture. 
+
+PD - Screening has been completed - Mr Davies screens in, and this will be progressed to a PD consultation. 
+
+Mr Davies needs to be assessed for his suitability for programmes by psychology and the Interventions team. 
+He has been assessed as a Category C prisoner. , label&#x3D;Supervision, questionNumber&#x3D;RM30}], oasysCompleted&#x3D;2026-02-09T10:10:37Z, version&#x3D;2, riskManagementAnswers&#x3D;{QRM32&#x3D;Motivational work will be undertaken with Mr Davies and will underpin all interventions. Work will be undertaken on a face to face basis with POM, 
+
+Practical Support will be provided by Prison Officers - relating to practical daily issues - they will be available on the wing at all times.  
+
+Prison Offender Manager will see Mr Davies on a fortnightly basis to assess progress with the supervision plan.
+
+Mr Davies screens into the PD Pathway - and a consultation with the POM will take place. This will be arranged with Forensic Psychology. 
+
+Mr Davies has commenced in cell work through RES which will be monitored by the POM. .
+
+Mr Davies&#x27; contact with the mental heaalth team will need to be confirmed. , QRM31&#x3D;In custody - 
+
+Mr Davies will be managed by HMP Berwyn within the prison regime. 
+His behaviour will be managed through the IEP and adjudications system.
+If his behaviour is concerning he will be referred to CSIP or IRMT for risk management -he will be removed to the CASU. 
+
+Mr Davies is subject to PPRC protocol - no contact with anyone under 18 years old without prior assessment-should he be suspected of contact or any increase in risk detected via Intel he will be subject to phone monitoring., QRM30&#x3D;Mr Davies is currently at HMP Berwyn
+
+xxx xxx Prison Offender Manager at HMP Berwynf - he will be seen as required in line with National Standards and as required by OMU. 
+
+Key Worker - To be confirmed with SMS in HMP Berwyn. - to be seen in line with key worker protocol. 
+
+OMIC - Prison Offender Manager has responsibility for this case, but this will be transferred to the COM at the appropriate juncture as per OMIC guidance. A handover will be completed at that juncture. 
+
+PD - Screening has been completed - Mr Davies screens in, and this will be progressed to a PD consultation. 
+
+Mr Davies needs to be assessed for his suitability for programmes by psychology and the Interventions team. 
+He has been assessed as a Category C prisoner. , QRM33&#x3D;There is a Restraining Order in place to protect xx xxx:
+
+You are prohibited from: 
+1. Contacting xxx xxx directly or indirectly including via social media 
+2. Entering any part of any premises occupied by xxx xxx for the time being as their usual place of residence, this is in place until 16/11/23
+
+There is also a Restraining Order in place to protect a previous victim xxx xxx:
+
+You are prohibited from:- 
+1. Contacting directly or indirectly xxx xxx, this is in place until further order.
+
+Consideration of multi agency meetings to further protect victims will need to be considered before release. 
+
+Blocks are on place at HMP Cardiff to prevent contact and safeguard victims. }}, anti-social-behaviour&#x3D;{concerns&#x3D;yes, concernsDetail&#x3D;Anti-social behaviour concerns detail}, substance-misuse&#x3D;{substanceMisuseDetail&#x3D;Details of drug and alcohol misuse, substanceMisuse&#x3D;yes}, accommodation-sharing&#x3D;{accommodationSharingYesDetail&#x3D;Some detail, accommodationSharingNoDetail&#x3D;, accommodationSharing&#x3D;yes}, cooperation&#x3D;{support&#x3D;Support detail}}</td></tr>
+                        
+                    </table>
+                
+                
+            
+            
+
+            <h5>Document</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+        
+            <h4>Application</h4>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Probation Delivery Unit</td>
+                    <td class="data-column-25">Offence id</td>
+                    <td class="data-column-25">Offender name</td>
+                    <td class="data-column-25">Submitted at</td>
+                </tr>
+                <tr>
+                    <td>SAR-TEST-PDU-2</td>
+                    <td>BEING_BAD</td>
+                    <td>Jeffity Jeff</td>
+                    <td>19 October 2021, 5:00:00 pm</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Created at</td>
+                    <td class="data-column-25">Prison name on creation</td>
+                    <td class="data-column-25">Has history of arson</td>
+                    <td class="data-column-25">Is registered sex offender</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>HMP Birmingham</td>
+                    <td>No</td>
+                    <td>No</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Is concerning arson behaviour</td>
+                    <td class="data-column-25">Needs accessible property</td>
+                    <td class="data-column-25">Is history of sexual offence</td>
+                    <td class="data-column-25">Is concerning sexual behaviour</td>
+                </tr>
+                <tr>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>No Data Held</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Is duty to refer submitted</td>
+                    <td class="data-column-25">Duty to refer submission date</td>
+                    <td class="data-column-25">Duty to refer outcome</td>
+                    <td class="data-column-25">Duty to refer local authority area name</td>
+                </tr>
+                <tr>
+                    <td>No Data Held</td>
+                    <td>19 October 2021</td>
+                    <td>No Data Held</td>
+                    <td>SAR-TEST-LAA</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Probation region</td>
+                    <td class="data-column-25">Arrival date</td>
+                    <td class="data-column-25">Is eligible</td>
+                    <td class="data-column-25">Eligibility reason</td>
+                </tr>
+                <tr>
+                    <td>SAR-TEST-REGION</td>
+                    <td>20 September 2021, 5:00:00 pm</td>
+                    <td>No</td>
+                    <td>Not eligible</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Applications user name</td>
+                    <td class="data-column-25">Prison release types</td>
+                    <td class="data-column-25">Person release date</td>
+                </tr>
+                <tr>
+                    <td>SAR-TEST-CREATED-BY-USER</td>
+                    <td>ANY</td>
+                    <td>20 September 2021</td>
+                </tr>
+            </table>
+
+            <h5>Risk Ratings</h5>
+            
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-50">Multi-Agency Public Protection Arrangements value</td>
+                        <td class="data-column-50">Multi-Agency Public Protection Arrangements status</td>
+                    </tr>
+                    <tr>
+                        <td>No Data Held</td>
+                        <td>NotFound</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">Tier level</td>
+                        <td class="data-column-25">Tier status</td>
+                        <td class="data-column-25">Tier last updated</td>
+                    </tr>
+                    <tr>
+                        <td>M1</td>
+                        <td>Retrieved</td>
+                        <td>26 June 2023</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">Risk of Serious Harm overall risk</td>
+                        <td class="data-column-25">Risk to Children</td>
+                        <td class="data-column-25">Risk to Public</td>
+                        <td class="data-column-25">Risk to Known Adult</td>
+                    </tr>
+                    <tr>
+                        <td>No Data Held</td>
+                        <td>No Data Held</td>
+                        <td>No Data Held</td>
+                        <td>No Data Held</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-25">Risk to Staff</td>
+                        <td class="data-column-25">Risk of Serious Harm status</td>
+                        <td class="data-column-25">Risk of Serious Harm last updated</td>
+                    </tr>
+                    <tr>
+                        <td>No Data Held</td>
+                        <td>NotFound</td>
+                        <td>No Data Held</td>
+                    </tr>
+                </table>
+                <table class="data-table">
+                    <tr>
+                        <td class="data-column-50">Flags</td>
+                        <td class="data-column-50">Flags status</td>
+                    </tr>
+                    <tr>
+                        <td>No Data Held</td>
+                        <td>NotFound</td>
+                    </tr>
+                </table>
+            
+            
+
+            <h5>Unsubmitted Document</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Document</h5>
+            
+                
+                    <p><b>Accommodation need</b></p>
+                    
+                        <p><b>Placement location</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Is the placement for the East of England region?</td><td class="data-column-50">Yes, East of England</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">PDU in East of England</td><td class="data-column-50">Bedfordshire (includes Bedford, Central Bedfordshire and Luton)</td></tr>
+                                
+                                    <tr><td class="data-column-50">Is placement required in a different PDU?</td><td class="data-column-50">Yes</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Reason for choosing a different PDU</td><td class="data-column-50">Reasons X, Y, Z</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Offence and behaviour summary</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Has the person ever been convicted of a sexual offence?</td><td class="data-column-50">No</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Are there concerns about the person&#x27;s sexual behaviour?</td><td class="data-column-50">Yes - Sexual behaviour concerns details</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Has the person ever been convicted of arson?</td><td class="data-column-50">No</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Are there concerns about arson for the person?</td><td class="data-column-50">Yes - Arson behaviour concerns details</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Sentence information</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Offence ID</td><td class="data-column-50">M2500403796</td></tr>
+                                
+                                    <tr><td class="data-column-50">Summary of offending history</td><td class="data-column-50">A brief summary of offending history</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Which of the following best describes the sentence type?</td><td class="data-column-50">Extended determinate custody</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">What is the sentence length?</td><td class="data-column-50">2 years, 4 days</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Sentence expiry date</td><td class="data-column-50">19 January 2124</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">CRD start date</td><td class="data-column-50">1 April 2122</td></tr>
+                                
+                                    <tr><td class="data-column-50">CRD end date</td><td class="data-column-50">18 July 2122</td></tr>
+                                
+                                    <tr><td class="data-column-50">Licence end date</td><td class="data-column-50">9 July 2024</td></tr>
+                                
+                                    <tr><td class="data-column-50">What is the release type?</td><td class="data-column-50">Conditional release date (CRD)
+Fixed-term Recall</td></tr>
+                                
+                                    <tr><td class="data-column-50">Licence start date</td><td class="data-column-50">19 January 2024</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Contact details</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Probation practitioner details</td><td class="data-column-50">[{PDU&#x3D;Suffolk, Email&#x3D;name@example.gov.uk, Phone&#x3D;01234 56780, Name&#x3D;Practitioner Name}]</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Backup contact / senior probation officer details</td><td class="data-column-50">[{Email&#x3D;backup-name@example.gov.uk, Phone&#x3D;09876 54321, Name&#x3D;Backup Name}]</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">What is the person&#x27;s phone number?</td><td class="data-column-50">01235 467890</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Eligibility</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">How is the person eligible for CAS3?</td><td class="data-column-50">Moving on as homeless from an Approved Premises (CAS1)</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Release date</td><td class="data-column-50">13 July 2026</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Accommodation required from date</td><td class="data-column-50">15 July 2026</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Consent</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Has consent for CAS3 been given?</td><td class="data-column-50">Yes</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                    
+                
+                    <p><b>Assess placement risks and needs</b></p>
+                    
+                        <p><b>Licence conditions</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Other conditions (relevant to accommodation)</td><td class="data-column-50">Other detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">Non association</td><td class="data-column-50">Non association detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">Non contact</td><td class="data-column-50">Non contact detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">Civil orders (e.g. SHPT), restraining orders, criminal behaviour orders</td><td class="data-column-50">Civil orders detail</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Prison information</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Adjudications</td><td class="data-column-50">[{Adjudication number&#x3D;1531418, Offence description&#x3D;Commits any assault - all assault on other person, Finding&#x3D;Proved, Report date and time&#x3D;25 Jun 2025, 13:13, Establishment&#x3D;Moorland (HMP &amp; YOI)}]</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">ACCT Alerts</td><td class="data-column-50">No ACCT information available for the person at the time of referral</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Placement considerations</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Is the person suitable to share accommodation with others?</td><td class="data-column-50">Yes - Some detail</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">How will you support the person&#x27;s placement considering any risks to the support worker?</td><td class="data-column-50">Support detail</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Are there any concerns or risks relating to anti-social behaviour?</td><td class="data-column-50">Yes - Anti-social behaviour concerns detail</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Does the person have any current or previous issues with drug or alcohol misuse?</td><td class="data-column-50">Yes - Details of drug and alcohol misuse</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Has a safety plan been completed?</td><td class="data-column-50">Yes, and consent to share has been given</td></tr>
+                                
+                                    <tr><td class="data-column-50">How will risk to self impact placement?</td><td class="data-column-50">Risk to self detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">How will risk to known adult impact placement?</td><td class="data-column-50">Risk to known adult detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">How will risk to staff impact placement?</td><td class="data-column-50">Risk to staff detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">Are there any current or past concerns about self-harm or suicide?</td><td class="data-column-50">Yes</td></tr>
+                                
+                                    <tr><td class="data-column-50">How will risk to children impact placement?</td><td class="data-column-50">Risk to children detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">How will risk to public impact placement?</td><td class="data-column-50">Risk to public detail</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">RM30: Supervision</td><td class="data-column-50">Mr Davies is currently at HMP Berwyn
+
+xxx xxx Prison Offender Manager at HMP Berwynf - he will be seen as required in line with National Standards and as required by OMU. 
+
+Key Worker - To be confirmed with SMS in HMP Berwyn. - to be seen in line with key worker protocol. 
+
+OMIC - Prison Offender Manager has responsibility for this case, but this will be transferred to the COM at the appropriate juncture as per OMIC guidance. A handover will be completed at that juncture. 
+
+PD - Screening has been completed - Mr Davies screens in, and this will be progressed to a PD consultation. 
+
+Mr Davies needs to be assessed for his suitability for programmes by psychology and the Interventions team. 
+He has been assessed as a Category C prisoner. </td></tr>
+                                
+                                    <tr><td class="data-column-50">RM32: Interventions and treatment</td><td class="data-column-50">Motivational work will be undertaken with Mr Davies and will underpin all interventions. Work will be undertaken on a face to face basis with POM, 
+
+Practical Support will be provided by Prison Officers - relating to practical daily issues - they will be available on the wing at all times.  
+
+Prison Offender Manager will see Mr Davies on a fortnightly basis to assess progress with the supervision plan.
+
+Mr Davies screens into the PD Pathway - and a consultation with the POM will take place. This will be arranged with Forensic Psychology. 
+
+Mr Davies has commenced in cell work through RES which will be monitored by the POM. .
+
+Mr Davies&#x27; contact with the mental heaalth team will need to be confirmed. </td></tr>
+                                
+                                    <tr><td class="data-column-50">RM31: Monitoring and control</td><td class="data-column-50">In custody - 
+
+Mr Davies will be managed by HMP Berwyn within the prison regime. 
+His behaviour will be managed through the IEP and adjudications system.
+If his behaviour is concerning he will be referred to CSIP or IRMT for risk management -he will be removed to the CASU. 
+
+Mr Davies is subject to PPRC protocol - no contact with anyone under 18 years old without prior assessment-should he be suspected of contact or any increase in risk detected via Intel he will be subject to phone monitoring.</td></tr>
+                                
+                                    <tr><td class="data-column-50">RM33: Victim safety planning</td><td class="data-column-50">There is a Restraining Order in place to protect xx xxx:
+
+You are prohibited from: 
+1. Contacting xxx xxx directly or indirectly including via social media 
+2. Entering any part of any premises occupied by xxx xxx for the time being as their usual place of residence, this is in place until 16/11/23
+
+There is also a Restraining Order in place to protect a previous victim xxx xxx:
+
+You are prohibited from:- 
+1. Contacting directly or indirectly xxx xxx, this is in place until further order.
+
+Consideration of multi agency meetings to further protect victims will need to be considered before release. 
+
+Blocks are on place at HMP Cardiff to prevent contact and safeguard victims. </td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Approvals for specific risks</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Risk of serious harm</td><td class="data-column-50">[{Risk to children&#x3D;Medium, Risk to known adult&#x3D;High, Risk to public&#x3D;High, Overall risk of serious harm&#x3D;High, Risk to staff&#x3D;Low}]</td></tr>
+                                
+                                    <tr><td class="data-column-50">NDelius risk flags (registers)</td><td class="data-column-50">Contact Suspended
+Risk to Staff
+Risk to Children
+Risk to Known Adult
+Risk to Prisoner
+Risk to Public</td></tr>
+                                
+                                    <tr><td class="data-column-50">Have your received approval for this referral?</td><td class="data-column-50">Yes - Approvals detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">Multi-agency public protection arrangements</td><td class="data-column-50">Something went wrong. We are unable to include MAPPA information. This risk data must be checked manually outside of this service.</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Behaviour in CAS</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Has the person previously stayed in Community Accommodation Services (CAS)?</td><td class="data-column-50">Yes</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">CAS3</td><td class="data-column-50">CAS3 detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">Approved Premises (AP or CAS1)</td><td class="data-column-50">Approved Premises detail</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                    
+                
+                    <p><b>Health, disability, culture, and safeguarding</b></p>
+                    
+                        <p><b>Health, disability and cultural needs</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Physical health condition, for example diabetes, epilepsy, asthma</td><td class="data-column-50">Physical health detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">Neurodivergence</td><td class="data-column-50">Neurodivergence detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">Another need</td><td class="data-column-50">Other needs detail</td></tr>
+                                
+                                    <tr><td class="data-column-50">Hearing impairment</td><td class="data-column-50">Hearing impairment detail</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Will the person require a property with specific attributes or adaptations?</td><td class="data-column-50">Yes - Adaptation requirements detail</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Does the person have any religious or cultural needs?</td><td class="data-column-50">Yes - Religious needs detail</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Safeguarding and support</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Do you have any concerns about safeguarding and/or vulnerability?</td><td class="data-column-50">Yes - Concerns A, B, and C</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Details of support in the community</td><td class="data-column-50">Community support details</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Details of local connections</td><td class="data-column-50">Local connection details</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Does the person have any caring responsibilities?</td><td class="data-column-50">Yes - Caring responsibilities X, Y, and Z</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Food allergies</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Does the person have any food allergies or dietary requirements?</td><td class="data-column-50">Yes - Allergic to X, Y, Z</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                        <p><b>Move on plan</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">How will you prepare the person for move on after placement?</td><td class="data-column-50">A move on plan</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                    
+                
+                    <p><b>Required referrals</b></p>
+                    
+                        <p><b>Accommodation referral details</b></p>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Has the Duty to refer (England) or Application for Assistance (Wales) been submitted?</td><td class="data-column-50">Yes</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Reference number</td><td class="data-column-50">ABC123</td></tr>
+                                
+                                    <tr><td class="data-column-50">Submission date</td><td class="data-column-50">12 April 2022</td></tr>
+                                
+                                    <tr><td class="data-column-50">What is the local authority?</td><td class="data-column-50">Barking and Dagenham</td></tr>
+                                
+                                    <tr><td class="data-column-50">Have you received an outcome from the local authority?</td><td class="data-column-50">Yes, it was accepted on prevention and relief duty</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Has a referral to Commissioned Rehabilitative Services (CRS) been submitted?</td><td class="data-column-50">Yes</td></tr>
+                                
+                            </table>
+                        
+                            <table class="summary-list">
+                                
+                                    <tr><td class="data-column-50">Have other accommodation options been considered?</td><td class="data-column-50">Yes - Other accommodation details</td></tr>
+                                
+                            </table>
+                        
+                        
+                    
+                    
+                
+                
+            
+            
+
+        
+        
+
+        <h3>Assessment Referral History Notes</h3>
+        
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Note type</td>
+                    <td class="data-column-30">System noted type</td>
+                    <td class="data-column-30">Created by user</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>User</td>
+                    <td>No Data Held</td>
+                    <td>SAR-TEST-CREATED-BY-USER</td>
+                </tr>
+            </table>
+            <table class="summary-list">
+                <tr><td>Message</td><td>some other message</td></tr>
+            </table>
+            <br/>
+        
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Note type</td>
+                    <td class="data-column-30">System noted type</td>
+                    <td class="data-column-30">Created by user</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>System</td>
+                    <td>READY_TO_PLACE</td>
+                    <td>SAR-TEST-CREATED-BY-USER</td>
+                </tr>
+            </table>
+            <table class="summary-list">
+                <tr><td>Message</td><td>Some message</td></tr>
+            </table>
+            <br/>
+        
+        
+
+        <h3>Bookings</h3>
+        
+            <h4>Booking</h4>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Created at</td>
+                    <td class="data-column-25">Status</td>
+                    <td class="data-column-25">Premises name</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>arrived</td>
+                    <td>SAR-TEST-PREMISES</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Arrival date</td>
+                    <td class="data-column-25">Departure date</td>
+                    <td class="data-column-25">Original arrival date</td>
+                </tr>
+                <tr>
+                    <td>20 September 2021</td>
+                    <td>23 September 2021</td>
+                    <td>20 September 2021</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Original departure date</td>
+                    <td class="data-column-25">Key worker staff code</td>
+                    <td class="data-column-25">Adhoc</td>
+                </tr>
+                <tr>
+                    <td>23 September 2021</td>
+                    <td>No Data Held</td>
+                    <td>No Data Held</td>
+                </tr>
+            </table>
+        
+        
+
+        <h3>Assessments</h3>
+        
+            <h4>Assessment</h4>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Decision</td>
+                    <td class="data-column-25">Submitted at</td>
+                    <td class="data-column-25">Created at</td>
+                    <td class="data-column-25">Is withdrawn</td>
+                </tr>
+                <tr>
+                    <td>REJECTED</td>
+                    <td>19 October 2021, 5:00:00 pm</td>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>No</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Referral rejection reason category</td>
+                    <td class="data-column-75">Referral rejection reason detail</td>
+                </tr>
+                <tr>
+                    <td>SAR-REJ</td>
+                    <td>Some Reason Detail</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Rejection rationale</td>
+                    <td class="data-column-25">Completed at</td>
+                    <td class="data-column-25">Accommodation required from date</td>
+                    <td class="data-column-25">Is able to share</td>
+                </tr>
+                <tr>
+                    <td>rejected as no good</td>
+                    <td>19 October 2021, 5:00:00 pm</td>
+                    <td>20 September 2021</td>
+                    <td>No</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Release type</td>
+                    <td class="data-column-25">Release date</td>
+                    <td class="data-column-25">Reallocated at</td>
+                    <td class="data-column-25">Due at</td>
+                </tr>
+                <tr>
+                    <td>licence</td>
+                    <td>20 September 2021</td>
+                    <td>No Data Held</td>
+                    <td>22 September 2021, 5:00:00 pm</td>
+                </tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Assessor name</td>
+                    <td class="data-column-25">Allocated at</td>
+                </tr>
+                <tr>
+                    <td>SAR-TEST-ASSESSOR</td>
+                    <td>21 September 2021, 5:00:00 pm</td>
+                </tr>
+            </table>
+        
+        
+
+        <h3>Cancellations</h3>
+        
+            <h4>Cancellation</h4>
+            <table class="summary-list">
+                <tr><td>Created at</td><td>18 September 2021, 5:00:00 pm</td></tr>
+                <tr><td>Cancellation date</td><td>25 September 2021</td></tr>
+                <tr><td>Cancellation reason</td><td>some reason</td></tr>
+                <tr><td>Other reason</td><td>some other reason</td></tr>
+                <tr><td>Notes</td><td>some notes</td></tr>
+            </table>
+        
+        
+
+        <h3>Domain Events</h3>
+        
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+                <h4>Referral Submitted</h4>
+            
+
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-25">Created at</td>
+                    <td class="data-column-25">Trigger source</td>
+                    <td class="data-column-25">Triggered by user</td>
+                    <td class="data-column-25">Occurred at</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>No Data Held</td>
+                    <td>Johnson</td>
+                    <td>21 September 2021, 5:00:00 pm</td>
+                </tr>
+            </table>
+
+        
+        
+
+    
+
+
+

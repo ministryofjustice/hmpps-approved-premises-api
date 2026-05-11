@@ -1,22 +1,22 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase() {
@@ -42,7 +42,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS3 Information - Applications`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = userEntity()
+    val (user, _) = givenAUser()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
     assertNotNull(result)
@@ -66,7 +66,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS3 Information - Assessments`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = userEntity()
+    val (user, _) = givenAUser()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val temporaryAccomodationAssessment = temporaryAccommodationAssessmentEntity(temporaryAccommodationApplication)
     val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
@@ -92,7 +92,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS3 Information - Assessment Referral History Notes`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = userEntity()
+    val (user, _) = givenAUser()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val temporaryAccomodationAssessment = temporaryAccommodationAssessmentEntity(temporaryAccommodationApplication)
     val assessmentReferralHistoryNoteSystem =
@@ -121,7 +121,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS3 information - have a booking`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = userEntity()
+    val (user, _) = givenAUser()
     val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
 
     val booking = bookingEntity(offenderDetails, application)
@@ -150,7 +150,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   @Test
   fun `Get CAS3 information - have a booking with extension`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = userEntity()
+    val (user, _) = givenAUser()
     val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
 
     val booking = bookingEntity(offenderDetails, application)
@@ -213,7 +213,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val application = temporaryAccommodationApplicationEntity(offender, user)
     val assessment = temporaryAccommodationAssessmentEntity(application)
 
-    val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id, ServiceName.temporaryAccommodation)
+    val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id, DomainEventType.CAS3_REFERRAL_SUBMITTED, ServiceName.temporaryAccommodation)
     val result = sarService.getCAS3Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNotNull(result)
@@ -312,6 +312,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     {
         "crn": "${temporaryAccommodationApplication.crn}",
         "noms_number": "${temporaryAccommodationApplication.nomsNumber}",
+        "data": $DATA_JSON_SIMPLE,
         "offender_name": "${temporaryAccommodationApplication.name}",
         "document": ${temporaryAccommodationApplication.document},
         "created_at": "$CREATED_AT",
@@ -344,49 +345,53 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
 
   private fun temporaryAccommodationAssessmentEntity(
     application: TemporaryAccommodationApplicationEntity,
-  ): TemporaryAccommodationAssessmentEntity {
+  ): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity {
     var user = userEntity()
     return temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
       withData(DATA_JSON_SIMPLE)
       withDocument(DOCUMENT_JSON_SIMPLE)
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withAllocatedAt(OffsetDateTime.parse(ALLOCATED_AT))
+      withCreatedAt(java.time.OffsetDateTime.parse(CREATED_AT))
+      withAllocatedAt(java.time.OffsetDateTime.parse(ALLOCATED_AT))
       withIsWithdrawn(false)
       withAllocatedToUser(userEntity())
       withApplication(application)
-      withDecision(AssessmentDecision.REJECTED)
+      withDecision(uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision.REJECTED)
       withReallocatedAt(null)
       withRejectionRationale("rejected as no good")
-      withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
-      withDueAt(OffsetDateTime.parse(DUE_AT))
+      withSubmittedAt(java.time.OffsetDateTime.parse(SUBMITTED_AT))
+      withDueAt(java.time.OffsetDateTime.parse(DUE_AT))
       withSummaryData(DATA_JSON_SIMPLE)
-      withCompletedAt(OffsetDateTime.parse(SUBMITTED_AT))
+      withCompletedAt(java.time.OffsetDateTime.parse(SUBMITTED_AT))
       withReferralRejectionReason(
         referralRejectionReasonEntityFactory.produceAndPersist {
-          withName(randomStringMultiCaseWithNumbers(6))
+          withName(
+            randomStringMultiCaseWithNumbers(
+              6,
+            ),
+          )
           withIsActive(true)
         },
       )
       withReferralRejectionReasonDetail("Some Reason Detail")
-      withReleaseDate(LocalDate.parse(arrivedAtDateOnly))
-      withAccommodationRequiredFromDate(LocalDate.parse(arrivedAtDateOnly))
+      withReleaseDate(java.time.LocalDate.parse(arrivedAtDateOnly))
+      withAccommodationRequiredFromDate(java.time.LocalDate.parse(arrivedAtDateOnly))
     }
   }
 
   private fun temporaryAccommodationApplicationEntity(
-    offenderDetails: OffenderDetailSummary,
-    user: UserEntity,
-  ): TemporaryAccommodationApplicationEntity {
+    offenderDetails: uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary,
+    user: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity,
+  ): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity {
     val risk1 = personRisks()
     return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withArrivalDate(OffsetDateTime.parse(ARRIVED_AT))
+      withArrivalDate(java.time.OffsetDateTime.parse(ARRIVED_AT))
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
       withData(DATA_JSON_SIMPLE)
       withDocument(DOCUMENT_JSON_SIMPLE)
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
-      withPersonReleaseDate(LocalDate.parse(arrivedAtDateOnly))
+      withCreatedAt(java.time.OffsetDateTime.parse(CREATED_AT))
+      withSubmittedAt(java.time.OffsetDateTime.parse(SUBMITTED_AT))
+      withPersonReleaseDate(java.time.LocalDate.parse(arrivedAtDateOnly))
       withCreatedByUser(user)
       withConvictionId(CONVICTION_ID)
       withName(NAME)
@@ -394,8 +399,12 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       withEventNumber(EVENT_NUMBER)
       withOffenceId(OFFENCE_ID)
       withRiskRatings(risk1)
-      withDutyToReferLocalAuthorityAreaName(randomStringMultiCaseWithNumbers(10))
-      withDutyToReferSubmissionDate(LocalDate.parse(submittedAtDateOnly))
+      withDutyToReferLocalAuthorityAreaName(
+        randomStringMultiCaseWithNumbers(
+          10,
+        ),
+      )
+      withDutyToReferSubmissionDate(java.time.LocalDate.parse(submittedAtDateOnly))
       withDutyToReferOutcome(null)
       withEligiblilityReason("Not eligible")
       withEventNumber("1")
