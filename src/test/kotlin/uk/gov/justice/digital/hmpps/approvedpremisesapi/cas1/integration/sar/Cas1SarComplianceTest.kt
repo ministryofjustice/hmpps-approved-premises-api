@@ -1,0 +1,94 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar
+
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
+import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelper
+import java.time.LocalDate
+
+/**
+ * Per-service SAR compliance test for CAS1.
+ *
+ * Cross-service SAR infrastructure (Flyway schema, JPA entity snapshot, template
+ * endpoint smoke tests) lives in `SarIntegrationTest` — they only need to run
+ * once for the whole app, since all four CAS services share one DB and one
+ * template file.
+ *
+ * This class verifies CAS1's slice end-to-end against CAS1-specific fixtures
+ * via [CasSarFixtureAsserter].
+ */
+class Cas1SarComplianceTest : Cas1SarTestBase() {
+
+  companion object {
+    const val TEST_CRN = "X320741"
+    const val TEST_NOMS_NUMBER = "A1234BC"
+    const val TEST_ASSESSOR_NAME = "SAR-TEST-ASSESSOR"
+    const val TEST_CASE_MANAGER_NAME = "SAR-TEST-CASE-MANAGER"
+    val TEST_FROM_DATE: LocalDate = LocalDate.of(2019, 1, 1)
+    val TEST_TO_DATE: LocalDate = LocalDate.of(2024, 12, 31)
+
+    const val EXPECTED_API_RESPONSE_PATH = "/sar/cas1-expected-api-response.json"
+    const val EXPECTED_REPORT_PATH = "/sar/cas1-expected-report.html"
+    const val GENERATED_API_RESPONSE_FILENAME = "cas1-sar-api-response.json.log"
+    const val GENERATED_REPORT_FILENAME = "cas1-sar-report.html.log"
+  }
+
+  private val asserter by lazy {
+    CasSarFixtureAsserter(
+      sarHelper = sarIntegrationTestHelper,
+      webTestClient = webTestClient,
+      expectedApiResponseResourcePath = EXPECTED_API_RESPONSE_PATH,
+      expectedReportResourcePath = EXPECTED_REPORT_PATH,
+      generatedApiResponseFilename = GENERATED_API_RESPONSE_FILENAME,
+      generatedReportFilename = GENERATED_REPORT_FILENAME,
+    )
+  }
+
+  @BeforeEach
+  fun clear() {
+    clearTestData()
+  }
+
+  private fun clearTestData() {
+    appealTestRepository.deleteAll()
+    approvedPremisesAssessmentRepository.deleteAll()
+    approvedPremisesApplicationRepository.deleteAll()
+  }
+
+  private fun setupTestData() {
+    val offenderDetails = OffenderDetailsSummaryFactory()
+      .withCrn(TEST_CRN)
+      .withNomsNumber(TEST_NOMS_NUMBER)
+      .produce()
+    val assessor = userEntityFactory.produceAndPersist {
+      withName(TEST_ASSESSOR_NAME)
+      withProbationRegion(givenAProbationRegion())
+    }
+    val application = approvedPremisesApplicationEntity(offenderDetails, TEST_CASE_MANAGER_NAME)
+    val assessment = approvedPremisesAssessmentEntity(application, assessor)
+    appealEntity(application, assessment)
+  }
+
+  @Test
+  fun `CAS1 SAR API should return expected data`() {
+    setupTestData()
+    asserter.assertApiDataMatchesFixture(
+      crn = TEST_CRN,
+      fromDate = TEST_FROM_DATE,
+      toDate = TEST_TO_DATE,
+    )
+  }
+
+  @Test
+  fun `CAS1 SAR report should render as expected`() {
+    setupTestData()
+    asserter.assertReportMatchesFixture(
+      crn = TEST_CRN,
+      fromDate = TEST_FROM_DATE,
+      toDate = TEST_TO_DATE,
+    )
+  }
+}

@@ -1,0 +1,121 @@
+[
+  {
+    "ShortTermAccommodation": []
+  },
+  {
+    "ApprovedPremises": {
+      "SpaceBookings": [],
+      "Applications": [
+        {
+          "offence_id": "BEING_BAD",
+          "application_user_name": "${json-unit.any-string}",
+          "sentence_type": "CUSTODIAL",
+          "submitted_at": "2021-10-19T16:00:00+00:00",
+          "withdrawal_reason": "NOT WITHDRAWN",
+          "ap_type": "NORMAL",
+          "document": {
+            "key2": "value2"
+          },
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "is_withdrawn": false,
+          "inmate_in_out_status_on_submission": null,
+          "expired_reason": "Expired reason",
+          "created_by_user": "${json-unit.any-string}",
+          "notice_type": "emergency",
+          "noms_number": "A1234BC",
+          "arrival_date": "2021-09-20T16:00:00+00:00",
+          "target_location": null,
+          "crn": "X320741",
+          "conviction_id": 2,
+          "situation": "bailSentence",
+          "case_manager_name": "SAR-TEST-CASE-MANAGER",
+          "is_emergency_application": true,
+          "release_type": "CONDITIONAL",
+          "is_inapplicable": false,
+          "licence_expiry_date": "2021-07-17",
+          "risk_ratings": {
+            "mappa": {
+              "value": null,
+              "status": "NotFound"
+            },
+            "tier": {
+              "value": {
+                "lastUpdated": [
+                  2023,
+                  6,
+                  26
+                ],
+                "level": "M1"
+              },
+              "status": "Retrieved"
+            },
+            "roshRisks": {
+              "value": null,
+              "status": "NotFound"
+            },
+            "flags": {
+              "value": null,
+              "status": "NotFound"
+            }
+          },
+          "name": "Jeffity Jeff",
+          "case_manager_is_not_applicant": true,
+          "event_number": "1",
+          "is_womens_application": false,
+          "other_withdrawal_reason": "NOT APPLICABLE",
+          "status": "AWAITING_ASSESSMENT"
+        }
+      ],
+      "ApplicationTimeline": [],
+      "Appeals": [
+        {
+          "noms_number": "A1234BC",
+          "decision": "rejected",
+          "decision_detail": "rejected as no good",
+          "appeal_created_at": "2021-09-18T16:00:00+00:00",
+          "appeal_detail": "I want to appeal this decision",
+          "crn": "X320741",
+          "appeal_date": "2021-10-24",
+          "created_by_user": "${json-unit.any-string}"
+        }
+      ],
+      "AssessmentClarificationNotes": [],
+      "PlacementRequirementCriteria": [],
+      "DomainEventsMetadata": [],
+      "Assessments": [
+        {
+          "decision": "REJECTED",
+          "submitted_at": "2021-10-19T16:00:00+00:00",
+          "agree_with_short_notice_reason": false,
+          "document": {
+            "key2": "value2"
+          },
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "is_withdrawn": false,
+          "created_from_appeal": false,
+          "rejection_rationale": "rejected as no good",
+          "noms_number": "A1234BC",
+          "reason_for_late_application": "late application reason",
+          "reallocated_at": null,
+          "due_at": "2021-09-22T16:00:00+00:00",
+          "agree_with_short_notice_reason_comments": "agree with short notice reason comments",
+          "assessor_name": "SAR-TEST-ASSESSOR",
+          "crn": "X320741",
+          "allocated_at": "2021-09-21T16:00:00+00:00"
+        }
+      ],
+      "PlacementRequirements": [],
+      "OfflineApplications": [],
+      "PlacementRequests": [],
+      "BookingNotMades": [],
+      "PlacementApplications": [],
+      "DomainEvents": []
+    }
+  },
+  {
+    "BailAccommodation": []
+  },
+  {
+    "TemporaryAccommodation": []
+  }
+]
