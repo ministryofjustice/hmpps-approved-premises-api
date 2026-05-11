@@ -147,6 +147,9 @@ data class PlacementApplicationEntity(
    */
   var expectedArrival: LocalDate? = null,
 
+  /**
+   * If [submittedAt] is not null, this value will be set. Use [placementDates()] to access.
+   */
   var requestedDuration: Int? = null,
 
   var authorisedDuration: Int? = null,
