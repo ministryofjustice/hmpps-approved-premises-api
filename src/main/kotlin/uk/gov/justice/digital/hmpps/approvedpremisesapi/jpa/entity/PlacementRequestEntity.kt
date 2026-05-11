@@ -220,7 +220,7 @@ data class PlacementRequestEntity(
    * This property is used to identify such instances
    *
    * Note that we also populate [PlacementApplicationPlaceholderEntity] for any initial request
-   * for placements to support reporting on initial requests before a [PlcementRequestEntity]
+   * for placements to support reporting on initial requests before a [PlacementRequestEntity]
    * exists
    */
   fun isForLegacyInitialRequestForPlacement() = placementApplication == null

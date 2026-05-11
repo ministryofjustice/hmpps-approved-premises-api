@@ -371,7 +371,7 @@ class ApprovedPremisesApplicationEntity(
   /**
    * If a request for placement was made in the original application, this value
    * will provide the requested arrival date at midnight in UTC
-   * (See [ApplicationService.getArrivalDate])
+   * (See [Cas1ApplicationCreationService.getArrivalDate])
    *
    * Ideally we'd persist this as a date only (as is provided by the UI)
    */

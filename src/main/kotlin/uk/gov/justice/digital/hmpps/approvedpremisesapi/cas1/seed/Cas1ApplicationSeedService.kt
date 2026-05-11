@@ -243,6 +243,7 @@ class Cas1ApplicationSeedService(
         releaseType = ReleaseTypeOption.licence,
         targetLocation = postcodeDistrictRepository.findAll()[0].outcode,
         arrivalDate = LocalDate.of(2030, 1, 1),
+        duration = 28,
         sentenceType = SentenceTypeOption.ipp,
         situation = SituationOption.bailSentence,
         applicantUserDetails = Cas1ApplicationUserDetails(
