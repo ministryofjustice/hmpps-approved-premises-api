@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.ninjasquad.springmockk.SpykBean
+import com.ninjasquad.springmockk.MockkSpyBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
@@ -25,12 +25,12 @@ import java.util.UUID
 
 class Cas2v2AssessmentTest : IntegrationTestBase() {
 
-  @SpykBean
+  @MockkSpyBean
   lateinit var realAssessmentRepository: Cas2AssessmentRepository
 
   @AfterEach
   fun afterEach() {
-    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
+    // SpringMockK does not correctly clear mocks for @MockkSpyBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(realAssessmentRepository)

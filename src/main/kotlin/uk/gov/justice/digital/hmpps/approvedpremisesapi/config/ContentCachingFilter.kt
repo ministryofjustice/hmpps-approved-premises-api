@@ -11,11 +11,16 @@ import org.springframework.web.util.ContentCachingRequestWrapper
 @Component
 @Order(1)
 class ContentCachingFilter : OncePerRequestFilter() {
+
+  companion object {
+    const val NO_CACHE_LIMIT_VALUE = 0
+  }
+
   override fun doFilterInternal(
     httpServletRequest: HttpServletRequest,
     httpServletResponse: HttpServletResponse,
     filterChain: FilterChain,
   ) {
-    filterChain.doFilter(ContentCachingRequestWrapper(httpServletRequest), httpServletResponse)
+    filterChain.doFilter(ContentCachingRequestWrapper(httpServletRequest, NO_CACHE_LIMIT_VALUE), httpServletResponse)
   }
 }

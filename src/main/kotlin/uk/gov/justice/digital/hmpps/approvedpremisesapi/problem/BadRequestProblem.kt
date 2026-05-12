@@ -11,35 +11,24 @@ class BadRequestProblem(
 
   override fun toProblemDetail(): ProblemDetail {
     val detail = errorDetail ?: "There is a problem with your request"
-    val problemDetail = InvalidParamsProblemDetail(
-      HttpStatus.BAD_REQUEST,
-      detail,
-      invalidParams?.flatMap { (field, paramDetails) ->
-        listOf(
-          ParamError(
-            propertyName = field,
-            errorType = paramDetails.errorType,
-            entityId = paramDetails.entityId,
-            value = paramDetails.value,
-          ),
+
+    return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail).apply {
+      title = "Bad Request"
+
+      if (invalidParams != null) {
+        setProperty(
+          "invalid-params",
+          invalidParams.map {
+            ParamError(
+              propertyName = it.key,
+              errorType = it.value.errorType,
+              entityId = it.value.entityId,
+              value = it.value.value,
+            )
+          },
         )
-      },
-    )
-    problemDetail.title = "Bad Request"
-    if (invalidParams != null) {
-      problemDetail.setProperty(
-        "invalid-params",
-        invalidParams.map {
-          ParamError(
-            propertyName = it.key,
-            errorType = it.value.errorType,
-            entityId = it.value.entityId,
-            value = it.value.value,
-          )
-        },
-      )
+      }
     }
-    return problemDetail
   }
 }
 

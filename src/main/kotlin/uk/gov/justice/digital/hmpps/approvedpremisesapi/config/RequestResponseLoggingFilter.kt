@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.util.ContentCachingRequestWrapper
 import org.springframework.web.util.ContentCachingResponseWrapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ContentCachingFilter.Companion.NO_CACHE_LIMIT_VALUE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
@@ -46,7 +47,7 @@ class RequestResponseLoggingFilter(
 
     request.setAttribute(ATTRIBUTE_RECEIVED_TIMESTAMP, System.currentTimeMillis())
 
-    val requestWrapper = ContentCachingRequestWrapper(request)
+    val requestWrapper = ContentCachingRequestWrapper(request, NO_CACHE_LIMIT_VALUE)
     val responseWrapper = ContentCachingResponseWrapper(response)
 
     filterChain.doFilter(requestWrapper, responseWrapper)

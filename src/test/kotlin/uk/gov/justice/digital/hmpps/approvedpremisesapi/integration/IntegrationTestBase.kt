@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.cache.CacheManager
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpHeaders
@@ -308,6 +309,7 @@ import java.util.UUID
 @ContextConfiguration(initializers = [TestPropertiesInitializer::class])
 @ActiveProfiles("test")
 @Tag("integration")
+@AutoConfigureWebTestClient
 abstract class IntegrationTestBase {
   @Autowired
   lateinit var cas3BedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository
@@ -344,6 +346,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var jsonMapper: JsonMapper
+
+  @Autowired
+  lateinit var jackson3JsonMapper: tools.jackson.databind.json.JsonMapper
 
   @Autowired
   lateinit var jwtAuthHelper: JwtAuthHelper
