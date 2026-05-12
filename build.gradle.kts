@@ -41,10 +41,10 @@ dependencies {
   // generated schema, making it incompatible with the typescript generators and in some
   // places it was incorrect. We're pinning version 3.0.2 until a new version is available
   // reverting this change, as proposed by https://github.com/springdoc/springdoc-openapi/pull/3276
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
   // this is a transitive dependency of uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-autoconfigure
   // so we need to force a different version
-  implementation("org.springdoc:springdoc-openapi-starter-common:3.0.2")
+  implementation("org.springdoc:springdoc-openapi-starter-common:3.0.3")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
