@@ -3,7 +3,6 @@ plugins {
   kotlin("plugin.spring") version "2.3.20"
   kotlin("plugin.jpa") version "2.3.20"
   id("dev.detekt") version "2.0.0-alpha.2"
-  id("org.owasp.dependencycheck") version "12.2.1"
 }
 
 kotlin {
@@ -216,7 +215,7 @@ detekt {
 }
 
 dependencyCheck {
-  suppressionFile = ".dependencycheckignore.xml"
+  suppressionFiles.add(".cas-api-dependency-check-ignore.xml")
 }
 
 tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
