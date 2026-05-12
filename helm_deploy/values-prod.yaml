@@ -46,6 +46,9 @@ generic-service:
     NOTIFY_LOG_EMAILS: false
     HMPPS_SQS_USE_WEB_TOKEN: true
 
+    SPRINGDOC_API_DOCS_ENABLED: false
+    SPRINGDOC_SWAGGER_UI_ENABLED: false
+
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_APPLICATION-APPEAL: https://approved-premises.hmpps.service.justice.gov.uk/applications/#applicationId/appeals/#appealId
     URL-TEMPLATES_FRONTEND_APPLICATION-TIMELINE: https://approved-premises.hmpps.service.justice.gov.uk/applications/#applicationId?tab=timeline
