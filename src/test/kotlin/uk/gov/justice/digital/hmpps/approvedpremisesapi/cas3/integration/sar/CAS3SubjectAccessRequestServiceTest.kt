@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.sar
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -27,7 +27,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
-    assertNull(result)
+      assertNull(result)
   }
 
   @Test
@@ -36,7 +36,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
 
-    assertNull(result)
+      assertNull(result)
   }
 
   @Test
@@ -45,7 +45,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val user = userEntity()
     val temporaryAccommodationApplication = temporaryAccommodationApplicationEntity(offenderDetails, user)
     val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
       {
@@ -60,7 +60,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       }
     """.trimIndent()
 
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -71,7 +71,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val temporaryAccomodationAssessment = temporaryAccommodationAssessmentEntity(temporaryAccommodationApplication)
     val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
       {
@@ -86,7 +86,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       }
     """.trimIndent()
 
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -100,7 +100,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val assessmentReferralHistoryNoteUser = assessmentReferralHistoryUserNoteEntity(temporaryAccomodationAssessment, user)
     val result = sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
       {
@@ -115,7 +115,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       }
     """.trimIndent()
 
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -129,7 +129,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
     {        
@@ -144,7 +144,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }
     """.trimIndent()
 
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -159,7 +159,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
     {
@@ -174,7 +174,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }
     """.trimIndent()
 
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -188,7 +188,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
     {      
@@ -203,7 +203,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }
     """.trimIndent()
 
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -216,7 +216,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val domainEvent = domainEventEntity(offender, application.id, assessment.id, user.id, ServiceName.temporaryAccommodation)
     val result = sarService.getCAS3Result(offender.otherIds.crn, offender.otherIds.nomsNumber, START_DATE, END_DATE)
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
       {
@@ -230,12 +230,12 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
       }
     """.trimIndent()
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   private fun assessmentReferralHistoryNotesJson(
-    assessmentReferralHistoryNoteSystem: AssessmentReferralHistorySystemNoteEntity,
-    assessmentReferralHistoryNoteUser: AssessmentReferralHistoryUserNoteEntity,
+      assessmentReferralHistoryNoteSystem: AssessmentReferralHistorySystemNoteEntity,
+      assessmentReferralHistoryNoteUser: AssessmentReferralHistoryUserNoteEntity,
   ) = """
     {
       "crn": "${assessmentReferralHistoryNoteSystem.assessment.application.crn}",
@@ -258,8 +258,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   """.trimIndent()
 
   private fun assessmentReferralHistoryUserNoteEntity(
-    temporaryAccomodationAssessment: TemporaryAccommodationAssessmentEntity,
-    user: UserEntity,
+      temporaryAccomodationAssessment: TemporaryAccommodationAssessmentEntity,
+      user: UserEntity,
   ) = assessmentReferralHistoryUserNoteEntityFactory.produceAndPersist {
     withAssessment(temporaryAccomodationAssessment)
     withMessage("some other message")
@@ -268,8 +268,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   private fun assessmentReferralHistorySystemNoteEntity(
-    temporaryAccomodationAssessment: TemporaryAccommodationAssessmentEntity,
-    user: UserEntity,
+      temporaryAccomodationAssessment: TemporaryAccommodationAssessmentEntity,
+      user: UserEntity,
   ) = assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
     withAssessment(temporaryAccomodationAssessment)
     withType(ReferralHistorySystemNoteType.READY_TO_PLACE)
@@ -279,7 +279,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   private fun temporaryAccommodationAssessmentJson(
-    assessment: TemporaryAccommodationAssessmentEntity,
+      assessment: TemporaryAccommodationAssessmentEntity,
   ): String =
     """
       {
@@ -306,7 +306,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     """.trimIndent()
 
   private fun temporaryAccommodationApplicationJson(
-    temporaryAccommodationApplication: TemporaryAccommodationApplicationEntity,
+      temporaryAccommodationApplication: TemporaryAccommodationApplicationEntity,
   ): String =
     """
     {
@@ -343,7 +343,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     """.trimIndent()
 
   private fun temporaryAccommodationAssessmentEntity(
-    application: TemporaryAccommodationApplicationEntity,
+      application: TemporaryAccommodationApplicationEntity,
   ): TemporaryAccommodationAssessmentEntity {
     var user = userEntity()
     return temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
@@ -374,8 +374,8 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
   }
 
   private fun temporaryAccommodationApplicationEntity(
-    offenderDetails: OffenderDetailSummary,
-    user: UserEntity,
+      offenderDetails: OffenderDetailSummary,
+      user: UserEntity,
   ): TemporaryAccommodationApplicationEntity {
     val risk1 = personRisks()
     return temporaryAccommodationApplicationEntityFactory.produceAndPersist {

@@ -89,9 +89,6 @@ dependencies {
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.1.4")
-  // json-unit-assertj is a runtime transitive of hmpps-subject-access-request-test-support
-  // but not exposed at compile time; we need it directly for per-service SAR fixture
-  // assertions in CasSarFixtureAsserter.
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:5.1.1")
 
   testImplementation("com.ninja-squad:springmockk:5.0.1")

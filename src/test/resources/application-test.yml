@@ -107,10 +107,6 @@ hmpps:
       path: /sar/template_hmpps-approved-premises-api.mustache
       enabled: true
     tests:
-      expected-api-response:
-        path: /sar/cas1-expected-api-response.json
-      expected-render-result:
-        path: /sar/cas1-expected-report.html
       attachments-expected: false
       expected-flyway-schema-version: 20260209120000000
       expected-jpa-entity-schema:
