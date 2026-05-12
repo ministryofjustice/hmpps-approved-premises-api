@@ -652,6 +652,12 @@ data class Cas1SpaceBookingEntity(
     else -> Cas1SpaceBookingStatus.UPCOMING
   }
 
+
+  data class StatusAndWhen(
+    val status: Cas1SpaceBookingStatus,
+    val occurredat: LocalDate,
+  )
+
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade
     get() = Cas1ApplicationFacade(application, offlineApplication)

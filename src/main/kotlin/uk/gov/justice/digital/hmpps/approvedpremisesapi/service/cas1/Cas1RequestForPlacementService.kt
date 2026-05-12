@@ -23,7 +23,25 @@ class Cas1RequestForPlacementService(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1SpaceBookingTransformer: Cas1SpaceBookingTransformer,
 ) {
-  fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity): CasResult<List<RequestForPlacement>> {
+
+  /*
+  Need a function that returns
+
+  for each rfp
+     # RequestForPlacement.status
+    - status
+     # need to add RequestForPlacement.statusUpdated
+    - date status set
+
+    for each placement
+     # Cas1SpaceBookingShortSummary.status
+     - status
+     # need to add Cas1SpaceBookingShortSummary.statusUpdated
+     - date status set
+   */
+
+  // TODO: could have a version that takes no user and the actual application instance and returns a list instead of CasResult
+  fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity?): CasResult<List<RequestForPlacement>> {
     val application = applicationService.getApplication(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
@@ -39,15 +57,15 @@ class Cas1RequestForPlacementService(
     return CasResult.Success(result.sortedByDescending { it.submittedAt })
   }
 
-  private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
+  private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity?) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
     placementApplication,
-    cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user),
+    user?.let { cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user) } ?: false,
   )
 
-  private fun toRequestForPlacement(placementRequest: PlacementRequestEntity, user: UserEntity): RequestForPlacement = requestForPlacementTransformer
+  private fun toRequestForPlacement(placementRequest: PlacementRequestEntity, user: UserEntity?): RequestForPlacement = requestForPlacementTransformer
     .transformPlacementRequestEntityToApi(
       placementRequest,
-      cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user),
+      user?.let { cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user) } ?: false,
     ).apply {
       placements = cas1SpaceBookingRepository
         .findByPlacementRequestId(placementRequest.id)

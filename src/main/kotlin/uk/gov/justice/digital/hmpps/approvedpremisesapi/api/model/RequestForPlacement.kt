@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
+import java.time.LocalDate
 
 data class RequestForPlacement(
   @Schema(description = "If `type` is `\"manual\"`, provides the `PlacementApplication` ID. If `type` is `\"automatic\"` this field provides a `PlacementRequest` ID. ")
@@ -17,6 +18,7 @@ data class RequestForPlacement(
   val requestedPlacementPeriod: Cas1RequestedPlacementPeriod,
   val authorisedPlacementPeriod: Cas1RequestedPlacementPeriod?,
   val status: RequestForPlacementStatus,
+  val statusSetDate: LocalDate,
   val submittedAt: java.time.Instant? = null,
   @Schema(description = "If `type` is `\"manual\"`, provides the value of `PlacementApplication.decisionMadeAt`. If `type` is `\"automatic\"` this field provides the value of `PlacementRequest.assessmentCompletedAt`. ")
   val requestReviewedAt: java.time.Instant? = null,

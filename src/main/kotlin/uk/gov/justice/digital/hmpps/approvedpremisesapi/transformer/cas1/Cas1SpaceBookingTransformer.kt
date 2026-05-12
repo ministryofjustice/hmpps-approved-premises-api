@@ -126,6 +126,14 @@ class Cas1SpaceBookingTransformer(
     departure = spaceBooking.extractDeparture(),
     bookedBy = spaceBooking.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
     status = spaceBooking.getSpaceBookingStatus(),
+    statusSetDate = when (spaceBooking.getSpaceBookingStatus()) {
+      Cas1SpaceBookingStatus.CANCELLED -> spaceBooking.cancellationOccurredAt
+      // arguably this should be the expected arrival date, but 'statusSetDate' may not be a good name then
+      Cas1SpaceBookingStatus.NOT_ARRIVED -> spaceBooking.nonArrivalConfirmedAt!!.toLocalDate()
+      Cas1SpaceBookingStatus.DEPARTED -> spaceBooking.actualDepartureDate
+      Cas1SpaceBookingStatus.ARRIVED -> spaceBooking.actualArrivalDate
+      Cas1SpaceBookingStatus.UPCOMING -> spaceBooking.expectedArrivalDate
+    },
   )
 
   private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() = Cas1SpaceBookingDates(

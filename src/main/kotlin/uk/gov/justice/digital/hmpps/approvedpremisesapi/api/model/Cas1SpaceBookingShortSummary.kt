@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 data class Cas1SpaceBookingShortSummary(
@@ -24,4 +25,5 @@ data class Cas1SpaceBookingShortSummary(
   val additionalInformation: String? = null,
   val transferReason: TransferReason? = null,
   val status: Cas1SpaceBookingStatus? = null,
+  val statusSetDate: LocalDate? = null,
 )

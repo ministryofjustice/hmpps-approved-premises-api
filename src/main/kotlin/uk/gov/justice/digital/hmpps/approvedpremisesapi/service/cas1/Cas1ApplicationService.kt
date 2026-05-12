@@ -61,6 +61,7 @@ class Cas1ApplicationService(
   private val cas1UserAccessService: Cas1UserAccessService,
   private val userAccessService: UserAccessService,
   private val offenderService: OffenderService,
+  private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
 ) {
   fun getApplication(applicationId: UUID) = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
 
@@ -103,6 +104,51 @@ class Cas1ApplicationService(
   }
 
   fun getSubmittedApplicationsForCrn(crn: String, limit: Int) = approvedPremisesApplicationRepository.findByCrnAndSubmittedAtIsNotNull(crn, Limit.of(limit))
+
+  fun getSuitableApplicationByCrnDa(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
+    .maxWithOrNull(
+      compareBy<ApprovedPremisesApplicationEntity> { suitableStatusesAsc[it.status] }
+        .thenBy { it.submittedAt ?: it.createdAt },
+    )
+    ?.let { application ->
+
+      val rfps = (cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, requestingUser = null) as CasResult.Success).value
+
+      val placementHistories = rfps.flatMap { rfp ->
+
+        if (rfp.placements.isEmpty()) {
+          listOf(
+            Cas1PlacementHistory(
+              dateApplied = rfp.statusSetDate,
+              requestForPlacementStatus = rfp.status,
+              placementStatus = null,
+            ),
+          )
+        } else {
+          rfp.placements.map { placement ->
+            Cas1PlacementHistory(
+              dateApplied = requireNotNull(placement.statusSetDate),
+              requestForPlacementStatus = rfp.status,
+              placementStatus = placement.status,
+            )
+          }
+        }
+      }.sortedByDescending { it.dateApplied }
+
+      val today = LocalDate.now()
+
+      val currentPlacementHistory =
+        placementHistories.lastOrNull { it.dateApplied >= today }
+          ?: placementHistories.firstOrNull { it.dateApplied < today }
+
+      Cas1SuitableApplication(
+        id = application.id,
+        applicationStatus = application.status,
+        requestForPlacementStatus = currentPlacementHistory?.requestForPlacementStatus,
+        placementStatus = currentPlacementHistory?.placementStatus,
+        placementHistories = placementHistories,
+      )
+    }
 
   fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
     .maxWithOrNull(
