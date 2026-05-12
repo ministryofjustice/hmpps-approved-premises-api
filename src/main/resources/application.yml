@@ -150,8 +150,6 @@ spring:
 
 springdoc:
   swagger-ui:
-    # advised by https://github.com/ministryofjustice/hmpps-gradle-spring-boot/blob/main/release-notes/10.x.md#1021
-    version: 5.32.2
     urls-primary-name: "All CAS"
   remove-broken-reference-definitions: false
   writer-with-order-by-keys: true
