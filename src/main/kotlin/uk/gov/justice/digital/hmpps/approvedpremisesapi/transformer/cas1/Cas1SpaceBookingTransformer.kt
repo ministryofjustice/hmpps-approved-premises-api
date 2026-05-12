@@ -92,41 +92,46 @@ class Cas1SpaceBookingTransformer(
       openChangeRequests = openChangeRequests,
       additionalInformation = jpa.additionalInformation,
       transferReason = jpa.transferReason,
-      status = jpa.getSpaceBookingStatus(),
+      status = jpa.getSpaceBookingStatus().status,
     )
   }
 
   fun transformToCas1SpaceBookingShortSummary(
     spaceBooking: Cas1SpaceBookingEntity,
-  ): Cas1SpaceBookingShortSummary = Cas1SpaceBookingShortSummary(
-    id = spaceBooking.id,
-    premises = NamedId(
-      id = spaceBooking.premises.id,
-      name = spaceBooking.premises.name,
-    ),
-    apArea = spaceBooking.premises.probationRegion.apArea!!.let {
-      NamedId(
-        id = it.id,
-        name = it.name,
-      )
-    },
-    deliusEventNumber = spaceBooking.deliusEventNumber,
-    actualArrivalDate = spaceBooking.actualArrivalDate,
-    actualDepartureDate = spaceBooking.actualDepartureDate,
-    expectedArrivalDate = spaceBooking.expectedArrivalDate,
-    expectedDepartureDate = spaceBooking.expectedDepartureDate,
-    createdAt = spaceBooking.createdAt.toLocalDateTime(),
-    isNonArrival = spaceBooking.hasNonArrival(),
-    cancellation = spaceBooking.extractCancellation(),
-    characteristics = spaceBooking.criteria.toCas1SpaceCharacteristics(),
-    keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
-    nonArrival = spaceBooking.extractNonArrival(),
-    transferReason = spaceBooking.transferReason,
-    additionalInformation = spaceBooking.additionalInformation,
-    departure = spaceBooking.extractDeparture(),
-    bookedBy = spaceBooking.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
-    status = spaceBooking.getSpaceBookingStatus(),
-  )
+  ): Cas1SpaceBookingShortSummary {
+    val statusAndWhen = spaceBooking.getSpaceBookingStatus()
+
+    return Cas1SpaceBookingShortSummary(
+      id = spaceBooking.id,
+      premises = NamedId(
+        id = spaceBooking.premises.id,
+        name = spaceBooking.premises.name,
+      ),
+      apArea = spaceBooking.premises.probationRegion.apArea!!.let {
+        NamedId(
+          id = it.id,
+          name = it.name,
+        )
+      },
+      deliusEventNumber = spaceBooking.deliusEventNumber,
+      actualArrivalDate = spaceBooking.actualArrivalDate,
+      actualDepartureDate = spaceBooking.actualDepartureDate,
+      expectedArrivalDate = spaceBooking.expectedArrivalDate,
+      expectedDepartureDate = spaceBooking.expectedDepartureDate,
+      createdAt = spaceBooking.createdAt.toLocalDateTime(),
+      isNonArrival = spaceBooking.hasNonArrival(),
+      cancellation = spaceBooking.extractCancellation(),
+      characteristics = spaceBooking.criteria.toCas1SpaceCharacteristics(),
+      keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
+      nonArrival = spaceBooking.extractNonArrival(),
+      transferReason = spaceBooking.transferReason,
+      additionalInformation = spaceBooking.additionalInformation,
+      departure = spaceBooking.extractDeparture(),
+      bookedBy = spaceBooking.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
+      status = statusAndWhen.status,
+      statusSetDate = statusAndWhen.occurredAt,
+    )
+  }
 
   private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() = Cas1SpaceBookingDates(
     id = this.id,
@@ -224,7 +229,7 @@ class Cas1SpaceBookingTransformer(
       createdAt = spaceBooking.createdAt.toInstant(),
       transferReason = spaceBooking.transferReason,
       additionalInformation = spaceBooking.additionalInformation,
-      status = spaceBooking.getSpaceBookingStatus(),
+      status = spaceBooking.getSpaceBookingStatus().status,
     )
   }
 
@@ -251,7 +256,7 @@ class Cas1SpaceBookingTransformer(
       else -> null
     },
     tier = searchResult.tier,
-    keyWorkerAllocation = searchResult.keyWorkerStaffCode?.let { staffCode ->
+    keyWorkerAllocation = searchResult.keyWorkerStaffCode?.let { _ ->
       Cas1KeyWorkerAllocation(
         allocatedAt = searchResult.keyWorkerAssignedAt?.toLocalDate(),
         name = searchResult.keyWorkerName!!,

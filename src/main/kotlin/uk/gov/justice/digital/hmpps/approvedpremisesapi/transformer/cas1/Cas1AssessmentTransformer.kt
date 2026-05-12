@@ -95,7 +95,7 @@ class Cas1AssessmentTransformer(
       pdu = application.cruManagementArea?.name,
       referredBy = application.createdByUser.name,
       placementAddress = placementAddress,
-      placementStatus = latestBooking?.getSpaceBookingStatus()?.value,
+      placementStatus = latestBooking?.getSpaceBookingStatus()?.status?.value,
     )
   }
 

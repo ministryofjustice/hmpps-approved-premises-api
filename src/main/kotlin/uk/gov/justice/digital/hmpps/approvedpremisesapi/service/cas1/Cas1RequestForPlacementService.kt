@@ -23,7 +23,7 @@ class Cas1RequestForPlacementService(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val cas1SpaceBookingTransformer: Cas1SpaceBookingTransformer,
 ) {
-  fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity): CasResult<List<RequestForPlacement>> {
+  fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity?): CasResult<List<RequestForPlacement>> {
     val application = applicationService.getApplication(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
@@ -39,22 +39,18 @@ class Cas1RequestForPlacementService(
     return CasResult.Success(result.sortedByDescending { it.submittedAt })
   }
 
-  private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
+  private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity?) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
     placementApplication,
-    cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user),
+    user?.let { cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user) } ?: false,
   )
 
-  private fun toRequestForPlacement(placementRequest: PlacementRequestEntity, user: UserEntity): RequestForPlacement = requestForPlacementTransformer
+  private fun toRequestForPlacement(placementRequest: PlacementRequestEntity, user: UserEntity?): RequestForPlacement = requestForPlacementTransformer
     .transformPlacementRequestEntityToApi(
       placementRequest,
-      cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user),
+      user?.let { cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user) } ?: false,
     ).apply {
       placements = cas1SpaceBookingRepository
         .findByPlacementRequestId(placementRequest.id)
         .map { cas1SpaceBookingTransformer.transformToCas1SpaceBookingShortSummary(it) }
     }
-
-  private sealed class RequestForPlacementServiceException(message: String) : RuntimeException(message) {
-    class AmbiguousRequestForPlacementId : RequestForPlacementServiceException("A placement application and placement request could not be distinguished as they share the same UUID")
-  }
 }
