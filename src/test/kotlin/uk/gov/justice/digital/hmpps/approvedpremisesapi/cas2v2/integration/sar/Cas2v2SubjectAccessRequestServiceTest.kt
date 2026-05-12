@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.sar
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -36,7 +36,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
         END_DATE,
       )
 
-    assertNull(result)
+      assertNull(result)
   }
 
   @Test
@@ -45,7 +45,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     val result =
       sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
 
-    assertNull(result)
+      assertNull(result)
   }
 
   @Test
@@ -62,7 +62,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       END_DATE,
     )
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
    {
@@ -75,7 +75,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "DomainEventsMetadata": []
    }
     """.trimIndent()
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -93,7 +93,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       END_DATE,
     )
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
    {
@@ -106,7 +106,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "DomainEventsMetadata": []
    }
     """.trimIndent()
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -126,7 +126,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       END_DATE,
     )
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
    {
@@ -140,7 +140,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
 
    }
     """.trimIndent()
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -162,7 +162,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       END_DATE,
     )
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
    {
@@ -176,7 +176,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       
    }
     """.trimIndent()
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   @Test
@@ -198,7 +198,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       END_DATE,
     )
 
-    assertNotNull(result)
+      assertNotNull(result)
 
     val expectedJson = """
    {
@@ -211,7 +211,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
       "DomainEventsMetadata": [${domainEventsMetadataJson(domainEvent)}]
    }
     """.trimIndent()
-    assertJsonEquals(expectedJson, result)
+      assertJsonEquals(expectedJson, result)
   }
 
   private fun cas2StatusUpdateDetails(statusUpdateDetail: Cas2StatusUpdateDetailEntity): String = """
@@ -277,9 +277,9 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   """.trimIndent()
 
   private fun cas2ApplicationNoteEntity(
-    application: Cas2ApplicationEntity,
-    assessment: Cas2AssessmentEntity,
-    user: Cas2UserEntity,
+      application: Cas2ApplicationEntity,
+      assessment: Cas2AssessmentEntity,
+      user: Cas2UserEntity,
   ) = cas2NoteEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
@@ -289,9 +289,9 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   }
 
   private fun cas2StatusUpdateEntity(
-    application: Cas2ApplicationEntity,
-    assessment: Cas2AssessmentEntity,
-    externalAssessor: Cas2UserEntity,
+      application: Cas2ApplicationEntity,
+      assessment: Cas2AssessmentEntity,
+      externalAssessor: Cas2UserEntity,
   ): Cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
@@ -317,8 +317,8 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
   }
 
   private fun cas2ApplicationEntity(
-    offenderDetails: OffenderDetailSummary,
-    user: Cas2UserEntity,
+      offenderDetails: OffenderDetailSummary,
+      user: Cas2UserEntity,
   ): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
     withCrn(offenderDetails.otherIds.crn)
     withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
