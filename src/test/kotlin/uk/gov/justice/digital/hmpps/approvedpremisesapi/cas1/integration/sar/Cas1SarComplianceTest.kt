@@ -2,11 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.sar
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
-import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelper
 import java.time.LocalDate
 
 /**
