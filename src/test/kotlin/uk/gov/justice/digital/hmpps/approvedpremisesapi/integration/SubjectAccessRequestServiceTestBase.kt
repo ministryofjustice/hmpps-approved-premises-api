@@ -152,9 +152,10 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     application: ApplicationEntity,
     offlineApplication: OfflineApplicationEntity? = null,
     serviceName: ServiceName = ServiceName.approvedPremises,
+    premisesName: String = "a premises ${randomStringMultiCaseWithNumbers(5)}",
   ): BookingEntity {
     val premisesForBooking = givenAnApprovedPremises(
-      name = "a premises ${randomStringMultiCaseWithNumbers(5)}",
+      name = premisesName,
       apCode = "AP Code ${randomStringMultiCaseWithNumbers(5)}",
       localAuthorityArea = localAuthorityEntityFactory.produceAndPersist {
         withName("An LAA ${randomStringMultiCaseWithNumbers(5)}")
@@ -284,8 +285,10 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     )
   }
 
-  protected fun probationRegionEntity() = probationRegionEntityFactory.produceAndPersist {
-    withName("Probation Region ${randomStringMultiCaseWithNumbers(5)}")
+  protected fun probationRegionEntity(
+    name: String = "Probation Region ${randomStringMultiCaseWithNumbers(5)}",
+  ) = probationRegionEntityFactory.produceAndPersist {
+    withName(name)
     withApArea(givenAnApArea(name = "Probation Area ${randomStringMultiCaseWithNumbers(5)}"))
   }
 
@@ -293,7 +296,11 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     withProbationRegion(givenAProbationRegion())
   }
 
-  protected fun probationDeliveryUnitEntity(user: UserEntity): ProbationDeliveryUnitEntity = probationDeliveryUnitFactory.produceAndPersist {
+  protected fun probationDeliveryUnitEntity(
+    user: UserEntity,
+    name: String = randomStringMultiCaseWithNumbers(8),
+  ): ProbationDeliveryUnitEntity = probationDeliveryUnitFactory.produceAndPersist {
     withProbationRegion(user.probationRegion)
+    withName(name)
   }
 }

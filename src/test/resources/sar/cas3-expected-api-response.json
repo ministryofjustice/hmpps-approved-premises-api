@@ -1,0 +1,216 @@
+[
+  {
+    "ShortTermAccommodation": []
+  },
+  {
+    "ApprovedPremises": {
+      "SpaceBookings": [],
+      "Applications": [],
+      "ApplicationTimeline": [],
+      "Appeals": [],
+      "AssessmentClarificationNotes": [],
+      "PlacementRequirementCriteria": [],
+      "DomainEventsMetadata": [],
+      "Assessments": [
+        {
+          "decision": "REJECTED",
+          "submitted_at": "2021-10-19T16:00:00+00:00",
+          "agree_with_short_notice_reason": null,
+          "document": {
+            "key2": "value2"
+          },
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "is_withdrawn": false,
+          "created_from_appeal": null,
+          "rejection_rationale": "rejected as no good",
+          "noms_number": "A1234BF",
+          "reason_for_late_application": null,
+          "reallocated_at": null,
+          "due_at": "2021-09-22T16:00:00+00:00",
+          "agree_with_short_notice_reason_comments": null,
+          "assessor_name": "SAR-TEST-ASSESSOR",
+          "crn": "X320744",
+          "allocated_at": "2021-09-21T16:00:00+00:00"
+        }
+      ],
+      "PlacementRequirements": [],
+      "OfflineApplications": [],
+      "PlacementRequests": [],
+      "BookingNotMades": [],
+      "PlacementApplications": [],
+      "DomainEvents": []
+    }
+  },
+  {
+    "BailAccommodation": []
+  },
+  {
+    "TemporaryAccommodation": {
+      "BookingExtensions": [
+        {
+          "noms_number": "A1234BF",
+          "notes": "some notes",
+          "new_departure_date": "2021-09-24",
+          "previous_departure_date": "2021-09-23",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "crn": "X320744"
+        }
+      ],
+      "Applications": [
+        {
+          "pdu": "SAR-TEST-PDU",
+          "offence_id": "BEING_BAD",
+          "submitted_at": "2021-10-19T16:00:00+00:00",
+          "document": {
+            "key2": "value2"
+          },
+          "offender_name": "Jeffity Jeff",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "has_history_of_arson": false,
+          "noms_number": "A1234BF",
+          "is_registered_sex_offender": false,
+          "is_concerning_arson_behaviour": false,
+          "duty_to_refer_outcome": null,
+          "is_duty_to_refer_submitted": null,
+          "probation_region": "SAR-TEST-REGION",
+          "arrival_date": "2021-09-20T16:00:00+00:00",
+          "needs_accessible_property": false,
+          "is_history_of_sexual_offence": false,
+          "crn": "X320744",
+          "conviction_id": 2,
+          "prison_release_types": "ANY",
+          "is_concerning_sexual_behaviour": null,
+          "eligibility_reason": "Not eligible",
+          "duty_to_refer_local_authority_area_name": "SAR-TEST-LAA",
+          "applications_user_name": "SAR-TEST-CREATED-BY-USER",
+          "duty_to_refer_submission_date": "2021-10-19",
+          "risk_ratings": {
+            "mappa": {
+              "value": null,
+              "status": "NotFound"
+            },
+            "tier": {
+              "value": {
+                "lastUpdated": [
+                  2023,
+                  6,
+                  26
+                ],
+                "level": "M1"
+              },
+              "status": "Retrieved"
+            },
+            "roshRisks": {
+              "value": null,
+              "status": "NotFound"
+            },
+            "flags": {
+              "value": null,
+              "status": "NotFound"
+            }
+          },
+          "person_release_date": "2021-09-20",
+          "prison_name_on_creation": "HMP Birmingham",
+          "event_number": "1",
+          "is_eligible": false
+        }
+      ],
+      "AssessmentReferralHistoryNotes": [
+        {
+          "note_type": "User",
+          "noms_number": "A1234BF",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "message": "some other message",
+          "system_note_type": null,
+          "crn": "X320744",
+          "created_by_user": "SAR-TEST-CREATED-BY-USER"
+        },
+        {
+          "note_type": "System",
+          "noms_number": "A1234BF",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "message": "Some message",
+          "system_note_type": "READY_TO_PLACE",
+          "crn": "X320744",
+          "created_by_user": "SAR-TEST-CREATED-BY-USER"
+        }
+      ],
+      "Bookings": [
+        {
+          "noms_number": "A1234BF",
+          "departure_date": "2021-09-23",
+          "offender_name": "SAR-FIRST SAR-LAST",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "original_arrival_date": "2021-09-20",
+          "original_departure_date": "2021-09-23",
+          "adhoc": true,
+          "arrival_date": "2021-09-20",
+          "crn": "X320744",
+          "status": "arrived",
+          "premises_name": "SAR-TEST-PREMISES",
+          "key_worker_staff_code": "KEYWORKERSTAFFCODE"
+        }
+      ],
+      "DomainEventsMetadata": [
+        {
+          "noms_number": "A1234BF",
+          "name": "CAS1_REQUESTED_AP_TYPE",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "value": "NORMAL",
+          "crn": "X320744"
+        }
+      ],
+      "Assessments": [
+        {
+          "data": {
+            "key": "value"
+          },
+          "decision": "REJECTED",
+          "submitted_at": "2021-10-19T16:00:00+00:00",
+          "document": {
+            "key2": "value2"
+          },
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "is_withdrawn": false,
+          "referral_rejection_reason_category": "SAR-REJ",
+          "rejection_rationale": "rejected as no good",
+          "referral_rejection_reason_detail": "Some Reason Detail",
+          "noms_number": "A1234BF",
+          "completed_at": "2021-10-19T16:00:00+00:00",
+          "accommodation_required_from_date": "2021-09-20",
+          "summary_data": {
+            "key": "value"
+          },
+          "release_date": "2021-09-20",
+          "reallocated_at": null,
+          "due_at": "2021-09-22T16:00:00+00:00",
+          "assessor_name": "SAR-TEST-ASSESSOR",
+          "crn": "X320744",
+          "allocated_at": "2021-09-21T16:00:00+00:00"
+        }
+      ],
+      "Cancellations": [
+        {
+          "noms_number": "A1234BF",
+          "notes": "some notes",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "other_reason": "some other reason",
+          "cancellation_reason": "some reason",
+          "crn": "X320744",
+          "cancellation_date": "2021-09-25"
+        }
+      ],
+      "DomainEvents": [
+        {
+          "occurred_at": "2021-09-21T16:00:00+00:00",
+          "noms_number": "A1234BF",
+          "data": {},
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "triggered_by_user": "SAR-TEST-CREATED-BY-USER",
+          "type": "APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED",
+          "crn": "X320744"
+        }
+      ]
+    }
+  }
+]

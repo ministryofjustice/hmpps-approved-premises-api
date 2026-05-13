@@ -1,40 +1,25 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.sar
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SubjectAccessRequestServiceTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.assertJsonEquals
 
-class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
+class CAS2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
 
   @Test
-  fun `Get CAS2 v2 Information - No Results`() {
+  fun `Get CAS2 Information - No Results`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
-      sarService.getCAS2v2Result(
-        offenderDetails.otherIds.crn,
-        offenderDetails.otherIds.nomsNumber,
-        START_DATE,
-        END_DATE,
-      )
+      sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
 
     assertNull(result)
   }
 
   @Test
-  fun `Get CAS2 v2 Information - null date Check`() {
+  fun `Get CAS2 Information - null date Check`() {
     val (offenderDetails, _) = givenAnOffender()
     val result =
       sarService.getCAS2Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, null, null)
@@ -43,13 +28,13 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
   }
 
   @Test
-  fun `Get CAS2 v2 Information - Applications`() {
+  fun `Get CAS2 Information - Applications`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL)
+    val user = cas2NomisUserEntity()
 
-    val application = cas2ApplicationEntity(offenderDetails, user, Cas2ServiceOrigin.BAIL)
+    val application = cas2ApplicationEntity(offenderDetails, user)
 
-    val result = sarService.getCAS2v2Result(
+    val result = sarService.getCAS2Result(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -73,14 +58,14 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
   }
 
   @Test
-  fun `Get CAS2 v2 Information - Application with assessment`() {
+  fun `Get CAS2 Information - Application with assessment`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL)
+    val user = cas2NomisUserEntity()
 
-    val application = cas2ApplicationEntity(offenderDetails, user, Cas2ServiceOrigin.BAIL)
-    val assessment = cas2AssessmentEntity(application, Cas2ServiceOrigin.BAIL)
+    val application = cas2ApplicationEntity(offenderDetails, user)
+    val assessment = cas2AssessmentEntity(application)
 
-    val result = sarService.getCAS2v2Result(
+    val result = sarService.getCAS2Result(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -104,16 +89,16 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
   }
 
   @Test
-  fun `Get CAS2 v2 Information - Application with Note`() {
+  fun `Get CAS2 Information - Application with Note`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL)
+    val user = cas2NomisUserEntity()
 
-    val application = cas2ApplicationEntity(offenderDetails, user, Cas2ServiceOrigin.BAIL)
-    val assessment = cas2AssessmentEntity(application, Cas2ServiceOrigin.BAIL)
+    val application = cas2ApplicationEntity(offenderDetails, user)
+    val assessment = cas2AssessmentEntity(application)
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
 
-    val result = sarService.getCAS2v2Result(
+    val result = sarService.getCAS2Result(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -138,18 +123,18 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
   }
 
   @Test
-  fun `Get CAS2 v2 Information - Application with Note and Status update`() {
+  fun `Get CAS2 Information - Application with Note and Status update`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL)
-    val application = cas2ApplicationEntity(offenderDetails, user, Cas2ServiceOrigin.BAIL)
-    val assessment = cas2AssessmentEntity(application, Cas2ServiceOrigin.BAIL)
+    val user = cas2NomisUserEntity()
+    val assessor = cas2ExternalUserEntity()
+    val application = cas2ApplicationEntity(offenderDetails, user)
+    val assessment = cas2AssessmentEntity(application)
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
-
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
 
-    val result = sarService.getCAS2v2Result(
+    val result = sarService.getCAS2Result(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,
@@ -174,18 +159,19 @@ class Cas2v2SubjectAccessRequestServiceTest : Cas2SarTestBase() {
   }
 
   @Test
-  fun `Get CAS2 v2 Information - Domain Events`() {
+  fun `Get CAS2 Information - Domain Events`() {
     val (offenderDetails, _) = givenAnOffender()
-    val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL)
-    val application = cas2ApplicationEntity(offenderDetails, user, Cas2ServiceOrigin.BAIL)
-    val assessment = cas2AssessmentEntity(application, Cas2ServiceOrigin.BAIL)
+    val user = cas2NomisUserEntity()
+    val assessor = cas2ExternalUserEntity()
+    val application = cas2ApplicationEntity(offenderDetails, user)
+    val assessment = cas2AssessmentEntity(application)
 
     val applicationNotes = cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
     val statusUpdateDetail = cas2StatusUpdateDetailEntity(statusUpdate)
-    val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, ServiceName.cas2v2)
+    val domainEvent = domainEventEntity(offenderDetails, application.id, assessment.id, null, ServiceName.cas2)
 
-    val result = sarService.getCAS2v2Result(
+    val result = sarService.getCAS2Result(
       offenderDetails.otherIds.crn,
       offenderDetails.otherIds.nomsNumber,
       START_DATE,

@@ -1,0 +1,93 @@
+[
+  {
+    "ShortTermAccommodation": {
+      "StatusUpdateDetails": [
+        {
+          "noms_number": "A1234BD",
+          "status_label": "Some Label",
+          "created_at": "2021-09-18 16:00:00",
+          "detail_label": "Some detailed label",
+          "crn": "X320742"
+        }
+      ],
+      "Applications": [
+        {
+          "submitted_at": "2021-10-19T16:00:00+00:00",
+          "document": {
+            "key2": "value2"
+          },
+          "conditional_release_date": "2021-09-20",
+          "service_origin": "HDC",
+          "telephone_number": "0123456",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "abandoned_at": null,
+          "referring_prison_code": "ABC",
+          "created_by_user": "SAR-TEST-NOMIS-USER",
+          "noms_number": "A1234BD",
+          "bail_hearing_date": null,
+          "application_origin": "homeDetentionCurfew",
+          "preferred_areas": "some areas",
+          "crn": "X320742",
+          "hdc_eligibility_date": "2021-09-20"
+        }
+      ],
+      "DomainEventsMetadata": [
+        {
+          "noms_number": "A1234BD",
+          "name": "CAS1_REQUESTED_AP_TYPE",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "value": "NORMAL",
+          "crn": "X320742"
+        }
+      ],
+      "Assessments": [
+        {
+          "noms_number": "A1234BD",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "assessor_name": "SAR-TEST-ASSESSOR",
+          "nacro_referral_id": "0000000001",
+          "crn": "X320742"
+        }
+      ],
+      "StatusUpdates": [
+        {
+          "noms_number": "A1234BD",
+          "created_at": "2021-09-18 16:00:00",
+          "description": "Some Description",
+          "assessor_origin": "NACRO",
+          "assessor_name": "SAR-TEST-EXTERNAL-USER",
+          "label": "Some Label",
+          "crn": "X320742"
+        }
+      ],
+      "ApplicationNotes": [
+        {
+          "noms_number": "A1234BD",
+          "body": "some body text",
+          "crn": "X320742",
+          "created_by_user": "SAR-TEST-NOMIS-USER"
+        }
+      ],
+      "DomainEvents": [
+        {
+          "occurred_at": "2021-09-21T16:00:00+00:00",
+          "noms_number": "A1234BD",
+          "data": {},
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "triggered_by_user": null,
+          "type": "APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED",
+          "crn": "X320742"
+        }
+      ]
+    }
+  },
+  {
+    "ApprovedPremises": []
+  },
+  {
+    "BailAccommodation": []
+  },
+  {
+    "TemporaryAccommodation": []
+  }
+]

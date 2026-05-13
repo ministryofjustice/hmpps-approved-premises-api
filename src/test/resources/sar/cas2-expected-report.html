@@ -1,0 +1,477 @@
+<style>
+    * {
+        font-family: "HelveticaNeue", "Helvetica Neue", "Arial", "Helvetica", sans-serif;
+        font-size: 12pt;
+        color: #0b0c0c;
+    }
+    /* --- HEADINGS --- */
+
+    .title {
+        font-size: 20pt;
+        text-align: center;
+    }
+
+    h1, h2, h3 {
+        color: #0b0c0c;
+        font-weight: 700;
+        display: block;
+        margin-top: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    h1 {
+        font-size: 18pt;
+        line-height: 1.09375;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        margin-block-start: 0.67em;
+        margin-block-end: 0.67em;
+    }
+
+    h2 {
+        font-size: 17pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h3 {
+        font-size: 16pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h4 {
+        font-size: 15pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h5 {
+        font-size: 14pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    /* --- SUMMARY LIST --- */
+
+    table.summary-list {
+        display: table;
+        width: 700px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin: 0 0 5px;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    table.summary-list tr {
+        display: table-row;
+        margin: 0 0 20px;
+    }
+
+    table.summary-list tr td {
+        border-bottom: 1px solid #b1b4b6;
+        /*margin-bottom: 5px;*/
+        overflow-wrap: break-word;
+        display: table-cell;
+        /*padding-top: 2px;*/
+        /*padding-bottom: 2px;*/
+        /*padding-right: 0;*/
+        margin-inline-start: 40px;
+        width: 70%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        line-height: 1.25;
+        font-weight: 400;
+        white-space: normal;
+        vertical-align: top;
+    }
+
+    table.summary-list tr td:first-child {
+        font-size: 12pt;
+        width: 30%;
+        font-weight: 700;
+        padding-right: 20px;
+        vertical-align: top;
+    }
+
+    /* --- DATA TABLE --- */
+
+    table.data-table {
+        display: table;
+        width: 700px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin: 0 0 5px;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    table.data-table tr {
+        display: table-row;
+        margin: 0 0 20px;
+    }
+
+    table.data-table tr td {
+        border-bottom: 1px solid #b1b4b6;
+        margin-bottom: 5px;
+        overflow-wrap: break-word;
+        display: table-cell;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        padding-right: 0;
+        margin-inline-start: 40px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        line-height: 1.25;
+        font-weight: 400;
+        white-space: pre-wrap;
+        vertical-align: top;
+    }
+
+    table.data-table tr:first-child td {
+        font-size: 12pt;
+        width: 30%;
+        font-weight: 700;
+        padding-right: 20px;
+        border-bottom: none;
+        vertical-align: top;
+    }
+
+    table.data-table tr td.data-column-5 { width: 5% }
+    table.data-table tr td.data-column-10 { width: 10% }
+    table.data-table tr td.data-column-15 { width: 15% }
+    table.data-table tr td.data-column-20 { width: 20% }
+    table.data-table tr td.data-column-25 { width: 25% }
+    table.data-table tr td.data-column-30 { width: 30% }
+    table.data-table tr td.data-column-35 { width: 35% }
+    table.data-table tr td.data-column-40 { width: 40% }
+    table.data-table tr td.data-column-45 { width: 45% }
+    table.data-table tr td.data-column-50 { width: 50% }
+    table.data-table tr td.data-column-55 { width: 55% }
+    table.data-table tr td.data-column-60 { width: 60% }
+    table.data-table tr td.data-column-65 { width: 65% }
+    table.data-table tr td.data-column-70 { width: 70% }
+    table.data-table tr td.data-column-75 { width: 75% }
+    table.data-table tr td.data-column-80 { width: 80% }
+    table.data-table tr td.data-column-85 { width: 85% }
+    table.data-table tr td.data-column-90 { width: 90% }
+    table.data-table tr td.data-column-95 { width: 95% }
+
+    table tr td.data-column-5 { width: 5% }
+    table tr td.data-column-10 { width: 10% }
+    table tr td.data-column-15 { width: 15% }
+    table tr td.data-column-20 { width: 20% }
+    table tr td.data-column-25 { width: 25% }
+    table tr td.data-column-30 { width: 30% }
+    table tr td.data-column-35 { width: 35% }
+    table tr td.data-column-40 { width: 40% }
+    table tr td.data-column-45 { width: 45% }
+    table tr td.data-column-50 { width: 50% }
+    table tr td.data-column-55 { width: 55% }
+    table tr td.data-column-60 { width: 60% }
+    table tr td.data-column-65 { width: 65% }
+    table tr td.data-column-70 { width: 70% }
+    table tr td.data-column-75 { width: 75% }
+    table tr td.data-column-80 { width: 80% }
+    table tr td.data-column-85 { width: 85% }
+    table tr td.data-column-90 { width: 90% }
+    table tr td.data-column-95 { width: 95% }
+
+    table.summary-list tr td.data-column-5 { width: 5% }
+    table.summary-list tr td.data-column-10 { width: 10% }
+    table.summary-list tr td.data-column-15 { width: 15% }
+    table.summary-list tr td.data-column-20 { width: 20% }
+    table.summary-list tr td.data-column-25 { width: 25% }
+    table.summary-list tr td.data-column-30 { width: 30% }
+    table.summary-list tr td.data-column-35 { width: 35% }
+    table.summary-list tr td.data-column-40 { width: 40% }
+    table.summary-list tr td.data-column-45 { width: 45% }
+    table.summary-list tr td.data-column-50 { width: 50% }
+    table.summary-list tr td.data-column-55 { width: 55% }
+    table.summary-list tr td.data-column-60 { width: 60% }
+    table.summary-list tr td.data-column-65 { width: 65% }
+    table.summary-list tr td.data-column-70 { width: 70% }
+    table.summary-list tr td.data-column-75 { width: 75% }
+    table.summary-list tr td.data-column-80 { width: 80% }
+    table.summary-list tr td.data-column-85 { width: 85% }
+    table.summary-list tr td.data-column-90 { width: 90% }
+    table.summary-list tr td.data-column-95 { width: 95% }
+
+    ul {
+        padding: 0 0 0 10px;
+    }
+
+</style>
+
+§<h1 class="title">Approved Premises</h1>
+
+    
+    <h2>Short term accommodation</h2>
+
+        <h3>Status update details</h3>
+        
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Status Label</td>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Detail Label</td>
+                </tr>
+                <tr>
+                    <td>Some Label</td>
+                    <td>2021-09-18 16:00:00</td>
+                    <td>Some detailed label</td>
+                </tr>
+            </table>
+        
+        
+
+        <h3>Applications</h3>
+        
+            <h4>Application</h4>
+            <br/>
+            <table class="summary-list">
+                <tr><td>Submitted at</td><td>19 October 2021, 5:00:00 pm</td></tr>
+                <tr><td>Conditional release date</td><td>20 September 2021</td></tr>
+                <tr><td>Created at</td><td>18 September 2021, 5:00:00 pm</td></tr>
+                <tr><td>Abandoned at</td><td>No Data Held</td></tr>
+                <tr><td>Referring prison code</td><td>Moorland (HMP &amp; YOI)</td></tr>
+                <tr><td>Preferred areas</td><td>some areas</td></tr>
+                <tr><td>Home Detention Curfew eligibility date</td><td>20 September 2021</td></tr>
+            </table>
+
+            <h5>Address History</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Offending history</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Risk to self</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Community Probation Practitioner details and Home Detention Curfew licence conditions</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Information needed from applicant</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Confirm consent</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Funding information</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Confirm eligibility</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Current offences</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Personal information</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Check your answers</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Equality and diversity monitoring</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Risk of serious harm</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Home Detention Curfew Licence dates</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Area information</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Health needs</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Referrer details</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Document</h5>
+            
+                
+                
+                    <p>No Data Held</p>
+                
+            
+            
+
+        
+        
+
+        <h3>Assessments</h3>
+        
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Assessor name</td>
+                    <td class="data-column-30">Nacro referral id</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>SAR-TEST-ASSESSOR</td>
+                    <td>0000000001</td>
+                </tr>
+            </table>
+        
+        
+
+        <h3>Status updates</h3>
+        
+            <br/>
+            <table class="summary-list">
+                <tr><td>Created at</td><td>2021-09-18 16:00:00</td></tr>
+                <tr><td>Description</td><td>Some Description</td></tr>
+                <tr><td>Assessor origin</td><td>NACRO</td></tr>
+                <tr><td>Assessor name</td><td>SAR-TEST-EXTERNAL-USER</td></tr>
+                <tr><td>Label</td><td>Some Label</td></tr>
+            </table>
+        
+        
+
+        <h3>Application Notes</h3>
+        
+            <br/>
+            <table class="summary-list">
+                <tr><td>Created by user</td><td>SAR-TEST-NOMIS-USER</td></tr>
+                <tr><td>Body</td><td>some body text</td></tr>
+            </table>
+        
+        
+
+        <h3>Domain Events</h3>
+        
+
+            
+
+            
+
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-20">Created at</td>
+                    <td class="data-column-20">Trigger source</td>
+                    <td class="data-column-20">Triggered by user</td>
+                    <td class="data-column-20">Occurred at</td>
+                    <td class="data-column-20">Updated at</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>No Data Held</td>
+                    <td>No Data Held</td>
+                    <td>21 September 2021, 5:00:00 pm</td>
+                    <td>No Data Held</td>
+                </tr>
+            </table>
+
+        
+        
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+
+
+

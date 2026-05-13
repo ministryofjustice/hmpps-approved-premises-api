@@ -1,0 +1,76 @@
+[
+  {
+    "ShortTermAccommodation": []
+  },
+  {
+    "ApprovedPremises": []
+  },
+  {
+    "BailAccommodation": {
+      "StatusUpdateDetails": [],
+      "Applications": [
+        {
+          "submitted_at": "2021-10-19T16:00:00+00:00",
+          "document": {
+            "key2": "value2"
+          },
+          "conditional_release_date": "2021-09-20",
+          "service_origin": "BAIL",
+          "telephone_number": "0123456",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "abandoned_at": null,
+          "referring_prison_code": "ABC",
+          "created_by_user": "SAR-TEST-NOMIS-USER",
+          "noms_number": "A1234BE",
+          "bail_hearing_date": "2021-09-20",
+          "application_origin": "homeDetentionCurfew",
+          "preferred_areas": "some areas",
+          "crn": "X320743",
+          "hdc_eligibility_date": "2021-09-20"
+        }
+      ],
+      "DomainEventsMetadata": [
+        {
+          "noms_number": "A1234BE",
+          "name": "CAS1_REQUESTED_AP_TYPE",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "value": "NORMAL",
+          "crn": "X320743"
+        }
+      ],
+      "Assessments": [
+        {
+          "noms_number": "A1234BE",
+          "service_origin": "BAIL",
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "assessor_name": "SAR-TEST-ASSESSOR",
+          "nacro_referral_id": "0000000002",
+          "crn": "X320743"
+        }
+      ],
+      "StatusUpdates": [],
+      "ApplicationNotes": [
+        {
+          "noms_number": "A1234BE",
+          "body": "some body text",
+          "crn": "X320743",
+          "created_by_user": "SAR-TEST-NOMIS-USER"
+        }
+      ],
+      "DomainEvents": [
+        {
+          "occurred_at": "2021-09-21T16:00:00+00:00",
+          "noms_number": "A1234BE",
+          "data": {},
+          "created_at": "2021-09-18T16:00:00+00:00",
+          "triggered_by_user": null,
+          "type": "APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED",
+          "crn": "X320743"
+        }
+      ]
+    }
+  },
+  {
+    "TemporaryAccommodation": []
+  }
+]
