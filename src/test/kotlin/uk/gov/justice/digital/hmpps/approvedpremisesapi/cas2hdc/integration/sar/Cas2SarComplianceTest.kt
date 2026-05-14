@@ -8,6 +8,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.CasSarFixtureAsserter
 import java.time.LocalDate
 
+/**
+ * Per-service SAR compliance test for CAS2.
+ *
+ * Cross-service SAR infrastructure (Flyway schema, JPA entity snapshot, template
+ * endpoint smoke tests) lives in `SarIntegrationTest` — they only need to run
+ * once for the whole app, since all four CAS services share one DB and one
+ * template file.
+ *
+ * This class verifies CAS2's slice end-to-end against CAS2-specific fixtures
+ * via [CasSarFixtureAsserter].
+ */
 class Cas2SarComplianceTest : Cas2SarTestBase() {
 
   companion object {
