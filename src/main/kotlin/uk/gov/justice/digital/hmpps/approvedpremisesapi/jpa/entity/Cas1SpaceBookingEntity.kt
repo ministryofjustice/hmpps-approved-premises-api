@@ -24,6 +24,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity.Companion.CHARACTERISTICS_OF_INTEREST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_CHILD_SEX_OFFENDERS
@@ -298,6 +299,11 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
   ): List<Cas1SpaceBookingEntity>
 
   fun findAllByApplication(application: ApplicationEntity): List<Cas1SpaceBookingEntity>
+
+  @Query("SELECT b FROM Cas1SpaceBookingEntity b WHERE b.application.id = :applicationId ORDER BY b.createdAt DESC")
+  fun findLatestCas1SpaceBooking(
+    applicationId: UUID,
+  ): List<Cas1SpaceBookingEntity>
 
   @Modifying
   @Query(
