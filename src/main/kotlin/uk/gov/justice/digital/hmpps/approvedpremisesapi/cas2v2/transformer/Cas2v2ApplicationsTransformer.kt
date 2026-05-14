@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateNonAssignable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
@@ -24,6 +26,7 @@ class Cas2v2ApplicationsTransformer(
   private val statusUpdateTransformer: Cas2v2StatusUpdateTransformer,
   private val timelineEventsTransformer: Cas2v2TimelineEventsTransformer,
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
+  private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2v2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.transformModelToPersonApi(personInfo))
@@ -86,13 +89,29 @@ class Cas2v2ApplicationsTransformer(
 
   fun transformJpaToCas2v2ReferralHistory(
     jpa: Cas2ApplicationEntity,
-  ) = Cas2v2ReferralHistory(
-    id = jpa.assessment!!.id,
-    applicationId = jpa.id,
-    type = ServiceType.CAS2v2,
-    createdAt = jpa.submittedAt!!.toInstant(),
-    status = jpa.statusUpdates!!.first().label,
-  )
+  ): Cas2v2ReferralHistory {
+    val latestStatusUpdate = jpa.statusUpdates?.firstOrNull()
+    val rejectionReason = latestStatusUpdate
+      ?.takeIf { it.label in listOf(Cas2StatusUpdateNonAssignable.REFERRAL_CANCELLED.label, Cas2StatusUpdateNonAssignable.REFERRAL_WITHDRAWN.label) }
+      ?.label
+
+    val omu = jpa.referringPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
+    val placementAddress = omu?.prisonName ?: jpa.referringPrisonCode ?: throw IllegalStateException("Missing placement address for CAS2v2 application ${jpa.id}")
+
+    return Cas2v2ReferralHistory(
+      id = jpa.assessment!!.id,
+      applicationId = jpa.id,
+      type = ServiceType.CAS2v2,
+      createdAt = jpa.submittedAt!!.toInstant(),
+      status = jpa.statusUpdates!!.first().label,
+      referralRejectionReason = rejectionReason,
+      localAuthorityArea = placementAddress,
+      pdu = jpa.preferredAreas,
+      referredBy = jpa.createdByUser.name,
+      placementAddress = placementAddress,
+      placementStatus = latestStatusUpdate?.label,
+    )
+  }
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {

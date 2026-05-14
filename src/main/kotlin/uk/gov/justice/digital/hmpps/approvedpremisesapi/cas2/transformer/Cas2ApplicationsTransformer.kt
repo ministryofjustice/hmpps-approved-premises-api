@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateNonAssignable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
@@ -84,13 +86,31 @@ class Cas2ApplicationsTransformer(
 
   fun transformJpaToCas2ReferralHistory(
     jpa: Cas2ApplicationEntity,
-  ) = Cas2ReferralHistory(
-    id = jpa.assessment!!.id,
-    applicationId = jpa.id,
-    type = ServiceType.CAS2,
-    createdAt = jpa.submittedAt!!.toInstant(),
-    status = jpa.statusUpdates!!.first().label,
-  )
+  ): Cas2ReferralHistory {
+    val latestStatusUpdate = getReferralHistoryStatus(jpa)
+    val rejectionReason = latestStatusUpdate
+      ?.takeIf { it.label in listOf(Cas2StatusUpdateNonAssignable.REFERRAL_CANCELLED.label, Cas2StatusUpdateNonAssignable.REFERRAL_WITHDRAWN.label) }
+      ?.label
+
+    val omu = jpa.referringPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
+    val placementAddress = omu?.prisonName ?: jpa.referringPrisonCode
+
+    return Cas2ReferralHistory(
+      id = jpa.assessment!!.id,
+      applicationId = jpa.id,
+      type = ServiceType.CAS2,
+      createdAt = jpa.submittedAt!!.toInstant(),
+      status = jpa.statusUpdates!!.first().label,
+      referralRejectionReason = rejectionReason,
+      localAuthorityArea = placementAddress,
+      pdu = jpa.preferredAreas,
+      referredBy = jpa.createdByUser.name,
+      placementAddress = placementAddress,
+      placementStatus = latestStatusUpdate?.label,
+    )
+  }
+
+  private fun getReferralHistoryStatus(jpa: Cas2ApplicationEntity): Cas2StatusUpdateEntity? = jpa.statusUpdates?.firstOrNull()
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {
