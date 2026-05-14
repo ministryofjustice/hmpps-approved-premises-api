@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
+import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -32,6 +33,8 @@ class Cas2v2AssessmentsController(
   private val cas2v2StatusUpdateService: Cas2v2StatusUpdateService,
   private val cas2v2UserService: Cas2v2UserService,
 ) {
+
+  @Operation(description = "Get an assessment. There are no constraints on assessments returned")
   @GetMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdGet(
     @PathVariable assessmentId: UUID,
@@ -41,6 +44,7 @@ class Cas2v2AssessmentsController(
     return ResponseEntity.ok(cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity))
   }
 
+  @Operation(description = "Update an assessment. There are no constraints on who can access this endpoint")
   @PutMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdPut(
     @PathVariable assessmentId: UUID,

@@ -31,7 +31,7 @@ class Cas2v2ApplicationsTransformer(
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2v2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.transformModelToPersonApi(personInfo))
 
-  fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person): Cas2v2Application = Cas2v2Application(
+  fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person) = Cas2v2Application(
     id = jpa.id,
     person = fullPerson,
     createdBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),

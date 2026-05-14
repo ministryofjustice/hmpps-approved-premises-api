@@ -19,6 +19,10 @@ import java.util.UUID
 
 enum class Cas2UserType(val authSource: String) {
   DELIUS("delius"),
+
+  /**
+   * AKA DPS
+   */
   NOMIS("nomis"),
   EXTERNAL("auth"),
   ;
@@ -83,6 +87,10 @@ data class Cas2UserEntity(
   // Nomis specific fields that are only expected to have values if the
   // accountType is Cas2UserType.NOMIS
   var nomisStaffId: Long? = null,
+
+  /**
+   * Corresponds to a prison code
+   */
   var activeNomisCaseloadId: String? = null,
   var nomisAccountType: String? = null,
 

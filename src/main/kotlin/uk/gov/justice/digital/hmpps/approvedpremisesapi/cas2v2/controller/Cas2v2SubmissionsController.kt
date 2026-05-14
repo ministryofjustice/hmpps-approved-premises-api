@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
+import io.swagger.v3.oas.annotations.Operation
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -39,6 +40,7 @@ class Cas2v2SubmissionsController(
   private val userService: Cas2v2UserService,
 ) {
 
+  @Operation(description = "Get all submitted applications, paged. There are no constraints on assessments returned")
   @GetMapping("/submissions")
   fun submissionsGet(
     @RequestParam page: Int?,
@@ -55,6 +57,7 @@ class Cas2v2SubmissionsController(
     ).body(getPersonNamesAndTransformToSummaries(applications))
   }
 
+  @Operation(description = "Get a submitted application. There are no constraints on who can access this endpoint")
   @GetMapping("/submissions/{applicationId}")
   fun submissionsApplicationIdGet(
     @PathVariable applicationId: UUID,
@@ -67,6 +70,7 @@ class Cas2v2SubmissionsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
+  @Operation(description = "Submit an application. The application must have been created by the calling user, and not already submitted or abandoned")
   @Transactional
   @PostMapping("/submissions")
   fun submissionsPost(

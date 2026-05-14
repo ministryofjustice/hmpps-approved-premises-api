@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -9,8 +11,8 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
@@ -46,14 +48,20 @@ class Cas2v2ApplicationController(
   private val cas2OffenderService: Cas2OffenderService,
   private val userService: Cas2v2UserService,
 ) {
+
+  @Operation(summary = "List all applications according to miscellaneous parameters")
   @GetMapping("/applications")
   @PaginationHeaders
-  @SuppressWarnings("LongParameterList")
   fun applicationsGet(
     @RequestParam isSubmitted: Boolean?,
     @RequestParam page: Int?,
+    @Parameter(description = "Use of prisonCode is limited for users with referer roles (ROLE_CAS2_COURT_BAIL_REFERRER or ROLE_CAS2_PRISON_BAIL_REFERRER). See limitByUser documentation")
     @RequestParam prisonCode: String?,
     @RequestParam applicationOrigin: ApplicationOrigin?,
+    @Parameter(
+      description = """Defaults to true. If true returns applications created by the calling user. If the user does not have a refer role (ROLE_CAS2_COURT_BAIL_REFERRER or ROLE_CAS2_PRISON_BAIL_REFERRER), 
+      |and prisonCode is specified, it must match the user's active case load id""",
+    )
     @RequestParam limitByUser: Boolean?,
     @RequestParam crnOrNomsNumber: String?,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
@@ -81,10 +89,16 @@ class Cas2v2ApplicationController(
     ).body(getPersonNamesAndTransformToSummaries(applications))
   }
 
+  @Operation(
+    description = "Get an application by ID. Access is allowed if one of the following rules is met: " +
+      "1. The calling user created the application, " +
+      "2. The calling user has ROLE_CAS2_PRISON_BAIL_REFERRER and the application is a submitted prison bail application, " +
+      "3. The calling user is a NOMIS user and the application corresponds to an offender in a prison matching the calling user active case load id",
+  )
   @GetMapping("/applications/{applicationId}")
   fun applicationsApplicationIdGet(
     @PathVariable applicationId: UUID,
-  ): ResponseEntity<Application> {
+  ): ResponseEntity<Cas2v2Application> {
     val user = userService.getUserForRequest()
 
     val applicationResult = cas2v2ApplicationService
@@ -97,12 +111,13 @@ class Cas2v2ApplicationController(
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
+  @Operation(description = "Create a new Application. This will persist a non-submitted application and the response will include the assigned application ID")
   @Transactional
   @Suppress("ThrowsCount")
   @PostMapping("/applications")
   fun applicationsPost(
     @RequestBody body: NewCas2v2Application,
-  ): ResponseEntity<Application> {
+  ): ResponseEntity<Cas2v2Application> {
     val user = userService.getUserForRequest()
 
     val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(body.crn)) {
@@ -132,13 +147,14 @@ class Cas2v2ApplicationController(
       .body(cas2v2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, personInfo))
   }
 
+  @Operation(description = "Update a non submitted application. An application can only be updated if it's created by the calling user, unsubmitted and not abandoned")
   @Suppress("TooGenericExceptionThrown")
   @Transactional
   @PutMapping("/applications/{applicationId}")
   fun applicationsApplicationIdPut(
     @PathVariable applicationId: UUID,
     @RequestBody body: UpdateApplication,
-  ): ResponseEntity<Application> {
+  ): ResponseEntity<Cas2v2Application> {
     val user = userService.getUserForRequest()
 
     val serializedData = jsonMapper.writeValueAsString(body.data)
@@ -158,6 +174,7 @@ class Cas2v2ApplicationController(
     return ResponseEntity.ok(getPersonDetailAndTransform(entity))
   }
 
+  @Operation(description = "Abandon an application. Application must be unsubmitted and created by the calling user")
   @Transactional
   @PutMapping("/applications/{applicationId}/abandon")
   fun applicationsApplicationIdAbandonPut(
@@ -185,7 +202,7 @@ class Cas2v2ApplicationController(
   @SuppressWarnings("ThrowsCount")
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
-  ): Application {
+  ): Cas2v2Application {
     val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(application.crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
