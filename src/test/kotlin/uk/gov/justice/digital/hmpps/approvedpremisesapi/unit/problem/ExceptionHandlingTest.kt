@@ -93,7 +93,9 @@ class ExceptionHandlingTest {
     assertThat(problem.status).isEqualTo(expectedProblem.status)
     assertThat(problem.detail).isEqualTo(expectedProblem.detail)
 
-    verify { mockSentryService.captureException(throwable) }
+    loggerExtension.assertError("Resource not found", throwable)
+
+    verify(exactly = 0) { mockSentryService.captureException(throwable) }
   }
 
   @Test
