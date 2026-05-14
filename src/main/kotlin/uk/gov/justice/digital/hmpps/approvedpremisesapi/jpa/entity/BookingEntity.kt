@@ -24,6 +24,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingRecord
@@ -114,6 +115,15 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findByBedIdAndArrivingBeforeDate(bedId: UUID, date: LocalDate, thisEntityId: UUID?): List<BookingEntity>
 
   fun findAllByApplication(application: ApplicationEntity): List<BookingEntity>
+
+  @Query(
+    "SELECT * FROM bookings WHERE application_id = :applicationId AND service = :service ORDER BY created_at DESC LIMIT 1",
+    nativeQuery = true,
+  )
+  fun findLatestCas3BookingEntity(
+    applicationId: UUID,
+    service: String,
+  ): Cas3BookingEntity?
 
   @Modifying
   @Query("UPDATE BookingEntity b set b.status = :status where b.id = :bookingId")
