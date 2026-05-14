@@ -10,4 +10,10 @@ data class Cas2ReferralHistory(
   val applicationId: UUID,
   val status: String,
   val createdAt: Instant,
+  val referralRejectionReason: String?,
+  val localAuthorityArea: String?,
+  val pdu: String?,
+  val referredBy: String?,
+  val placementAddress: String?,
+  val placementStatus: String?,
 )
