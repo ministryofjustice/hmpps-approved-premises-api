@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 import java.time.LocalDate
@@ -36,7 +37,7 @@ class Cas2v2ApplicationTransformerTest {
   private val mockCas2v2StatusUpdateTransformer = mockk<Cas2v2StatusUpdateTransformer>()
   private val mockCas2v2TimelineEventsTransformer = mockk<Cas2v2TimelineEventsTransformer>()
   private val mockCas2v2AssessmentsTransformer = mockk<Cas2v2AssessmentsTransformer>()
-
+  private val mockOffenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
   private val objectMapper = JsonMapperFactory.createJackson3JsonMapper()
 
   private val cas2v2ApplicationsTransformer = Cas2v2ApplicationsTransformer(
@@ -46,6 +47,7 @@ class Cas2v2ApplicationTransformerTest {
     mockCas2v2StatusUpdateTransformer,
     mockCas2v2TimelineEventsTransformer,
     mockCas2v2AssessmentsTransformer,
+    mockOffenderManagementUnitRepository,
   )
 
   private val user = Cas2UserEntityFactory()
