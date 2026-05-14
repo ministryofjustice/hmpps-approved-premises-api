@@ -60,6 +60,10 @@ class Cas3PremisesEntityFactory : Factory<Cas3PremisesEntity> {
     this.addressLine2 = { addressLine2 }
   }
 
+  fun withTown(town: String?) = apply {
+    this.town = { town }
+  }
+
   fun withNotes(notes: String) = apply {
     this.notes = { notes }
   }

@@ -11,4 +11,10 @@ data class Cas3ReferralHistory(
   val applicationId: UUID,
   val status: TemporaryAccommodationAssessmentStatus,
   val createdAt: Instant,
+  val referralRejectionReason: String?,
+  val localAuthorityArea: String?,
+  val pdu: String?,
+  val referredBy: String?,
+  val placementAddress: String?,
+  val placementStatus: String?,
 )

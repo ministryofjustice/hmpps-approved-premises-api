@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ReferralH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -35,6 +36,7 @@ class Cas3AssessmentTransformer(
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val userTransformer: UserTransformer,
   private val jsonMapper: JsonMapper,
+  private val bookingRepository: BookingRepository,
 ) {
   fun transformJpaToApi(
     jpa: TemporaryAccommodationAssessmentEntity,
@@ -78,13 +80,29 @@ class Cas3AssessmentTransformer(
     probationDeliveryUnitName = ase.probationDeliveryUnitName,
   )
 
-  fun transformAssessmentToCas3ReferralHistory(a: TemporaryAccommodationAssessmentEntity): Cas3ReferralHistory = Cas3ReferralHistory(
-    id = a.id,
-    applicationId = a.application.id,
-    createdAt = a.createdAt.toInstant(),
-    status = a.deriveAssessmentStatus(),
-    type = ServiceType.CAS3,
-  )
+  fun transformAssessmentToCas3ReferralHistory(a: TemporaryAccommodationAssessmentEntity): Cas3ReferralHistory {
+    val application = a.typedApplication<TemporaryAccommodationApplicationEntity>()
+
+    val latestBooking = bookingRepository.findLatestCas3BookingEntity(application.id, ServiceName.temporaryAccommodation.value)
+
+    val placementAddress = latestBooking?.let {
+      listOfNotNull(it.premises.addressLine1, it.premises.town, it.premises.postcode).joinToString(", ")
+    }
+
+    return Cas3ReferralHistory(
+      id = a.id,
+      applicationId = application.id,
+      createdAt = a.createdAt.toInstant(),
+      status = a.deriveAssessmentStatus(),
+      type = ServiceType.CAS3,
+      referralRejectionReason = a.referralRejectionReason?.name ?: a.rejectionRationale,
+      localAuthorityArea = application.dutyToReferLocalAuthorityAreaName,
+      pdu = application.probationDeliveryUnit?.name,
+      referredBy = application.createdByUser.name,
+      placementAddress = placementAddress,
+      placementStatus = latestBooking?.status?.value,
+    )
+  }
 
   fun transformApiStatusToDomainSummaryState(status: AssessmentStatus) = when (status) {
     AssessmentStatus.cas1Completed -> DomainAssessmentSummaryStatus.COMPLETED
