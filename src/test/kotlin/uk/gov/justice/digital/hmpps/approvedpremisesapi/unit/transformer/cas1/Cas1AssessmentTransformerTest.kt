@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -67,6 +68,9 @@ class Cas1AssessmentTransformerTest {
 
   @MockK
   lateinit var approvedPremisesUser: ApprovedPremisesUser
+
+  @MockK
+  lateinit var mockCas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
   private val risksTransformer = RisksTransformer()
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()

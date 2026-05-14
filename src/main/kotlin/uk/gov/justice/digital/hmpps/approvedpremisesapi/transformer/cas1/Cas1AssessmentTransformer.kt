@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -30,6 +31,7 @@ class Cas1AssessmentTransformer(
   private val userTransformer: UserTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
+  private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
 ) {
 
   fun transformJpaToCas1Assessment(
@@ -73,13 +75,29 @@ class Cas1AssessmentTransformer(
     dueAt = ase.dueAt!!,
   )
 
-  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity): Cas1ReferralHistory = Cas1ReferralHistory(
-    id = entity.id,
-    applicationId = entity.application.id,
-    createdAt = entity.createdAt.toInstant(),
-    status = getStatusForCas1Assessment(entity),
-    type = ServiceType.CAS1,
-  )
+  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity): Cas1ReferralHistory {
+    val application = entity.cas1Application()
+
+    val latestBooking = cas1SpaceBookingRepository.findLatestCas1SpaceBooking(application.id).firstOrNull()
+
+    val placementAddress = latestBooking?.premises?.let {
+      listOfNotNull(it.addressLine1, it.town, it.postcode).joinToString(", ")
+    }
+
+    return Cas1ReferralHistory(
+      id = entity.id,
+      applicationId = entity.application.id,
+      createdAt = entity.createdAt.toInstant(),
+      status = getStatusForCas1Assessment(entity),
+      type = ServiceType.CAS1,
+      referralRejectionReason = entity.rejectionRationale,
+      localAuthorityArea = application.apArea?.name,
+      pdu = application.cruManagementArea?.name,
+      referredBy = application.createdByUser.name,
+      placementAddress = placementAddress,
+      placementStatus = latestBooking?.getSpaceBookingStatus()?.value,
+    )
+  }
 
   fun transformCas1AssessmentStatusToDomainSummaryState(status: Cas1AssessmentStatus) = when (status) {
     Cas1AssessmentStatus.awaitingResponse -> DomainAssessmentSummaryStatus.AWAITING_RESPONSE
