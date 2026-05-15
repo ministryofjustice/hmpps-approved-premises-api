@@ -142,7 +142,7 @@ class Cas2v2ApplicationService(
     user: Cas2UserEntity,
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
-  ) = validated<Cas2ApplicationEntity> {
+  ) = validated {
     val offenderDetailsResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)
 
     val offenderDetails = when (offenderDetailsResult) {
