@@ -49,7 +49,7 @@ class ExceptionHandling(
 
   @ExceptionHandler(NoResourceFoundException::class)
   fun handleNoResourceFoundException(ex: NoResourceFoundException): ResponseEntity<ProblemDetail> {
-    sentryService.captureException(ex)
+    log.warn("Resource not found", ex)
     return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(APPLICATION_PROBLEM_JSON).body(NotFoundResourceProblem().toProblemDetail())
   }
 
