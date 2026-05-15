@@ -7,9 +7,8 @@
 # To stop the hmpps-gradle-spring-boot project from overwriting any project specific customisations here, remove the
 # warning at the top of this file.
 #
-# Suppression for h2 2.1.214 password on command line vulnerability
-#   can be suppressed as we only run h2 locally and not on build environments
-CVE-2022-45868
-# Suppression for tomcat vulnerability affecting jsp compilation in the default servlet
-#   can be suppressed as we do not use the default servlet and haven't configured it for write either
-CVE-2024-50379
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.1
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore: {}
+patch: {}
