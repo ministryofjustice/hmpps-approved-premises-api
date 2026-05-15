@@ -24,12 +24,20 @@ class RoshSummary(
 )
 
 data class RoshSummaryInner(
+  // R10.1
   val whoIsAtRisk: String?,
+  // R10.2
   val natureOfRisk: String?,
+  // R10.3
   val riskGreatest: String?,
+  // R10.4
   val riskIncreaseLikelyTo: String?,
+  // R10.5
   val riskReductionLikelyTo: String?,
+  // SUM9
   val factorsAnalysisOfRisk: String?,
+  // SUM10
   val factorsStrengthsAndProtective: String?,
+  // SUM11
   val factorsSituationsLikelyToOffend: String?,
 )
