@@ -56,6 +56,7 @@ dependencies {
   implementation(kotlin("reflect"))
 
   implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.10.0")
+  implementation("org.webjars:swagger-ui:5.32.2")
 
   implementation("org.jetbrains.kotlinx:dataframe:0.15.0") {
     exclude(group = "org.jetbrains.kotlinx", module = "dataframe-openapi")
