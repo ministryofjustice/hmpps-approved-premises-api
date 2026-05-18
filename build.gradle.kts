@@ -43,7 +43,7 @@ dependencies {
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
   // this is a transitive dependency of uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-autoconfigure
   // so we need to force a different version
-  implementation("org.springdoc:springdoc-openapi-starter-common:3.0.2")
+  implementation("org.springdoc:springdoc-openapi-starter-common:3.0.3")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
