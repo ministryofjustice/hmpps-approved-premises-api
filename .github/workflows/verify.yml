@@ -146,7 +146,7 @@ jobs:
         env:
           ALLOW_EMPTY_PASSWORD: yes
       postgres:
-        image: "postgis/postgis:14-3.5"
+        image: "postgis/postgis:17-3.5"
 
         env:
           POSTGRES_USER: api_user
