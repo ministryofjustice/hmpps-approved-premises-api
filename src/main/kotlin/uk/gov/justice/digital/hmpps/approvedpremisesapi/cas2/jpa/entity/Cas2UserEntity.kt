@@ -57,7 +57,7 @@ interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
     ON CONFLICT (username, user_type, service_origin) DO NOTHING
   """,
   )
-  fun createCas2User(user: Cas2UserEntity): Unit
+  fun createCas2User(user: Cas2UserEntity)
 
   fun findByServiceOrigin(serviceOrigin: Cas2ServiceOrigin): List<Cas2UserEntity>
   fun findByUsernameAndServiceOrigin(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
