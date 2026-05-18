@@ -110,17 +110,21 @@ generic-service:
       NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
       NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
 
-# CloudPlatform AlertManager receiver to route prometheus alerts to slack
-# See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
+# These alerts are provided by https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/README.md
 generic-prometheus-alerts:
   alertSeverity: hmpps-approved-premises-nonprod
+  elastiCacheAlertsClusterIds:
+    cp-1faf5cb78c4ab173: "community accommodation"
   rdsAlertsDatabases:
     cloud-platform-e683abb0b1eddb61: "community accommodation"
   # API pool users = 20 per pod
   # Max expected connections for 4 x pods = 80 + additional 10 (buffer for direct connections)
   rdsAlertsConnectionThreshold: 90
-  elastiCacheAlertsClusterIds:
-    cp-1faf5cb78c4ab173: "community accommodation"
+  sqsAlertsQueueNames:
+    - "hmpps-community-accommodation-preprod-cas-2-domain-events-listener-dlq"
+    - "hmpps-community-accommodation-preprod-cas-2-domain-events-listener-queue"
+  sqsAlertsOldestThreshold: 30
+  sqsAlertsTotalMessagesThreshold: 10
 
 env_details:
   production_env: false
