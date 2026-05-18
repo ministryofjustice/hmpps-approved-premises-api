@@ -687,7 +687,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
   @Nested
   inner class UnarchiveBedspace {
     @Test
-    fun `Unarchive bedspace returns 200 OK when successful`() {
+    fun `Unarchive bedspace returns 200 OK when successful (+14 days)`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         givenACas3PremisesWithBedspaces(
           region = user.probationRegion,
@@ -700,7 +700,45 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           ),
         ) { premises, bedspaces ->
           val archivedBedspace = bedspaces.first()
-          val cas3UnarchiveBedspace = Cas3UnarchiveBedspace(LocalDate.now().plusDays(1))
+          val cas3UnarchiveBedspace = Cas3UnarchiveBedspace(LocalDate.now().plusDays(14))
+
+          webTestClient.post()
+            .uri("/cas3/v2/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
+            .headers(buildTemporaryAccommodationHeaders(jwt))
+            .bodyValue(cas3UnarchiveBedspace)
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          // Verify the bedspace was updated
+          val updatedBedspace = cas3BedspacesRepository.findById(archivedBedspace.id).get()
+          assertThat(updatedBedspace.startDate).isEqualTo(cas3UnarchiveBedspace.restartDate)
+          assertThat(updatedBedspace.endDate).isNull()
+
+          val allEvents = domainEventRepository.findAll()
+          assertThat(allEvents).hasSize(1)
+          assertThat(allEvents[0].type).isEqualTo(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
+          assertThat(allEvents[0].cas3BedspaceId).isEqualTo(archivedBedspace.id)
+          assertThat(allEvents[0].cas3PremisesId).isEqualTo(premises.id)
+        }
+      }
+    }
+
+    @Test
+    fun `Unarchive bedspace returns 200 OK when successful (-14 days)`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        givenACas3PremisesWithBedspaces(
+          region = user.probationRegion,
+          bedspaceCount = 1,
+          bedspacesStartDates = listOf(
+            LocalDate.now(clock).minusDays(30),
+          ),
+          bedspacesEndDates = listOf(
+            LocalDate.now(clock).minusDays(15),
+          ),
+        ) { premises, bedspaces ->
+          val archivedBedspace = bedspaces.first()
+          val cas3UnarchiveBedspace = Cas3UnarchiveBedspace(LocalDate.now().minusDays(14))
 
           webTestClient.post()
             .uri("/cas3/v2/premises/${premises.id}/bedspaces/${archivedBedspace.id}/unarchive")
