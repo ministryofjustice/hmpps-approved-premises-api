@@ -59,6 +59,8 @@ dependencies {
 
   implementation("org.jetbrains.kotlinx:dataframe:0.15.0") {
     exclude(group = "org.jetbrains.kotlinx", module = "dataframe-openapi")
+    exclude(group = "org.jetbrains.kotlinx", module = "dataframe-arrow")
+    exclude(group = "org.jetbrains.kotlinx", module = "dataframe-jdbc")
   }
   implementation("org.apache.poi:poi-ooxml:5.3.0")
 
