@@ -142,18 +142,21 @@ generic-service:
     ncc-tsc-team-9: "195.95.131.0/24"
     ncc-mvss-team-1: "5.148.8.192/26"
 
-# CloudPlatform AlertManager receiver to route prometheus alerts to slack
-# See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
+# These alerts are provided by https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/README.md
 generic-prometheus-alerts:
   alertSeverity: hmpps-approved-premises-nonprod
+  elastiCacheAlertsClusterIds:
+    cp-ede0649d3201fded: "community accommodation"
   rdsAlertsDatabases:
     cloud-platform-914625011536d5f1: "community accommodation"
   # API pool users = 20 per pod
   # Max expected connections for 2 x pods = 40 + additional 10 (buffer for direct connections)
   rdsAlertsConnectionThreshold: 50
-  elastiCacheAlertsClusterIds:
-    cp-ede0649d3201fded: "community accommodation"
-
+  sqsAlertsQueueNames:
+    - "hmpps-community-accommodation-development-cas-2-domain-events-listener-dlq"
+    - "hmpps-community-accommodation-development-cas-2-domain-events-listener-queue"
+  sqsAlertsOldestThreshold: 30
+  sqsAlertsTotalMessagesThreshold: 10
 
 env_details:
   production_env: false

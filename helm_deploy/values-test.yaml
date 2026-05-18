@@ -141,17 +141,21 @@ generic-service:
     dxw-vpn: "54.76.254.148/32"
     cyberlab: "51.38.77.66/32"
 
-# CloudPlatform AlertManager receiver to route prometheus alerts to slack
-# See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
+# These alerts are provided by https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/README.md
 generic-prometheus-alerts:
   alertSeverity: hmpps-approved-premises-nonprod
+  elastiCacheAlertsClusterIds:
+    cp-377025d1a50411fe: "community accommodation"
   rdsAlertsDatabases:
     cloud-platform-f3a9f9984df2d0e7: "community accommodation"
   # API pool users = 20 per pod
   # Max expected connections for 2 x pods = 40 + additional 10 (buffer for direct connections)
   rdsAlertsConnectionThreshold: 50
-  elastiCacheAlertsClusterIds:
-    cp-377025d1a50411fe: "community accommodation"
+  sqsAlertsQueueNames:
+    - "hmpps-community-accommodation-test-cas-2-domain-events-listener-dlq"
+    - "hmpps-community-accommodation-test-cas-2-domain-events-listener-queue"
+  sqsAlertsOldestThreshold: 30
+  sqsAlertsTotalMessagesThreshold: 10
 
 env_details:
   production_env: false
