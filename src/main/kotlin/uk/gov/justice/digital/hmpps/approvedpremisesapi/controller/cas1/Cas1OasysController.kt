@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
@@ -15,11 +16,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetailsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1CreateApplicationLaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
@@ -35,6 +41,7 @@ class Cas1OasysController(
   private val oaSysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer,
+  private val userAccessService: Cas1UserAccessService,
 ) {
 
   @Operation(
@@ -116,6 +123,35 @@ class Cas1OasysController(
         answers = answers,
       ),
     )
+  }
+
+  @Operation(summary = "Returns OASys risk to the individual for a Person.")
+  @GetMapping("/people/{crn}/oasys/risks-to-individual")
+  fun getOasysRisksToIndividual(@PathVariable crn: String): ResponseEntity<RiskToTheIndividualInner> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val risksToTheIndividualWrapper = extractEntityFromCasResult(
+      oaSysService.getOASysRiskToTheIndividual(crn),
+    )
+
+    val riskToTheIndividual = risksToTheIndividualWrapper.riskToTheIndividual
+      ?: throw NotFoundProblem(crn, "RiskToTheIndividual")
+
+    return ResponseEntity.ok(riskToTheIndividual)
+  }
+
+  @Operation(summary = "Returns OASys health details for a Person.")
+  @GetMapping("/people/{crn}/oasys/health-details")
+  fun getOasysHealthDetails(@PathVariable crn: String): ResponseEntity<HealthDetailsInner> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val healthDetailsWrapper = extractEntityFromCasResult(
+      oaSysService.getOASysHealthDetails(crn),
+    )
+
+    val healthDetails = healthDetailsWrapper.health
+
+    return ResponseEntity.ok(healthDetails)
   }
 
   @SuppressWarnings("ThrowsCount")
