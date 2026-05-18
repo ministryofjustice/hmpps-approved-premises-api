@@ -54,6 +54,8 @@ class Cas2OAsysSectionsTransformer(val featureFlagService: FeatureFlagService) {
 
   private fun riskToSelfAnswersPostNod1057(risksToTheIndividual: RiskToTheIndividualInner?) = listOf(
     OASysQuestion("Analysis of current or previous self-harm and/or suicide concerns", "FA62", risksToTheIndividual?.analysisSuicideSelfharm),
+    // Whilst the questionNumber is labelled as 'R8.3.1', it's being sourced from FA64. Ideally we'd change the question number here, but a UI change would
+    // be required first as it relies on the question number
     OASysQuestion("Current concerns about Vulnerability", "R8.3.1", risksToTheIndividual?.analysisVulnerabilities),
   )
 

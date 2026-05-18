@@ -24,12 +24,20 @@ class RiskManagementPlan(
 )
 
 data class RiskManagementPlanInner(
+  // RM28
   val furtherConsiderations: String?,
+  // RM35
   val additionalComments: String?,
+  // RM35
   val contingencyPlans: String?,
+  // RM33
   val victimSafetyPlanning: String?,
+  // RM32
   val interventionsAndTreatment: String?,
+  // RM31
   val monitoringAndControl: String?,
+  // RM30
   val supervision: String?,
+  // RM28.1
   val keyInformationAboutCurrentSituation: String?,
 )

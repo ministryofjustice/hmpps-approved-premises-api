@@ -24,13 +24,20 @@ class OffenceDetails(
 )
 
 data class OffenceDetailsInner(
+  // 2.1
   val offenceAnalysis: String?,
   val othersInvolved: String?,
+  // 2.98
   val issueContributingToRisk: String?,
+  // 2.8.3
   val offenceMotivation: String?,
+  // 2.5
   val victimImpact: String?,
+  // 2.4.1
   val victimPerpetratorRel: String?,
+  // 2.4.2
   val victimInfo: String?,
+  // 2.12
   val patternOffending: String?,
   val acceptsResponsibility: String?,
 )
