@@ -1,8 +1,8 @@
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.3.1"
-  kotlin("plugin.spring") version "2.3.20"
-  kotlin("plugin.jpa") version "2.3.20"
-  id("dev.detekt") version "2.0.0-alpha.2"
+  kotlin("plugin.spring") version "2.3.21"
+  kotlin("plugin.jpa") version "2.3.21"
+  id("dev.detekt") version "2.0.0-alpha.3"
 }
 
 kotlin {
@@ -14,7 +14,7 @@ kotlin {
 configurations.matching { it.name == "detekt" }.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "org.jetbrains.kotlin") {
-      useVersion("2.3.0")
+      useVersion(dev.detekt.gradle.plugin.getSupportedKotlinVersion())
     }
   }
 }
