@@ -1791,8 +1791,6 @@ class Cas3v2BookingServiceTest {
 
     @Test
     fun `createDeparture returns FieldValidationError when departure date is before the booking arrival date`() {
-      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
-
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
         dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
@@ -1809,29 +1807,8 @@ class Cas3v2BookingServiceTest {
     }
 
     @Test
-    fun `createDeparture returns FieldValidationError when departure date is in the future`() {
-      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns true
-
-      val result = cas3BookingService.createDeparture(
-        booking = bookingEntity,
-        dateTime = OffsetDateTime.now().plusDays(1),
-        reasonId = departureReasonId,
-        moveOnCategoryId = moveOnCategoryId,
-        notes = "notes",
-        user = UserEntityFactory()
-          .withUnitTestControlProbationRegion()
-          .produce(),
-      )
-
-      assertThatCasResult(result).isFieldValidationError()
-        .hasMessage("$.dateTime", "departureDateInFuture")
-    }
-
-    @Test
     fun `createDeparture returns FieldValidationError when invalid departure reason supplied`() {
       every { mockDepartureReasonRepository.findByIdOrNull(any()) } returns null
-      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
-
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
         dateTime = OffsetDateTime.now().minusMinutes(1),
@@ -1852,7 +1829,6 @@ class Cas3v2BookingServiceTest {
       every { mockDepartureReasonRepository.findByIdOrNull(any()) } returns DepartureReasonEntityFactory()
         .withServiceScope(ServiceName.approvedPremises.value)
         .produce()
-      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
@@ -1872,7 +1848,6 @@ class Cas3v2BookingServiceTest {
     @Test
     fun `createDeparture returns FieldValidationError when invalid move on category supplied`() {
       every { mockMoveOnCategoryRepository.findByIdOrNull(any()) } returns null
-      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
@@ -1897,7 +1872,6 @@ class Cas3v2BookingServiceTest {
       every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns MoveOnCategoryEntityFactory()
         .withServiceScope(ServiceName.approvedPremises.value)
         .produce()
-      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
@@ -1939,7 +1913,6 @@ class Cas3v2BookingServiceTest {
       every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as Cas3DepartureEntity }
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as Cas3ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
-      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val user = UserEntityFactory()
         .withProbationRegion(probationRegion)
@@ -2018,7 +1991,6 @@ class Cas3v2BookingServiceTest {
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as Cas3ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
       every { mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(Cas3BookingEntity::class), user) } just Runs
-      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
