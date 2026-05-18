@@ -330,10 +330,6 @@ class Cas3v2BookingService(
       "$.dateTime" hasValidationError "beforeBookingArrivalDate"
     }
 
-    if (featureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") && dateTime.isAfter(OffsetDateTime.now())) {
-      validationErrors["$.dateTime"] = "departureDateInFuture"
-    }
-
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
       "$.reasonId" hasValidationError "doesNotExist"
