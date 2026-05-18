@@ -1,36 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>ministryofjustice/hmpps-renovate-config:jvm"],
-  "assigneesFromCodeOwners": true,
-  "packageRules": [
-    {
-      "matchUpdateTypes": ["patch"],
-      "minimumReleaseAge": "3 days"
-    },
-    {
-      "matchUpdateTypes": ["minor"],
-      "minimumReleaseAge": "7 days"
-    },
-    {
-      "matchUpdateTypes": ["major"],
-      "minimumReleaseAge": "30 days"
-    },
-    {
-      "matchDatasources": ["docker"],
-      "allowedVersions": "17-slim"
-    },
-    {
-      "groupName": "spring doc",
-      "matchPackagePrefixes": [
-        "org.springdoc"
-      ]
-    },
-    {
-      "groupName": "test containers",
-      "matchPackagePrefixes": [
-        "org.testcontainers"
-      ]
-    }
-  ],
-  "ignoreDeps": ["org.hibernate:hibernate-spatial"]
+  "extends": ["github>ministryofjustice/hmpps-renovate-config:jvm"]
 }
