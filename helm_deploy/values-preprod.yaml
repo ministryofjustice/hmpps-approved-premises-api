@@ -114,7 +114,7 @@ generic-service:
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
-  alertSeverity: hmpps-approved-premises
+  alertSeverity: hmpps-approved-premises-nonprod
   rdsAlertsDatabases:
     cloud-platform-e683abb0b1eddb61: "community accommodation"
   # API pool users = 20 per pod
