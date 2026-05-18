@@ -116,7 +116,7 @@ class ApprovedPremisesRoomsSeedJob(
 
   private fun updateExistingRoom(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): RoomEntity = room.apply { this!!.notes = row.notes }
 
-  private fun createRoom(row: ApprovedPremisesRoomsSeedCsvRow, premises: PremisesEntity, roomCode: String): RoomEntity? {
+  private fun createRoom(row: ApprovedPremisesRoomsSeedCsvRow, premises: PremisesEntity, roomCode: String): RoomEntity {
     val room = roomRepository.save(
       RoomEntity(
         id = UUID.randomUUID(),

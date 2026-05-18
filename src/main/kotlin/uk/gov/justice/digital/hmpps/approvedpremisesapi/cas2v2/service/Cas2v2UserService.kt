@@ -61,7 +61,7 @@ class Cas2v2UserService(
     return roles?.any { it in grantedAuthorities } ?: false
   }
 
-  private fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority>? = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
+  private fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority> = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
 
   private fun getExistingUser(username: String, userType: Cas2UserType): Cas2UserEntity? = cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, userType, Cas2ServiceOrigin.BAIL)
 
