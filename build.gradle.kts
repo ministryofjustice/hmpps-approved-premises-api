@@ -80,7 +80,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
-  testImplementation("org.zalando:logbook-spring-boot-starter:4.0.3")
+  testImplementation("org.zalando:logbook-spring-boot-starter:4.0.4")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.1")
 
