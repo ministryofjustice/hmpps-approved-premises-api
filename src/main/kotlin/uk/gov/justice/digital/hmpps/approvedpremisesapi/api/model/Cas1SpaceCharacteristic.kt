@@ -59,6 +59,6 @@ enum class Cas1SpaceCharacteristic(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): Cas1SpaceCharacteristic = values().first { it -> it.value == value }
+    fun forValue(value: String): Cas1SpaceCharacteristic = values().first { it.value == value }
   }
 }

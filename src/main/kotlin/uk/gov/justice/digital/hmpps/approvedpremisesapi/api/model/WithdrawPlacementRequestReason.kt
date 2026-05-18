@@ -23,6 +23,6 @@ enum class WithdrawPlacementRequestReason(@get:JsonValue val value: kotlin.Strin
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): WithdrawPlacementRequestReason = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): WithdrawPlacementRequestReason = values().first { it.value == value }
   }
 }

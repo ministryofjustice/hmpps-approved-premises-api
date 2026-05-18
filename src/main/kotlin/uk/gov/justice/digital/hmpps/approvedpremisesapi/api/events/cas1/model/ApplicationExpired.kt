@@ -31,7 +31,7 @@ data class ApplicationExpired(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): ApplicationExpired.ExpiryReason = ApplicationExpired.ExpiryReason.values().first { it -> it.value == value }
+      fun forValue(value: kotlin.String): ApplicationExpired.ExpiryReason = ApplicationExpired.ExpiryReason.values().first { it.value == value }
     }
   }
 }

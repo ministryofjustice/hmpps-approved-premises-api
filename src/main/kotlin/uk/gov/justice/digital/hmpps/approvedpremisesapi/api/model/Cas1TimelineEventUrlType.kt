@@ -15,6 +15,6 @@ enum class Cas1TimelineEventUrlType(@get:JsonValue val value: String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): Cas1TimelineEventUrlType = values().first { it -> it.value == value }
+    fun forValue(value: String): Cas1TimelineEventUrlType = values().first { it.value == value }
   }
 }

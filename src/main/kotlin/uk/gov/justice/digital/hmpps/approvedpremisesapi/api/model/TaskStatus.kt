@@ -15,6 +15,6 @@ enum class TaskStatus(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): TaskStatus = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): TaskStatus = values().first { it.value == value }
   }
 }

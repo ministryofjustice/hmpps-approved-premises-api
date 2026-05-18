@@ -14,6 +14,6 @@ enum class Cas1ApplicationTimelinessCategory(@get:JsonValue val value: kotlin.St
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1ApplicationTimelinessCategory = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): Cas1ApplicationTimelinessCategory = values().first { it.value == value }
   }
 }
