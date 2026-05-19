@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
@@ -54,7 +55,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
