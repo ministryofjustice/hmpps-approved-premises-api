@@ -5,9 +5,6 @@ import org.springframework.data.domain.Limit
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementHistory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -16,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -27,31 +23,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
-import java.time.LocalDate
 import java.util.UUID
-
-@SuppressWarnings("MagicNumber")
-val suitableStatusesAsc = mapOf(
-  ApprovedPremisesApplicationStatus.INAPPLICABLE to 0,
-  ApprovedPremisesApplicationStatus.EXPIRED to 1,
-  ApprovedPremisesApplicationStatus.WITHDRAWN to 2,
-  ApprovedPremisesApplicationStatus.REJECTED to 3,
-  ApprovedPremisesApplicationStatus.STARTED to 4,
-  ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT to 5,
-  ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT to 6,
-  ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS to 7,
-  ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION to 8,
-  ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST to 9,
-  ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT to 10,
-  ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED to 11,
-)
 
 @SuppressWarnings("TooGenericExceptionThrown")
 @Service
 class Cas1ApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val applicationRepository: ApplicationRepository,
-  private val placementApplicationRepository: PlacementApplicationRepository,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val userRepository: UserRepository,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
@@ -103,75 +81,6 @@ class Cas1ApplicationService(
   }
 
   fun getSubmittedApplicationsForCrn(crn: String, limit: Int) = approvedPremisesApplicationRepository.findByCrnAndSubmittedAtIsNotNull(crn, Limit.of(limit))
-
-  fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
-    .maxWithOrNull(
-      compareBy<ApprovedPremisesApplicationEntity> { suitableStatusesAsc[it.status] }
-        .thenBy { it.submittedAt ?: it.createdAt },
-    )
-    ?.let { application ->
-
-      val placementHistories =
-        placementApplicationRepository
-          .findByApplication(application)
-          .flatMap { placementApplication ->
-
-            val placementRequest = placementApplication.placementRequest
-
-            when {
-              placementRequest == null -> listOf(
-                Cas1PlacementHistory(
-                  dateApplied = placementApplication.expectedArrival
-                    ?: placementApplication.submittedAt?.toLocalDate()
-                    ?: placementApplication.createdAt.toLocalDate(),
-                  requestForPlacementStatus = placementApplication.deriveStatus(),
-                  placementStatus = null,
-                ),
-              )
-
-              placementRequest.spaceBookings.isEmpty() -> listOf(
-                Cas1PlacementHistory(
-                  dateApplied = placementRequest.expectedArrival,
-                  requestForPlacementStatus = placementRequest.deriveStatus(),
-                  placementStatus = null,
-                ),
-              )
-
-              else -> placementRequest.spaceBookings.map { placement ->
-                val placementStatus = placement.getSpaceBookingStatus()
-
-                val dateApplied = when (placementStatus) {
-                  Cas1SpaceBookingStatus.CANCELLED -> placement.cancellationOccurredAt
-                  Cas1SpaceBookingStatus.NOT_ARRIVED -> placement.expectedArrivalDate
-                  Cas1SpaceBookingStatus.DEPARTED -> placement.actualDepartureDate
-                  Cas1SpaceBookingStatus.ARRIVED -> placement.actualArrivalDate
-                  Cas1SpaceBookingStatus.UPCOMING -> placement.expectedArrivalDate
-                }
-
-                Cas1PlacementHistory(
-                  dateApplied = requireNotNull(dateApplied),
-                  requestForPlacementStatus = placementRequest.deriveStatus(),
-                  placementStatus = placementStatus,
-                )
-              }
-            }
-          }
-          .sortedByDescending { it.dateApplied }
-
-      val today = LocalDate.now()
-
-      val currentPlacementHistory =
-        placementHistories.lastOrNull { it.dateApplied >= today }
-          ?: placementHistories.firstOrNull { it.dateApplied < today }
-
-      Cas1SuitableApplication(
-        id = application.id,
-        applicationStatus = application.status,
-        requestForPlacementStatus = currentPlacementHistory?.requestForPlacementStatus,
-        placementStatus = currentPlacementHistory?.placementStatus,
-        placementHistories = placementHistories,
-      )
-    }
 
   fun getOfflineApplicationsForCrn(crn: String, limit: Int) = offlineApplicationRepository.findAllByCrn(crn, Limit.of(limit))
 

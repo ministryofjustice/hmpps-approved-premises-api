@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.external
 
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementHistory
@@ -8,14 +8,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 class Cas1ExternalApplicationsTest : IntegrationTestBase() {
   private val crn = "ABC1234"
@@ -47,61 +48,75 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
     fun `Get suitable application returns ok`() {
       givenAUser { user, _ ->
         givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-          val premises = givenAnApprovedPremises()
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(user)
-            withStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
-            withCrn(crn)
-          }
-          val placementApplication = givenAPlacementApplication(
-            crn = crn,
+          givenAnAssessmentForApprovedPremises(
+            allocatedToUser = null,
             createdByUser = user,
-            application = application,
-          )
+          ) { assessment, application ->
 
-          val (placementRequest, applicationWithPr) = givenAPlacementRequest(
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = crn,
-            application = application,
-            placementApplication = placementApplication,
-          )
+            application.status = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED
 
-          givenACas1SpaceBooking(
-            crn = crn,
-            placementRequest = placementRequest,
-            premises = premises,
-            canonicalArrivalDate = LocalDate.of(2025, 5, 6),
-            canonicalDepartureDate = LocalDate.of(2025, 5, 28),
-            cancellationOccurredAt = null,
-            application = applicationWithPr,
-          )
+            approvedPremisesApplicationRepository.save(application)
 
-          val suitableApplication = Cas1SuitableApplication(
-            id = applicationWithPr.id,
-            applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
-            placementStatus = Cas1SpaceBookingStatus.UPCOMING,
-            requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
-            placementHistories = listOf(
-              Cas1PlacementHistory(
-                dateApplied = LocalDate.now(),
-                placementStatus = Cas1SpaceBookingStatus.UPCOMING,
-                requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+            val placementRequirements = placementRequirementsFactory.produceAndPersist {
+              withApplication(application)
+              withAssessment(assessment)
+              withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+              withEssentialCriteria(listOf())
+              withDesirableCriteria(listOf())
+            }
+
+            val placementRequest = placementRequestFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.parse("2007-08-03T10:15:30+01"))
+              withApplication(application)
+              withAssessment(assessment)
+              withPlacementRequirements(placementRequirements)
+            }
+
+            val region = givenAProbationRegion()
+
+            val premises = givenAnApprovedPremises(
+              region = region,
+              supportsSpaceBookings = true,
+            )
+
+            val (offender) = givenAnOffender()
+
+            cas1SpaceBookingEntityFactory.produceAndPersist {
+              withCrn(offender.otherIds.crn)
+              withPremises(premises)
+              withPlacementRequest(placementRequest)
+              withApplication(placementRequest.application)
+              withCreatedBy(user)
+              withExpectedArrivalDate(LocalDate.now())
+              withExpectedDepartureDate(LocalDate.now().plusDays(10))
+            }
+
+            val suitableApplication = Cas1SuitableApplication(
+              id = application.id,
+              applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
+              placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+              requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+              placementHistories = listOf(
+                Cas1PlacementHistory(
+                  dateApplied = LocalDate.now(),
+                  placementStatus = Cas1SpaceBookingStatus.UPCOMING,
+                  requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+                ),
               ),
-            ),
-          )
+            )
 
-          val response = webTestClient.get()
-            .uri("/cas1/external/cases/$crn/applications/suitable")
-            .header("Authorization", "Bearer $clientCredentialsJwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody(Cas1SuitableApplication::class.java)
-            .returnResult()
-            .responseBody
+            val response = webTestClient.get()
+              .uri("/cas1/external/cases/${application.crn}/applications/suitable")
+              .header("Authorization", "Bearer $clientCredentialsJwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody(Cas1SuitableApplication::class.java)
+              .returnResult()
+              .responseBody
 
-          Assertions.assertThat(response).isEqualTo(suitableApplication)
+            assertThat(response).isEqualTo(suitableApplication)
+          }
         }
       }
     }

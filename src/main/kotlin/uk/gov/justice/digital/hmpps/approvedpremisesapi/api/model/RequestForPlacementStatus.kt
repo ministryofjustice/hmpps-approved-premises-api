@@ -15,11 +15,6 @@ enum class RequestForPlacementStatus(@get:JsonValue val value: String) {
   awaitingMatch("awaiting_match"),
   requestWithdrawn("request_withdrawn"),
   placementBooked("placement_booked"),
-
-  // not used
-  personArrived("person_arrived"),
-  personNotArrived("person_not_arrived"),
-  personDeparted("person_departed"),
   ;
 
   companion object {

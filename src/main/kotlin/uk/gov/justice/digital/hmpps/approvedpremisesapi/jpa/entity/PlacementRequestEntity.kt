@@ -22,7 +22,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
@@ -176,17 +175,13 @@ data class PlacementRequestEntity(
 ) {
   fun isInWithdrawableState() = isActive()
 
-  fun hasActiveBooking() = (spaceBookings.any { !it.isCancelled() })
+  fun hasActiveBooking() = this.activeSpaceBookings().isNotEmpty()
+
+  fun activeSpaceBookings() = spaceBookings.filter { !it.isCancelled() }
 
   fun expectedDeparture(): LocalDate = expectedArrival.plusDays(duration.toLong())
 
   fun isActive() = !isWithdrawn
-
-  fun deriveStatus(): RequestForPlacementStatus = when {
-    this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
-    this.hasActiveBooking() -> RequestForPlacementStatus.placementBooked
-    else -> RequestForPlacementStatus.awaitingMatch
-  }
 
   /**
    * Before 26/8/25, if a request for placement was made as part of the original

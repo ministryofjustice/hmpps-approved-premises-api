@@ -650,13 +650,18 @@ data class Cas1SpaceBookingEntity(
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
 
-  fun getSpaceBookingStatus(): Cas1SpaceBookingStatus = when {
-    isCancelled() -> Cas1SpaceBookingStatus.CANCELLED
-    hasNonArrival() -> Cas1SpaceBookingStatus.NOT_ARRIVED
-    hasDeparted() -> Cas1SpaceBookingStatus.DEPARTED
-    hasArrival() -> Cas1SpaceBookingStatus.ARRIVED
-    else -> Cas1SpaceBookingStatus.UPCOMING
+  fun getSpaceBookingStatus(): Cas1SpaceBookingStatusAndWhen = when {
+    isCancelled() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.CANCELLED, this.cancellationOccurredAt!!)
+    hasNonArrival() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.NOT_ARRIVED, this.expectedArrivalDate)
+    hasDeparted() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.DEPARTED, this.actualDepartureDate!!)
+    hasArrival() -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.ARRIVED, this.actualArrivalDate!!)
+    else -> Cas1SpaceBookingStatusAndWhen(Cas1SpaceBookingStatus.UPCOMING, this.expectedArrivalDate)
   }
+
+  data class Cas1SpaceBookingStatusAndWhen(
+    val status: Cas1SpaceBookingStatus,
+    val occurredAt: LocalDate,
+  )
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade
