@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 )
 interface PersonSummary {
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val crn: kotlin.String
+  val crn: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
   val personType: PersonSummaryDiscriminator

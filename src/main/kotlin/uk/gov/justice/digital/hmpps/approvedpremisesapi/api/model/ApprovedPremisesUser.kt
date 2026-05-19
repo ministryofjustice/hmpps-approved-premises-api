@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class ApprovedPremisesUser(
 
-  @get:JsonProperty("qualifications", required = true) val qualifications: kotlin.collections.List<UserQualification>,
+  @get:JsonProperty("qualifications", required = true) val qualifications: List<UserQualification>,
 
-  @get:JsonProperty("roles", required = true) val roles: kotlin.collections.List<ApprovedPremisesUserRole>,
+  @get:JsonProperty("roles", required = true) val roles: List<ApprovedPremisesUserRole>,
 
   @get:JsonProperty("apArea", required = true) val apArea: ApArea,
 
@@ -17,28 +17,28 @@ data class ApprovedPremisesUser(
   @Schema(example = "null", required = true, description = "The CRU Management Area used if no override is defined. This is provided to support the user configuration page.")
   @get:JsonProperty("cruManagementAreaDefault", required = true) val cruManagementAreaDefault: NamedId,
 
-  @get:JsonProperty("service", required = true) override val service: kotlin.String,
+  @get:JsonProperty("service", required = true) override val service: String,
 
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 
-  @get:JsonProperty("name", required = true) override val name: kotlin.String,
+  @get:JsonProperty("name", required = true) override val name: String,
 
-  @get:JsonProperty("deliusUsername", required = true) override val deliusUsername: kotlin.String,
+  @get:JsonProperty("deliusUsername", required = true) override val deliusUsername: String,
 
   @get:JsonProperty("region", required = true) override val region: ProbationRegion,
 
-  @get:JsonProperty("permissions") val permissions: kotlin.collections.List<ApprovedPremisesUserPermission>? = null,
+  @get:JsonProperty("permissions") val permissions: List<ApprovedPremisesUserPermission>? = null,
 
   @Schema(example = "null", description = "The CRU Management Area manually set on this user. This is provided to support the user configuration page.")
   @get:JsonProperty("cruManagementAreaOverride") val cruManagementAreaOverride: NamedId? = null,
 
-  @get:JsonProperty("version") val version: kotlin.Int? = null,
+  @get:JsonProperty("version") val version: Int? = null,
 
-  @get:JsonProperty("email") override val email: kotlin.String? = null,
+  @get:JsonProperty("email") override val email: String? = null,
 
-  @get:JsonProperty("telephoneNumber") override val telephoneNumber: kotlin.String? = null,
+  @get:JsonProperty("telephoneNumber") override val telephoneNumber: String? = null,
 
-  @get:JsonProperty("isActive") override val isActive: kotlin.Boolean? = null,
+  @get:JsonProperty("isActive") override val isActive: Boolean? = null,
 
   @get:JsonProperty("probationDeliveryUnit") override val probationDeliveryUnit: ProbationDeliveryUnit? = null,
 ) : User

@@ -12,28 +12,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Tem
 )
 interface User {
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val service: kotlin.String
+  val service: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
   val id: java.util.UUID
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val name: kotlin.String
+  val name: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val deliusUsername: kotlin.String
+  val deliusUsername: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
   val region: ProbationRegion
 
   @get:Schema(example = "null", description = "")
-  val email: kotlin.String?
+  val email: String?
 
   @get:Schema(example = "null", description = "")
-  val telephoneNumber: kotlin.String?
+  val telephoneNumber: String?
 
   @get:Schema(example = "null", description = "")
-  val isActive: kotlin.Boolean?
+  val isActive: Boolean?
 
   @get:Schema(example = "null", description = "")
   val probationDeliveryUnit: ProbationDeliveryUnit?

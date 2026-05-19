@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class TaskStatus(@get:JsonValue val value: kotlin.String) {
+enum class TaskStatus(@get:JsonValue val value: String) {
 
   notStarted("not_started"),
   inProgress("in_progress"),
@@ -15,6 +15,6 @@ enum class TaskStatus(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): TaskStatus = values().first { it.value == value }
+    fun forValue(value: String): TaskStatus = values().first { it.value == value }
   }
 }

@@ -10,27 +10,27 @@ data class Cas1PlacementRequestSummary(
 
   @get:JsonProperty("person", required = true) val person: Person,
 
-  @get:JsonProperty("placementRequestStatus", required = true) val placementRequestStatus: Cas1PlacementRequestSummary.PlacementRequestStatus,
+  @get:JsonProperty("placementRequestStatus", required = true) val placementRequestStatus: PlacementRequestStatus,
 
-  @get:JsonProperty("isParole", required = true) val isParole: kotlin.Boolean,
+  @get:JsonProperty("isParole", required = true) val isParole: Boolean,
 
-  @get:JsonProperty("requestedPlacementDuration") val requestedPlacementDuration: kotlin.Int? = null,
+  @get:JsonProperty("requestedPlacementDuration") val requestedPlacementDuration: Int? = null,
 
   @get:JsonProperty("requestedPlacementArrivalDate") val requestedPlacementArrivalDate: java.time.LocalDate? = null,
 
-  @get:JsonProperty("personTier") val personTier: kotlin.String? = null,
+  @get:JsonProperty("personTier") val personTier: String? = null,
 
   @get:JsonProperty("applicationId") val applicationId: java.util.UUID? = null,
 
   @get:JsonProperty("applicationSubmittedDate") val applicationSubmittedDate: java.time.LocalDate? = null,
 
-  @get:JsonProperty("firstBookingPremisesName") val firstBookingPremisesName: kotlin.String? = null,
+  @get:JsonProperty("firstBookingPremisesName") val firstBookingPremisesName: String? = null,
 
   @get:JsonProperty("firstBookingArrivalDate") val firstBookingArrivalDate: java.time.LocalDate? = null,
 ) {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-  enum class PlacementRequestStatus(@get:JsonValue val value: kotlin.String) {
+  enum class PlacementRequestStatus(@get:JsonValue val value: String) {
 
     matched("matched"),
     unableToMatch("unableToMatch"),
@@ -40,7 +40,7 @@ data class Cas1PlacementRequestSummary(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): PlacementRequestStatus = values().first { it.value == value }
+      fun forValue(value: String): PlacementRequestStatus = values().first { it.value == value }
     }
   }
 }

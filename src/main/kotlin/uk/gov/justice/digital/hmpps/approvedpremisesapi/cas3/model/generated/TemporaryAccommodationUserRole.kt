@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 * Values: assessor,referrer,reporter
 */
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class TemporaryAccommodationUserRole(@get:JsonValue val value: kotlin.String) {
+enum class TemporaryAccommodationUserRole(@get:JsonValue val value: String) {
 
   assessor("assessor"),
   referrer("referrer"),
@@ -19,6 +19,6 @@ enum class TemporaryAccommodationUserRole(@get:JsonValue val value: kotlin.Strin
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): TemporaryAccommodationUserRole = values().first { it.value == value }
+    fun forValue(value: String): TemporaryAccommodationUserRole = values().first { it.value == value }
   }
 }

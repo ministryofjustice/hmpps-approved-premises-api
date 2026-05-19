@@ -14,9 +14,9 @@ data class Cas1NewDeparture(
   @get:JsonProperty("departureDate") val departureDate: java.time.LocalDate? = null,
 
   @Schema(example = "23:15", description = "")
-  @get:JsonProperty("departureTime") val departureTime: kotlin.String? = null,
+  @get:JsonProperty("departureTime") val departureTime: String? = null,
 
   @get:JsonProperty("moveOnCategoryId") val moveOnCategoryId: java.util.UUID? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 )

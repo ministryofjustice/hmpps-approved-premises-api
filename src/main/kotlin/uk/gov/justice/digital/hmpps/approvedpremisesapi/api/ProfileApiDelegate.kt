@@ -15,7 +15,7 @@ interface ProfileApiDelegate {
 
   fun profileV2Get(
     xServiceName: ServiceName,
-    readOnly: kotlin.Boolean?,
+    readOnly: Boolean?,
   ): ResponseEntity<ProfileResponse> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

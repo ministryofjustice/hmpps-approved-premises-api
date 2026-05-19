@@ -12,11 +12,11 @@ data class Cancellation(
 
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
 
-  @get:JsonProperty("premisesName", required = true) val premisesName: kotlin.String,
+  @get:JsonProperty("premisesName", required = true) val premisesName: String,
 
   @get:JsonProperty("id") val id: java.util.UUID? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 
-  @get:JsonProperty("otherReason") val otherReason: kotlin.String? = null,
+  @get:JsonProperty("otherReason") val otherReason: String? = null,
 )

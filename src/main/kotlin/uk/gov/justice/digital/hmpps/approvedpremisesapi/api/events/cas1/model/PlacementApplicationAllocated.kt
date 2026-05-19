@@ -9,7 +9,7 @@ data class PlacementApplicationAllocated(
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
   @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
-  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
+  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: String,
 
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of a placement application")
   @get:JsonProperty("placementApplicationId", required = true) val placementApplicationId: java.util.UUID,
@@ -18,7 +18,7 @@ data class PlacementApplicationAllocated(
 
   @get:JsonProperty("allocatedAt", required = true) val allocatedAt: java.time.Instant,
 
-  @get:JsonProperty("placementDates", required = true) val placementDates: kotlin.collections.List<DatePeriod>,
+  @get:JsonProperty("placementDates", required = true) val placementDates: List<DatePeriod>,
 
   @get:JsonProperty("allocatedTo") val allocatedTo: StaffMember? = null,
 

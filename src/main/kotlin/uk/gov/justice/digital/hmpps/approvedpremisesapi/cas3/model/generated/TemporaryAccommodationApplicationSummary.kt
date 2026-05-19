@@ -18,7 +18,7 @@ data class TemporaryAccommodationApplicationSummary(
 
   @get:JsonProperty("status", required = true) val status: ApplicationStatus,
 
-  @get:JsonProperty("type", required = true) override val type: kotlin.String,
+  @get:JsonProperty("type", required = true) override val type: String,
 
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 

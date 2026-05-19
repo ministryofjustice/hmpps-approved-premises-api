@@ -12,7 +12,7 @@ interface DocumentsApiDelegate {
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
   fun documentsCrnDocumentIdGet(
-    crn: kotlin.String,
+    crn: String,
     documentId: java.util.UUID,
   ): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> {
     getRequest().ifPresent { request ->

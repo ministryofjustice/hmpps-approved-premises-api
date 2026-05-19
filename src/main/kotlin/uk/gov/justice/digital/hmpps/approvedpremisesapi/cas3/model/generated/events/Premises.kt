@@ -12,13 +12,13 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class Premises(
 
-  @get:JsonProperty("addressLine1", required = true) val addressLine1: kotlin.String,
+  @get:JsonProperty("addressLine1", required = true) val addressLine1: String,
 
-  @get:JsonProperty("postcode", required = true) val postcode: kotlin.String,
+  @get:JsonProperty("postcode", required = true) val postcode: String,
 
-  @get:JsonProperty("region", required = true) val region: kotlin.String,
+  @get:JsonProperty("region", required = true) val region: String,
 
-  @get:JsonProperty("addressLine2") val addressLine2: kotlin.String? = null,
+  @get:JsonProperty("addressLine2") val addressLine2: String? = null,
 
-  @get:JsonProperty("town") val town: kotlin.String? = null,
+  @get:JsonProperty("town") val town: String? = null,
 )

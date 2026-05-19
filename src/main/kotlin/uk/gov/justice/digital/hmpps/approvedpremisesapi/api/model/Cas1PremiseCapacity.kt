@@ -10,5 +10,5 @@ data class Cas1PremiseCapacity(
   @get:JsonProperty("endDate", required = true) val endDate: java.time.LocalDate,
 
   @Schema(example = "null", required = true, description = "Capacity for each day, returning chronologically (oldest first)")
-  @get:JsonProperty("capacity", required = true) val capacity: kotlin.collections.List<Cas1PremiseCapacityForDay>,
+  @get:JsonProperty("capacity", required = true) val capacity: List<Cas1PremiseCapacityForDay>,
 )

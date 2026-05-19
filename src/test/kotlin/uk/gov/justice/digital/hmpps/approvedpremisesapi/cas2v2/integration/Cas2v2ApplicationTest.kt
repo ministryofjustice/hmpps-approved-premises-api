@@ -1356,7 +1356,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
                 withSubmittedAt(OffsetDateTime.now().minusDays(1))
                 withReferringPrisonCode(userEntity.activeNomisCaseloadId!!)
                 withApplicationOrigin(ApplicationOrigin.prisonBail)
-                withServiceOrigin(uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin.BAIL)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               webTestClient.get()
@@ -1492,7 +1492,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           it.matches(Regex("/cas2v2/applications/.+"))
         }
 
-        Assertions.assertThat(result.responseBody.blockFirst()!!).matches {
+        assertThat(result.responseBody.blockFirst()!!).matches {
           it.person.crn == offenderDetails.otherIds.crn
         }
       }
@@ -1692,7 +1692,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             Cas2v2Application::class.java,
           )
 
-          Assertions.assertThat(responseBody).matches {
+          assertThat(responseBody).matches {
             application.id == it.id &&
               application.crn == it.person.crn &&
               application.createdAt.toInstant() == it.createdAt &&
@@ -1726,7 +1726,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             Application::class.java,
           )
 
-          Assertions.assertThat(responseBody).matches {
+          assertThat(responseBody).matches {
             application.id == it.id &&
               application.crn == it.person.crn &&
               application.createdAt.toInstant() == it.createdAt

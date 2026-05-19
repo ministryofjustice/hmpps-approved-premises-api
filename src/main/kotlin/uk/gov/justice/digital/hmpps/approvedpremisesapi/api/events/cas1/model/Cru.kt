@@ -6,5 +6,5 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class Cru(
 
   @Schema(example = "NPS North East", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 )

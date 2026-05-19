@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class Cas1OutOfServiceBedRevisionType(@get:JsonValue val value: kotlin.String) {
+enum class Cas1OutOfServiceBedRevisionType(@get:JsonValue val value: String) {
 
   created("created"),
   updatedStartDate("updatedStartDate"),
@@ -17,6 +17,6 @@ enum class Cas1OutOfServiceBedRevisionType(@get:JsonValue val value: kotlin.Stri
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): Cas1OutOfServiceBedRevisionType = values().first { it.value == value }
+    fun forValue(value: String): Cas1OutOfServiceBedRevisionType = values().first { it.value == value }
   }
 }

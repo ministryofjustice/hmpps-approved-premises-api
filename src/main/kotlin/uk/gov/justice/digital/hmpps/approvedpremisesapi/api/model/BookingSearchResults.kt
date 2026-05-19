@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class BookingSearchResults(
 
-  @get:JsonProperty("resultsCount", required = true) val resultsCount: kotlin.Int,
+  @get:JsonProperty("resultsCount", required = true) val resultsCount: Int,
 
-  @get:JsonProperty("results", required = true) val results: kotlin.collections.List<BookingSearchResult>,
+  @get:JsonProperty("results", required = true) val results: List<BookingSearchResult>,
 )

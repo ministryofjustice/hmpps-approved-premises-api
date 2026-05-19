@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class BookingSearchSortField(@get:JsonValue val value: kotlin.String) {
+enum class BookingSearchSortField(@get:JsonValue val value: String) {
 
   personName("name"),
   personCrn("crn"),
@@ -16,6 +16,6 @@ enum class BookingSearchSortField(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): BookingSearchSortField = values().first { it.value == value }
+    fun forValue(value: String): BookingSearchSortField = values().first { it.value == value }
   }
 }

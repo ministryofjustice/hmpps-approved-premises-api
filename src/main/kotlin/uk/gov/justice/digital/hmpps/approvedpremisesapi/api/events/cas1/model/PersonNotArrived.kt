@@ -8,13 +8,13 @@ data class PersonNotArrived(
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
   @Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
-  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: kotlin.String,
+  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: String,
 
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
   @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
-  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
+  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: String,
 
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of booking for an AP place")
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
@@ -27,11 +27,11 @@ data class PersonNotArrived(
   @get:JsonProperty("recordedBy", required = true) val recordedBy: StaffMember,
 
   @Schema(example = "Arrested, remanded in custody, or sentenced", required = true, description = "")
-  @get:JsonProperty("reason", required = true) val reason: kotlin.String,
+  @get:JsonProperty("reason", required = true) val reason: String,
 
   @Schema(example = "Q", required = true, description = "")
-  @get:JsonProperty("legacyReasonCode", required = true) val legacyReasonCode: kotlin.String,
+  @get:JsonProperty("legacyReasonCode", required = true) val legacyReasonCode: String,
 
   @Schema(example = "We learnt that Mr Smith is in hospital.", description = "")
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 ) : Cas1DomainEventPayload

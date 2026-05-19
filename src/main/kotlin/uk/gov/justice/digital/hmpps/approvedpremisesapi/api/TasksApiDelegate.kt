@@ -23,9 +23,9 @@ interface TasksApiDelegate {
 
   fun tasksGet(
     type: TaskType?,
-    types: kotlin.collections.List<TaskType>?,
-    page: kotlin.Int?,
-    perPage: kotlin.Int?,
+    types: List<TaskType>?,
+    page: Int?,
+    perPage: Int?,
     sortBy: TaskSortField?,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
@@ -33,8 +33,8 @@ interface TasksApiDelegate {
     cruManagementAreaId: java.util.UUID?,
     allocatedToUserId: java.util.UUID?,
     requiredQualification: UserQualification?,
-    crnOrName: kotlin.String?,
-    isCompleted: kotlin.Boolean?,
+    crnOrName: String?,
+    isCompleted: Boolean?,
   ): ResponseEntity<List<Task>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -49,7 +49,7 @@ interface TasksApiDelegate {
 
   fun tasksTaskTypeIdAllocationsDelete(
     id: java.util.UUID,
-    taskType: kotlin.String,
+    taskType: String,
   ): ResponseEntity<Unit> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -64,7 +64,7 @@ interface TasksApiDelegate {
 
   fun tasksTaskTypeIdAllocationsPost(
     id: java.util.UUID,
-    taskType: kotlin.String,
+    taskType: String,
     xServiceName: ServiceName,
     body: NewReallocation?,
   ): ResponseEntity<Reallocation> {
@@ -85,7 +85,7 @@ interface TasksApiDelegate {
 
   fun tasksTaskTypeIdGet(
     id: java.util.UUID,
-    taskType: kotlin.String,
+    taskType: String,
   ): ResponseEntity<TaskWrapper> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

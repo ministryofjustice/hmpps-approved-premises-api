@@ -6,13 +6,13 @@ data class BookingSearchResultPremisesSummary(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
-  @get:JsonProperty("addressLine1", required = true) val addressLine1: kotlin.String,
+  @get:JsonProperty("addressLine1", required = true) val addressLine1: String,
 
-  @get:JsonProperty("postcode", required = true) val postcode: kotlin.String,
+  @get:JsonProperty("postcode", required = true) val postcode: String,
 
-  @get:JsonProperty("addressLine2") val addressLine2: kotlin.String? = null,
+  @get:JsonProperty("addressLine2") val addressLine2: String? = null,
 
-  @get:JsonProperty("town") val town: kotlin.String? = null,
+  @get:JsonProperty("town") val town: String? = null,
 )

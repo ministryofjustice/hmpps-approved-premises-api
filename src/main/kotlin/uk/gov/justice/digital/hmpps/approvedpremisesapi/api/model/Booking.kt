@@ -23,13 +23,13 @@ data class Booking(
 
   @get:JsonProperty("status", required = true) val status: BookingStatus,
 
-  @get:JsonProperty("extensions", required = true) val extensions: kotlin.collections.List<Extension>,
+  @get:JsonProperty("extensions", required = true) val extensions: List<Extension>,
 
   @Schema(example = "null", required = true, description = "The full history of the departure")
-  @get:JsonProperty("departures", required = true) val departures: kotlin.collections.List<Departure>,
+  @get:JsonProperty("departures", required = true) val departures: List<Departure>,
 
   @Schema(example = "null", required = true, description = "The full history of the cancellation")
-  @get:JsonProperty("cancellations", required = true) val cancellations: kotlin.collections.List<Cancellation>,
+  @get:JsonProperty("cancellations", required = true) val cancellations: List<Cancellation>,
 
   @get:JsonProperty("premises", required = true) val premises: BookingPremisesSummary,
 
@@ -51,7 +51,7 @@ data class Booking(
   @get:JsonProperty("turnaround") val turnaround: Turnaround? = null,
 
   @Schema(example = "null", description = "The full history of turnarounds")
-  @get:JsonProperty("turnarounds") val turnarounds: kotlin.collections.List<Turnaround>? = null,
+  @get:JsonProperty("turnarounds") val turnarounds: List<Turnaround>? = null,
 
   @get:JsonProperty("turnaroundStartDate") val turnaroundStartDate: java.time.LocalDate? = null,
 

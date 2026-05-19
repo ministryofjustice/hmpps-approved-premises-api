@@ -99,7 +99,7 @@ interface OutOfServiceBedsCas1 {
     value = ["/out-of-service-beds"],
     produces = ["application/json"],
   )
-  fun getOutOfServiceBeds(@RequestParam(value = "temporality", required = false) temporality: kotlin.collections.List<Temporality>?, @RequestParam(value = "premisesId", required = false) premisesId: java.util.UUID?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1OutOfServiceBedSortField?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "perPage", required = false) perPage: kotlin.Int?): ResponseEntity<List<Cas1OutOfServiceBed>> = getDelegate().getOutOfServiceBeds(temporality, premisesId, apAreaId, sortDirection, sortBy, page, perPage)
+  fun getOutOfServiceBeds(@RequestParam(value = "temporality", required = false) temporality: List<Temporality>?, @RequestParam(value = "premisesId", required = false) premisesId: java.util.UUID?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1OutOfServiceBedSortField?, @RequestParam(value = "page", required = false) page: Int?, @RequestParam(value = "perPage", required = false) perPage: Int?): ResponseEntity<List<Cas1OutOfServiceBed>> = getDelegate().getOutOfServiceBeds(temporality, premisesId, apAreaId, sortDirection, sortBy, page, perPage)
 
   @Operation(
     tags = ["out-of-service beds"],

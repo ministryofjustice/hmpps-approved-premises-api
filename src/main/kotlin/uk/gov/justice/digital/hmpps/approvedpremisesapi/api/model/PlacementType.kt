@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class PlacementType(@get:JsonValue val value: kotlin.String) {
+enum class PlacementType(@get:JsonValue val value: String) {
 
   rotl("rotl"),
   releaseFollowingDecision("release_following_decision"),
@@ -14,6 +14,6 @@ enum class PlacementType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): PlacementType = values().first { it.value == value }
+    fun forValue(value: String): PlacementType = values().first { it.value == value }
   }
 }

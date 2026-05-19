@@ -12,5 +12,5 @@ data class Cas1NewArrival(
   @get:JsonProperty("arrivalDate") val arrivalDate: java.time.LocalDate? = null,
 
   @Schema(example = "23:15", description = "")
-  @get:JsonProperty("arrivalTime") val arrivalTime: kotlin.String? = null,
+  @get:JsonProperty("arrivalTime") val arrivalTime: String? = null,
 )

@@ -96,7 +96,7 @@ interface AssessmentsCas1 {
     value = ["/assessments"],
     produces = ["application/json"],
   )
-  fun getAssessmentsForUser(@RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1AssessmentSortField?, @RequestParam(value = "statuses", required = false) statuses: kotlin.collections.List<Cas1AssessmentStatus>?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "perPage", required = false) perPage: kotlin.Int?): ResponseEntity<List<Cas1AssessmentSummary>> = getDelegate().getAssessmentsForUser(sortDirection, sortBy, statuses, crnOrName, page, perPage)
+  fun getAssessmentsForUser(@RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1AssessmentSortField?, @RequestParam(value = "statuses", required = false) statuses: List<Cas1AssessmentStatus>?, @RequestParam(value = "crnOrName", required = false) crnOrName: String?, @RequestParam(value = "page", required = false) page: Int?, @RequestParam(value = "perPage", required = false) perPage: Int?): ResponseEntity<List<Cas1AssessmentSummary>> = getDelegate().getAssessmentsForUser(sortDirection, sortBy, statuses, crnOrName, page, perPage)
 
   @Operation(
     tags = ["Assessments"],

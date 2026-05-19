@@ -107,7 +107,7 @@ class Cas1BackfillAutomaticPlacementApplicationsJobTest : IntegrationTestBase() 
 
     val (application3AssessmentAllocatedTo, _) = givenAUser()
     val (application3Pr1, _) = givenAPlacementRequest(
-      placementRequestCreatedAt = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+      placementRequestCreatedAt = now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
       application = application3HasMultipleInitialPrs,
       expectedArrival = LocalDate.parse("2020-02-10"),
       duration = 7,

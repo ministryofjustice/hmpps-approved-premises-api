@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class ReferralHistoryNoteMessageDetails(
 
-  @get:JsonProperty("rejectionReason") val rejectionReason: kotlin.String? = null,
+  @get:JsonProperty("rejectionReason") val rejectionReason: String? = null,
 
-  @get:JsonProperty("rejectionReasonDetails") val rejectionReasonDetails: kotlin.String? = null,
+  @get:JsonProperty("rejectionReasonDetails") val rejectionReasonDetails: String? = null,
 
-  @get:JsonProperty("isWithdrawn") val isWithdrawn: kotlin.Boolean? = null,
+  @get:JsonProperty("isWithdrawn") val isWithdrawn: Boolean? = null,
 
-  @get:JsonProperty("domainEvent") val domainEvent: kotlin.Any? = null,
+  @get:JsonProperty("domainEvent") val domainEvent: Any? = null,
 )

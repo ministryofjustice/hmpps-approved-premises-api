@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class WithdrawalReason(@get:JsonValue val value: kotlin.String) {
+enum class WithdrawalReason(@get:JsonValue val value: String) {
 
   changeInCircumstancesNewApplicationToBeSubmitted("change_in_circumstances_new_application_to_be_submitted"),
   errorInApplication("error_in_application"),
@@ -17,6 +17,6 @@ enum class WithdrawalReason(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): WithdrawalReason = values().first { it.value == value }
+    fun forValue(value: String): WithdrawalReason = values().first { it.value == value }
   }
 }

@@ -12,5 +12,5 @@ data class Cas1UpdateSpaceBooking(
   @get:JsonProperty("departureDate") val departureDate: java.time.LocalDate? = null,
 
   @Schema(example = "null", description = "Only provided if characteristics have changed")
-  @get:JsonProperty("characteristics") val characteristics: kotlin.collections.List<Cas1SpaceBookingCharacteristic>? = null,
+  @get:JsonProperty("characteristics") val characteristics: List<Cas1SpaceBookingCharacteristic>? = null,
 )

@@ -12,7 +12,7 @@ data class Cas1NewOutOfServiceBed(
 
   @get:JsonProperty("bedId", required = true) val bedId: java.util.UUID,
 
-  @get:JsonProperty("referenceNumber") val referenceNumber: kotlin.String? = null,
+  @get:JsonProperty("referenceNumber") val referenceNumber: String? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 )

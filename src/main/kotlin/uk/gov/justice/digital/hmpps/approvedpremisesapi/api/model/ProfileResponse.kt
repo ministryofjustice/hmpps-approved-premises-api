@@ -5,15 +5,15 @@ import com.fasterxml.jackson.annotation.JsonValue
 
 data class ProfileResponse(
 
-  @get:JsonProperty("deliusUsername", required = true) val deliusUsername: kotlin.String,
+  @get:JsonProperty("deliusUsername", required = true) val deliusUsername: String,
 
-  @get:JsonProperty("loadError") val loadError: ProfileResponse.LoadError? = null,
+  @get:JsonProperty("loadError") val loadError: LoadError? = null,
 
   @get:JsonProperty("user") val user: User? = null,
 ) {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-  enum class LoadError(@get:JsonValue val value: kotlin.String) {
+  enum class LoadError(@get:JsonValue val value: String) {
 
     staffRecordNotFound("staff_record_not_found"),
   }

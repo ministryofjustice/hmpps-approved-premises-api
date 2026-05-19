@@ -47,7 +47,7 @@ interface TasksApi {
     value = ["/tasks"],
     produces = ["application/json"],
   )
-  fun tasksGet(@RequestParam(value = "type", required = false) type: TaskType?, @RequestParam(value = "types", required = false) types: kotlin.collections.List<TaskType>?, @RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "perPage", required = false) perPage: kotlin.Int?, @RequestParam(value = "sortBy", required = false) sortBy: TaskSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "allocatedFilter", required = false) allocatedFilter: AllocatedFilter?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "allocatedToUserId", required = false) allocatedToUserId: java.util.UUID?, @RequestParam(value = "requiredQualification", required = false) requiredQualification: UserQualification?, @RequestParam(value = "crnOrName", required = false) crnOrName: kotlin.String?, @RequestParam(value = "isCompleted", required = false) isCompleted: kotlin.Boolean?): ResponseEntity<List<Task>> = getDelegate().tasksGet(type, types, page, perPage, sortBy, sortDirection, allocatedFilter, apAreaId, cruManagementAreaId, allocatedToUserId, requiredQualification, crnOrName, isCompleted)
+  fun tasksGet(@RequestParam(value = "type", required = false) type: TaskType?, @RequestParam(value = "types", required = false) types: List<TaskType>?, @RequestParam(value = "page", required = false) page: Int?, @RequestParam(value = "perPage", required = false) perPage: Int?, @RequestParam(value = "sortBy", required = false) sortBy: TaskSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?, @RequestParam(value = "allocatedFilter", required = false) allocatedFilter: AllocatedFilter?, @RequestParam(value = "apAreaId", required = false) apAreaId: java.util.UUID?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "allocatedToUserId", required = false) allocatedToUserId: java.util.UUID?, @RequestParam(value = "requiredQualification", required = false) requiredQualification: UserQualification?, @RequestParam(value = "crnOrName", required = false) crnOrName: String?, @RequestParam(value = "isCompleted", required = false) isCompleted: Boolean?): ResponseEntity<List<Task>> = getDelegate().tasksGet(type, types, page, perPage, sortBy, sortDirection, allocatedFilter, apAreaId, cruManagementAreaId, allocatedToUserId, requiredQualification, crnOrName, isCompleted)
 
   @Operation(
     tags = ["Operations on applications"],
@@ -64,7 +64,7 @@ interface TasksApi {
     value = ["/tasks/{taskType}/{id}/allocations"],
     produces = ["application/problem+json"],
   )
-  fun tasksTaskTypeIdAllocationsDelete(@Parameter(description = "ID of the task", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Task type", required = true) @PathVariable("taskType") taskType: kotlin.String): ResponseEntity<Unit> = getDelegate().tasksTaskTypeIdAllocationsDelete(id, taskType)
+  fun tasksTaskTypeIdAllocationsDelete(@Parameter(description = "ID of the task", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Task type", required = true) @PathVariable("taskType") taskType: String): ResponseEntity<Unit> = getDelegate().tasksTaskTypeIdAllocationsDelete(id, taskType)
 
   @Operation(
     tags = ["Operations on applications"],
@@ -82,7 +82,7 @@ interface TasksApi {
     produces = ["application/json", "application/problem+json"],
     consumes = ["application/json"],
   )
-  fun tasksTaskTypeIdAllocationsPost(@Parameter(description = "ID of the task", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Task type", required = true) @PathVariable("taskType") taskType: kotlin.String, @Parameter(description = "Only assessments for this service will be returned", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName, @Parameter(description = "") @RequestBody(required = false) body: NewReallocation?): ResponseEntity<Reallocation> = getDelegate().tasksTaskTypeIdAllocationsPost(id, taskType, xServiceName, body)
+  fun tasksTaskTypeIdAllocationsPost(@Parameter(description = "ID of the task", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Task type", required = true) @PathVariable("taskType") taskType: String, @Parameter(description = "Only assessments for this service will be returned", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName, @Parameter(description = "") @RequestBody(required = false) body: NewReallocation?): ResponseEntity<Reallocation> = getDelegate().tasksTaskTypeIdAllocationsPost(id, taskType, xServiceName, body)
 
   @Operation(
     tags = ["Application data"],
@@ -98,5 +98,5 @@ interface TasksApi {
     value = ["/tasks/{taskType}/{id}"],
     produces = ["application/json"],
   )
-  fun tasksTaskTypeIdGet(@Parameter(description = "ID of the task", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Task type", required = true) @PathVariable("taskType") taskType: kotlin.String): ResponseEntity<TaskWrapper> = getDelegate().tasksTaskTypeIdGet(id, taskType)
+  fun tasksTaskTypeIdGet(@Parameter(description = "ID of the task", required = true) @PathVariable("id") id: java.util.UUID, @Parameter(description = "Task type", required = true) @PathVariable("taskType") taskType: String): ResponseEntity<TaskWrapper> = getDelegate().tasksTaskTypeIdGet(id, taskType)
 }

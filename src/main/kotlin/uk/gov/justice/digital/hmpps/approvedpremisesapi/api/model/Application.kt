@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAcco
 )
 interface Application {
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val type: kotlin.String
+  val type: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
   val id: java.util.UUID

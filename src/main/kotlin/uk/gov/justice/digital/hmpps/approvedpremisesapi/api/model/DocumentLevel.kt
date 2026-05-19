@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class DocumentLevel(@get:JsonValue val value: kotlin.String) {
+enum class DocumentLevel(@get:JsonValue val value: String) {
 
   offender("Offender"),
   conviction("Conviction"),
@@ -13,6 +13,6 @@ enum class DocumentLevel(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): DocumentLevel = values().first { it.value == value }
+    fun forValue(value: String): DocumentLevel = values().first { it.value == value }
   }
 }

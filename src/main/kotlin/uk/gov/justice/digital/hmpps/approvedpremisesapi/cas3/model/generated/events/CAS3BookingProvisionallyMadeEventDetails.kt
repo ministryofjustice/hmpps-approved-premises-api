@@ -23,7 +23,7 @@ data class CAS3BookingProvisionallyMadeEventDetails(
 
   @get:JsonProperty("expectedArrivedAt", required = true) val expectedArrivedAt: java.time.Instant,
 
-  @get:JsonProperty("notes", required = true) val notes: kotlin.String,
+  @get:JsonProperty("notes", required = true) val notes: String,
 
   @get:JsonProperty("applicationId") val applicationId: java.util.UUID? = null,
 

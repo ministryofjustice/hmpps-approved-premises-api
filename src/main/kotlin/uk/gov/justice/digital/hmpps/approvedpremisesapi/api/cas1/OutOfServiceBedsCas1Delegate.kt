@@ -86,13 +86,13 @@ interface OutOfServiceBedsCas1Delegate {
   }
 
   fun getOutOfServiceBeds(
-    temporality: kotlin.collections.List<Temporality>?,
+    temporality: List<Temporality>?,
     premisesId: java.util.UUID?,
     apAreaId: java.util.UUID?,
     sortDirection: SortDirection?,
     sortBy: Cas1OutOfServiceBedSortField?,
-    page: kotlin.Int?,
-    perPage: kotlin.Int?,
+    page: Int?,
+    perPage: Int?,
   ): ResponseEntity<List<Cas1OutOfServiceBed>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

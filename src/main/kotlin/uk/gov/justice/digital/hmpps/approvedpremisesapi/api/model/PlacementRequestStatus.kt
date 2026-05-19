@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class PlacementRequestStatus(@get:JsonValue val value: kotlin.String) {
+enum class PlacementRequestStatus(@get:JsonValue val value: String) {
 
   notMatched("notMatched"),
   unableToMatch("unableToMatch"),
@@ -14,6 +14,6 @@ enum class PlacementRequestStatus(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): PlacementRequestStatus = values().first { it.value == value }
+    fun forValue(value: String): PlacementRequestStatus = values().first { it.value == value }
   }
 }

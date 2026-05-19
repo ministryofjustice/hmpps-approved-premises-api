@@ -8,7 +8,7 @@ data class DestinationProvider(
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "Ext - North East Region", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
-  @get:JsonProperty("isActive", required = true) val isActive: kotlin.Boolean,
+  @get:JsonProperty("isActive", required = true) val isActive: Boolean,
 )

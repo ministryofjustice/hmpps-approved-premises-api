@@ -7,15 +7,15 @@ data class PlacementRequest(
   val type: ApType,
 
   @Schema(example = "B74", required = true, description = "Postcode outcode")
-  val location: kotlin.String,
+  val location: String,
 
-  val radius: kotlin.Int,
+  val radius: Int,
 
-  val essentialCriteria: kotlin.collections.List<PlacementCriteria>,
+  val essentialCriteria: List<PlacementCriteria>,
 
   val expectedArrival: java.time.LocalDate,
 
-  val duration: kotlin.Int,
+  val duration: Int,
 
   val id: java.util.UUID,
 
@@ -39,12 +39,12 @@ data class PlacementRequest(
 
   val assessor: ApprovedPremisesUser,
 
-  val isParole: kotlin.Boolean,
+  val isParole: Boolean,
 
-  val isWithdrawn: kotlin.Boolean,
+  val isWithdrawn: Boolean,
 
   @Schema(example = "null", description = "Notes from the assessor for the CRU Manager")
-  val notes: kotlin.String? = null,
+  val notes: String? = null,
 
   val booking: PlacementRequestBookingSummary? = null,
 

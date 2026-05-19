@@ -79,7 +79,7 @@ interface ReferenceDataApi {
     value = ["/reference-data/characteristics"],
     produces = ["application/json"],
   )
-  fun referenceDataCharacteristicsGet(@Parameter(description = "If given, only characteristics for this service will be returned", `in` = ParameterIn.HEADER, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?, @RequestParam(value = "modelScope", required = false) modelScope: kotlin.String?): ResponseEntity<List<Characteristic>> = getDelegate().referenceDataCharacteristicsGet(xServiceName, modelScope)
+  fun referenceDataCharacteristicsGet(@Parameter(description = "If given, only characteristics for this service will be returned", `in` = ParameterIn.HEADER, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?, @RequestParam(value = "modelScope", required = false) modelScope: String?): ResponseEntity<List<Characteristic>> = getDelegate().referenceDataCharacteristicsGet(xServiceName, modelScope)
 
   @Operation(
     tags = ["Reference Data"],
@@ -95,7 +95,7 @@ interface ReferenceDataApi {
     value = ["/reference-data/departure-reasons"],
     produces = ["application/json"],
   )
-  fun referenceDataDepartureReasonsGet(@Parameter(description = "If given, only departure reasons for this service will be returned", `in` = ParameterIn.HEADER, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?, @RequestParam(value = "includeInactive", required = false) includeInactive: kotlin.Boolean?): ResponseEntity<List<DepartureReason>> = getDelegate().referenceDataDepartureReasonsGet(xServiceName, includeInactive)
+  fun referenceDataDepartureReasonsGet(@Parameter(description = "If given, only departure reasons for this service will be returned", `in` = ParameterIn.HEADER, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?, @RequestParam(value = "includeInactive", required = false) includeInactive: Boolean?): ResponseEntity<List<DepartureReason>> = getDelegate().referenceDataDepartureReasonsGet(xServiceName, includeInactive)
 
   @Operation(
     tags = ["Reference Data"],
@@ -159,7 +159,7 @@ interface ReferenceDataApi {
     value = ["/reference-data/move-on-categories"],
     produces = ["application/json"],
   )
-  fun referenceDataMoveOnCategoriesGet(@Parameter(description = "If given, only move-on categories for this service will be returned", `in` = ParameterIn.HEADER, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?, @RequestParam(value = "includeInactive", required = false) includeInactive: kotlin.Boolean?): ResponseEntity<List<MoveOnCategory>> = getDelegate().referenceDataMoveOnCategoriesGet(xServiceName, includeInactive)
+  fun referenceDataMoveOnCategoriesGet(@Parameter(description = "If given, only move-on categories for this service will be returned", `in` = ParameterIn.HEADER, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?, @RequestParam(value = "includeInactive", required = false) includeInactive: Boolean?): ResponseEntity<List<MoveOnCategory>> = getDelegate().referenceDataMoveOnCategoriesGet(xServiceName, includeInactive)
 
   @Operation(
     tags = ["Reference Data"],

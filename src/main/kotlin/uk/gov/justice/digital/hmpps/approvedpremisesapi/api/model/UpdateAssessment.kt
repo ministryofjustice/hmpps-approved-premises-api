@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class UpdateAssessment(
 
-  @get:JsonProperty("data", required = true) val `data`: kotlin.collections.Map<kotlin.String, kotlin.Any>,
+  @get:JsonProperty("data", required = true) val `data`: Map<String, Any>,
 
   @get:JsonProperty("releaseDate") val releaseDate: java.time.LocalDate? = null,
 

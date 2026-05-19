@@ -6,5 +6,5 @@ data class SeedRequest(
 
   @get:JsonProperty("seedType", required = true) val seedType: SeedFileType,
 
-  @get:JsonProperty("fileName", required = true) val fileName: kotlin.String,
+  @get:JsonProperty("fileName", required = true) val fileName: String,
 )

@@ -10,9 +10,9 @@ data class Cas1ClarificationNote(
 
   @get:JsonProperty("createdByStaffMemberId", required = true) val createdByStaffMemberId: java.util.UUID,
 
-  @get:JsonProperty("query", required = true) val query: kotlin.String,
+  @get:JsonProperty("query", required = true) val query: String,
 
   @get:JsonProperty("responseReceivedOn") val responseReceivedOn: java.time.LocalDate? = null,
 
-  @get:JsonProperty("response") val response: kotlin.String? = null,
+  @get:JsonProperty("response") val response: String? = null,
 )

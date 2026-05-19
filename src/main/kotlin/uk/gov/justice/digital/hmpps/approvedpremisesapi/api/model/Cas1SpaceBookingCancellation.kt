@@ -10,5 +10,5 @@ data class Cas1SpaceBookingCancellation(
 
   @get:JsonProperty("reason", required = true) val reason: CancellationReason,
 
-  @get:JsonProperty("reason_notes") val reasonNotes: kotlin.String? = null,
+  @get:JsonProperty("reason_notes") val reasonNotes: String? = null,
 )

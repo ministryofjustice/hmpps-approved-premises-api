@@ -53,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
@@ -552,7 +551,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Mandatory parameters provided, No matching premises returns empty result`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
 
       val response = webTestClient.post()
         .uri("/cas1/premises/capacity")
@@ -578,7 +577,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Mandatory parameters provided, single premises available and all fields mapped`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
 
       val premises = givenAnApprovedPremises(
         supportsSpaceBookings = true,
@@ -649,7 +648,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Postcode not provided, return in order of ap area identifier followed by premises name`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
 
       val regionCC = givenAProbationRegion(apArea = givenAnApArea(identifier = "CC"))
 
@@ -703,7 +702,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Postcode provided, return in distance order followed by premises name, lowest first`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
 
       givenAnApprovedPremises(
         supportsSpaceBookings = true,
@@ -769,7 +768,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Premises and room characteristics provided, ignore room characteristics for premises filtering`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
 
       // no matching chars, ignored
       givenAnApprovedPremises(
@@ -818,7 +817,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `Room characteristics provided, filter occupancy results on room characteristics`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
 
       val premises = givenAnApprovedPremises(
         supportsSpaceBookings = true,
@@ -930,7 +929,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @Test
     fun `CRU Management Area IDs provided, only return premises in those areas`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_JANITOR))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_JANITOR))
 
       val area1 = givenACas1CruManagementArea()
       val area2 = givenACas1CruManagementArea()

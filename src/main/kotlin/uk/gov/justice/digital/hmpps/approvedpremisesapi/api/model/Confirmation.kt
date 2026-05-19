@@ -12,5 +12,5 @@ data class Confirmation(
 
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 )

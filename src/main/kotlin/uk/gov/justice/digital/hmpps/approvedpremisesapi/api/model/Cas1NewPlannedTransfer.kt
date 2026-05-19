@@ -16,5 +16,5 @@ data class Cas1NewPlannedTransfer(
   @get:JsonProperty("changeRequestId", required = true) val changeRequestId: java.util.UUID,
 
   @Schema(example = "null", description = "If not provided, it is assumed that no characteristics are required")
-  @get:JsonProperty("characteristics") val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic>? = null,
+  @get:JsonProperty("characteristics") val characteristics: List<Cas1SpaceCharacteristic>? = null,
 )

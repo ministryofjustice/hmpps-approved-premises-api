@@ -15,8 +15,8 @@ interface ReportsCas1Delegate {
   fun getReportByName(
     xServiceName: ServiceName,
     reportName: Cas1ReportName,
-    year: kotlin.Int?,
-    month: kotlin.Int?,
+    year: Int?,
+    month: Int?,
     startDate: java.time.LocalDate?,
     endDate: java.time.LocalDate?,
   ): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> = ResponseEntity(HttpStatus.NOT_IMPLEMENTED)

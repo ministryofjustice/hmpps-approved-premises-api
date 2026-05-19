@@ -4,15 +4,15 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class OASysSupportingInformationQuestion(
 
-  @get:JsonProperty("label", required = true) val label: kotlin.String,
+  @get:JsonProperty("label", required = true) val label: String,
 
-  @get:JsonProperty("questionNumber", required = true) val questionNumber: kotlin.String,
+  @get:JsonProperty("questionNumber", required = true) val questionNumber: String,
 
-  @get:JsonProperty("sectionNumber") val sectionNumber: kotlin.Int? = null,
+  @get:JsonProperty("sectionNumber") val sectionNumber: Int? = null,
 
-  @get:JsonProperty("linkedToHarm") val linkedToHarm: kotlin.Boolean? = null,
+  @get:JsonProperty("linkedToHarm") val linkedToHarm: Boolean? = null,
 
-  @get:JsonProperty("linkedToReOffending") val linkedToReOffending: kotlin.Boolean? = null,
+  @get:JsonProperty("linkedToReOffending") val linkedToReOffending: Boolean? = null,
 
-  @get:JsonProperty("answer") val answer: kotlin.String? = null,
+  @get:JsonProperty("answer") val answer: String? = null,
 )

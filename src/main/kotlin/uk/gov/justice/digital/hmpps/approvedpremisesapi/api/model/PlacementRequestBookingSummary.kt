@@ -17,7 +17,7 @@ data class PlacementRequestBookingSummary(
 ) {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-  enum class Type(@get:JsonValue val value: kotlin.String) {
+  enum class Type(@get:JsonValue val value: String) {
 
     space("space"),
     legacy("legacy"),
@@ -26,7 +26,7 @@ data class PlacementRequestBookingSummary(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Type = values().first { it.value == value }
+      fun forValue(value: String): Type = values().first { it.value == value }
     }
   }
 }

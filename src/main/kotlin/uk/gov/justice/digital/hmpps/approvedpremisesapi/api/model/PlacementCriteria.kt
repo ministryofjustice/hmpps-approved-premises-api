@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class PlacementCriteria(@get:JsonValue val value: kotlin.String) {
+enum class PlacementCriteria(@get:JsonValue val value: String) {
 
   isPIPE("isPIPE"),
   isESAP("isESAP"),
@@ -35,6 +35,6 @@ enum class PlacementCriteria(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): PlacementCriteria = values().first { it.value == value }
+    fun forValue(value: String): PlacementCriteria = values().first { it.value == value }
   }
 }

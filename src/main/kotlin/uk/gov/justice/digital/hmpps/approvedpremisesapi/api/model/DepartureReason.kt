@@ -8,11 +8,11 @@ data class DepartureReason(
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "Admitted to Hospital", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
-  @get:JsonProperty("serviceScope", required = true) val serviceScope: kotlin.String,
+  @get:JsonProperty("serviceScope", required = true) val serviceScope: String,
 
-  @get:JsonProperty("isActive", required = true) val isActive: kotlin.Boolean,
+  @get:JsonProperty("isActive", required = true) val isActive: Boolean,
 
   @get:JsonProperty("parentReasonId") val parentReasonId: java.util.UUID? = null,
 )

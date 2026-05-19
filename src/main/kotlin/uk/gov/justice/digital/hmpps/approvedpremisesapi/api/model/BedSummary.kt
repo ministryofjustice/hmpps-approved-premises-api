@@ -6,9 +6,9 @@ data class BedSummary(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
-  @get:JsonProperty("roomName", required = true) val roomName: kotlin.String,
+  @get:JsonProperty("roomName", required = true) val roomName: String,
 
   @get:JsonProperty("status", required = true) val status: BedStatus,
 )

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class TimelineEventType(@get:JsonValue val value: kotlin.String) {
+enum class TimelineEventType(@get:JsonValue val value: String) {
 
   cas3PersonArrived("cas3_person_arrived"),
   cas3PersonDeparted("cas3_person_departed"),
@@ -19,6 +19,6 @@ enum class TimelineEventType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): TimelineEventType = values().first { it.value == value }
+    fun forValue(value: String): TimelineEventType = values().first { it.value == value }
   }
 }
