@@ -4,14 +4,16 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationStatusUpdatesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2SubmittedApplicationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UnsubmittedApplicationsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.ApplicationStatusUpdatesReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.SubmittedApplicationReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.reporting.model.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.ApplicationStatusUpdatesReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.SubmittedApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.UnsubmittedApplicationsReportRow
 import java.io.OutputStream
+import java.time.LocalDate
 
 @Service
 class Cas2v2ReportsService(
@@ -20,34 +22,28 @@ class Cas2v2ReportsService(
   private val unsubmittedApplicationsReportRepository: Cas2UnsubmittedApplicationsReportRepository,
 ) {
 
-  fun createSubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = submittedApplicationReportRepository.generateSubmittedApplicationReportRows(Cas2ServiceOrigin.BAIL.name).map { row ->
-      SubmittedApplicationReportRow(
-        eventId = row.getId(),
-        applicationId = row.getApplicationId(),
-        personCrn = row.getPersonCrn(),
-        personNoms = row.getPersonNoms(),
-        referringPrisonCode = row.getReferringPrisonCode(),
-        preferredAreas = row.getPreferredAreas(),
-        hdcEligibilityDate = row.getHdcEligibilityDate(),
-        conditionalReleaseDate = row.getConditionalReleaseDate(),
-        submittedBy = row.getSubmittedBy(),
-        submittedAt = row.getSubmittedAt(),
-        startedAt = row.getStartedAt(),
-        applicationOrigin = row.getApplicationOrigin(),
-        bailHearingDate = row.getBailHearingDate(),
-      )
-    }
-
-    reportData.toDataFrame()
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
+  fun createSubmittedApplicationsReport(outputStream: OutputStream) = submittedApplicationReportRepository.generateSubmittedApplicationReportRows(Cas2ServiceOrigin.BAIL.name).map { row ->
+    SubmittedApplicationReportRow(
+      eventId = row.getId(),
+      applicationId = row.getApplicationId(),
+      personCrn = row.getPersonCrn(),
+      personNoms = row.getPersonNoms(),
+      referringPrisonCode = row.getReferringPrisonCode(),
+      preferredAreas = row.getPreferredAreas(),
+      hdcEligibilityDate = row.getHdcEligibilityDate(),
+      conditionalReleaseDate = row.getConditionalReleaseDate(),
+      submittedBy = row.getSubmittedBy(),
+      submittedAt = row.getSubmittedAt(),
+      startedAt = row.getStartedAt(),
+      applicationOrigin = row.getApplicationOrigin(),
+      bailHearingDate = row.getBailHearingDate(),
+    )
   }
+    .toCas2v2Report(outputStream)
 
-  fun createApplicationStatusUpdatesReport(outputStream: OutputStream) {
-    val reportData = applicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows(Cas2ServiceOrigin.BAIL.name).map { row ->
+  fun createApplicationStatusUpdatesReport(outputStream: OutputStream) = applicationStatusUpdatesReportRepository
+    .generateApplicationStatusUpdatesReportRows(Cas2ServiceOrigin.BAIL.name)
+    .map { row ->
       ApplicationStatusUpdatesReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
@@ -60,16 +56,11 @@ class Cas2v2ReportsService(
         applicationOrigin = row.getApplicationOrigin(),
       )
     }
+    .toCas2v2Report(outputStream)
 
-    reportData.toDataFrame()
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
-  }
-
-  fun createUnsubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = unsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows(Cas2ServiceOrigin.BAIL.name).map { row ->
+  fun createUnsubmittedApplicationsReport(outputStream: OutputStream) = unsubmittedApplicationsReportRepository
+    .generateUnsubmittedApplicationsReportRows(Cas2ServiceOrigin.BAIL.name)
+    .map { row ->
       UnsubmittedApplicationsReportRow(
         applicationId = row.getApplicationId(),
         personCrn = row.getPersonCrn(),
@@ -79,11 +70,49 @@ class Cas2v2ReportsService(
         applicationOrigin = row.getApplicationOrigin(),
       )
     }
-
-    reportData.toDataFrame()
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
-  }
+    .toCas2v2Report(outputStream)
 }
+
+inline fun <reified T> Iterable<T>.toCas2v2Report(outputStream: OutputStream) = toDataFrame<T>()
+  .writeExcel(
+    outputStream = outputStream,
+    factory = WorkbookFactory.create(true),
+  )
+
+@Suppress("LongParameterList")
+class ApplicationStatusUpdatesReportRow(
+  val eventId: String,
+  val applicationId: String,
+  val personCrn: String,
+  val personNoms: String,
+  val newStatus: String,
+  val updatedAt: String,
+  val updatedBy: String,
+  val statusDetails: String,
+  val applicationOrigin: String,
+)
+
+data class SubmittedApplicationReportRow(
+  val eventId: String,
+  val applicationId: String,
+  val personCrn: String,
+  val personNoms: String?,
+  val referringPrisonCode: String?,
+  val preferredAreas: String?,
+  val hdcEligibilityDate: LocalDate?,
+  val conditionalReleaseDate: LocalDate?,
+  val submittedAt: String,
+  val submittedBy: String,
+  val startedAt: String,
+  val applicationOrigin: ApplicationOrigin,
+  val bailHearingDate: LocalDate?,
+)
+
+class UnsubmittedApplicationsReportRow(
+  val applicationId: String,
+  val personCrn: String,
+  val personNoms: String?,
+  val startedAt: String,
+  val startedBy: String,
+  val applicationOrigin: ApplicationOrigin,
+)
