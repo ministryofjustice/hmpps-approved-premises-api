@@ -1195,13 +1195,13 @@ class UserServiceTest {
 
       every { mockUserRepository.findActiveUsersWithAtLeastOneRole(any()) } returns listOf(user)
 
-      val allocatableUser = userService.getAllocatableUsersForAllocationType(
+      userService.getAllocatableUsersForAllocationType(
         "crn",
-        emptyList<UserQualification>(),
+        emptyList(),
         UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
       )
 
-      verify(exactly = 1) { mockUserRepository.findActiveUsersWithAtLeastOneRole(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_APPEALS_MANAGER, UserRole.CAS1_JANITOR)) }
+      verify(exactly = 1) { mockUserRepository.findActiveUsersWithAtLeastOneRole(listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_EXPERIMENTAL, UserRole.CAS1_APPEALS_MANAGER, UserRole.CAS1_JANITOR)) }
     }
   }
 

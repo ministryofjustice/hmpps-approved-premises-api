@@ -108,7 +108,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Get All Out-Of-Service Beds returns 403 for invalid roles`(role: UserRole) {
@@ -709,7 +709,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Get All Out-Of-Service Bed in Premises returns 403 for invalid roles`(role: UserRole) {
@@ -896,7 +896,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Get Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
@@ -971,7 +971,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Create Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
@@ -1426,7 +1426,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Update Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
@@ -2041,7 +2041,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Cancel Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {

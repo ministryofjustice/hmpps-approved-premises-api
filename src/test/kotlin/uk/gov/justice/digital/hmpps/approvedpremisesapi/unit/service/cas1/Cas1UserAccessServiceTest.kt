@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.Companion.getRolesWithAllProdPermissions
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
@@ -91,7 +92,7 @@ class Cas1UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawApplication returns true if submitted and has CRU_MEMBER or JANITOR role`(
+    fun `userMayWithdrawApplication returns true if submitted and has CRU_MEMBER`(
       role: UserRole,
     ) {
       val otherUser = UserEntityFactory()
@@ -105,7 +106,7 @@ class Cas1UserAccessServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      val canCancelApplication = listOf(CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canCancelApplication = listOf(CAS1_CRU_MEMBER).getRolesWithAllProdPermissions().contains(role)
 
       assertThat(service.userMayWithdrawApplication(otherUser, application)).isEqualTo(canCancelApplication)
     }
@@ -200,7 +201,7 @@ class Cas1UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawPlacementRequest returns true if user has CAS1_CRU_MEMBER or JANITOR role`(
+    fun `userMayWithdrawPlacementRequest returns true if user has CAS1_CRU_MEMBER role`(
       role: UserRole,
     ) {
       val otherUser = UserEntityFactory()
@@ -229,7 +230,7 @@ class Cas1UserAccessServiceTest {
         )
         .produce()
 
-      val canWithdrawPlacementRequest = listOf(CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canWithdrawPlacementRequest = listOf(CAS1_CRU_MEMBER).getRolesWithAllProdPermissions().contains(role)
 
       assertThat(service.userMayWithdrawPlacementRequest(otherUser, placementRequest)).isEqualTo(canWithdrawPlacementRequest)
     }
@@ -271,7 +272,7 @@ class Cas1UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userMayWithdrawPlacementApplication returns true if submitted and has CRU_MEMBER or JANITOR role`(
+    fun `userMayWithdrawPlacementApplication returns true if submitted and has CRU_MEMBER role`(
       role: UserRole,
     ) {
       val otherUser = UserEntityFactory()
@@ -291,7 +292,7 @@ class Cas1UserAccessServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      val canCancelPlacementApp = listOf(CAS1_CRU_MEMBER, CAS1_JANITOR).contains(role)
+      val canCancelPlacementApp = listOf(CAS1_CRU_MEMBER).getRolesWithAllProdPermissions().contains(role)
 
       assertThat(service.userMayWithdrawPlacementApplication(otherUser, placementApplication)).isEqualTo(canCancelPlacementApp)
     }

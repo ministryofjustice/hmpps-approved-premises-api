@@ -7,7 +7,7 @@ enum class UserPermission(
   val cas1ApiValue: ApprovedPremisesUserPermission?,
   /**
    * If a permission is experimental it will not be available in prod
-   * i.e. when listing user permissions it will not be included
+   * i.e. when listing a user's permissions it will never be included
    */
   val experimental: Boolean = false,
 ) {
@@ -32,6 +32,11 @@ enum class UserPermission(
 
   CAS1_CHANGE_REQUEST_LIST(ApprovedPremisesUserPermission.changeRequestList, experimental = true),
   CAS1_CHANGE_REQUEST_VIEW(ApprovedPremisesUserPermission.changeRequestView, experimental = true),
+
+  /**
+   * A generic experimental permission to use for functionality that won't necessarily need a specific permission once complete
+   */
+  CAS1_EXPERIMENTAL(ApprovedPremisesUserPermission.experimental, experimental = true),
 
   CAS1_EXPERIMENTAL_NEW_ASSIGN_KEYWORKER_FLOW(ApprovedPremisesUserPermission.experimentalNewAssignKeyworkerFlow, experimental = true),
 

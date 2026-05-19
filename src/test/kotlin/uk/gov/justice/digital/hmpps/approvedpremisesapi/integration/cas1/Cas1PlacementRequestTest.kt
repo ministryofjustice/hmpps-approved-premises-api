@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.Companion.removeRolesWithAllProdPermissions
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
@@ -95,7 +96,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"], mode = EnumSource.Mode.EXCLUDE)
     fun `Get dashboard without CAS1_VIEW_CRU_DASHBOARD permission returns 401`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -1530,7 +1531,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     @Test
     fun `Withdraw Placement Request without CAS1_CRU_MEMBER returns 403`() {
       givenAUser { creator, _ ->
-        givenAUser(roles = UserRole.getAllRolesExcept(UserRole.CAS1_CRU_MEMBER, UserRole.CAS1_JANITOR)) { user, jwt ->
+        givenAUser(roles = UserRole.getAllRolesExcept(UserRole.CAS1_CRU_MEMBER).removeRolesWithAllProdPermissions()) { user, jwt ->
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = user) {
               givenAPlacementRequest(
