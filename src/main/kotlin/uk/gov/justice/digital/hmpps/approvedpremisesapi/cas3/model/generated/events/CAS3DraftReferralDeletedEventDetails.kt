@@ -12,7 +12,7 @@ data class CAS3DraftReferralDeletedEventDetails(
 
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
-  @get:JsonProperty("crn", required = true) val crn: kotlin.String,
+  @get:JsonProperty("crn", required = true) val crn: String,
 
   @get:JsonProperty("deletedBy", required = true) val deletedBy: java.util.UUID,
 )

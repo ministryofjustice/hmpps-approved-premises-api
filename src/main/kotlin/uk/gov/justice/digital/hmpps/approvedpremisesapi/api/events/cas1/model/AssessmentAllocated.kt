@@ -9,13 +9,13 @@ data class AssessmentAllocated(
   @get:JsonProperty("assessmentId", required = true) val assessmentId: java.util.UUID,
 
   @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/assessments/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP assessment and related resources, including bookings")
-  @get:JsonProperty("assessmentUrl", required = true) val assessmentUrl: kotlin.String,
+  @get:JsonProperty("assessmentUrl", required = true) val assessmentUrl: String,
 
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
   @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
-  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
+  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: String,
 
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 

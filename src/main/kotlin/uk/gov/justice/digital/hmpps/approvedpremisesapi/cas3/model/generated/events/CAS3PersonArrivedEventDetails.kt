@@ -20,7 +20,7 @@ data class CAS3PersonArrivedEventDetails(
 
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
-  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: kotlin.String,
+  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: String,
 
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
 
@@ -32,7 +32,7 @@ data class CAS3PersonArrivedEventDetails(
 
   @get:JsonProperty("expectedDepartureOn", required = true) val expectedDepartureOn: java.time.LocalDate,
 
-  @get:JsonProperty("notes", required = true) val notes: kotlin.String,
+  @get:JsonProperty("notes", required = true) val notes: String,
 
   @get:JsonProperty("applicationId") val applicationId: java.util.UUID? = null,
 

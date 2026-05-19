@@ -95,7 +95,7 @@ interface ChangeRequestsCas1 {
     value = ["/placement-requests/change-requests"],
     produces = ["application/json"],
   )
-  fun findOpen(@RequestParam(value = "page", required = false) page: kotlin.Int?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1ChangeRequestSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<Cas1ChangeRequestSummary>> = getDelegate().findOpen(page, cruManagementAreaId, sortBy, sortDirection)
+  fun findOpen(@RequestParam(value = "page", required = false) page: Int?, @RequestParam(value = "cruManagementAreaId", required = false) cruManagementAreaId: java.util.UUID?, @RequestParam(value = "sortBy", required = false) sortBy: Cas1ChangeRequestSortField?, @RequestParam(value = "sortDirection", required = false) sortDirection: SortDirection?): ResponseEntity<List<Cas1ChangeRequestSummary>> = getDelegate().findOpen(page, cruManagementAreaId, sortBy, sortDirection)
 
   @Operation(
     tags = ["change requests"],

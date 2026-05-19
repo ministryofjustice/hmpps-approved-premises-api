@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Withdrawables(
 
-  @get:JsonProperty("notes", required = true) val notes: kotlin.collections.List<kotlin.String>,
+  @get:JsonProperty("notes", required = true) val notes: List<String>,
 
-  @get:JsonProperty("withdrawables", required = true) val withdrawables: kotlin.collections.List<Withdrawable>,
+  @get:JsonProperty("withdrawables", required = true) val withdrawables: List<Withdrawable>,
 )

@@ -6,7 +6,7 @@ data class Cas1BookingCancelledContentPayload(
 
   @get:JsonProperty("booking", required = true) val booking: Cas1TimelineEventPayloadBookingSummary,
 
-  @get:JsonProperty("cancellationReason", required = true) val cancellationReason: kotlin.String,
+  @get:JsonProperty("cancellationReason", required = true) val cancellationReason: String,
 
   @get:JsonProperty("type", required = true) override val type: Cas1TimelineEventType,
 

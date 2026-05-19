@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Cas1AssessmentAcceptance(
 
-  @get:JsonProperty("document", required = true) val document: kotlin.Any,
+  @get:JsonProperty("document", required = true) val document: Any,
 
   @get:JsonProperty("requirements") val requirements: PlacementRequirements,
 
@@ -12,11 +12,11 @@ data class Cas1AssessmentAcceptance(
 
   @get:JsonProperty("apType") val apType: ApType? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 
-  @get:JsonProperty("agreeWithShortNoticeReason") val agreeWithShortNoticeReason: kotlin.Boolean? = null,
+  @get:JsonProperty("agreeWithShortNoticeReason") val agreeWithShortNoticeReason: Boolean? = null,
 
-  @get:JsonProperty("agreeWithShortNoticeReasonComments") val agreeWithShortNoticeReasonComments: kotlin.String? = null,
+  @get:JsonProperty("agreeWithShortNoticeReasonComments") val agreeWithShortNoticeReasonComments: String? = null,
 
-  @get:JsonProperty("reasonForLateApplication") val reasonForLateApplication: kotlin.String? = null,
+  @get:JsonProperty("reasonForLateApplication") val reasonForLateApplication: String? = null,
 )

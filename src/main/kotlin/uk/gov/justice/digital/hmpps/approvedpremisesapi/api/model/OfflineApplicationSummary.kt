@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 class OfflineApplicationSummary(
 
-  @get:JsonProperty("type", required = true) override val type: kotlin.String,
+  @get:JsonProperty("type", required = true) override val type: String,
 
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 

@@ -6,5 +6,5 @@ data class FlagsEnvelope(
 
   @get:JsonProperty("status", required = true) val status: RiskEnvelopeStatus,
 
-  @get:JsonProperty("value") val `value`: kotlin.collections.List<kotlin.String>? = null,
+  @get:JsonProperty("value") val `value`: List<String>? = null,
 )

@@ -3518,7 +3518,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `returns empty list if crn doesn't exist`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       webTestClient.get()
         .uri("/cas1/people/${"XX"}/space-bookings")
@@ -3531,7 +3531,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `returns bookings without cancelled bookings by default`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/people/${spaceBooking2029.crn}/space-bookings")
@@ -3550,7 +3550,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `returns bookings including cancelled bookings when includeCancelled is true`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/people/${spaceBooking2029.crn}/space-bookings?includeCancelled=true")

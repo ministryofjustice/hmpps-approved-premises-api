@@ -8,11 +8,11 @@ class ReferralHistoryDomainEventNote(
 
   @get:JsonProperty("createdAt", required = true) override val createdAt: java.time.Instant,
 
-  @get:JsonProperty("createdByUserName", required = true) override val createdByUserName: kotlin.String,
+  @get:JsonProperty("createdByUserName", required = true) override val createdByUserName: String,
 
-  @get:JsonProperty("type", required = true) override val type: kotlin.String,
+  @get:JsonProperty("type", required = true) override val type: String,
 
-  @get:JsonProperty("message") override val message: kotlin.String? = null,
+  @get:JsonProperty("message") override val message: String? = null,
 
   @get:JsonProperty("messageDetails") override val messageDetails: ReferralHistoryNoteMessageDetails? = null,
 ) : ReferralHistoryNote

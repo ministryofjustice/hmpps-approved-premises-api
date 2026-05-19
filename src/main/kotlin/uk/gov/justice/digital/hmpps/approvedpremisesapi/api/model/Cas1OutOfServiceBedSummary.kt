@@ -16,7 +16,7 @@ data class Cas1OutOfServiceBedSummary(
 
   @get:JsonProperty("reason", required = true) val reason: Cas1OutOfServiceBedReason,
 
-  @get:JsonProperty("characteristics", required = true) val characteristics: kotlin.collections.List<Cas1SpaceCharacteristic>,
+  @get:JsonProperty("characteristics", required = true) val characteristics: List<Cas1SpaceCharacteristic>,
 
-  @get:JsonProperty("roomName") val roomName: kotlin.String? = null,
+  @get:JsonProperty("roomName") val roomName: String? = null,
 )

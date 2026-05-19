@@ -8,13 +8,13 @@ data class DestinationPremises(
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "New Place", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
   @Schema(example = "NENEW1", required = true, description = "")
-  @get:JsonProperty("apCode", required = true) val apCode: kotlin.String,
+  @get:JsonProperty("apCode", required = true) val apCode: String,
 
   @Schema(example = "Q061", required = true, description = "")
-  @get:JsonProperty("legacyApCode", required = true) val legacyApCode: kotlin.String,
+  @get:JsonProperty("legacyApCode", required = true) val legacyApCode: String,
 
   @get:JsonProperty("probationArea", required = true) val probationArea: ProbationArea,
 )

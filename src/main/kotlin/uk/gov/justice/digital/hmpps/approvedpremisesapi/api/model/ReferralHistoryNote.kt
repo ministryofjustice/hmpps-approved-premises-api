@@ -18,13 +18,13 @@ interface ReferralHistoryNote {
   val createdAt: java.time.Instant
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val createdByUserName: kotlin.String
+  val createdByUserName: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val type: kotlin.String
+  val type: String
 
   @get:Schema(example = "null", description = "")
-  val message: kotlin.String?
+  val message: String?
 
   @get:Schema(example = "null", description = "")
   val messageDetails: ReferralHistoryNoteMessageDetails?

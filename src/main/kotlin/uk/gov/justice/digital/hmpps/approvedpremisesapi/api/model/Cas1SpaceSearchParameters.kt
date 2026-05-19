@@ -12,10 +12,10 @@ data class Cas1SpaceSearchParameters(
   @get:JsonProperty("startDate", required = true) val startDate: java.time.LocalDate,
 
   @Schema(example = "84", required = true, description = "The number of days the space is needed, from the start date")
-  @get:JsonProperty("durationInDays", required = true) val durationInDays: kotlin.Int,
+  @get:JsonProperty("durationInDays", required = true) val durationInDays: Int,
 
   @Schema(example = "SE5", required = true, description = "The 'target' location, in the form of a postcode district")
-  @get:JsonProperty("targetPostcodeDistrict", required = true) val targetPostcodeDistrict: kotlin.String,
+  @get:JsonProperty("targetPostcodeDistrict", required = true) val targetPostcodeDistrict: String,
 
-  @get:JsonProperty("spaceCharacteristics") val spaceCharacteristics: kotlin.collections.List<Cas1SpaceCharacteristic>? = null,
+  @get:JsonProperty("spaceCharacteristics") val spaceCharacteristics: List<Cas1SpaceCharacteristic>? = null,
 )

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class PersonType(@get:JsonValue val value: kotlin.String) {
+enum class PersonType(@get:JsonValue val value: String) {
 
   fullPerson("FullPerson"),
   restrictedPerson("RestrictedPerson"),
@@ -14,6 +14,6 @@ enum class PersonType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): PersonType = values().first { it.value == value }
+    fun forValue(value: String): PersonType = values().first { it.value == value }
   }
 }

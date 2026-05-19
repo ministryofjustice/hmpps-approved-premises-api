@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Tem
 )
 interface Assessment {
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val service: kotlin.String
+  val service: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
   val id: java.util.UUID
@@ -21,7 +21,7 @@ interface Assessment {
   val createdAt: java.time.Instant
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val clarificationNotes: kotlin.collections.List<ClarificationNote>
+  val clarificationNotes: List<ClarificationNote>
 
   @get:Schema(example = "null", description = "")
   val allocatedAt: java.time.Instant?
@@ -33,8 +33,8 @@ interface Assessment {
   val decision: AssessmentDecision?
 
   @get:Schema(example = "null", description = "")
-  val rejectionRationale: kotlin.String?
+  val rejectionRationale: String?
 
   @get:Schema(example = "null", description = "Any object")
-  val `data`: kotlin.Any?
+  val `data`: Any?
 }

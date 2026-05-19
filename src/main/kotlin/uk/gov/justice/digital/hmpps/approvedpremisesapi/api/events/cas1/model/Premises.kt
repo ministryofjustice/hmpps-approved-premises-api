@@ -8,13 +8,13 @@ data class Premises(
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "Hope House", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
   @Schema(example = "NEHOPE1", required = true, description = "")
-  @get:JsonProperty("apCode", required = true) val apCode: kotlin.String,
+  @get:JsonProperty("apCode", required = true) val apCode: String,
 
   @Schema(example = "Q057", required = true, description = "The 'Q code' used in Delius to identify an Approved Premises")
-  @get:JsonProperty("legacyApCode", required = true) val legacyApCode: kotlin.String,
+  @get:JsonProperty("legacyApCode", required = true) val legacyApCode: String,
 
-  @get:JsonProperty("localAuthorityAreaName", required = true) val localAuthorityAreaName: kotlin.String,
+  @get:JsonProperty("localAuthorityAreaName", required = true) val localAuthorityAreaName: String,
 )

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class RequestForPlacementType(@get:JsonValue val value: kotlin.String) {
+enum class RequestForPlacementType(@get:JsonValue val value: String) {
 
   manual("manual"),
   automatic("automatic"),
@@ -13,6 +13,6 @@ enum class RequestForPlacementType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): RequestForPlacementType = values().first { it.value == value }
+    fun forValue(value: String): RequestForPlacementType = values().first { it.value == value }
   }
 }

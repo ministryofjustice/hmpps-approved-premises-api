@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class SituationOption(@get:JsonValue val value: kotlin.String) {
+enum class SituationOption(@get:JsonValue val value: String) {
 
   riskManagement("riskManagement"),
   residencyManagement("residencyManagement"),
@@ -16,6 +16,6 @@ enum class SituationOption(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): SituationOption = values().first { it.value == value }
+    fun forValue(value: String): SituationOption = values().first { it.value == value }
   }
 }

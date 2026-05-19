@@ -8,7 +8,7 @@ data class Cas1OutOfServiceBedRevision(
 
   @get:JsonProperty("updatedAt", required = true) val updatedAt: java.time.Instant,
 
-  @get:JsonProperty("revisionType", required = true) val revisionType: kotlin.collections.List<Cas1OutOfServiceBedRevisionType>,
+  @get:JsonProperty("revisionType", required = true) val revisionType: List<Cas1OutOfServiceBedRevisionType>,
 
   @get:JsonProperty("updatedBy") val updatedBy: User? = null,
 
@@ -18,7 +18,7 @@ data class Cas1OutOfServiceBedRevision(
 
   @get:JsonProperty("reason") val reason: Cas1OutOfServiceBedReason? = null,
 
-  @get:JsonProperty("referenceNumber") val referenceNumber: kotlin.String? = null,
+  @get:JsonProperty("referenceNumber") val referenceNumber: String? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 )

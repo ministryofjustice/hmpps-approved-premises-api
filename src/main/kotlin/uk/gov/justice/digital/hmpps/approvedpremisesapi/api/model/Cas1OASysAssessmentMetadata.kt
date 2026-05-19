@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Cas1OASysAssessmentMetadata(
 
-  @get:JsonProperty("hasApplicableAssessment", required = true) val hasApplicableAssessment: kotlin.Boolean,
+  @get:JsonProperty("hasApplicableAssessment", required = true) val hasApplicableAssessment: Boolean,
 
   @get:JsonProperty("dateStarted") val dateStarted: java.time.Instant? = null,
 

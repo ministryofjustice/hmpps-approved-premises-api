@@ -6,23 +6,23 @@ import com.fasterxml.jackson.annotation.JsonValue
 
 data class ReferralHistorySystemNote(
 
-  @get:JsonProperty("category", required = true) val category: ReferralHistorySystemNote.Category,
+  @get:JsonProperty("category", required = true) val category: Category,
 
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 
   @get:JsonProperty("createdAt", required = true) override val createdAt: java.time.Instant,
 
-  @get:JsonProperty("createdByUserName", required = true) override val createdByUserName: kotlin.String,
+  @get:JsonProperty("createdByUserName", required = true) override val createdByUserName: String,
 
-  @get:JsonProperty("type", required = true) override val type: kotlin.String,
+  @get:JsonProperty("type", required = true) override val type: String,
 
-  @get:JsonProperty("message") override val message: kotlin.String? = null,
+  @get:JsonProperty("message") override val message: String? = null,
 
   @get:JsonProperty("messageDetails") override val messageDetails: ReferralHistoryNoteMessageDetails? = null,
 ) : ReferralHistoryNote {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-  enum class Category(@get:JsonValue val value: kotlin.String) {
+  enum class Category(@get:JsonValue val value: String) {
 
     submitted("submitted"),
     unallocated("unallocated"),
@@ -35,7 +35,7 @@ data class ReferralHistorySystemNote(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Category = values().first { it.value == value }
+      fun forValue(value: String): Category = values().first { it.value == value }
     }
   }
 }

@@ -50,7 +50,7 @@ interface ReferenceDataApiDelegate {
 
   fun referenceDataCharacteristicsGet(
     xServiceName: ServiceName?,
-    modelScope: kotlin.String?,
+    modelScope: String?,
   ): ResponseEntity<List<Characteristic>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -65,7 +65,7 @@ interface ReferenceDataApiDelegate {
 
   fun referenceDataDepartureReasonsGet(
     xServiceName: ServiceName?,
-    includeInactive: kotlin.Boolean?,
+    includeInactive: Boolean?,
   ): ResponseEntity<List<DepartureReason>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -116,7 +116,7 @@ interface ReferenceDataApiDelegate {
 
   fun referenceDataMoveOnCategoriesGet(
     xServiceName: ServiceName?,
-    includeInactive: kotlin.Boolean?,
+    includeInactive: Boolean?,
   ): ResponseEntity<List<MoveOnCategory>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

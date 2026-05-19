@@ -9,7 +9,7 @@ data class BookingKeyWorkerAssigned(
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
   @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
-  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
+  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: String,
 
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of booking for an AP place")
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
@@ -19,7 +19,7 @@ data class BookingKeyWorkerAssigned(
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
   @Schema(example = "7", required = true, description = "Used in Delius to identify the 'event' via the first active conviction's 'index'")
-  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: kotlin.String,
+  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: String,
 
   @get:JsonProperty("premises", required = true) val premises: Premises,
 
@@ -29,7 +29,7 @@ data class BookingKeyWorkerAssigned(
   @Schema(example = "Sun Feb 12 00:00:00 GMT 2023", required = true, description = "")
   @get:JsonProperty("departureDate", required = true) val departureDate: java.time.LocalDate,
 
-  @get:JsonProperty("assignedKeyWorkerName", required = true) val assignedKeyWorkerName: kotlin.String,
+  @get:JsonProperty("assignedKeyWorkerName", required = true) val assignedKeyWorkerName: String,
 
-  @get:JsonProperty("previousKeyWorkerName") val previousKeyWorkerName: kotlin.String? = null,
+  @get:JsonProperty("previousKeyWorkerName") val previousKeyWorkerName: String? = null,
 ) : Cas1DomainEventPayload

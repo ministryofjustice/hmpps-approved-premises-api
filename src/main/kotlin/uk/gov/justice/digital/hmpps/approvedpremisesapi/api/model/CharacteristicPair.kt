@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class CharacteristicPair(
 
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
-  @get:JsonProperty("propertyName") val propertyName: kotlin.String? = null,
+  @get:JsonProperty("propertyName") val propertyName: String? = null,
 )

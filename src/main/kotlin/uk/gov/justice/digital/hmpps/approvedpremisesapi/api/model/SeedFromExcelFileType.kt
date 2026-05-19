@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class SeedFromExcelFileType(@get:JsonValue val value: kotlin.String) {
+enum class SeedFromExcelFileType(@get:JsonValue val value: String) {
 
   CAS1_IMPORT_SITE_SURVEY_ROOMS("cas1_import_site_survey_rooms"),
   CAS1_IMPORT_SITE_SURVEY_PREMISES("cas1_import_site_survey_premises"),
@@ -13,6 +13,6 @@ enum class SeedFromExcelFileType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): SeedFromExcelFileType = values().first { it.value == value }
+    fun forValue(value: String): SeedFromExcelFileType = values().first { it.value == value }
   }
 }

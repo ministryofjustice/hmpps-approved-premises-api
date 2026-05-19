@@ -7,19 +7,19 @@ data class UpdateApprovedPremisesApplication(
 
   @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
 
-  @get:JsonProperty("data", required = true) override val `data`: kotlin.collections.Map<kotlin.String, kotlin.Any>,
+  @get:JsonProperty("data", required = true) override val `data`: Map<String, Any>,
 
-  @get:JsonProperty("isInapplicable") val isInapplicable: kotlin.Boolean? = null,
+  @get:JsonProperty("isInapplicable") val isInapplicable: Boolean? = null,
 
-  @get:JsonProperty("isWomensApplication") val isWomensApplication: kotlin.Boolean? = null,
+  @get:JsonProperty("isWomensApplication") val isWomensApplication: Boolean? = null,
 
   @Schema(example = "null", description = "noticeType should be used to indicate if an emergency application")
   @Deprecated(message = "")
-  @get:JsonProperty("isEmergencyApplication") val isEmergencyApplication: kotlin.Boolean? = null,
+  @get:JsonProperty("isEmergencyApplication") val isEmergencyApplication: Boolean? = null,
 
   @get:JsonProperty("apType") val apType: ApType? = null,
 
-  @get:JsonProperty("targetLocation") val targetLocation: kotlin.String? = null,
+  @get:JsonProperty("targetLocation") val targetLocation: String? = null,
 
   @get:JsonProperty("releaseType") val releaseType: ReleaseTypeOption? = null,
 

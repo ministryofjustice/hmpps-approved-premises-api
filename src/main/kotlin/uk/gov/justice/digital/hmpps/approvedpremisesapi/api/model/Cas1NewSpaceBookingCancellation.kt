@@ -8,5 +8,5 @@ data class Cas1NewSpaceBookingCancellation(
 
   @get:JsonProperty("reasonId", required = true) val reasonId: java.util.UUID,
 
-  @get:JsonProperty("reasonNotes") val reasonNotes: kotlin.String? = null,
+  @get:JsonProperty("reasonNotes") val reasonNotes: String? = null,
 )

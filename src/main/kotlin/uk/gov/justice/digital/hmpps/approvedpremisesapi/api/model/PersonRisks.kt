@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class PersonRisks(
 
-  @get:JsonProperty("crn", required = true) val crn: kotlin.String,
+  @get:JsonProperty("crn", required = true) val crn: String,
 
   @get:JsonProperty("roshRisks", required = true) val roshRisks: RoshRisksEnvelope,
 

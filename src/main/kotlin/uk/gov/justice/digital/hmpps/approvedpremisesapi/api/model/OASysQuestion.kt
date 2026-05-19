@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class OASysQuestion(
 
-  @get:JsonProperty("label", required = true) val label: kotlin.String,
+  @get:JsonProperty("label", required = true) val label: String,
 
-  @get:JsonProperty("questionNumber", required = true) val questionNumber: kotlin.String,
+  @get:JsonProperty("questionNumber", required = true) val questionNumber: String,
 
-  @get:JsonProperty("answer") val answer: kotlin.String? = null,
+  @get:JsonProperty("answer") val answer: String? = null,
 )

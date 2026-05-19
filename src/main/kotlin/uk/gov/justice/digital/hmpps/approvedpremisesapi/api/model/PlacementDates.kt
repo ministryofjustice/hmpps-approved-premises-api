@@ -6,5 +6,5 @@ data class PlacementDates(
 
   @get:JsonProperty("expectedArrival", required = true) val expectedArrival: java.time.LocalDate,
 
-  @get:JsonProperty("duration", required = true) val duration: kotlin.Int,
+  @get:JsonProperty("duration", required = true) val duration: Int,
 )

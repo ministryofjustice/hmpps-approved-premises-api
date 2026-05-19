@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 class OfflineApplication(
 
-  override val type: kotlin.String,
+  override val type: String,
 
   override val id: java.util.UUID,
 

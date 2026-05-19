@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class BookingStatus(@get:JsonValue val value: kotlin.String) {
+enum class BookingStatus(@get:JsonValue val value: String) {
 
   arrived("arrived"),
   awaitingMinusArrival("awaiting-arrival"),
@@ -19,6 +19,6 @@ enum class BookingStatus(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): BookingStatus = values().first { it.value == value }
+    fun forValue(value: String): BookingStatus = values().first { it.value == value }
   }
 }

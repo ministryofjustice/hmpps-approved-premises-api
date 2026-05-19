@@ -6,5 +6,5 @@ data class NewExtension(
 
   @get:JsonProperty("newDepartureDate", required = true) val newDepartureDate: java.time.LocalDate,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 )

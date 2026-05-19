@@ -10,19 +10,19 @@ data class ApplicationExpired(
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
-  @get:JsonProperty("previousStatus", required = true) val previousStatus: kotlin.String,
+  @get:JsonProperty("previousStatus", required = true) val previousStatus: String,
 
-  @get:JsonProperty("updatedStatus", required = true) val updatedStatus: kotlin.String,
+  @get:JsonProperty("updatedStatus", required = true) val updatedStatus: String,
 
   @Schema(example = "null", required = false, description = "The status of the application before expiry")
-  @get:JsonProperty("statusBeforeExpiry") val statusBeforeExpiry: kotlin.String? = null,
+  @get:JsonProperty("statusBeforeExpiry") val statusBeforeExpiry: String? = null,
 
   @Schema(example = "null", required = false, description = "The reason for the application's expiry")
-  @get:JsonProperty("expiryReason") val expiryReason: ApplicationExpired.ExpiryReason = ExpiryReason.unsubmittedApplicationExpired,
+  @get:JsonProperty("expiryReason") val expiryReason: ExpiryReason = ExpiryReason.unsubmittedApplicationExpired,
 ) : Cas1DomainEventPayload {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-  enum class ExpiryReason(@get:JsonValue val value: kotlin.String) {
+  enum class ExpiryReason(@get:JsonValue val value: String) {
 
     assessmentExpired("AssessmentExpired"),
     unsubmittedApplicationExpired("UnsubmittedApplicationExpired"),
@@ -31,7 +31,7 @@ data class ApplicationExpired(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): ApplicationExpired.ExpiryReason = ApplicationExpired.ExpiryReason.values().first { it.value == value }
+      fun forValue(value: String): ExpiryReason = ExpiryReason.values().first { it.value == value }
     }
   }
 }

@@ -8,31 +8,31 @@ data class Cas1Premises(
   val id: java.util.UUID,
 
   @Schema(example = "Hope House")
-  val name: kotlin.String,
+  val name: String,
 
   @Schema(example = "NEHOPE1")
-  val apCode: kotlin.String,
+  val apCode: String,
 
   @Schema(description = "Full address, excluding postcode")
-  val fullAddress: kotlin.String,
+  val fullAddress: String,
 
   @Schema(example = "LS1 3AD")
-  val postcode: kotlin.String,
+  val postcode: String,
 
   val apArea: ApArea,
 
   @Schema(example = "22", description = "The total number of beds in this premises")
-  val bedCount: kotlin.Int,
+  val bedCount: Int,
 
   @Schema(example = "20", description = "The total number of beds available at this moment in time")
-  val availableBeds: kotlin.Int,
+  val availableBeds: Int,
 
   @Schema(example = "2", description = "The total number of out of service beds at this moment in time")
-  val outOfServiceBeds: kotlin.Int,
+  val outOfServiceBeds: Int,
 
-  val supportsSpaceBookings: kotlin.Boolean,
+  val supportsSpaceBookings: Boolean,
 
-  val managerDetails: kotlin.String? = null,
+  val managerDetails: String? = null,
 
   @Schema(
     example = "No hate based offences",

@@ -24,9 +24,9 @@ data class PlacementApplicationTask(
   @get:JsonProperty("personSummary", required = true) override val personSummary: PersonSummary,
 
   @Schema(example = "null", required = true, description = "Superseded by personSummary which provides 'name' as well as 'personType' and 'crn'.")
-  @get:JsonProperty("personName", required = true) override val personName: kotlin.String,
+  @get:JsonProperty("personName", required = true) override val personName: String,
 
-  @get:JsonProperty("crn", required = true) override val crn: kotlin.String,
+  @get:JsonProperty("crn", required = true) override val crn: String,
 
   @Schema(example = "null", required = true, description = "The Due date of the task - this is deprecated in favour of the `dueAt` field")
   @get:JsonProperty("dueDate", required = true) override val dueDate: java.time.LocalDate,
@@ -39,7 +39,7 @@ data class PlacementApplicationTask(
 
   @Schema(example = "null", description = "Placement apps only have one set of placement dates, use 'dates' instead")
   @Deprecated(message = "")
-  @get:JsonProperty("placementDates") val placementDates: kotlin.collections.List<PlacementDates>? = null,
+  @get:JsonProperty("placementDates") val placementDates: List<PlacementDates>? = null,
 
   @get:JsonProperty("outcome") val outcome: PlacementApplicationDecision? = null,
 

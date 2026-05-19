@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class ApplicationTimelineNote(
 
-  @get:JsonProperty("note", required = true) val note: kotlin.String,
+  @get:JsonProperty("note", required = true) val note: String,
 
   @get:JsonProperty("id") val id: java.util.UUID? = null,
 

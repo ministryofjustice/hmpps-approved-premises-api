@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2App
 )
 interface SubmitApplication {
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val type: kotlin.String
+  val type: String
 
   @get:Schema(example = "null", description = "Any object")
-  val translatedDocument: kotlin.Any?
+  val translatedDocument: Any?
 }

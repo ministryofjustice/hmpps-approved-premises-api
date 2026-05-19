@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class TaskSortField(@get:JsonValue val value: kotlin.String) {
+enum class TaskSortField(@get:JsonValue val value: String) {
 
   createdAt("createdAt"),
   dueAt("dueAt"),
@@ -20,6 +20,6 @@ enum class TaskSortField(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): TaskSortField = values().first { it.value == value }
+    fun forValue(value: String): TaskSortField = values().first { it.value == value }
   }
 }

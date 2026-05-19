@@ -8,5 +8,5 @@ data class Cas1ApprovedPlacementAppeal(
 
   @get:JsonProperty("placementAppealChangeRequestId", required = true) val placementAppealChangeRequestId: java.util.UUID,
 
-  @get:JsonProperty("reasonNotes") val reasonNotes: kotlin.String? = null,
+  @get:JsonProperty("reasonNotes") val reasonNotes: String? = null,
 )

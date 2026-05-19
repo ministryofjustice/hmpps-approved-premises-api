@@ -10,5 +10,5 @@ data class Cas1SpaceBookingDeparture(
 
   @get:JsonProperty("moveOnCategory") val moveOnCategory: NamedId? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 )

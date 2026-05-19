@@ -12,7 +12,7 @@ data class Cas1ChangeRequest(
 
   @get:JsonProperty("requestReason", required = true) val requestReason: NamedId,
 
-  @get:JsonProperty("requestJson", required = true) val requestJson: kotlin.Any,
+  @get:JsonProperty("requestJson", required = true) val requestJson: Any,
 
   @get:JsonProperty("spaceBookingId", required = true) val spaceBookingId: java.util.UUID,
 
@@ -20,7 +20,7 @@ data class Cas1ChangeRequest(
 
   @get:JsonProperty("decision") val decision: Cas1ChangeRequestDecision? = null,
 
-  @get:JsonProperty("decisionJson") val decisionJson: kotlin.Any? = null,
+  @get:JsonProperty("decisionJson") val decisionJson: Any? = null,
 
   @get:JsonProperty("rejectionReason") val rejectionReason: NamedId? = null,
 )

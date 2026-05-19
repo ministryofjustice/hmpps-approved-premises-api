@@ -39,7 +39,7 @@ data class ApprovedPremisesApplication(
   val applicantUserDetails: Cas1ApplicationUserDetails? = null,
 
   @Schema(description = "If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details")
-  val caseManagerIsNotApplicant: kotlin.Boolean? = null,
+  val caseManagerIsNotApplicant: Boolean? = null,
 
   val caseManagerUserDetails: Cas1ApplicationUserDetails? = null,
 

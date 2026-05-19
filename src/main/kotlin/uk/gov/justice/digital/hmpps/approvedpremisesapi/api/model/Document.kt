@@ -4,17 +4,17 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Document(
 
-  @get:JsonProperty("id", required = true) val id: kotlin.String,
+  @get:JsonProperty("id", required = true) val id: String,
 
   @get:JsonProperty("level", required = true) val level: DocumentLevel,
 
-  @get:JsonProperty("fileName", required = true) val fileName: kotlin.String,
+  @get:JsonProperty("fileName", required = true) val fileName: String,
 
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
 
-  @get:JsonProperty("typeCode", required = true) val typeCode: kotlin.String,
+  @get:JsonProperty("typeCode", required = true) val typeCode: String,
 
-  @get:JsonProperty("typeDescription", required = true) val typeDescription: kotlin.String,
+  @get:JsonProperty("typeDescription", required = true) val typeDescription: String,
 
-  @get:JsonProperty("description") val description: kotlin.String? = null,
+  @get:JsonProperty("description") val description: String? = null,
 )

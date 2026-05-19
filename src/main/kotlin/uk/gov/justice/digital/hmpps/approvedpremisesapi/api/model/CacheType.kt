@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class CacheType(@get:JsonValue val value: kotlin.String) {
+enum class CacheType(@get:JsonValue val value: String) {
 
   qCodeStaffMembers("qCodeStaffMembers"),
   userAccess("userAccess"),
@@ -18,6 +18,6 @@ enum class CacheType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): CacheType = values().first { it.value == value }
+    fun forValue(value: String): CacheType = values().first { it.value == value }
   }
 }
