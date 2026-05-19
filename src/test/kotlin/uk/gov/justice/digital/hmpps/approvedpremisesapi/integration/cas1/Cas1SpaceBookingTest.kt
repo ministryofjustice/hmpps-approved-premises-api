@@ -2603,7 +2603,7 @@ class Cas1SpaceBookingTest {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_CHANGE_REQUEST_DEV"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL", "CAS1_CHANGE_REQUEST_DEV"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Cancellation with invalid role returns 401`(role: UserRole) {
@@ -2683,7 +2683,7 @@ class Cas1SpaceBookingTest {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_JANITOR", "CAS1_CHANGE_REQUEST_DEV"],
+      names = ["CAS1_JANITOR", "CAS1_CHANGE_REQUEST_DEV", "CAS1_EXPERIMENTAL"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Cancellation (due to appeal) with invalid role returns 401`(role: UserRole) {

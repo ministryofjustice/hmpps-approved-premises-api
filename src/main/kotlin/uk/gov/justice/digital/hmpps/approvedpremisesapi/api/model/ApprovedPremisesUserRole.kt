@@ -10,6 +10,7 @@ enum class ApprovedPremisesUserRole(@get:JsonValue val value: String) {
   futureManager("future_manager"),
   changeRequestDev("change_request_dev"),
   cruMember("cru_member"),
+  experimental("experimental"),
   applicant("applicant"),
   reportViewer("report_viewer"),
   reportViewerWithPii("report_viewer_with_pii"),

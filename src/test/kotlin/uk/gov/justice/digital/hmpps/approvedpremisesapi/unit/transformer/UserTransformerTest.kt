@@ -330,7 +330,7 @@ class UserTransformerTest {
     @Test
     fun `should not include experimental permission for production`() {
       val user = buildUserEntity(
-        role = UserRole.CAS1_JANITOR,
+        role = UserRole.CAS1_EXPERIMENTAL,
         apArea = ApAreaEntityFactory().produce(),
         cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
@@ -341,7 +341,7 @@ class UserTransformerTest {
       val result =
         userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
 
-      assertThat(result.permissions).doesNotContain(ApprovedPremisesUserPermission.cas1TestExperimentalPermission)
+      assertThat(result.permissions).doesNotContain(ApprovedPremisesUserPermission.experimental)
     }
 
     @Test

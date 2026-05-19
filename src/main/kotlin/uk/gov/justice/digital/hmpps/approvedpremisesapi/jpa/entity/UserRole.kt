@@ -17,6 +17,15 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ),
   ),
 
+  /**
+   * A user that has all available permissions
+   */
+  CAS1_EXPERIMENTAL(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.experimental,
+    UserPermission.entries.toList(),
+  ),
+
   CAS1_FUTURE_MANAGER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.futureManager,
@@ -130,10 +139,14 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
     ),
   ),
+
+  /**
+   * A user that has all available permissions, apart from 'experimental'
+   */
   CAS1_JANITOR(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.janitor,
-    UserPermission.entries.toList(),
+    UserPermission.entries.toList().filter { it != UserPermission.CAS1_EXPERIMENTAL },
   ),
   CAS1_USER_MANAGER(
     ServiceName.approvedPremises,
@@ -189,5 +202,11 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     fun getAllRolesForPermission(permission: UserPermission) = entries.filter { it.permissions.contains(permission) }
 
     fun getAllRolesExcept(vararg rolesToExclude: UserRole) = UserRole.entries.filter { !rolesToExclude.contains(it) }
+
+    fun getRolesWithAllPermissions() = listOf(CAS1_JANITOR, CAS1_EXPERIMENTAL)
+
+    fun List<UserRole>.removeRolesWithAllProdPermissions() = this - getRolesWithAllPermissions().toSet()
+
+    fun List<UserRole>.getRolesWithAllProdPermissions() = this + getRolesWithAllPermissions()
   }
 }

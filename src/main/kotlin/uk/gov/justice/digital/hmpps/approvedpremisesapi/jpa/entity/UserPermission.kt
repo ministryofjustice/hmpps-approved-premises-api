@@ -7,7 +7,7 @@ enum class UserPermission(
   val cas1ApiValue: ApprovedPremisesUserPermission?,
   /**
    * If a permission is experimental it will not be available in prod
-   * i.e. when listing user permissions it will not be included
+   * i.e. when listing a user's permissions it will never be included
    */
   val experimental: Boolean = false,
 ) {
@@ -30,8 +30,16 @@ enum class UserPermission(
   CAS1_BOOKING_WITHDRAW(ApprovedPremisesUserPermission.bookingWithdraw),
   CAS1_BOOKING_CHANGE_DATES(ApprovedPremisesUserPermission.bookingChangeDates),
 
+  @Deprecated("Change request functionality is unused and will be removed in the future")
   CAS1_CHANGE_REQUEST_LIST(ApprovedPremisesUserPermission.changeRequestList, experimental = true),
+
+  @Deprecated("Change request functionality is unused and will be removed in the future")
   CAS1_CHANGE_REQUEST_VIEW(ApprovedPremisesUserPermission.changeRequestView, experimental = true),
+
+  /**
+   * A generic experimental permission to use for functionality that won't necessarily need a specific permission once complete
+   */
+  CAS1_EXPERIMENTAL(ApprovedPremisesUserPermission.experimental, experimental = true),
 
   CAS1_EXPERIMENTAL_NEW_ASSIGN_KEYWORKER_FLOW(ApprovedPremisesUserPermission.experimentalNewAssignKeyworkerFlow, experimental = true),
 
@@ -116,7 +124,10 @@ enum class UserPermission(
    */
   CAS1_TRANSFER_CREATE(ApprovedPremisesUserPermission.transferCreate, experimental = true),
 
+  @Deprecated("Change request functionality is unused and will be removed in the future")
   CAS1_PLACEMENT_APPEAL_CREATE(ApprovedPremisesUserPermission.placementAppealCreate, experimental = true),
+
+  @Deprecated("Change request functionality is unused and will be removed in the future")
   CAS1_PLACEMENT_APPEAL_ASSESS(ApprovedPremisesUserPermission.placementAppealAssess, experimental = true),
 
   CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE(ApprovedPremisesUserPermission.premisesLocalRestrictionsManage),

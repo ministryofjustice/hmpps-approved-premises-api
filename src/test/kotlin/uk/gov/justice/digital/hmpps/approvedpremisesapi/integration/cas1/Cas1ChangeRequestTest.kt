@@ -59,7 +59,7 @@ class Cas1ChangeRequestTest {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR"],
+      names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Returns 403 when type is appeal and role is invalid`(role: UserRole) {
@@ -89,7 +89,7 @@ class Cas1ChangeRequestTest {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR"],
+      names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Returns 403 when type is planned transfer and role is invalid`(role: UserRole) {
@@ -357,7 +357,7 @@ class Cas1ChangeRequestTest {
     }
 
     @ParameterizedTest
-    @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR"])
+    @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"])
     fun `Getting change requests without a valid role returns 403`(role: UserRole) {
       val (_, jwt) = givenAUser(roles = listOf(role))
 
@@ -616,7 +616,7 @@ class Cas1ChangeRequestTest {
     }
 
     @ParameterizedTest
-    @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR"])
+    @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"])
     fun `Reject change request without a valid role returns 403`(role: UserRole) {
       val (_, jwt) = givenAUser(roles = listOf(role))
 
@@ -763,7 +763,7 @@ class Cas1ChangeRequestTest {
     }
 
     @ParameterizedTest
-    @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR"])
+    @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"])
     fun `Get change request without a valid role returns 403`(role: UserRole) {
       val (_, jwt) = givenAUser(roles = listOf(role))
 

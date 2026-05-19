@@ -238,7 +238,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
   @Nested
   inner class UpdateUser {
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_EXPERIMENTAL", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `Updating a user without an approved role is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         val id = UUID.randomUUID()
@@ -328,7 +328,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
   @Nested
   inner class DeleteUser {
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_EXPERIMENTAL", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
     fun `Deleting a user with an unapproved role is forbidden`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         val id = UUID.randomUUID()
@@ -393,7 +393,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_USER_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_EXPERIMENTAL"], mode = EnumSource.Mode.EXCLUDE)
     fun `Deleting a user without an approved role is forbidden `(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.delete()
@@ -412,7 +412,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `GET users with a role without permission CAS1_USER_LIST is forbidden`(role: UserRole) {
@@ -808,7 +808,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER", "CAS1_FUTURE_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER", "CAS1_FUTURE_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `GET user summary with a role without permission CAS1_USER_SUMMARY_LIST is forbidden`(role: UserRole) {
@@ -1163,7 +1163,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `GET to user search with an unapproved role is forbidden`(role: UserRole) {
@@ -1225,7 +1225,7 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
+      names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL", "CAS1_USER_MANAGER", "CAS1_AP_AREA_MANAGER"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `GET user search delius username with an unapproved role is forbidden`(role: UserRole) {
