@@ -80,6 +80,9 @@ dependencies {
   implementation("io.micrometer:micrometer-registry-azure-monitor:1.16.5")
   implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
 
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.2")
+  implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.9")
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.1")
@@ -90,9 +93,9 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
   testImplementation("org.zalando:logbook-spring-boot-starter:4.0.4")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.2")
-
-  implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.41") {
+    exclude(group = "io.swagger.core.v3")
+  }
 }
 
 springBoot {
@@ -210,8 +213,8 @@ allOpen {
 
 tasks {
   withType<JavaExec> {
-    jvmArgs!!.plus("--add-opens")
-    jvmArgs!!.plus("java.base/java.lang=ALL-UNNAMED")
+    jvmArgs.plus("--add-opens")
+    jvmArgs.plus("java.base/java.lang=ALL-UNNAMED")
   }
 }
 
