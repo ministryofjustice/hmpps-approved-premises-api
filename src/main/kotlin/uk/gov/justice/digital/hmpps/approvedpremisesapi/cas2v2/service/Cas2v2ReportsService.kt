@@ -20,34 +20,28 @@ class Cas2v2ReportsService(
   private val unsubmittedApplicationsReportRepository: Cas2UnsubmittedApplicationsReportRepository,
 ) {
 
-  fun createSubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = submittedApplicationReportRepository.generateSubmittedApplicationReportRows(Cas2ServiceOrigin.BAIL.name).map { row ->
-      SubmittedApplicationReportRow(
-        eventId = row.getId(),
-        applicationId = row.getApplicationId(),
-        personCrn = row.getPersonCrn(),
-        personNoms = row.getPersonNoms(),
-        referringPrisonCode = row.getReferringPrisonCode(),
-        preferredAreas = row.getPreferredAreas(),
-        hdcEligibilityDate = row.getHdcEligibilityDate(),
-        conditionalReleaseDate = row.getConditionalReleaseDate(),
-        submittedBy = row.getSubmittedBy(),
-        submittedAt = row.getSubmittedAt(),
-        startedAt = row.getStartedAt(),
-        applicationOrigin = row.getApplicationOrigin(),
-        bailHearingDate = row.getBailHearingDate(),
-      )
-    }
-
-    reportData.toDataFrame()
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
+  fun createSubmittedApplicationsReport(outputStream: OutputStream) = submittedApplicationReportRepository.generateSubmittedApplicationReportRows(Cas2ServiceOrigin.BAIL.name).map { row ->
+    SubmittedApplicationReportRow(
+      eventId = row.getId(),
+      applicationId = row.getApplicationId(),
+      personCrn = row.getPersonCrn(),
+      personNoms = row.getPersonNoms(),
+      referringPrisonCode = row.getReferringPrisonCode(),
+      preferredAreas = row.getPreferredAreas(),
+      hdcEligibilityDate = row.getHdcEligibilityDate(),
+      conditionalReleaseDate = row.getConditionalReleaseDate(),
+      submittedBy = row.getSubmittedBy(),
+      submittedAt = row.getSubmittedAt(),
+      startedAt = row.getStartedAt(),
+      applicationOrigin = row.getApplicationOrigin(),
+      bailHearingDate = row.getBailHearingDate(),
+    )
   }
+    .toCas2v2Report(outputStream)
 
-  fun createApplicationStatusUpdatesReport(outputStream: OutputStream) {
-    val reportData = applicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows(Cas2ServiceOrigin.BAIL.name).map { row ->
+  fun createApplicationStatusUpdatesReport(outputStream: OutputStream) = applicationStatusUpdatesReportRepository
+    .generateApplicationStatusUpdatesReportRows(Cas2ServiceOrigin.BAIL.name)
+    .map { row ->
       ApplicationStatusUpdatesReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
@@ -60,16 +54,11 @@ class Cas2v2ReportsService(
         applicationOrigin = row.getApplicationOrigin(),
       )
     }
+    .toCas2v2Report(outputStream)
 
-    reportData.toDataFrame()
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
-  }
-
-  fun createUnsubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = unsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows(Cas2ServiceOrigin.BAIL.name).map { row ->
+  fun createUnsubmittedApplicationsReport(outputStream: OutputStream) = unsubmittedApplicationsReportRepository
+    .generateUnsubmittedApplicationsReportRows(Cas2ServiceOrigin.BAIL.name)
+    .map { row ->
       UnsubmittedApplicationsReportRow(
         applicationId = row.getApplicationId(),
         personCrn = row.getPersonCrn(),
@@ -79,11 +68,11 @@ class Cas2v2ReportsService(
         applicationOrigin = row.getApplicationOrigin(),
       )
     }
-
-    reportData.toDataFrame()
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
-  }
+    .toCas2v2Report(outputStream)
 }
+
+inline fun <reified T> Iterable<T>.toCas2v2Report(outputStream: OutputStream) = toDataFrame<T>()
+  .writeExcel(
+    outputStream = outputStream,
+    factory = WorkbookFactory.create(true),
+  )
