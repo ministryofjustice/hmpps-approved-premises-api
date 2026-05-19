@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class SpaceCharacteristic(@get:JsonValue val value: kotlin.String) {
+enum class SpaceCharacteristic(@get:JsonValue val value: String) {
 
   acceptsChildSexOffenders("acceptsChildSexOffenders"),
   acceptsHateCrimeOffenders("acceptsHateCrimeOffenders"),
@@ -52,6 +52,6 @@ enum class SpaceCharacteristic(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): SpaceCharacteristic = values().first { it -> it.value == value }
+    fun forValue(value: String): SpaceCharacteristic = values().first { it -> it.value == value }
   }
 }

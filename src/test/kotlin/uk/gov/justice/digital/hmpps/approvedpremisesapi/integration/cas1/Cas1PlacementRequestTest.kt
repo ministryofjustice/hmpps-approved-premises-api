@@ -136,7 +136,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
             assertThat(summaries[0].id).isEqualTo(placementRequest.id)
             assertThat(summaries[0].person.crn).isEqualTo(unmatchedOffender.otherIds.crn)
-            assertThat(summaries[0].placementRequestStatus).isEqualTo(Cas1PlacementRequestSummary.PlacementRequestStatus.unableToMatch)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(PlacementRequestStatus.unableToMatch)
             assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
             assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
             assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
@@ -186,7 +186,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
             assertThat(summaries[0].id).isEqualTo(placementRequest.id)
             assertThat(summaries[0].person.crn).isEqualTo(unmatchedOffender.otherIds.crn)
-            assertThat(summaries[0].placementRequestStatus).isEqualTo(Cas1PlacementRequestSummary.PlacementRequestStatus.matched)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(PlacementRequestStatus.matched)
             assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
             assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
             assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
@@ -243,7 +243,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
             assertThat(summaries[0].id).isEqualTo(placementRequest.id)
             assertThat(summaries[0].person.crn).isEqualTo(unmatchedOffender.otherIds.crn)
-            assertThat(summaries[0].placementRequestStatus).isEqualTo(Cas1PlacementRequestSummary.PlacementRequestStatus.matched)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(PlacementRequestStatus.matched)
             assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
             assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
             assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)

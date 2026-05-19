@@ -33,13 +33,13 @@ interface PlacementRequestsCas1Delegate {
 
   fun search(
     status: PlacementRequestStatus?,
-    crnOrName: kotlin.String?,
+    crnOrName: String?,
     tier: RiskTierLevel?,
     arrivalDateStart: java.time.LocalDate?,
     arrivalDateEnd: java.time.LocalDate?,
     requestType: PlacementRequestRequestType?,
     cruManagementAreaId: java.util.UUID?,
-    page: kotlin.Int?,
+    page: Int?,
     sortBy: PlacementRequestSortField?,
     sortDirection: SortDirection?,
   ): ResponseEntity<List<Cas1PlacementRequestSummary>> {

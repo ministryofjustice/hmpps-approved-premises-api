@@ -8,7 +8,7 @@ data class Cas1NewChangeRequest(
 
   @get:JsonProperty("type", required = true) val type: Cas1ChangeRequestType,
 
-  @get:JsonProperty("requestJson", required = true) val requestJson: kotlin.Any,
+  @get:JsonProperty("requestJson", required = true) val requestJson: Any,
 
   @get:JsonProperty("reasonId", required = true) val reasonId: java.util.UUID,
 )

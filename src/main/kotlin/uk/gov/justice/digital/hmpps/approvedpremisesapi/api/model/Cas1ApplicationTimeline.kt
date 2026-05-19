@@ -8,9 +8,9 @@ data class Cas1ApplicationTimeline(
 
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
 
-  @get:JsonProperty("isOfflineApplication", required = true) val isOfflineApplication: kotlin.Boolean,
+  @get:JsonProperty("isOfflineApplication", required = true) val isOfflineApplication: Boolean,
 
-  @get:JsonProperty("timelineEvents", required = true) val timelineEvents: kotlin.collections.List<Cas1TimelineEvent>,
+  @get:JsonProperty("timelineEvents", required = true) val timelineEvents: List<Cas1TimelineEvent>,
 
   @get:JsonProperty("status") val status: Cas1ApplicationStatus? = null,
 

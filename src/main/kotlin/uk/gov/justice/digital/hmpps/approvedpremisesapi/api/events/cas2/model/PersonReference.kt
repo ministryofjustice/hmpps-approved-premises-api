@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class PersonReference(
 
-  @get:JsonProperty("noms", required = true) val noms: kotlin.String,
+  @get:JsonProperty("noms", required = true) val noms: String,
 
-  @get:JsonProperty("crn") val crn: kotlin.String? = null,
+  @get:JsonProperty("crn") val crn: String? = null,
 )

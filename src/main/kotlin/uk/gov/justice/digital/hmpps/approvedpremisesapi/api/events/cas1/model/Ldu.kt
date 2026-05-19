@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class Ldu(
 
   @Schema(example = "N54PPU", required = true, description = "")
-  @get:JsonProperty("code", required = true) val code: kotlin.String,
+  @get:JsonProperty("code", required = true) val code: String,
 
   @Schema(example = "Public Protection NE", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 )

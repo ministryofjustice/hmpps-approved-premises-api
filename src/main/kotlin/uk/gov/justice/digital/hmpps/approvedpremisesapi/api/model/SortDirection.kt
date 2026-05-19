@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class SortDirection(@get:JsonValue val value: kotlin.String) {
+enum class SortDirection(@get:JsonValue val value: String) {
 
   asc("asc"),
   desc("desc"),
@@ -13,6 +13,6 @@ enum class SortDirection(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): SortDirection = values().first { it -> it.value == value }
+    fun forValue(value: String): SortDirection = values().first { it -> it.value == value }
   }
 }

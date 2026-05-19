@@ -45,7 +45,7 @@ interface PeopleApi {
     value = ["/people/{crn}/acct-alerts"],
     produces = ["application/json"],
   )
-  fun peopleCrnAcctAlertsGet(@Parameter(description = "CRN of the Person to fetch ACCT alerts for", required = true) @PathVariable("crn") crn: kotlin.String): ResponseEntity<List<PersonAcctAlert>> = getDelegate().peopleCrnAcctAlertsGet(crn)
+  fun peopleCrnAcctAlertsGet(@Parameter(description = "CRN of the Person to fetch ACCT alerts for", required = true) @PathVariable("crn") crn: String): ResponseEntity<List<PersonAcctAlert>> = getDelegate().peopleCrnAcctAlertsGet(crn)
 
   @Operation(
     tags = ["default"],
@@ -62,7 +62,7 @@ interface PeopleApi {
     value = ["/people/{crn}/adjudications"],
     produces = ["application/json"],
   )
-  fun peopleCrnAdjudicationsGet(@Parameter(description = "CRN of the Person to fetch adjudications for", required = true) @PathVariable("crn") crn: kotlin.String, @Parameter(description = "CAS1 requests may be limited to adjudications for last 12 months only", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName): ResponseEntity<List<Adjudication>> = getDelegate().peopleCrnAdjudicationsGet(crn, xServiceName)
+  fun peopleCrnAdjudicationsGet(@Parameter(description = "CRN of the Person to fetch adjudications for", required = true) @PathVariable("crn") crn: String, @Parameter(description = "CAS1 requests may be limited to adjudications for last 12 months only", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName): ResponseEntity<List<Adjudication>> = getDelegate().peopleCrnAdjudicationsGet(crn, xServiceName)
 
   @Operation(
     tags = ["OASys"],
@@ -79,7 +79,7 @@ interface PeopleApi {
     value = ["/people/{crn}/oasys/sections"],
     produces = ["application/json"],
   )
-  fun peopleCrnOasysSectionsGet(@Parameter(description = "CRN of the Person to fetch latest OASys selection", required = true) @PathVariable("crn") crn: kotlin.String, @RequestParam(value = "selected-sections", required = false) selectedSections: kotlin.collections.List<kotlin.Int>?): ResponseEntity<OASysSections> = getDelegate().peopleCrnOasysSectionsGet(crn, selectedSections)
+  fun peopleCrnOasysSectionsGet(@Parameter(description = "CRN of the Person to fetch latest OASys selection", required = true) @PathVariable("crn") crn: String, @RequestParam(value = "selected-sections", required = false) selectedSections: List<Int>?): ResponseEntity<OASysSections> = getDelegate().peopleCrnOasysSectionsGet(crn, selectedSections)
 
   @Operation(
     tags = ["default"],
@@ -96,7 +96,7 @@ interface PeopleApi {
     value = ["/people/{crn}/offences"],
     produces = ["application/json"],
   )
-  fun peopleCrnOffencesGet(@Parameter(description = "CRN of the Person to fetch active offences for", required = true) @PathVariable("crn") crn: kotlin.String): ResponseEntity<List<ActiveOffence>> = getDelegate().peopleCrnOffencesGet(crn)
+  fun peopleCrnOffencesGet(@Parameter(description = "CRN of the Person to fetch active offences for", required = true) @PathVariable("crn") crn: String): ResponseEntity<List<ActiveOffence>> = getDelegate().peopleCrnOffencesGet(crn)
 
   @Operation(
     tags = ["default"],
@@ -113,7 +113,7 @@ interface PeopleApi {
     value = ["/people/{crn}/prison-case-notes"],
     produces = ["application/json"],
   )
-  fun peopleCrnPrisonCaseNotesGet(@Parameter(description = "CRN of the Person to fetch prison case notes for", required = true) @PathVariable("crn") crn: kotlin.String, @Parameter(description = "CAS1 requests may limit returned case note types", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName): ResponseEntity<List<PrisonCaseNote>> = getDelegate().peopleCrnPrisonCaseNotesGet(crn, xServiceName)
+  fun peopleCrnPrisonCaseNotesGet(@Parameter(description = "CRN of the Person to fetch prison case notes for", required = true) @PathVariable("crn") crn: String, @Parameter(description = "CAS1 requests may limit returned case note types", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName): ResponseEntity<List<PrisonCaseNote>> = getDelegate().peopleCrnPrisonCaseNotesGet(crn, xServiceName)
 
   @Operation(
     tags = ["default"],
@@ -131,5 +131,5 @@ interface PeopleApi {
     value = ["/people/search"],
     produces = ["application/json", "application/problem+json"],
   )
-  fun peopleSearchGet(@RequestParam(value = "crn", required = true) crn: kotlin.String): ResponseEntity<Person> = getDelegate().peopleSearchGet(crn)
+  fun peopleSearchGet(@RequestParam(value = "crn", required = true) crn: String): ResponseEntity<Person> = getDelegate().peopleSearchGet(crn)
 }

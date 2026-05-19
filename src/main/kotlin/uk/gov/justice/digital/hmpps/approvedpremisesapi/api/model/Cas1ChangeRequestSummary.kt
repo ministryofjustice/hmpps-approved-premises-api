@@ -16,7 +16,7 @@ data class Cas1ChangeRequestSummary(
 
   @get:JsonProperty("placementRequestId", required = true) val placementRequestId: java.util.UUID,
 
-  @get:JsonProperty("tier") val tier: kotlin.String? = null,
+  @get:JsonProperty("tier") val tier: String? = null,
 
   @get:JsonProperty("actualArrivalDate") val actualArrivalDate: java.time.LocalDate? = null,
 )

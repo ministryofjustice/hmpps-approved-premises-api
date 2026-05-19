@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class WithdrawPlacementRequestReason(@get:JsonValue val value: kotlin.String) {
+enum class WithdrawPlacementRequestReason(@get:JsonValue val value: String) {
 
   duplicatePlacementRequest("DuplicatePlacementRequest"),
   alternativeProvisionIdentified("AlternativeProvisionIdentified"),
@@ -23,6 +23,6 @@ enum class WithdrawPlacementRequestReason(@get:JsonValue val value: kotlin.Strin
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): WithdrawPlacementRequestReason = values().first { it -> it.value == value }
+    fun forValue(value: String): WithdrawPlacementRequestReason = values().first { it -> it.value == value }
   }
 }

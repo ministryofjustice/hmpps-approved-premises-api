@@ -4,5 +4,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class NewReferralHistoryUserNote(
 
-  @get:JsonProperty("message", required = true) val message: kotlin.String,
+  @get:JsonProperty("message", required = true) val message: String,
 )

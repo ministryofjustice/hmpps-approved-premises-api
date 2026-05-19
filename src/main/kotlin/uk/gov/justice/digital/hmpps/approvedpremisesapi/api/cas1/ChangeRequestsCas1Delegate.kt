@@ -63,7 +63,7 @@ interface ChangeRequestsCas1Delegate {
   }
 
   fun findOpen(
-    page: kotlin.Int?,
+    page: Int?,
     cruManagementAreaId: java.util.UUID?,
     sortBy: Cas1ChangeRequestSortField?,
     sortDirection: SortDirection?,

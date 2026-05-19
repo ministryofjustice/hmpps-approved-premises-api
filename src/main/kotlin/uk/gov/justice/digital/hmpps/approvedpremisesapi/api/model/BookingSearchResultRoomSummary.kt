@@ -6,5 +6,5 @@ data class BookingSearchResultRoomSummary(
 
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 )

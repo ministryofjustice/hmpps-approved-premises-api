@@ -6,14 +6,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class ExternalUser(
 
   @Schema(example = "CAS2_ASSESSOR_USER", required = true, description = "")
-  @get:JsonProperty("username", required = true) val username: kotlin.String,
+  @get:JsonProperty("username", required = true) val username: String,
 
   @Schema(example = "Roger Smith", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
   @Schema(example = "roger@external.example.com", required = true, description = "")
-  @get:JsonProperty("email", required = true) val email: kotlin.String,
+  @get:JsonProperty("email", required = true) val email: String,
 
   @Schema(example = "NACRO", description = "")
-  @get:JsonProperty("origin") val origin: kotlin.String? = null,
+  @get:JsonProperty("origin") val origin: String? = null,
 )

@@ -6,9 +6,9 @@ data class NewAppeal(
 
   @get:JsonProperty("appealDate", required = true) val appealDate: java.time.LocalDate,
 
-  @get:JsonProperty("appealDetail", required = true) val appealDetail: kotlin.String,
+  @get:JsonProperty("appealDetail", required = true) val appealDetail: String,
 
   @get:JsonProperty("decision", required = true) val decision: AppealDecision,
 
-  @get:JsonProperty("decisionDetail", required = true) val decisionDetail: kotlin.String,
+  @get:JsonProperty("decisionDetail", required = true) val decisionDetail: String,
 )

@@ -57,10 +57,10 @@ interface AssessmentsCas1Delegate {
   fun getAssessmentsForUser(
     sortDirection: SortDirection?,
     sortBy: Cas1AssessmentSortField?,
-    statuses: kotlin.collections.List<Cas1AssessmentStatus>?,
-    crnOrName: kotlin.String?,
-    page: kotlin.Int?,
-    perPage: kotlin.Int?,
+    statuses: List<Cas1AssessmentStatus>?,
+    crnOrName: String?,
+    page: Int?,
+    perPage: Int?,
   ): ResponseEntity<List<Cas1AssessmentSummary>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {

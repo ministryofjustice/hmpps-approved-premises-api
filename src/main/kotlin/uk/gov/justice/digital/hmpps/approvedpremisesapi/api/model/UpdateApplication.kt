@@ -17,5 +17,5 @@ interface UpdateApplication {
   val type: UpdateApplicationType
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val `data`: kotlin.collections.Map<kotlin.String, kotlin.Any>
+  val `data`: Map<String, Any>
 }

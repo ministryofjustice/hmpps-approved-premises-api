@@ -8,7 +8,7 @@ data class ApprovedPremisesAssessmentSummary(
 
   @get:JsonProperty("dueAt", required = true) val dueAt: java.time.Instant,
 
-  @get:JsonProperty("type", required = true) override val type: kotlin.String,
+  @get:JsonProperty("type", required = true) override val type: String,
 
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 

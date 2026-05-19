@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class ApprovedPremisesAssessmentStatus(@get:JsonValue val value: kotlin.String) {
+enum class ApprovedPremisesAssessmentStatus(@get:JsonValue val value: String) {
 
   awaitingResponse("awaiting_response"),
   completed("completed"),
@@ -16,6 +16,6 @@ enum class ApprovedPremisesAssessmentStatus(@get:JsonValue val value: kotlin.Str
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): ApprovedPremisesAssessmentStatus = values().first { it -> it.value == value }
+    fun forValue(value: String): ApprovedPremisesAssessmentStatus = values().first { it -> it.value == value }
   }
 }

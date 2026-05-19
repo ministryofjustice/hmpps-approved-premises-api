@@ -11,27 +11,27 @@ data class RequestForPlacementAssessed(
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
   @Schema(example = "https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings")
-  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
+  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: String,
 
   @Schema(example = "14c80733-4b6d-4f35-b724-66955aac320c", required = true, description = "The UUID of a placement application")
   @get:JsonProperty("placementApplicationId", required = true) val placementApplicationId: java.util.UUID,
 
   @get:JsonProperty("assessedBy", required = true) val assessedBy: StaffMember,
 
-  @get:JsonProperty("decision", required = true) val decision: RequestForPlacementAssessed.Decision,
+  @get:JsonProperty("decision", required = true) val decision: Decision,
 
   @Schema(example = "Mon Jan 30 00:00:00 GMT 2023", required = true, description = "")
   @get:JsonProperty("expectedArrival", required = true) val expectedArrival: java.time.LocalDate,
 
   @Schema(example = "7", required = true, description = "")
-  @get:JsonProperty("duration", required = true) val duration: kotlin.Int,
+  @get:JsonProperty("duration", required = true) val duration: Int,
 
   @Schema(example = "the decision was to accept", description = "")
-  @get:JsonProperty("decisionSummary") val decisionSummary: kotlin.String? = null,
+  @get:JsonProperty("decisionSummary") val decisionSummary: String? = null,
 ) : Cas1DomainEventPayload {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-  enum class Decision(@get:JsonValue val value: kotlin.String) {
+  enum class Decision(@get:JsonValue val value: String) {
 
     accepted("accepted"),
     rejected("rejected"),
@@ -40,7 +40,7 @@ data class RequestForPlacementAssessed(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Decision = values().first { it -> it.value == value }
+      fun forValue(value: String): Decision = values().first { it -> it.value == value }
     }
   }
 }

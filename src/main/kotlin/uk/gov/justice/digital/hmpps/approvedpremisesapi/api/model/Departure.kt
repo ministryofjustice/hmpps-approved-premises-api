@@ -16,7 +16,7 @@ data class Departure(
 
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 
   @get:JsonProperty("destinationProvider") val destinationProvider: DestinationProvider? = null,
 )

@@ -265,7 +265,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
         .produce()
 
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withCrn(TestConstants.CRN)
+        .withCrn(CRN)
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
@@ -318,7 +318,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
         .produce()
 
       val application = ApprovedPremisesApplicationEntityFactory()
-        .withCrn(TestConstants.CRN)
+        .withCrn(CRN)
         .withCreatedByUser(allocatedByUser)
         .withSubmittedAt(OffsetDateTime.now())
         .produce()

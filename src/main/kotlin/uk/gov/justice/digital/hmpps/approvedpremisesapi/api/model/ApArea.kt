@@ -9,8 +9,8 @@ data class ApArea(
   @get:JsonProperty("id", required = true) val id: java.util.UUID,
 
   @Schema(example = "LON", required = true, description = "")
-  @get:JsonProperty("identifier", required = true) val identifier: kotlin.String,
+  @get:JsonProperty("identifier", required = true) val identifier: String,
 
   @Schema(example = "Yorkshire & The Humber", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 )

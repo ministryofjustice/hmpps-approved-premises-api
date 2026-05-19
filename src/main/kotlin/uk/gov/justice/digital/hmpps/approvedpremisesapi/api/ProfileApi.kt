@@ -35,5 +35,5 @@ interface ProfileApi {
     value = ["/profile/v2"],
     produces = ["application/json"],
   )
-  fun profileV2Get(@Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName, @RequestParam(value = "readOnly", required = false) readOnly: kotlin.Boolean?): ResponseEntity<ProfileResponse> = getDelegate().profileV2Get(xServiceName, readOnly)
+  fun profileV2Get(@Parameter(description = "Filters the user details to those relevant to the specified service.", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName, @RequestParam(value = "readOnly", required = false) readOnly: Boolean?): ResponseEntity<ProfileResponse> = getDelegate().profileV2Get(xServiceName, readOnly)
 }

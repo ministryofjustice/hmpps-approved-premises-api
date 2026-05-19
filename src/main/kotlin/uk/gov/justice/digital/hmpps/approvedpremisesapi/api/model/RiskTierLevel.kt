@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class RiskTierLevel(@get:JsonValue val value: kotlin.String) {
+enum class RiskTierLevel(@get:JsonValue val value: String) {
 
   d0("D0"),
   d1("D1"),
@@ -27,6 +27,6 @@ enum class RiskTierLevel(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): RiskTierLevel = values().first { it -> it.value == value }
+    fun forValue(value: String): RiskTierLevel = values().first { it -> it.value == value }
   }
 }

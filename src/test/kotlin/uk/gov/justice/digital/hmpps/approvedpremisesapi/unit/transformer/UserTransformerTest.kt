@@ -262,7 +262,7 @@ class UserTransformerTest {
         apArea = ApAreaEntityFactory().produce(),
         cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
-      user.addRoleForUnitTest(UserRole.CAS1_REPORT_VIEWER)
+      user.addRoleForUnitTest(CAS1_REPORT_VIEWER)
 
       every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
 

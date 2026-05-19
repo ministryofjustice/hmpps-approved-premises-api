@@ -6,5 +6,5 @@ data class Cas1NonArrival(
 
   @get:JsonProperty("reason", required = true) val reason: java.util.UUID,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 )

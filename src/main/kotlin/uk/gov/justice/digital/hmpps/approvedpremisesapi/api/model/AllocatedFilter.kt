@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class AllocatedFilter(@get:JsonValue val value: kotlin.String) {
+enum class AllocatedFilter(@get:JsonValue val value: String) {
 
   allocated("allocated"),
   unallocated("unallocated"),
@@ -13,6 +13,6 @@ enum class AllocatedFilter(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): AllocatedFilter = values().first { it -> it.value == value }
+    fun forValue(value: String): AllocatedFilter = values().first { it -> it.value == value }
   }
 }

@@ -35,10 +35,10 @@ data class Cas1SpaceBookingSummary(
   val deliusEventNumber: String? = null,
 
   @Deprecated(message = "")
-  val plannedTransferRequested: kotlin.Boolean? = null,
+  val plannedTransferRequested: Boolean? = null,
 
   @Deprecated(message = "")
-  val appealRequested: kotlin.Boolean? = null,
+  val appealRequested: Boolean? = null,
 
   val createdAt: java.time.Instant? = null,
 

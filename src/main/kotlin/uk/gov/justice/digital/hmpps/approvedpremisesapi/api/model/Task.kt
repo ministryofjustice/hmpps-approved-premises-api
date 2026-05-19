@@ -23,10 +23,10 @@ interface Task {
   val personSummary: PersonSummary
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "Superseded by personSummary which provides 'name' as well as 'personType' and 'crn'.")
-  val personName: kotlin.String
+  val personName: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val crn: kotlin.String
+  val crn: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "The Due date of the task - this is deprecated in favour of the `dueAt` field")
   val dueDate: java.time.LocalDate

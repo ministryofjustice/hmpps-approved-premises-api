@@ -240,7 +240,7 @@ data class BedEntity(
   @CreationTimestamp
   var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
-  fun isActive(now: LocalDate) = Companion.isActive(now, endDate)
+  fun isActive(now: LocalDate) = isActive(now, endDate)
   override fun toString() = "BedEntity: $id"
 
   companion object {

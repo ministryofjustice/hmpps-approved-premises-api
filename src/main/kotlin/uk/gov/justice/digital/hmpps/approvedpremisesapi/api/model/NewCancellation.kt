@@ -8,7 +8,7 @@ data class NewCancellation(
 
   @get:JsonProperty("reason", required = true) val reason: java.util.UUID,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 
-  @get:JsonProperty("otherReason") val otherReason: kotlin.String? = null,
+  @get:JsonProperty("otherReason") val otherReason: String? = null,
 )

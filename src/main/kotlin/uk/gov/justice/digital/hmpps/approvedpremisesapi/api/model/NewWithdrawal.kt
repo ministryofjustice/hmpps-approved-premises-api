@@ -6,5 +6,5 @@ data class NewWithdrawal(
 
   @get:JsonProperty("reason", required = true) val reason: WithdrawalReason,
 
-  @get:JsonProperty("otherReason") val otherReason: kotlin.String? = null,
+  @get:JsonProperty("otherReason") val otherReason: String? = null,
 )

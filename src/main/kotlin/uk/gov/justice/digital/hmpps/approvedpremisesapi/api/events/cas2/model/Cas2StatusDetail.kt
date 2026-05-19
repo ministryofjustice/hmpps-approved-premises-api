@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class Cas2StatusDetail(
 
   @Schema(example = "changeOfCircumstances", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
   @Schema(example = "Change of Circumstances", required = true, description = "")
-  @get:JsonProperty("label", required = true) val label: kotlin.String,
+  @get:JsonProperty("label", required = true) val label: String,
 )

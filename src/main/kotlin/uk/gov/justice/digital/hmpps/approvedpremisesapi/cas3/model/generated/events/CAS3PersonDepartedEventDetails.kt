@@ -21,7 +21,7 @@ data class CAS3PersonDepartedEventDetails(
 
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
-  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: kotlin.String,
+  @get:JsonProperty("deliusEventNumber", required = true) val deliusEventNumber: String,
 
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
 
@@ -31,15 +31,15 @@ data class CAS3PersonDepartedEventDetails(
 
   @get:JsonProperty("departedAt", required = true) val departedAt: java.time.Instant,
 
-  @get:JsonProperty("reason", required = true) val reason: kotlin.String,
+  @get:JsonProperty("reason", required = true) val reason: String,
 
-  @get:JsonProperty("notes", required = true) val notes: kotlin.String,
+  @get:JsonProperty("notes", required = true) val notes: String,
 
   @get:JsonProperty("applicationId") val applicationId: java.util.UUID? = null,
 
   @get:JsonProperty("applicationUrl") val applicationUrl: java.net.URI? = null,
 
-  @get:JsonProperty("reasonDetail") val reasonDetail: kotlin.String? = null,
+  @get:JsonProperty("reasonDetail") val reasonDetail: String? = null,
 
   @get:JsonProperty("recordedBy") val recordedBy: StaffMember? = null,
 )

@@ -6,5 +6,5 @@ data class Cas1OASysMetadata(
 
   @get:JsonProperty("assessmentMetadata", required = true) val assessmentMetadata: Cas1OASysAssessmentMetadata,
 
-  @get:JsonProperty("supportingInformation", required = true) val supportingInformation: kotlin.collections.List<Cas1OASysSupportingInformationQuestionMetaData>,
+  @get:JsonProperty("supportingInformation", required = true) val supportingInformation: List<Cas1OASysSupportingInformationQuestionMetaData>,
 )

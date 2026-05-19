@@ -12,25 +12,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Tem
 )
 interface Premises {
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val service: kotlin.String
+  val service: String
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
   val id: java.util.UUID
 
   @get:Schema(example = "Hope House", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val name: kotlin.String
+  val name: String
 
   @get:Schema(example = "one something street", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val addressLine1: kotlin.String
+  val addressLine1: String
 
   @get:Schema(example = "LS1 3AD", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val postcode: kotlin.String
+  val postcode: String
 
   @get:Schema(example = "22", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val bedCount: kotlin.Int
+  val bedCount: Int
 
   @get:Schema(example = "20", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
-  val availableBedsForToday: kotlin.Int
+  val availableBedsForToday: Int
 
   @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
   val probationRegion: ProbationRegion
@@ -42,17 +42,17 @@ interface Premises {
   val status: PropertyStatus
 
   @get:Schema(example = "Blackmore End", description = "")
-  val addressLine2: kotlin.String?
+  val addressLine2: String?
 
   @get:Schema(example = "Braintree", description = "")
-  val town: kotlin.String?
+  val town: String?
 
   @get:Schema(example = "some notes about this property", description = "")
-  val notes: kotlin.String?
+  val notes: String?
 
   @get:Schema(example = "null", description = "")
   val localAuthorityArea: LocalAuthorityArea?
 
   @get:Schema(example = "null", description = "")
-  val characteristics: kotlin.collections.List<Characteristic>?
+  val characteristics: List<Characteristic>?
 }

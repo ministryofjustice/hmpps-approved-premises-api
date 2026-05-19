@@ -8,5 +8,5 @@ data class Cas1SpaceBookingNonArrival(
 
   @get:JsonProperty("reason") val reason: NamedId? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 )

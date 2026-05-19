@@ -8,5 +8,5 @@ data class Cas1OASysGroup(
 
   @get:JsonProperty("assessmentMetadata", required = true) val assessmentMetadata: Cas1OASysAssessmentMetadata,
 
-  @get:JsonProperty("answers", required = true) val answers: kotlin.collections.List<OASysQuestion>,
+  @get:JsonProperty("answers", required = true) val answers: List<OASysQuestion>,
 )

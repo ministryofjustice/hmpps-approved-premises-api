@@ -22,7 +22,7 @@ data class CAS3BookingCancelledEventDetails(
 
   @get:JsonProperty("bookingUrl", required = true) val bookingUrl: java.net.URI,
 
-  @get:JsonProperty("cancellationReason", required = true) val cancellationReason: kotlin.String,
+  @get:JsonProperty("cancellationReason", required = true) val cancellationReason: String,
 
   @get:JsonProperty("applicationId") val applicationId: java.util.UUID? = null,
 
@@ -30,7 +30,7 @@ data class CAS3BookingCancelledEventDetails(
 
   @get:JsonProperty("cancelledAt") val cancelledAt: java.time.LocalDate? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 
   @get:JsonProperty("cancelledBy") val cancelledBy: StaffMember? = null,
 )

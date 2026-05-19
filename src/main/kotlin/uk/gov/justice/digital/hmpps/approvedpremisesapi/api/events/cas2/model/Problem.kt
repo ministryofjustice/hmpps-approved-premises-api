@@ -6,17 +6,17 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class Problem(
 
   @Schema(example = "https://example.net/validation-error", description = "")
-  @get:JsonProperty("type") val type: kotlin.String? = null,
+  @get:JsonProperty("type") val type: String? = null,
 
   @Schema(example = "Invalid request parameters", description = "")
-  @get:JsonProperty("title") val title: kotlin.String? = null,
+  @get:JsonProperty("title") val title: String? = null,
 
   @Schema(example = "400", description = "")
-  @get:JsonProperty("status") val status: kotlin.Int? = null,
+  @get:JsonProperty("status") val status: Int? = null,
 
   @Schema(example = "You provided invalid request parameters", description = "")
-  @get:JsonProperty("detail") val detail: kotlin.String? = null,
+  @get:JsonProperty("detail") val detail: String? = null,
 
   @Schema(example = "f7493e12-546d-42c3-b838-06c12671ab5b", description = "")
-  @get:JsonProperty("instance") val instance: kotlin.String? = null,
+  @get:JsonProperty("instance") val instance: String? = null,
 )

@@ -8,7 +8,7 @@ data class Turnaround(
 
   @get:JsonProperty("bookingId", required = true) val bookingId: java.util.UUID,
 
-  @get:JsonProperty("workingDays", required = true) val workingDays: kotlin.Int,
+  @get:JsonProperty("workingDays", required = true) val workingDays: Int,
 
   @get:JsonProperty("createdAt", required = true) val createdAt: java.time.Instant,
 )

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class EventType(@get:JsonValue val value: kotlin.String) {
+enum class EventType(@get:JsonValue val value: String) {
 
   applicationSubmitted("applications.cas2.application.submitted"),
   applicationStatusUpdated("applications.cas2.application.status-updated"),
@@ -13,6 +13,6 @@ enum class EventType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): EventType = values().first { it -> it.value == value }
+    fun forValue(value: String): EventType = values().first { it -> it.value == value }
   }
 }

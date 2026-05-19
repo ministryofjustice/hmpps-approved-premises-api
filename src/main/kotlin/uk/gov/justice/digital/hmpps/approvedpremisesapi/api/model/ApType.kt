@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class ApType(@get:JsonValue val value: kotlin.String) {
+enum class ApType(@get:JsonValue val value: String) {
 
   normal("normal"),
   pipe("pipe"),
@@ -17,6 +17,6 @@ enum class ApType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): ApType = values().first { it -> it.value == value }
+    fun forValue(value: String): ApType = values().first { it -> it.value == value }
   }
 }

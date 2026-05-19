@@ -8,21 +8,21 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class Cas2StaffMember(
 
   @Schema(example = "1501234567", required = true, description = "")
-  @get:JsonProperty("staffIdentifier", required = true) val staffIdentifier: kotlin.Long,
+  @get:JsonProperty("staffIdentifier", required = true) val staffIdentifier: Long,
 
   @Schema(example = "John Smith", required = true, description = "")
-  @get:JsonProperty("name", required = true) val name: kotlin.String,
+  @get:JsonProperty("name", required = true) val name: String,
 
   @Schema(example = "SMITHJ_GEN", description = "")
-  @get:JsonProperty("username") val username: kotlin.String? = null,
+  @get:JsonProperty("username") val username: String? = null,
 
-  @get:JsonProperty("cas2StaffIdentifier") val cas2StaffIdentifier: kotlin.String? = null,
+  @get:JsonProperty("cas2StaffIdentifier") val cas2StaffIdentifier: String? = null,
 
-  @get:JsonProperty("usertype") val usertype: Cas2StaffMember.Usertype? = null,
+  @get:JsonProperty("usertype") val usertype: Usertype? = null,
 ) {
 
   @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-  enum class Usertype(@get:JsonValue val value: kotlin.String) {
+  enum class Usertype(@get:JsonValue val value: String) {
 
     nomis("nomis"),
     delius("delius"),
@@ -31,7 +31,7 @@ data class Cas2StaffMember(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Usertype = values().first { it -> it.value == value }
+      fun forValue(value: String): Usertype = values().first { it -> it.value == value }
     }
   }
 }

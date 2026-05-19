@@ -37,7 +37,7 @@ interface OAsysCas1 {
     value = ["/people/{crn}/oasys/answers"],
     produces = ["application/json"],
   )
-  fun answers(@Parameter(description = "CRN of the Person to fetch latest OASys selection", required = true) @PathVariable("crn") crn: kotlin.String, @RequestParam(value = "group", required = true) group: Cas1OASysGroupName, @RequestParam(value = "includeOptionalSections", required = false) includeOptionalSections: kotlin.collections.List<kotlin.Int>?): ResponseEntity<Cas1OASysGroup> = getDelegate().answers(crn, group, includeOptionalSections)
+  fun answers(@Parameter(description = "CRN of the Person to fetch latest OASys selection", required = true) @PathVariable("crn") crn: String, @RequestParam(value = "group", required = true) group: Cas1OASysGroupName, @RequestParam(value = "includeOptionalSections", required = false) includeOptionalSections: List<Int>?): ResponseEntity<Cas1OASysGroup> = getDelegate().answers(crn, group, includeOptionalSections)
 
   @Operation(
     tags = ["OAsys"],
@@ -54,5 +54,5 @@ interface OAsysCas1 {
     value = ["/people/{crn}/oasys/metadata"],
     produces = ["application/json"],
   )
-  fun metadata(@Parameter(description = "", required = true) @PathVariable("crn") crn: kotlin.String): ResponseEntity<Cas1OASysMetadata> = getDelegate().metadata(crn)
+  fun metadata(@Parameter(description = "", required = true) @PathVariable("crn") crn: String): ResponseEntity<Cas1OASysMetadata> = getDelegate().metadata(crn)
 }

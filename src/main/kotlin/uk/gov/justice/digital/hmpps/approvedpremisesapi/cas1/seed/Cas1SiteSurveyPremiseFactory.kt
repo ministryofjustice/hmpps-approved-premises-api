@@ -19,7 +19,7 @@ class Cas1SiteSurveyPremiseFactory {
   private fun Cas1SiteSurveyDataFrame.getQCode(): String {
     ensureCorrectColumnCount()
 
-    return resolveAnswer(Cas1SiteSurveyDataFrame.QuestionToMatch.Exact("AP Identifier (Q No.)"))
+    return resolveAnswer(Exact("AP Identifier (Q No.)"))
   }
 
   private fun Cas1SiteSurveyDataFrame.toInternalModel(): Cas1SiteSurveyPremise {

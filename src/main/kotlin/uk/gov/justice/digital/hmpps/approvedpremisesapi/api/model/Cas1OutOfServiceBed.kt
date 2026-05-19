@@ -24,17 +24,17 @@ data class Cas1OutOfServiceBed(
 
   @get:JsonProperty("reason", required = true) val reason: Cas1OutOfServiceBedReason,
 
-  @get:JsonProperty("daysLostCount", required = true) val daysLostCount: kotlin.Int,
+  @get:JsonProperty("daysLostCount", required = true) val daysLostCount: Int,
 
   @get:JsonProperty("temporality", required = true) val temporality: Temporality,
 
   @get:JsonProperty("status", required = true) val status: Cas1OutOfServiceBedStatus,
 
-  @get:JsonProperty("revisionHistory", required = true) val revisionHistory: kotlin.collections.List<Cas1OutOfServiceBedRevision>,
+  @get:JsonProperty("revisionHistory", required = true) val revisionHistory: List<Cas1OutOfServiceBedRevision>,
 
-  @get:JsonProperty("referenceNumber") val referenceNumber: kotlin.String? = null,
+  @get:JsonProperty("referenceNumber") val referenceNumber: String? = null,
 
-  @get:JsonProperty("notes") val notes: kotlin.String? = null,
+  @get:JsonProperty("notes") val notes: String? = null,
 
   @get:JsonProperty("cancellation") val cancellation: Cas1OutOfServiceBedCancellation? = null,
 )

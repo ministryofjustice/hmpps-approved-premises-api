@@ -34,5 +34,5 @@ interface DocumentsApi {
     value = ["/documents/{crn}/{documentId}"],
     produces = ["application/octet-stream", "application/json"],
   )
-  fun documentsCrnDocumentIdGet(@Parameter(description = "CRN of the Person the document is associated with", required = true) @PathVariable("crn") crn: kotlin.String, @Parameter(description = "ID of the document", required = true) @PathVariable("documentId") documentId: java.util.UUID): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> = getDelegate().documentsCrnDocumentIdGet(crn, documentId)
+  fun documentsCrnDocumentIdGet(@Parameter(description = "CRN of the Person the document is associated with", required = true) @PathVariable("crn") crn: String, @Parameter(description = "ID of the document", required = true) @PathVariable("documentId") documentId: java.util.UUID): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> = getDelegate().documentsCrnDocumentIdGet(crn, documentId)
 }

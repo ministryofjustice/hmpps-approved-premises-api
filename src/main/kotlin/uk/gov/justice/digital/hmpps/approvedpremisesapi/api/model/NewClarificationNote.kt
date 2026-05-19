@@ -4,5 +4,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class NewClarificationNote(
 
-  @get:JsonProperty("query", required = true) val query: kotlin.String,
+  @get:JsonProperty("query", required = true) val query: String,
 )

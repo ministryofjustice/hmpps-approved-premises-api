@@ -9,11 +9,11 @@ data class ApprovedPremisesApplicationSummary(
 
   @get:JsonProperty("status", required = true) val status: ApprovedPremisesApplicationStatus,
 
-  @get:JsonProperty("isWithdrawn", required = true) val isWithdrawn: kotlin.Boolean,
+  @get:JsonProperty("isWithdrawn", required = true) val isWithdrawn: Boolean,
 
-  @get:JsonProperty("hasRequestsForPlacement", required = true) val hasRequestsForPlacement: kotlin.Boolean,
+  @get:JsonProperty("hasRequestsForPlacement", required = true) val hasRequestsForPlacement: Boolean,
 
-  @get:JsonProperty("type", required = true) override val type: kotlin.String,
+  @get:JsonProperty("type", required = true) override val type: String,
 
   @get:JsonProperty("id", required = true) override val id: java.util.UUID,
 
@@ -21,15 +21,15 @@ data class ApprovedPremisesApplicationSummary(
 
   @get:JsonProperty("createdAt", required = true) override val createdAt: java.time.Instant,
 
-  @get:JsonProperty("isWomensApplication") val isWomensApplication: kotlin.Boolean? = null,
+  @get:JsonProperty("isWomensApplication") val isWomensApplication: Boolean? = null,
 
-  @get:JsonProperty("isEmergencyApplication") val isEmergencyApplication: kotlin.Boolean? = null,
+  @get:JsonProperty("isEmergencyApplication") val isEmergencyApplication: Boolean? = null,
 
   @get:JsonProperty("arrivalDate") val arrivalDate: java.time.Instant? = null,
 
   @get:JsonProperty("risks") val risks: PersonRisks? = null,
 
-  @get:JsonProperty("tier") val tier: kotlin.String? = null,
+  @get:JsonProperty("tier") val tier: String? = null,
 
   @get:JsonProperty("releaseType") val releaseType: ReleaseTypeOption? = null,
 

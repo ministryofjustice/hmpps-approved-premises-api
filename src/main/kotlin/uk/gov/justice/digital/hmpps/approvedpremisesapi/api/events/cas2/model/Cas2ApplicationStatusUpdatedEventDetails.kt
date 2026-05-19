@@ -8,7 +8,7 @@ data class Cas2ApplicationStatusUpdatedEventDetails(
   @get:JsonProperty("applicationId", required = true) val applicationId: java.util.UUID,
 
   @Schema(example = "https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "")
-  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: kotlin.String,
+  @get:JsonProperty("applicationUrl", required = true) val applicationUrl: String,
 
   @get:JsonProperty("personReference", required = true) val personReference: PersonReference,
 
@@ -18,5 +18,5 @@ data class Cas2ApplicationStatusUpdatedEventDetails(
 
   @get:JsonProperty("updatedAt", required = true) val updatedAt: java.time.Instant,
 
-  @get:JsonProperty("applicationOrigin", required = true) val applicationOrigin: kotlin.String = "homeDetentionCurfew",
+  @get:JsonProperty("applicationOrigin", required = true) val applicationOrigin: String = "homeDetentionCurfew",
 )

@@ -14,15 +14,15 @@ data class Cas1Application(
 
   val status: ApprovedPremisesApplicationStatus,
 
-  val isWomensApplication: kotlin.Boolean? = null,
+  val isWomensApplication: Boolean? = null,
 
   @Deprecated(message = "")
-  val isPipeApplication: kotlin.Boolean? = null,
+  val isPipeApplication: Boolean? = null,
 
-  val isEmergencyApplication: kotlin.Boolean? = null,
+  val isEmergencyApplication: Boolean? = null,
 
   @Deprecated(message = "")
-  val isEsapApplication: kotlin.Boolean? = null,
+  val isEsapApplication: Boolean? = null,
 
   val apType: ApType? = null,
 
@@ -30,9 +30,9 @@ data class Cas1Application(
 
   val risks: PersonRisks? = null,
 
-  val `data`: kotlin.Any? = null,
+  val `data`: Any? = null,
 
-  val document: kotlin.Any? = null,
+  val document: Any? = null,
 
   val assessmentId: java.util.UUID? = null,
 
@@ -50,7 +50,7 @@ data class Cas1Application(
 
   val applicantUserDetails: Cas1ApplicationUserDetails? = null,
 
-  val caseManagerIsNotApplicant: kotlin.Boolean? = null,
+  val caseManagerIsNotApplicant: Boolean? = null,
 
   val caseManagerUserDetails: Cas1ApplicationUserDetails? = null,
 

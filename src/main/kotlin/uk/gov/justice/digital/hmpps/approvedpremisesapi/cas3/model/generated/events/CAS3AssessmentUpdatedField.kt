@@ -10,9 +10,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
  */
 data class CAS3AssessmentUpdatedField(
 
-  @get:JsonProperty("fieldName", required = true) val fieldName: kotlin.String,
+  @get:JsonProperty("fieldName", required = true) val fieldName: String,
 
-  @get:JsonProperty("updatedFrom", required = true) val updatedFrom: kotlin.String,
+  @get:JsonProperty("updatedFrom", required = true) val updatedFrom: String,
 
-  @get:JsonProperty("updatedTo", required = true) val updatedTo: kotlin.String,
+  @get:JsonProperty("updatedTo", required = true) val updatedTo: String,
 )

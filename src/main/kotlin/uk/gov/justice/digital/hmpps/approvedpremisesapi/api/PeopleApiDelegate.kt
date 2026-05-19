@@ -18,7 +18,7 @@ interface PeopleApiDelegate {
 
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
-  fun peopleCrnAcctAlertsGet(crn: kotlin.String): ResponseEntity<List<PersonAcctAlert>> {
+  fun peopleCrnAcctAlertsGet(crn: String): ResponseEntity<List<PersonAcctAlert>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
         if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
@@ -35,7 +35,7 @@ interface PeopleApiDelegate {
   }
 
   fun peopleCrnAdjudicationsGet(
-    crn: kotlin.String,
+    crn: String,
     xServiceName: ServiceName,
   ): ResponseEntity<List<Adjudication>> {
     getRequest().ifPresent { request ->
@@ -54,8 +54,8 @@ interface PeopleApiDelegate {
   }
 
   fun peopleCrnOasysSectionsGet(
-    crn: kotlin.String,
-    selectedSections: kotlin.collections.List<kotlin.Int>?,
+    crn: String,
+    selectedSections: List<Int>?,
   ): ResponseEntity<OASysSections> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -72,7 +72,7 @@ interface PeopleApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  fun peopleCrnOffencesGet(crn: kotlin.String): ResponseEntity<List<ActiveOffence>> {
+  fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
         if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
@@ -89,7 +89,7 @@ interface PeopleApiDelegate {
   }
 
   fun peopleCrnPrisonCaseNotesGet(
-    crn: kotlin.String,
+    crn: String,
     xServiceName: ServiceName,
   ): ResponseEntity<List<PrisonCaseNote>> {
     getRequest().ifPresent { request ->
@@ -107,7 +107,7 @@ interface PeopleApiDelegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  fun peopleSearchGet(crn: kotlin.String): ResponseEntity<Person> {
+  fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
         if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {

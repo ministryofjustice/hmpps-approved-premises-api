@@ -8,5 +8,5 @@ data class SeedFromExcelDirectoryRequest(
   @get:JsonProperty("seedType", required = true) val seedType: SeedFromExcelFileType,
 
   @Schema(example = "null", required = true, description = "Directory within the pre-configured seed directory")
-  @get:JsonProperty("directoryName", required = true) val directoryName: kotlin.String,
+  @get:JsonProperty("directoryName", required = true) val directoryName: String,
 )

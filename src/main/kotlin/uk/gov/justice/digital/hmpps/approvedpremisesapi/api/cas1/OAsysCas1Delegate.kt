@@ -15,9 +15,9 @@ interface OAsysCas1Delegate {
   fun getRequest(): Optional<NativeWebRequest> = Optional.empty()
 
   fun answers(
-    crn: kotlin.String,
+    crn: String,
     group: Cas1OASysGroupName,
-    includeOptionalSections: kotlin.collections.List<kotlin.Int>?,
+    includeOptionalSections: List<Int>?,
   ): ResponseEntity<Cas1OASysGroup> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
@@ -34,7 +34,7 @@ interface OAsysCas1Delegate {
     return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
   }
 
-  fun metadata(crn: kotlin.String): ResponseEntity<Cas1OASysMetadata> {
+  fun metadata(crn: String): ResponseEntity<Cas1OASysMetadata> {
     getRequest().ifPresent { request ->
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
         if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {

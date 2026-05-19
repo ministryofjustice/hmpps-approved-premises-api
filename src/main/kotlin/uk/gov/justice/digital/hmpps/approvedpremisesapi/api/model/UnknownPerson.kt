@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 class UnknownPerson(
 
-  @get:JsonProperty("crn", required = true) override val crn: kotlin.String,
+  @get:JsonProperty("crn", required = true) override val crn: String,
 
   @get:JsonProperty("type", required = true) override val type: PersonType,
 ) : Person

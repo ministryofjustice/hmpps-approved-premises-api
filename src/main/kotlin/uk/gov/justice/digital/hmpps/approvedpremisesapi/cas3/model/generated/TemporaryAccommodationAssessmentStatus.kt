@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 * Values: unallocated,inReview,readyToPlace,closed,rejected
 */
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class TemporaryAccommodationAssessmentStatus(@get:JsonValue val value: kotlin.String) {
+enum class TemporaryAccommodationAssessmentStatus(@get:JsonValue val value: String) {
 
   unallocated("unallocated"),
   inReview("in_review"),
@@ -20,6 +20,6 @@ enum class TemporaryAccommodationAssessmentStatus(@get:JsonValue val value: kotl
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): TemporaryAccommodationAssessmentStatus = values().first { it.value == value }
+    fun forValue(value: String): TemporaryAccommodationAssessmentStatus = values().first { it.value == value }
   }
 }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 class RestrictedPersonSummary(
 
-  @get:JsonProperty("crn", required = true) override val crn: kotlin.String,
+  @get:JsonProperty("crn", required = true) override val crn: String,
 
   @get:JsonProperty("personType", required = true) override val personType: PersonSummaryDiscriminator,
 ) : PersonSummary

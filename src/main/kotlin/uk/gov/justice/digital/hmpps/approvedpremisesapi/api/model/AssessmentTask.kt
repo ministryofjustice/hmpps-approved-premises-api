@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class AssessmentTask(
 
-  @get:JsonProperty("createdFromAppeal", required = true) val createdFromAppeal: kotlin.Boolean,
+  @get:JsonProperty("createdFromAppeal", required = true) val createdFromAppeal: Boolean,
 
   @get:JsonProperty("taskType", required = true) override val taskType: TaskType,
 
@@ -18,9 +18,9 @@ data class AssessmentTask(
   @get:JsonProperty("personSummary", required = true) override val personSummary: PersonSummary,
 
   @Schema(example = "null", required = true, description = "Superseded by personSummary which provides 'name' as well as 'personType' and 'crn'.")
-  @get:JsonProperty("personName", required = true) override val personName: kotlin.String,
+  @get:JsonProperty("personName", required = true) override val personName: String,
 
-  @get:JsonProperty("crn", required = true) override val crn: kotlin.String,
+  @get:JsonProperty("crn", required = true) override val crn: String,
 
   @Schema(example = "null", required = true, description = "The Due date of the task - this is deprecated in favour of the `dueAt` field")
   @get:JsonProperty("dueDate", required = true) override val dueDate: java.time.LocalDate,
