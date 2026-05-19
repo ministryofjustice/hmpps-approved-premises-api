@@ -1,0 +1,1 @@
+ALTER TABLE cas_2_applications ADD cohort text NULL;
