@@ -30,7 +30,10 @@ enum class UserPermission(
   CAS1_BOOKING_WITHDRAW(ApprovedPremisesUserPermission.bookingWithdraw),
   CAS1_BOOKING_CHANGE_DATES(ApprovedPremisesUserPermission.bookingChangeDates),
 
+  @Deprecated("Change request functionality is unused and will be removed in the future")
   CAS1_CHANGE_REQUEST_LIST(ApprovedPremisesUserPermission.changeRequestList, experimental = true),
+
+  @Deprecated("Change request functionality is unused and will be removed in the future")
   CAS1_CHANGE_REQUEST_VIEW(ApprovedPremisesUserPermission.changeRequestView, experimental = true),
 
   /**
@@ -121,7 +124,10 @@ enum class UserPermission(
    */
   CAS1_TRANSFER_CREATE(ApprovedPremisesUserPermission.transferCreate, experimental = true),
 
+  @Deprecated("Change request functionality is unused and will be removed in the future")
   CAS1_PLACEMENT_APPEAL_CREATE(ApprovedPremisesUserPermission.placementAppealCreate, experimental = true),
+
+  @Deprecated("Change request functionality is unused and will be removed in the future")
   CAS1_PLACEMENT_APPEAL_ASSESS(ApprovedPremisesUserPermission.placementAppealAssess, experimental = true),
 
   CAS1_PREMISES_LOCAL_RESTRICTIONS_MANAGE(ApprovedPremisesUserPermission.premisesLocalRestrictionsManage),
