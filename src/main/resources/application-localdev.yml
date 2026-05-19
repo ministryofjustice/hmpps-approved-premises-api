@@ -12,7 +12,6 @@ domain-events:
 
 feature-flags:
   cas1-disable-overbooking-summary: true
-  cas1-expire-unsubmitted-applications-job-enabled: true
   cas2-oasys-use-new-questions: true
 
 hmpps.sqs:

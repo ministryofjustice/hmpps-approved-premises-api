@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEventWithPayload
 import java.time.Instant
@@ -22,7 +21,6 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJob(
   private val domainEventService: Cas1DomainEventService,
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val transactionTemplate: TransactionTemplate,
-  private val featureFlagService: FeatureFlagService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -31,19 +29,17 @@ class Cas1ExpireUnsubmittedApplicationsScheduledJob(
   @Scheduled(cron = "0 0 3 * * ?")
   @SchedulerLock(name = "cas1_expire_unsubmitted_applications", lockAtMostFor = "5m", lockAtLeastFor = "1m")
   fun expireApplicationsOlderThanSixMonths() {
-    if (featureFlagService.getBooleanFlag("cas1-expire-unsubmitted-applications-job-enabled")) {
-      val applicationIdsToExpire =
-        approvedPremisesApplicationRepository.findIdsForUnsubmittedApplicationsOlderThanSixMonths()
+    val applicationIdsToExpire =
+      approvedPremisesApplicationRepository.findIdsForUnsubmittedApplicationsOlderThanSixMonths()
 
-      log.info("Found ${applicationIdsToExpire.size} unsubmitted applications older than six months to expire")
+    log.info("Found ${applicationIdsToExpire.size} unsubmitted applications older than six months to expire")
 
-      val batchSize = 100
-      applicationIdsToExpire.chunked(batchSize).forEach { batch ->
-        log.info("Processing batch of ${batch.size} applications")
+    val batchSize = 100
+    applicationIdsToExpire.chunked(batchSize).forEach { batch ->
+      log.info("Processing batch of ${batch.size} applications")
 
-        transactionTemplate.executeWithoutResult {
-          expireApplications(approvedPremisesApplicationRepository.findAllById(batch))
-        }
+      transactionTemplate.executeWithoutResult {
+        expireApplications(approvedPremisesApplicationRepository.findAllById(batch))
       }
     }
   }
