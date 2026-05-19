@@ -20,8 +20,8 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
       deliusEventNumber = "101",
       offlineApplication = givenAnOfflineApplication("CRN1", eventNumberSet = false),
       criteria = listOf(
-        getCharacteristic(CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        getCharacteristic(CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE),
+        getCharacteristic(CharacteristicRepository.CAS1_PROPERTY_NAME_SINGLE_ROOM),
+        getCharacteristic(CharacteristicRepository.CAS1_PROPERTY_NAME_ENSUITE),
       ),
     )
 
@@ -35,8 +35,8 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
             eventNumber = "999",
             updateCriteria = true,
             criteria = listOf(
-              CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM,
-              CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED,
+              CharacteristicRepository.CAS1_PROPERTY_NAME_SINGLE_ROOM,
+              CharacteristicRepository.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED,
             ),
           ),
         ),
@@ -46,8 +46,8 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
     val updatedSpaceBooking = cas1SpaceBookingRepository.findById(spaceBooking.id).get()
     assertThat(updatedSpaceBooking.deliusEventNumber).isEqualTo("999")
     assertThat(updatedSpaceBooking.criteria).containsExactlyInAnyOrder(
-      getCharacteristic(CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM),
-      getCharacteristic(CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
+      getCharacteristic(CharacteristicRepository.CAS1_PROPERTY_NAME_SINGLE_ROOM),
+      getCharacteristic(CharacteristicRepository.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED),
     )
   }
 

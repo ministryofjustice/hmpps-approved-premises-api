@@ -16,6 +16,6 @@ enum class SituationOption(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): SituationOption = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): SituationOption = values().first { it.value == value }
   }
 }

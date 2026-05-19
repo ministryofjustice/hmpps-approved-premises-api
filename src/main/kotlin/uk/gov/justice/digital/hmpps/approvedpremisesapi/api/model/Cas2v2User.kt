@@ -36,7 +36,7 @@ data class Cas2v2User(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: String): AuthSource = values().first { it -> it.value == value }
+      fun forValue(value: String): AuthSource = values().first { it.value == value }
     }
   }
 }

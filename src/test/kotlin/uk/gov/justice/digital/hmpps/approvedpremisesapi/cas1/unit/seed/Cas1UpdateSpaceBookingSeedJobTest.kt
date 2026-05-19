@@ -28,11 +28,11 @@ class Cas1UpdateSpaceBookingSeedJobTest {
   }
 
   private val arsonSuitableCharacteristic = CharacteristicEntityFactory()
-    .withPropertyName(CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE)
+    .withPropertyName(CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE)
     .produce()
 
   private val stepFreeCharacteristic = CharacteristicEntityFactory()
-    .withPropertyName(CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED)
+    .withPropertyName(CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED)
     .produce()
 
   private val otherCharacteristic = CharacteristicEntityFactory()
@@ -166,8 +166,8 @@ class Cas1UpdateSpaceBookingSeedJobTest {
           updateCriteria = true,
           criteria = listOf(
             "unexpectedProperty1",
-            CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-            CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+            CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+            CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
             "unexpectedProperty2",
           ),
         ),
@@ -185,8 +185,8 @@ class Cas1UpdateSpaceBookingSeedJobTest {
     every {
       characteristicRepository.findAllWherePropertyNameIn(
         listOf(
-          CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-          CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+          CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+          CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
         ),
         ServiceName.approvedPremises.value,
       )
@@ -199,8 +199,8 @@ class Cas1UpdateSpaceBookingSeedJobTest {
         updateEventNumber = false,
         updateCriteria = true,
         criteria = listOf(
-          CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
-          CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+          CharacteristicRepository.CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+          CharacteristicRepository.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
         ),
       ),
     )

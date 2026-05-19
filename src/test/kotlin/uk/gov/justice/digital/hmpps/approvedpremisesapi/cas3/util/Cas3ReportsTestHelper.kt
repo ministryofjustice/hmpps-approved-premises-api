@@ -62,7 +62,7 @@ fun List<Cas3BookingEntity>.toBookingsReportData(): List<BookingsReportData> = t
         get() = it.departure?.moveOnCategory?.name
       override val dutyToReferLocalAuthorityAreaName: String?
         get() = application?.dutyToReferLocalAuthorityAreaName
-      override val pdu: String?
+      override val pdu: String
         get() = it.bedspace.premises.probationDeliveryUnit.name
       override val town: String?
         get() = it.bedspace.premises.town

@@ -17,6 +17,6 @@ enum class ApType(@get:JsonValue val value: kotlin.String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): ApType = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): ApType = values().first { it.value == value }
   }
 }

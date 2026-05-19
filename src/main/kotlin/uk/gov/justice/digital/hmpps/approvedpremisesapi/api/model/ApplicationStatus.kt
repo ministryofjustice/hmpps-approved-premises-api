@@ -15,6 +15,6 @@ enum class ApplicationStatus(@get:JsonValue val value: String, val priority: Int
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): ApplicationStatus = entries.first { it -> it.value == value }
+    fun forValue(value: String): ApplicationStatus = entries.first { it.value == value }
   }
 }

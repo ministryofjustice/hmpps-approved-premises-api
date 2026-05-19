@@ -26,7 +26,7 @@ data class PlacementRequestBookingSummary(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): Type = values().first { it -> it.value == value }
+      fun forValue(value: kotlin.String): Type = values().first { it.value == value }
     }
   }
 }

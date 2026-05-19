@@ -75,7 +75,7 @@ class WebClientCache(
   ) {
     val qualifiedKey = getCacheKeySet(requestBuilder, cacheConfig)
 
-    val body: String? = exception.responseBodyAsString
+    val body: String = exception.responseBodyAsString
 
     val backoffSeconds = if (attempt <= cacheConfig.failureSoftTtlBackoffSeconds.size) {
       cacheConfig.failureSoftTtlBackoffSeconds[attempt - 1].toLong()

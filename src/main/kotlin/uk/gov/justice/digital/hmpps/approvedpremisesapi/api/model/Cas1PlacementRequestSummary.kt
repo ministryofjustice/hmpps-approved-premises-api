@@ -40,7 +40,7 @@ data class Cas1PlacementRequestSummary(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: kotlin.String): PlacementRequestStatus = values().first { it -> it.value == value }
+      fun forValue(value: kotlin.String): PlacementRequestStatus = values().first { it.value == value }
     }
   }
 }

@@ -23,6 +23,6 @@ enum class ApprovedPremisesApplicationStatus(@get:JsonValue val value: kotlin.St
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: kotlin.String): ApprovedPremisesApplicationStatus = values().first { it -> it.value == value }
+    fun forValue(value: kotlin.String): ApprovedPremisesApplicationStatus = values().first { it.value == value }
   }
 }

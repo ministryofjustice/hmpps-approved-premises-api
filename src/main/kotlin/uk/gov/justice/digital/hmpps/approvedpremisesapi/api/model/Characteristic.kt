@@ -24,7 +24,7 @@ data class Characteristic(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: String): ServiceScope = entries.first { it -> it.value == value }
+      fun forValue(value: String): ServiceScope = entries.first { it.value == value }
     }
   }
 
@@ -39,7 +39,7 @@ data class Characteristic(
     companion object {
       @JvmStatic
       @JsonCreator
-      fun forValue(value: String): ModelScope = entries.first { it -> it.value == value }
+      fun forValue(value: String): ModelScope = entries.first { it.value == value }
     }
   }
 }

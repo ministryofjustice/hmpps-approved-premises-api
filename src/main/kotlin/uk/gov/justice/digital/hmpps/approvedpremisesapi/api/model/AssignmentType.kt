@@ -16,6 +16,6 @@ enum class AssignmentType(@get:JsonValue val value: String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): AssignmentType = values().first { it -> it.value == value }
+    fun forValue(value: String): AssignmentType = values().first { it.value == value }
   }
 }
