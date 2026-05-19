@@ -51,7 +51,7 @@ class Cas1WithdrawPlacementRequestSeedJob(
       ),
     )
 
-    extractEntityFromCasResult(result).placementRequest
+    extractEntityFromCasResult(result)
 
     val reasonDescription = withdrawalReason.name.javaConstantNameToSentence()
     cas1ApplicationTimelineNoteService.saveApplicationTimelineNote(

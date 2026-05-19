@@ -131,7 +131,7 @@ class Cas1PlacementRequestsController(
       null -> null
     }
 
-    val (placementRequest, _) = extractEntityFromCasResult(
+    val placementRequest = extractEntityFromCasResult(
       cas1WithdrawableService.withdrawPlacementRequest(
         id,
         user,
