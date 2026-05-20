@@ -1576,6 +1576,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           withCreatedByUser(submittingUser)
           withApplicationOrigin(ApplicationOrigin.courtBail)
           withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          withCohort(Cas2v2Cohort.FROM_AP)
         }
 
         val resultBody = webTestClient.put()
@@ -1585,6 +1586,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             UpdateCas2v2Application(
               data = mapOf("thingId" to 123),
               type = UpdateApplicationType.CAS2V2,
+              cohort = Cas2v2CohortDto.RISK_ASSESSED_RECALL_REVIEW,
             ),
           )
           .exchange()
@@ -1597,6 +1599,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         val result = jsonMapper.readValue(resultBody, Cas2v2Application::class.java)
 
         Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+        Assertions.assertThat(result.cohort).isEqualTo(Cas2v2CohortDto.RISK_ASSESSED_RECALL_REVIEW)
       }
     }
   }

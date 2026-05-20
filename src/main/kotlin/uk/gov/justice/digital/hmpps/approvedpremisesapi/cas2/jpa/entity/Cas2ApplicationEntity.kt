@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
@@ -87,7 +88,13 @@ enum class Cas2v2Cohort(val apiType: Cas2v2CohortDto) {
   HEFR(Cas2v2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL),
   ISC(Cas2v2CohortDto.INTENSIVE_SUPERVISION_COURTS),
   RARR(Cas2v2CohortDto.RISK_ASSESSED_RECALL_REVIEW),
-  FROM_AP(Cas2v2CohortDto.REFERRAL_FROM_APPROVED_PREMISES),
+  FROM_AP(Cas2v2CohortDto.REFERRAL_FROM_APPROVED_PREMISES);
+
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: String) = values().first { it.apiType.value == value }
+  }
 }
 
 @Entity
