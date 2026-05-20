@@ -54,12 +54,7 @@ FROM
   LEFT OUTER JOIN characteristics premises_chars_resolved ON premises_chars_resolved.id = premises_chars.characteristic_id
   LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = rooms.id
   LEFT OUTER JOIN characteristics room_chars_resolved ON room_chars_resolved.id = room_chars.characteristic_id
-  LEFT OUTER JOIN LATERAL (
-    SELECT lr.description
-    FROM cas1_premises_local_restrictions lr
-    WHERE lr.archived = false AND lr.approved_premises_id = p.id
-    ORDER BY lr.created_at DESC
-) restrictions ON TRUE
+  LEFT OUTER JOIN cas1_premises_local_restrictions restrictions ON restrictions.archived = false AND restrictions.approved_premises_id = p.id
   WHERE 
     p.status != 'archived' AND
     ap.supports_space_bookings = true AND
