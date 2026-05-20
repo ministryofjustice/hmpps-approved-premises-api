@@ -20,6 +20,17 @@ import java.util.UUID
 
 open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
 
+  companion object {
+    const val CAS2_DATA_PATH = "db/seed/dev+test/cas2_application_data"
+    const val CAS2V2_DATA_PATH = "db/seed/dev+test/cas2v2_application_data"
+
+    val CAS2_APPLICATION_DATA by lazy { readResource("$CAS2_DATA_PATH/data_A1234AI.json") }
+    val CAS2_APPLICATION_DOCUMENT by lazy { readResource("$CAS2_DATA_PATH/document_A1234AI.json") }
+
+    val CAS2V2_APPLICATION_DATA by lazy { readResource("$CAS2V2_DATA_PATH/data_A1234AX.json") }
+    val CAS2V2_APPLICATION_DOCUMENT by lazy { readResource("$CAS2V2_DATA_PATH/document_A1234AX.json") }
+  }
+
   protected fun cas2StatusUpdateDetails(statusUpdateDetail: Cas2StatusUpdateDetailEntity): String = """
     {
         "crn": "${statusUpdateDetail.statusUpdate.application.crn}",
@@ -133,12 +144,14 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
     serviceOrigin: Cas2ServiceOrigin = Cas2ServiceOrigin.HDC,
     referringPrisonCode: String = randomStringMultiCaseWithNumbers(3),
     telephoneNumber: String = randomStringMultiCaseWithNumbers(7),
+    data: String = DATA_JSON_SIMPLE,
+    document: String = DOCUMENT_JSON_SIMPLE,
   ) = cas2ApplicationEntityFactory.produceAndPersist {
     withCrn(offenderDetails.otherIds.crn)
     withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
     withCreatedByUser(user)
-    withData(DATA_JSON_SIMPLE)
-    withDocument(DOCUMENT_JSON_SIMPLE)
+    withData(data)
+    withDocument(document)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withReferringPrisonCode(referringPrisonCode)

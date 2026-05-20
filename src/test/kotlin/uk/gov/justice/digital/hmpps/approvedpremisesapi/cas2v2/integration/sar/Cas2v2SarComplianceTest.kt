@@ -26,7 +26,6 @@ class Cas2v2SarComplianceTest : Cas2SarTestBase() {
     const val TEST_CRN = "X320743"
     const val TEST_NOMS_NUMBER = "A1234BE"
     const val TEST_NOMIS_USER_NAME = "SAR-TEST-NOMIS-USER"
-    const val TEST_EXTERNAL_USER_NAME = "SAR-TEST-EXTERNAL-USER"
     const val TEST_ASSESSOR_NAME = "SAR-TEST-ASSESSOR"
     const val TEST_NACRO_REFERRAL_ID = "0000000002"
     const val TEST_REFERRING_PRISON_CODE = "ABC"
@@ -68,13 +67,14 @@ class Cas2v2SarComplianceTest : Cas2SarTestBase() {
       },
     )
     val user = cas2NomisUserEntity(Cas2ServiceOrigin.BAIL, name = TEST_NOMIS_USER_NAME)
-    val assessor = cas2ExternalUserEntity(name = TEST_EXTERNAL_USER_NAME)
     val application = cas2ApplicationEntity(
       offenderDetails,
       user,
       Cas2ServiceOrigin.BAIL,
       referringPrisonCode = TEST_REFERRING_PRISON_CODE,
       telephoneNumber = TEST_TELEPHONE_NUMBER,
+      data = CAS2V2_APPLICATION_DATA,
+      document = CAS2V2_APPLICATION_DOCUMENT,
     )
     val assessment = cas2AssessmentEntity(
       application,
@@ -84,7 +84,7 @@ class Cas2v2SarComplianceTest : Cas2SarTestBase() {
     )
 
     cas2ApplicationNoteEntity(application, assessment, user)
-    val statusUpdate = cas2StatusUpdateEntity(application, assessment, assessor)
+    val statusUpdate = cas2StatusUpdateEntity(application, assessment, user)
     cas2StatusUpdateDetailEntity(statusUpdate)
     domainEventEntity(offenderDetails, application.id, assessment.id, null, ServiceName.cas2v2)
   }

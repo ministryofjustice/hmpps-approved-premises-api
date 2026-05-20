@@ -15,6 +15,13 @@ import java.time.OffsetDateTime
 
 open class Cas3SarTestBase : SubjectAccessRequestServiceTestBase() {
 
+  companion object {
+    const val CAS3_DATA_PATH = "db/seed/dev+test/cas3_application_data"
+
+    val CAS3_APPLICATION_DATA by lazy { readResource("$CAS3_DATA_PATH/application_data.json") }
+    val CAS3_APPLICATION_DOCUMENT by lazy { readResource("$CAS3_DATA_PATH/application_document.json") }
+  }
+
   protected fun assessmentReferralHistoryNotesJson(
     assessmentReferralHistoryNoteSystem: AssessmentReferralHistorySystemNoteEntity,
     assessmentReferralHistoryNoteUser: AssessmentReferralHistoryUserNoteEntity,
@@ -154,20 +161,22 @@ open class Cas3SarTestBase : SubjectAccessRequestServiceTestBase() {
     withAccommodationRequiredFromDate(LocalDate.parse(arrivedAtDateOnly))
   }
 
-  protected fun temporaryAccommodationApplicationEntity(
+  internal fun temporaryAccommodationApplicationEntity(
     offenderDetails: OffenderDetailSummary,
     user: UserEntity,
     dutyToReferLocalAuthorityAreaName: String = randomStringMultiCaseWithNumbers(10),
     probationRegionName: String = "Probation Region ${randomStringMultiCaseWithNumbers(5)}",
     probationDeliveryUnitName: String = randomStringMultiCaseWithNumbers(8),
+    data: String = DATA_JSON_SIMPLE,
+    document: String = DOCUMENT_JSON_SIMPLE,
   ): TemporaryAccommodationApplicationEntity {
     val risk1 = personRisks()
     return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
       withArrivalDate(OffsetDateTime.parse(ARRIVED_AT))
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
-      withData(DATA_JSON_SIMPLE)
-      withDocument(DOCUMENT_JSON_SIMPLE)
+      withData(data)
+      withDocument(document)
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
       withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
       withPersonReleaseDate(LocalDate.parse(arrivedAtDateOnly))
