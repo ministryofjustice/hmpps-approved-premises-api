@@ -23,6 +23,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import java.time.LocalDate
@@ -77,6 +78,18 @@ interface Cas2LockableApplicationRepository : JpaRepository<Cas2LockableApplicat
   fun acquirePessimisticLock(id: UUID): Cas2LockableApplicationEntity?
 }
 
+enum class Cas2v2Cohort(val apiType: Cas2v2CohortDto) {
+  HDC(Cas2v2CohortDto.HOME_DETENTION_CURFEW),
+  BAIL(Cas2v2CohortDto.BAIL),
+  COURT(Cas2v2CohortDto.COURT),
+  ATCR(Cas2v2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL),
+  HCRD(Cas2v2CohortDto.HOMELESS_AT_CONDITIONAL_RELEASE_DATE),
+  HEFR(Cas2v2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL),
+  ISC(Cas2v2CohortDto.INTENSIVE_SUPERVISION_COURTS),
+  RARR(Cas2v2CohortDto.RISK_ASSESSED_RECALL_REVIEW),
+  FROM_AP(Cas2v2CohortDto.REFERRAL_FROM_APPROVED_PREMISES),
+}
+
 @Entity
 @Table(name = "cas_2_applications")
 data class Cas2ApplicationEntity(
@@ -127,6 +140,9 @@ data class Cas2ApplicationEntity(
 
   @Enumerated(EnumType.STRING)
   var serviceOrigin: Cas2ServiceOrigin,
+
+  @Enumerated(EnumType.STRING)
+  var cohort: Cas2v2Cohort? = null,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
   fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByUser.id == user.id
