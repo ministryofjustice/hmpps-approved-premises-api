@@ -82,6 +82,8 @@ class CasSarFixtureAsserter(
       templateResponse,
     )
 
+    sarHelper.renderAndSaveReportAsPdf(renderResult, prn, crn)
+
     if (generateActual()) {
       sarHelper.saveContentToFile(renderResult, generatedReportFilename)
     } else {

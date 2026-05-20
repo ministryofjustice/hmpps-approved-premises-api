@@ -23,8 +23,26 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
   companion object {
     const val TEST_CRN = "X320741"
     const val TEST_NOMS_NUMBER = "A1234BC"
+    const val TEST_OFFENDER_FIRST_NAME = "SAR-FIRST"
+    const val TEST_OFFENDER_SURNAME = "SAR-LAST"
+    const val TEST_APPLICANT_NAME = "SAR-TEST-APPLICANT"
+    const val TEST_APPLICATION_CREATED_BY_USER_NAME = "SAR-TEST-CREATED-BY-USER"
     const val TEST_ASSESSOR_NAME = "SAR-TEST-ASSESSOR"
     const val TEST_CASE_MANAGER_NAME = "SAR-TEST-CASE-MANAGER"
+    const val TEST_SPACE_BOOKING_CREATED_BY_USER_NAME = "SAR-TEST-BOOKING-CREATED-BY"
+    const val TEST_PREMISES_NAME = "SAR-TEST-PREMISES"
+    const val TEST_CHARACTERISTIC_NAME = "SAR-TEST-CHARACTERISTIC"
+    const val TEST_CHARACTERISTIC_PROPERTY_NAME = "SAR-CHAR-PROP"
+    const val TEST_DESIRABLE_CRITERIA_NAME = "SAR-DESIRABLE"
+    const val TEST_DESIRABLE_CRITERIA_PROPERTY_NAME = "SAR-DESIRABLE-PROP"
+    const val TEST_ESSENTIAL_CRITERIA_NAME = "SAR-ESSENTIAL"
+    const val TEST_ESSENTIAL_CRITERIA_PROPERTY_NAME = "SAR-ESSENTIAL-PROP"
+    const val TEST_POSTCODE_OUTCODE = "SAR1"
+    const val TEST_NON_ARRIVAL_REASON_NAME = "SAR-NON-ARR"
+    const val TEST_NON_ARRIVAL_REASON_ID = "11111111-1111-1111-1111-111111111111"
+    const val TEST_DEPARTURE_REASON_NAME = "SAR-DEP"
+    const val TEST_MOVE_ON_CATEGORY_NAME = "SAR-MOC"
+    const val TEST_CANCELLATION_REASON_NAME = "SAR-CXL"
     val TEST_FROM_DATE: LocalDate = LocalDate.of(2019, 1, 1)
     val TEST_TO_DATE: LocalDate = LocalDate.of(2024, 12, 31)
 
@@ -51,23 +69,118 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
   }
 
   private fun clearTestData() {
+    bookingNotMadeRepository.deleteAll()
+    placementRequestRepository.deleteAll()
+    placementApplicationRepository.deleteAll()
+    cas1SpaceBookingRepository.deleteAll()
+    assessmentClarificationNoteRepository.deleteAll()
+    applicationTimelineNoteRepository.deleteAll()
     appealTestRepository.deleteAll()
     approvedPremisesAssessmentRepository.deleteAll()
     approvedPremisesApplicationRepository.deleteAll()
+    offlineApplicationRepository.deleteAll()
+    domainEventRepository.deleteAll()
+    bedRepository.deleteAll()
+    roomRepository.deleteAll()
+    approvedPremisesRepository.deleteAll()
+    characteristicRepository.deleteAll()
+    nonArrivalReasonRepository.deleteAll()
+    departureReasonRepository.deleteAll()
+    moveOnCategoryRepository.deleteAll()
+    cancellationReasonRepository.deleteAll()
   }
 
+  @SuppressWarnings("LongMethod")
   private fun setupTestData() {
     val offenderDetails = OffenderDetailsSummaryFactory()
       .withCrn(TEST_CRN)
       .withNomsNumber(TEST_NOMS_NUMBER)
+      .withFirstName(TEST_OFFENDER_FIRST_NAME)
+      .withLastName(TEST_OFFENDER_SURNAME)
       .produce()
+    val createdByUser = userEntityFactory.produceAndPersist {
+      withName(TEST_APPLICATION_CREATED_BY_USER_NAME)
+      withProbationRegion(givenAProbationRegion())
+    }
     val assessor = userEntityFactory.produceAndPersist {
       withName(TEST_ASSESSOR_NAME)
       withProbationRegion(givenAProbationRegion())
     }
-    val application = approvedPremisesApplicationEntity(offenderDetails, TEST_CASE_MANAGER_NAME)
-    val assessment = approvedPremisesAssessmentEntity(application, assessor)
+    val spaceBookingCreatedByUser = userEntityFactory.produceAndPersist {
+      withName(TEST_SPACE_BOOKING_CREATED_BY_USER_NAME)
+      withProbationRegion(givenAProbationRegion())
+    }
+
+    val application = approvedPremisesApplicationEntity(
+      offenderDetails,
+      caseManagerName = TEST_CASE_MANAGER_NAME,
+      createdByUser = createdByUser,
+      applicantUserName = TEST_APPLICANT_NAME,
+      data = CAS1_APPLICATION_DATA,
+      document = CAS1_APPLICATION_DOCUMENT,
+    )
+    val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
+
+    applicationTimelineNoteEntity(application)
+    approvedPremisesAssessmentClarificationNoteEntity(assessment)
     appealEntity(application, assessment)
+
+    val placementApplication = placementApplicationEntity(application)
+    val placementRequirements = placementRequirementEntity(
+      application,
+      assessment,
+      desirableCriteria = listOf(
+        characteristicEntity(
+          name = TEST_DESIRABLE_CRITERIA_NAME,
+          propertyName = TEST_DESIRABLE_CRITERIA_PROPERTY_NAME,
+        ),
+      ),
+      essentialCriteria = listOf(
+        characteristicEntity(
+          name = TEST_ESSENTIAL_CRITERIA_NAME,
+          propertyName = TEST_ESSENTIAL_CRITERIA_PROPERTY_NAME,
+        ),
+      ),
+      postcodeOutcode = TEST_POSTCODE_OUTCODE,
+    )
+    val placementRequest = placementRequestEntity(
+      assessment,
+      application,
+      placementApplication,
+      placementRequirements = placementRequirements,
+    )
+    bookingNotMadeEntity(placementRequest)
+
+    val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist {
+      withId(java.util.UUID.fromString(TEST_NON_ARRIVAL_REASON_ID))
+      withName(TEST_NON_ARRIVAL_REASON_NAME)
+    }
+    val departureReason = departureReasonEntityFactory.produceAndPersist {
+      withName(TEST_DEPARTURE_REASON_NAME)
+    }
+    val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+      withName(TEST_MOVE_ON_CATEGORY_NAME)
+    }
+    val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+      withName(TEST_CANCELLATION_REASON_NAME)
+    }
+    spaceBookingEntity(
+      offenderDetails = offenderDetails,
+      application = application,
+      nonArrivalReason = nonArrivalReason,
+      departureReason = departureReason,
+      moveOnCategory = moveOnCategory,
+      cancellationReason = cancellationReason,
+      transferType = TRANSFER_TYPE,
+      additionalInformation = ADDITIONAL_INFORMATION,
+      transferReason = TRANSFER_REASON,
+      createdByUser = spaceBookingCreatedByUser,
+      premisesName = TEST_PREMISES_NAME,
+      characteristicName = TEST_CHARACTERISTIC_NAME,
+      characteristicPropertyName = TEST_CHARACTERISTIC_PROPERTY_NAME,
+    )
+
+    domainEventEntity(offenderDetails, application.id, assessment.id, assessor.id)
   }
 
   @Test

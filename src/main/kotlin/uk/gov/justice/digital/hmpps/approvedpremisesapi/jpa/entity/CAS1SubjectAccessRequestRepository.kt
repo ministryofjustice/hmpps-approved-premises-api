@@ -149,7 +149,11 @@ from
                apa.agree_with_short_notice_reason_comments,
                apa.reason_for_late_application
            from
+               approved_premises_assessments apa
+           inner join
                assessments assess
+           on
+               apa.assessment_id = assess.id
            inner join 
                applications app
            on
@@ -158,10 +162,6 @@ from
                users u 
            on
                u.id = assess.allocated_to_user_id
-           left join 
-               approved_premises_assessments apa 
-           on
-               apa.assessment_id = assess.id
           where
               (app.crn = :crn or app.noms_number = :noms_number )
           and 

@@ -88,6 +88,8 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
       dutyToReferLocalAuthorityAreaName = TEST_DUTY_TO_REFER_AREA,
       probationRegionName = TEST_PROBATION_REGION,
       probationDeliveryUnitName = TEST_PROBATION_DELIVERY_UNIT,
+      data = CAS3_APPLICATION_DATA,
+      document = CAS3_APPLICATION_DOCUMENT,
     )
     val temporaryAccommodationAssessment = temporaryAccommodationAssessmentEntity(
       temporaryAccommodationApplication,

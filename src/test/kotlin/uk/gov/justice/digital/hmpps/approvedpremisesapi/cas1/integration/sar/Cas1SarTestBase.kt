@@ -59,9 +59,15 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     const val REQUESTED_DURATION = 8
     const val AUTHORISED_DURATION = 9
     const val ADDITIONAL_INFORMATION = "some additional information"
+    const val CAS1_DATA_PATH = "db/seed/dev+test/cas1_application_data"
 
     val TRANSFER_TYPE = TransferType.PLANNED
     val TRANSFER_REASON = TransferReason.movingPersonCloserToResettlementArea
+
+    val CAS1_APPLICATION_DATA by lazy { readResource("$CAS1_DATA_PATH/application_data.json") }
+    val CAS1_APPLICATION_DOCUMENT by lazy { readResource("$CAS1_DATA_PATH/application_document.json") }
+    val CAS1_ASSESSMENT_DATA by lazy { readResource("$CAS1_DATA_PATH/assessment_data.json") }
+    val CAS1_ASSESSMENT_DOCUMENT by lazy { readResource("$CAS1_DATA_PATH/assessment_document.json") }
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -116,13 +122,17 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     transferType: TransferType? = null,
     additionalInformation: String? = null,
     transferReason: TransferReason? = null,
+    createdByUser: UserEntity? = null,
+    premisesName: String = "a premises ${randomStringMultiCaseWithNumbers(5)}",
+    characteristicName: String = randomStringMultiCaseWithNumbers(10),
+    characteristicPropertyName: String = randomStringMultiCaseWithNumbers(6),
   ): Cas1SpaceBookingEntity {
-    val (user, _) = givenAUser()
+    val user = createdByUser ?: givenAUser().first
     val (placementRequest) = givenAPlacementRequest(
       assessmentAllocatedTo = user,
       createdByUser = user,
     )
-    val bed = bedEntity()
+    val bed = bedEntity(premisesName = premisesName)
     return cas1SpaceBookingEntityFactory.produceAndPersist {
       withPlacementRequest(placementRequest)
       withCrn(offenderDetails.otherIds.crn)
@@ -154,7 +164,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
       withCancellationReasonNotes("CANCELLATIONREASONNOTES")
       withCriteria(
         mutableListOf(
-          characteristicEntityFactory.produceAndPersist(),
+          characteristicEntity(name = characteristicName, propertyName = characteristicPropertyName),
         ),
       )
       withOfflineApplication(offlineApplication)
@@ -164,12 +174,15 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     }
   }
 
-  protected fun bedEntity(premisesEntity: ApprovedPremisesEntity? = null) = bedEntityFactory.produceAndPersist {
+  protected fun bedEntity(
+    premisesEntity: ApprovedPremisesEntity? = null,
+    premisesName: String = "a premises ${randomStringMultiCaseWithNumbers(5)}",
+  ) = bedEntityFactory.produceAndPersist {
     withName("a bed ${randomStringMultiCaseWithNumbers(5)}")
     withCode("a code ${randomStringMultiCaseWithNumbers(5)}")
 
     premises = givenAnApprovedPremises(
-      name = "a premises ${randomStringMultiCaseWithNumbers(5)}",
+      name = premisesName,
       apCode = "AP Code ${randomStringMultiCaseWithNumbers(5)}",
       localAuthorityArea = localAuthorityEntityFactory.produceAndPersist {
         withName("An LAA ${randomStringMultiCaseWithNumbers(5)}")
@@ -196,9 +209,16 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
   }
 
-  protected fun approvedPremisesApplicationEntity(offenderDetails: OffenderDetailSummary, caseManagerName: String? = null): ApprovedPremisesApplicationEntity {
-    val user = userEntity()
-    val applicantUserDetails = cas1ApplicationUserDetailsEntity()
+  protected fun approvedPremisesApplicationEntity(
+    offenderDetails: OffenderDetailSummary,
+    caseManagerName: String? = null,
+    createdByUser: UserEntity? = null,
+    applicantUserName: String? = null,
+    data: String = DATA_JSON_SIMPLE,
+    document: String = DOCUMENT_JSON_SIMPLE,
+  ): ApprovedPremisesApplicationEntity {
+    val user = createdByUser ?: userEntity()
+    val applicantUserDetails = cas1ApplicationUserDetailsEntity(applicantUserName)
     val caseManagerUserDetails = cas1CaseManagerUserDetailsEntity(caseManagerName)
     return approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
@@ -227,8 +247,8 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
       withApplicantUserDetails(applicantUserDetails)
       withCaseManagerUserDetails(caseManagerUserDetails)
       withCaseManagerIsNotApplicant(true)
-      withData(DATA_JSON_SIMPLE)
-      withDocument(DOCUMENT_JSON_SIMPLE)
+      withData(data)
+      withDocument(document)
       withSituation(SituationOption.bailSentence.toString())
       withIsInapplicable(false)
       withLicenseExpiredDate(LocalDate.parse(LICENCE_EXPIRY_DATE))
@@ -239,9 +259,11 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
   protected fun approvedPremisesAssessmentEntity(
     application: ApprovedPremisesApplicationEntity,
     assessor: UserEntity = userEntity(),
+    data: String = DATA_JSON_SIMPLE,
+    document: String = DOCUMENT_JSON_SIMPLE,
   ): ApprovedPremisesAssessmentEntity = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-    withData(DATA_JSON_SIMPLE)
-    withDocument(DOCUMENT_JSON_SIMPLE)
+    withData(data)
+    withDocument(document)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withAllocatedAt(OffsetDateTime.parse(ALLOCATED_AT))
     withIsWithdrawn(false)
@@ -314,6 +336,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     assessment: ApprovedPremisesAssessmentEntity,
     application: ApprovedPremisesApplicationEntity,
     placementApplication: PlacementApplicationEntity,
+    placementRequirements: PlacementRequirementsEntity? = null,
   ): PlacementRequestEntity = placementRequestFactory.produceAndPersist {
     withAssessment(assessment)
     withApplication(application)
@@ -326,27 +349,37 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     withIsWithdrawn(true)
     withWithdrawalReason(PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
     withNotes("some notes")
-    withPlacementRequirements(placementRequirementEntity(application, assessment))
+    withPlacementRequirements(placementRequirements ?: placementRequirementEntity(application, assessment))
   }
 
   protected fun placementRequirementEntity(
     application: ApprovedPremisesApplicationEntity,
     assessment: ApprovedPremisesAssessmentEntity,
+    desirableCriteria: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity> = listOf(characteristicEntity()),
+    essentialCriteria: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity> = listOf(characteristicEntity()),
+    postcodeOutcode: String? = null,
   ): PlacementRequirementsEntity = placementRequirementsFactory.produceAndPersist {
     withApplication(application)
     withAssessment(assessment)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withApType(JpaApType.NORMAL)
-    withDesirableCriteria(listOf(characteristicEntity()))
-    withEssentialCriteria(listOf(characteristicEntity()))
-    withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+    withDesirableCriteria(desirableCriteria)
+    withEssentialCriteria(essentialCriteria)
+    withPostcodeDistrict(
+      postCodeDistrictFactory.produceAndPersist {
+        if (postcodeOutcode != null) withOutcode(postcodeOutcode)
+      },
+    )
   }
 
-  protected fun characteristicEntity() = characteristicEntityFactory.produceAndPersist {
-    withName(randomStringMultiCaseWithNumbers(10))
+  protected fun characteristicEntity(
+    name: String = randomStringMultiCaseWithNumbers(10),
+    propertyName: String = randomStringMultiCaseWithNumbers(6),
+  ) = characteristicEntityFactory.produceAndPersist {
+    withName(name)
     withServiceScope(Characteristic.ServiceScope.star.value)
     withModelScope(Characteristic.ModelScope.room.value)
-    withPropertyName(randomStringMultiCaseWithNumbers(6))
+    withPropertyName(propertyName)
   }
 
   protected fun bookingNotMadeEntity(placementRequest: PlacementRequestEntity): BookingNotMadeEntity = bookingNotMadeFactory.produceAndPersist {
@@ -355,7 +388,10 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     withNotes("Some notes on booking not made")
   }
 
-  protected fun cas1ApplicationUserDetailsEntity(): Cas1ApplicationUserDetailsEntity = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+  protected fun cas1ApplicationUserDetailsEntity(
+    name: String? = null,
+  ): Cas1ApplicationUserDetailsEntity = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+    if (name != null) withName(name)
     withEmailAddress("noname_applicant_user@noname.net")
   }
 

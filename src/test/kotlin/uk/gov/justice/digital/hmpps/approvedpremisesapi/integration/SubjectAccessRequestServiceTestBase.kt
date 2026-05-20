@@ -57,6 +57,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     const val DECISION_MADE_AT_NO_TZ = "2021-10-25T16:01:00"
     const val DATA_JSON_SIMPLE = """{ "key": "value" }"""
     const val DOCUMENT_JSON_SIMPLE = """{ "key2": "value2" }"""
+
     const val EVENT_NUMBER = "1"
     const val OFFENCE_ID = "BEING_BAD"
     const val CONVICTION_ID = 2L
@@ -77,6 +78,9 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     var cancellationDateOnly = CANCELLATION_DATE.substring(0..9)
     var arrivedAtTime = ARRIVED_AT.substring(11..18)
     var departedAtTime = DEPARTED_AT.substring(11..18)
+
+    @JvmStatic
+    protected fun readResource(path: String) = SubjectAccessRequestServiceTestBase::class.java.classLoader.getResource(path)!!.readText()
   }
 
   protected fun OffsetDateTime.toStandardisedFormat(): String = this.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
