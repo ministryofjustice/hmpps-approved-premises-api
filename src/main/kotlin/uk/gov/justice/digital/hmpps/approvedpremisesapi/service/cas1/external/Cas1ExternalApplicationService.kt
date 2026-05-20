@@ -3,10 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import java.time.LocalDate
 
@@ -15,6 +17,8 @@ import java.time.LocalDate
 class Cas1ExternalApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
+  private val cas1PremisesService: Cas1PremisesService,
+
 ) {
   fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
     .maxWithOrNull(
@@ -33,14 +37,35 @@ class Cas1ExternalApplicationService(
               dateApplied = rfp.statusSetDate,
               requestForPlacementStatus = rfp.status,
               placementStatus = null,
+              premises = null,
+              isSuitable = false,
             ),
           )
         } else {
           rfp.placements.map { placement ->
+            println(placement)
+            println("hello")
+            println(placement.premises.id)
+            println(placement.premises.name)
+
+            val premises = cas1PremisesService.findPremisesById(placement.premises.id)
+              ?.let {
+                SuitablePremisesDto(
+                  startDate = placement.expectedArrivalDate,
+                  endDate = placement.expectedDepartureDate,
+                  postcode = it.postcode,
+                  addressLine1 = it.addressLine1,
+                  addressLine2 = it.addressLine2,
+                  town = it.town,
+                )
+              }
+
             Cas1PlacementHistory(
               dateApplied = requireNotNull(placement.statusSetDate),
               requestForPlacementStatus = rfp.status,
               placementStatus = placement.status,
+              premises = premises,
+              isSuitable = false,
             )
           }
         }
@@ -48,16 +73,18 @@ class Cas1ExternalApplicationService(
 
       val today = LocalDate.now()
 
-      val currentPlacementHistory =
+      val suitablePlacement =
         placementHistories.lastOrNull { it.dateApplied >= today }
           ?: placementHistories.firstOrNull { it.dateApplied < today }
+
+      suitablePlacement?.isSuitable = true
 
       Cas1SuitableApplication(
         id = application.id,
         applicationStatus = application.status,
-        requestForPlacementStatus = currentPlacementHistory?.requestForPlacementStatus,
-        placementStatus = currentPlacementHistory?.placementStatus,
         placementHistories = placementHistories,
+        requestForPlacementStatus = suitablePlacement?.requestForPlacementStatus,
+        placementStatus = suitablePlacement?.placementStatus,
       )
     }
 
