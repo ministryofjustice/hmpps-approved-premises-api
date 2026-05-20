@@ -38,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -71,7 +70,6 @@ class Cas3v2BookingService(
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
   private val cas3AssessmentService: Cas3AssessmentService,
-  private val featureFlagService: FeatureFlagService,
 ) {
   companion object {
     const val ARRIVAL_AFTER_LATEST_DATE_LIMIT_DAYS: Long = 14
@@ -568,7 +566,5 @@ class Cas3v2BookingService(
 
   fun Cas3BookingEntity.lastUnavailableDate() = workingDayService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
 
-  fun getLatestBookingStatus(applicationId: UUID): Cas3BookingStatus? = cas3BookingRepository.findAllByApplicationId(applicationId)
-    .maxByOrNull { it.createdAt }
-    ?.status
+  fun getLatestBooking(applicationId: UUID): Cas3BookingEntity? = cas3BookingRepository.findTopByApplicationIdOrderByCreatedAtDesc(applicationId)
 }

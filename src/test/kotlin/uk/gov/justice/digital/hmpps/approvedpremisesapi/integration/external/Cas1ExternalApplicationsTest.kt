@@ -3,11 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.external
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
@@ -97,21 +96,13 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
               requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
               placementStatus = Cas1SpaceBookingStatus.UPCOMING,
-              placementHistories = listOf(
-                Cas1PlacementHistory(
-                  placementStatus = Cas1SpaceBookingStatus.UPCOMING,
-                  requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
-                  premises = SuitablePremisesDto(
-                    startDate = booking.expectedArrivalDate,
-                    endDate = booking.expectedDepartureDate,
-                    addressLine1 = premises.addressLine1,
-                    addressLine2 = premises.addressLine2,
-                    town = premises.town,
-                    postcode = premises.postcode,
-                  ),
-                  dateApplied = booking.expectedArrivalDate,
-                  isSuitable = true,
-                ),
+              premises = Cas1SuitablePremisesDto(
+                startDate = booking.expectedArrivalDate,
+                endDate = booking.expectedDepartureDate,
+                addressLine1 = premises.addressLine1,
+                addressLine2 = premises.addressLine2,
+                town = premises.town,
+                postcode = premises.postcode,
               ),
             )
 

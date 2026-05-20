@@ -12,9 +12,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
@@ -157,7 +160,7 @@ class Cas3ApplicationServiceTest {
         inProgressApplicationNewer,
         inProgressApplicationOlder,
       )
-      every { mockCas3v2BookingService.getLatestBookingStatus(inProgressApplicationNewer.id) } returns null
+      every { mockCas3v2BookingService.getLatestBooking(inProgressApplicationNewer.id) } returns null
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),
@@ -167,6 +170,7 @@ class Cas3ApplicationServiceTest {
           ApplicationStatus.inProgress,
           null,
           bookingStatus = null,
+          premises = null,
         ),
       )
     }
@@ -227,7 +231,7 @@ class Cas3ApplicationServiceTest {
         submittedApplication3,
       )
 
-      every { mockCas3v2BookingService.getLatestBookingStatus(submittedApplication2.id) } returns null
+      every { mockCas3v2BookingService.getLatestBooking(submittedApplication2.id) } returns null
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),
@@ -237,6 +241,7 @@ class Cas3ApplicationServiceTest {
           ApplicationStatus.submitted,
           null,
           bookingStatus = null,
+          premises = null,
         ),
       )
     }
@@ -275,7 +280,7 @@ class Cas3ApplicationServiceTest {
         submittedApplication3,
       )
 
-      every { mockCas3v2BookingService.getLatestBookingStatus(submittedApplication2.id) } returns null
+      every { mockCas3v2BookingService.getLatestBooking(submittedApplication2.id) } returns null
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),
@@ -285,6 +290,7 @@ class Cas3ApplicationServiceTest {
           ApplicationStatus.submitted,
           null,
           bookingStatus = null,
+          premises = null,
         ),
       )
     }
@@ -314,7 +320,7 @@ class Cas3ApplicationServiceTest {
         submittedApplication,
       )
 
-      every { mockCas3v2BookingService.getLatestBookingStatus(submittedApplication.id) } returns null
+      every { mockCas3v2BookingService.getLatestBooking(submittedApplication.id) } returns null
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),
@@ -324,6 +330,7 @@ class Cas3ApplicationServiceTest {
           ApplicationStatus.submitted,
           TemporaryAccommodationAssessmentStatus.readyToPlace,
           bookingStatus = null,
+          premises = null,
         ),
       )
     }
@@ -353,7 +360,18 @@ class Cas3ApplicationServiceTest {
         submittedApplication,
       )
 
-      every { mockCas3v2BookingService.getLatestBookingStatus(submittedApplication.id) } returns Cas3BookingStatus.provisional
+      val premises = Cas3PremisesEntityFactory()
+        .produce()
+
+      val booking = Cas3BookingEntityFactory()
+        .withDefaults()
+        .withStatus(Cas3BookingStatus.provisional)
+        .withPremises(premises)
+        .withArrivalDate(LocalDate.now().plusMonths(1))
+        .withDepartureDate(LocalDate.now().plusMonths(2))
+        .produce()
+
+      every { mockCas3v2BookingService.getLatestBooking(submittedApplication.id) } returns booking
 
       assertThat(
         cas3ApplicationService.getSuitableApplicationByCrn(crn),
@@ -363,6 +381,15 @@ class Cas3ApplicationServiceTest {
           ApplicationStatus.submitted,
           TemporaryAccommodationAssessmentStatus.readyToPlace,
           bookingStatus = Cas3BookingStatus.provisional,
+          premises = Cas3SuitablePremisesDto(
+            startDate = booking.arrivalDate,
+            endDate = booking.departureDate,
+            name = booking.premises.name,
+            addressLine1 = booking.premises.addressLine1,
+            addressLine2 = booking.premises.addressLine2,
+            town = booking.premises.town,
+            postcode = booking.premises.postcode,
+          ),
         ),
       )
     }

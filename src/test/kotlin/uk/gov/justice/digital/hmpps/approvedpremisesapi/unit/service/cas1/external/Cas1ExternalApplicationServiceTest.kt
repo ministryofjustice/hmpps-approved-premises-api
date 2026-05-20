@@ -11,12 +11,11 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -108,36 +107,7 @@ class Cas1ExternalApplicationServiceTest {
           applicationStatus = awaitingPlacementApplication.status,
           requestForPlacementStatus = requestForPlacement2.status,
           placementStatus = null,
-          placementHistories = listOf(
-            Cas1PlacementHistory(
-              dateApplied = requestForPlacement2.statusSetDate,
-              requestForPlacementStatus = requestForPlacement2.status,
-              placementStatus = null,
-              premises = null,
-              isSuitable = true,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = requestForPlacement4.statusSetDate,
-              requestForPlacementStatus = requestForPlacement4.status,
-              placementStatus = null,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = requestForPlacement1.statusSetDate,
-              requestForPlacementStatus = requestForPlacement1.status,
-              placementStatus = null,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = requestForPlacement3.statusSetDate,
-              requestForPlacementStatus = requestForPlacement3.status,
-              placementStatus = null,
-              premises = null,
-              isSuitable = false,
-            ),
-          ),
+          premises = null,
         ),
       )
     }
@@ -257,91 +227,13 @@ class Cas1ExternalApplicationServiceTest {
           applicationStatus = awaitingPlacementApplication.status,
           requestForPlacementStatus = requestForPlacement3.status,
           placementStatus = placement7.status,
-          placementHistories = listOf(
-            Cas1PlacementHistory(
-              dateApplied = placement8.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement2.status,
-              placementStatus = placement8.status,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = placement10.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement2.status,
-              placementStatus = placement10.status,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = placement9.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement2.status,
-              placementStatus = placement9.status,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = placement7.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement3.status,
-              placementStatus = placement7.status,
-              premises = SuitablePremisesDto(
-                startDate = placement7.expectedArrivalDate,
-                endDate = placement7.expectedDepartureDate,
-                addressLine1 = premisesEntity.addressLine1,
-                addressLine2 = premisesEntity.addressLine2,
-                town = premisesEntity.town,
-                postcode = premisesEntity.postcode,
-              ),
-              isSuitable = true,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = placement1.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement1.status,
-              placementStatus = placement1.status,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = requestForPlacement4.statusSetDate,
-              requestForPlacementStatus = requestForPlacement4.status,
-              placementStatus = null,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = placement2.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement1.status,
-              placementStatus = placement2.status,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = placement3.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement1.status,
-              placementStatus = placement3.status,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = placement4.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement3.status,
-              placementStatus = placement4.status,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = placement6.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement3.status,
-              placementStatus = placement6.status,
-              premises = null,
-              isSuitable = false,
-            ),
-            Cas1PlacementHistory(
-              dateApplied = placement5.statusSetDate!!,
-              requestForPlacementStatus = requestForPlacement3.status,
-              placementStatus = placement5.status,
-              premises = null,
-              isSuitable = false,
-            ),
+          premises = Cas1SuitablePremisesDto(
+            startDate = placement7.expectedArrivalDate,
+            endDate = placement7.expectedDepartureDate,
+            addressLine1 = premisesEntity.addressLine1,
+            addressLine2 = premisesEntity.addressLine2,
+            town = premisesEntity.town,
+            postcode = premisesEntity.postcode,
           ),
         ),
       )
@@ -407,7 +299,7 @@ class Cas1ExternalApplicationServiceTest {
       )
         .withStatus(RequestForPlacementStatus.placementBooked).produce()
 
-      val premises = SuitablePremisesDto(
+      val premises = Cas1SuitablePremisesDto(
         startDate = booking.expectedArrivalDate,
         endDate = booking.expectedDepartureDate,
         addressLine1 = premisesEntity.addressLine1,
@@ -429,15 +321,7 @@ class Cas1ExternalApplicationServiceTest {
         applicationStatus = application.status,
         requestForPlacementStatus = requestForPlacement.status,
         placementStatus = placement.status,
-        placementHistories = listOf(
-          Cas1PlacementHistory(
-            requestForPlacementStatus = requestForPlacement.status,
-            placementStatus = placement.status,
-            premises = premises,
-            dateApplied = placement.statusSetDate!!,
-            isSuitable = true,
-          ),
-        ),
+        premises = premises,
       )
       val result = service.getSuitableApplicationByCrn(application.crn)
 
@@ -454,7 +338,7 @@ class Cas1ExternalApplicationServiceTest {
       val suitableApplication = Cas1SuitableApplication(
         id = suitableApprovedPremisesApplication.id,
         applicationStatus = suitableApprovedPremisesApplication.status,
-        placementHistories = listOf(),
+        premises = null,
         requestForPlacementStatus = null,
         placementStatus = null,
       )
@@ -505,7 +389,7 @@ class Cas1ExternalApplicationServiceTest {
       val suitableApplication = Cas1SuitableApplication(
         id = latestAwaitingPlacementApplication.id,
         applicationStatus = ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
-        placementHistories = listOf(),
+        premises = null,
         requestForPlacementStatus = null,
         placementStatus = null,
       )
@@ -554,7 +438,7 @@ class Cas1ExternalApplicationServiceTest {
       val suitableApplication = Cas1SuitableApplication(
         id = latestStartedApplication.id,
         applicationStatus = ApprovedPremisesApplicationStatus.STARTED,
-        placementHistories = listOf(),
+        premises = null,
         requestForPlacementStatus = null,
         placementStatus = null,
       )
