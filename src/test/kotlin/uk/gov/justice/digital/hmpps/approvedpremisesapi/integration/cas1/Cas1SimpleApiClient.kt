@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
@@ -101,7 +102,7 @@ class Cas1SimpleApiClient {
     integrationTestBase: IntegrationTestBase,
     assessmentId: UUID,
     assessorJwt: String,
-    body: AssessmentAcceptance,
+    body: Cas1AssessmentAcceptance,
   ) {
     integrationTestBase.webTestClient.post()
       .uri("/cas1/assessments/$assessmentId/acceptance")
@@ -121,7 +122,7 @@ class Cas1SimpleApiClient {
    *
    * Once we've migrated these existing entries to also
    * have an entry in placement_applications, we can remove
-   * this function
+   * this function, and remove
    */
   fun assessmentAcceptLegacyBehaviour(
     integrationTestBase: IntegrationTestBase,
