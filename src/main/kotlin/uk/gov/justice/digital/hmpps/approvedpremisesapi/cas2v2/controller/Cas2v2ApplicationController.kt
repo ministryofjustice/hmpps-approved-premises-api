@@ -165,6 +165,7 @@ class Cas2v2ApplicationController(
         data = serializedData,
         user,
         body.bailHearingDate,
+        body.cohort,
       )
 
       else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
