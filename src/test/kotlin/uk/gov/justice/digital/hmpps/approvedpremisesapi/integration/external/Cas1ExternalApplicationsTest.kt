@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
@@ -81,7 +82,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
 
             val (offender) = givenAnOffender()
 
-            cas1SpaceBookingEntityFactory.produceAndPersist {
+            val booking = cas1SpaceBookingEntityFactory.produceAndPersist {
               withCrn(offender.otherIds.crn)
               withPremises(premises)
               withPlacementRequest(placementRequest)
@@ -94,13 +95,22 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             val suitableApplication = Cas1SuitableApplication(
               id = application.id,
               applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
-              placementStatus = Cas1SpaceBookingStatus.UPCOMING,
               requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+              placementStatus = Cas1SpaceBookingStatus.UPCOMING,
               placementHistories = listOf(
                 Cas1PlacementHistory(
-                  dateApplied = LocalDate.now(),
                   placementStatus = Cas1SpaceBookingStatus.UPCOMING,
                   requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+                  premises = SuitablePremisesDto(
+                    startDate = booking.expectedArrivalDate,
+                    endDate = booking.expectedDepartureDate,
+                    addressLine1 = premises.addressLine1,
+                    addressLine2 = premises.addressLine2,
+                    town = premises.town,
+                    postcode = premises.postcode,
+                  ),
+                  dateApplied = booking.expectedArrivalDate,
+                  isSuitable = true,
                 ),
               ),
             )

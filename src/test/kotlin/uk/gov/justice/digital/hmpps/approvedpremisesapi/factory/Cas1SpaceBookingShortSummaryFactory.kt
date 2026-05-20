@@ -70,12 +70,8 @@ class Cas1SpaceBookingShortSummaryFactory : Factory<Cas1SpaceBookingShortSummary
     this.actualDepartureDate = { actualDepartureDate }
   }
 
-  fun withAdditionalInformation(additionalInformation: String?) = apply {
-    this.additionalInformation = { additionalInformation }
-  }
-
-  fun withTransferReason(transferReason: TransferReason?) = apply {
-    this.transferReason = { transferReason }
+  fun withPremises(premises: NamedId) = apply {
+    this.premises = { premises }
   }
 
   fun withStatus(status: Cas1SpaceBookingStatus) = apply {
