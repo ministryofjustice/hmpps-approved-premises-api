@@ -69,6 +69,7 @@ springdoc:
 hmpps.sqs:
   useWebToken: false
   provider: localstack
+  localstackUrl: http://localhost:4466
   topics:
     domainevents:
       arn: "dynamically set per test"

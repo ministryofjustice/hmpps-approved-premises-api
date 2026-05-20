@@ -162,10 +162,10 @@ jobs:
           # Maps tcp port 5432 on service container to the host
           - 5432:5432
       localstack:
-        image: localstack/localstack:3.4.0
+        image: localstack/localstack:community-archive
         ports:
-          - 4566:4566
-          - 4571:4571
+          - 4466:4566
+          - 4471:4571
         env:
           ES_PORT_EXTERNAL: 4571
           DOCKER_HOST: 'unix:///var/run/docker.sock'
