@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
@@ -32,12 +33,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
@@ -114,6 +117,12 @@ class Cas1SpaceBookingTransformerTest {
 
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withDefaults()
+            .withApType(JpaApType.RFAP)
+            .produce(),
+        )
         .produce()
 
       val cancellationReason = CancellationReasonEntityFactory().produce()
@@ -238,6 +247,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.bookedBy).isEqualTo(expectedUser)
       assertThat(result.requestForPlacementId).isEqualTo(placementRequest.id)
       assertThat(result.placementRequestId).isEqualTo(placementRequest.id)
+      assertThat(result.placementRequestApType).isEqualTo(ApType.rfap)
       assertThat(result.expectedArrivalDate).isEqualTo(spaceBooking.expectedArrivalDate)
       assertThat(result.expectedDepartureDate).isEqualTo(spaceBooking.expectedDepartureDate)
       assertThat(result.actualArrivalDate).isEqualTo(LocalDate.parse("2009-02-05"))

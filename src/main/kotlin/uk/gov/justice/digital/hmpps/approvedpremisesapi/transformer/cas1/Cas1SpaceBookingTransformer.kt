@@ -84,6 +84,7 @@ class Cas1SpaceBookingTransformer(
       cancellation = jpa.extractCancellation(),
       requestForPlacementId = jpa.placementRequest?.id,
       placementRequestId = jpa.placementRequest?.id,
+      placementRequestApType = jpa.placementRequest?.placementRequirements?.apType?.apiType,
       nonArrival = jpa.extractNonArrival(),
       deliusEventNumber = jpa.deliusEventNumber,
       departure = jpa.extractDeparture(),
