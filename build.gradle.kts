@@ -72,6 +72,10 @@ dependencies {
   implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:7.7.0")
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
 
+  val appinsightsCore = "core:2.6.4"
+  implementation("io.micrometer:micrometer-registry-azure-monitor:1.16.5")
+  implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.9")
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.1")
