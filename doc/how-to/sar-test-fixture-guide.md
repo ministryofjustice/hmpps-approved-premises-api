@@ -68,3 +68,35 @@ The `template_hmpps-approved-premises-api.mustache` file is shared across all se
 - Use conditional sections like `{{#ApprovedPremises}}...{{/ApprovedPremises}}` or `{{#TemporaryAccommodation}}...{{/TemporaryAccommodation}}` to isolate service-specific sections.
 - If you add new data to the API response, you must update the template to display it.
 - After updating the template, you **must** regenerate the HTML fixtures for **all** services that might be affected to ensure their compliance tests still pass.
+
+## Schema and Integration Tests
+
+The `SarIntegrationTest` class contains tests for verifying the SAR template endpoints and ensuring the database schema matches expectations.
+
+### Flyway Schema Test
+
+The `FlywaySchemaTest` verifies that the Flyway migrations are up to date and match the version expected by the SAR library.
+
+```bash
+./gradlew integrationTest --tests "uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.SarIntegrationTest"
+```
+
+### JPA Entities Test (Entity Schema)
+
+The `JpaEntitiesTest` ensures that the JPA entities in the project correctly map to the database schema and match the expected JSON representation used by the SAR service.
+
+If you add or modify JPA entities, you may need to update the `cas-entities-schema.json` fixture.
+
+#### 1. Generate the new entity schema
+
+```bash
+SAR_GENERATE_ACTUAL=true ./gradlew integrationTest --tests "uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.sar.SarIntegrationTest"
+```
+
+#### 2. Update the fixture
+
+The generated schema will be saved to `src/test/resources/entity-schema.json.log`. Copy it to the correct location:
+
+```bash
+cp src/test/resources/entity-schema.json.log src/test/resources/sar/cas-entities-schema.json
+```

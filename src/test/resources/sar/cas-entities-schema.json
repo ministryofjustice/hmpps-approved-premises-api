@@ -303,6 +303,10 @@
     "name": "String",
     "notifyReplyToEmailId": "String"
   },
+  "Cas1FormDataEntity": {
+    "id": "String",
+    "value": "String"
+  },
   "Cas1KeyWorkerStaffCodeLookupEntity": {
     "staffCode1": "String",
     "staffCode2": "String"
