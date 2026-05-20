@@ -45,6 +45,7 @@ class Cas2v2ApplicationsTransformer(
     assessment = if (jpa.assessment != null) cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
     timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
     applicationOrigin = jpa.applicationOrigin,
+    cohort = jpa.cohort?.apiType,
   )
 
   fun transformJpaAndFullPersonToApiSubmitted(jpa: Cas2ApplicationEntity, fullPerson: Person): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
@@ -78,6 +79,7 @@ class Cas2v2ApplicationsTransformer(
     personName = personName,
     prisonCode = jpaSummary.prisonCode,
     applicationOrigin = jpaSummary.applicationOrigin?.let { ApplicationOrigin.forValue(it) } ?: ApplicationOrigin.homeDetentionCurfew,
+    cohort = jpaSummary.cohort?.apiType,
   )
 
   fun applicationOriginFromText(applicationOrigin: String): ApplicationOrigin = when (applicationOrigin) {

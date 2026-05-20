@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.domain.Page
@@ -90,4 +92,7 @@ data class Cas2ApplicationSummaryEntity(
   var applicationOrigin: String? = null,
   @Column(name = "service_origin")
   var serviceOrigin: String? = null,
+  @Column(name = "cohort")
+  @Enumerated(EnumType.STRING)
+  var cohort: Cas2v2Cohort? = null,
 )

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2v2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -43,6 +44,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.homeDetentionCurfew }
   private var serviceOrigin: Yielded<Cas2ServiceOrigin> = { Cas2ServiceOrigin.HDC }
   private var bailHearingDate: Yielded<LocalDate?> = { null }
+  private var cohort: Yielded<Cas2v2Cohort> = { Cas2v2Cohort.HDC }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -153,6 +155,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.bailHearingDate = { bailHearingDate }
   }
 
+  fun withCohort(cohort: Cas2v2Cohort) = apply {
+    this.cohort = { cohort }
+  }
+
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce(): Cas2ApplicationEntity {
     val application = Cas2ApplicationEntity(
@@ -177,6 +183,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
       applicationOrigin = this.applicationOrigin(),
       bailHearingDate = this.bailHearingDate(),
       serviceOrigin = this.serviceOrigin(),
+      cohort = this.cohort(),
     )
     return application
   }
