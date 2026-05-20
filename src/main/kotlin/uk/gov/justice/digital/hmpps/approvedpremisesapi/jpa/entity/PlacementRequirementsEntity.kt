@@ -40,6 +40,13 @@ data class PlacementRequirementsEntity(
   @JoinColumn(name = "assessment_id")
   val assessment: ApprovedPremisesAssessmentEntity,
 
+  /**
+   * Note - these characteristics _may_ also include the characteristic
+   * for the ap type, if non-standard (this is down to the UI providing it)
+   *
+   * Due to this ambiguity, if ap Type is required, use the [apType] property
+   * instead
+   */
   @ManyToMany
   @JoinTable(
     name = "placement_requirements_essential_criteria",

@@ -902,7 +902,7 @@ class Cas1AssessmentServiceTest {
         .withData("{\"test\": \"data\"}")
 
       placementRequirements = PlacementRequirements(
-        type = ApType.normal,
+        type = ApType.esap,
         location = "AB123",
         radius = 50,
         desirableCriteria = listOf(),
@@ -1144,7 +1144,7 @@ class Cas1AssessmentServiceTest {
         )
       } returns placementRequirementEntity
 
-      every { cas1AssessmentDomainEventService.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
+      every { cas1AssessmentDomainEventService.assessmentAccepted(any(), any(), any(), any(), ApType.esap, any()) } just Runs
 
       every { cas1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
 
@@ -1282,7 +1282,6 @@ class Cas1AssessmentServiceTest {
         "{\"test\": \"data\"}",
         placementRequirements,
         placementDates,
-        null,
         notes,
       )
 

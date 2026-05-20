@@ -748,7 +748,6 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
             duration = duration,
           )
         },
-        apType = ApType.normal,
       ),
     )
   }

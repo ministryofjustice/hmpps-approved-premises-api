@@ -10,8 +10,6 @@ data class Cas1AssessmentAcceptance(
 
   @get:JsonProperty("placementDates") val placementDates: PlacementDates? = null,
 
-  @get:JsonProperty("apType") val apType: ApType? = null,
-
   @get:JsonProperty("notes") val notes: String? = null,
 
   @get:JsonProperty("agreeWithShortNoticeReason") val agreeWithShortNoticeReason: Boolean? = null,

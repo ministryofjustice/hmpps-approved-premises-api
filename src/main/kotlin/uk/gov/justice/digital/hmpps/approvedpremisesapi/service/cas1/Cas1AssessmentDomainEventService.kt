@@ -148,7 +148,7 @@ class Cas1AssessmentDomainEventService(
     assessment: AssessmentEntity,
     offenderDetails: OffenderDetailSummary,
     placementDates: PlacementDates?,
-    apType: ApType?,
+    apType: ApType,
     acceptingUser: UserEntity,
   ) {
     val domainEventId = UUID.randomUUID()
@@ -198,7 +198,7 @@ class Cas1AssessmentDomainEventService(
           ),
         ),
         metadata = mapOf(
-          MetaDataName.CAS1_REQUESTED_AP_TYPE to apType?.asApprovedPremisesType()?.name,
+          MetaDataName.CAS1_REQUESTED_AP_TYPE to apType.asApprovedPremisesType().name,
         ),
         schemaVersion = 2,
       ),

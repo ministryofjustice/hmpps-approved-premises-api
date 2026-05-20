@@ -122,7 +122,7 @@ class Cas1SimpleApiClient {
    *
    * Once we've migrated these existing entries to also
    * have an entry in placement_applications, we can remove
-   * this function, and remove
+   * this function, and remove [AssessmentAcceptance]
    */
   fun assessmentAcceptLegacyBehaviour(
     integrationTestBase: IntegrationTestBase,

@@ -160,7 +160,6 @@ class Cas1AssessmentsController(
       document = serializedData,
       placementRequirements = cas1AssessmentAcceptance.requirements,
       placementDates = cas1AssessmentAcceptance.placementDates,
-      apType = cas1AssessmentAcceptance.apType,
       notes = cas1AssessmentAcceptance.notes,
       agreeWithShortNoticeReason = cas1AssessmentAcceptance.agreeWithShortNoticeReason,
       agreeWithShortNoticeReasonComments = cas1AssessmentAcceptance.agreeWithShortNoticeReasonComments,

@@ -733,7 +733,6 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
             duration = duration,
           )
         },
-        apType = ApType.normal,
       ),
     )
   }

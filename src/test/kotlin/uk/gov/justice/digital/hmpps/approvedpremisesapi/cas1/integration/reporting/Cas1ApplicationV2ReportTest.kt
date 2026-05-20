@@ -1027,7 +1027,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
 
     val placementRequirements = PlacementRequirements(
-      type = ApType.normal,
+      type = apType,
       location = postCodeDistrictFactory.produceAndPersist().outcode,
       radius = 50,
       essentialCriteria = essentialCriteria,
@@ -1044,7 +1044,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         document = mapOf("document" to "value"),
         requirements = placementRequirements,
         placementDates = null,
-        apType = apType,
         agreeWithShortNoticeReason = agreeWithShortNoticeReason,
         agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments,
         reasonForLateApplication = reasonForLateApplication,
