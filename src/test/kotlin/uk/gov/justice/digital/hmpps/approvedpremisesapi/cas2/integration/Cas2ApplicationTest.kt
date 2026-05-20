@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2v2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
@@ -1592,9 +1593,13 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               it.matches(Regex("/cas2/applications/.+"))
             }
 
-            assertThat(result.responseBody.blockFirst()!!).matches {
+            val returnedApplication = result.responseBody.blockFirst()!!
+            assertThat(returnedApplication).matches {
               it.person.crn == offenderDetails.otherIds.crn
             }
+
+            val savedApplication = realApplicationRepository.findById(returnedApplication.id).get()
+            assertThat(savedApplication.cohort).isEqualTo(Cas2v2Cohort.HDC)
           }
         }
       }
