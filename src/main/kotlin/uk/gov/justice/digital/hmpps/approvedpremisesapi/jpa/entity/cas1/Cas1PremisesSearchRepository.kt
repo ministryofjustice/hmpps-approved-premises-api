@@ -27,10 +27,10 @@ FROM
             ) * 0.000621371
     END AS distance_in_miles,
     CASE
-      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_PIPE'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'PIPE'
-      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_ESAP'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'ESAP'
-      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'RFAP'
-      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH'=ANY(ARRAY_AGG (premises_chars_resolved.property_name))) THEN 'MHAP'
+      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_PIPE'=ANY(premises_chars.property_name_array)) THEN 'PIPE'
+      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_ESAP'=ANY(premises_chars.property_name_array)) THEN 'ESAP'
+      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED'=ANY(premises_chars.property_name_array)) THEN 'RFAP'
+      WHEN ('$CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH'=ANY(premises_chars.property_name_array)) THEN 'MHAP'
       ELSE 'NORMAL'
     END AS ap_type,
     p.name AS name,
@@ -42,15 +42,21 @@ FROM
     aa.id AS ap_area_id,
     aa.name AS ap_area_name,
     aa.identifier AS ap_area_identifier,
-    ARRAY_REMOVE(ARRAY_AGG (DISTINCT premises_chars_resolved.property_name), null) as premises_characteristics,
+    premises_chars.property_name_array as premises_characteristics,
     room_chars.property_name_array as room_characteristics,
     ARRAY_REMOVE(ARRAY_AGG (DISTINCT restrictions.description), null) as local_restrictions
   FROM approved_premises ap
   INNER JOIN premises p ON ap.premises_id = p.id
   INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
   INNER JOIN ap_areas aa ON pr.ap_area_id = aa.id
-  LEFT OUTER JOIN premises_characteristics premises_chars ON premises_chars.premises_id = p.id
-  LEFT OUTER JOIN characteristics premises_chars_resolved ON premises_chars_resolved.id = premises_chars.characteristic_id
+
+  LEFT JOIN (
+    SELECT pc.premises_id,
+           ARRAY_REMOVE(ARRAY_AGG(DISTINCT c.property_name), null) AS property_name_array
+    FROM premises_characteristics pc
+    JOIN characteristics c ON c.id = pc.characteristic_id
+    GROUP BY pc.premises_id
+  ) premises_chars ON premises_chars.premises_id = p.id
   
   LEFT JOIN (
     SELECT rooms.premises_id,
@@ -68,7 +74,7 @@ FROM
     ap.allow_new_space_bookings = true AND
     (:gender = 'ANY' OR (ap.gender = :gender)) AND
     (:cruManagementAreaIdsCount = 0 OR (ap.cas1_cru_management_area_id IN (:cruManagementAreaIds)))
-  GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name, room_chars.property_name_array   
+  GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name, premises_chars.property_name_array, room_chars.property_name_array   
 ) AS result
 WHERE
 (
