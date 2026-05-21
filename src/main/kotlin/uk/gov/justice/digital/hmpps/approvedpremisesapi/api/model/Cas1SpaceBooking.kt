@@ -21,6 +21,7 @@ data class Cas1SpaceBooking(
   @Deprecated(message = "Use placementRequestId")
   val requestForPlacementId: java.util.UUID? = null,
   val placementRequestId: java.util.UUID? = null,
+  val placementRequestApType: ApType? = null,
   val actualArrivalDate: java.time.LocalDate? = null,
   @Deprecated(message = "Use actualArrivalDate")
   val actualArrivalDateOnly: java.time.LocalDate? = null,
