@@ -3,25 +3,25 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.NeedsDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.OffenceDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskManagementPlan
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RisksToTheIndividual
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 
 @Service
 class OASysService(
-  private val apOASysContextApiClient: ApOASysContextApiClient,
+  private val apAndOASysClient: ApAndOASysClient,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getOASysNeeds(crn: String): CasResult<NeedsDetails> = when (val needsResult = apOASysContextApiClient.getNeedsDetails(crn)) {
+  fun getOASysNeeds(crn: String): CasResult<NeedsDetails> = when (val needsResult = apAndOASysClient.getNeedsDetails(crn)) {
     is ClientResult.Success -> CasResult.Success(needsResult.body)
     is ClientResult.Failure.StatusCode -> when (needsResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -38,7 +38,7 @@ class OASysService(
     is ClientResult.Failure -> needsResult.throwException()
   }
 
-  fun getOASysOffenceDetails(crn: String): CasResult<OffenceDetails> = when (val offenceDetailsResult = apOASysContextApiClient.getOffenceDetails(crn)) {
+  fun getOASysOffenceDetails(crn: String): CasResult<OffenceDetails> = when (val offenceDetailsResult = apAndOASysClient.getOffenceDetails(crn)) {
     is ClientResult.Success -> CasResult.Success(offenceDetailsResult.body)
     is ClientResult.Failure.StatusCode -> when (offenceDetailsResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -48,7 +48,7 @@ class OASysService(
     is ClientResult.Failure -> offenceDetailsResult.throwException()
   }
 
-  fun getOASysRiskManagementPlan(crn: String): CasResult<RiskManagementPlan> = when (val riskManagementPlanResult = apOASysContextApiClient.getRiskManagementPlan(crn)) {
+  fun getOASysRiskManagementPlan(crn: String): CasResult<RiskManagementPlan> = when (val riskManagementPlanResult = apAndOASysClient.getRiskManagementPlan(crn)) {
     is ClientResult.Success -> CasResult.Success(riskManagementPlanResult.body)
     is ClientResult.Failure.StatusCode -> when (riskManagementPlanResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -58,7 +58,7 @@ class OASysService(
     is ClientResult.Failure -> riskManagementPlanResult.throwException()
   }
 
-  fun getOASysRoshSummary(crn: String): CasResult<RoshSummary> = when (val roshSummaryResult = apOASysContextApiClient.getRoshSummary(crn)) {
+  fun getOASysRoshSummary(crn: String): CasResult<RoshSummary> = when (val roshSummaryResult = apAndOASysClient.getRoshSummary(crn)) {
     is ClientResult.Success -> CasResult.Success(roshSummaryResult.body)
     is ClientResult.Failure.StatusCode -> when (roshSummaryResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -68,7 +68,7 @@ class OASysService(
     is ClientResult.Failure -> roshSummaryResult.throwException()
   }
 
-  fun getOASysRiskToTheIndividual(crn: String): CasResult<RisksToTheIndividual> = when (val risksToTheIndividualResult = apOASysContextApiClient.getRiskToTheIndividual(crn)) {
+  fun getOASysRiskToTheIndividual(crn: String): CasResult<RisksToTheIndividual> = when (val risksToTheIndividualResult = apAndOASysClient.getRiskToTheIndividual(crn)) {
     is ClientResult.Success -> CasResult.Success(risksToTheIndividualResult.body)
     is ClientResult.Failure.StatusCode -> when (risksToTheIndividualResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -78,7 +78,7 @@ class OASysService(
     is ClientResult.Failure -> risksToTheIndividualResult.throwException()
   }
 
-  fun getOASysHealthDetails(crn: String): CasResult<HealthDetails> = when (val healthDetailsResult = apOASysContextApiClient.getHealth(crn)) {
+  fun getOASysHealthDetails(crn: String): CasResult<HealthDetails> = when (val healthDetailsResult = apAndOASysClient.getHealth(crn)) {
     is ClientResult.Success -> CasResult.Success(healthDetailsResult.body)
     is ClientResult.Failure.StatusCode -> when (healthDetailsResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)

@@ -10,13 +10,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndivid
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulOffenceDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskManagementPlanCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskToTheIndividualCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoSHSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockUnsuccessfulNeedsDetailsCallWithDelay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskManagementPlanCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
 class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
@@ -88,16 +88,16 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
     givenAUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        apAndOASysMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
         val roshSummary = RoshSummaryFactory().produce()
-        apOASysContextMockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, roshSummary)
+        apAndOASysMockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, roshSummary)
 
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        apOASysContextMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
+        apAndOASysMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         val riskManagementPlan = RiskManagementPlanFactory().produce()
-        apOASysContextMockSuccessfulRiskManagementPlanCall(offenderDetails.otherIds.crn, riskManagementPlan)
+        apAndOASysMockSuccessfulRiskManagementPlanCall(offenderDetails.otherIds.crn, riskManagementPlan)
 
         val needsDetails = NeedsDetailsFactory().apply {
           withAssessmentId(34853487)
@@ -106,7 +106,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        apOASysContextMockSuccessfulNeedsDetailsCall(offenderDetails.otherIds.crn, needsDetails)
+        apAndOASysMockSuccessfulNeedsDetailsCall(offenderDetails.otherIds.crn, needsDetails)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/sections?selected-sections=11&selected-sections=12")
@@ -142,7 +142,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
+        apAndOASysMockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/sections?selected-sections=11&selected-sections=12")

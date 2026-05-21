@@ -16,8 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetailsInner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetailsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem

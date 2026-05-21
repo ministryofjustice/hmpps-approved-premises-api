@@ -17,17 +17,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndivid
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockNeedsDetails404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockOffenceDetails404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRiskManagementPlan404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRiskToTheIndividual404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulHealthDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulOffenceDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskManagementPlanCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskToTheIndividualCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoSHSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockNeedsDetails404Call
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockOffenceDetails404Call
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskManagementPlan404Call
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskToTheIndividual404Call
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulHealthDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskManagementPlanCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoSHSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
@@ -61,8 +61,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
-      apOASysContextMockOffenceDetails404Call(CRN)
-      apOASysContextMockNeedsDetails404Call(CRN)
+      apAndOASysMockOffenceDetails404Call(CRN)
+      apAndOASysMockNeedsDetails404Call(CRN)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/metadata")
@@ -102,7 +102,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
       val offenceDetails = OffenceDetailsFactory().produce()
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
+      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
 
       val needsDetails = NeedsDetailsFactory().apply {
         withAssessmentId(34853487)
@@ -110,7 +110,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         withAttitudeIssuesDetails("Attitude", false, true)
         withFinanceIssuesDetails(null, null, null)
       }.produce()
-      apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
+      apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
       webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/metadata")
@@ -166,8 +166,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockOffenceDetails404Call(CRN)
-      apOASysContextMockRiskManagementPlan404Call(CRN)
+      apAndOASysMockOffenceDetails404Call(CRN)
+      apAndOASysMockRiskManagementPlan404Call(CRN)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan")
@@ -194,12 +194,12 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
 
       val riskManagementPlan = RiskManagementPlanFactory()
         .withSupervision("The supervision answer")
         .produce()
-      apOASysContextMockSuccessfulRiskManagementPlanCall(CRN, riskManagementPlan)
+      apAndOASysMockSuccessfulRiskManagementPlanCall(CRN, riskManagementPlan)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan")
@@ -225,7 +225,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockOffenceDetails404Call(CRN)
+      apAndOASysMockOffenceDetails404Call(CRN)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails")
@@ -255,7 +255,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val offenceDetails = OffenceDetailsFactory()
         .withVictimImpact("Victim impact answer")
         .produce()
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
+      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails")
@@ -282,12 +282,12 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
 
       val roshSummary = RoshSummaryFactory()
         .withWhoAtRisk("Who at risk answer")
         .produce()
-      apOASysContextMockSuccessfulRoSHSummaryCall(CRN, roshSummary)
+      apAndOASysMockSuccessfulRoSHSummaryCall(CRN, roshSummary)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=roshSummary")
@@ -313,8 +313,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
-      apOASysContextMockRiskToTheIndividual404Call(CRN)
+      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apAndOASysMockRiskToTheIndividual404Call(CRN)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
@@ -340,12 +340,12 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
 
       val riskToIndividual = RiskToTheIndividualFactory()
         .withCurrentVulnerability("Current vuln answer")
         .produce()
-      apOASysContextMockSuccessfulRiskToTheIndividualCall(CRN, riskToIndividual)
+      apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, riskToIndividual)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
@@ -371,8 +371,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apOASysContextMockOffenceDetails404Call(CRN)
-      apOASysContextMockNeedsDetails404Call(CRN)
+      apAndOASysMockOffenceDetails404Call(CRN)
+      apAndOASysMockNeedsDetails404Call(CRN)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=")
@@ -409,7 +409,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
-      apOASysContextMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
+      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
 
       val needsDetails = NeedsDetailsFactory().apply {
         withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
@@ -421,8 +421,8 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         withGeneralHealth(generalHealth = false, generalHealthSpecify = "health answer")
       }.produce()
 
-      apOASysContextMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
-      apOASysContextMockSuccessfulHealthDetailsCall(CRN, healthDetails)
+      apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
+      apAndOASysMockSuccessfulHealthDetailsCall(CRN, healthDetails)
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")

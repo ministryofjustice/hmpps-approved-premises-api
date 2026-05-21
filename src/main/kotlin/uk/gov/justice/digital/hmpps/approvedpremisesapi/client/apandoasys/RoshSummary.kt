@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys
 
 import java.time.OffsetDateTime
 

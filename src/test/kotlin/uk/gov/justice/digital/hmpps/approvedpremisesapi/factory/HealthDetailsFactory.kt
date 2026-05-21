@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetailsInner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthIssue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetailsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthIssue
 
 class HealthDetailsFactory : AssessmentInfoFactory<HealthDetails>() {
   private var generalHealth: Yielded<Boolean?> = { false }

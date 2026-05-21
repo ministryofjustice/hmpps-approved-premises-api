@@ -12,14 +12,14 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
@@ -40,7 +40,7 @@ import java.time.OffsetDateTime
 class Cas2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
+  private val mockApOASysContextApiClient = mockk<ApAndOASysClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
 
   private val offenderService = Cas2OffenderService(
