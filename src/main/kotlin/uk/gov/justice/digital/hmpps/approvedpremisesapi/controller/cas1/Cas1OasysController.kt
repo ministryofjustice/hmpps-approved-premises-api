@@ -1,23 +1,39 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.OAsysCas1Delegate
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetailsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1CreateApplicationLaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
-@Service
+@Cas1Controller
+@Tag(name = "CAS1 OASys")
 class Cas1OasysController(
   private val offenderService: OffenderService,
   private val userService: UserService,
@@ -25,9 +41,25 @@ class Cas1OasysController(
   private val oaSysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer,
-) : OAsysCas1Delegate {
+  private val userAccessService: Cas1UserAccessService,
+) {
 
-  override fun metadata(crn: String): ResponseEntity<Cas1OASysMetadata> {
+  @Operation(
+    summary = "Returns metadata about supporting information questions for a given CRN",
+    operationId = "metadata",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OASysMetadata::class))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/people/{crn}/oasys/metadata"],
+    produces = ["application/json"],
+  )
+  fun metadata(
+    @PathVariable crn: String,
+  ): ResponseEntity<Cas1OASysMetadata> {
     ensureOffenderAccess(crn)
 
     return ResponseEntity.ok(
@@ -42,10 +74,23 @@ class Cas1OasysController(
     )
   }
 
-  override fun answers(
-    crn: String,
-    group: Cas1OASysGroupName,
-    includeOptionalSections: List<Int>?,
+  @Operation(
+    summary = "Returns OASys answers for the requested group. The Supporting Information answers are returned if linked to harm and optionally if their section number appears in the selected-sections query parameter.",
+    operationId = "answers",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OASysGroup::class))]),
+      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/people/{crn}/oasys/answers"],
+    produces = ["application/json"],
+  )
+  fun answers(
+    @PathVariable @Parameter(description = "CRN of the Person to fetch latest OASys selection") crn: String,
+    @RequestParam group: Cas1OASysGroupName,
+    @RequestParam includeOptionalSections: List<Int>?,
   ): ResponseEntity<Cas1OASysGroup> {
     ensureOffenderAccess(crn)
 
@@ -78,6 +123,35 @@ class Cas1OasysController(
         answers = answers,
       ),
     )
+  }
+
+  @Operation(summary = "Returns OASys risk to the individual for a Person.")
+  @GetMapping("/people/{crn}/oasys/risks-to-individual")
+  fun getOasysRisksToIndividual(@PathVariable crn: String): ResponseEntity<RiskToTheIndividualInner> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val risksToTheIndividualWrapper = extractEntityFromCasResult(
+      oaSysService.getOASysRiskToTheIndividual(crn),
+    )
+
+    val riskToTheIndividual = risksToTheIndividualWrapper.riskToTheIndividual
+      ?: throw NotFoundProblem(crn, "RiskToTheIndividual")
+
+    return ResponseEntity.ok(riskToTheIndividual)
+  }
+
+  @Operation(summary = "Returns OASys health details for a Person.")
+  @GetMapping("/people/{crn}/oasys/health-details")
+  fun getOasysHealthDetails(@PathVariable crn: String): ResponseEntity<HealthDetailsInner> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
+
+    val healthDetailsWrapper = extractEntityFromCasResult(
+      oaSysService.getOASysHealthDetails(crn),
+    )
+
+    val healthDetails = healthDetailsWrapper.health
+
+    return ResponseEntity.ok(healthDetails)
   }
 
   @SuppressWarnings("ThrowsCount")

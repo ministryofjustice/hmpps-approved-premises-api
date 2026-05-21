@@ -10,8 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetailsInner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.BookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -23,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HealthAndMedicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LicenceService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -50,7 +47,6 @@ class Cas1PeopleController(
   private val userAccessService: Cas1UserAccessService,
   private val licenceService: LicenceService,
   private val offenderService: OffenderService,
-  private val oasysService: OASysService,
   private val healthAndMedicationService: HealthAndMedicationService,
 ) {
 
@@ -100,35 +96,6 @@ class Cas1PeopleController(
     val csraSummaries = offenderService.getCsraSummariesForOffender(crn, laoStrategy)
 
     return ResponseEntity.ok(extractEntityFromCasResult(csraSummaries))
-  }
-
-  @Operation(summary = "Returns OASys risk to the individual for a Person.")
-  @GetMapping("/people/{crn}/oasys/risks-to-individual")
-  fun getOasysRisksToIndividual(@PathVariable crn: String): ResponseEntity<RiskToTheIndividualInner> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
-
-    val risksToTheIndividualWrapper = extractEntityFromCasResult(
-      oasysService.getOASysRiskToTheIndividual(crn),
-    )
-
-    val riskToTheIndividual = risksToTheIndividualWrapper.riskToTheIndividual
-      ?: throw NotFoundProblem(crn, "RiskToTheIndividual")
-
-    return ResponseEntity.ok(riskToTheIndividual)
-  }
-
-  @Operation(summary = "Returns OASys health details for a Person.")
-  @GetMapping("/people/{crn}/oasys/health-details")
-  fun getOasysHealthDetails(@PathVariable crn: String): ResponseEntity<HealthDetailsInner> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
-
-    val healthDetailsWrapper = extractEntityFromCasResult(
-      oasysService.getOASysHealthDetails(crn),
-    )
-
-    val healthDetails = healthDetailsWrapper.health
-
-    return ResponseEntity.ok(healthDetails)
   }
 
   @Operation(summary = "Returns booking details for a Person.")
