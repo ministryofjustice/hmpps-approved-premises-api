@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
@@ -44,7 +44,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
           ),
         )
 
-        apOASysContextMockSuccessfulNeedsDetailsCall(
+        apAndOASysMockSuccessfulNeedsDetailsCall(
           offenderDetails.otherIds.crn,
           NeedsDetailsFactory().produce(),
         )

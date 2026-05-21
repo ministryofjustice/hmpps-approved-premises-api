@@ -52,16 +52,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockHealthDetails404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRiskToTheIndividual404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulHealthDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskToTheIndividualCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccesfullCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockHealthDetails404Call
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockRiskToTheIndividual404Call
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulHealthDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockForbiddenDietAndAllergyCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockNotFoundDietAndAllergyCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockSuccessfulDietAndAllergyCall
@@ -126,7 +126,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           ),
         )
 
-        apOASysContextMockSuccessfulRiskToTheIndividualCall(crn, risksToTheIndividual)
+        apAndOASysMockSuccessfulRiskToTheIndividualCall(crn, risksToTheIndividual)
 
         webTestClient.get()
           .uri("/cas1/people/$crn/oasys/risks-to-individual")
@@ -146,7 +146,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         val crn = "CRN"
 
-        apOASysContextMockRiskToTheIndividual404Call(crn)
+        apAndOASysMockRiskToTheIndividual404Call(crn)
 
         webTestClient.get()
           .uri("/cas1/people/$crn/oasys/risks-to-individual")
@@ -173,7 +173,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           riskToTheIndividual = null,
         )
 
-        apOASysContextMockSuccessfulRiskToTheIndividualCall(crn, risksToTheIndividual)
+        apAndOASysMockSuccessfulRiskToTheIndividualCall(crn, risksToTheIndividual)
 
         webTestClient.get()
           .uri("/cas1/people/$crn/oasys/risks-to-individual")
@@ -675,7 +675,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       givenAnOffender { offenderDetails, _ ->
         apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
-        apOASysContextMockSuccessfulRoshRatingsCall(offenderDetails.otherIds.crn, roshRatings)
+        apAndOASysMockSuccessfulRoshRatingsCall(offenderDetails.otherIds.crn, roshRatings)
         hmppsTierMockSuccessfulTierCall(
           offenderDetails.otherIds.crn,
           tier,
@@ -1378,7 +1378,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
           .withAlcoholMisuse(alcoholMisuse)
           .produce()
 
-        apOASysContextMockSuccessfulHealthDetailsCall(crn, healthDetails)
+        apAndOASysMockSuccessfulHealthDetailsCall(crn, healthDetails)
 
         val response = webTestClient.get()
           .uri("/cas1/people/$crn/oasys/health-details")
@@ -1406,7 +1406,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         val crn = "CRN"
 
-        apOASysContextMockHealthDetails404Call(crn)
+        apAndOASysMockHealthDetails404Call(crn)
 
         webTestClient.get()
           .uri("/cas1/people/$crn/oasys/health-details")

@@ -8,10 +8,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndivid
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulOffenceDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskToTheIndividualCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockUnsuccessfulRisksToTheIndividualCallWithDelay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRiskToTheIndividualCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay
 
 class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
   @Autowired
@@ -78,10 +78,10 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        apAndOASysMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
 
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        apOASysContextMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
+        apAndOASysMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         webTestClient.get()
           .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
@@ -107,7 +107,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, 2500)
+        apAndOASysMockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()
           .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")

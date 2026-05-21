@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -79,7 +79,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
   fun `Getting risks for a CRN returns OK with correct body`() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
-        apOASysContextMockSuccessfulRoshRatingsCall(
+        apAndOASysMockSuccessfulRoshRatingsCall(
           offenderDetails.otherIds.crn,
           RoshRatingsFactory().apply {
             withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))

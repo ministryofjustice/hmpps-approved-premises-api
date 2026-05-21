@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -27,7 +27,7 @@ class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
     val crn = offender.otherIds.crn
 
     apDeliusContextMockSuccessfulTeamsManagingCaseCall(crn, ManagingTeamsResponse(teamCodes = listOf("TEAM1")))
-    apOASysContextMockSuccessfulNeedsDetailsCall(crn, NeedsDetailsFactory().produce())
+    apAndOASysMockSuccessfulNeedsDetailsCall(crn, NeedsDetailsFactory().produce())
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
     val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
