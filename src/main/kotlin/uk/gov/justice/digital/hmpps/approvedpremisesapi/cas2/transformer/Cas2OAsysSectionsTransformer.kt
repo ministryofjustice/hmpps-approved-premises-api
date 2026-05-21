@@ -5,11 +5,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.OffenceDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RisksToTheIndividual
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshSummaryInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskToTheIndividualInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummaryInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 
 @Service

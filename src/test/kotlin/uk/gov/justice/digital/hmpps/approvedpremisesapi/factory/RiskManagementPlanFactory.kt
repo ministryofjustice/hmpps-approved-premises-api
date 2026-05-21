@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskManagementPlan
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskManagementPlanInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlanInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
 class RiskManagementPlanFactory : AssessmentInfoFactory<RiskManagementPlan>() {

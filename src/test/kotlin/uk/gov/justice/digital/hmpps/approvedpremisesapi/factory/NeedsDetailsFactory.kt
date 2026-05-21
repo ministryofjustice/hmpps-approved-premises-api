@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.LinksToHarm
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.LinksToReOffending
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.NeedsDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.NeedsDetailsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.LinksToHarm
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.LinksToReOffending
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetailsInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
 class NeedsDetailsFactory : AssessmentInfoFactory<NeedsDetails>() {

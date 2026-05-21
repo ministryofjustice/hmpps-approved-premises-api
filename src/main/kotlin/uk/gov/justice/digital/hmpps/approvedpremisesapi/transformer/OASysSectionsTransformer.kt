@@ -5,15 +5,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSupportingInformationQuestion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.NeedsDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.OffenceDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.OffenceDetailsInner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskManagementPlan
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskManagementPlanInner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskToTheIndividualInner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RisksToTheIndividual
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshSummaryInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetailsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlanInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskToTheIndividualInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummaryInner
 
 @Component
 class OASysSectionsTransformer {

@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshRatings
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshRatingsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatingsInner
 
 class RoshRatingsFactory : AssessmentInfoFactory<RoshRatings>() {
   private var riskChildrenCommunity: Yielded<RiskLevel> = { RiskLevel.LOW }

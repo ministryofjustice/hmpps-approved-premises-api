@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 @Component
 class OffenderRisksService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val apOASysContextApiClient: ApOASysContextApiClient,
+  private val apAndOASysClient: ApAndOASysClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val sentryService: SentryService,
 ) {
@@ -36,7 +36,7 @@ class OffenderRisksService(
     )
   }
 
-  private fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> = when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {
+  private fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> = when (val roshRisksResponse = apAndOASysClient.getRoshRatings(crn)) {
     is ClientResult.Success -> {
       val summary = roshRisksResponse.body.rosh
 

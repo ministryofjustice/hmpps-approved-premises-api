@@ -107,7 +107,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val rosh = RoshSummaryFactory().produce()
-        apOASysContextMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, rosh, 2500)
+        apOASysContextMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()
           .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/rosh")

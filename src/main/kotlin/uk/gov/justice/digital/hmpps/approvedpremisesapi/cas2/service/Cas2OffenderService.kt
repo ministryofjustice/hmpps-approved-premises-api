@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
@@ -44,7 +44,7 @@ import java.util.stream.Collectors
 class Cas2OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val apOASysContextApiClient: ApOASysContextApiClient,
+  private val apAndOASysClient: ApAndOASysClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
   @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
@@ -279,7 +279,7 @@ class Cas2OffenderService(
   }
 
   private fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> {
-    when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {
+    when (val roshRisksResponse = apAndOASysClient.getRoshRatings(crn)) {
       is ClientResult.Success -> {
         val summary = roshRisksResponse.body.rosh
 

@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.NeedsDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.OffenceDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskManagementPlan
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RisksToTheIndividual
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshRatings
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 
 fun IntegrationTestBase.apOASysContextMockSuccessfulOffenceDetailsCall(crn: String, response: OffenceDetails) = mockSuccessfulGetCallWithJsonResponse(
@@ -23,12 +23,6 @@ fun IntegrationTestBase.apOASysContextMockOffenceDetails404Call(crn: String) = m
 fun IntegrationTestBase.apOASysContextMockSuccessfulRoSHSummaryCall(crn: String, response: RoshSummary) = mockSuccessfulGetCallWithJsonResponse(
   url = "/rosh-summary/$crn",
   responseBody = response,
-)
-
-fun IntegrationTestBase.apOASysContextMockRoSHSummary404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
-  url = "/rosh-summary/$crn",
-  responseStatus = 404,
-  delayMs = 0,
 )
 
 fun IntegrationTestBase.apOASysContextMockSuccessfulRiskToTheIndividualCall(crn: String, response: RisksToTheIndividual) = mockSuccessfulGetCallWithJsonResponse(
@@ -75,13 +69,13 @@ fun IntegrationTestBase.apOASysContextMockNeedsDetails404Call(crn: String) = moc
   delayMs = 0,
 )
 
-fun IntegrationTestBase.apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay(crn: String, response: NeedsDetails, delayMs: Int) = mockUnsuccessfulGetCallWithDelayedResponse(
+fun IntegrationTestBase.apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay(crn: String, delayMs: Int) = mockUnsuccessfulGetCallWithDelayedResponse(
   url = "/needs-details/$crn",
   responseStatus = 404,
   delayMs = delayMs,
 )
 
-fun IntegrationTestBase.apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay(crn: String, response: RisksToTheIndividual, delayMs: Int) = mockUnsuccessfulGetCallWithDelayedResponse(
+fun IntegrationTestBase.apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay(crn: String, delayMs: Int) = mockUnsuccessfulGetCallWithDelayedResponse(
   url = "/risk-to-the-individual/$crn",
   responseStatus = 404,
   delayMs = delayMs,
@@ -92,7 +86,7 @@ fun IntegrationTestBase.apOASysContextMockSuccessfulRoshRatingsCall(crn: String,
   responseBody = response,
 )
 
-fun IntegrationTestBase.apOASysContextMockUnsuccessfulRoshCallWithDelay(crn: String, response: RoshSummary, delayMs: Int) = mockUnsuccessfulGetCallWithDelayedResponse(
+fun IntegrationTestBase.apOASysContextMockUnsuccessfulRoshCallWithDelay(crn: String, delayMs: Int) = mockUnsuccessfulGetCallWithDelayedResponse(
   url = "/rosh/$crn",
   responseStatus = 404,
   delayMs = delayMs,

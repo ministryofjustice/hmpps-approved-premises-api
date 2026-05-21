@@ -8,16 +8,16 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.MappaDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Registration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -31,7 +31,7 @@ import java.util.UUID
 
 class OffenderRisksServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
+  private val mockApOASysContextApiClient = mockk<ApAndOASysClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockSentryService = mockk<SentryService>()
 

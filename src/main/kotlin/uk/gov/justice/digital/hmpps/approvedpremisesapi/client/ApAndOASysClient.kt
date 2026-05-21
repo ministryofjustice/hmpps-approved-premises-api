@@ -3,17 +3,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.HealthDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.NeedsDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.OffenceDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RiskManagementPlan
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RisksToTheIndividual
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshRatings
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.oasyscontext.RoshSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlan
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 
 @Component
-class ApOASysContextApiClient(
+class ApAndOASysClient(
   @Qualifier("apOASysContextApiWebClient") webClientConfig: WebClientConfig,
   jsonMapper: JsonMapper,
   webClientCache: WebClientCache,

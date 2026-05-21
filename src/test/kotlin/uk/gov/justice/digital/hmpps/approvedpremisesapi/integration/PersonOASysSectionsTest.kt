@@ -142,7 +142,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
+        apOASysContextMockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/oasys/sections?selected-sections=11&selected-sections=12")
