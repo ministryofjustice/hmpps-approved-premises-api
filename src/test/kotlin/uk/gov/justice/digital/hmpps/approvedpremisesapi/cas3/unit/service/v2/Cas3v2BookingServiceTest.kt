@@ -71,7 +71,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -104,7 +103,6 @@ class Cas3v2BookingServiceTest {
   private val mockDepartureRepository = mockk<Cas3DepartureRepository>()
   private val mockDepartureReasonRepository = mockk<DepartureReasonRepository>()
   private val mockMoveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
-  private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockExtensionRepository = mockk<Cas3ExtensionRepository>()
   private val mockOverstayRepository = mockk<Cas3OverstayRepository>()
 
@@ -128,7 +126,6 @@ class Cas3v2BookingServiceTest {
     cas3DomainEventService = mockCas3DomainEventService,
     userAccessService = mockUserAccessService,
     cas3AssessmentService = mockCas3AssessmentService,
-    featureFlagService = mockFeatureFlagService,
   )
 
   private val cas3BookingService = createCas3v2BookingService()
@@ -1412,7 +1409,7 @@ class Cas3v2BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as Cas3CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any(Cas3BookingEntity::class), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
-      every { mockCas3AssessmentService.acceptAssessment(user, any(), any()) } returns CasResult.Success(assessmentEntity!!)
+      every { mockCas3AssessmentService.acceptAssessment(user, any(), any()) } returns CasResult.Success(assessmentEntity)
       mockkStatic(Sentry::class)
 
       val result = cas3BookingService.createCancellation(
@@ -2478,64 +2475,30 @@ class Cas3v2BookingServiceTest {
   }
 
   @Nested
-  inner class GetLatestBookingStatus {
+  inner class GetLatestBooking {
     private val applicationId = UUID.randomUUID()
 
     @Test
     fun `returns null when no bookings exist for application`() {
-      every { mockBookingRepository.findAllByApplicationId(applicationId) } returns emptyList()
+      every { mockBookingRepository.findTopByApplicationIdOrderByCreatedAtDesc(applicationId) } returns null
 
-      val result = cas3BookingService.getLatestBookingStatus(applicationId)
+      val result = cas3BookingService.getLatestBooking(applicationId)
 
       assertThat(result).isNull()
     }
 
     @Test
-    fun `returns booking status when single booking exists`() {
+    fun `returns booking when booking exists`() {
       val booking = Cas3BookingEntityFactory()
         .withDefaults()
         .withStatus(Cas3BookingStatus.confirmed)
         .produce()
 
-      every { mockBookingRepository.findAllByApplicationId(applicationId) } returns listOf(booking)
+      every { mockBookingRepository.findTopByApplicationIdOrderByCreatedAtDesc(applicationId) } returns booking
 
-      val result = cas3BookingService.getLatestBookingStatus(applicationId)
+      val result = cas3BookingService.getLatestBooking(applicationId)
 
-      assertThat(result).isEqualTo(Cas3BookingStatus.confirmed)
-    }
-
-    @Test
-    fun `returns latest booking status when multiple bookings exist`() {
-      val olderBooking = Cas3BookingEntityFactory()
-        .withDefaults()
-        .withStatus(Cas3BookingStatus.provisional)
-        .withCreatedAt(OffsetDateTime.now().minusDays(5))
-        .produce()
-
-      val newerBooking = Cas3BookingEntityFactory()
-        .withDefaults()
-        .withStatus(Cas3BookingStatus.arrived)
-        .withCreatedAt(OffsetDateTime.now())
-        .produce()
-
-      every { mockBookingRepository.findAllByApplicationId(applicationId) } returns listOf(olderBooking, newerBooking)
-
-      val result = cas3BookingService.getLatestBookingStatus(applicationId)
-
-      assertThat(result).isEqualTo(Cas3BookingStatus.arrived)
-    }
-
-    @Test
-    fun `returns null when booking has no status`() {
-      val booking = Cas3BookingEntityFactory()
-        .withDefaults()
-        .produce()
-
-      every { mockBookingRepository.findAllByApplicationId(applicationId) } returns listOf(booking)
-
-      val result = cas3BookingService.getLatestBookingStatus(applicationId)
-
-      assertThat(result).isNull()
+      assertThat(result).isEqualTo(booking)
     }
   }
 }

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
+import java.time.LocalDate
 import java.util.UUID
 
 data class Cas3SuitableApplication(
@@ -10,4 +11,15 @@ data class Cas3SuitableApplication(
   val applicationStatus: ApplicationStatus,
   val assessmentStatus: TemporaryAccommodationAssessmentStatus?,
   val bookingStatus: Cas3BookingStatus?,
+  val premises: Cas3SuitablePremisesDto?,
+)
+
+data class Cas3SuitablePremisesDto(
+  val startDate: LocalDate?,
+  val endDate: LocalDate?,
+  val name: String?,
+  val addressLine1: String,
+  val addressLine2: String?,
+  val town: String?,
+  val postcode: String,
 )

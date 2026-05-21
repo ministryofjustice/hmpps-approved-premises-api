@@ -293,7 +293,7 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
     endDate: LocalDate,
   ): List<Cas3v2OverlapBookingsSearchResult>
 
-  fun findAllByApplicationId(applicationId: UUID): List<Cas3BookingEntity>
+  fun findTopByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas3BookingEntity?
 }
 
 @Suppress("TooManyFunctions")

@@ -1,9 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SuitablePremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitablePremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -43,14 +44,9 @@ class Cas1ExternalApplicationService(
           )
         } else {
           rfp.placements.map { placement ->
-            println(placement)
-            println("hello")
-            println(placement.premises.id)
-            println(placement.premises.name)
-
             val premises = cas1PremisesService.findPremisesById(placement.premises.id)
               ?.let {
-                SuitablePremisesDto(
+                Cas1SuitablePremisesDto(
                   startDate = placement.expectedArrivalDate,
                   endDate = placement.expectedDepartureDate,
                   postcode = it.postcode,
@@ -82,9 +78,9 @@ class Cas1ExternalApplicationService(
       Cas1SuitableApplication(
         id = application.id,
         applicationStatus = application.status,
-        placementHistories = placementHistories,
         requestForPlacementStatus = suitablePlacement?.requestForPlacementStatus,
         placementStatus = suitablePlacement?.placementStatus,
+        premises = suitablePlacement?.premises,
       )
     }
 
@@ -102,5 +98,13 @@ class Cas1ExternalApplicationService(
     ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST to 9,
     ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT to 10,
     ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED to 11,
+  )
+
+  private data class Cas1PlacementHistory(
+    val dateApplied: LocalDate,
+    val requestForPlacementStatus: RequestForPlacementStatus,
+    val placementStatus: Cas1SpaceBookingStatus?,
+    val premises: Cas1SuitablePremisesDto?,
+    var isSuitable: Boolean,
   )
 }

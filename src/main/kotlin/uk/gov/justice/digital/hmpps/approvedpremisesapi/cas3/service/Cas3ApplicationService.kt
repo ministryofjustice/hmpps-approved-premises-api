@@ -5,6 +5,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
@@ -70,11 +71,27 @@ class Cas3ApplicationService(
       compareBy { it.createdAt },
     )
     ?.let { application ->
+
+      val booking = cas3v2BookingService.getLatestBooking(application.id)
+
+      val premises = booking?.premises?.let {
+        Cas3SuitablePremisesDto(
+          startDate = booking.arrivalDate,
+          endDate = booking.departureDate,
+          name = it.name,
+          addressLine1 = it.addressLine1,
+          addressLine2 = it.addressLine2,
+          town = it.town,
+          postcode = it.postcode,
+        )
+      }
+
       Cas3SuitableApplication(
         id = application.id,
         applicationStatus = application.getStatus(),
         assessmentStatus = application.getLatestAssessment()?.deriveAssessmentStatus(),
-        bookingStatus = cas3v2BookingService.getLatestBookingStatus(application.id),
+        bookingStatus = booking?.status,
+        premises = premises,
       )
     }
 

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
@@ -55,6 +56,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             applicationStatus = ApplicationStatus.submitted,
             assessmentStatus = null,
             bookingStatus = null,
+            premises = null,
           )
 
           val response = webTestClient.get()
@@ -88,6 +90,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             applicationStatus = ApplicationStatus.inProgress,
             null,
             bookingStatus = null,
+            premises = null,
           )
 
           val response = webTestClient.get()
@@ -125,7 +128,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withSubmittedAt(OffsetDateTime.now())
           }
 
-          cas3BookingEntityFactory.produceAndPersist {
+          val booking = cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
             withApplication(application)
@@ -141,6 +144,15 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             applicationStatus = ApplicationStatus.submitted,
             assessmentStatus = null,
             bookingStatus = Cas3BookingStatus.confirmed,
+            premises = Cas3SuitablePremisesDto(
+              startDate = booking.arrivalDate,
+              endDate = booking.departureDate,
+              name = premises.name,
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
+            ),
           )
 
           val response = webTestClient.get()
