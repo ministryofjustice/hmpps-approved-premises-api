@@ -14,11 +14,52 @@
         <vulnerabilityName>CVE-2025-31672</vulnerabilityName>
     </suppress>
     <suppress>
-        <notes><![CDATA[We don't derive file download names from user input, so this is not
-        of concern. This should be resolved in a newer version of
-        uk.gov.justice.hmpps.gradle-spring-boot when it includes a version
-         of spring newer than 6.2.7]]></notes>
-        <packageUrl regex="true">^.*org.springframework.*$</packageUrl>
-        <vulnerabilityName>CVE-2025-41234</vulnerabilityName>
+        <notes><![CDATA[
+        file name: applicationinsights-core-2.6.4.jar
+        Suppressed as this is an Azure SDK dependency, not application insights.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.azure/applicationinsights-core@.*$</packageUrl>
+        <cve>CVE-2026-33117</cve>
+    </suppress>
+    <!-- DOM Purify -->
+    <suppress>
+        <notes><![CDATA[
+    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
+    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
+    ]]></notes>
+        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
+        <vulnerabilityName>CVE-2026-0540</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
+    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
+    ]]></notes>
+        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
+        <vulnerabilityName>CVE-2025-15599</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
+    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
+    ]]></notes>
+        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
+        <vulnerabilityName>GHSA-cj63-jhhr-wcxv</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
+    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
+    ]]></notes>
+        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
+        <vulnerabilityName>GHSA-cjmm-f4jc-qw8r</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    Suppression for dompurify issue as only bundled with swagger-ui and swagger docs should only be available in dev.
+    file name: swagger-ui-5.32.0.jar: swagger-ui-bundle.js
+    ]]></notes>
+        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
+        <vulnerabilityName>GHSA-h8r8-wccr-v5f2</vulnerabilityName>
     </suppress>
 </suppressions>
