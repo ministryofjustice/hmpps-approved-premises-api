@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 import io.swagger.v3.core.converter.AnnotatedType
 import io.swagger.v3.core.converter.ModelConverters
 import io.swagger.v3.core.jackson.ModelResolver
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType
+import io.swagger.v3.oas.annotations.security.SecurityScheme
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.info.Info
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.responses.ApiResponse
+import io.swagger.v3.oas.models.security.SecurityRequirement
 import org.springdoc.core.customizers.OpenApiCustomizer
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.boot.info.BuildProperties
@@ -17,6 +20,12 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 
+@SecurityScheme(
+  name = "bearer-jwt",
+  type = SecuritySchemeType.HTTP,
+  scheme = "bearer",
+  bearerFormat = "JWT",
+)
 @Configuration
 class OpenApiConfiguration(buildProperties: BuildProperties) {
   private val version: String = buildProperties.version!!
@@ -35,6 +44,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
         .version(version)
         .description("Swagger Documentation for Approved Premises API"),
     )
+    .addSecurityItem(SecurityRequirement().addList("bearer-jwt"))
 
   @Bean
   fun allCas(): GroupedOpenApi = GroupedOpenApi.builder()

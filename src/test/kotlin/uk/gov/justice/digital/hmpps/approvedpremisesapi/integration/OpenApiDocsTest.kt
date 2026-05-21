@@ -12,6 +12,9 @@ import org.springframework.boot.info.BuildProperties
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
 
+/**
+ * This is taken from hmpps-template-kotlin, with some tweaks
+ */
 class OpenApiDocsTest : IntegrationTestBase() {
   @LocalServerPort
   private val port: Int = 0
@@ -85,7 +88,7 @@ class OpenApiDocsTest : IntegrationTestBase() {
   }
 
   @Test
-  @Disabled("TODO Enable this test once you have added security schema to OpenApiConfiguration.OpenAPi().components()")
+  @Disabled("This is disabled as we have sufficient security documentation for current usage patterns")
   fun `the open api json path security requirements are valid`() {
     val result = OpenAPIV3Parser().readLocation("http://localhost:$port/v3/api-docs", null, null)
 
@@ -98,7 +101,7 @@ class OpenApiDocsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @Disabled("TODO Enable this test once you have added security schema to OpenApiConfiguration.OpenAPi().components(). Add the security scheme / roles to @CsvSource")
+  @Disabled("This is disabled as we have sufficient security documentation for current usage patterns")
   @CsvSource(value = ["security-scheme-name, ROLE_"])
   fun `the security scheme is setup for bearer tokens`(key: String, role: String) {
     webTestClient.get()
