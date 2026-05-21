@@ -49,7 +49,6 @@ class OpenApiDocsTest : IntegrationTestBase() {
       .jsonPath("paths").isNotEmpty
   }
 
-  @Disabled
   @Test
   fun `the swagger json don't contain any duplicate methods`() {
     // Methods in resource classes with the same name end up with operationIds that have _1 and _2 etc. in the name.
