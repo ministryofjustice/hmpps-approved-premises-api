@@ -20,7 +20,8 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.2.0")
+  val hmppsSpringBootStarterVersion = "2.2.0"
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsSpringBootStarterVersion")
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -36,14 +37,15 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.11")
   implementation("org.javers:javers-core:7.11.0")
 
+  val springDocOpenApiStarterVersion = "3.0.2"
   // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
   // generated schema, making it incompatible with the typescript generators and in some
   // places it was incorrect. We're pinning version 3.0.2 until a new version is available
   // reverting this change, as proposed by https://github.com/springdoc/springdoc-openapi/pull/3276
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocOpenApiStarterVersion")
   // this is a transitive dependency of uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-autoconfigure
   // so we need to force a different version
-  implementation("org.springdoc:springdoc-openapi-starter-common:3.0.2")
+  implementation("org.springdoc:springdoc-openapi-starter-common:$springDocOpenApiStarterVersion")
 
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
@@ -68,8 +70,10 @@ dependencies {
 
   implementation("com.opencsv:opencsv:5.12.0")
 
-  implementation("net.javacrumbs.shedlock:shedlock-spring:7.7.0")
-  implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:7.7.0")
+  val shedLockVersion = "7.7.0"
+  implementation("net.javacrumbs.shedlock:shedlock-spring:$shedLockVersion")
+  implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:$shedLockVersion")
+
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
 
   val appinsightsCore = "core:2.6.4"
@@ -80,7 +84,7 @@ dependencies {
   testImplementation("io.mockk:mockk:1.14.9")
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.1")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.2.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
 
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
