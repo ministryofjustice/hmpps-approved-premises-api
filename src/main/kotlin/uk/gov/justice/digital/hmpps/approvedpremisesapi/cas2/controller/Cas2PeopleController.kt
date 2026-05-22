@@ -40,9 +40,7 @@ class Cas2PeopleController(
   fun peopleSearchGet(@RequestParam nomsNumber: String): ResponseEntity<Person> {
     val currentUser = cas2UserService.getUserForRequest(Cas2ServiceOrigin.HDC)
 
-    val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
-
-    when (probationOffenderResult) {
+    when (val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)) {
       is ProbationOffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")
       is ProbationOffenderSearchResult.Forbidden -> throw ForbiddenProblem()
       is ProbationOffenderSearchResult.Unknown ->

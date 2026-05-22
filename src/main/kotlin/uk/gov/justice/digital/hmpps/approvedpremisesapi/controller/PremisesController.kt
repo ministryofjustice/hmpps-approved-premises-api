@@ -117,9 +117,7 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
-    val bookingResult = bookingService.getBooking(bookingId)
-
-    val bookingAndPersons = when (bookingResult) {
+    val bookingAndPersons = when (val bookingResult = bookingService.getBooking(bookingId)) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(bookingResult.id!!, bookingResult.entityType!!)
       is AuthorisableActionResult.Success -> bookingResult.entity

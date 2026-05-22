@@ -51,14 +51,11 @@ data class Cas1SiteSurveyDataFrame(
     else -> error("Invalid value for Yes/No dropdown: $answer on sheet $sheetName column ${answerCol + 1}. Question is $question")
   }
 
-  fun resolveAnswerYesNoNaDropDown(question: QuestionToMatch, answerCol: Int = 1): Boolean {
-    val answer = resolveAnswer(question, answerCol).uppercase()
-    return when (answer) {
-      "YES" -> true
-      "NO" -> false
-      "N/A" -> false
-      else -> error("Invalid value for Yes/No/N/A dropdown: $answer on sheet $sheetName column ${answerCol + 1}. Question is $question")
-    }
+  fun resolveAnswerYesNoNaDropDown(question: QuestionToMatch, answerCol: Int = 1): Boolean = when (val answer = resolveAnswer(question, answerCol).uppercase()) {
+    "YES" -> true
+    "NO" -> false
+    "N/A" -> false
+    else -> error("Invalid value for Yes/No/N/A dropdown: $answer on sheet $sheetName column ${answerCol + 1}. Question is $question")
   }
 
   /**

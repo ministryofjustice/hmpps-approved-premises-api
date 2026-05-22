@@ -27,8 +27,7 @@ class Cas2v2OffenderService(
   fun getPersonByNomisIdOrCrn(nomisIdOrCrn: String): Cas2v2OffenderSearchResult {
     fun logFailedResponse(probationResponse: ClientResult.Failure<CaseSummaries>) = log.warn("Could not get inmate details for $nomisIdOrCrn", probationResponse.toException())
 
-    val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomisIdOrCrn))
-    val caseSummaryList = when (caseSummaries) {
+    val caseSummaryList = when (val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomisIdOrCrn))) {
       is ClientResult.Success -> caseSummaries.body.cases
       is ClientResult.Failure.StatusCode -> when (caseSummaries.status) {
         HttpStatus.NOT_FOUND -> return emitMessageAndCreateNotFound("Person not found ($nomisIdOrCrn) via the Delius Integration Api", nomisIdOrCrn)

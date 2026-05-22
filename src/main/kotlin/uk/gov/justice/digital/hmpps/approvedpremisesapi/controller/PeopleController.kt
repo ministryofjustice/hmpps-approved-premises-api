@@ -80,8 +80,7 @@ class PeopleController(
   override fun peopleCrnAdjudicationsGet(crn: String, xServiceName: ServiceName): ResponseEntity<List<Adjudication>> {
     val nomsNumber = getNomsNumber(crn)
 
-    val adjudicationsResult = offenderService.getAdjudicationsByNomsNumber(nomsNumber)
-    val adjudications = when (adjudicationsResult) {
+    val adjudications = when (val adjudicationsResult = offenderService.getAdjudicationsByNomsNumber(nomsNumber)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Inmate")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> adjudicationsResult.entity

@@ -219,8 +219,7 @@ class Cas1UsersController(
   fun usersDeliusGet(@RequestParam name: String): ResponseEntity<ApprovedPremisesUser> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_USER_LIST)
 
-    val getUserResponse = userService.getExistingUserOrCreate(name)
-    return when (getUserResponse) {
+    return when (val getUserResponse = userService.getExistingUserOrCreate(name)) {
       UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(name, "user", "username")
       is UserService.GetUserResponse.StaffProbationRegionNotSupported -> throw RuntimeException("Probation region ${getUserResponse.unsupportedRegionId} not supported for user $name")
       is UserService.GetUserResponse.Success -> ResponseEntity.ok(userTransformer.transformCas1JpaToApi(getUserResponse.user))
