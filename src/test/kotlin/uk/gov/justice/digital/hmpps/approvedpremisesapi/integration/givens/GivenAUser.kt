@@ -163,7 +163,7 @@ fun IntegrationTestBase.givenACas2v2DeliusUser(
     withServiceOrigin(Cas2ServiceOrigin.BAIL)
   }
 
-  val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(deliusUser.deliusUsername)
+  val jwt = jwtAuthHelper.createValidCas2v2DeliusAuthorisationCodeJwt(deliusUser.deliusUsername)
 
   block(user, jwt)
 }

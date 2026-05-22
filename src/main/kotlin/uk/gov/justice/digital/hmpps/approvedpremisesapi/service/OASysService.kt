@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OASysAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
@@ -20,6 +21,15 @@ class OASysService(
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  fun getAssessmentSummary(crn: String): CasResult<OASysAssessmentSummary> = when (val result = apAndOASysClient.getLatestAssessmentSummary(crn)) {
+    is ClientResult.Success -> CasResult.Success(result.body)
+    is ClientResult.Failure.StatusCode -> when (result.status) {
+      HttpStatus.NOT_FOUND -> CasResult.NotFound("OASysAssessment", crn)
+      else -> result.throwException()
+    }
+    is ClientResult.Failure -> result.throwException()
+  }
 
   fun getOASysNeeds(crn: String): CasResult<NeedsDetails> = when (val needsResult = apAndOASysClient.getNeedsDetails(crn)) {
     is ClientResult.Success -> CasResult.Success(needsResult.body)
