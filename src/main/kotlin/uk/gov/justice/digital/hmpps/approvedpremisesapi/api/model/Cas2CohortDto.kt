@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue
 
 enum class Cas2CohortDto(@get:JsonValue val value: String) {
   HOME_DETENTION_CURFEW("hdc"),
-  BAIL("bail"),
-  COURT("court"),
+  PRISON_BAIL("prisonBail"),
+  COURT_BAIL("courtBail"),
   ALTERNATIVE_TO_CUSTODIAL_RECALL("atcr"),
   HOMELESS_AT_CONDITIONAL_RELEASE_DATE("hcrd"),
   HOMELESS_AT_END_OF_FIXED_TERM_RECALL("hefr"),

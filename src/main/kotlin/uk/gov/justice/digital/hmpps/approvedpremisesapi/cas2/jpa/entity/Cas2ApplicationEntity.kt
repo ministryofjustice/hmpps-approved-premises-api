@@ -81,8 +81,8 @@ interface Cas2LockableApplicationRepository : JpaRepository<Cas2LockableApplicat
 
 enum class Cas2Cohort(val apiType: Cas2CohortDto) {
   HDC(Cas2CohortDto.HOME_DETENTION_CURFEW),
-  BAIL(Cas2CohortDto.BAIL),
-  COURT(Cas2CohortDto.COURT),
+  PRISON_BAIL(Cas2CohortDto.PRISON_BAIL),
+  COURT_BAIL(Cas2CohortDto.COURT_BAIL),
   ATCR(Cas2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL),
   HCRD(Cas2CohortDto.HOMELESS_AT_CONDITIONAL_RELEASE_DATE),
   HEFR(Cas2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL),

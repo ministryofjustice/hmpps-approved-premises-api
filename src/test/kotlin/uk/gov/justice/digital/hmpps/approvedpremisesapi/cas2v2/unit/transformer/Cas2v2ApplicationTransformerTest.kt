@@ -87,7 +87,7 @@ class Cas2v2ApplicationTransformerTest {
         .withSubmittedAt(null)
         .withApplicationOrigin(ApplicationOrigin.prisonBail)
         .withServiceOrigin(Cas2ServiceOrigin.BAIL)
-        .withCohort(Cas2Cohort.BAIL)
+        .withCohort(Cas2Cohort.PRISON_BAIL)
         .produce()
 
       val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
@@ -115,7 +115,7 @@ class Cas2v2ApplicationTransformerTest {
       assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
       assertThat(result.timelineEvents).isEqualTo(listOf<Cas2TimelineEvent>())
       assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
-      assertThat(result.cohort).isEqualTo(Cas2CohortDto.BAIL)
+      assertThat(result.cohort).isEqualTo(Cas2CohortDto.PRISON_BAIL)
     }
 
     @Test
