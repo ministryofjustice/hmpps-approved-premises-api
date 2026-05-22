@@ -58,7 +58,8 @@ class ApplicationTimelinessTest : IntegrationTestBase() {
       withRiskRatings(risks)
     }
 
-    val unSubmittedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
+    // unSubmittedApplication
+    approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(user)
       withSubmittedAt(null)
       withRiskRatings(risks)

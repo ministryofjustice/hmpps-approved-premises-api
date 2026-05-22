@@ -390,7 +390,7 @@ class Cas1ChangeRequestTest {
     fun `ensure fields correctly populated`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
-      val response = webTestClient.get()
+      webTestClient.get()
         .uri("/cas1/placement-requests/change-requests")
         .header("Authorization", "Bearer $jwt")
         .exchange()

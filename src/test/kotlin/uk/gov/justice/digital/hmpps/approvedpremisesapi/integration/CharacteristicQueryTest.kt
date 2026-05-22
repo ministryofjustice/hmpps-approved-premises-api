@@ -20,7 +20,8 @@ class CharacteristicQueryTest : IntegrationTestBase() {
 
     val roomCharacteristics = mutableListOf(char1, char2, char3)
 
-    var otherCharacteristics = mutableListOf(
+    // otherCharacteristics
+    mutableListOf(
       characteristicEntityFactory.produceAndPersist(),
       characteristicEntityFactory.produceAndPersist(),
     )

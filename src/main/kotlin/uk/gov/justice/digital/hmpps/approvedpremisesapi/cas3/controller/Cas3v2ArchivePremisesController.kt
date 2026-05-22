@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2ArchiveService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
@@ -28,7 +29,7 @@ class Cas3v2ArchivePremisesController(
 
   @GetMapping("/premises/{premisesId}/can-archive")
   fun canArchivePremises(@PathVariable premisesId: UUID): ResponseEntity<Cas3ValidationResults> {
-    extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+    ensureEntityFromCasResultIsSuccess(cas3v2PremisesService.getValidatedPremises(premisesId))
 
     val result = archiveService.canArchivePremisesInFuture(premisesId)
 
@@ -82,7 +83,7 @@ class Cas3v2ArchivePremisesController(
   fun cancelScheduledUnarchivePremises(
     @PathVariable premisesId: UUID,
   ): ResponseEntity<Cas3Premises> {
-    val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
+    ensureEntityFromCasResultIsSuccess(cas3v2PremisesService.getValidatedPremises(premisesId))
 
     val updatedPremises = extractEntityFromCasResult(
       archiveService.cancelScheduledUnarchivePremises(premisesId),

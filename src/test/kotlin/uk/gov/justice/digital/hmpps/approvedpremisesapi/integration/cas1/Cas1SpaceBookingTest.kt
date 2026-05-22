@@ -1070,7 +1070,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on Key Worker Staff Code`() {
-      val (user, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?keyWorkerStaffCode=${keyWorker.deliusStaffCode}&sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -1091,7 +1091,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Filter on Key Worker Staff User Id`() {
-      val (user, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?keyWorkerUserId=${keyWorker.id}&sortBy=canonicalArrivalDate&sortDirection=asc")

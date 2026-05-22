@@ -1244,7 +1244,8 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
           }
 
-          val existingOutOfServiceBedWithConflictingDateInHistory = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          // existingOutOfServiceBedWithConflictingDateInHistory
+          cas1OutOfServiceBedEntityFactory.produceAndPersist {
             withBed(bed)
           }.apply {
             this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
@@ -1591,7 +1592,8 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
         val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
 
-        val existingBooking = bookingEntityFactory.produceAndPersist {
+        // existingBooking
+        bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.approvedPremises)
           withCrn("CRN123")
           withYieldedPremises { premises }
@@ -1861,7 +1863,8 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
           }
 
-          val existingOutOfServiceBedWithConflictingDateInHistory = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+          // existingOutOfServiceBedWithConflictingDateInHistory
+          cas1OutOfServiceBedEntityFactory.produceAndPersist {
             withBed(bed)
           }.apply {
             this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {

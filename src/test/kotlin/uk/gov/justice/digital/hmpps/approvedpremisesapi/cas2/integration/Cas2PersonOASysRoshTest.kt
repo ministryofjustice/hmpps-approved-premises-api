@@ -106,7 +106,6 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
   fun `Getting RoSH when upstream times out returns 404`() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
-        val rosh = RoshSummaryFactory().produce()
         apAndOASysMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()

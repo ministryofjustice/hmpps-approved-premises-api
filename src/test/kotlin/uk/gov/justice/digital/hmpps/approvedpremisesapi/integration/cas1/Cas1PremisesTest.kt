@@ -482,10 +482,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
     @BeforeAll
     fun setupTestData() {
-      val region = givenAProbationRegion(
-        apArea = givenAnApArea(name = "The ap area name"),
-      )
-
       premises = givenAnApprovedPremises(
         name = "the premises name",
         apCode = "the ap code",

@@ -178,7 +178,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
           givenAnAssessmentForApprovedPremises(user1, user1) { apAssessment, _ ->
             givenAUser(probationRegion = user1.probationRegion) { user2, _ ->
 
-              val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+              temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
                 val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
                   withCreatedByUser(user2)
                   withProbationRegion(user2.probationRegion)

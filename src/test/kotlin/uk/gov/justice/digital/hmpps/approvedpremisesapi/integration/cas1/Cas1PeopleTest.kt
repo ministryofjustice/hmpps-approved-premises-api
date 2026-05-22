@@ -738,7 +738,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         ),
       )
 
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       givenAnOffender { offenderDetails, _ ->
         prisonAPIMockSuccessfulCsraSummariesCall(offenderDetails.otherIds.nomsNumber!!, csraSummaries)
 
@@ -829,7 +829,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting CSRA summaries for a CRN that does not exist returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val crn = "NOT_FOUND_CRN"
 
       apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
@@ -844,7 +844,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting CSRA summaries for a CRN where Prison API returns 404 returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       givenAnOffender { offenderDetails, _ ->
         prisonAPIMockNotFoundCsraSummariesCall(offenderDetails.otherIds.nomsNumber!!)
 
@@ -862,7 +862,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
   inner class GetOffenderBookingDetails {
     @Test
     fun `Getting booking details for a CRN returns 200`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
 
       val crn = "CRN01"
       val nomsNumber = "NOMS01"
@@ -896,7 +896,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting booking details for a CRN that does not exist returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val crn = "NOT_FOUND_CRN"
 
       webTestClient.get()
@@ -909,7 +909,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting booking details for a CRN where Prison API returns 404 returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val (offenderDetails, _) = givenAnOffender()
       val existingOffender = Cas1OffenderEntityFactory().withCrn(offenderDetails.otherIds.crn).withNomsNumber(offenderDetails.otherIds.nomsNumber).withName("name").produce()
       cas1OffenderRepository.saveAndFlush(existingOffender)
@@ -1156,7 +1156,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting diet and allergy details for a CRN returns 200`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
 
       val crn = "CRN99"
       val nomsNumber = "NOMS99"
@@ -1233,7 +1233,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting diet and allergy details for a CRN returns 200 with empty diet and allergy details`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
 
       val crn = "CRN99"
       val nomsNumber = "NOMS99"
@@ -1296,7 +1296,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting diet and allergy details for a CRN that does not exist returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val crn = "NOT_FOUND_CRN_DIET"
 
       webTestClient.get()
@@ -1309,7 +1309,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting diet and allergy details for a CRN where Health and Medication API returns 404 returns 404`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val crn = "CRN404"
       val nomsNumber = "NOMS404"
 
@@ -1328,7 +1328,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Getting diet and allergy details for a CRN where Health and Medication API returns 403 returns 403`() {
-      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val crn = "CRN403"
       val nomsNumber = "NOMS403"
 

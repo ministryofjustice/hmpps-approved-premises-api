@@ -584,9 +584,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
   fun `Overstay columns show overstay when booking has overstayed`() {
     val startDate = LocalDate.of(2023, 4, 1)
     val endDate = LocalDate.of(2023, 4, 30)
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
 
     val localAuthority = LocalAuthorityEntityFactory().produce()
 
@@ -644,9 +641,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
   fun `Overstay columns show no overstay when booking did not overstay`() {
     val startDate = LocalDate.of(2023, 4, 1)
     val endDate = LocalDate.of(2023, 4, 30)
-    val probationRegion = ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
 
     val localAuthority = LocalAuthorityEntityFactory().produce()
 
@@ -662,7 +656,6 @@ class Cas3BedspaceUsageReportGeneratorTest {
       .produce()
 
     val arrivalDate = LocalDate.parse("2023-03-01")
-    val expectedDepartureDate = LocalDate.parse("2023-04-10")
 
     val booking = Cas3BookingEntityFactory()
       .withPremises(cas3Premises)
@@ -694,7 +687,7 @@ class Cas3BedspaceUsageReportGeneratorTest {
   fun `Overstay columns show no overstay when booking has an extension that is newer than overstay`() {
     val startDate = LocalDate.of(2023, 4, 1)
     val endDate = LocalDate.of(2023, 4, 30)
-    val probationRegion = ProbationRegionEntityFactory()
+    ProbationRegionEntityFactory()
       .withYieldedApArea { ApAreaEntityFactory().produce() }
       .produce()
 

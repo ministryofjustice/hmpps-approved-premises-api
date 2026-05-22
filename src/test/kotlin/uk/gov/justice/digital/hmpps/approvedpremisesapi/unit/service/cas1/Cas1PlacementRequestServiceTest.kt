@@ -607,7 +607,8 @@ class Cas1PlacementRequestServiceTest {
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val otherUser = UserEntityFactory()
+      // otherUser
+      UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
 

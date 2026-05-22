@@ -106,7 +106,6 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
   fun `Getting Risk to Self when upstream times out returns 404`() {
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
-        val risksToTheIndividual = RiskToTheIndividualFactory().produce()
         apAndOASysMockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()

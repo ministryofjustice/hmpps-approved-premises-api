@@ -1278,7 +1278,6 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
       ) { _, jwt, premises ->
 
         val cas3UnarchivePremises = Cas3UnarchivePremises(LocalDate.now().minusDays(15))
-        val restartDate = LocalDate.now()
 
         webTestClient.post()
           .uri("/cas3/v2/premises/${premises.id}/unarchive")

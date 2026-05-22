@@ -2597,7 +2597,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           allocatedToUser = null,
           createdByUser = user,
         ) { assessment, application ->
-          val unsubmittedPlacementApplication = placementApplicationFactory.produceAndPersist {
+          // unsubmittedPlacementApplication
+          placementApplicationFactory.produceAndPersist {
             withApplication(application)
             withCreatedByUser(user)
           }
@@ -2623,7 +2624,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withSituation(SituationOption.bailSentence.name)
           }
 
-          val submittedButReallocatedPlacementApplication = placementApplicationFactory.produceAndPersist {
+          // submittedButReallocatedPlacementApplication
+          placementApplicationFactory.produceAndPersist {
             withApplication(application)
             withCreatedByUser(user)
             withSubmittedAt(OffsetDateTime.now())
