@@ -41,4 +41,6 @@ data class Cas2v2ApplicationSummary(
   @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
 
   @get:JsonProperty("prisonCode") val prisonCode: String? = null,
+
+  @get:JsonProperty("cohort") val cohort: Cas2CohortDto? = null,
 )

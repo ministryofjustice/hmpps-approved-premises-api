@@ -35,4 +35,7 @@ data class Cas2v2Application(
   @get:JsonProperty("timelineEvents") val timelineEvents: List<Cas2TimelineEvent>? = null,
 
   @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+
+  @get:JsonProperty("cohort") val cohort: Cas2CohortDto? = null,
+
 ) : Application

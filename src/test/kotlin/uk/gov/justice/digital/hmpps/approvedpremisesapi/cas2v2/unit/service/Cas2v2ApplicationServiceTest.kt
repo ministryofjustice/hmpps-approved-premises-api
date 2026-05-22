@@ -22,6 +22,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.domain.Specification
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummarySpecifications
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
@@ -409,6 +411,7 @@ class Cas2v2ApplicationServiceTest {
           data = "{}",
           user = user,
           null,
+          null,
         ) is CasResult.NotFound,
       ).isTrue
     }
@@ -436,6 +439,7 @@ class Cas2v2ApplicationServiceTest {
           data = "{}",
           user = user,
           null,
+          null,
         ) is CasResult.Unauthorised,
       ).isTrue
     }
@@ -458,6 +462,7 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = "{}",
         user = user,
+        null,
         null,
       )
 
@@ -483,6 +488,7 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = "{}",
         user = user,
+        null,
         null,
       )
 
@@ -521,6 +527,7 @@ class Cas2v2ApplicationServiceTest {
         data = updatedData,
         user = user,
         null,
+        null,
       )
 
       result as CasResult.Success
@@ -542,11 +549,13 @@ class Cas2v2ApplicationServiceTest {
 
       val bailHearingDate = LocalDate.of(2030, 12, 18)
       val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+      val cohort = Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW
 
       val updatedData = """
       {
-        "aProperty": "value"
-        "bailHearingDate": "${bailHearingDate.format(formatter)}"
+        "aProperty": "value",
+        "bailHearingDate": "${bailHearingDate.format(formatter)}",
+        "cohort": "${cohort.value}",
       }
     """
 
@@ -554,6 +563,7 @@ class Cas2v2ApplicationServiceTest {
         .withId(applicationId)
         .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .withCreatedByUser(user)
+        .withCohort(Cas2Cohort.HEFR)
         .produce()
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns
@@ -569,6 +579,7 @@ class Cas2v2ApplicationServiceTest {
         data = updatedData,
         user = user,
         bailHearingDate,
+        Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW,
       )
 
       result as CasResult.Success
@@ -579,6 +590,7 @@ class Cas2v2ApplicationServiceTest {
 
       assertThat(cas2v2Application.data).isEqualTo(updatedData)
       assertThat(cas2v2Application.bailHearingDate).isEqualTo(bailHearingDate)
+      assertThat(cas2v2Application.cohort).isEqualTo(Cas2Cohort.RARR)
     }
   }
 

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
@@ -23,6 +24,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import java.time.LocalDate
@@ -77,6 +79,25 @@ interface Cas2LockableApplicationRepository : JpaRepository<Cas2LockableApplicat
   fun acquirePessimisticLock(id: UUID): Cas2LockableApplicationEntity?
 }
 
+enum class Cas2Cohort(val apiType: Cas2CohortDto) {
+  HDC(Cas2CohortDto.HOME_DETENTION_CURFEW),
+  PRISON_BAIL(Cas2CohortDto.PRISON_BAIL),
+  COURT_BAIL(Cas2CohortDto.COURT_BAIL),
+  ATCR(Cas2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL),
+  HCRD(Cas2CohortDto.HOMELESS_AT_CONDITIONAL_RELEASE_DATE),
+  HEFR(Cas2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL),
+  ISC(Cas2CohortDto.INTENSIVE_SUPERVISION_COURTS),
+  RARR(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW),
+  FROM_AP(Cas2CohortDto.REFERRAL_FROM_APPROVED_PREMISES),
+  ;
+
+  companion object {
+    @JvmStatic
+    @JsonCreator
+    fun forValue(value: String) = values().first { it.apiType.value == value }
+  }
+}
+
 @Entity
 @Table(name = "cas_2_applications")
 data class Cas2ApplicationEntity(
@@ -127,6 +148,9 @@ data class Cas2ApplicationEntity(
 
   @Enumerated(EnumType.STRING)
   var serviceOrigin: Cas2ServiceOrigin,
+
+  @Enumerated(EnumType.STRING)
+  var cohort: Cas2Cohort? = null,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
   fun isCreatedBy(user: Cas2UserEntity): Boolean = createdByUser.id == user.id
