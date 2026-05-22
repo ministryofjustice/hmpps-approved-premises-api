@@ -125,7 +125,7 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
     approvedPremisesAssessmentClarificationNoteEntity(assessment)
     appealEntity(application, assessment)
 
-    val placementApplication = placementApplicationEntity(application)
+    val placementApplication = placementApplicationEntity(application, CAS1_PLACEMENT_APPLICATION_DOCUMENT)
     val placementRequirements = placementRequirementEntity(
       application,
       assessment,
