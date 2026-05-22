@@ -35,7 +35,7 @@ dependencies {
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.6.0-jre")
   implementation("org.postgresql:postgresql:42.7.11")
-  implementation("org.javers:javers-core:7.11.0")
+  implementation("org.javers:javers-core:7.11.1")
 
   val springDocOpenApiStarterVersion = "3.0.2"
   // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
