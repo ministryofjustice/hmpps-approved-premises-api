@@ -508,7 +508,7 @@ class Cas1ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     val assessment = application.getLatestAssessment()!!
 
     webTestClient.post()
-      .uri("/tasks/assessment/${assessment.id}/allocations")
+      .uri("/cas1/tasks/assessment/${assessment.id}/allocations")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .bodyValue(
