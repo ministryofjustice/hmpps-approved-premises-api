@@ -28,7 +28,7 @@ class CsvObjectListConsumer(
       .withMappingStrategy(headerMappingStrategy)
       .build()
 
-    val headerLine = Arrays.stream(FutureBookingsReportRow::class.java.getDeclaredFields())
+    val headerLine = Arrays.stream(FutureBookingsReportRow::class.java.declaredFields)
       .map { field -> field.getAnnotation(CsvBindByName::class.java) }
       .filter(Objects::nonNull)
       .map { obj: CsvBindByName -> obj.column }

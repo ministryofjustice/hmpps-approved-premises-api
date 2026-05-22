@@ -53,7 +53,7 @@ class Cas2ApplicationsSeedJob(
 
   override fun processRow(row: Cas2ApplicationSeedCsvRow) {
     log.info("Setting up Application id ${row.id}")
-    if (repository.findById(row.id).isPresent()) {
+    if (repository.findById(row.id).isPresent) {
       return log.info("Skipping ${row.id}: already seeded")
     }
 

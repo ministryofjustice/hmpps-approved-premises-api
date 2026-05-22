@@ -58,7 +58,7 @@ class Cas2v2ApplicationsSeedJob(
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
   override fun processRow(row: Cas2v2ApplicationSeedCsvRow) {
     log.info("Setting up Application id ${row.id}")
-    if (repository.findById(row.id).isPresent()) {
+    if (repository.findById(row.id).isPresent) {
       return log.info("Skipping ${row.id}: already seeded")
     }
 
