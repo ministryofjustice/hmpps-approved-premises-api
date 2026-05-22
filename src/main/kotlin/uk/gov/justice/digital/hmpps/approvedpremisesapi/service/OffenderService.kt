@@ -303,17 +303,6 @@ class OffenderService(
   }
 
   fun getAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
-    val useManageAdjudicationsApi = featureFlagService.getBooleanFlag("cas1-manage-adjudications-api-enabled")
-    if (useManageAdjudicationsApi) {
-      log.info("Will use Manage Adjudications API to fetch adjudications")
-      return getPrisonAdjudicationsByNomsNumber(nomsNumber)
-    } else {
-      log.info("Uses existing Prison API to fetch adjudications")
-      return getPrisonAdjudicationsByNomsNumber(nomsNumber)
-    }
-  }
-
-  fun getPrisonAdjudicationsByNomsNumber(nomsNumber: String): AuthorisableActionResult<AdjudicationsPage> {
     val allAdjudications = mutableListOf<Adjudication>()
     val allAgencies = mutableListOf<Agency>()
 
