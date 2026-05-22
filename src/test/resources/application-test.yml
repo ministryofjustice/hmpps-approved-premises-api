@@ -6,6 +6,10 @@ management.endpoint:
   info.cache.time-to-live: 0
 
 spring:
+  http:
+    codecs:
+      # this is required for open api tests due to the size of our open api doc
+      max-in-memory-size: 10MB
   datasource:
     username: api_user
     password: api_user_password

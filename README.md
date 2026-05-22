@@ -52,6 +52,14 @@ Authorization: Bearer {the JWT}
 
 ## Coding Notes
 
+## Divergence from the hmpps kotlin template
+
+HMPPS provide a [kotlin template project](https://github.com/ministryofjustice/hmpps-template-kotlin)
+
+Whilst we should remain aligned with the template, there are some areas that we diverge
+
+* We use pattern matching rules to apply security, where as the sample [ResourceSecurityTest](https://github.com/ministryofjustice/hmpps-template-kotlin/blob/main/src/test/kotlin/uk/gov/justice/digital/hmpps/templatepackagename/integration/ResourceSecurityTest.kt) expects use of @PreAuthorize annotations. For this reason we do not include this test. AuthTest provides from top level authentication tests, and each individual end test ensures a token is required with a suitable role
+
 ### Load tests
 
 * Load tests are managed in the [hmpps-load-testing-probation](https://github.com/ministryofjustice/hmpps-load-testing-probation) repo
@@ -102,12 +110,11 @@ other commands you may need.
 ### Environments
 
 [Details of the different environments and their roles can be found in
-Confluence](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4330226204/Environments).
+Confluence](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/5001478252/CAS+Environments+URLs).
 
 ## Release process
 
-Our release process aligns with the other CAS teams and as such [lives in Confluence](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4247847062/Release+process). 
-The steps are also available in the pull request checklist[PULL_REQUEST_TEMPLATE](/.github/PULL_REQUEST_TEMPLATE/full_template.md).
+Our release process aligns with the other CAS teams and as such [lives in Confluence](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4247847062/Release+process).
 
 ## Docker Build
 

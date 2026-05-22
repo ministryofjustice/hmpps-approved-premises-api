@@ -5,9 +5,6 @@ info.app:
 spring:
   application:
     name: approved-premises-api
-  codec:
-    # note that we use configuration in web-clients: for any WebClients we construct ourselves
-    max-in-memory-size: 40MB
 
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"

@@ -1,7 +1,8 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
 import io.swagger.v3.core.converter.AnnotatedType
 import io.swagger.v3.core.converter.ModelConverters
+import io.swagger.v3.core.jackson.ModelResolver
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.media.Content
@@ -10,16 +11,18 @@ import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.responses.ApiResponse
 import org.springdoc.core.customizers.OpenApiCustomizer
 import org.springdoc.core.models.GroupedOpenApi
+import org.springframework.boot.info.BuildProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 
 @Configuration
-class SwaggerConfiguration {
+class OpenApiConfiguration(buildProperties: BuildProperties) {
+  private val version: String = buildProperties.version!!
 
   companion object {
     init {
-      io.swagger.v3.core.jackson.ModelResolver.enumsAsRef = true
+      ModelResolver.enumsAsRef = true
     }
   }
 
@@ -28,7 +31,7 @@ class SwaggerConfiguration {
     .info(
       Info()
         .title("Approved Premises")
-        .version("1.0.0")
+        .version(version)
         .description("Swagger Documentation for Approved Premises API"),
     )
 
