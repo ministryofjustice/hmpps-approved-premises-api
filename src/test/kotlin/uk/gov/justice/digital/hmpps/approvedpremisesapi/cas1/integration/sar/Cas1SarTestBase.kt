@@ -311,7 +311,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
 
   protected fun placementApplicationEntity(
     application: ApprovedPremisesApplicationEntity,
-    document: String = DOCUMENT_JSON_SIMPLE
+    document: String = DOCUMENT_JSON_SIMPLE,
   ): PlacementApplicationEntity = placementApplicationFactory.produceAndPersist {
     withApplication(application)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
