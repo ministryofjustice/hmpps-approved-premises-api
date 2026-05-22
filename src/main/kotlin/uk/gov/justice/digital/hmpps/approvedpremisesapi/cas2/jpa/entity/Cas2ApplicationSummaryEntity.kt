@@ -94,5 +94,5 @@ data class Cas2ApplicationSummaryEntity(
   var serviceOrigin: String? = null,
   @Column(name = "cohort")
   @Enumerated(EnumType.STRING)
-  var cohort: Cas2v2Cohort? = null,
+  var cohort: Cas2Cohort? = null,
 )

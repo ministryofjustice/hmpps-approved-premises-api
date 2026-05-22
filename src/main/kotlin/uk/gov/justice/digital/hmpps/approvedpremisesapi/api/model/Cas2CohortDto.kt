@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-enum class Cas2v2CohortDto(@get:JsonValue val value: String) {
+enum class Cas2CohortDto(@get:JsonValue val value: String) {
   HOME_DETENTION_CURFEW("hdc"),
   BAIL("bail"),
   COURT("court"),

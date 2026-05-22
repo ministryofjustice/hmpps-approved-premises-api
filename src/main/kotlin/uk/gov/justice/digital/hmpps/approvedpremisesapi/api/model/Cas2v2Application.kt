@@ -36,6 +36,6 @@ data class Cas2v2Application(
 
   @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
 
-  @get:JsonProperty("cohort") val cohort: Cas2v2CohortDto? = null,
+  @get:JsonProperty("cohort") val cohort: Cas2CohortDto? = null,
 
 ) : Application

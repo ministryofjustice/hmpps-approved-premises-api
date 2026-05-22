@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2v2StatusUpdate
@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2v2Cohort
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
@@ -87,7 +87,7 @@ class Cas2v2ApplicationTransformerTest {
         .withSubmittedAt(null)
         .withApplicationOrigin(ApplicationOrigin.prisonBail)
         .withServiceOrigin(Cas2ServiceOrigin.BAIL)
-        .withCohort(Cas2v2Cohort.BAIL)
+        .withCohort(Cas2Cohort.BAIL)
         .produce()
 
       val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
@@ -115,7 +115,7 @@ class Cas2v2ApplicationTransformerTest {
       assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
       assertThat(result.timelineEvents).isEqualTo(listOf<Cas2TimelineEvent>())
       assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
-      assertThat(result.cohort).isEqualTo(Cas2v2CohortDto.BAIL)
+      assertThat(result.cohort).isEqualTo(Cas2CohortDto.BAIL)
     }
 
     @Test

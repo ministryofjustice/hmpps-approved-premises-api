@@ -17,19 +17,19 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2v2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -716,7 +716,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
                     withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
                     withApplicationOrigin(ApplicationOrigin.courtBail)
                     withServiceOrigin(Cas2ServiceOrigin.BAIL)
-                    withCohort(Cas2v2Cohort.HEFR)
+                    withCohort(Cas2Cohort.HEFR)
                   }.id,
                 )
               }
@@ -734,7 +734,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
                     withConditionalReleaseDate(LocalDate.now())
                     withApplicationOrigin(ApplicationOrigin.courtBail)
                     withServiceOrigin(Cas2ServiceOrigin.BAIL)
-                    withCohort(Cas2v2Cohort.HEFR)
+                    withCohort(Cas2Cohort.HEFR)
                   }.id,
                 )
               }
@@ -762,7 +762,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
                     withData("{}")
                     withApplicationOrigin(ApplicationOrigin.courtBail)
                     withServiceOrigin(Cas2ServiceOrigin.BAIL)
-                    withCohort(Cas2v2Cohort.ATCR)
+                    withCohort(Cas2Cohort.ATCR)
                   }.id,
                 )
               }
@@ -815,12 +815,12 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
       Assertions.assertThat(responseBody.filter { it.status == ApplicationStatus.submitted })
         .allMatch {
-          it.cohort == Cas2v2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL
+          it.cohort == Cas2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL
         }
 
       Assertions.assertThat(responseBody.filter { it.status == ApplicationStatus.inProgress })
         .allMatch {
-          it.cohort == Cas2v2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL
+          it.cohort == Cas2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL
         }
 
       val uuids = responseBody.map { it.id }.toSet()
@@ -1143,7 +1143,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
                 data,
               )
               withApplicationOrigin(ApplicationOrigin.courtBail)
-              withCohort(Cas2v2Cohort.ISC)
+              withCohort(Cas2Cohort.ISC)
             }
 
             val rawResponseBody = webTestClient.get()
@@ -1166,7 +1166,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             assertThat(responseBody.createdAt).isEqualTo(applicationEntity.createdAt.toInstant())
             assertThat(responseBody.createdBy.id).isEqualTo(applicationEntity.createdByUser.id)
             assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
-            assertThat(responseBody.cohort).isEqualTo(Cas2v2CohortDto.INTENSIVE_SUPERVISION_COURTS)
+            assertThat(responseBody.cohort).isEqualTo(Cas2CohortDto.INTENSIVE_SUPERVISION_COURTS)
             assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))
           }
         }
@@ -1576,7 +1576,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           withCreatedByUser(submittingUser)
           withApplicationOrigin(ApplicationOrigin.courtBail)
           withServiceOrigin(Cas2ServiceOrigin.BAIL)
-          withCohort(Cas2v2Cohort.FROM_AP)
+          withCohort(Cas2Cohort.FROM_AP)
         }
 
         val resultBody = webTestClient.put()
@@ -1586,7 +1586,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             UpdateCas2v2Application(
               data = mapOf("thingId" to 123),
               type = UpdateApplicationType.CAS2V2,
-              cohort = Cas2v2CohortDto.RISK_ASSESSED_RECALL_REVIEW,
+              cohort = Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW,
             ),
           )
           .exchange()
@@ -1599,7 +1599,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         val result = jsonMapper.readValue(resultBody, Cas2v2Application::class.java)
 
         Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
-        Assertions.assertThat(result.cohort).isEqualTo(Cas2v2CohortDto.RISK_ASSESSED_RECALL_REVIEW)
+        Assertions.assertThat(result.cohort).isEqualTo(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW)
       }
     }
   }
