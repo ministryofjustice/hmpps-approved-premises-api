@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -271,7 +270,6 @@ class Cas1AssessmentService(
     document: String?,
     placementRequirements: PlacementRequirements,
     placementDates: PlacementDates?,
-    apType: ApType?,
     notes: String?,
     agreeWithShortNoticeReason: Boolean? = null,
     agreeWithShortNoticeReasonComments: String? = null,
@@ -325,7 +323,7 @@ class Cas1AssessmentService(
       assessment = assessment,
       offenderDetails = caseSummary.asOffenderDetailSummary(),
       placementDates = placementDates,
-      apType = apType,
+      apType = placementRequirements.type,
       acceptingUser = acceptingUser,
     )
     cas1AssessmentEmailService.assessmentAccepted(application)

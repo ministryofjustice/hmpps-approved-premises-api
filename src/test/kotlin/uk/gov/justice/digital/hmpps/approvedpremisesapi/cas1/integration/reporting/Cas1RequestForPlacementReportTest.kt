@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcce
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -771,7 +772,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       this,
       assessmentId,
       assessorJwt,
-      AssessmentAcceptance(
+      Cas1AssessmentAcceptance(
         document = mapOf("document" to "value"),
         requirements = placementRequirements,
         placementDates = expectedArrival?.let {
@@ -780,7 +781,6 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
             duration = duration!!,
           )
         },
-        apType = ApType.normal,
       ),
     )
   }

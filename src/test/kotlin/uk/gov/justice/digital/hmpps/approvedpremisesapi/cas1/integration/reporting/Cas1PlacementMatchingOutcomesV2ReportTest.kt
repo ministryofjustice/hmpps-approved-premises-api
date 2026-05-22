@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
@@ -724,7 +724,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       this,
       assessmentId,
       assessorJwt,
-      AssessmentAcceptance(
+      Cas1AssessmentAcceptance(
         document = mapOf("document" to "value"),
         requirements = placementRequirements,
         placementDates = expectedArrival?.let {
@@ -733,7 +733,6 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
             duration = duration,
           )
         },
-        apType = ApType.normal,
       ),
     )
   }

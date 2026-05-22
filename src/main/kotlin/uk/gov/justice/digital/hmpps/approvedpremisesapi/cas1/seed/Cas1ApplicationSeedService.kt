@@ -295,7 +295,6 @@ class Cas1ApplicationSeedService(
           expectedArrival = application.arrivalDate!!.toLocalDate(),
           duration = 28,
         ),
-        apType = ApType.normal,
         notes = null,
       ),
     )
