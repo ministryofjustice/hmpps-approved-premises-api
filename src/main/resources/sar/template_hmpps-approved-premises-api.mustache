@@ -36,8 +36,8 @@
                 <tr><td>Home Detention Curfew eligibility date</td><td>{{ optionalValue (formatDate hdc_eligibility_date) }}</td></tr>
             </table>
 
+            <h5>Unsubmitted Document</h5>
             {{^document}}
-                <h5>Unsubmitted Document</h5>
                 {{#data}}
                     <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
                     <table class="summary-list">
@@ -50,9 +50,12 @@
                     <p>No Data Held</p>
                 {{/data}}
             {{/document}}
-
             {{#document}}
-                <h5>Document</h5>
+                <p>No Data Held</p>
+            {{/document}}
+
+            <h5>Document</h5>
+            {{#document}}
                 {{#sections}}
                     <p><b>{{ title }}</b></p>
                     {{#tasks}}
@@ -255,8 +258,8 @@
                 <tr><td>Home Detention Curfew eligibility date</td><td>{{ optionalValue (formatDate hdc_eligibility_date) }}</td></tr>
             </table>
 
+            <h5>Unsubmitted Document</h5>
             {{^document}}
-                <h5>Unsubmitted Document</h5>
                 {{#data}}
                     <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
                     <table class="summary-list">
@@ -269,9 +272,12 @@
                     <p>No Data Held</p>
                 {{/data}}
             {{/document}}
-
             {{#document}}
-                <h5>Document</h5>
+                <p>No Data Held</p>
+            {{/document}}
+
+            <h5>Document</h5>
+            {{#document}}
                 {{#sections}}
                     <p><b>{{ title }}</b></p>
                     {{#tasks}}
@@ -601,8 +607,8 @@
                 <p>No Data Held</p>
             {{/risk_ratings}}
 
+            <h5>Unsubmitted Document</h5>
             {{^document}}
-                <h5>Unsubmitted Document</h5>
                 {{#data}}
                     <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
                     <table class="summary-list">
@@ -614,6 +620,9 @@
                 {{^data}}
                     <p>No Data Held</p>
                 {{/data}}
+            {{/document}}
+            {{#document}}
+                <p>No Data Held</p>
             {{/document}}
 
             <h5>Document</h5>
@@ -831,8 +840,8 @@
                 </tr>
             </table>
 
+            <h5>Unsubmitted Document</h5>
             {{^document}}
-                <h5>Unsubmitted Document</h5>
                 {{#data}}
                     <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
                     <table class="summary-list">
@@ -844,6 +853,9 @@
                 {{^data}}
                     <p>No Data Held</p>
                 {{/data}}
+            {{/document}}
+            {{#document}}
+                <p>No Data Held</p>
             {{/document}}
 
             <h5>Document</h5>
@@ -1038,8 +1050,8 @@
                 </tr>
             </table>
 
+            <h5>Unsubmitted Document</h5>
             {{^document}}
-                <h5>Unsubmitted Document</h5>
                 {{#data}}
                     <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
                     <table class="summary-list">
@@ -1051,6 +1063,9 @@
                 {{^data}}
                     <p>No Data Held</p>
                 {{/data}}
+            {{/document}}
+            {{#document}}
+                <p>No Data Held</p>
             {{/document}}
 
             <h5>Document</h5>
@@ -1935,8 +1950,8 @@
                 </tr>
             </table>
 
+            <h5>Unsubmitted Document</h5>
             {{^document}}
-                <h5>Unsubmitted Document</h5>
                 {{#data}}
                     <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
                     <table class="summary-list">
@@ -1949,9 +1964,12 @@
                     <p>No Data Held</p>
                 {{/data}}
             {{/document}}
-
             {{#document}}
-                <h5>Document</h5>
+                <p>No Data Held</p>
+            {{/document}}
+
+            <h5>Document</h5>
+            {{#document}}
                 {{#sections}}
                     <p><b>{{ title }}</b></p>
                     {{#tasks}}
