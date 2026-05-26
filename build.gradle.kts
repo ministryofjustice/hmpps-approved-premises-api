@@ -81,7 +81,7 @@ dependencies {
   implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.2")
-  implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
+  implementation("uk.gov.service.notify:notifications-java-client:6.0.0-RELEASE")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.14.9")
