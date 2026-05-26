@@ -1492,8 +1492,6 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
-              val premises = givenAnApprovedPremises()
-
               webTestClient.get()
                 .uri("/cas1/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")

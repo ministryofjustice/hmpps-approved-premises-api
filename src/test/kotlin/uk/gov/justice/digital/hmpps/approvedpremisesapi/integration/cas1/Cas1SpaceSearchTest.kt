@@ -270,7 +270,8 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         )
       }
 
-      val unexpectedPremises = (0..4).map {
+      // unexpectedPremises
+      (0..4).forEach { _ ->
         givenAnApprovedPremises(
           latitude = (-0.01) - 0.08,
           longitude = (0.01) + 51.49,

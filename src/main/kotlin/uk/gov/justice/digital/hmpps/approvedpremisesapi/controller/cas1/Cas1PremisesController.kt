@@ -152,7 +152,7 @@ class Cas1PremisesController(
   fun getBeds(
     @PathVariable premisesId: UUID,
   ): ResponseEntity<List<Cas1PremisesBedSummary>> {
-    val premises = cas1PremisesService.findPremisesById(premisesId)
+    cas1PremisesService.findPremisesById(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     return ResponseEntity.ok(

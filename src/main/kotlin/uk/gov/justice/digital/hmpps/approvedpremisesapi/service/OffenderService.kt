@@ -350,9 +350,7 @@ class OffenderService(
   }
 
   fun getAcctPrisonerAlertsByNomsNumber(nomsNumber: String): CasResult<List<PrisionerAlert>> {
-    val alertsResult = prisionerAlertsApiClient.getAlerts(nomsNumber, "HA")
-
-    val alerts = when (alertsResult) {
+    val alerts = when (val alertsResult = prisionerAlertsApiClient.getAlerts(nomsNumber, "HA")) {
       is ClientResult.Success -> alertsResult.body
       is ClientResult.Failure.StatusCode -> when (alertsResult.status) {
         HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "Alert", id = nomsNumber)

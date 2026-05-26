@@ -61,7 +61,6 @@ class ClientResultRedisSerializerTest {
     )
 
     val cachedByteArray = clientResponseRedisSerializer.serialize(clientResult)
-    val cachedString = String(cachedByteArray)
     val deserializedCacheValue = clientResponseRedisSerializer.deserialize(cachedByteArray)
 
     assertThat(deserializedCacheValue is ClientResult.Success).isTrue

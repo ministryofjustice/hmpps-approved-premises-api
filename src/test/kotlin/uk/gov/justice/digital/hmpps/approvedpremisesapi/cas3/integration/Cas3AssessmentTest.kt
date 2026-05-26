@@ -516,7 +516,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .sortedBy { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
             .map { assessmentSummaryMapper(it.offenderDetails, it.inmateDetails).toCas3Summary(it.assessment) }
 
-          apDeliusContextAddListCaseSummaryToBulkResponse(offenders.map { (offenderDetails, inmateDetails) -> offenderDetails.asCaseSummary() })
+          apDeliusContextAddListCaseSummaryToBulkResponse(offenders.map { (offenderDetails, _) -> offenderDetails.asCaseSummary() })
 
           assertResponseForUrl(
             jwt,
@@ -541,8 +541,8 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
           val assessment = produceAndPersistAssessmentEntity(user, application)
 
-          val otherAssessment =
-            produceAndPersistAssessmentEntity(user, otherApplication)
+          // other assessment
+          produceAndPersistAssessmentEntity(user, otherApplication)
 
           // when CRN is upper case
           assertResponseForUrl(
@@ -581,8 +581,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
 
           val assessment = produceAndPersistAssessmentEntity(user, application)
 
-          val otherAssessment =
-            produceAndPersistAssessmentEntity(user, otherApplication)
+          produceAndPersistAssessmentEntity(user, otherApplication)
 
           // first name match
           assertResponseForUrl(
@@ -637,10 +636,9 @@ class Cas3AssessmentTest : IntegrationTestBase() {
           val otherApplication =
             produceAndPersistApplication(otherOffender.first.otherIds.crn, user)
 
-          val assessment = produceAndPersistAssessmentEntity(user, application)
+          produceAndPersistAssessmentEntity(user, application)
 
-          val otherAssessment =
-            produceAndPersistAssessmentEntity(user, otherApplication)
+          produceAndPersistAssessmentEntity(user, otherApplication)
 
           assertResponseForUrl(
             jwt,

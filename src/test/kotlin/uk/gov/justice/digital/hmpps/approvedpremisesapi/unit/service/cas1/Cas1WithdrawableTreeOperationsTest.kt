@@ -334,7 +334,7 @@ class Cas1WithdrawableTreeOperationsTest {
     val logger = mockk<Logger>()
     service.log = logger
 
-    every { logger.isDebugEnabled() } returns true
+    every { logger.isDebugEnabled } returns true
     every { logger.debug(any<String>()) } returns Unit
     every { logger.error(any<String>()) } returns Unit
 

@@ -1042,14 +1042,15 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           val startDate = LocalDate.of(2023, 4, 1)
           val endDate = LocalDate.of(2023, 7, 24)
 
-          val (premises, bedspace, booking) = setupPremisesWIthABedspaceAndABooking(
+          val (_, _, booking) = setupPremisesWIthABedspaceAndABooking(
             crn = offenderDetails.otherIds.crn,
             user,
             startDate,
             departureDate = endDate, // 111 days from arrival (2023-04-05)
           )
 
-          val overstay = cas3OverstayEntityFactory.produceAndPersist {
+          // overstay
+          cas3OverstayEntityFactory.produceAndPersist {
             withNewDepartureDate(endDate)
             withPreviousDepartureDate(LocalDate.of(2023, 4, 30))
             withBooking(booking)
@@ -1070,7 +1071,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
           }
 
-          val caseSummary = CaseSummaryFactory()
+          CaseSummaryFactory()
             .fromOffenderDetails(offenderDetails)
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()

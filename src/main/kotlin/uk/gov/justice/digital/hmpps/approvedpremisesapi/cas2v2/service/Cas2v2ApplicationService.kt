@@ -145,9 +145,7 @@ class Cas2v2ApplicationService(
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
   ) = validated {
-    val offenderDetailsResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)
-
-    val offenderDetails = when (offenderDetailsResult) {
+    val offenderDetails = when (val offenderDetailsResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
       is Cas2v2OffenderSearchResult.Forbidden -> return "$.crn" hasSingleValidationError "userPermission"
       is Cas2v2OffenderSearchResult.Unknown -> return "$.crn" hasSingleValidationError "unknown"

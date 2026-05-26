@@ -135,13 +135,6 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
   fun `Getting oasys sections when upstream times out returns 404`() {
     givenAUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
-        val needsDetails = NeedsDetailsFactory().apply {
-          withAssessmentId(34853487)
-          withAccommodationIssuesDetails("Accommodation", true, false)
-          withAttitudeIssuesDetails("Attitude", false, true)
-          withFinanceIssuesDetails(null, null, null)
-        }.produce()
-
         apAndOASysMockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()

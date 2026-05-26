@@ -57,8 +57,7 @@ class Cas2OffenderService(
   ): ProbationOffenderSearchResult {
     fun logFailedResponse(caseSummaries: ClientResult.Failure<CaseSummaries>) = log.warn("Could not get inmate details for $nomsNumber", caseSummaries.toException())
 
-    val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber))
-    val caseSummaryList = when (caseSummaries) {
+    val caseSummaryList = when (val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber))) {
       is ClientResult.Success -> caseSummaries.body.cases
       is ClientResult.Failure.StatusCode -> when (caseSummaries.status) {
         HttpStatus.NOT_FOUND -> return ProbationOffenderSearchResult.NotFound(nomsNumber)
@@ -176,8 +175,7 @@ class Cas2OffenderService(
   }
 
   fun getFullInfoForPersonOrThrow(crn: String): PersonInfoResult.Success.Full {
-    val personInfo = getInfoForPerson(crn)
-    when (personInfo) {
+    when (val personInfo = getInfoForPerson(crn)) {
       is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem("Offender $crn is Restricted.")
       is PersonInfoResult.Success.Full -> return personInfo

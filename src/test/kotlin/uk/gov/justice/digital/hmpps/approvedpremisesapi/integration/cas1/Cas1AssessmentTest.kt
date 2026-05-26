@@ -1570,7 +1570,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             assessment.clarificationNotes = mutableListOf(this)
           }
 
-          val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
+          postCodeDistrictFactory.produceAndPersist()
 
           webTestClient.post()
             .uri("/cas1/assessments/${assessment.id}/rejection")

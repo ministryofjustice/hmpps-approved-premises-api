@@ -236,7 +236,7 @@ class Cas2StatusUpdateTest(
                 .isNotNull()
 
               emailAsserter.assertEmailsRequestedCount(1)
-              val email = emailAsserter.assertEmailRequested(
+              emailAsserter.assertEmailRequested(
                 toEmailAddress = applicant.email!!,
                 templateId = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a",
                 personalisation = mapOf(

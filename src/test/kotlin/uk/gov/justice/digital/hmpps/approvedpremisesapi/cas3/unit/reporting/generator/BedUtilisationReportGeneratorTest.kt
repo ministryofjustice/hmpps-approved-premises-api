@@ -222,11 +222,11 @@ class BedUtilisationReportGeneratorTest {
     val temporaryAccommodationBedOutsideProbationRegion =
       BedEntityFactory().withRoom(temporaryAccommodationRoomOutsideProbationRegion).produce()
 
-    val temporaryAccommodationLostBedOutsideProbationArea =
-      Cas3VoidBedspaceEntityFactory().withBed(temporaryAccommodationBedOutsideProbationRegion)
-        .withStartDate(LocalDate.parse("2023-04-05")).withEndDate(LocalDate.parse("2023-04-07"))
-        .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
-        .withPremises(temporaryAccommodationPremisesOutsideProbationRegion).produce()
+    // temporaryAccommodationLostBedOutsideProbationArea
+    Cas3VoidBedspaceEntityFactory().withBed(temporaryAccommodationBedOutsideProbationRegion)
+      .withStartDate(LocalDate.parse("2023-04-05")).withEndDate(LocalDate.parse("2023-04-07"))
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
+      .withPremises(temporaryAccommodationPremisesOutsideProbationRegion).produce()
 
     val bedUtilisationBedspaceReportData =
       convertToCas3BedUtilisationBedspaceReportData(temporaryAccommodationBedInProbationRegion)

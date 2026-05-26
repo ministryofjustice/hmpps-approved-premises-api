@@ -1006,8 +1006,7 @@ class Cas1BookingManagementServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
-      val extractedResult = (result as CasResult.Success).value
+      assertThatCasResult(result).isSuccess()
     }
 
     @Test

@@ -39,9 +39,7 @@ class Cas1BackfillUserApArea(
   private fun updateUser(user: UserEntity) {
     log.info("Update ap area and teams for user ${user.id}")
     try {
-      val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)
-
-      when (staffDetailsResult) {
+      when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
         is ClientResult.Success -> {
           log.info("Updating user ${user.id} using the user update service")
 
