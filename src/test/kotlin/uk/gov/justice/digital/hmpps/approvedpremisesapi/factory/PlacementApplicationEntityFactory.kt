@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.LocalDate
@@ -39,7 +40,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var authorisedDuration: Yielded<Int?> = { null }
   private var expectedArrivalFlexible: Yielded<Boolean> = { false }
   private var sentenceType: Yielded<String?> = { null }
-  private var releaseType: Yielded<String?> = { null }
+  private var releaseType: Yielded<Cas1ReleaseType?> = { null }
   private var situation: Yielded<String?> = { null }
 
   fun withDefaults() = apply {
@@ -135,7 +136,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.sentenceType = { sentenceType }
   }
 
-  fun withReleaseType(releaseType: String?) = apply {
+  fun withReleaseType(releaseType: Cas1ReleaseType?) = apply {
     this.releaseType = { releaseType }
   }
 

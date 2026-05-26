@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
@@ -68,7 +69,7 @@ class RequestForPlacementTransformerTest {
         .withRequestedDuration(48)
         .withAuthorisedDuration(49)
         .withSentenceType(SentenceTypeOption.bailPlacement.name)
-        .withReleaseType(ReleaseTypeOption.licence.name)
+        .withReleaseType(Cas1ReleaseType.licence)
         .withSituation(SituationOption.bailSentence.name)
         .produce()
 
@@ -311,7 +312,7 @@ class RequestForPlacementTransformerTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .withSentenceType(SentenceTypeOption.bailPlacement.name)
-        .withReleaseType(ReleaseTypeOption.rotl.name)
+        .withReleaseType(Cas1ReleaseType.rotl)
         .withSituation(SituationOption.bailAssessment.name)
         .produce()
 

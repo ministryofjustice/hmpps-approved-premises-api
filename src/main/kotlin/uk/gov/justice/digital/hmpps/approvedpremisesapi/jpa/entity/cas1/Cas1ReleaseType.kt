@@ -22,6 +22,6 @@ enum class Cas1ReleaseType(
   ;
 
   companion object {
-    fun fromApiType(apiType: ReleaseTypeOption) = Cas1ReleaseType.entries.first { it.apiType == apiType }
+    fun fromApiType(apiType: ReleaseTypeOption) = Cas1ReleaseType.entries.firstOrNull { it.apiType == apiType } ?: error("Can't find entry for API Type $apiType")
   }
 }

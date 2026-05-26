@@ -250,7 +250,7 @@ class Cas1ApplicationsController(
         isWomensApplication = body.isWomensApplication,
         isEmergencyApplication = body.isEmergencyApplication,
         apType = body.apType,
-        releaseType = body.releaseType?.name,
+        releaseType = body.releaseType,
         arrivalDate = body.arrivalDate,
         isInapplicable = body.isInapplicable,
         noticeType = body.noticeType,

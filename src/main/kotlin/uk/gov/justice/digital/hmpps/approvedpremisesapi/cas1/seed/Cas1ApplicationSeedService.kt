@@ -209,7 +209,7 @@ class Cas1ApplicationSeedService(
           isWomensApplication = false,
           isEmergencyApplication = false,
           apType = ApType.normal,
-          releaseType = "licence",
+          releaseType = ReleaseTypeOption.licence,
           arrivalDate = LocalDate.of(2025, 12, 12),
           data = APPLICATION_DATA_JSON,
           isInapplicable = false,

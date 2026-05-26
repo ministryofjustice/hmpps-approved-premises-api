@@ -25,6 +25,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -155,7 +156,8 @@ data class PlacementApplicationEntity(
 
   var expectedArrivalFlexible: Boolean? = null,
 
-  var releaseType: String? = null,
+  @Enumerated(value = EnumType.STRING)
+  var releaseType: Cas1ReleaseType? = null,
   var sentenceType: String? = null,
   var situation: String? = null,
 

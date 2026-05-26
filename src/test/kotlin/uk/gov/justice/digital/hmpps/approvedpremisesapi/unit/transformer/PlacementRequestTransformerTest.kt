@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -75,7 +76,7 @@ class PlacementRequestTransformerTest {
   private val assessmentSubmittedAt = OffsetDateTime.now().minusDays(3)
 
   private val application = ApprovedPremisesApplicationEntityFactory()
-    .withReleaseType("licence")
+    .withReleaseType(Cas1ReleaseType.licence)
     .withCreatedByUser(user)
     .withSubmittedAt(applicationSubmittedAt)
     .produce()
@@ -302,7 +303,18 @@ class PlacementRequestTransformerTest {
         .withNotes("Some notes")
         .produce()
 
-      application.releaseType = releaseTypeOption.name
+      application.releaseType = when (releaseTypeOption) {
+        ReleaseTypeOption.licence -> Cas1ReleaseType.licence
+        ReleaseTypeOption.rotl -> Cas1ReleaseType.rotl
+        ReleaseTypeOption.hdc -> Cas1ReleaseType.hdc
+        ReleaseTypeOption.pss -> Cas1ReleaseType.pss
+        ReleaseTypeOption.inCommunity -> Cas1ReleaseType.inCommunity
+        ReleaseTypeOption.notApplicable -> Cas1ReleaseType.notApplicable
+        ReleaseTypeOption.extendedDeterminateLicence -> Cas1ReleaseType.extendedDeterminateLicence
+        ReleaseTypeOption.paroleDirectedLicence -> Cas1ReleaseType.paroleDirectedLicence
+        ReleaseTypeOption.reReleasedPostRecall -> Cas1ReleaseType.reReleasedPostRecall
+        ReleaseTypeOption.reReleasedFollowingFixedTermRecall -> Cas1ReleaseType.reReleasedFollowingFixedTermRecall
+      }
 
       val result = placementRequestTransformer.transformJpaToApi(
         placementRequestEntity,

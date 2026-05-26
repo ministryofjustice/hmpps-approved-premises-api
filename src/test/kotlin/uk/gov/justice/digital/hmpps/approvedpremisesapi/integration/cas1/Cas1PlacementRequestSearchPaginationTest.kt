@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
@@ -168,7 +169,7 @@ class Cas1PlacementRequestSearchPaginationTest : IntegrationTestBase() {
       withCrn(caseSummary.crn)
       withCreatedByUser(user)
       withSubmittedAt(applicationDate)
-      withReleaseType("licence")
+      withReleaseType(Cas1ReleaseType.licence)
       withName("${caseSummary.name.forename} ${caseSummary.name.surname}")
       withRiskRatings(
         uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory()

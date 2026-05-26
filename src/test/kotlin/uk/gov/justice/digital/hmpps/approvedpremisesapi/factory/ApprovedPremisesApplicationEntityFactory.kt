@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -48,7 +49,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf() }
   private var teamCodes: Yielded<MutableList<ApplicationTeamCodeEntity>> = { mutableListOf() }
   private var placementRequests: Yielded<MutableList<PlacementRequestEntity>> = { mutableListOf() }
-  private var releaseType: Yielded<String?> = { null }
+  private var releaseType: Yielded<Cas1ReleaseType?> = { null }
   private var sentenceType: Yielded<String?> = { null }
   private var situation: Yielded<String?> = { null }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
@@ -140,7 +141,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.placementRequests = { placementRequests }
   }
 
-  fun withReleaseType(releaseType: String) = apply {
+  fun withReleaseType(releaseType: Cas1ReleaseType) = apply {
     this.releaseType = { releaseType }
   }
 

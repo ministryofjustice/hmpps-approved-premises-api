@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventTransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -36,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -82,7 +82,7 @@ class Cas1BookingDomainEventServiceTest {
       .withEventNumber("online app event number")
       .withCreatedByUser(otherUser)
       .withSubmittedAt(OffsetDateTime.now())
-      .withReleaseType(ReleaseTypeOption.licence.toString())
+      .withReleaseType(Cas1ReleaseType.licence)
       .withSentenceType(SentenceTypeOption.nonStatutory.toString())
       .withSituation(SituationOption.bailSentence.toString())
       .produce()
@@ -177,7 +177,7 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.arrivalOn).isEqualTo(LocalDate.of(2025, 12, 11))
       assertThat(data.departureOn).isEqualTo(LocalDate.of(2025, 12, 12))
       assertThat(data.applicationSubmittedOn).isEqualTo(application.submittedAt!!.toInstant())
-      assertThat(data.releaseType).isEqualTo(application.releaseType)
+      assertThat(data.releaseType).isEqualTo(application.releaseType.toString())
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
       assertThat(data.situation).isEqualTo(application.situation)
       assertThat(data.characteristics).isEqualTo(listOf(SpaceCharacteristic.hasEnSuite))
@@ -208,7 +208,7 @@ class Cas1BookingDomainEventServiceTest {
         .withCrn("Application CRN")
         .withCreatedByUser(otherUser)
         .withSubmittedAt(OffsetDateTime.now())
-        .withReleaseType(ReleaseTypeOption.licence.toString())
+        .withReleaseType(Cas1ReleaseType.licence)
         .withSentenceType(SentenceTypeOption.nonStatutory.toString())
         .withSituation(SituationOption.bailSentence.toString())
         .produce()

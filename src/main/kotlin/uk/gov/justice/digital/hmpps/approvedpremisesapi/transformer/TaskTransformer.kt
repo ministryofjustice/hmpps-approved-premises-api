@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 class TaskTransformer(
   private val userTransformer: UserTransformer,
   private val risksTransformer: RisksTransformer,
-  private val placementRequestTransformer: PlacementRequestTransformer,
   private val apAreaTransformer: ApAreaTransformer,
   private val assessmentTransformer: AssessmentTransformer,
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
@@ -76,7 +75,7 @@ class TaskTransformer(
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
     dates = placementApplication.placementDates()!!.toApiType(),
     placementDates = listOf(placementApplication.placementDates()!!.toApiType()),
-    releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType),
+    releaseType = placementApplication.application.releaseType!!.apiType,
     placementType = getPlacementType(placementApplication.placementType!!),
     apArea = getApArea(placementApplication.application),
     outcomeRecordedAt = placementApplication.decisionMadeAt?.toInstant(),

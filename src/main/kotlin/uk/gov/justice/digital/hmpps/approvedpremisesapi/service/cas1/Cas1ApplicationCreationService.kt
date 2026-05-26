@@ -7,6 +7,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -217,7 +219,7 @@ class Cas1ApplicationCreationService(
       this.apType = submitApplication.apType.asApprovedPremisesType()
       submittedAt = now
       document = serializedTranslatedDocument
-      releaseType = submitApplication.releaseType.toString()
+      releaseType = Cas1ReleaseType.fromApiType(submitApplication.releaseType)
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.arrivalDate)
       duration = submitApplication.duration
@@ -328,7 +330,7 @@ class Cas1ApplicationCreationService(
       this.isWomensApplication = updateFields.isWomensApplication
       this.isEmergencyApplication = updateFields.isEmergencyApplication
       this.apType = updateFields.apType?.asApprovedPremisesType() ?: ApprovedPremisesType.NORMAL
-      this.releaseType = updateFields.releaseType
+      this.releaseType = updateFields.releaseType?.let { Cas1ReleaseType.fromApiType(it) }
       this.arrivalDate = if (updateFields.arrivalDate !== null) {
         OffsetDateTime.of(updateFields.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
       } else {
@@ -387,7 +389,7 @@ class Cas1ApplicationCreationService(
     @Deprecated("use noticeType")
     val isEmergencyApplication: Boolean?,
     val apType: ApType?,
-    val releaseType: String?,
+    val releaseType: ReleaseTypeOption?,
     val arrivalDate: LocalDate?,
     val data: String,
     val isInapplicable: Boolean?,

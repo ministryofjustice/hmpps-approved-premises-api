@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import java.time.OffsetDateTime
@@ -26,7 +27,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withCreatedByUser(differentUser)
             withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
-            withReleaseType("rotl")
+            withReleaseType(Cas1ReleaseType.rotl)
             withSubmittedAt(null)
           }
 
@@ -35,7 +36,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withCreatedByUser(user)
             withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
-            withReleaseType("rotl")
+            withReleaseType(Cas1ReleaseType.rotl)
             withSubmittedAt(null)
             withIsInapplicable(false)
             withStatus(ApprovedPremisesApplicationStatus.STARTED)
@@ -46,7 +47,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withCreatedByUser(user)
             withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
-            withReleaseType("rotl")
+            withReleaseType(Cas1ReleaseType.rotl)
             withIsWithdrawn(true)
             withStatus(ApprovedPremisesApplicationStatus.WITHDRAWN)
           }
@@ -63,7 +64,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withCreatedByUser(user)
             withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
-            withReleaseType("rotl")
+            withReleaseType(Cas1ReleaseType.rotl)
             withSubmittedAt(OffsetDateTime.parse("2023-04-19T09:34:00+01:00"))
             withStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
           }

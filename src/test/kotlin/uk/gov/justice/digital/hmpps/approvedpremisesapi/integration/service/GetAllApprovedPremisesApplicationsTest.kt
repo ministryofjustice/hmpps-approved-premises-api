@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -129,7 +130,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
                 withCreatedByUser(userEntity)
                 withCreatedAt(OffsetDateTime.now().minusDays(Random.nextLong(1, 25)))
                 withArrivalDate(OffsetDateTime.now().plusDays(Random.nextLong(1, 25)))
-                withReleaseType(it.name)
+                withReleaseType(Cas1ReleaseType.fromApiType(it))
                 withRiskRatings(
                   PersonRisksFactory().withTier(
                     RiskWithStatus(
@@ -315,7 +316,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @ParameterizedTest
   @EnumSource(ReleaseTypeOption::class)
   fun `findAllApprovedPremisesSummaries filters by release type`(releaseType: ReleaseTypeOption) {
-    val expectedApplications = allApplications.filter { it.releaseType == releaseType.name }
+    val expectedApplications = allApplications.filter { it.releaseType?.apiType == releaseType }
 
     val result = cas1ApplicationService.getAllApprovedPremisesApplications(
       1,

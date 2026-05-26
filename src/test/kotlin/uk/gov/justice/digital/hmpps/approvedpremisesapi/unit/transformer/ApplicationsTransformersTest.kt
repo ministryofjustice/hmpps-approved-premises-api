@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -129,7 +130,7 @@ class ApplicationsTransformersTest {
       .withCaseManagerIsNotApplicant(true)
       .withCaseManagerUserDetails(caseManagerUserDetails)
       .withLicenseExpiredDate(LocalDate.of(2026, 5, 5))
-      .withReleaseType(ReleaseTypeOption.notApplicable.name)
+      .withReleaseType(Cas1ReleaseType.notApplicable)
       .withSentenceType(SentenceTypeOption.bailPlacement.name)
       .produce()
 

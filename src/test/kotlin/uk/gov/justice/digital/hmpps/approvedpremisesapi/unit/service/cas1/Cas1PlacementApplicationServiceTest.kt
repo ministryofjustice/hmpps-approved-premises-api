@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -171,7 +172,7 @@ class Cas1PlacementApplicationServiceTest {
         .withSubmittedAt(OffsetDateTime.parse("2018-12-04T10:15:30+01:00"))
         .withDuration(25)
         .withSentenceType(SentenceTypeOption.bailPlacement.name)
-        .withReleaseType(ReleaseTypeOption.licence.name)
+        .withReleaseType(Cas1ReleaseType.licence)
         .withSituation(SituationOption.bailAssessment.name)
         .produce()
 
@@ -216,7 +217,7 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(persisted.allocatedAt).isEqualTo(OffsetDateTime.parse("2018-12-05T10:15:30+01:00"))
       assertThat(persisted.reallocatedAt).isNull()
       assertThat(persisted.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement.name)
-      assertThat(persisted.releaseType).isEqualTo(ReleaseTypeOption.licence.name)
+      assertThat(persisted.releaseType).isEqualTo(Cas1ReleaseType.licence)
       assertThat(persisted.situation).isEqualTo(SituationOption.bailAssessment.name)
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(persisted, createdByUserName = null) }
@@ -313,18 +314,18 @@ class Cas1PlacementApplicationServiceTest {
 
     @ParameterizedTest
     @CsvSource(
-      "paroleDirectedLicence, RELEASE_FOLLOWING_DECISION",
-      "rotl, ROTL",
-      "licence, ADDITIONAL_PLACEMENT",
-      "hdc, ADDITIONAL_PLACEMENT",
-      "pss, ADDITIONAL_PLACEMENT",
-      "inCommunity, ADDITIONAL_PLACEMENT",
-      "notApplicable, ADDITIONAL_PLACEMENT",
-      "extendedDeterminateLicence, ADDITIONAL_PLACEMENT",
-      "reReleasedPostRecall, ADDITIONAL_PLACEMENT",
-      "reReleasedFollowingFixedTermRecall, ADDITIONAL_PLACEMENT",
+      "paroleDirectedLicence, paroleDirectedLicence, RELEASE_FOLLOWING_DECISION",
+      "rotl, rotl, ROTL",
+      "licence, licence,ADDITIONAL_PLACEMENT",
+      "hdc, hdc,ADDITIONAL_PLACEMENT",
+      "pss, pss,ADDITIONAL_PLACEMENT",
+      "inCommunity, inCommunity,ADDITIONAL_PLACEMENT",
+      "notApplicable, notApplicable,ADDITIONAL_PLACEMENT",
+      "extendedDeterminateLicence, extendedDeterminateLicence,ADDITIONAL_PLACEMENT",
+      "reReleasedPostRecall, reReleasedPostRecall,ADDITIONAL_PLACEMENT",
+      "reReleasedFollowingFixedTermRecall, reReleasedFollowingFixedTermRecall,ADDITIONAL_PLACEMENT",
     )
-    fun `Submitting an application and inferring placement type from release type`(releaseType: String, jpaPlacementType: String) {
+    fun `Submitting an application and inferring placement type from release type`(releaseTypeOption: ReleaseTypeOption, cas1ReleaseType: Cas1ReleaseType, jpaPlacementType: String) {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -346,7 +347,7 @@ class Cas1PlacementApplicationServiceTest {
             arrivalFlexible = true,
           ),
         ),
-        releaseType = ReleaseTypeOption.valueOf(releaseType),
+        releaseType = releaseTypeOption,
         sentenceType = null,
         situationType = null,
       )
@@ -363,7 +364,7 @@ class Cas1PlacementApplicationServiceTest {
 
       val updatedPlacementApp = updatedPlacementApplications[0]
 
-      assertThat(updatedPlacementApp.releaseType).isEqualTo(releaseType)
+      assertThat(updatedPlacementApp.releaseType).isEqualTo(cas1ReleaseType)
       assertThat(updatedPlacementApp.placementType.toString()).isEqualTo(jpaPlacementType)
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
@@ -457,7 +458,7 @@ class Cas1PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp.requestedDuration).isEqualTo(5)
       assertThat(updatedPlacementApp.expectedArrivalFlexible).isTrue
       assertThat(updatedPlacementApp.authorisedDuration).isNull()
-      assertThat(updatedPlacementApp.releaseType).isEqualTo(ReleaseTypeOption.licence.toString())
+      assertThat(updatedPlacementApp.releaseType).isEqualTo(Cas1ReleaseType.licence)
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
