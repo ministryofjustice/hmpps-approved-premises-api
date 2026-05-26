@@ -20,6 +20,7 @@ import org.hibernate.annotations.Type
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
@@ -38,6 +39,16 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   fun findByIdAndServiceOriginAndSubmittedAtIsNotNull(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2ApplicationEntity?
   fun findByIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2ApplicationEntity?
   fun findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn: String): List<Cas2ApplicationEntity>
+
+  @Query(
+    "SELECT id, application_origin FROM cas_2_applications WHERE cohort IS NULL",
+    nativeQuery = true,
+  )
+  fun findIdAndApplicationOriginByCohortIsNull(): List<Cas2IdApplicationOriginEntity>
+
+  @Modifying
+  @Query("UPDATE cas_2_applications SET cohort = :cohort WHERE id = :id", nativeQuery = true)
+  fun updateCohort(id: UUID, cohort: String)
 
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.submittedAt IS NOT NULL " +
@@ -97,6 +108,16 @@ enum class Cas2Cohort(val apiType: Cas2CohortDto) {
     fun forValue(value: String) = values().first { it.apiType.value == value }
   }
 }
+
+@Entity
+@Table(name = "cas_2_applications")
+data class Cas2IdApplicationOriginEntity(
+  @Id
+  val id: UUID,
+
+  @Enumerated(EnumType.STRING)
+  var applicationOrigin: ApplicationOrigin,
+)
 
 @Entity
 @Table(name = "cas_2_applications")

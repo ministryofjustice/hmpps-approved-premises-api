@@ -44,7 +44,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.homeDetentionCurfew }
   private var serviceOrigin: Yielded<Cas2ServiceOrigin> = { Cas2ServiceOrigin.HDC }
   private var bailHearingDate: Yielded<LocalDate?> = { null }
-  private var cohort: Yielded<Cas2Cohort> = { Cas2Cohort.HDC }
+  private var cohort: Yielded<Cas2Cohort?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
