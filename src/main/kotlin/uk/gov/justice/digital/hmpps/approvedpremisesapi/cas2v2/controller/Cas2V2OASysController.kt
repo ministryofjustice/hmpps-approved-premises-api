@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OASysAssessmentMetadataDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OAsysRiskToSelfDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2OASysTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
@@ -25,5 +26,17 @@ class Cas2V2OASysController(
     }
 
     return ResponseEntity.ok(cas2v2OASysTransformer.toOASysAssessmentMetadataDto(assessment))
+  }
+
+  @GetMapping("/people/{crn}/oasys/risk-to-self")
+  fun getRiskToSelf(
+    @PathVariable crn: String,
+  ): ResponseEntity<Cas2v2OAsysRiskToSelfDto> {
+    val risksToTheIndividual = when (val result = oasysService.getRiskToTheIndividual(crn)) {
+      is CasResult.NotFound -> null
+      else -> extractEntityFromCasResult(result)
+    }
+
+    return ResponseEntity.ok(cas2v2OASysTransformer.toOASysRiskToSelfDto(risksToTheIndividual))
   }
 }
