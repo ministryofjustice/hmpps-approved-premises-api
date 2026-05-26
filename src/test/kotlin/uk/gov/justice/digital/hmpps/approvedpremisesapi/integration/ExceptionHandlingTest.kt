@@ -721,13 +721,13 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
 @RestController
 class ExceptionHandlingTestController {
   @PostMapping(path = ["deserialization-test/object"], consumes = ["application/json"])
-  fun testDeserialization(@RequestBody body: DeserializationTestBody): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
+  fun testDeserializationForObject(@RequestBody body: DeserializationTestBody): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
 
   @PostMapping(path = ["deserialization-test/array"], consumes = ["application/json"])
-  fun testDeserialization(@RequestBody body: List<DeserializationTestBody>): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
+  fun testDeserializationForList(@RequestBody body: List<DeserializationTestBody>): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
 
   @PostMapping(path = ["deserialization-test/special-json-primitives"], consumes = ["application/json"])
-  fun testDeserialization(@RequestBody body: AllSpecialJSONPrimitives): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
+  fun testDeserializationForPrimitives(@RequestBody body: AllSpecialJSONPrimitives): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
 
   @GetMapping(path = ["deserialization-test/query-params"])
   fun testQueryParams(@RequestParam(value = "requiredProperty", required = true) requiredProperty: Int): ResponseEntity<Unit> = ResponseEntity.ok(Unit)

@@ -146,6 +146,7 @@ spring:
             token-uri: ${hmpps.auth.url}/oauth/token
 
 springdoc:
+  paths-to-exclude: "/queue-admin/**"
   swagger-ui:
     urls-primary-name: "All CAS"
   remove-broken-reference-definitions: false

@@ -16,7 +16,7 @@ class Cas2V2OASysController(
 ) {
 
   @GetMapping("/people/{crn}/oasys/metadata")
-  fun searchByCrnGet(
+  fun getOASysMetadataByCrn(
     @PathVariable crn: String,
   ): ResponseEntity<Cas2v2OASysAssessmentMetadataDto> {
     val assessment = when (val result = oasysService.getAssessmentSummary(crn)) {
