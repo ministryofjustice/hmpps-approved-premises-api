@@ -87,7 +87,16 @@ class Cas3SarComplianceTest : Cas3SarTestBase() {
       user,
       dutyToReferLocalAuthorityAreaName = TEST_DUTY_TO_REFER_AREA,
       probationRegionName = TEST_PROBATION_REGION,
-      probationDeliveryUnitName = TEST_PROBATION_DELIVERY_UNIT,
+      probationDeliveryUnitName = "SAR-TEST-PDU-1",
+      data = CAS3_APPLICATION_DATA,
+      document = "null",
+    )
+    temporaryAccommodationApplicationEntity(
+      offenderDetails,
+      user,
+      dutyToReferLocalAuthorityAreaName = TEST_DUTY_TO_REFER_AREA,
+      probationRegionName = TEST_PROBATION_REGION,
+      probationDeliveryUnitName = "SAR-TEST-PDU-2",
       data = CAS3_APPLICATION_DATA,
       document = CAS3_APPLICATION_DOCUMENT,
     )

@@ -524,7 +524,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
         "notes": "${placementRequest.notes}",
         "is_parole": ${placementRequest.isParole},
         "is_withdrawn": ${placementRequest.isWithdrawn},
-        "withdrawal_reason": "${placementRequest.withdrawalReason}",
+        "withdrawal_reason": "${placementRequest.withdrawalReason}"
       }
     """.trimIndent()
 
@@ -534,6 +534,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
         "crn": "${placementApplication.application.crn}",
         "noms_number": "${placementApplication.application.nomsNumber}",
         "document": $DOCUMENT_JSON_SIMPLE,
+        "data": $DATA_JSON_SIMPLE,
         "created_at": "$CREATED_AT_NO_TZ",
         "submitted_at": "$SUBMITTED_AT_NO_TZ" ,
         "allocated_at": null,
@@ -552,7 +553,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
         "authorised_duration": $AUTHORISED_DURATION,
         "expected_arrival": "$arrivedAtDateOnly",
         "expected_arrival_flexible": true,
-        "situation": "${SituationOption.awaitingSentence}",
+        "situation": "${SituationOption.awaitingSentence}"
       }
     """.trimIndent()
 
@@ -579,6 +580,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
            "crn": "${offenderDetails.otherIds.crn}",
            "noms_number": "${offenderDetails.otherIds.nomsNumber}",
            "document": $DOCUMENT_JSON_SIMPLE,
+           "data": $DATA_JSON_SIMPLE,
            "created_at": "$CREATED_AT",
            "submitted_at": "$SUBMITTED_AT",
            "created_by_user": "${application.createdByUser.name}",
@@ -605,7 +607,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
            "situation": "${SituationOption.bailSentence}",
            "is_inapplicable": false,
            "licence_expiry_date": "$LICENCE_EXPIRY_DATE",
-           "expired_reason": "$EXPIRED_REASON",
+           "expired_reason": "$EXPIRED_REASON"
         }
   """.trimIndent()
 
@@ -633,6 +635,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
          "noms_number":"${offenderDetails.otherIds.nomsNumber}",
          "assessor_name":"${assessment.allocatedToUser?.name}",
          "document":$DOCUMENT_JSON_SIMPLE,
+         "data": $DATA_JSON_SIMPLE,
          "created_at":"$CREATED_AT",
          "allocated_at":"$ALLOCATED_AT",
          "submitted_at":"$SUBMITTED_AT",
@@ -644,7 +647,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
          "created_from_appeal":false,
          "agree_with_short_notice_reason": false,
          "agree_with_short_notice_reason_comments": "$REASON_COMMENTS",
-         "reason_for_late_application": "$LATE_APPLICATION_REASON",
+         "reason_for_late_application": "$LATE_APPLICATION_REASON"
       }
     """.trimIndent()
 
@@ -660,7 +663,7 @@ class CAS1SarServiceTest : Cas1SarTestBase() {
         "query": "${clarificationNote.query}",
         "response": "${clarificationNote.response}",
         "response_received_on": "$RESPONSE_RECEIVED_AT",
-        "created_by_user": "${clarificationNote.createdByUser.name}",   
+        "created_by_user": "${clarificationNote.createdByUser.name}"
       }
     """.trimIndent()
 
