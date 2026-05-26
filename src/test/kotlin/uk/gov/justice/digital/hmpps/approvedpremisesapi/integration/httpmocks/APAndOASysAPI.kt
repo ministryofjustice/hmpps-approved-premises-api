@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OASysAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
@@ -90,4 +91,15 @@ fun IntegrationTestBase.apAndOASysMockUnsuccessfulRoshCallWithDelay(crn: String,
   url = "/rosh/$crn",
   responseStatus = 404,
   delayMs = delayMs,
+)
+
+fun IntegrationTestBase.apAndOAsysMockAssessmentSummaryResponse(crn: String, response: OASysAssessmentSummary) = mockSuccessfulGetCallWithJsonResponse(
+  "/latest-assessment/$crn",
+  responseStatus = 200,
+  responseBody = response,
+)
+
+fun IntegrationTestBase.apAndOASysMockAssessmentSummaryNotFound(crn: String) = mockUnsuccessfulGetCall(
+  url = "/latest-assessment/$crn",
+  responseStatus = 404,
 )
