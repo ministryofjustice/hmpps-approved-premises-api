@@ -69,6 +69,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
     val CAS1_ASSESSMENT_DATA by lazy { readResource("$CAS1_DATA_PATH/assessment_data.json") }
     val CAS1_ASSESSMENT_DOCUMENT by lazy { readResource("$CAS1_DATA_PATH/assessment_document.json") }
     val CAS1_PLACEMENT_APPLICATION_DOCUMENT by lazy { readResource("$CAS1_DATA_PATH/placement_application_document.json") }
+    val CAS1_PLACEMENT_APPLICATION_DATA by lazy { readResource("$CAS1_DATA_PATH/placement_application_data.json") }
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -312,12 +313,13 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
   protected fun placementApplicationEntity(
     application: ApprovedPremisesApplicationEntity,
     document: String = DOCUMENT_JSON_SIMPLE,
+    data: String = DATA_JSON_SIMPLE,
   ): PlacementApplicationEntity = placementApplicationFactory.produceAndPersist {
     withApplication(application)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withDueAt(null)
-    withData(DATA_JSON_SIMPLE)
+    withData(data)
     withDocument(document)
     withAllocatedToUser(null)
     withCreatedByUser(application.createdByUser)

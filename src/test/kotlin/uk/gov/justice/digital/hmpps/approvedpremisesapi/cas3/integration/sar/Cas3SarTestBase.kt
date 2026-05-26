@@ -103,6 +103,7 @@ open class Cas3SarTestBase : SubjectAccessRequestServiceTestBase() {
         "noms_number": "${temporaryAccommodationApplication.nomsNumber}",
         "offender_name": "${temporaryAccommodationApplication.name}",
         "document": ${temporaryAccommodationApplication.document},
+        "data": ${temporaryAccommodationApplication.data},
         "created_at": "$CREATED_AT",
         "submitted_at": "$SUBMITTED_AT",
         "applications_user_name": "${temporaryAccommodationApplication.createdByUser.name}",

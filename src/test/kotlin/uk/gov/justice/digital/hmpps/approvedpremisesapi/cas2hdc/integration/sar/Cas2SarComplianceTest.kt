@@ -75,6 +75,15 @@ class Cas2SarComplianceTest : Cas2SarTestBase() {
       referringPrisonCode = TEST_REFERRING_PRISON_CODE,
       telephoneNumber = TEST_TELEPHONE_NUMBER,
       data = CAS2_APPLICATION_DATA,
+      document = "null",
+    )
+    cas2ApplicationEntity(
+      offenderDetails,
+      user,
+      Cas2ServiceOrigin.HDC,
+      referringPrisonCode = TEST_REFERRING_PRISON_CODE,
+      telephoneNumber = TEST_TELEPHONE_NUMBER,
+      data = CAS2_APPLICATION_DATA,
       document = CAS2_APPLICATION_DOCUMENT,
     )
     val assessment = cas2AssessmentEntity(

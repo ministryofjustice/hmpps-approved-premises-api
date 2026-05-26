@@ -117,15 +117,25 @@ class Cas1SarComplianceTest : Cas1SarTestBase() {
       createdByUser = createdByUser,
       applicantUserName = TEST_APPLICANT_NAME,
       data = CAS1_APPLICATION_DATA,
+      document = "null",
+    )
+    approvedPremisesApplicationEntity(
+      offenderDetails,
+      caseManagerName = TEST_CASE_MANAGER_NAME,
+      createdByUser = createdByUser,
+      applicantUserName = TEST_APPLICANT_NAME,
+      data = CAS1_APPLICATION_DATA,
       document = CAS1_APPLICATION_DOCUMENT,
     )
-    val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
+    val assessment = approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, "null")
+    approvedPremisesAssessmentEntity(application, assessor, CAS1_ASSESSMENT_DATA, CAS1_ASSESSMENT_DOCUMENT)
 
     applicationTimelineNoteEntity(application)
     approvedPremisesAssessmentClarificationNoteEntity(assessment)
     appealEntity(application, assessment)
 
-    val placementApplication = placementApplicationEntity(application, CAS1_PLACEMENT_APPLICATION_DOCUMENT)
+    val placementApplication = placementApplicationEntity(application, "null", CAS1_PLACEMENT_APPLICATION_DATA)
+    placementApplicationEntity(application, CAS1_PLACEMENT_APPLICATION_DOCUMENT, CAS1_PLACEMENT_APPLICATION_DATA)
     val placementRequirements = placementRequirementEntity(
       application,
       assessment,
