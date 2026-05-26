@@ -26,12 +26,12 @@ class Cas3PeopleController(
   fun riskManagement(@PathVariable crn: String): ResponseEntity<Cas3OASysGroup> {
     ensureOffenderAccess(crn)
 
-    val offenceDetails = extractEntityFromCasResult(oaSysService.getOASysOffenceDetails(crn))
+    val offenceDetails = extractEntityFromCasResult(oaSysService.getOffenceDetails(crn))
 
     val assessmentMetadata = oaSysOffenceDetailsTransformer.toAssessmentMetadata(offenceDetails)
 
     val answers = oaSysSectionsTransformer.riskManagementPlanAnswers(
-      extractEntityFromCasResult(oaSysService.getOASysRiskManagementPlan(crn)).riskManagementPlan,
+      extractEntityFromCasResult(oaSysService.getRiskManagementPlan(crn)).riskManagementPlan,
     )
 
     return ResponseEntity.ok(

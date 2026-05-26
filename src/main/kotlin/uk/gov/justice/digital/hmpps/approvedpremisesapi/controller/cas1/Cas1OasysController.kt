@@ -65,10 +65,10 @@ class Cas1OasysController(
     return ResponseEntity.ok(
       Cas1OASysMetadata(
         assessmentMetadata = oaSysOffenceDetailsTransformer.toAssessmentMetadata(
-          extractNullableOAsysResult(oaSysService.getOASysOffenceDetails(crn)),
+          extractNullableOAsysResult(oaSysService.getOffenceDetails(crn)),
         ),
         supportingInformation = cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(
-          extractNullableOAsysResult(oaSysService.getOASysNeeds(crn)),
+          extractNullableOAsysResult(oaSysService.getNeedsDetails(crn)),
         ),
       ),
     )
@@ -94,25 +94,25 @@ class Cas1OasysController(
   ): ResponseEntity<Cas1OASysGroup> {
     ensureOffenderAccess(crn)
 
-    val offenceDetails = extractNullableOAsysResult(oaSysService.getOASysOffenceDetails(crn))
+    val offenceDetails = extractNullableOAsysResult(oaSysService.getOffenceDetails(crn))
 
     val assessmentMetadata = oaSysOffenceDetailsTransformer.toAssessmentMetadata(offenceDetails)
 
     val answers = when (group) {
       Cas1OASysGroupName.RISK_MANAGEMENT_PLAN -> oaSysSectionsTransformer.riskManagementPlanAnswers(
-        extractNullableOAsysResult(oaSysService.getOASysRiskManagementPlan(crn))?.riskManagementPlan,
+        extractNullableOAsysResult(oaSysService.getRiskManagementPlan(crn))?.riskManagementPlan,
       )
       Cas1OASysGroupName.OFFENCE_DETAILS -> oaSysSectionsTransformer.offenceDetailsAnswers(offenceDetails?.offence)
       Cas1OASysGroupName.ROSH_SUMMARY -> oaSysSectionsTransformer.roshSummaryAnswers(
-        extractNullableOAsysResult(oaSysService.getOASysRoshSummary(crn))?.roshSummary,
+        extractNullableOAsysResult(oaSysService.getRoshSummary(crn))?.roshSummary,
       )
       Cas1OASysGroupName.SUPPORTING_INFORMATION -> cas1OASysNeedsQuestionTransformer.transformToOASysQuestion(
-        needsDetails = extractNullableOAsysResult(oaSysService.getOASysNeeds(crn)),
+        needsDetails = extractNullableOAsysResult(oaSysService.getNeedsDetails(crn)),
         includeOptionalSections = includeOptionalSections ?: emptyList(),
-        health = extractNullableOAsysResult(oaSysService.getOASysHealthDetails(crn)),
+        health = extractNullableOAsysResult(oaSysService.getHealthDetails(crn)),
       )
       Cas1OASysGroupName.RISK_TO_SELF -> oaSysSectionsTransformer.riskToSelfAnswers(
-        extractNullableOAsysResult(oaSysService.getOASysRiskToTheIndividual(crn))?.riskToTheIndividual,
+        extractNullableOAsysResult(oaSysService.getRiskToTheIndividual(crn))?.riskToTheIndividual,
       )
     }
 
@@ -131,7 +131,7 @@ class Cas1OasysController(
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
 
     val risksToTheIndividualWrapper = extractEntityFromCasResult(
-      oaSysService.getOASysRiskToTheIndividual(crn),
+      oaSysService.getRiskToTheIndividual(crn),
     )
 
     val riskToTheIndividual = risksToTheIndividualWrapper.riskToTheIndividual
@@ -146,7 +146,7 @@ class Cas1OasysController(
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
 
     val healthDetailsWrapper = extractEntityFromCasResult(
-      oaSysService.getOASysHealthDetails(crn),
+      oaSysService.getHealthDetails(crn),
     )
 
     val healthDetails = healthDetailsWrapper.health
