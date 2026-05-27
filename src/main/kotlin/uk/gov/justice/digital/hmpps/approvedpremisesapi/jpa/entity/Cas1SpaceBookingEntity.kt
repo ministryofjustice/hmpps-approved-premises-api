@@ -595,6 +595,10 @@ data class Cas1SpaceBookingEntity(
    *
    * Instead, use the repository to find the value for 'transferredTo'.
    */
+  @Deprecated(
+    "This was added for change request functionality, but never used. " +
+      "Instead, a transfer is indicated by a value being set in [transferType]",
+  )
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "transferred_from", referencedColumnName = "id")
   val transferredFrom: Cas1SpaceBookingEntity? = null,
@@ -602,6 +606,10 @@ data class Cas1SpaceBookingEntity(
   /**
    * If [transferredFrom] is not null, this indicates the type of transfer
    */
+  @Deprecated(
+    "This was added for change request functionality, but never used. " +
+      "Instead, a transfer is indicated by a value being set in [transferType]",
+  )
   @Enumerated(EnumType.STRING)
   var transferType: TransferType? = null,
 

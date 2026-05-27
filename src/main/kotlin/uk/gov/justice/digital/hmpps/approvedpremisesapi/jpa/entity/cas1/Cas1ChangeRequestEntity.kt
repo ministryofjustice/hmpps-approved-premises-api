@@ -26,6 +26,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Deprecated("Change request functionality was developed but never used")
 @Repository
 interface Cas1ChangeRequestRepository : JpaRepository<Cas1ChangeRequestEntity, UUID> {
 
@@ -78,6 +79,7 @@ interface Cas1ChangeRequestRepository : JpaRepository<Cas1ChangeRequestEntity, U
   }
 }
 
+@Deprecated("Change request functionality was developed but never used")
 @Entity
 @Table(name = "cas1_change_requests")
 data class Cas1ChangeRequestEntity(
