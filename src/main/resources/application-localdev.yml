@@ -51,6 +51,8 @@ spring:
 
 springdoc:
   pre-loading-enabled: false
+  api-docs:
+    version: openapi_3_0
 
 user-allocations:
   rules:
