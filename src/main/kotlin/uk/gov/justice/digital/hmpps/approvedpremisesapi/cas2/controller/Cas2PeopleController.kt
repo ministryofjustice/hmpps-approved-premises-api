@@ -61,11 +61,11 @@ class Cas2PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        oasysService.getOASysOffenceDetails(crn)
+        oasysService.getOffenceDetails(crn)
       }
 
       val riskToTheIndividualResult = async {
-        oasysService.getOASysRiskToTheIndividual(crn)
+        oasysService.getRiskToTheIndividual(crn)
       }
 
       val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
@@ -83,11 +83,11 @@ class Cas2PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        oasysService.getOASysOffenceDetails(crn)
+        oasysService.getOffenceDetails(crn)
       }
 
       val roshResult = async {
-        oasysService.getOASysRoshSummary(crn)
+        oasysService.getRoshSummary(crn)
       }
 
       val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())

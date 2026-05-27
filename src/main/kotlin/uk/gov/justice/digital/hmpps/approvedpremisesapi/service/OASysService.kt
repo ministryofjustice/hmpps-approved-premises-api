@@ -31,7 +31,7 @@ class OASysService(
     is ClientResult.Failure -> result.throwException()
   }
 
-  fun getOASysNeeds(crn: String): CasResult<NeedsDetails> = when (val needsResult = apAndOASysClient.getNeedsDetails(crn)) {
+  fun getNeedsDetails(crn: String): CasResult<NeedsDetails> = when (val needsResult = apAndOASysClient.getNeedsDetails(crn)) {
     is ClientResult.Success -> CasResult.Success(needsResult.body)
     is ClientResult.Failure.StatusCode -> when (needsResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -48,7 +48,7 @@ class OASysService(
     is ClientResult.Failure -> needsResult.throwException()
   }
 
-  fun getOASysOffenceDetails(crn: String): CasResult<OffenceDetails> = when (val offenceDetailsResult = apAndOASysClient.getOffenceDetails(crn)) {
+  fun getOffenceDetails(crn: String): CasResult<OffenceDetails> = when (val offenceDetailsResult = apAndOASysClient.getOffenceDetails(crn)) {
     is ClientResult.Success -> CasResult.Success(offenceDetailsResult.body)
     is ClientResult.Failure.StatusCode -> when (offenceDetailsResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -58,7 +58,7 @@ class OASysService(
     is ClientResult.Failure -> offenceDetailsResult.throwException()
   }
 
-  fun getOASysRiskManagementPlan(crn: String): CasResult<RiskManagementPlan> = when (val riskManagementPlanResult = apAndOASysClient.getRiskManagementPlan(crn)) {
+  fun getRiskManagementPlan(crn: String): CasResult<RiskManagementPlan> = when (val riskManagementPlanResult = apAndOASysClient.getRiskManagementPlan(crn)) {
     is ClientResult.Success -> CasResult.Success(riskManagementPlanResult.body)
     is ClientResult.Failure.StatusCode -> when (riskManagementPlanResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -68,7 +68,7 @@ class OASysService(
     is ClientResult.Failure -> riskManagementPlanResult.throwException()
   }
 
-  fun getOASysRoshSummary(crn: String): CasResult<RoshSummary> = when (val roshSummaryResult = apAndOASysClient.getRoshSummary(crn)) {
+  fun getRoshSummary(crn: String): CasResult<RoshSummary> = when (val roshSummaryResult = apAndOASysClient.getRoshSummary(crn)) {
     is ClientResult.Success -> CasResult.Success(roshSummaryResult.body)
     is ClientResult.Failure.StatusCode -> when (roshSummaryResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -78,7 +78,7 @@ class OASysService(
     is ClientResult.Failure -> roshSummaryResult.throwException()
   }
 
-  fun getOASysRiskToTheIndividual(crn: String): CasResult<RisksToTheIndividual> = when (val risksToTheIndividualResult = apAndOASysClient.getRiskToTheIndividual(crn)) {
+  fun getRiskToTheIndividual(crn: String): CasResult<RisksToTheIndividual> = when (val risksToTheIndividualResult = apAndOASysClient.getRiskToTheIndividual(crn)) {
     is ClientResult.Success -> CasResult.Success(risksToTheIndividualResult.body)
     is ClientResult.Failure.StatusCode -> when (risksToTheIndividualResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
@@ -88,7 +88,7 @@ class OASysService(
     is ClientResult.Failure -> risksToTheIndividualResult.throwException()
   }
 
-  fun getOASysHealthDetails(crn: String): CasResult<HealthDetails> = when (val healthDetailsResult = apAndOASysClient.getHealth(crn)) {
+  fun getHealthDetails(crn: String): CasResult<HealthDetails> = when (val healthDetailsResult = apAndOASysClient.getHealth(crn)) {
     is ClientResult.Success -> CasResult.Success(healthDetailsResult.body)
     is ClientResult.Failure.StatusCode -> when (healthDetailsResult.status) {
       HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)

@@ -105,20 +105,20 @@ class PeopleController(
   override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
     ensureUserCanAccessOffenderInfo(crn)
 
-    val needs = extractEntityFromCasResult(oasysService.getOASysNeeds(crn))
+    val needs = extractEntityFromCasResult(oasysService.getNeedsDetails(crn))
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        oasysService.getOASysOffenceDetails(crn)
+        oasysService.getOffenceDetails(crn)
       }
       val roshSummaryResult = async {
-        oasysService.getOASysRoshSummary(crn)
+        oasysService.getRoshSummary(crn)
       }
       val riskToTheIndividualResult = async {
-        oasysService.getOASysRiskToTheIndividual(crn)
+        oasysService.getRiskToTheIndividual(crn)
       }
       val riskManagementPlanResult = async {
-        oasysService.getOASysRiskManagementPlan(crn)
+        oasysService.getRiskManagementPlan(crn)
       }
 
       val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
