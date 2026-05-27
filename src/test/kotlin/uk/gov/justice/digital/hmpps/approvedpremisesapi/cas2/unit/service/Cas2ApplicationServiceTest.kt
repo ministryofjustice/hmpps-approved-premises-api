@@ -391,7 +391,7 @@ class Cas2ApplicationServiceTest {
 
       val result = applicationService.getApplicationForUser(applicationId, userEntity)
 
-      assertThatCasResult(result).isSuccess().hasValueEqualTo(applicationEntity)
+      assertThatCasResult(result).isSuccess().withValueEqualTo(applicationEntity)
     }
   }
 
