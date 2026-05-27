@@ -95,7 +95,9 @@ SAR_GENERATE_ACTUAL=true ./gradlew integrationTest --tests "uk.gov.justice.digit
 
 #### 2. Update the fixture
 
-The generated schema will be saved to `src/test/resources/entity-schema.json.log`. Copy it to the correct location:
+The generated schema will be saved to `src/test/resources/entity-schema.json.log`.(The SAR test library stores the file in this location.)
+
+#### 3.Copy it to the correct location:
 
 ```bash
 cp src/test/resources/entity-schema.json.log src/test/resources/sar/cas-entities-schema.json
