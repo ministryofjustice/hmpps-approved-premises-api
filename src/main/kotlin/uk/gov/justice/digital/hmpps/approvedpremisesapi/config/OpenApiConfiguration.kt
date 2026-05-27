@@ -58,7 +58,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas1Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS1Shared")
     .displayName("CAS1 & Shared")
-    .pathsToExclude("/**/cas2/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**")
+    .pathsToExclude("/**/cas2/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -66,7 +66,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas1DomainEvents(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS1DomainEvents")
     .displayName("CAS1 Domain Events")
-    .pathsToExclude("/**/events/cas2/**", "/**/events/cas3/**")
+    .pathsToExclude("/**/events/cas2/**", "/**/events/cas3/**", "/queue-admin/**")
     .pathsToMatch("/**/events/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
@@ -75,7 +75,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas2Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2Shared")
     .displayName("CAS2 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**")
+    .pathsToExclude("/**/cas1/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -100,7 +100,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas2v2Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2v2Shared")
     .displayName("CAS2v2 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas3/**", "/**/events/**")
+    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -108,7 +108,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas3Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS3Shared")
     .displayName("CAS3 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas2v2/**", "/**/events/**")
+    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas2v2/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 

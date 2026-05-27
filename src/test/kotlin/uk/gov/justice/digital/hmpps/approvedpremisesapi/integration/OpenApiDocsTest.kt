@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.info.BuildProperties
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 
 /**
  * This is taken from hmpps-template-kotlin, with some tweaks
@@ -129,5 +130,17 @@ class OpenApiDocsTest : IntegrationTestBase() {
       .expectStatus().isOk
       .expectBody()
       .jsonPath("$.paths[*][*][?(!@.security)]").doesNotExist()
+  }
+
+  @Test
+  fun `groups exclude other CASs`() {
+    val openApiDoc = webTestClient.get()
+      .uri("/v3/api-docs/CAS1Shared")
+      .accept(MediaType.APPLICATION_JSON)
+      .exchange()
+      .expectStatus().isOk
+      .bodyAsObject<String>()
+
+    assertThat(openApiDoc).doesNotContainIgnoringCase("Cas3Premises")
   }
 }
