@@ -26,7 +26,6 @@ from
 		apa.name,
 		a.crn,
 		a.noms_number,
-		a."data",
 		a."document",
 		a.created_at,
 		a.submitted_at,
@@ -136,7 +135,6 @@ from
                app.crn,
                app.noms_number,
                u."name" as assessor_name,
-               assess."data",
                assess."document",
                assess.created_at,
                assess.allocated_at,
@@ -239,7 +237,6 @@ from
           select
             a.crn,
             a.noms_number,
-            pa."data",
             pa."document",
             pa.created_at,
             pa.submitted_at ,

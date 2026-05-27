@@ -77,7 +77,6 @@ open class Cas2SarTestBase : SubjectAccessRequestServiceTestBase() {
       "crn": "${application.crn}",
       "noms_number": "${application.nomsNumber}",
       "document": ${application.document},
-      "data": ${application.data},
       "created_by_user": "${application.createdByUser.name}",
       "created_at": "$CREATED_AT",
       "submitted_at": "$SUBMITTED_AT",
