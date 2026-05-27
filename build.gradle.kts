@@ -20,7 +20,7 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 dependencies {
-  val hmppsSpringBootStarterVersion = "2.2.0"
+  val hmppsSpringBootStarterVersion = "2.5.0"
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsSpringBootStarterVersion")
   implementation("org.springframework.boot:spring-boot-starter-flyway")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
@@ -88,7 +88,7 @@ dependencies {
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.1")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.4.1")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:2.4.3")
   // Used directly in our tests for JSON response assertions.
   // Also aligned with the approach used in the SAR team's tests.
   testImplementation("net.javacrumbs.json-unit:json-unit-assertj:5.1.1")
