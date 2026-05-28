@@ -83,6 +83,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
@@ -2651,6 +2652,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
             withEssentialCriteria(listOf())
             withDesirableCriteria(listOf())
+            withApType(JpaApType.RFAP)
           }
 
           val placementRequest = placementRequestFactory.produceAndPersist {
@@ -2669,7 +2671,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
           val (offender) = givenAnOffender()
 
-          cas1SpaceBookingEntityFactory.produceAndPersist {
+          val spaceBookingEntity = cas1SpaceBookingEntityFactory.produceAndPersist {
             withCrn(offender.otherIds.crn)
             withPremises(premises)
             withPlacementRequest(placementRequest)
@@ -2741,6 +2743,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(requestForPlacements[4].sentenceType).isNull()
           assertThat(requestForPlacements[4].releaseType).isEqualTo(ReleaseTypeOption.licence)
           assertThat(requestForPlacements[4].situation).isNull()
+
           // Validate space bookings are returned on the placement request
           assertThat(requestForPlacements[4].placements).hasSize(1)
           val spaceBooking = requestForPlacements[4].placements[0]
@@ -2748,7 +2751,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(spaceBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusDays(10))
           assertThat(spaceBooking.premises).isEqualTo(NamedId(premises.id, premises.name))
           assertThat(spaceBooking.apArea).isEqualTo(NamedId(premises.probationRegion.apArea!!.id, premises.probationRegion.apArea!!.name))
-          assertThat(spaceBooking.createdAt).isEqualTo(spaceBooking.createdAt)
+          assertThat(spaceBooking.placementRequestApType).isEqualTo(ApType.rfap)
         }
       }
     }

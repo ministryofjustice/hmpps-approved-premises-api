@@ -131,6 +131,7 @@ class Cas1SpaceBookingTransformer(
       bookedBy = spaceBooking.createdBy?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
       status = statusAndWhen.status,
       statusSetDate = statusAndWhen.occurredAt,
+      placementRequestApType = spaceBooking.placementRequest?.placementRequirements?.apType?.apiType,
     )
   }
 
