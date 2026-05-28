@@ -231,7 +231,7 @@ class Cas3v2BedspaceSearchServiceTest {
       ),
     )
 
-    assertThatCasResult(result).isSuccess().hasValueEqualTo(candidateBedspaces)
+    assertThatCasResult(result).isSuccess().withValueEqualTo(candidateBedspaces)
   }
 
   @Test
@@ -415,7 +415,7 @@ class Cas3v2BedspaceSearchServiceTest {
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
       ),
     )
-    assertThatCasResult(result).isSuccess().hasValueEqualTo(expectedResults)
+    assertThatCasResult(result).isSuccess().withValueEqualTo(expectedResults)
   }
 
   @Suppress("LongParameterList")

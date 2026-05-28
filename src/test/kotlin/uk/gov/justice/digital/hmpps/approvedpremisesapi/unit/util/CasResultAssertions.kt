@@ -101,7 +101,7 @@ class CasSuccessResultAssertions<T>(actual: CasResult.Success<T>) :
     actual,
     CasSuccessResultAssertions::class.java,
   ) {
-  fun hasValueEqualTo(expected: Any): CasSuccessResultAssertions<T> {
+  fun withValueEqualTo(expected: Any): CasSuccessResultAssertions<T> {
     val value = actual.value
     if (value != expected) {
       failWithMessage("Expected CasResult value to be <%s> but was:<%s>", expected, value)
