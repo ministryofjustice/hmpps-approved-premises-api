@@ -52,6 +52,17 @@ import java.util.UUID
 
 @Repository
 interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUID> {
+
+  @Query(
+    """
+    SELECT b FROM Cas1SpaceBookingEntity b
+    JOIN b.premises
+    JOIN b.placementRequest pr
+    JOIN pr.placementRequirements prreq
+    JOIN pr.application app
+    WHERE pr.id = :placementRequestId
+    """,
+  )
   fun findByPlacementRequestId(placementRequestId: UUID): List<Cas1SpaceBookingEntity>
 
   companion object {
@@ -387,6 +398,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     """
     SELECT b FROM Cas1SpaceBookingEntity b
     JOIN b.placementRequest pr
+    JOIN pr.placementRequirements prreq
     JOIN pr.application app
     WHERE
       b.crn = :crn AND
