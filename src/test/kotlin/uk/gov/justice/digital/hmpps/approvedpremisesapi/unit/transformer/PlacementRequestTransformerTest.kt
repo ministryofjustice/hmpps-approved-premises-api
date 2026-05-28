@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -76,7 +77,7 @@ class PlacementRequestTransformerTest {
   private val assessmentSubmittedAt = OffsetDateTime.now().minusDays(3)
 
   private val application = ApprovedPremisesApplicationEntityFactory()
-    .withReleaseType(Cas1ReleaseType.licence)
+    .withReleaseType(Cas1ReleaseType.reReleasedPostRecall)
     .withCreatedByUser(user)
     .withSubmittedAt(applicationSubmittedAt)
     .produce()
@@ -108,6 +109,7 @@ class PlacementRequestTransformerTest {
 
   private val placementRequestFactory = PlacementRequestEntityFactory()
     .withApplication(application)
+    .withPlacementApplication(PlacementApplicationEntityFactory().withDefaults().withReleaseType(Cas1ReleaseType.licence).produce())
     .withAssessment(assessment)
 
   private val mockRisks = mockk<PersonRisks>()
@@ -279,42 +281,35 @@ class PlacementRequestTransformerTest {
 
     @ParameterizedTest
     @EnumSource(value = ReleaseTypeOption::class)
-    fun `release types are transformed correctly`(releaseTypeOption: ReleaseTypeOption) {
-      val placementRequirementsEntity = placementRequirementsFactory
-        .withEssentialCriteria(
-          listOf(
-            CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
-            CharacteristicEntityFactory().withPropertyName("isRecoveryFocussed").produce(),
-            CharacteristicEntityFactory().withPropertyName("someOtherPropertyName").produce(),
-          ),
-        )
-        .withDesirableCriteria(
-          listOf(
-            CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
-            CharacteristicEntityFactory().withPropertyName("isSingle").produce(),
-            CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
-            CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
-          ),
-        )
-        .produce()
+    fun `release types are transformed correctly from placement application, if defined`(releaseTypeOption: ReleaseTypeOption) {
+      application.releaseType = null
 
       val placementRequestEntity = placementRequestFactory
-        .withPlacementRequirements(placementRequirementsEntity)
-        .withNotes("Some notes")
+        .withPlacementApplication(
+          PlacementApplicationEntityFactory().withDefaults()
+            .withReleaseType(releaseTypeOption.toJpaType())
+            .produce(),
+        )
+        .withPlacementRequirements(placementRequirementsFactory.produce())
         .produce()
 
-      application.releaseType = when (releaseTypeOption) {
-        ReleaseTypeOption.licence -> Cas1ReleaseType.licence
-        ReleaseTypeOption.rotl -> Cas1ReleaseType.rotl
-        ReleaseTypeOption.hdc -> Cas1ReleaseType.hdc
-        ReleaseTypeOption.pss -> Cas1ReleaseType.pss
-        ReleaseTypeOption.inCommunity -> Cas1ReleaseType.inCommunity
-        ReleaseTypeOption.notApplicable -> Cas1ReleaseType.notApplicable
-        ReleaseTypeOption.extendedDeterminateLicence -> Cas1ReleaseType.extendedDeterminateLicence
-        ReleaseTypeOption.paroleDirectedLicence -> Cas1ReleaseType.paroleDirectedLicence
-        ReleaseTypeOption.reReleasedPostRecall -> Cas1ReleaseType.reReleasedPostRecall
-        ReleaseTypeOption.reReleasedFollowingFixedTermRecall -> Cas1ReleaseType.reReleasedFollowingFixedTermRecall
-      }
+      val result = placementRequestTransformer.transformJpaToApi(
+        placementRequestEntity,
+        PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail),
+      )
+
+      assertThat(result.releaseType).isEqualTo(releaseTypeOption)
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ReleaseTypeOption::class)
+    fun `release types are transformed correctly from application, when no placement application is defined`(releaseTypeOption: ReleaseTypeOption) {
+      application.releaseType = releaseTypeOption.toJpaType()
+
+      val placementRequestEntity = placementRequestFactory
+        .withPlacementApplication(null)
+        .withPlacementRequirements(placementRequirementsFactory.produce())
+        .produce()
 
       val result = placementRequestTransformer.transformJpaToApi(
         placementRequestEntity,
@@ -385,5 +380,18 @@ class PlacementRequestTransformerTest {
         ),
       )
     }
+  }
+
+  fun ReleaseTypeOption.toJpaType() = when (this) {
+    ReleaseTypeOption.licence -> Cas1ReleaseType.licence
+    ReleaseTypeOption.rotl -> Cas1ReleaseType.rotl
+    ReleaseTypeOption.hdc -> Cas1ReleaseType.hdc
+    ReleaseTypeOption.pss -> Cas1ReleaseType.pss
+    ReleaseTypeOption.inCommunity -> Cas1ReleaseType.inCommunity
+    ReleaseTypeOption.notApplicable -> Cas1ReleaseType.notApplicable
+    ReleaseTypeOption.extendedDeterminateLicence -> Cas1ReleaseType.extendedDeterminateLicence
+    ReleaseTypeOption.paroleDirectedLicence -> Cas1ReleaseType.paroleDirectedLicence
+    ReleaseTypeOption.reReleasedPostRecall -> Cas1ReleaseType.reReleasedPostRecall
+    ReleaseTypeOption.reReleasedFollowingFixedTermRecall -> Cas1ReleaseType.reReleasedFollowingFixedTermRecall
   }
 }
