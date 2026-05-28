@@ -17,14 +17,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 class OASysService(
   private val apAndOASysClient: ApAndOASysClient,
 ) {
-  fun getAssessmentSummary(crn: String): CasResult<OASysAssessmentSummary> = when (val result = apAndOASysClient.getLatestAssessmentSummary(crn)) {
-    is ClientResult.Success -> CasResult.Success(result.body)
-    is ClientResult.Failure.StatusCode -> when (result.status) {
-      HttpStatus.NOT_FOUND -> CasResult.NotFound("OASysAssessment", crn)
-      else -> result.throwException()
-    }
-    is ClientResult.Failure -> result.throwException()
-  }
+  fun getAssessmentSummary(crn: String): CasResult<OASysAssessmentSummary> = handleResponse(
+    crn = crn,
+    response = apAndOASysClient.getLatestAssessmentSummary(crn),
+  )
 
   fun getNeedsDetails(crn: String): CasResult<NeedsDetails> = handleResponse(
     crn = crn,
