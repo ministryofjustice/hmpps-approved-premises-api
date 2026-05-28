@@ -89,6 +89,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -1141,7 +1142,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withData("""{"thingId":123}""")
-            withReleaseType("reReleasedFollowingFixedTermRecall")
+            withReleaseType(Cas1ReleaseType.reReleasedFollowingFixedTermRecall)
           }
 
           val rawResponseBody = webTestClient.get()
@@ -1162,7 +1163,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(responseBody.createdByUserId).isEqualTo(applicationEntity.createdByUser.id)
           assertThat(responseBody.createdByUserName).isEqualTo(applicationEntity.createdByUser.name)
           assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
-          assertThat(responseBody.releaseType).isEqualTo(ReleaseTypeOption.valueOf(applicationEntity.releaseType!!))
+          assertThat(responseBody.releaseType).isEqualTo(applicationEntity.releaseType!!.apiType)
           assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))
         }
       }
@@ -1888,7 +1889,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
       assertThat(persistedApplication.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 12, 1))
-      assertThat(persistedApplication.releaseType).isEqualTo(ReleaseTypeOption.reReleasedFollowingFixedTermRecall.toString())
+      assertThat(persistedApplication.releaseType).isEqualTo(Cas1ReleaseType.reReleasedFollowingFixedTermRecall)
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
@@ -2620,7 +2621,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withExpectedArrival(LocalDate.now())
             withRequestedDuration(2)
             withSentenceType(SentenceTypeOption.bailPlacement.name)
-            withReleaseType(ReleaseTypeOption.inCommunity.name)
+            withReleaseType(Cas1ReleaseType.inCommunity)
             withSituation(SituationOption.bailSentence.name)
           }
 

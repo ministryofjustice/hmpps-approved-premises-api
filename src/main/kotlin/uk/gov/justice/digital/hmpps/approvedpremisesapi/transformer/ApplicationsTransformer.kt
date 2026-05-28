@@ -133,7 +133,7 @@ class ApplicationsTransformer(
       apType = applicationEntity.apType.asApiType(),
       licenceExpiryDate = applicationEntity.licenceExpiryDate,
 
-      releaseType = applicationEntity.releaseType?.let { ReleaseTypeOption.valueOf(it) },
+      releaseType = applicationEntity.releaseType?.apiType,
       sentenceType = applicationEntity.sentenceType?.let { SentenceTypeOption.valueOf(it) },
     )
   }

@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
@@ -46,7 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
@@ -60,7 +60,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 class TaskTransformerTest {
   private val mockUserTransformer = mockk<UserTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
-  private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
   private val mockApAreaTransformer = mockk<ApAreaTransformer>()
   private val mockAssessmentTransformer = mockk<AssessmentTransformer>()
   private val mockProbationDeliveryUnitTransformer = mockk<ProbationDeliveryUnitTransformer>()
@@ -116,7 +115,6 @@ class TaskTransformerTest {
   private val taskTransformer = TaskTransformer(
     mockUserTransformer,
     mockRisksTransformer,
-    mockPlacementRequestTransformer,
     mockApAreaTransformer,
     mockAssessmentTransformer,
     mockProbationDeliveryUnitTransformer,
@@ -280,12 +278,11 @@ class TaskTransformerTest {
       .produce()
     val application = placementApplication.application
     private val mockTier = mockk<RiskTierEnvelope>()
-    private val releaseType = ReleaseTypeOption.licence
 
     @BeforeEach
     fun setup() {
       every { mockRisksTransformer.transformTierDomainToApi(application.riskRatings!!.tier) } returns mockTier
-      every { mockPlacementRequestTransformer.getReleaseType(application.releaseType) } returns releaseType
+      application.releaseType = Cas1ReleaseType.licence
     }
 
     @Test
@@ -301,7 +298,7 @@ class TaskTransformerTest {
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
       assertThat(result.id).isEqualTo(placementApplication.id)
       assertThat(result.tier).isEqualTo(mockTier)
-      assertThat(result.releaseType).isEqualTo(releaseType)
+      assertThat(result.releaseType).isEqualTo(ReleaseTypeOption.licence)
       assertThat(result.personName).isEqualTo("First Last")
       assertThat(result.crn).isEqualTo(placementApplication.application.crn)
       assertThat(result.dates).isEqualTo(
@@ -391,7 +388,7 @@ class TaskTransformerTest {
     @Test
     fun `placement application with ApArea is correctly transformed`() {
       val apArea = ApAreaEntityFactory().produce()
-      val application = applicationFactory.withApArea(apArea).produce()
+      val application = applicationFactory.withApArea(apArea).withReleaseType(Cas1ReleaseType.licence).produce()
       val placementApplication = placementApplicationFactory
         .withApplication(application)
         .withSubmittedAt(OffsetDateTime.now())

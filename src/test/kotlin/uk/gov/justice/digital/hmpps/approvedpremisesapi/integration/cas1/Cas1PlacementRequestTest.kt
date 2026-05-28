@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.Companion.removeRolesWithAllProdPermissions
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
@@ -1144,7 +1145,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
         withCrn(offenderDetails.otherIds.crn)
         withCreatedByUser(user)
         withSubmittedAt(OffsetDateTime.now())
-        withReleaseType("licence")
+        withReleaseType(Cas1ReleaseType.licence)
         withSubmittedAt(applicationDate)
         withName("${offenderDetails.firstName} ${offenderDetails.surname}")
         withRiskRatings(

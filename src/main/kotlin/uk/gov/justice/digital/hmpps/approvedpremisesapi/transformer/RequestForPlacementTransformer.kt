@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
@@ -56,7 +55,7 @@ class RequestForPlacementTransformer(
       status = statusAndWhen.status,
       statusSetDate = statusAndWhen.occurredAt,
       sentenceType = placementApplicationEntity.sentenceType?.let { SentenceTypeOption.valueOf(it) },
-      releaseType = placementApplicationEntity.releaseType?.let { ReleaseTypeOption.valueOf(it) },
+      releaseType = placementApplicationEntity.releaseType?.apiType,
       situation = placementApplicationEntity.situation?.let { SituationOption.valueOf(it) },
     )
   }
@@ -110,7 +109,7 @@ class RequestForPlacementTransformer(
       status = statusAndWhen.status,
       statusSetDate = statusAndWhen.occurredAt,
       sentenceType = application.sentenceType?.let { SentenceTypeOption.valueOf(it) },
-      releaseType = application.releaseType?.let { ReleaseTypeOption.valueOf(it) },
+      releaseType = application.releaseType?.apiType,
       situation = application.situation?.let { SituationOption.valueOf(it) },
     )
   }

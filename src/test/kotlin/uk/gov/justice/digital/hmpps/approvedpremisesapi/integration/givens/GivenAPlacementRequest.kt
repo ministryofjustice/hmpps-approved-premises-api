@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -85,7 +86,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
     withCreatedAt(applicationCreatedAt)
     withCreatedByUser(createdByUser)
     withSubmittedAt(applicationSubmittedAt)
-    withReleaseType("licence")
+    withReleaseType(Cas1ReleaseType.licence)
     withRiskRatings(
       risksFactory.produce(),
     )

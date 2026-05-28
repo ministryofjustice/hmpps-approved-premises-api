@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -383,7 +384,7 @@ class Cas1ApplicationCreationServiceTest {
           isWomensApplication = false,
           isEmergencyApplication = false,
           apType = apType,
-          releaseType = "rotl",
+          releaseType = ReleaseTypeOption.rotl,
           arrivalDate = LocalDate.parse("2023-04-17"),
           data = updatedData,
           isInapplicable = false,
@@ -398,7 +399,7 @@ class Cas1ApplicationCreationServiceTest {
         assertThat(it.isPipeApplication).isEqualTo(apType == ApType.pipe)
         assertThat(it.isEsapApplication).isEqualTo(apType == ApType.esap)
         assertThat(it.apType).isEqualTo(apType.asApprovedPremisesType())
-        assertThat(it.releaseType).isEqualTo("rotl")
+        assertThat(it.releaseType).isEqualTo(Cas1ReleaseType.rotl)
         assertThat(it.isInapplicable).isEqualTo(false)
         assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
         assertThat(it.applicantUserDetails).isNull()
@@ -435,7 +436,7 @@ class Cas1ApplicationCreationServiceTest {
           isWomensApplication = false,
           isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
           apType = ApType.pipe,
-          releaseType = "rotl",
+          releaseType = ReleaseTypeOption.rotl,
           arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
             LocalDate.now().plusDays(10)
           } else {
@@ -661,7 +662,7 @@ class Cas1ApplicationCreationServiceTest {
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.isPipeApplication).isTrue
         assertThat(it.isWomensApplication).isFalse
-        assertThat(it.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
+        assertThat(it.releaseType).isEqualTo(Cas1ReleaseType.licence)
         if (situation == null) {
           assertThat(it.situation).isNull()
         } else {
@@ -812,7 +813,7 @@ class Cas1ApplicationCreationServiceTest {
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.isPipeApplication).isTrue
         assertThat(it.isWomensApplication).isFalse
-        assertThat(it.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
+        assertThat(it.releaseType).isEqualTo(Cas1ReleaseType.licence)
         assertThat(it.noticeType).isEqualTo(noticeType)
         assertThat(it.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
         assertThat(it.inmateInOutStatusOnSubmission).isEqualTo("OUT")
@@ -891,7 +892,7 @@ class Cas1ApplicationCreationServiceTest {
         assertThat(it.isEsapApplication).isEqualTo(apType == ApType.esap)
         assertThat(it.apType).isEqualTo(apType.asApprovedPremisesType())
         assertThat(it.isWomensApplication).isFalse
-        assertThat(it.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
+        assertThat(it.releaseType).isEqualTo(Cas1ReleaseType.licence)
         assertThat(it.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
         assertThat(it.targetLocation).isEqualTo(defaultSubmitApprovedPremisesApplication.targetLocation)
         assertThat(it.inmateInOutStatusOnSubmission).isEqualTo("OUT")

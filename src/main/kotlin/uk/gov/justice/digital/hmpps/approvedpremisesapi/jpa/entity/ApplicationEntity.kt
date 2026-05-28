@@ -33,6 +33,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -365,7 +366,8 @@ class ApprovedPremisesApplicationEntity(
   val teamCodes: MutableList<ApplicationTeamCodeEntity>,
   @OneToMany(mappedBy = "application")
   var placementRequests: MutableList<PlacementRequestEntity>,
-  var releaseType: String?,
+  @Enumerated(value = EnumType.STRING)
+  var releaseType: Cas1ReleaseType?,
   var sentenceType: String?,
   var situation: String?,
   /**

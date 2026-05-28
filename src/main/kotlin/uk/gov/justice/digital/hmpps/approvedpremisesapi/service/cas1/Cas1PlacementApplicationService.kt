@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
@@ -163,7 +164,7 @@ class Cas1PlacementApplicationService(
           allocatedAt = assessment.allocatedAt,
           reallocatedAt = null,
           dueAt = null,
-          releaseType = application.releaseType?.toString(),
+          releaseType = application.releaseType,
           sentenceType = application.sentenceType?.toString(),
           situation = application.situation?.toString(),
         ),
@@ -371,7 +372,7 @@ class Cas1PlacementApplicationService(
       allocatedAt = now
       placementType = placementTypeValue
       submissionGroupId = UUID.randomUUID()
-      releaseType = submitPlacementApplication.releaseType?.toString()
+      releaseType = submitPlacementApplication.releaseType?.let { Cas1ReleaseType.fromApiType(it) }
       sentenceType = submitPlacementApplication.sentenceType?.toString()
       situation = submitPlacementApplication.situationType?.toString()
     }

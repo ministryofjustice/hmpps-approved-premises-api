@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
@@ -304,7 +305,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
         withCreatedByUser(applicant)
         withSubmittedAt(OffsetDateTime.now())
         withApArea(givenAnApArea())
-        withReleaseType("licence")
+        withReleaseType(Cas1ReleaseType.licence)
         withEventNumber(OLD_EVENT_NUMBER)
         withOffenceId(OLD_OFFENCE_ID)
         withConvictionId(OLD_CONVICTION_ID)

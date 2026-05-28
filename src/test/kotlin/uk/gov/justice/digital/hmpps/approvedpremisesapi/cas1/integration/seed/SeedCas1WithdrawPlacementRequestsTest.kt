@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -170,7 +171,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
       withCreatedByUser(applicant)
       withSubmittedAt(OffsetDateTime.now())
       withApArea(apArea)
-      withReleaseType("licence")
+      withReleaseType(Cas1ReleaseType.licence)
       withCaseManagerUserDetails(caseManager)
       withCaseManagerIsNotApplicant(caseManager != null)
       withCruManagementArea(givenACas1CruManagementArea())

@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -876,7 +877,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(updatedPlacementApplication.allocatedToUser).isNull()
             assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(placementDates[0].duration)
             assertThat(updatedPlacementApplication.expectedArrival).isEqualTo(placementDates[0].expectedArrival)
-            assertThat(updatedPlacementApplication.releaseType).isEqualTo(ReleaseTypeOption.licence.toString())
+            assertThat(updatedPlacementApplication.releaseType).isEqualTo(Cas1ReleaseType.licence)
             assertThat(updatedPlacementApplication.sentenceType).isEqualTo(SentenceTypeOption.communityOrder.toString())
             assertThat(updatedPlacementApplication.situation).isEqualTo(SituationOption.bailSentence.toString())
 
@@ -959,7 +960,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(updatedEntity1.requestedDuration).isEqualTo(duration1)
             assertThat(updatedEntity1.submittedAt).isNotNull()
             assertThat(updatedEntity1.allocatedToUser).isNull()
-            assertThat(updatedEntity1.releaseType).isEqualTo(ReleaseTypeOption.licence.toString())
+            assertThat(updatedEntity1.releaseType).isEqualTo(Cas1ReleaseType.licence)
 
             val createdApp2Id = body[1].id
             val updatedEntity2 = placementApplicationRepository.findByIdOrNull(createdApp2Id)!!

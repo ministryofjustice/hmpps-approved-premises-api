@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCrite
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
@@ -42,7 +41,7 @@ class PlacementRequestTransformer(
     risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
     applicationId = jpa.application.id,
     assessmentId = jpa.assessment.id,
-    releaseType = getReleaseType(jpa.application.releaseType),
+    releaseType = jpa.application.releaseType!!.apiType,
     status = getStatus(jpa),
     assessmentDecision = assessmentTransformer.transformJpaDecisionToApi(jpa.assessment.decision)!!,
     assessmentDate = jpa.assessment.submittedAt?.toInstant()!!,
@@ -78,20 +77,6 @@ class PlacementRequestTransformer(
     PlacementCriteria.valueOf(characteristic.propertyName!!)
   } catch (exception: Exception) {
     null
-  }
-
-  fun getReleaseType(releaseType: String?): ReleaseTypeOption = when (releaseType) {
-    "licence" -> ReleaseTypeOption.licence
-    "rotl" -> ReleaseTypeOption.rotl
-    "hdc" -> ReleaseTypeOption.hdc
-    "pss" -> ReleaseTypeOption.pss
-    "inCommunity" -> ReleaseTypeOption.inCommunity
-    "notApplicable" -> ReleaseTypeOption.notApplicable
-    "extendedDeterminateLicence" -> ReleaseTypeOption.extendedDeterminateLicence
-    "paroleDirectedLicence" -> ReleaseTypeOption.paroleDirectedLicence
-    "reReleasedPostRecall" -> ReleaseTypeOption.reReleasedPostRecall
-    "reReleasedFollowingFixedTermRecall" -> ReleaseTypeOption.reReleasedFollowingFixedTermRecall
-    else -> throw RuntimeException("Unrecognised releaseType: $releaseType")
   }
 
   fun getWithdrawalReason(withdrawalReason: PlacementRequestWithdrawalReason?): WithdrawPlacementRequestReason? = when (withdrawalReason) {

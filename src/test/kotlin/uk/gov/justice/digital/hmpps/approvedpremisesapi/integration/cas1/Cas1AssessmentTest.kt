@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCrite
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
@@ -65,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
@@ -1165,7 +1165,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             withCreatedByUser(userEntity)
             withSubmittedAt(OffsetDateTime.now())
             withSentenceType(SentenceTypeOption.bailPlacement.name)
-            withReleaseType(ReleaseTypeOption.inCommunity.name)
+            withReleaseType(Cas1ReleaseType.inCommunity)
             withSituation(SituationOption.bailSentence.name)
           }
 
@@ -1248,7 +1248,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
           assertThat(placementApplication.expectedArrival).isEqualTo(placementDates.expectedArrival)
           assertThat(placementApplication.authorisedDuration).isEqualTo(placementDates.duration)
           assertThat(placementApplication.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement.name)
-          assertThat(placementApplication.releaseType).isEqualTo(ReleaseTypeOption.inCommunity.name)
+          assertThat(placementApplication.releaseType).isEqualTo(Cas1ReleaseType.inCommunity)
           assertThat(placementApplication.situation).isEqualTo(SituationOption.bailSentence.name)
 
           assertThat(placementApplicationPlaceholderRepository.findByApplication(application)!!.archived).isTrue
