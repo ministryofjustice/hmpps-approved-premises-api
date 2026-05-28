@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -48,7 +49,7 @@ open class Cas1SarTestBase : SubjectAccessRequestServiceTestBase() {
   lateinit var premises: ApprovedPremisesEntity
 
   companion object {
-    const val RELEASE_TYPE_CONDITIONAL = "CONDITIONAL"
+    val RELEASE_TYPE_CONDITIONAL = Cas1ReleaseType.reReleasedPostRecall
     const val WITHDRAWAL_REASON_NOT_WITHDRAWN = "NOT WITHDRAWN"
     const val OTHER_WITHDRAWAL_REASON_NOT_APPLICABLE = "NOT APPLICABLE"
     const val SENTENCE_TYPE_CUSTODIAL = "CUSTODIAL"
