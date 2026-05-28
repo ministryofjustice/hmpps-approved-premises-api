@@ -20,7 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndivid
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService.OASysAssessmentDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
+import java.time.OffsetDateTime
 
 @ExtendWith(MockKExtension::class)
 class OASysServiceTest {
@@ -28,25 +31,52 @@ class OASysServiceTest {
   @MockK
   private lateinit var apAndOASysClient: ApAndOASysClient
 
+  @MockK
+  private lateinit var oasysApplicabilitySevice: OASysSuitabilityService
+
   @InjectMockKs
   private lateinit var service: OASysService
 
   companion object {
     const val CRN = "CRN1122"
+    val INITIATION_DATE: OffsetDateTime = OffsetDateTime.parse("2007-12-03T10:15:30+01:00")
+    val COMPLETION_DATE: OffsetDateTime = OffsetDateTime.parse("2007-12-04T10:15:30+01:00")
+    val APPLICABILITY_INFO: OASysAssessmentDates = OASysAssessmentDates(CRN, INITIATION_DATE, COMPLETION_DATE)
   }
 
   @Nested
   inner class AssessmentSummary {
 
     @Test
-    fun success() {
-      val upstreamResponse = OASysAssessmentSummaryFactory().produce()
+    fun `success if assessment exists and is usable`() {
+      val upstreamResponse = OASysAssessmentSummaryFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withCompletedDate(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getLatestAssessmentSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
       val result = service.getAssessmentSummary(CRN)
 
       assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+    }
+
+    @Test
+    fun `not found if assessment exists but isnt usable`() {
+      val upstreamResponse = OASysAssessmentSummaryFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withCompletedDate(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+
+      every { apAndOASysClient.getLatestAssessmentSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+
+      val result = service.getAssessmentSummary(CRN)
+
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -81,14 +111,35 @@ class OASysServiceTest {
   inner class NeedsDetails {
 
     @Test
-    fun success() {
-      val upstreamResponse = NeedsDetailsFactory().produce()
+    fun `success if assessment exists and is usable`() {
+      val upstreamResponse = NeedsDetailsFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
       val result = service.getNeedsDetails(CRN)
 
       assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+    }
+
+    @Test
+    fun `not found if assessment exists but isnt usable`() {
+      val upstreamResponse = NeedsDetailsFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+
+      every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+
+      val result = service.getNeedsDetails(CRN)
+
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -132,8 +183,13 @@ class OASysServiceTest {
   inner class OffenceDetails {
 
     @Test
-    fun success() {
-      val upstreamResponse = OffenceDetailsFactory().produce()
+    fun `success if assessment exists and is usable`() {
+      val upstreamResponse = OffenceDetailsFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -143,8 +199,15 @@ class OASysServiceTest {
     }
 
     @Test
-    fun `not found status code returns not found`() {
-      every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResultFactory.notFound()
+    fun `not found if assessment exists but isnt usable`() {
+      val upstreamResponse = OffenceDetailsFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+
+      every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
       val result = service.getOffenceDetails(CRN)
 
@@ -183,14 +246,35 @@ class OASysServiceTest {
   inner class RiskManagementPlan {
 
     @Test
-    fun success() {
-      val upstreamResponse = RiskManagementPlanFactory().produce()
+    fun `success if assessment exists and is usable`() {
+      val upstreamResponse = RiskManagementPlanFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
       val result = service.getRiskManagementPlan(CRN)
 
       assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+    }
+
+    @Test
+    fun `not found if assessment exists but isnt usable`() {
+      val upstreamResponse = RiskManagementPlanFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+
+      every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+
+      val result = service.getRiskManagementPlan(CRN)
+
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -234,14 +318,35 @@ class OASysServiceTest {
   inner class RoshSummary {
 
     @Test
-    fun success() {
-      val upstreamResponse = RoshSummaryFactory().produce()
+    fun `success if assessment exists and is usable`() {
+      val upstreamResponse = RoshSummaryFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
       val result = service.getRoshSummary(CRN)
 
       assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+    }
+
+    @Test
+    fun `not found if assessment exists but isnt usable`() {
+      val upstreamResponse = RoshSummaryFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+
+      every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+
+      val result = service.getRoshSummary(CRN)
+
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -285,14 +390,35 @@ class OASysServiceTest {
   inner class RiskToTheIndividual {
 
     @Test
-    fun success() {
-      val upstreamResponse = RiskToTheIndividualFactory().produce()
+    fun `success if assessment exists and is usable`() {
+      val upstreamResponse = RiskToTheIndividualFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
       val result = service.getRiskToTheIndividual(CRN)
 
       assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+    }
+
+    @Test
+    fun `not found if assessment exists but isnt usable`() {
+      val upstreamResponse = RiskToTheIndividualFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+
+      every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+
+      val result = service.getRiskToTheIndividual(CRN)
+
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -336,14 +462,35 @@ class OASysServiceTest {
   inner class GetHealthDetails {
 
     @Test
-    fun success() {
-      val upstreamResponse = HealthDetailsFactory().produce()
+    fun `success if assessment exists and is usable`() {
+      val upstreamResponse = HealthDetailsFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getHealth(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
       val result = service.getHealthDetails(CRN)
 
       assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+    }
+
+    @Test
+    fun `not found if assessment exists but isnt usable`() {
+      val upstreamResponse = HealthDetailsFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
+
+      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+
+      every { apAndOASysClient.getHealth(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+
+      val result = service.getHealthDetails(CRN)
+
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
