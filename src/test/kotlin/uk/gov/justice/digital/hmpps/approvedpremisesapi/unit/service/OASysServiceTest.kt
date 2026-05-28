@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 
@@ -120,12 +119,12 @@ class OASysServiceTest {
     }
 
     @Test
-    fun `general error throws not found problem`() {
+    fun `general error throws exception`() {
       every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResultFactory.failureOther()
 
       assertThatThrownBy {
         service.getNeedsDetails(CRN)
-      }.isInstanceOf(NotFoundProblem::class.java)
+      }.isInstanceOf(RuntimeException::class.java)
     }
   }
 
