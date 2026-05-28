@@ -59,7 +59,7 @@ class OASysService(
   private fun <T> handleResponse(crn: String, response: ClientResult<T>) = when (response) {
     is ClientResult.Success -> CasResult.Success(response.body)
     is ClientResult.Failure.StatusCode -> when (response.status) {
-      HttpStatus.NOT_FOUND -> CasResult.NotFound("Person", crn)
+      HttpStatus.NOT_FOUND -> CasResult.NotFound("OASysAssessment", crn)
       HttpStatus.FORBIDDEN -> CasResult.Unauthorised()
       else -> response.throwException()
     }

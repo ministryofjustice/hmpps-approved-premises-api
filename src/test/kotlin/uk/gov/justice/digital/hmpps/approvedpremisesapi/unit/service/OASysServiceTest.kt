@@ -97,7 +97,7 @@ class OASysServiceTest {
 
       val result = service.getNeedsDetails(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -148,7 +148,7 @@ class OASysServiceTest {
 
       val result = service.getOffenceDetails(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -199,7 +199,7 @@ class OASysServiceTest {
 
       val result = service.getRiskManagementPlan(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -250,7 +250,7 @@ class OASysServiceTest {
 
       val result = service.getRoshSummary(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -301,7 +301,7 @@ class OASysServiceTest {
 
       val result = service.getRiskToTheIndividual(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
@@ -352,7 +352,7 @@ class OASysServiceTest {
 
       val result = service.getHealthDetails(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
