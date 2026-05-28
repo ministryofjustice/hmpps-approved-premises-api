@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory

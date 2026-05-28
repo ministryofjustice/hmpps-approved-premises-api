@@ -6,8 +6,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2SubjectAccessRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2SubjectAccessRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.jpa.entity.Cas2v2SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.CAS3SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
