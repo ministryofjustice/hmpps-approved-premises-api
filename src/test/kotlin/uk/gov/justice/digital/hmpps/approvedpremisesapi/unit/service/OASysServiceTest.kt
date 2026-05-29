@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 
@@ -98,16 +97,16 @@ class OASysServiceTest {
 
       val result = service.getNeedsDetails(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
     fun `forbidden status code returns forbidden`() {
       every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResultFactory.forbidden()
 
-      val result = service.getNeedsDetails(CRN)
-
-      assertThatCasResult(result).isUnauthorised()
+      assertThatThrownBy {
+        service.getNeedsDetails(CRN)
+      }.isInstanceOf(RuntimeException::class.java)
     }
 
     @Test
@@ -120,12 +119,12 @@ class OASysServiceTest {
     }
 
     @Test
-    fun `general error throws not found problem`() {
+    fun `general error throws exception`() {
       every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResultFactory.failureOther()
 
       assertThatThrownBy {
         service.getNeedsDetails(CRN)
-      }.isInstanceOf(NotFoundProblem::class.java)
+      }.isInstanceOf(RuntimeException::class.java)
     }
   }
 
@@ -149,16 +148,16 @@ class OASysServiceTest {
 
       val result = service.getOffenceDetails(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
     fun `forbidden status code returns forbidden`() {
       every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResultFactory.forbidden()
 
-      val result = service.getOffenceDetails(CRN)
-
-      assertThatCasResult(result).isUnauthorised()
+      assertThatThrownBy {
+        service.getOffenceDetails(CRN)
+      }.isInstanceOf(RuntimeException::class.java)
     }
 
     @Test
@@ -200,16 +199,16 @@ class OASysServiceTest {
 
       val result = service.getRiskManagementPlan(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
     fun `forbidden status code returns forbidden`() {
       every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResultFactory.forbidden()
 
-      val result = service.getRiskManagementPlan(CRN)
-
-      assertThatCasResult(result).isUnauthorised()
+      assertThatThrownBy {
+        service.getRiskManagementPlan(CRN)
+      }.isInstanceOf(RuntimeException::class.java)
     }
 
     @Test
@@ -251,16 +250,16 @@ class OASysServiceTest {
 
       val result = service.getRoshSummary(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
     fun `forbidden status code returns forbidden`() {
       every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResultFactory.forbidden()
 
-      val result = service.getRoshSummary(CRN)
-
-      assertThatCasResult(result).isUnauthorised()
+      assertThatThrownBy {
+        service.getRoshSummary(CRN)
+      }.isInstanceOf(RuntimeException::class.java)
     }
 
     @Test
@@ -302,16 +301,16 @@ class OASysServiceTest {
 
       val result = service.getRiskToTheIndividual(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
     fun `forbidden status code returns forbidden`() {
       every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResultFactory.forbidden()
 
-      val result = service.getRiskToTheIndividual(CRN)
-
-      assertThatCasResult(result).isUnauthorised()
+      assertThatThrownBy {
+        service.getRiskToTheIndividual(CRN)
+      }.isInstanceOf(RuntimeException::class.java)
     }
 
     @Test
@@ -353,16 +352,16 @@ class OASysServiceTest {
 
       val result = service.getHealthDetails(CRN)
 
-      assertThatCasResult(result).isNotFound("Person", CRN)
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
     }
 
     @Test
     fun `forbidden status code returns forbidden`() {
       every { apAndOASysClient.getHealth(CRN) } returns ClientResultFactory.forbidden()
 
-      val result = service.getHealthDetails(CRN)
-
-      assertThatCasResult(result).isUnauthorised()
+      assertThatThrownBy {
+        service.getHealthDetails(CRN)
+      }.isInstanceOf(RuntimeException::class.java)
     }
 
     @Test
