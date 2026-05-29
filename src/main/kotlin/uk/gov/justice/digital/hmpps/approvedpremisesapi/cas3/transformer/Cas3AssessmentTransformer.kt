@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -96,9 +98,10 @@ class Cas3AssessmentTransformer(
       status = a.deriveAssessmentStatus(),
       type = ServiceType.CAS3,
       referralRejectionReason = a.referralRejectionReason?.name ?: a.rejectionRationale,
+      referralRejectionReasonDetail = a.referralRejectionReasonDetail,
       localAuthorityArea = application.dutyToReferLocalAuthorityAreaName,
       pdu = application.probationDeliveryUnit?.name,
-      referredBy = application.createdByUser.name,
+      referredBy = transformToCas3StaffDto(application.createdByUser),
       placementAddress = placementAddress,
       placementStatus = latestBooking?.status?.value,
     )
@@ -136,4 +139,6 @@ class Cas3AssessmentTransformer(
     JpaAssessmentDecision.REJECTED -> ApiAssessmentDecision.rejected
     null -> null
   }
+
+  fun transformToCas3StaffDto(user: UserEntity) = Cas3StaffDto(user.deliusUsername, user.deliusStaffCode)
 }
