@@ -17,12 +17,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 @Service
 class OASysService(
   private val apAndOASysClient: ApAndOASysClient,
-  private val oasysApplicabilityService: OASysSuitabilityService,
+  private val oasysSuitabilityService: OASysSuitabilityService,
 ) {
   fun getAssessmentSummary(crn: String): CasResult<OASysAssessmentSummary> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getLatestAssessmentSummary(crn),
-    toApplicabilityInfo = {
+    toAssessmentDates = {
       OASysSuitabilityService.OASysAssessmentDates(
         crn = crn,
         initiationDate = it.initiationDate,
@@ -34,48 +34,47 @@ class OASysService(
   fun getNeedsDetails(crn: String): CasResult<NeedsDetails> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getNeedsDetails(crn),
-    toApplicabilityInfo = { it.toApplicabilityInfo(crn) },
+    toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
   fun getOffenceDetails(crn: String): CasResult<OffenceDetails> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getOffenceDetails(crn),
-    toApplicabilityInfo = { it.toApplicabilityInfo(crn) },
+    toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
   fun getRiskManagementPlan(crn: String): CasResult<RiskManagementPlan> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getRiskManagementPlan(crn),
-    toApplicabilityInfo = { it.toApplicabilityInfo(crn) },
+    toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
   fun getRoshSummary(crn: String): CasResult<RoshSummary> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getRoshSummary(crn),
-    toApplicabilityInfo = { it.toApplicabilityInfo(crn) },
+    toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
   fun getRiskToTheIndividual(crn: String): CasResult<RisksToTheIndividual> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getRiskToTheIndividual(crn),
-    toApplicabilityInfo = { it.toApplicabilityInfo(crn) },
+    toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
   fun getHealthDetails(crn: String): CasResult<HealthDetails> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getHealth(crn),
-    toApplicabilityInfo = { it.toApplicabilityInfo(crn) },
+    toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
   private fun <T> handleResponse(
     crn: String,
     response: ClientResult<T>,
-    toApplicabilityInfo: (T) -> OASysSuitabilityService.OASysAssessmentDates,
+    toAssessmentDates: (T) -> OASysSuitabilityService.OASysAssessmentDates,
   ) = when (response) {
     is ClientResult.Success -> {
       val body = response.body
-      val applicabilityInfo = toApplicabilityInfo(body)
-      if (oasysApplicabilityService.isUsable(applicabilityInfo)) {
+      if (oasysSuitabilityService.isSuitable(toAssessmentDates(body))) {
         CasResult.Success(body)
       } else {
         notFound(crn)
@@ -88,7 +87,7 @@ class OASysService(
     is ClientResult.Failure -> response.throwException()
   }
 
-  private fun AssessmentInfo.toApplicabilityInfo(crn: String) = OASysSuitabilityService.OASysAssessmentDates(
+  private fun AssessmentInfo.toAssessmentDates(crn: String) = OASysSuitabilityService.OASysAssessmentDates(
     crn = crn,
     initiationDate = initiationDate,
     dateCompleted = dateCompleted,

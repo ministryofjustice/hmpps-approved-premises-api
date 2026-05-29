@@ -54,7 +54,7 @@ class OASysServiceTest {
         .withCompletedDate(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getLatestAssessmentSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -70,7 +70,7 @@ class OASysServiceTest {
         .withCompletedDate(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns false
 
       every { apAndOASysClient.getLatestAssessmentSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -117,7 +117,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -133,7 +133,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns false
 
       every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -189,7 +189,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -205,7 +205,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns false
 
       every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -252,7 +252,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -268,7 +268,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns false
 
       every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -324,7 +324,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -340,7 +340,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns false
 
       every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -396,7 +396,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -412,7 +412,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns false
 
       every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -468,7 +468,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns true
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns true
 
       every { apAndOASysClient.getHealth(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
@@ -484,7 +484,7 @@ class OASysServiceTest {
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isUsable(APPLICABILITY_INFO) } returns false
+      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO) } returns false
 
       every { apAndOASysClient.getHealth(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
 
