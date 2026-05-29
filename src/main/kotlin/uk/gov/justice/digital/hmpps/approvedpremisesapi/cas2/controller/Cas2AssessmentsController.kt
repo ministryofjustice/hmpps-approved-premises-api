@@ -113,7 +113,7 @@ class Cas2AssessmentsController(
     val note = processValidation(validationResult) as Cas2ApplicationNoteEntity
 
     return ResponseEntity
-      .created(URI.create("/cas2/assessments/$assessmentId/notes/${note.id}"))
+      .created(URI.create("/cas2-hdc/assessments/$assessmentId/notes/${note.id}"))
       .body(
         applicationNotesTransformer.transformJpaToApi(note),
       )
