@@ -522,33 +522,6 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
           .isNotFound
       }
     }
-
-    @Test
-    fun `Getting OASys risks to individual returns 404 when riskToTheIndividual is null`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-        val crn = "CRN"
-        val risksToTheIndividual = RisksToTheIndividual(
-          assessmentId = 1,
-          assessmentType = "TYPE",
-          dateCompleted = OffsetDateTime.now(),
-          assessorSignedDate = OffsetDateTime.now(),
-          initiationDate = OffsetDateTime.now(),
-          assessmentStatus = "STATUS",
-          superStatus = "SUPER",
-          limitedAccessOffender = false,
-          riskToTheIndividual = null,
-        )
-
-        apAndOASysMockSuccessfulRiskToTheIndividualCall(crn, risksToTheIndividual)
-
-        webTestClient.get()
-          .uri("/cas1/people/$crn/oasys/risks-to-individual")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isNotFound
-      }
-    }
   }
 
   @Nested

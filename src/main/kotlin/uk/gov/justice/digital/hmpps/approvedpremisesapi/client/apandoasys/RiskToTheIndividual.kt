@@ -11,7 +11,7 @@ class RisksToTheIndividual(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
-  val riskToTheIndividual: RiskToTheIndividualInner?,
+  val riskToTheIndividual: RiskToTheIndividualInner,
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,

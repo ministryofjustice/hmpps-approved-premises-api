@@ -155,7 +155,6 @@ class Cas1OasysController(
     )
 
     val riskToTheIndividual = risksToTheIndividualWrapper.riskToTheIndividual
-      ?: throw NotFoundProblem(crn, "RiskToTheIndividual")
 
     return ResponseEntity.ok(riskToTheIndividual)
   }
