@@ -6,11 +6,13 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.ClockConfiguration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService.SuitabilityStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.OffsetDateTime
 
@@ -31,85 +33,127 @@ class OASysSuitabilityServiceTest {
   @Nested
   inner class IsSuitable {
 
-    @ParameterizedTest
-    @CsvSource(
-      // in the future (shouldn't really happen, but should allow)
-      "2010-07-02T11:00:00+00:00,true",
-      // very recent
-      "2010-07-01T11:00:00+00:00,true",
-      // 3 months old
-      "2010-04-01T12:00:00+00:00,true",
-      // 5 months old
-      "2010-02-01T12:00:00+00:00,true",
-      // just under 6 months old
-      "2010-01-01T13:00:00+00:00,true",
-      // just over 6 months old
-      "2010-01-01T11:00:00+00:00,false",
-      // 7 months old
-      "2009-12-01T12:00:00+00:00,false",
-      // 2 years old
-      "2008-07-01T12:00:00+00:00,false",
-    )
-    fun `completion defined`(
-      completionDateTime: OffsetDateTime,
-      isUsable: Boolean,
-    ) {
-      clock.setNow(OffsetDateTime.parse("2010-07-01T12:00:00+00:00"))
+    @Nested
+    inner class StrategyAllowAll {
 
-      val result = service.isSuitable(
-        OASysSuitabilityService.OASysAssessmentDates(
-          crn = CRN,
-          initiationDate = completionDateTime.minusMonths(12),
-          dateCompleted = completionDateTime,
-        ),
-      )
+      @Test
+      fun `completion defined`() {
+        clock.setNow(OffsetDateTime.parse("2010-07-01T12:00:00+00:00"))
 
-      assertThat(result).isEqualTo(isUsable)
+        val result = service.isSuitable(
+          OASysSuitabilityService.OASysAssessmentDates(
+            crn = CRN,
+            initiationDate = OffsetDateTime.parse("2001-07-01T12:00:00+00:00"),
+            dateCompleted = OffsetDateTime.parse("2008-07-01T12:00:00+00:00"),
+          ),
+          strategy = SuitabilityStrategy.AllowAll,
+        )
 
-      if (!isUsable) {
-        verify {
-          sentryService.captureErrorMessage("Have received an assessment with a completion date/time more than 6 months ago for CRN1122 and date/time $completionDateTime")
-        }
+        assertThat(result).isEqualTo(true)
+      }
+
+      @Test
+      fun `completion not defined`() {
+        clock.setNow(OffsetDateTime.parse("2010-07-01T12:00:00+00:00"))
+
+        val result = service.isSuitable(
+          OASysSuitabilityService.OASysAssessmentDates(
+            crn = CRN,
+            initiationDate = OffsetDateTime.parse("2001-07-01T12:00:00+00:00"),
+            dateCompleted = null,
+          ),
+          strategy = SuitabilityStrategy.AllowAll,
+        )
+
+        assertThat(result).isEqualTo(true)
       }
     }
 
-    @ParameterizedTest
-    @CsvSource(
-      // in the future (shouldn't really happen, but should allow)
-      "2010-07-02T11:00:00+00:00,true",
-      // very recent
-      "2010-07-01T11:00:00+00:00,true",
-      // 3 months old
-      "2010-04-01T12:00:00+00:00,true",
-      // 5 months old
-      "2010-02-01T12:00:00+00:00,true",
-      // just under 6 months old
-      "2010-01-01T13:00:00+00:00,true",
-      // just over 6 months old
-      "2010-01-01T11:00:00+00:00,false",
-      // 7 months old
-      "2009-12-01T12:00:00+00:00,false",
-      // 2 years old
-      "2008-07-01T12:00:00+00:00,false",
-    )
-    fun `if completion isn't defined fall back to initiation date and raise an alert`(
-      initiationDate: OffsetDateTime,
-      isUsable: Boolean,
-    ) {
-      clock.setNow(OffsetDateTime.parse("2010-07-01T12:00:00+00:00"))
+    @Nested
+    inner class StrategyCompletedInLastSixMonths {
 
-      val result = service.isSuitable(
-        OASysSuitabilityService.OASysAssessmentDates(
-          crn = CRN,
-          initiationDate = initiationDate,
-          dateCompleted = null,
-        ),
+      @ParameterizedTest
+      @CsvSource(
+        // in the future (shouldn't really happen, but should allow)
+        "2010-07-02T11:00:00+00:00,true",
+        // very recent
+        "2010-07-01T11:00:00+00:00,true",
+        // 3 months old
+        "2010-04-01T12:00:00+00:00,true",
+        // 5 months old
+        "2010-02-01T12:00:00+00:00,true",
+        // just under 6 months old
+        "2010-01-01T13:00:00+00:00,true",
+        // just over 6 months old
+        "2010-01-01T11:00:00+00:00,false",
+        // 7 months old
+        "2009-12-01T12:00:00+00:00,false",
+        // 2 years old
+        "2008-07-01T12:00:00+00:00,false",
       )
+      fun `completion defined`(
+        completionDateTime: OffsetDateTime,
+        isUsable: Boolean,
+      ) {
+        clock.setNow(OffsetDateTime.parse("2010-07-01T12:00:00+00:00"))
 
-      assertThat(result).isEqualTo(isUsable)
+        val result = service.isSuitable(
+          OASysSuitabilityService.OASysAssessmentDates(
+            crn = CRN,
+            initiationDate = completionDateTime.minusMonths(12),
+            dateCompleted = completionDateTime,
+          ),
+          strategy = SuitabilityStrategy.CompletedInLastSixMonths,
+        )
 
-      verify {
-        sentryService.captureErrorMessage("No completion date defined on assessment for CRN1122. Using initiation date/time of $initiationDate")
+        assertThat(result).isEqualTo(isUsable)
+
+        if (!isUsable) {
+          verify {
+            sentryService.captureErrorMessage("Have received an assessment with a completion date/time more than 6 months ago for CRN1122 and date/time $completionDateTime")
+          }
+        }
+
+        @ParameterizedTest
+        @CsvSource(
+          // in the future (shouldn't really happen, but should allow)
+          "2010-07-02T11:00:00+00:00,true",
+          // very recent
+          "2010-07-01T11:00:00+00:00,true",
+          // 3 months old
+          "2010-04-01T12:00:00+00:00,true",
+          // 5 months old
+          "2010-02-01T12:00:00+00:00,true",
+          // just under 6 months old
+          "2010-01-01T13:00:00+00:00,true",
+          // just over 6 months old
+          "2010-01-01T11:00:00+00:00,false",
+          // 7 months old
+          "2009-12-01T12:00:00+00:00,false",
+          // 2 years old
+          "2008-07-01T12:00:00+00:00,false",
+        )
+        fun `if completion isn't defined fall back to initiation date and raise an alert`(
+          initiationDate: OffsetDateTime,
+          isUsable: Boolean,
+        ) {
+          clock.setNow(OffsetDateTime.parse("2010-07-01T12:00:00+00:00"))
+
+          val result = service.isSuitable(
+            OASysSuitabilityService.OASysAssessmentDates(
+              crn = CRN,
+              initiationDate = initiationDate,
+              dateCompleted = null,
+            ),
+            strategy = SuitabilityStrategy.CompletedInLastSixMonths,
+          )
+
+          assertThat(result).isEqualTo(isUsable)
+
+          verify {
+            sentryService.captureErrorMessage("No completion date defined on assessment for CRN1122. Using initiation date/time of $initiationDate")
+          }
+        }
       }
     }
   }

@@ -13,15 +13,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskMa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService.SuitabilityStrategy
 
 @Service
 class OASysService(
   private val apAndOASysClient: ApAndOASysClient,
   private val oasysSuitabilityService: OASysSuitabilityService,
 ) {
-  fun getAssessmentSummary(crn: String): CasResult<OASysAssessmentSummary> = handleResponse(
+  fun getAssessmentSummary(
+    crn: String,
+    suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
+  ): CasResult<OASysAssessmentSummary> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getLatestAssessmentSummary(crn),
+    suitabilityStrategy = suitabilityStrategy,
     toAssessmentDates = {
       OASysSuitabilityService.OASysAssessmentDates(
         crn = crn,
@@ -31,50 +36,79 @@ class OASysService(
     },
   )
 
-  fun getNeedsDetails(crn: String): CasResult<NeedsDetails> = handleResponse(
+  fun getNeedsDetails(
+    crn: String,
+    suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
+  ): CasResult<NeedsDetails> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getNeedsDetails(crn),
+    suitabilityStrategy = suitabilityStrategy,
     toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
-  fun getOffenceDetails(crn: String): CasResult<OffenceDetails> = handleResponse(
+  fun getOffenceDetails(
+    crn: String,
+    suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
+  ): CasResult<OffenceDetails> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getOffenceDetails(crn),
+    suitabilityStrategy = suitabilityStrategy,
     toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
-  fun getRiskManagementPlan(crn: String): CasResult<RiskManagementPlan> = handleResponse(
+  fun getRiskManagementPlan(
+    crn: String,
+    suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
+  ): CasResult<RiskManagementPlan> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getRiskManagementPlan(crn),
+    suitabilityStrategy = suitabilityStrategy,
     toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
-  fun getRoshSummary(crn: String): CasResult<RoshSummary> = handleResponse(
+  fun getRoshSummary(
+    crn: String,
+    suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
+  ): CasResult<RoshSummary> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getRoshSummary(crn),
+    suitabilityStrategy = suitabilityStrategy,
     toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
-  fun getRiskToTheIndividual(crn: String): CasResult<RisksToTheIndividual> = handleResponse(
+  fun getRiskToTheIndividual(
+    crn: String,
+    suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
+  ): CasResult<RisksToTheIndividual> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getRiskToTheIndividual(crn),
+    suitabilityStrategy = suitabilityStrategy,
     toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
-  fun getHealthDetails(crn: String): CasResult<HealthDetails> = handleResponse(
+  fun getHealthDetails(
+    crn: String,
+    suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
+  ): CasResult<HealthDetails> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getHealth(crn),
+    suitabilityStrategy = suitabilityStrategy,
     toAssessmentDates = { it.toAssessmentDates(crn) },
   )
 
   private fun <T> handleResponse(
     crn: String,
     response: ClientResult<T>,
+    suitabilityStrategy: SuitabilityStrategy,
     toAssessmentDates: (T) -> OASysSuitabilityService.OASysAssessmentDates,
   ) = when (response) {
     is ClientResult.Success -> {
       val body = response.body
-      if (oasysSuitabilityService.isSuitable(toAssessmentDates(body))) {
+      if (oasysSuitabilityService.isSuitable(
+          assessmentDates = toAssessmentDates(body),
+          strategy = suitabilityStrategy,
+        )
+      ) {
         CasResult.Success(body)
       } else {
         notFound(crn)

@@ -9,12 +9,22 @@ class OASysSuitabilityService(
   private val clock: Clock,
   private val sentryService: SentryService,
 ) {
-  fun isSuitable(info: OASysAssessmentDates): Boolean {
+  fun isSuitable(
+    assessmentDates: OASysAssessmentDates,
+    strategy: SuitabilityStrategy,
+  ) = when (strategy) {
+    SuitabilityStrategy.AllowAll -> true
+    SuitabilityStrategy.CompletedInLastSixMonths -> limitToSixMonths(assessmentDates)
+  }
+
+  private fun limitToSixMonths(
+    assessmentDates: OASysAssessmentDates,
+  ): Boolean {
     val sixMonthThreshold = OffsetDateTime.now(clock).minusMonths(6)
 
-    val crn = info.crn
-    val initiationDate = info.initiationDate
-    val dateCompleted = info.dateCompleted
+    val crn = assessmentDates.crn
+    val initiationDate = assessmentDates.initiationDate
+    val dateCompleted = assessmentDates.dateCompleted
 
     val suitable = (dateCompleted ?: initiationDate).isAfter(sixMonthThreshold)
 
@@ -32,4 +42,9 @@ class OASysSuitabilityService(
     val initiationDate: OffsetDateTime,
     val dateCompleted: OffsetDateTime?,
   )
+
+  enum class SuitabilityStrategy {
+    AllowAll,
+    CompletedInLastSixMonths,
+  }
 }
