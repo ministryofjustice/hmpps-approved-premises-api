@@ -56,7 +56,7 @@ class Cas2AssessmentNotesTest(
     @Test
     fun `creating a note without JWT returns 401`() {
       webTestClient.post()
-        .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/notes")
+        .uri("/cas2-hdc/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/notes")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -74,7 +74,7 @@ class Cas2AssessmentNotesTest(
       )
 
       webTestClient.post()
-        .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/notes")
+        .uri("/cas2-hdc/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/notes")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -104,7 +104,7 @@ class Cas2AssessmentNotesTest(
           Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
 
           val rawResponseBody = webTestClient.post()
-            .uri("/cas2/assessments/${assessment.id}/notes")
+            .uri("/cas2-hdc/assessments/${assessment.id}/notes")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
@@ -176,7 +176,7 @@ class Cas2AssessmentNotesTest(
               Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
 
               val rawResponseBody = webTestClient.post()
-                .uri("/cas2/assessments/${assessment.id}/notes")
+                .uri("/cas2-hdc/assessments/${assessment.id}/notes")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .bodyValue(
@@ -244,7 +244,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
 
                 webTestClient.post()
-                  .uri("/cas2/assessments/${assessment.id}/notes")
+                  .uri("/cas2-hdc/assessments/${assessment.id}/notes")
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.cas2.value)
                   .bodyValue(
@@ -289,7 +289,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
 
                 val rawResponseBody = webTestClient.post()
-                  .uri("/cas2/assessments/${assessment.id}/notes")
+                  .uri("/cas2-hdc/assessments/${assessment.id}/notes")
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.cas2.value)
                   .bodyValue(
@@ -358,7 +358,7 @@ class Cas2AssessmentNotesTest(
               Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
 
               val rawResponseBody = webTestClient.post()
-                .uri("/cas2/assessments/${assessment.id}/notes")
+                .uri("/cas2-hdc/assessments/${assessment.id}/notes")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .bodyValue(
@@ -426,7 +426,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
 
                 webTestClient.post()
-                  .uri("/cas2/assessments/${assessment.id}/notes")
+                  .uri("/cas2-hdc/assessments/${assessment.id}/notes")
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.cas2.value)
                   .bodyValue(
@@ -471,7 +471,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
 
                 val rawResponseBody = webTestClient.post()
-                  .uri("/cas2/assessments/${assessment.id}/notes")
+                  .uri("/cas2-hdc/assessments/${assessment.id}/notes")
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.cas2.value)
                   .bodyValue(

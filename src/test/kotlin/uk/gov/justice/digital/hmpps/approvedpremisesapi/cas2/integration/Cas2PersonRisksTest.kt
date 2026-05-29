@@ -22,7 +22,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
   @Test
   fun `Getting risks by CRN without a JWT returns 401`() {
     webTestClient.get()
-      .uri("/cas2/people/CRN/risks")
+      .uri("/cas2-hdc/people/CRN/risks")
       .exchange()
       .expectStatus()
       .isUnauthorized
@@ -36,7 +36,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/cas2/people/CRN/risks")
+      .uri("/cas2-hdc/people/CRN/risks")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -52,7 +52,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/cas2/people/CRN/risks")
+      .uri("/cas2-hdc/people/CRN/risks")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -67,7 +67,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
       apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
 
       webTestClient.get()
-        .uri("/cas2/people/$crn/risks")
+        .uri("/cas2-hdc/people/$crn/risks")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -92,7 +92,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
         )
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/risks")
+          .uri("/cas2-hdc/people/${offenderDetails.otherIds.crn}/risks")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

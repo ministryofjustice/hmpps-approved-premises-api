@@ -27,7 +27,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       @Test
       fun `Searching by NOMIS ID without a JWT returns 401`() {
         webTestClient.get()
-          .uri("/cas2/people/search?nomsNumber=nomsNumber").exchange()
+          .uri("/cas2-hdc/people/search?nomsNumber=nomsNumber").exchange()
           .expectStatus()
           .isUnauthorized
       }
@@ -40,7 +40,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
         )
 
         webTestClient.get()
-          .uri("/cas2/people/search?nomsNumber=nomsNumber")
+          .uri("/cas2-hdc/people/search?nomsNumber=nomsNumber")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -56,7 +56,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
         )
 
         webTestClient.get()
-          .uri("/cas2/people/search?nomsNumber=nomsNumber")
+          .uri("/cas2-hdc/people/search?nomsNumber=nomsNumber")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -69,7 +69,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
           apDeliusContextMockUnsuccessfulCaseSummaryCall(403)
 
           webTestClient.get()
-            .uri("/cas2/people/search?nomsNumber=NOMS321")
+            .uri("/cas2-hdc/people/search?nomsNumber=NOMS321")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -110,7 +110,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
           prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
           webTestClient.get()
-            .uri("/cas2/people/search?nomsNumber=NOMS456")
+            .uri("/cas2-hdc/people/search?nomsNumber=NOMS456")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -124,7 +124,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
           apDeliusContextMockUnsuccessfulCaseSummaryCall(404)
 
           webTestClient.get()
-            .uri("/cas2/people/search?nomsNumber=NOMS321")
+            .uri("/cas2-hdc/people/search?nomsNumber=NOMS321")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -138,7 +138,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
           apDeliusContextMockUnsuccessfulCaseSummaryCall()
 
           webTestClient.get()
-            .uri("/cas2/people/search?nomsNumber=NOMS321")
+            .uri("/cas2-hdc/people/search?nomsNumber=NOMS321")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -181,7 +181,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
           prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
           webTestClient.get()
-            .uri("/cas2/people/search?nomsNumber=NOMS321")
+            .uri("/cas2-hdc/people/search?nomsNumber=NOMS321")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()

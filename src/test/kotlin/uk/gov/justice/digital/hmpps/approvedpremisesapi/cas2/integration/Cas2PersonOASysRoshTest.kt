@@ -20,7 +20,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
   @Test
   fun `Getting RoSH by CRN without a JWT returns 401`() {
     webTestClient.get()
-      .uri("/cas2/people/CRN/oasys/rosh")
+      .uri("/cas2-hdc/people/CRN/oasys/rosh")
       .exchange()
       .expectStatus()
       .isUnauthorized
@@ -34,7 +34,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/cas2/people/CRN/oasys/rosh")
+      .uri("/cas2-hdc/people/CRN/oasys/rosh")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -50,7 +50,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/cas2/people/CRN/oasys/rosh")
+      .uri("/cas2-hdc/people/CRN/oasys/rosh")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -65,7 +65,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
       apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
 
       webTestClient.get()
-        .uri("/cas2/people/$crn/oasys/rosh")
+        .uri("/cas2-hdc/people/$crn/oasys/rosh")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -84,7 +84,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
         apAndOASysMockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, rosh)
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/rosh")
+          .uri("/cas2-hdc/people/${offenderDetails.otherIds.crn}/oasys/rosh")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -109,7 +109,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
         apAndOASysMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/rosh")
+          .uri("/cas2-hdc/people/${offenderDetails.otherIds.crn}/oasys/rosh")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

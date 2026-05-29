@@ -109,7 +109,7 @@ class Cas2SubmissionTest(
       )
 
       webTestClient.post()
-        .uri("/cas2/submissions?applicationId=de6512fc-a225-4109-bdcd-86c6307a5237")
+        .uri("/cas2-hdc/submissions?applicationId=de6512fc-a225-4109-bdcd-86c6307a5237")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -125,7 +125,7 @@ class Cas2SubmissionTest(
       )
 
       webTestClient.get()
-        .uri("/cas2/submissions")
+        .uri("/cas2-hdc/submissions")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -141,7 +141,7 @@ class Cas2SubmissionTest(
       )
 
       webTestClient.get()
-        .uri("/cas2/submissions/66911cf0-75b1-4361-84bd-501b176fd4fd")
+        .uri("/cas2-hdc/submissions/66911cf0-75b1-4361-84bd-501b176fd4fd")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -154,7 +154,7 @@ class Cas2SubmissionTest(
     @Test
     fun `Get all submitted applications without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2/submissions")
+        .uri("/cas2-hdc/submissions")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -163,7 +163,7 @@ class Cas2SubmissionTest(
     @Test
     fun `Get single submitted application without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2/submissions/9b785e59-b85c-4be0-b271-d9ac287684b6")
+        .uri("/cas2-hdc/submissions/9b785e59-b85c-4be0-b271-d9ac287684b6")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -189,7 +189,7 @@ class Cas2SubmissionTest(
       val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt(username)
 
       webTestClient.get()
-        .uri("/cas2/submissions")
+        .uri("/cas2-hdc/submissions")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -242,7 +242,7 @@ class Cas2SubmissionTest(
               }
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/submissions?page=1")
+              .uri("/cas2-hdc/submissions?page=1")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -347,7 +347,7 @@ class Cas2SubmissionTest(
       val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt(username)
 
       webTestClient.get()
-        .uri("/cas2/submissions/fea7986d-cae6-4a7a-8420-5b31376ce787")
+        .uri("/cas2-hdc/submissions/fea7986d-cae6-4a7a-8420-5b31376ce787")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -469,7 +469,7 @@ class Cas2SubmissionTest(
             }
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/submissions/${applicationEntity.id}")
+              .uri("/cas2-hdc/submissions/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -546,7 +546,7 @@ class Cas2SubmissionTest(
             )
 
             webTestClient.get()
-              .uri("/cas2/submissions/${applicationEntity.id}")
+              .uri("/cas2-hdc/submissions/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -634,7 +634,7 @@ class Cas2SubmissionTest(
                 realApplicationRepository.save(applicationEntity)
 
                 val rawResponseBody = webTestClient.get()
-                  .uri("/cas2/submissions/${applicationEntity.id}")
+                  .uri("/cas2-hdc/submissions/${applicationEntity.id}")
                   .header("Authorization", "Bearer $jwt")
                   .exchange()
                   .expectStatus()
@@ -692,7 +692,7 @@ class Cas2SubmissionTest(
               )
 
               webTestClient.get()
-                .uri("/cas2/submissions/${applicationEntity.id}")
+                .uri("/cas2-hdc/submissions/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -743,7 +743,7 @@ class Cas2SubmissionTest(
           assertThat(realAssessmentRepository.count()).isEqualTo(0)
 
           webTestClient.post()
-            .uri("/cas2/submissions")
+            .uri("/cas2-hdc/submissions")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
@@ -836,7 +836,7 @@ class Cas2SubmissionTest(
           (1..10).map {
             val thread = Thread {
               webTestClient.post()
-                .uri("/cas2/submissions")
+                .uri("/cas2-hdc/submissions")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   SubmitCas2Application(
@@ -889,7 +889,7 @@ class Cas2SubmissionTest(
           assertThat(realAssessmentRepository.count()).isEqualTo(0)
 
           webTestClient.post()
-            .uri("/cas2/submissions")
+            .uri("/cas2-hdc/submissions")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(

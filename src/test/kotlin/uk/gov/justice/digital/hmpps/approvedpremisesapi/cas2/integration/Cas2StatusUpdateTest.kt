@@ -56,7 +56,7 @@ class Cas2StatusUpdateTest(
       )
 
       webTestClient.post()
-        .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/status-updates")
+        .uri("/cas2-hdc/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/status-updates")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -69,7 +69,7 @@ class Cas2StatusUpdateTest(
     @Test
     fun `creating a status update without JWT returns 401`() {
       webTestClient.post()
-        .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/status-updates")
+        .uri("/cas2-hdc/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/status-updates")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -98,7 +98,7 @@ class Cas2StatusUpdateTest(
           assertThat(realStatusUpdateDetailRepository.count()).isEqualTo(0)
 
           webTestClient.post()
-            .uri("/cas2/assessments/$assessmentId/status-updates")
+            .uri("/cas2-hdc/assessments/$assessmentId/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
@@ -136,7 +136,7 @@ class Cas2StatusUpdateTest(
     fun `Create status update returns 404 when assessment not found`() {
       givenACas2Assessor { _, jwt ->
         webTestClient.post()
-          .uri("/cas2/assessments/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
+          .uri("/cas2-hdc/assessments/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
@@ -161,7 +161,7 @@ class Cas2StatusUpdateTest(
           }
 
           webTestClient.post()
-            .uri("/cas2/assessments/${assessmemt.id}/status-updates")
+            .uri("/cas2-hdc/assessments/${assessmemt.id}/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas2AssessmentStatusUpdate(newStatus = "invalidStatus"),
@@ -203,7 +203,7 @@ class Cas2StatusUpdateTest(
               every { OffsetDateTime.now() } returns now
 
               webTestClient.post()
-                .uri("/cas2/assessments/$assessmentId/status-updates")
+                .uri("/cas2-hdc/assessments/$assessmentId/status-updates")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   Cas2AssessmentStatusUpdate(

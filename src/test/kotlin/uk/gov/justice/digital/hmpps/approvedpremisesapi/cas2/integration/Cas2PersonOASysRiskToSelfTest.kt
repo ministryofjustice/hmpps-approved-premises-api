@@ -20,7 +20,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
   @Test
   fun `Getting Risk to Self by CRN without a JWT returns 401`() {
     webTestClient.get()
-      .uri("/cas2/people/CRN/oasys/risk-to-self")
+      .uri("/cas2-hdc/people/CRN/oasys/risk-to-self")
       .exchange()
       .expectStatus()
       .isUnauthorized
@@ -34,7 +34,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/cas2/people/CRN/oasys/risk-to-self")
+      .uri("/cas2-hdc/people/CRN/oasys/risk-to-self")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -50,7 +50,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     )
 
     webTestClient.get()
-      .uri("/cas2/people/CRN/oasys/risk-to-self")
+      .uri("/cas2-hdc/people/CRN/oasys/risk-to-self")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -65,7 +65,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
       apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
 
       webTestClient.get()
-        .uri("/cas2/people/$crn/oasys/risk-to-self")
+        .uri("/cas2-hdc/people/$crn/oasys/risk-to-self")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -84,7 +84,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
         apAndOASysMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
+          .uri("/cas2-hdc/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -109,7 +109,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
         apAndOASysMockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
+          .uri("/cas2-hdc/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
