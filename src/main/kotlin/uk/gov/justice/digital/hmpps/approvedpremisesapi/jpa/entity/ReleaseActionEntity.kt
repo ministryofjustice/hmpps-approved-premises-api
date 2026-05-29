@@ -12,7 +12,9 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface ReleaseActionRepository : JpaRepository<ReleaseActionEntity, UUID>, RevisionRepository<ReleaseActionEntity, UUID, Int>
+interface ReleaseActionRepository :
+  JpaRepository<ReleaseActionEntity, UUID>,
+  RevisionRepository<ReleaseActionEntity, UUID, Int>
 
 @Entity
 @Table(name = "release_action")

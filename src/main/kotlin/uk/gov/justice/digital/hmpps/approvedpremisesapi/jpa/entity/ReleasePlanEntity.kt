@@ -7,6 +7,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.envers.Audited
+import org.hibernate.envers.RelationTargetAuditMode
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.history.RevisionRepository
 import org.springframework.stereotype.Repository
@@ -14,7 +15,12 @@ import java.time.LocalTime
 import java.util.UUID
 
 @Repository
-interface ReleasePlanRepository : JpaRepository<ReleasePlanEntity, UUID>, RevisionRepository<ReleasePlanEntity, UUID, Int>
+interface ReleasePlanRepository :
+  JpaRepository<ReleasePlanEntity, UUID>,
+  RevisionRepository<ReleasePlanEntity, UUID, Int> {
+
+  fun getBySpaceBooking(spaceBooking: Cas1SpaceBookingEntity): List<ReleasePlanEntity>?
+}
 
 @Entity
 @Table(name = "release_plan")
@@ -24,6 +30,7 @@ class ReleasePlanEntity(
   val id: UUID,
 
   @ManyToOne
+  @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
   val spaceBooking: Cas1SpaceBookingEntity,
 
   var expectedReleaseTime: LocalTime?,

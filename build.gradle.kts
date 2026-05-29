@@ -93,6 +93,7 @@ dependencies {
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
   testImplementation("org.zalando:logbook-spring-boot-starter:4.0.4")
+  testImplementation("org.springframework.security:spring-security-test")
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.43") {
     exclude(group = "io.swagger.core.v3")
