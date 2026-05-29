@@ -3,8 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OAsysSectionsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -76,7 +75,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
   fun `Getting Risk to Self for a CRN returns OK with correct body`() {
     givenACas2PomUser { _, jwt ->
       givenAnOffender { offenderDetails, _ ->
-        val risksToTheIndividual = RiskToTheIndividualFactory().produce()
+        val risksToTheIndividual = RisksToTheIndividualFactory().produce()
         apAndOASysMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         webTestClient.get()

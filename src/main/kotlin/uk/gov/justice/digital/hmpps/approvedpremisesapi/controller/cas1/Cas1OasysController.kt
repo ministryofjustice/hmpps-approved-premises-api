@@ -20,9 +20,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.Health
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
@@ -47,11 +47,11 @@ class Cas1OasysController(
 ) {
 
   @Operation(
-    summary = "Returns metadata about supporting information questions for a given CRN",
+    summary = "Returns metadata about supporting information questions for a given CRN,",
     operationId = "metadata",
     responses = [
       ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OASysMetadata::class))]),
-      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+      ApiResponse(responseCode = "404", description = "An OASys assessment completed in the last 6 months doesn't exist", content = [Content(schema = Schema(implementation = Problem::class))]),
     ],
   )
   @RequestMapping(
@@ -75,11 +75,12 @@ class Cas1OasysController(
   }
 
   @Operation(
-    summary = "Returns OASys answers for the requested group. The Supporting Information answers are returned if linked to harm and optionally if their section number appears in the selected-sections query parameter.",
+    summary = "Returns OASys answers for the requested group, if the most recent OAsys Assessment was completed in the last 6 months. " +
+      "The Supporting Information answers are returned if linked to harm and optionally if their section number appears in the selected-sections query parameter.",
     operationId = "answers",
     responses = [
       ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OASysGroup::class))]),
-      ApiResponse(responseCode = "404", description = "invalid CRN", content = [Content(schema = Schema(implementation = Problem::class))]),
+      ApiResponse(responseCode = "404", description = "An OASys assessment completed in the last 6 months doesn't exist", content = [Content(schema = Schema(implementation = Problem::class))]),
     ],
   )
   @RequestMapping(
@@ -145,13 +146,22 @@ class Cas1OasysController(
     return ResponseEntity.ok(group)
   }
 
-  @Operation(summary = "Returns OASys risk to the individual for a Person.")
+  @Operation(
+    summary = "Returns OASys risk to the individual for a Person. This will be taken from the most recently completed OASys assessment, regardless of its age",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OASysGroup::class))]),
+      ApiResponse(responseCode = "404", description = "A completed OASys assessment doesn't exist", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
   @GetMapping("/people/{crn}/oasys/risks-to-individual")
   fun getOasysRisksToIndividual(@PathVariable crn: String): ResponseEntity<RiskToTheIndividualInner> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
 
     val risksToTheIndividualWrapper = extractEntityFromCasResult(
-      oaSysService.getRiskToTheIndividual(crn),
+      oaSysService.getRiskToTheIndividual(
+        crn = crn,
+        suitabilityStrategy = OASysSuitabilityService.SuitabilityStrategy.AllowAll,
+      ),
     )
 
     val riskToTheIndividual = risksToTheIndividualWrapper.riskToTheIndividual
@@ -159,13 +169,22 @@ class Cas1OasysController(
     return ResponseEntity.ok(riskToTheIndividual)
   }
 
-  @Operation(summary = "Returns OASys health details for a Person.")
+  @Operation(
+    summary = "Returns OASys health details for a Person. This will be taken from the most recently completed OASys assessment, regardless of its age",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OASysGroup::class))]),
+      ApiResponse(responseCode = "404", description = "A completed OASys assessment doesn't exist", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
   @GetMapping("/people/{crn}/oasys/health-details")
   fun getOasysHealthDetails(@PathVariable crn: String): ResponseEntity<HealthDetailsInner> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
 
     val healthDetailsWrapper = extractEntityFromCasResult(
-      oaSysService.getHealthDetails(crn),
+      oaSysService.getHealthDetails(
+        crn = crn,
+        suitabilityStrategy = OASysSuitabilityService.SuitabilityStrategy.AllowAll,
+      ),
     )
 
     val healthDetails = healthDetailsWrapper.health
