@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2OASysTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -46,7 +46,7 @@ class Cas2v2OASysTransformerTest {
     @Test
     fun found() {
       val result = transformer.toOASysRiskToSelfDto(
-        RiskToTheIndividualFactory()
+        RisksToTheIndividualFactory()
           .withAnalysisSuicideSelfharm("self harm answer")
           .withAnalysisVulnerabilities("vulnerability answer")
           .withInitiationDate(OffsetDateTime.parse("2007-12-03T10:15:30+01:00"))

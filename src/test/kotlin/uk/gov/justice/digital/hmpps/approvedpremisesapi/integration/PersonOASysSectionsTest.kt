@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -93,7 +93,7 @@ class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
         val roshSummary = RoshSummaryFactory().produce()
         apAndOASysMockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, roshSummary)
 
-        val risksToTheIndividual = RiskToTheIndividualFactory().produce()
+        val risksToTheIndividual = RisksToTheIndividualFactory().produce()
         apAndOASysMockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
 
         val riskManagementPlan = RiskManagementPlanFactory().produce()

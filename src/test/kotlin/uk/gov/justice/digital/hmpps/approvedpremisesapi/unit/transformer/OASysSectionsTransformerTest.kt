@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSupportin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
@@ -243,7 +243,7 @@ class OASysSectionsTransformerTest {
 
     @Test
     fun `transforms correctly, post NOD 1057 assessment`() {
-      val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+      val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
         withCurrentConcernsSelfHarmSuicide(null)
         withCurrentCustodyHostelCoping(null)
         withCurrentVulnerability(null)
@@ -276,7 +276,7 @@ class OASysSectionsTransformerTest {
 
     @Test
     fun `transforms correctly, pre NOD 1057 assessment`() {
-      val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+      val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
         withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicide")
         withCurrentCustodyHostelCoping("currentCustodyHostelCoping")
         withCurrentVulnerability("currentVulnerability")
@@ -480,7 +480,7 @@ class OASysSectionsTransformerTest {
         withRiskReductionLikelyTo("Reduction Likely To")
       }.produce()
 
-      val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+      val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
         withAssessmentId(34853487)
         withDateCompleted(null)
         withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicide")
@@ -655,7 +655,7 @@ class OASysSectionsTransformerTest {
     fun `for supporting information includes optional sections, alcohol, drugs and those that are linked to harm`() {
       val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
       val roshSummaryApiResponse = RoshSummaryFactory().produce()
-      val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().produce()
+      val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().produce()
       val riskManagementPlanApiResponse = RiskManagementPlanFactory().produce()
 
       val requestedOptionalSections = listOf(4, 5)

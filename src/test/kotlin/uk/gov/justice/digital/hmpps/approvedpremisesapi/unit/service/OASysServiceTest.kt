@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.HealthDetailsFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
@@ -393,7 +393,7 @@ class OASysServiceTest {
 
     @Test
     fun `success if assessment exists and is usable`() {
-      val upstreamResponse = RiskToTheIndividualFactory()
+      val upstreamResponse = RisksToTheIndividualFactory()
         .withInitiationDate(INITIATION_DATE)
         .withDateCompleted(COMPLETION_DATE)
         .produce()
@@ -409,7 +409,7 @@ class OASysServiceTest {
 
     @Test
     fun `not found if assessment exists but isnt usable`() {
-      val upstreamResponse = RiskToTheIndividualFactory()
+      val upstreamResponse = RisksToTheIndividualFactory()
         .withInitiationDate(INITIATION_DATE)
         .withDateCompleted(COMPLETION_DATE)
         .produce()

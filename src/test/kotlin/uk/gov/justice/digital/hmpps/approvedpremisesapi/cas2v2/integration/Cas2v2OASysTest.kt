@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OASysAssessmentMetadataDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OAsysRiskToSelfDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockAssessmentSummaryNotFound
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRiskToTheIndividual404Call
@@ -122,7 +122,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
     fun `Assessment available`(role: RoleAndAuthSource) {
       apAndOASysMockSuccessfulRiskToTheIndividualCall(
         crn = "CRN123",
-        response = RiskToTheIndividualFactory().produce(),
+        response = RisksToTheIndividualFactory().produce(),
       )
 
       val result = webTestClient.get()
