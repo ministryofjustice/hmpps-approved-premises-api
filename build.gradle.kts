@@ -50,7 +50,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("io.sentry:sentry-spring-boot-4:8.41.0")
+  implementation("io.sentry:sentry-spring-boot-4:8.43.0")
 
   runtimeOnly("org.ehcache:ehcache")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
@@ -66,7 +66,7 @@ dependencies {
   }
   implementation("org.apache.poi:poi-ooxml:5.5.1")
 
-  implementation("io.arrow-kt:arrow-core:2.2.2")
+  implementation("io.arrow-kt:arrow-core:2.2.2.1")
 
   implementation("com.opencsv:opencsv:5.12.0")
 
@@ -84,7 +84,7 @@ dependencies {
   implementation("uk.gov.service.notify:notifications-java-client:6.0.0-RELEASE")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
-  testImplementation("io.mockk:mockk:1.14.9")
+  testImplementation("io.mockk:mockk:1.14.11")
   testImplementation("org.wiremock.integrations:wiremock-spring-boot:4.2.1")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsSpringBootStarterVersion")
@@ -93,7 +93,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
   testImplementation("org.zalando:logbook-spring-boot-starter:4.0.4")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.41") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.43") {
     exclude(group = "io.swagger.core.v3")
   }
 }
