@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -69,15 +70,17 @@ class Cas2ApplicationsController(
 
   @Transactional
   @PostMapping("/applications")
-  fun createCas2Application(@RequestBody body: NewApplication): ResponseEntity<Cas2Application> {
+  fun createCas2Application(@RequestBody body: NewApplication, request: HttpServletRequest): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
     val applicationResult = applicationService.createApplication(personInfo, user)
 
     val application = extractEntityFromCasResult(applicationResult)
 
+    val basePath = request.requestURI.removePrefix("/").substringBefore("/")
+
     return ResponseEntity
-      .created(URI.create("/cas2/applications/${application.id}"))
+      .created(URI.create("/$basePath/applications/${application.id}"))
       .body(cas2ApplicationsTransformer.transformJpaToApi(application, personInfo))
   }
 

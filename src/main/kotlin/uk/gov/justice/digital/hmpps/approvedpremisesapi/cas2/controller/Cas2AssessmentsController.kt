@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -105,6 +106,7 @@ class Cas2AssessmentsController(
   fun assessmentsAssessmentIdNotesPost(
     @PathVariable assessmentId: UUID,
     @RequestBody body: NewCas2ApplicationNote,
+    request: HttpServletRequest,
   ): ResponseEntity<Cas2ApplicationNote> {
     val noteResult = assessmentNoteService.createAssessmentNote(assessmentId, body)
 
@@ -112,8 +114,10 @@ class Cas2AssessmentsController(
 
     val note = processValidation(validationResult) as Cas2ApplicationNoteEntity
 
+    val basePath = request.requestURI.removePrefix("/").substringBefore("/")
+
     return ResponseEntity
-      .created(URI.create("/cas2/assessments/$assessmentId/notes/${note.id}"))
+      .created(URI.create("/$basePath/assessments/$assessmentId/notes/${note.id}"))
       .body(
         applicationNotesTransformer.transformJpaToApi(note),
       )
