@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.reporting.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
 import java.io.IOException
@@ -53,6 +55,7 @@ class Cas2v2ApplicationsSeedJob(
     statusUpdates = columns["statusUpdates"]!!.trim(),
     location = columns["location"]!!.trim(),
     referringPrisonCode = columns["referringPrisonCode"]!!.trim(),
+    cohort = SeedColumns(columns).getStringOrNull("cohort")?.let { Cas2Cohort.valueOf(it) },
   )
 
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
@@ -85,6 +88,7 @@ class Cas2v2ApplicationsSeedJob(
         document = documentFor(state = row.state, nomsNumber = row.nomsNumber),
         submittedAt = row.submittedAt,
         serviceOrigin = Cas2ServiceOrigin.BAIL,
+        cohort = row.cohort,
       ),
     )
     if (row.submittedAt != null) {
@@ -192,4 +196,5 @@ data class Cas2v2ApplicationSeedCsvRow(
   val statusUpdates: String,
   val location: String,
   val referringPrisonCode: String?,
+  val cohort: Cas2Cohort?,
 )
