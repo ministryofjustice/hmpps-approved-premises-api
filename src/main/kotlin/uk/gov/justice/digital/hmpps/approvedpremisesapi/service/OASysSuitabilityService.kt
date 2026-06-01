@@ -19,9 +19,9 @@ class OASysSuitabilityService(
     val suitable = (dateCompleted ?: initiationDate).isAfter(sixMonthThreshold)
 
     if (dateCompleted == null) {
-      sentryService.captureErrorMessage("No completion date defined on assessment for $crn. Using initiation date of $initiationDate")
+      sentryService.captureErrorMessage("No completion date defined on assessment for $crn. Using initiation date/time of $initiationDate")
     } else if (!suitable) {
-      sentryService.captureErrorMessage("Have received an assessment with a completion date more than 6 months ago for $crn and date $dateCompleted")
+      sentryService.captureErrorMessage("Have received an assessment with a completion date/time more than 6 months ago for $crn and date/time $dateCompleted")
     }
 
     return suitable

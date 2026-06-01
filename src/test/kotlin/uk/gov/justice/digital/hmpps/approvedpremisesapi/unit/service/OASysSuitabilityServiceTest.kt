@@ -68,7 +68,7 @@ class OASysSuitabilityServiceTest {
 
       if (!isUsable) {
         verify {
-          sentryService.captureErrorMessage("Have received an assessment with a completion date more than 6 months ago for CRN1122 and date $completionDateTime")
+          sentryService.captureErrorMessage("Have received an assessment with a completion date/time more than 6 months ago for CRN1122 and date/time $completionDateTime")
         }
       }
     }
@@ -109,7 +109,7 @@ class OASysSuitabilityServiceTest {
       assertThat(result).isEqualTo(isUsable)
 
       verify {
-        sentryService.captureErrorMessage("No completion date defined on assessment for CRN1122. Using initiation date of $initiationDate")
+        sentryService.captureErrorMessage("No completion date defined on assessment for CRN1122. Using initiation date/time of $initiationDate")
       }
     }
   }
