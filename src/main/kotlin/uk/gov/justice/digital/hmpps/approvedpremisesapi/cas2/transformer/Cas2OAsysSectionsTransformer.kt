@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
@@ -15,24 +14,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagServi
 @Service
 class Cas2OAsysSectionsTransformer(val featureFlagService: FeatureFlagService) {
   fun transformRiskToIndividual(
-    offenceDetails: OffenceDetails,
     risksToTheIndividual: RisksToTheIndividual,
   ): OASysRiskToSelf = OASysRiskToSelf(
-    assessmentId = offenceDetails.assessmentId,
-    assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
-    dateStarted = offenceDetails.initiationDate.toInstant(),
-    dateCompleted = offenceDetails.dateCompleted?.toInstant(),
+    assessmentId = risksToTheIndividual.assessmentId,
+    assessmentState = if (risksToTheIndividual.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
+    dateStarted = risksToTheIndividual.initiationDate.toInstant(),
+    dateCompleted = risksToTheIndividual.dateCompleted?.toInstant(),
     riskToSelf = riskToSelfAnswers(risksToTheIndividual.riskToTheIndividual),
   )
 
   fun transformRiskOfSeriousHarm(
-    offenceDetails: OffenceDetails,
     roshSummary: RoshSummary,
   ): OASysRiskOfSeriousHarm = OASysRiskOfSeriousHarm(
-    assessmentId = offenceDetails.assessmentId,
-    assessmentState = if (offenceDetails.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
-    dateStarted = offenceDetails.initiationDate.toInstant(),
-    dateCompleted = offenceDetails.dateCompleted?.toInstant(),
+    assessmentId = roshSummary.assessmentId,
+    assessmentState = if (roshSummary.dateCompleted != null) OASysAssessmentState.completed else OASysAssessmentState.incomplete,
+    dateStarted = roshSummary.initiationDate.toInstant(),
+    dateCompleted = roshSummary.dateCompleted?.toInstant(),
     rosh = roshSummaryAnswers(roshSummary.roshSummary),
   )
 

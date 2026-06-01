@@ -3,12 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OAsysSectionsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoSHSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockUnsuccessfulRoshCallWithDelay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
@@ -59,7 +57,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Rosh for a CRN that does not exist returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
+    givenACas2PomUser { _, jwt ->
       val crn = "CRN123"
 
       apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
@@ -75,11 +73,8 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
 
   @Test
   fun `Getting RoSH for a CRN returns OK with correct body`() {
-    givenACas2PomUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-        val offenceDetails = OffenceDetailsFactory().produce()
-        apAndOASysMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
-
+    givenACas2PomUser { _, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         val rosh = RoshSummaryFactory().produce()
         apAndOASysMockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, rosh)
 
@@ -93,7 +88,6 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
           .json(
             jsonMapper.writeValueAsString(
               oaSysSectionsTransformer.transformRiskOfSeriousHarm(
-                offenceDetails,
                 rosh,
               ),
             ),
@@ -104,8 +98,8 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
 
   @Test
   fun `Getting RoSH when upstream times out returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
+    givenACas2PomUser { _, jwt ->
+      givenAnOffender { offenderDetails, _ ->
         apAndOASysMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, 2500)
 
         webTestClient.get()

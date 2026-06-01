@@ -13,7 +13,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmentState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OAsysSectionsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
@@ -37,22 +36,17 @@ class Cas2OAsysSectionsTransformerTest {
       fun `transforms correctly`() {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns false
 
-        val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
-
         val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicideAnswer")
           withPreviousConcernsSelfHarmSuicide("previousConcernsSelfHarmSuicideAnswer")
           withCurrentVulnerability("currentVulnerabilityAnswer")
         }.produce()
 
-        val result = transformer.transformRiskToIndividual(
-          offenceDetailsApiResponse,
-          risksToTheIndividualApiResponse,
-        )
-        assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
+        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
         assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
+        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
 
         assertThat(result.riskToSelf).containsExactly(
           OASysQuestion(
@@ -77,21 +71,17 @@ class Cas2OAsysSectionsTransformerTest {
       fun `transforms correctly, no answers`() {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns false
 
-        val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
         val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide(null)
           withPreviousConcernsSelfHarmSuicide(null)
           withCurrentVulnerability(null)
         }.produce()
 
-        val result = transformer.transformRiskToIndividual(
-          offenceDetailsApiResponse,
-          risksToTheIndividualApiResponse,
-        )
-        assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
+        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
         assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
+        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
 
         assertThat(result.riskToSelf).containsExactly(
           OASysQuestion(
@@ -131,23 +121,18 @@ class Cas2OAsysSectionsTransformerTest {
       ) {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns true
 
-        val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
-
         val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide(currentConcernsSelfHarmSuicideAnswer)
           withPreviousConcernsSelfHarmSuicide(previousConcernsSelfHarmSuicideAnswer)
           withCurrentVulnerability("currentVulnerabilityAnswer")
         }.produce()
 
-        val result = transformer.transformRiskToIndividual(
-          offenceDetailsApiResponse,
-          risksToTheIndividualApiResponse,
-        )
+        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
 
-        assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
         assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
+        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
 
         assertThat(result.riskToSelf).containsExactly(
           OASysQuestion(
@@ -167,8 +152,6 @@ class Cas2OAsysSectionsTransformerTest {
       fun `transforms correctly, post NOD 1057 assessment`() {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns true
 
-        val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
-
         val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide(null)
           withCurrentVulnerability(null)
@@ -177,15 +160,12 @@ class Cas2OAsysSectionsTransformerTest {
           withAnalysisVulnerabilities("analysisVulnerabilitiesAnswer")
         }.produce()
 
-        val result = transformer.transformRiskToIndividual(
-          offenceDetailsApiResponse,
-          risksToTheIndividualApiResponse,
-        )
+        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
 
-        assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
         assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
+        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
 
         assertThat(result.riskToSelf).containsExactly(
           OASysQuestion(
@@ -205,23 +185,18 @@ class Cas2OAsysSectionsTransformerTest {
       fun `transforms correctly, no answers`() {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns true
 
-        val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
-
         val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide(null)
           withPreviousConcernsSelfHarmSuicide(null)
           withCurrentVulnerability(null)
         }.produce()
 
-        val result = transformer.transformRiskToIndividual(
-          offenceDetailsApiResponse,
-          risksToTheIndividualApiResponse,
-        )
+        val result = transformer.transformRiskToIndividual(risksToTheIndividualApiResponse)
 
-        assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+        assertThat(result.assessmentId).isEqualTo(risksToTheIndividualApiResponse.assessmentId)
         assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-        assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
-        assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+        assertThat(result.dateStarted).isEqualTo(risksToTheIndividualApiResponse.initiationDate.toInstant())
+        assertThat(result.dateCompleted).isEqualTo(risksToTheIndividualApiResponse.dateCompleted?.toInstant())
 
         assertThat(result.riskToSelf).containsExactly(
           OASysQuestion(
@@ -244,22 +219,19 @@ class Cas2OAsysSectionsTransformerTest {
 
     @Test
     fun `transforms correctly`() {
-      val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
-
       val roshApiResponse = RoshSummaryFactory().apply {
         withWhoAtRisk("whoIsAtRiskAnswer")
         withNatureOfRisk("natureOfRiskAnswer")
       }.produce()
 
       val result = transformer.transformRiskOfSeriousHarm(
-        offenceDetailsApiResponse,
         roshApiResponse,
       )
 
-      assertThat(result.assessmentId).isEqualTo(offenceDetailsApiResponse.assessmentId)
+      assertThat(result.assessmentId).isEqualTo(roshApiResponse.assessmentId)
       assertThat(result.assessmentState).isEqualTo(OASysAssessmentState.incomplete)
-      assertThat(result.dateStarted).isEqualTo(offenceDetailsApiResponse.initiationDate.toInstant())
-      assertThat(result.dateCompleted).isEqualTo(offenceDetailsApiResponse.dateCompleted?.toInstant())
+      assertThat(result.dateStarted).isEqualTo(roshApiResponse.initiationDate.toInstant())
+      assertThat(result.dateCompleted).isEqualTo(roshApiResponse.dateCompleted?.toInstant())
 
       assertThat(result.rosh).containsExactly(
         OASysQuestion(
@@ -277,15 +249,12 @@ class Cas2OAsysSectionsTransformerTest {
 
     @Test
     fun `transforms correctly, no answers`() {
-      val offenceDetailsApiResponse = OffenceDetailsFactory().produce()
-
       val roshApiResponse = RoshSummaryFactory().apply {
         withWhoAtRisk(null)
         withNatureOfRisk(null)
       }.produce()
 
       val result = transformer.transformRiskOfSeriousHarm(
-        offenceDetailsApiResponse,
         roshApiResponse,
       )
 

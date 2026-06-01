@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -59,44 +56,22 @@ class Cas2PeopleController(
   fun peopleCrnOasysRiskToSelfGet(@PathVariable crn: String): ResponseEntity<OASysRiskToSelf> {
     ensureCanAccessOffender(crn)
 
-    return runBlocking(context = Dispatchers.IO) {
-      val offenceDetailsResult = async {
-        oasysService.getOffenceDetails(crn)
-      }
-
-      val riskToTheIndividualResult = async {
-        oasysService.getRiskToTheIndividual(crn)
-      }
-
-      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
-      val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
-
-      ResponseEntity.ok(
-        oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
-      )
-    }
+    return ResponseEntity.ok(
+      oaSysSectionsTransformer.transformRiskToIndividual(
+        extractEntityFromCasResult(oasysService.getRiskToTheIndividual(crn)),
+      ),
+    )
   }
 
   @GetMapping("/people/{crn}/oasys/rosh")
   fun peopleCrnOasysRoshGet(@PathVariable crn: String): ResponseEntity<OASysRiskOfSeriousHarm> {
     ensureCanAccessOffender(crn)
 
-    return runBlocking(context = Dispatchers.IO) {
-      val offenceDetailsResult = async {
-        oasysService.getOffenceDetails(crn)
-      }
-
-      val roshResult = async {
-        oasysService.getRoshSummary(crn)
-      }
-
-      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
-      val rosh = extractEntityFromCasResult(roshResult.await())
-
-      ResponseEntity.ok(
-        oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
-      )
-    }
+    return ResponseEntity.ok(
+      oaSysSectionsTransformer.transformRiskOfSeriousHarm(
+        extractEntityFromCasResult(oasysService.getRoshSummary(crn)),
+      ),
+    )
   }
 
   @GetMapping("/people/{crn}/risks")
