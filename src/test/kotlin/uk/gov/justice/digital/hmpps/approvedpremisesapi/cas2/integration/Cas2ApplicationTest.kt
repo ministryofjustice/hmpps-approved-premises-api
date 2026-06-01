@@ -103,7 +103,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       )
 
       webTestClient.post()
-        .uri("/cas2/applications")
+        .uri("/cas2-hdc/applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -120,7 +120,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       )
 
       webTestClient.put()
-        .uri("/cas2/applications/66911cf0-75b1-4361-84bd-501b176fd4fd")
+        .uri("/cas2-hdc/applications/66911cf0-75b1-4361-84bd-501b176fd4fd")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -136,7 +136,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2/applications")
+        .uri("/cas2-hdc/applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -152,7 +152,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2/applications/66911cf0-75b1-4361-84bd-501b176fd4")
+        .uri("/cas2-hdc/applications/66911cf0-75b1-4361-84bd-501b176fd4")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -165,7 +165,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get all applications without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2/applications")
+        .uri("/cas2-hdc/applications")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -174,7 +174,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get single application without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2/applications/9b785e59-b85c-4be0-b271-d9ac287684b6")
+        .uri("/cas2-hdc/applications/9b785e59-b85c-4be0-b271-d9ac287684b6")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -183,7 +183,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Create new application without JWT returns 401`() {
       webTestClient.post()
-        .uri("/cas2/applications")
+        .uri("/cas2-hdc/applications")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -291,7 +291,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     fun doRequestAndGetResponse(assignmentType: AssignmentType, jwt: String): List<Cas2ApplicationSummary> = webTestClient.get()
-      .uri("/cas2/applications?assignmentType=${assignmentType.name}")
+      .uri("/cas2-hdc/applications?assignmentType=${assignmentType.name}")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", ServiceName.cas2.value)
       .exchange()
@@ -464,7 +464,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             cas2ApplicationRepository.saveAndFlush(unallocatedApplication)
 
             val responseBody = webTestClient.get()
-              .uri("/cas2/applications?assignmentType=${assignmentType.value}")
+              .uri("/cas2-hdc/applications?assignmentType=${assignmentType.value}")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -624,7 +624,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           }
 
           val responseBody = webTestClient.get()
-            .uri("/cas2/applications?assignmentType=${assignmentType.value}")
+            .uri("/cas2-hdc/applications?assignmentType=${assignmentType.value}")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .exchange()
@@ -659,7 +659,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             val rawResponseBodyPage1 = webTestClient.get()
-              .uri("/cas2/applications?page=1&assignmentType=ALLOCATED")
+              .uri("/cas2-hdc/applications?page=1&assignmentType=ALLOCATED")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -681,7 +681,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             assertThat(isOrderedByCreatedAtDescending(responseBodyPage1)).isTrue()
 
             val rawResponseBodyPage2 = webTestClient.get()
-              .uri("/cas2/applications?page=2&assignmentType=ALLOCATED")
+              .uri("/cas2-hdc/applications?page=2&assignmentType=ALLOCATED")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -713,7 +713,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
         produceAndPersistBasicApplication(crn, userEntity)
         webTestClient.get()
-          .uri("/cas2/applications?assignmentType=IN_PROGRESS")
+          .uri("/cas2-hdc/applications?assignmentType=IN_PROGRESS")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -834,7 +834,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               cas2ApplicationRepository.save(otherPrisonApplication)
 
               val responseBody = webTestClient.get()
-                .uri("/cas2/applications?assignmentType=PRISON")
+                .uri("/cas2-hdc/applications?assignmentType=PRISON")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .exchange()
@@ -927,7 +927,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
 
               val responseBody = webTestClient.get()
-                .uri("/cas2/applications?assignmentType=PRISON")
+                .uri("/cas2-hdc/applications?assignmentType=PRISON")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .exchange()
@@ -1023,7 +1023,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
 
               val responseBody = webTestClient.get()
-                .uri("/cas2/applications?assignmentType=PRISON")
+                .uri("/cas2-hdc/applications?assignmentType=PRISON")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .exchange()
@@ -1168,7 +1168,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     @Test
     fun `returns submitted applications for user when assignmentType is ALLOCATED`() {
       val responseBody = webTestClient.get()
-        .uri("/cas2/applications?assignmentType=ALLOCATED")
+        .uri("/cas2-hdc/applications?assignmentType=ALLOCATED")
         .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
@@ -1189,7 +1189,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     @Test
     fun `returns submitted applications for user when assignmentType is ALLOCATED and page specified`() {
       val responseBody = webTestClient.get()
-        .uri("/cas2/applications?assignmentType=ALLOCATED&page=1")
+        .uri("/cas2-hdc/applications?assignmentType=ALLOCATED&page=1")
         .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
@@ -1224,7 +1224,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications/${applicationEntity.id}")
+              .uri("/cas2-hdc/applications/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -1267,7 +1267,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications/${application.id}")
+              .uri("/cas2-hdc/applications/${application.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -1306,7 +1306,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               setUpSubmittedApplicationWithTimeline(offenderDetails, userEntity, prisonName, omuEmail)
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications/${applicationEntity.id}")
+              .uri("/cas2-hdc/applications/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -1354,7 +1354,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               cas2ApplicationRepository.save(applicationEntity)
 
               val rawResponseBody = webTestClient.get()
-                .uri("/cas2/applications/${applicationEntity.id}")
+                .uri("/cas2-hdc/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $otherJwt")
                 .exchange()
                 .expectStatus()
@@ -1409,7 +1409,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               cas2ApplicationRepository.save(applicationEntity)
 
               webTestClient.get()
-                .uri("/cas2/applications/${applicationEntity.id}")
+                .uri("/cas2-hdc/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1444,7 +1444,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/cas2/applications/${applicationEntity.id}")
+                .uri("/cas2-hdc/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1477,7 +1477,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
 
               val rawResponseBody = webTestClient.get()
-                .uri("/cas2/applications/${applicationEntity.id}")
+                .uri("/cas2-hdc/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1515,7 +1515,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/cas2/applications/${applicationEntity.id}")
+                .uri("/cas2-hdc/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1540,7 +1540,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             // BAIL-WIP we are passing in ApplicationOrigin.prisonBail BUT WE KNOW that we have not implemented
             // in the cas2 application service this to be set so it will default to homeDetentionCurfew/
             val result = webTestClient.post()
-              .uri("/cas2/applications")
+              .uri("/cas2-hdc/applications")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .bodyValue(
@@ -1555,7 +1555,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .returnResult(Cas2Application::class.java)
 
             assertThat(result.responseHeaders["Location"]).anyMatch {
-              it.matches(Regex("/cas2/applications/.+"))
+              it.matches(Regex("/cas2-hdc/applications/.+"))
             }
 
             assertThat(result.responseBody.blockFirst()!!).matches {
@@ -1576,7 +1576,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
 
             val result = webTestClient.post()
-              .uri("/cas2/applications")
+              .uri("/cas2-hdc/applications")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .bodyValue(
@@ -1590,7 +1590,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .returnResult(Cas2Application::class.java)
 
             assertThat(result.responseHeaders["Location"]).anyMatch {
-              it.matches(Regex("/cas2/applications/.+"))
+              it.matches(Regex("/cas2-hdc/applications/.+"))
             }
 
             val returnedApplication = result.responseBody.blockFirst()!!
@@ -1610,7 +1610,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           val crn = "X1234"
 
           webTestClient.post()
-            .uri("/cas2/applications")
+            .uri("/cas2-hdc/applications")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewApplication(
@@ -1643,7 +1643,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           mockInmateDetailPrisonsApiCall(InmateDetail(caseDetail.nomsId!!, InmateStatus.IN, null, bookingId = null))
 
           webTestClient.post()
-            .uri("/cas2/applications")
+            .uri("/cas2-hdc/applications")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewApplication(
@@ -1667,7 +1667,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           givenAnOffender { offenderDetails, _ ->
 
             val result = webTestClient.post()
-              .uri("/cas2/applications")
+              .uri("/cas2-hdc/applications")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .bodyValue(
@@ -1681,7 +1681,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .returnResult(Cas2Application::class.java)
 
             assertThat(result.responseHeaders["Location"]).anyMatch {
-              it.matches(Regex("/cas2/applications/.+"))
+              it.matches(Regex("/cas2-hdc/applications/.+"))
             }
 
             assertThat(result.responseBody.blockFirst()!!).matches {
@@ -1697,7 +1697,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           val crn = "X1234"
 
           webTestClient.post()
-            .uri("/cas2/applications")
+            .uri("/cas2-hdc/applications")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewApplication(
@@ -1732,7 +1732,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             val resultBody = webTestClient.put()
-              .uri("/cas2/applications/$applicationId")
+              .uri("/cas2-hdc/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 UpdateCas2Application(
@@ -1772,7 +1772,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             val resultBody = webTestClient.put()
-              .uri("/cas2/applications/$applicationId")
+              .uri("/cas2-hdc/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 UpdateCas2Application(
@@ -1810,7 +1810,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             val resultBody = webTestClient.put()
-              .uri("/cas2/applications/$applicationId")
+              .uri("/cas2-hdc/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 UpdateCas2Application(

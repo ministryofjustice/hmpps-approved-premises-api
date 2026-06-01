@@ -83,7 +83,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas2(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2")
     .displayName("CAS2")
-    .pathsToMatch("/**/cas2/**")
+    .pathsToMatch("/**/cas2/**", "/**/cas2-hdc/**")
     .pathsToExclude("/**/events/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
@@ -119,6 +119,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     .pathsToMatch("/**/events/cas3/**")
     .build()
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   @Bean
   fun openApiCustomizer() = OpenApiCustomizer { openApi: OpenAPI ->
     openApi.paths.values.forEach { pathItem ->
@@ -143,6 +144,8 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
           "cas2v2-"
         } else if (path.startsWith("/cas3/")) {
           "cas3-"
+        } else if (path.startsWith("/cas2-hdc/")) {
+          "cas2-hdc-"
         } else {
           ""
         }

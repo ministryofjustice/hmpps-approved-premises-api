@@ -77,7 +77,7 @@ class Cas2ApplicationsController(
     val application = extractEntityFromCasResult(applicationResult)
 
     return ResponseEntity
-      .created(URI.create("/cas2/applications/${application.id}"))
+      .created(URI.create("/cas2-hdc/applications/${application.id}"))
       .body(cas2ApplicationsTransformer.transformJpaToApi(application, personInfo))
   }
 

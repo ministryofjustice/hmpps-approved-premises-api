@@ -65,7 +65,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
       )
 
       webTestClient.put()
-        .uri("/cas2/applications/66911cf0-75b1-4361-84bd-501b176fd4fd/abandon")
+        .uri("/cas2-hdc/applications/66911cf0-75b1-4361-84bd-501b176fd4fd/abandon")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -78,7 +78,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
     @Test
     fun `Abandon application without JWT returns 401`() {
       webTestClient.put()
-        .uri("/cas2/applications/9b785e59-b85c-4be0-b271-d9ac287684b6/abandon")
+        .uri("/cas2-hdc/applications/9b785e59-b85c-4be0-b271-d9ac287684b6/abandon")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -97,7 +97,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
             val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
 
             webTestClient.put()
-              .uri("/cas2/applications/${application.id}/abandon")
+              .uri("/cas2-hdc/applications/${application.id}/abandon")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -118,7 +118,7 @@ class Cas2ApplicationAbandonTest : IntegrationTestBase() {
             val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
 
             webTestClient.put()
-              .uri("/cas2/applications/${application.id}/abandon")
+              .uri("/cas2-hdc/applications/${application.id}/abandon")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()

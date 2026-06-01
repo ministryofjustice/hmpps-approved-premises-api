@@ -65,6 +65,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.DELETE, "/cache/*", permitAll)
         authorize(HttpMethod.POST, "/migration-job", permitAll)
         authorize(HttpMethod.GET, "/events/cas2/**", hasAuthority("ROLE_CAS2_EVENTS"))
+        authorize(HttpMethod.GET, "/events/cas2-hdc/**", hasAuthority("ROLE_CAS2_EVENTS"))
         authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))
 
         authorize(HttpMethod.GET, "/cas2/external/**", hasRole("APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
@@ -77,6 +78,17 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas2/reference-data/**", hasAnyRole("CAS2_ASSESSOR", "POM", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER"))
         authorize(HttpMethod.GET, "/cas2/reports/**", hasRole("CAS2_MI"))
         authorize("/cas2/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+
+        authorize(HttpMethod.GET, "/cas2-hdc/external/**", hasRole("APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
+        authorize(HttpMethod.PUT, "/cas2-hdc/assessments/**", hasRole("CAS2_ASSESSOR"))
+        authorize(HttpMethod.GET, "/cas2-hdc/assessments/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.POST, "/cas2-hdc/assessments/*/status-updates", hasRole("CAS2_ASSESSOR"))
+        authorize(HttpMethod.POST, "/cas2-hdc/assessments/*/notes", hasAnyRole("LICENCE_CA", "POM", "CAS2_ASSESSOR", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2-hdc/submissions/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN"))
+        authorize(HttpMethod.POST, "/cas2-hdc/submissions/*/status-updates", hasRole("CAS2_ASSESSOR"))
+        authorize(HttpMethod.GET, "/cas2-hdc/reference-data/**", hasAnyRole("CAS2_ASSESSOR", "POM", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2-hdc/reports/**", hasRole("CAS2_MI"))
+        authorize("/cas2-hdc/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
 
         authorize(HttpMethod.PUT, "/cas2v2/assessments/**", hasAuthority("ROLE_CAS2_ASSESSOR"))
         authorize(HttpMethod.GET, "/cas2v2/assessments/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
