@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1CreateApplicationLaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysAssessmentInfoTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -39,6 +40,7 @@ class Cas1OasysController(
   private val userService: UserService,
   private val cas1OASysNeedsQuestionTransformer: Cas1OASysNeedsQuestionTransformer,
   private val oaSysService: OASysService,
+  private val cas1OASysAssessmentInfoTransformer: Cas1OASysAssessmentInfoTransformer,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer,
   private val userAccessService: Cas1UserAccessService,
@@ -62,14 +64,12 @@ class Cas1OasysController(
   ): ResponseEntity<Cas1OASysMetadata> {
     ensureOffenderAccess(crn)
 
+    val needDetails = extractNullableOAsysResult(oaSysService.getNeedsDetails(crn))
+
     return ResponseEntity.ok(
       Cas1OASysMetadata(
-        assessmentMetadata = oaSysOffenceDetailsTransformer.toAssessmentMetadata(
-          extractNullableOAsysResult(oaSysService.getOffenceDetails(crn)),
-        ),
-        supportingInformation = cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(
-          extractNullableOAsysResult(oaSysService.getNeedsDetails(crn)),
-        ),
+        assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(needDetails),
+        supportingInformation = cas1OASysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needDetails),
       ),
     )
   }
@@ -94,35 +94,55 @@ class Cas1OasysController(
   ): ResponseEntity<Cas1OASysGroup> {
     ensureOffenderAccess(crn)
 
-    val offenceDetails = extractNullableOAsysResult(oaSysService.getOffenceDetails(crn))
-
-    val assessmentMetadata = oaSysOffenceDetailsTransformer.toAssessmentMetadata(offenceDetails)
-
-    val answers = when (group) {
-      Cas1OASysGroupName.RISK_MANAGEMENT_PLAN -> oaSysSectionsTransformer.riskManagementPlanAnswers(
-        extractNullableOAsysResult(oaSysService.getRiskManagementPlan(crn))?.riskManagementPlan,
-      )
-      Cas1OASysGroupName.OFFENCE_DETAILS -> oaSysSectionsTransformer.offenceDetailsAnswers(offenceDetails?.offence)
-      Cas1OASysGroupName.ROSH_SUMMARY -> oaSysSectionsTransformer.roshSummaryAnswers(
-        extractNullableOAsysResult(oaSysService.getRoshSummary(crn))?.roshSummary,
-      )
-      Cas1OASysGroupName.SUPPORTING_INFORMATION -> cas1OASysNeedsQuestionTransformer.transformToOASysQuestion(
-        needsDetails = extractNullableOAsysResult(oaSysService.getNeedsDetails(crn)),
-        includeOptionalSections = includeOptionalSections ?: emptyList(),
-        health = extractNullableOAsysResult(oaSysService.getHealthDetails(crn)),
-      )
-      Cas1OASysGroupName.RISK_TO_SELF -> oaSysSectionsTransformer.riskToSelfAnswers(
-        extractNullableOAsysResult(oaSysService.getRiskToTheIndividual(crn))?.riskToTheIndividual,
-      )
+    val group = when (group) {
+      Cas1OASysGroupName.RISK_MANAGEMENT_PLAN -> {
+        val riskManagementPlan = extractNullableOAsysResult(oaSysService.getRiskManagementPlan(crn))
+        Cas1OASysGroup(
+          group = group,
+          assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(riskManagementPlan),
+          answers = oaSysSectionsTransformer.riskManagementPlanAnswers(riskManagementPlan?.riskManagementPlan),
+        )
+      }
+      Cas1OASysGroupName.OFFENCE_DETAILS -> {
+        val offenceDetails = extractNullableOAsysResult(oaSysService.getOffenceDetails(crn))
+        Cas1OASysGroup(
+          group = group,
+          assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(offenceDetails),
+          answers = oaSysSectionsTransformer.offenceDetailsAnswers(offenceDetails?.offence),
+        )
+      }
+      Cas1OASysGroupName.ROSH_SUMMARY -> {
+        val roshSummary = extractNullableOAsysResult(oaSysService.getRoshSummary(crn))
+        Cas1OASysGroup(
+          group = group,
+          assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(roshSummary),
+          answers = oaSysSectionsTransformer.roshSummaryAnswers(roshSummary?.roshSummary),
+        )
+      }
+      Cas1OASysGroupName.SUPPORTING_INFORMATION -> {
+        val needsDetails = extractNullableOAsysResult(oaSysService.getNeedsDetails(crn))
+        val healthDetails = extractNullableOAsysResult(oaSysService.getHealthDetails(crn))
+        Cas1OASysGroup(
+          group = group,
+          assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(needsDetails),
+          answers = cas1OASysNeedsQuestionTransformer.transformToOASysQuestion(
+            needsDetails = needsDetails,
+            includeOptionalSections = includeOptionalSections ?: emptyList(),
+            health = healthDetails,
+          ),
+        )
+      }
+      Cas1OASysGroupName.RISK_TO_SELF -> {
+        val riskToTheIndividual = extractNullableOAsysResult(oaSysService.getRiskToTheIndividual(crn))
+        Cas1OASysGroup(
+          group = group,
+          assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(riskToTheIndividual),
+          answers = oaSysSectionsTransformer.riskToSelfAnswers(riskToTheIndividual?.riskToTheIndividual),
+        )
+      }
     }
 
-    return ResponseEntity.ok(
-      Cas1OASysGroup(
-        group = group,
-        assessmentMetadata = assessmentMetadata,
-        answers = answers,
-      ),
-    )
+    return ResponseEntity.ok(group)
   }
 
   @Operation(summary = "Returns OASys risk to the individual for a Person.")
