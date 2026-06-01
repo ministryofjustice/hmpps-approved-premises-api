@@ -51,6 +51,12 @@ class Cas1StartupScript(
 
     createApplication(
       deliusUserName = "AP_USER_TEST_1",
+      crn = "Y006208",
+      state = Cas1ApplicationSeedService.ApplicationState.AUTHORISED,
+    )
+
+    createApplication(
+      deliusUserName = "AP_USER_TEST_1",
       crn = "X698338",
       state = Cas1ApplicationSeedService.ApplicationState.EXPIRED_AFTER_AUTHORISATION,
     )
@@ -63,7 +69,7 @@ class Cas1StartupScript(
     crn: String,
     state: Cas1ApplicationSeedService.ApplicationState,
   ) {
-    seedLogger.info("Creating application with state $state for CRN X320741")
+    seedLogger.info("Creating application with state $state for CRN $crn")
     try {
       cas1ApplicationSeedService.createApplication(
         deliusUserName = deliusUserName,

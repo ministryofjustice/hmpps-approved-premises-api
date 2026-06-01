@@ -41,7 +41,7 @@ class PlacementRequestTransformer(
     risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
     applicationId = jpa.application.id,
     assessmentId = jpa.assessment.id,
-    releaseType = jpa.application.releaseType!!.apiType,
+    releaseType = jpa.placementApplication?.releaseType?.apiType ?: jpa.application.releaseType!!.apiType,
     status = getStatus(jpa),
     assessmentDecision = assessmentTransformer.transformJpaDecisionToApi(jpa.assessment.decision)!!,
     assessmentDate = jpa.assessment.submittedAt?.toInstant()!!,
