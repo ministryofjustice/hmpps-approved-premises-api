@@ -37,7 +37,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.11")
   implementation("org.javers:javers-core:7.11.1")
 
-  val springDocOpenApiStarterVersion = "3.0.2"
+  val springDocOpenApiStarterVersion = "3.0.3"
   // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
   // generated schema, making it incompatible with the typescript generators and in some
   // places it was incorrect. We're pinning version 3.0.2 until a new version is available
