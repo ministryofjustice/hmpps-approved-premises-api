@@ -36,20 +36,6 @@ class UserAccessService(
     else -> true
   }
 
-  fun currentUserCanViewPremises(premises: PremisesEntity) = userCanViewPremises(userService.getUserForRequest(), premises)
-
-  fun userCanViewPremises(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
-    else -> false
-  }
-
-  fun currentUserCanManagePremises(premises: PremisesEntity) = userCanManagePremises(userService.getUserForRequest(), premises)
-
-  fun userCanManagePremises(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
-    else -> false
-  }
-
   fun currentUserCanChangeBookingDate(premises: PremisesEntity) = when (premises) {
     is TemporaryAccommodationPremisesEntity -> currentUserCanManageCas3PremisesBookings(premises)
     else -> false
