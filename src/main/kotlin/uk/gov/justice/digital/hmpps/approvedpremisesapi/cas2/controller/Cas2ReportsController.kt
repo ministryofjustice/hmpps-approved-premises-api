@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxS
 
 @RestController
 @RequestMapping(
-  value = ["\${api.base-path:}/cas2", "\${api.base-path:}/cas2-hdc"],
+  value = [ "\${api.base-path:}/cas2-hdc"],
   produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
 )
 class Cas2ReportsController(private val reportService: Cas2ReportsService) {

@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 @Retention(AnnotationRetention.RUNTIME)
 @RestController
 @RequestMapping(
-  value = ["\${api.base-path:}/cas2", "\${api.base-path:}/cas2-hdc"],
+  value = [ "\${api.base-path:}/cas2-hdc"],
   produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
 )
 @Parameter(
