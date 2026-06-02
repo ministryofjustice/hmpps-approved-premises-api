@@ -24,6 +24,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenASubmittedCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenAnUnsubmittedCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenAnUnsubmittedCas2HdcApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.UnsubmittedApplicationsReportRow
@@ -501,64 +504,25 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val newer = Instant.now().minusDays(100)
       val tooOld = Instant.now().minusDays(366)
 
-      val user1 = cas2UserEntityFactory.produceAndPersist {
-        withUsername("NOMIS_USER_1")
-      }
-
-      val user2 = cas2UserEntityFactory.produceAndPersist {
-        withUsername("NOMIS_USER_2")
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
+      val applicableApplication = givenAnUnsubmittedCas2Application(createdAt = newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
 
       // HDC application, which should not feature in report
-      cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(user1)
-        withCrn("CRN_1")
-        withNomsNumber("NOMS_1")
-        withCreatedAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData("{}")
-        withSubmittedAt(null)
-      }
-
-      val application2 = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(user2)
-        withCrn("CRN_2")
-        withApplicationOrigin(ApplicationOrigin.prisonBail)
-        withNomsNumber("NOMS_2")
-        withCreatedAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData("{}")
-        withSubmittedAt(null)
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
+      givenAnUnsubmittedCas2HdcApplication(createdAt = old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
 
       // outside time limit -- should not feature in report
-      cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(user2)
-        withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withApplicationOrigin(ApplicationOrigin.prisonBail)
-        withData("{}")
-        withSubmittedAt(null)
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
+      givenAnUnsubmittedCas2Application(createdAt = tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
 
       // submitted application, which should not feature in report
-      cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(user2)
-        withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
-        withData("{}")
-        withApplicationOrigin(ApplicationOrigin.prisonBail)
-        withSubmittedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(50))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
+      givenASubmittedCas2Application(createdAt = Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
 
       val expectedDataFrame = listOf(
         UnsubmittedApplicationsReportRow(
-          applicationId = application2.id.toString(),
-          personCrn = application2.crn,
-          applicationOrigin = application2.applicationOrigin,
-          personNoms = application2.nomsNumber.toString(),
-          startedAt = application2.createdAt.toString().split(".").first(),
-          startedBy = application2.createdByUser.username,
+          applicationId = applicableApplication.id.toString(),
+          personCrn = applicableApplication.crn,
+          applicationOrigin = applicableApplication.applicationOrigin,
+          personNoms = applicableApplication.nomsNumber.toString(),
+          startedAt = applicableApplication.createdAt.toString().split(".").first(),
+          startedBy = applicableApplication.createdByUser.username,
         ),
       )
         .toDataFrame()
