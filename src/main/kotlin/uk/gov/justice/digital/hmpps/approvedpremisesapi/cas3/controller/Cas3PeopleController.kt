@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3OASysGroup
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3OASysOffenceDetailsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3OASysAssessmentInfoTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -19,25 +19,19 @@ class Cas3PeopleController(
   private val userService: UserService,
   private val oaSysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
-  private val oaSysOffenceDetailsTransformer: Cas3OASysOffenceDetailsTransformer,
+  private val oaSysAssessmentInfoTransformer: Cas3OASysAssessmentInfoTransformer,
 ) {
 
   @GetMapping("/people/{crn}/oasys/riskManagement")
   fun riskManagement(@PathVariable crn: String): ResponseEntity<Cas3OASysGroup> {
     ensureOffenderAccess(crn)
 
-    val offenceDetails = extractEntityFromCasResult(oaSysService.getOffenceDetails(crn))
-
-    val assessmentMetadata = oaSysOffenceDetailsTransformer.toAssessmentMetadata(offenceDetails)
-
-    val answers = oaSysSectionsTransformer.riskManagementPlanAnswers(
-      extractEntityFromCasResult(oaSysService.getRiskManagementPlan(crn)).riskManagementPlan,
-    )
+    val riskManagementPlan = extractEntityFromCasResult(oaSysService.getRiskManagementPlan(crn))
 
     return ResponseEntity.ok(
       Cas3OASysGroup(
-        assessmentMetadata = assessmentMetadata,
-        answers = answers,
+        assessmentMetadata = oaSysAssessmentInfoTransformer.toAssessmentMetadata(riskManagementPlan),
+        answers = oaSysSectionsTransformer.riskManagementPlanAnswers(riskManagementPlan.riskManagementPlan),
       ),
     )
   }

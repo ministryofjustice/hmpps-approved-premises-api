@@ -3,14 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3OASysOffenceDetailsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3OASysAssessmentInfoTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import java.time.Instant
 import java.time.OffsetDateTime
 
-class Cas3OASysOffenceDetailsTransformerTest {
+class Cas3OASysAssessmentInfoTransformerTest {
 
-  private val transformer = Cas3OASysOffenceDetailsTransformer()
+  private val transformer = Cas3OASysAssessmentInfoTransformer()
 
   @Nested
   inner class ToAssessmentMetadata {
