@@ -1,14 +1,26 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PlacementRequestsCas1Delegate
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
@@ -31,7 +43,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.time.LocalDate
 import java.util.UUID
 
-@Service
+@Cas1Controller
+@Tag(name = "CAS1 Placement Requests")
 class Cas1PlacementRequestsController(
   private val userService: UserService,
   private val placementRequestService: Cas1PlacementRequestService,
@@ -40,19 +53,30 @@ class Cas1PlacementRequestsController(
   private val offenderDetailService: OffenderDetailService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
-) : PlacementRequestsCas1Delegate {
+) {
 
-  override fun search(
-    status: PlacementRequestStatus?,
-    crnOrName: String?,
-    tier: RiskTierLevel?,
-    arrivalDateStart: LocalDate?,
-    arrivalDateEnd: LocalDate?,
-    requestType: PlacementRequestRequestType?,
-    cruManagementAreaId: UUID?,
-    page: Int?,
-    sortBy: PlacementRequestSortField?,
-    sortDirection: SortDirection?,
+  @Operation(
+    summary = "Gets all placement requests",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved placement requests", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1PlacementRequestSummary::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/placement-requests"],
+    produces = ["application/json"],
+  )
+  fun search(
+    @RequestParam status: PlacementRequestStatus?,
+    @RequestParam crnOrName: String?,
+    @RequestParam tier: RiskTierLevel?,
+    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) arrivalDateStart: LocalDate?,
+    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) arrivalDateEnd: LocalDate?,
+    @RequestParam requestType: PlacementRequestRequestType?,
+    @RequestParam cruManagementAreaId: UUID?,
+    @RequestParam page: Int?,
+    @RequestParam sortBy: PlacementRequestSortField?,
+    @RequestParam sortDirection: SortDirection?,
   ): ResponseEntity<List<Cas1PlacementRequestSummary>> {
     val user = getUserForRequest()
 
@@ -101,7 +125,18 @@ class Cas1PlacementRequestsController(
     }
   }
 
-  override fun getPlacementRequest(id: UUID): ResponseEntity<Cas1PlacementRequestDetail> {
+  @Operation(
+    summary = "Gets placement requests for a given user",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved placement requests", content = [Content(schema = Schema(implementation = Cas1PlacementRequestDetail::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/placement-requests/{id}"],
+    produces = ["application/json"],
+  )
+  fun getPlacementRequest(@Parameter(description = "ID of the placement request") @PathVariable id: UUID): ResponseEntity<Cas1PlacementRequestDetail> {
     val user = getUserForRequest()
 
     val placementRequest = extractEntityFromCasResult(placementRequestService.getPlacementRequest(user, id))
@@ -109,9 +144,23 @@ class Cas1PlacementRequestsController(
     return ResponseEntity.ok(toCas1PlacementRequestDetail(user, placementRequest))
   }
 
-  override fun withdrawPlacementRequest(
-    id: UUID,
-    body: Cas1WithdrawPlacementRequest?,
+  @Operation(
+    summary = "Withdraws a placement request",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1PlacementRequestDetail::class))]),
+      ApiResponse(responseCode = "404", description = "invalid applicationId", content = [Content(schema = Schema(implementation = Problem::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-requests/{id}/withdrawal"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  @SuppressWarnings("ThrowsCount")
+  fun withdrawPlacementRequest(
+    @Parameter(description = "ID of the placement request") @PathVariable id: UUID,
+    @Parameter(description = "Withdrawal details") @RequestBody body: Cas1WithdrawPlacementRequest?,
   ): ResponseEntity<Cas1PlacementRequestDetail> {
     val user = getUserForRequest()
 
