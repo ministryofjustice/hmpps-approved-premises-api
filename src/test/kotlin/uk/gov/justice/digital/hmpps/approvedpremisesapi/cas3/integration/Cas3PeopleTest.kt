@@ -6,14 +6,11 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1OAsysTest.Companion.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockNeedsDetails404Call
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockOffenceDetails404Call
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskManagementPlanCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
@@ -33,26 +30,10 @@ class Cas3PeopleTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Return 404 if offence details record can't be found for the CRN`() {
-      val (_, jwt) = givenAUser()
-
-      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apAndOASysMockOffenceDetails404Call(CRN)
-
-      webTestClient.get()
-        .uri("/cas3/people/$CRN/oasys/riskManagement")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
-    }
-
-    @Test
     fun `Return 404 if needs record can't be found for the CRN`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
       apAndOASysMockNeedsDetails404Call(CRN)
 
       webTestClient.get()
@@ -68,8 +49,6 @@ class Cas3PeopleTest : InitialiseDatabasePerClassTestBase() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
-
-      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, OffenceDetailsFactory().produce())
 
       val riskManagementPlan = RiskManagementPlanFactory()
         .withSupervision("The supervision answer")
