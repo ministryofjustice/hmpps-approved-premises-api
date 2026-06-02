@@ -58,7 +58,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas1Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS1Shared")
     .displayName("CAS1 & Shared")
-    .pathsToExclude("/**/cas2/**", "/**/cas2-hdc/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
+    .pathsToExclude("/**/cas2-hdc/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -83,7 +83,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas2(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2")
     .displayName("CAS2")
-    .pathsToMatch("/**/cas2/**", "/**/cas2-hdc/**")
+    .pathsToMatch("/**/cas2-hdc/**")
     .pathsToExclude("/**/events/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
@@ -100,7 +100,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas2v2Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2v2Shared")
     .displayName("CAS2v2 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas2-hdc/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
+    .pathsToExclude("/**/cas1/**", "/**/cas2-hdc/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -108,7 +108,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas3Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS3Shared")
     .displayName("CAS3 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas2-hdc/**", "/**/cas2v2/**", "/**/events/**", "/queue-admin/**")
+    .pathsToExclude("/**/cas1/**", "/**/cas2-hdc/**", "/**/cas2v2/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -138,14 +138,12 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
 
         val prefix = if (path.startsWith("/cas1/")) {
           "cas1-"
-        } else if (path.startsWith("/cas2/")) {
-          "cas2-"
         } else if (path.startsWith("/cas2v2/")) {
           "cas2v2-"
         } else if (path.startsWith("/cas3/")) {
           "cas3-"
         } else if (path.startsWith("/cas2-hdc/")) {
-          "cas2-hdc-"
+          "cas2-hdc"
         } else {
           ""
         }
