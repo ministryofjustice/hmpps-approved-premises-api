@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmentState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OAsysSectionsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 
@@ -36,7 +36,7 @@ class Cas2OAsysSectionsTransformerTest {
       fun `transforms correctly`() {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns false
 
-        val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide("currentConcernsSelfHarmSuicideAnswer")
           withPreviousConcernsSelfHarmSuicide("previousConcernsSelfHarmSuicideAnswer")
           withCurrentVulnerability("currentVulnerabilityAnswer")
@@ -71,7 +71,7 @@ class Cas2OAsysSectionsTransformerTest {
       fun `transforms correctly, no answers`() {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns false
 
-        val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide(null)
           withPreviousConcernsSelfHarmSuicide(null)
           withCurrentVulnerability(null)
@@ -121,7 +121,7 @@ class Cas2OAsysSectionsTransformerTest {
       ) {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns true
 
-        val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide(currentConcernsSelfHarmSuicideAnswer)
           withPreviousConcernsSelfHarmSuicide(previousConcernsSelfHarmSuicideAnswer)
           withCurrentVulnerability("currentVulnerabilityAnswer")
@@ -152,7 +152,7 @@ class Cas2OAsysSectionsTransformerTest {
       fun `transforms correctly, post NOD 1057 assessment`() {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns true
 
-        val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide(null)
           withCurrentVulnerability(null)
           withPreviousConcernsSelfHarmSuicide(null)
@@ -185,7 +185,7 @@ class Cas2OAsysSectionsTransformerTest {
       fun `transforms correctly, no answers`() {
         every { featureFlagService.getBooleanFlag("cas2-oasys-use-new-questions") } returns true
 
-        val risksToTheIndividualApiResponse = RiskToTheIndividualFactory().apply {
+        val risksToTheIndividualApiResponse = RisksToTheIndividualFactory().apply {
           withCurrentConcernsSelfHarmSuicide(null)
           withPreviousConcernsSelfHarmSuicide(null)
           withCurrentVulnerability(null)

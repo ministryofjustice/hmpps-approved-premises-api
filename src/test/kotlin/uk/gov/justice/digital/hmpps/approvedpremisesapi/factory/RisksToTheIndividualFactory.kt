@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskTo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
-class RiskToTheIndividualFactory : AssessmentInfoFactory<RisksToTheIndividual>() {
+class RisksToTheIndividualFactory : AssessmentInfoFactory<RisksToTheIndividual>() {
   private var currentConcernsSelfHarmSuicide: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var previousConcernsSelfHarmSuicide: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var currentCustodyHostelCoping: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }

@@ -8,15 +8,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetailsInner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthIssue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.HealthDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockHealthDetails404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockNeedsDetails404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockOffenceDetails404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRiskManagementPlan404Call
@@ -28,10 +31,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoSHSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysAssessmentInfoTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import java.time.OffsetDateTime
 
 class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
@@ -335,7 +340,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
-      val riskToIndividual = RiskToTheIndividualFactory()
+      val riskToIndividual = RisksToTheIndividualFactory()
         .withCurrentVulnerability("Current vuln answer")
         .produce()
       apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, riskToIndividual)
@@ -443,6 +448,154 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
           answer = "relationship answer",
         ),
       )
+    }
+  }
+
+  @Nested
+  inner class GetRisksToIndividual {
+    @Test
+    fun `Request without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/risks-to-individual")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Returns OK with correct body`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val risksToTheIndividual = RisksToTheIndividualFactory().produce()
+
+      apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, risksToTheIndividual)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/risks-to-individual")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          jsonMapper.writeValueAsString(risksToTheIndividual.riskToTheIndividual),
+        )
+    }
+
+    @Test
+    fun `Returns OK with correct body if assessment is older than 6 months`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val risksToTheIndividual = RisksToTheIndividualFactory()
+        .withDateCompleted(OffsetDateTime.now().minusMonths(10))
+        .produce()
+
+      apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, risksToTheIndividual)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/risks-to-individual")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          jsonMapper.writeValueAsString(risksToTheIndividual.riskToTheIndividual),
+        )
+    }
+
+    @Test
+    fun `Returns 404 when OASys returns 404`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      apAndOASysMockRiskToTheIndividual404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/risks-to-individual")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+    }
+  }
+
+  @Nested
+  inner class GetHealthDetails {
+    @Test
+    fun `Request without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/health-details")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Returns OK with correct body`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      val drugsMisuse = HealthIssue(
+        community = "drugs community",
+        electronicMonitoring = "drugs em",
+        programme = "drugs programme",
+      )
+      val alcoholMisuse = HealthIssue(
+        community = "alcohol community",
+        electronicMonitoring = "alcohol em",
+        programme = "alcohol programme",
+      )
+
+      val healthDetails = HealthDetailsFactory()
+        .withGeneralHealth(true, "some health issues")
+        .withDrugsMisuse(drugsMisuse)
+        .withAlcoholMisuse(alcoholMisuse)
+        .produce()
+
+      apAndOASysMockSuccessfulHealthDetailsCall(CRN, healthDetails)
+
+      val response = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/health-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<HealthDetailsInner>()
+
+      assertThat(response.generalHealth).isEqualTo(healthDetails.health.generalHealth)
+      assertThat(response.generalHealthSpecify).isEqualTo(healthDetails.health.generalHealthSpecify)
+      assertThat(response.drugsMisuse!!.community).isEqualTo(drugsMisuse.community)
+      assertThat(response.drugsMisuse.electronicMonitoring).isEqualTo(drugsMisuse.electronicMonitoring)
+      assertThat(response.drugsMisuse.programme).isEqualTo(drugsMisuse.programme)
+      assertThat(response.alcoholMisuse!!.community).isEqualTo(alcoholMisuse.community)
+      assertThat(response.alcoholMisuse.electronicMonitoring).isEqualTo(alcoholMisuse.electronicMonitoring)
+      assertThat(response.alcoholMisuse.programme).isEqualTo(alcoholMisuse.programme)
+    }
+
+    @Test
+    fun `Returns OK with correct body if assessment is older than 6 months`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+
+      val healthDetails = HealthDetailsFactory()
+        .withDateCompleted(OffsetDateTime.now().minusMonths(10))
+        .produce()
+
+      apAndOASysMockSuccessfulHealthDetailsCall(CRN, healthDetails)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/health-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+    }
+
+    @Test
+    fun `Returns 404 when OASys returns 404`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
+      apAndOASysMockHealthDetails404Call(CRN)
+
+      webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/health-details")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
     }
   }
 }

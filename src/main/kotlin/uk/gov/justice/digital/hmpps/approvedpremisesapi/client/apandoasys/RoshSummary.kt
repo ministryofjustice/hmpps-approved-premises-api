@@ -11,7 +11,7 @@ class RoshSummary(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
-  val roshSummary: RoshSummaryInner?,
+  val roshSummary: RoshSummaryInner,
 ) : AssessmentInfo(
   assessmentId,
   assessmentType,
