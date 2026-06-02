@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Submitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.UnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusDays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.io.ByteArrayInputStream
 import java.time.Instant
@@ -99,7 +100,8 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class SubmittedApplications {
+  inner class SubmittedApplicationReport {
+
     @Test
     fun `streams spreadsheet of cas2v2 Cas2SubmittedApplicationEvents, last 12 months only`() {
       val event1Id = UUID.randomUUID()
@@ -113,7 +115,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val newerCreated = newerSubmitted.minusDays(7)
 
       val tooOldSubmitted = OffsetDateTime.now().minusDays(366)
-      val tooOldCreated = tooOldSubmitted.minusSeconds(daysInSeconds(7))
+      val tooOldCreated = tooOldSubmitted.minusDays(7)
 
       val user1 = cas2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_1")
@@ -336,7 +338,8 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class ApplicationStatusUpdates {
+  inner class ApplicationStatusUpdateReport {
+
     @Test
     fun `streams spreadsheet of cas2v2 Cas2ApplicationStatusUpdatedEvents, last 12 months only`() {
       // create applications and then
@@ -361,9 +364,9 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val event2Id = UUID.randomUUID()
       val event3Id = UUID.randomUUID()
 
-      val old = Instant.now().minusSeconds(daysInSeconds(365))
-      val newer = Instant.now().minusSeconds(daysInSeconds(100))
-      val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
+      val old = Instant.now().minusDays(365)
+      val newer = Instant.now().minusDays(100)
+      val tooOld = Instant.now().minusDays(366)
 
       val event1StatusDetails = listOf(
         Cas2StatusDetail("personalInformation", "Personal information"),
@@ -490,12 +493,13 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class UnSubmittedApplications {
+  inner class UnSubmittedApplicationReport {
+
     @Test
     fun `streams cas2v2 spreadsheet of data from un-submitted CAS2 applications, newest first`() {
-      val old = Instant.now().minusSeconds(daysInSeconds(365))
-      val newer = Instant.now().minusSeconds(daysInSeconds(100))
-      val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
+      val old = Instant.now().minusDays(365)
+      val newer = Instant.now().minusDays(100)
+      val tooOld = Instant.now().minusDays(366)
 
       val user1 = cas2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_1")
@@ -673,6 +677,4 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       }
     }
   }
-
-  private fun daysInSeconds(days: Int): Long = days.toLong() * 60 * 60 * 24
 }

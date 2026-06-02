@@ -1,11 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
-import java.sql.Timestamp
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.concurrent.TimeUnit
 
-fun OffsetDateTime.toTimestamp(): Timestamp = Timestamp.from(this.toInstant())
+fun Instant.minusDays(days: Long): Instant = this.minus(Duration.ofDays(days))
 
 fun OffsetDateTime.roundNanosToMillisToAccountForLossOfPrecisionInPostgres(): OffsetDateTime = this.withNano(nanosToNearestMilli(this.nano.toLong()))
 
