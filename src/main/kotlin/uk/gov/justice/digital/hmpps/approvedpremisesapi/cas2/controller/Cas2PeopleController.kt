@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -16,13 +13,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OAsysSectionsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Cas2Controller
@@ -57,46 +54,24 @@ class Cas2PeopleController(
 
   @GetMapping("/people/{crn}/oasys/risk-to-self")
   fun peopleCrnOasysRiskToSelfGet(@PathVariable crn: String): ResponseEntity<OASysRiskToSelf> {
-    getOffenderDetails(crn)
+    ensureCanAccessOffender(crn)
 
-    return runBlocking(context = Dispatchers.IO) {
-      val offenceDetailsResult = async {
-        oasysService.getOffenceDetails(crn)
-      }
-
-      val riskToTheIndividualResult = async {
-        oasysService.getRiskToTheIndividual(crn)
-      }
-
-      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
-      val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
-
-      ResponseEntity.ok(
-        oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
-      )
-    }
+    return ResponseEntity.ok(
+      oaSysSectionsTransformer.transformRiskToIndividual(
+        extractEntityFromCasResult(oasysService.getRiskToTheIndividual(crn)),
+      ),
+    )
   }
 
   @GetMapping("/people/{crn}/oasys/rosh")
   fun peopleCrnOasysRoshGet(@PathVariable crn: String): ResponseEntity<OASysRiskOfSeriousHarm> {
-    getOffenderDetails(crn)
+    ensureCanAccessOffender(crn)
 
-    return runBlocking(context = Dispatchers.IO) {
-      val offenceDetailsResult = async {
-        oasysService.getOffenceDetails(crn)
-      }
-
-      val roshResult = async {
-        oasysService.getRoshSummary(crn)
-      }
-
-      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
-      val rosh = extractEntityFromCasResult(roshResult.await())
-
-      ResponseEntity.ok(
-        oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
-      )
-    }
+    return ResponseEntity.ok(
+      oaSysSectionsTransformer.transformRiskOfSeriousHarm(
+        extractEntityFromCasResult(oasysService.getRoshSummary(crn)),
+      ),
+    )
   }
 
   @GetMapping("/people/{crn}/risks")
@@ -110,13 +85,7 @@ class Cas2PeopleController(
     return ResponseEntity.ok(risksTransformer.transformDomainToApi(risks, crn))
   }
 
-  private fun getOffenderDetails(crn: String): OffenderDetailSummary {
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrnDeprecated(crn)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-    }
-
-    return offenderDetails
+  private fun ensureCanAccessOffender(crn: String) {
+    ensureEntityFromCasResultIsSuccess(offenderService.getOffenderByCrn(crn))
   }
 }
