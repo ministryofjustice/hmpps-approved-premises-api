@@ -10,6 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.LatestCas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
@@ -17,11 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.LatestCas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2ApplicationsTransformer
