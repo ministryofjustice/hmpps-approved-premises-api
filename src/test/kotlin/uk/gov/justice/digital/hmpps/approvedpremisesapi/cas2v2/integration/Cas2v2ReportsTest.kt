@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2Rep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusDays
 import java.io.ByteArrayInputStream
 import java.time.Duration
@@ -262,9 +263,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        .expectBody<ByteArray>()
-        .returnResult()
-        .responseBody
+        .bodyAsObject<ByteArray>()
 
       val inputStream = ByteArrayInputStream(responseBody)
       val dataFrame = DataFrame.readExcel(inputStream)
@@ -453,7 +452,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
   inner class UnSubmittedApplicationReport {
 
     @Test
-    fun `streams cas2v2 spreadsheet of data from un-submitted CAS2 applications, newest first`() {
+    fun `only includes submissions from last 12 months, excluding HDC`() {
       val old = Instant.now().minusDays(365)
       val newer = Instant.now().minusDays(100)
       val tooOld = Instant.now().minusDays(366)
@@ -477,6 +476,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           personNoms = applicableApplication.nomsNumber.toString(),
           startedAt = applicableApplication.createdAt.toString().split(".").first(),
           startedBy = applicableApplication.createdByUser.username,
+          cohort = "Prison Bail",
         ),
       )
         .toDataFrame()
@@ -501,6 +501,75 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
 
           assertThat(actual).isEqualTo(expectedDataFrame)
         }
+    }
+
+    @Test
+    fun `maps cohort correctly`() {
+      var createdAt = OffsetDateTime.now()
+
+      fun createUnsubmittedApplication(
+        origin: ApplicationOrigin,
+        cohort: Cas2Cohort,
+      ) {
+        givenAnUnsubmittedCas2Application(
+          applicationOrigin = origin,
+          cohort = cohort,
+          createdAt = createdAt,
+        )
+
+        createdAt -= Duration.ofSeconds(10)
+      }
+
+      createUnsubmittedApplication(ApplicationOrigin.prisonBail, Cas2Cohort.PRISON_BAIL)
+      createUnsubmittedApplication(ApplicationOrigin.courtBail, Cas2Cohort.COURT_BAIL)
+      createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.ATCR)
+      createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.HCRD)
+      createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.HEFR)
+      createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.ISC)
+      createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.RARR)
+      createUnsubmittedApplication(ApplicationOrigin.other, Cas2Cohort.FROM_AP)
+
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+      )
+
+      val responseBody = webTestClient.get()
+        .uri("/cas2v2/reports/unsubmitted-applications")
+        .header("Content-Type", "text/csv")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<ByteArray>()
+
+      val inputStream = ByteArrayInputStream(responseBody)
+      val dataFrame = DataFrame.readExcel(inputStream)
+
+      assertThat(dataFrame[0]["applicationOrigin"]).isEqualTo("prisonBail")
+      assertThat(dataFrame[0]["cohort"]).isEqualTo("Prison Bail")
+
+      assertThat(dataFrame[1]["applicationOrigin"]).isEqualTo("courtBail")
+      assertThat(dataFrame[1]["cohort"]).isEqualTo("Court Bail")
+
+      assertThat(dataFrame[2]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[2]["cohort"]).isEqualTo("Alternative to custodial recall")
+
+      assertThat(dataFrame[3]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[3]["cohort"]).isEqualTo("Homeless at conditional release date")
+
+      assertThat(dataFrame[4]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[4]["cohort"]).isEqualTo("Homeless at end of fixed-term recall")
+
+      assertThat(dataFrame[5]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[5]["cohort"]).isEqualTo("Intensive supervision courts")
+
+      assertThat(dataFrame[6]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[6]["cohort"]).isEqualTo("Risk Assessed Recall Review")
+
+      assertThat(dataFrame[7]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[7]["cohort"]).isEqualTo("Referral from Approved Premises")
     }
   }
 }

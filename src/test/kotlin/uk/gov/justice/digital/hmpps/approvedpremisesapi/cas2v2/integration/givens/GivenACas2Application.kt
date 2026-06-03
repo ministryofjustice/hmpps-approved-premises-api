@@ -26,6 +26,8 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2HdcApplication(
 
 fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
   createdBy: Cas2UserEntity? = null,
+  applicationOrigin: ApplicationOrigin = ApplicationOrigin.prisonBail,
+  cohort: Cas2Cohort = Cas2Cohort.PRISON_BAIL,
   crn: String = "CRN_1",
   noms: String = "NOMS_1",
   createdAt: OffsetDateTime = OffsetDateTime.now(),
@@ -36,7 +38,8 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
     },
   )
   withCrn(crn)
-  withApplicationOrigin(ApplicationOrigin.prisonBail)
+  withApplicationOrigin(applicationOrigin)
+  withCohort(cohort)
   withNomsNumber(noms)
   withCreatedAt(createdAt)
   withData("{}")

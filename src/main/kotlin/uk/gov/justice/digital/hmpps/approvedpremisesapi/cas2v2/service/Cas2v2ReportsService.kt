@@ -67,6 +67,7 @@ class Cas2v2ReportsService(
         startedAt = row.getStartedAt(),
         startedBy = row.getStartedBy(),
         applicationOrigin = row.getApplicationOrigin(),
+        cohort = row.getCohort()?.toDescription(),
       )
     }
     .toCas2v2Report(outputStream)
@@ -119,6 +120,7 @@ class Cas2v2ReportsService(
     val startedAt: String,
     val startedBy: String,
     val applicationOrigin: ApplicationOrigin,
+    val cohort: String?,
   )
 }
 
