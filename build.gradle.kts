@@ -35,8 +35,7 @@ dependencies {
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.6.0-jre")
   implementation("org.postgresql:postgresql:42.7.11")
-  implementation("org.javers:javers-core:7.11.1")
-
+  implementation("org.javers:javers-spring-boot-starter-sql:7.11.0")
   val springDocOpenApiStarterVersion = "3.0.2"
   // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
   // generated schema, making it incompatible with the typescript generators and in some
@@ -96,6 +95,7 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.43") {
     exclude(group = "io.swagger.core.v3")
   }
+  testImplementation("org.springframework.security:spring-security-test")
 }
 
 springBoot {
