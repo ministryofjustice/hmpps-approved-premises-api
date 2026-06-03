@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.migration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Slice
