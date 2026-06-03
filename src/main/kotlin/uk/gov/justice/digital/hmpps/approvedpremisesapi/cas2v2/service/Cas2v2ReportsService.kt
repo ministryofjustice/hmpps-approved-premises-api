@@ -79,8 +79,7 @@ inline fun <reified T> Iterable<T>.toCas2v2Report(outputStream: OutputStream) = 
     factory = WorkbookFactory.create(true),
   )
 
-@Suppress("LongParameterList")
-class ApplicationStatusUpdatesReportRow(
+data class ApplicationStatusUpdatesReportRow(
   val eventId: String,
   val applicationId: String,
   val personCrn: String,
@@ -108,7 +107,7 @@ data class SubmittedApplicationReportRow(
   val bailHearingDate: LocalDate?,
 )
 
-class UnsubmittedApplicationsReportRow(
+data class UnsubmittedApplicationsReportRow(
   val applicationId: String,
   val personCrn: String,
   val personNoms: String?,
