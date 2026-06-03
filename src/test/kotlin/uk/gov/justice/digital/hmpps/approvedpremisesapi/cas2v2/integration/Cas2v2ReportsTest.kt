@@ -27,9 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenASubmittedCas2HdcApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenAnUnsubmittedCas2HdcApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.ApplicationStatusUpdatesReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.SubmittedApplicationReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ReportsService.ApplicationStatusUpdatesReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ReportsService.SubmittedApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ReportsService.UnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType

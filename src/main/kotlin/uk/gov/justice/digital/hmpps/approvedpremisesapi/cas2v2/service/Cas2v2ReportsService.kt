@@ -68,6 +68,43 @@ class Cas2v2ReportsService(
       )
     }
     .toCas2v2Report(outputStream)
+
+  data class ApplicationStatusUpdatesReportRow(
+    val eventId: String,
+    val applicationId: String,
+    val personCrn: String,
+    val personNoms: String,
+    val newStatus: String,
+    val updatedAt: String,
+    val updatedBy: String,
+    val statusDetails: String,
+    val applicationOrigin: String,
+  )
+
+  data class SubmittedApplicationReportRow(
+    val eventId: String,
+    val applicationId: String,
+    val personCrn: String,
+    val personNoms: String?,
+    val referringPrisonCode: String?,
+    val preferredAreas: String?,
+    val hdcEligibilityDate: LocalDate?,
+    val conditionalReleaseDate: LocalDate?,
+    val submittedAt: String,
+    val submittedBy: String,
+    val startedAt: String,
+    val applicationOrigin: ApplicationOrigin,
+    val bailHearingDate: LocalDate?,
+  )
+
+  data class UnsubmittedApplicationsReportRow(
+    val applicationId: String,
+    val personCrn: String,
+    val personNoms: String?,
+    val startedAt: String,
+    val startedBy: String,
+    val applicationOrigin: ApplicationOrigin,
+  )
 }
 
 inline fun <reified T> Iterable<T>.toCas2v2Report(outputStream: OutputStream) = toDataFrame<T>()
@@ -75,40 +112,3 @@ inline fun <reified T> Iterable<T>.toCas2v2Report(outputStream: OutputStream) = 
     outputStream = outputStream,
     factory = WorkbookFactory.create(true),
   )
-
-data class ApplicationStatusUpdatesReportRow(
-  val eventId: String,
-  val applicationId: String,
-  val personCrn: String,
-  val personNoms: String,
-  val newStatus: String,
-  val updatedAt: String,
-  val updatedBy: String,
-  val statusDetails: String,
-  val applicationOrigin: String,
-)
-
-data class SubmittedApplicationReportRow(
-  val eventId: String,
-  val applicationId: String,
-  val personCrn: String,
-  val personNoms: String?,
-  val referringPrisonCode: String?,
-  val preferredAreas: String?,
-  val hdcEligibilityDate: LocalDate?,
-  val conditionalReleaseDate: LocalDate?,
-  val submittedAt: String,
-  val submittedBy: String,
-  val startedAt: String,
-  val applicationOrigin: ApplicationOrigin,
-  val bailHearingDate: LocalDate?,
-)
-
-data class UnsubmittedApplicationsReportRow(
-  val applicationId: String,
-  val personCrn: String,
-  val personNoms: String?,
-  val startedAt: String,
-  val startedBy: String,
-  val applicationOrigin: ApplicationOrigin,
-)
