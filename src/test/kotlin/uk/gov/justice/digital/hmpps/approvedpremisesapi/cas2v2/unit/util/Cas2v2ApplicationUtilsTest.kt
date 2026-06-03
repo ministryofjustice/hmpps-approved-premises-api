@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.unit.util
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Constants.CAS2_COURT_BAIL_APPLICATION_TYPE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Constants.CAS2_PRISON_BAIL_APPLICATION_TYPE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Constants.HDC_APPLICATION_TYPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constants.CAS2_COURT_BAIL_APPLICATION_TYPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constants.CAS2_PRISON_BAIL_APPLICATION_TYPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constants.HDC_APPLICATION_TYPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.util.Cas2v2ApplicationUtils
 
 class Cas2v2ApplicationUtilsTest {

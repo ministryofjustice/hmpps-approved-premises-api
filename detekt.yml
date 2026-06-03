@@ -37,7 +37,7 @@ complexity:
       # dependencies required by each one that would violate this rule.
       - org.springframework.stereotype.*
       - uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1Controller
-      - uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller.Cas2Controller
+      - uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.controller.Cas2Controller
       - uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller.Cas2v2Controller
       - uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.controller.Cas3Controller
       # Entities typically have large constructors, reflecting the columns in the database tables. Trying to reduce
