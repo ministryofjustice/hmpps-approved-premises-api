@@ -64,3 +64,25 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
   withSubmittedAt(submittedAt)
   withServiceOrigin(Cas2ServiceOrigin.BAIL)
 }
+
+fun IntegrationTestBase.givenASubmittedCas2HdcApplication(
+  createdBy: Cas2UserEntity? = null,
+  applicationOrigin: ApplicationOrigin = ApplicationOrigin.courtBail,
+  crn: String = "CRN_1",
+  nomsNumber: String = "NOMS_1",
+  createdAt: OffsetDateTime = OffsetDateTime.now().minusDays(5),
+  submittedAt: OffsetDateTime = OffsetDateTime.now(),
+) = cas2ApplicationEntityFactory.produceAndPersist {
+  withCreatedByUser(
+    createdBy ?: cas2UserEntityFactory.produceAndPersist {
+      withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    },
+  )
+  withCrn(crn)
+  withApplicationOrigin(applicationOrigin)
+  withNomsNumber(nomsNumber)
+  withCreatedAt(createdAt)
+  withData("{}")
+  withSubmittedAt(submittedAt)
+  withServiceOrigin(Cas2ServiceOrigin.HDC)
+}

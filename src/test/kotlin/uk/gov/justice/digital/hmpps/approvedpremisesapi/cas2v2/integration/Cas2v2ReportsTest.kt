@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenASubmittedCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenASubmittedCas2HdcApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenAnUnsubmittedCas2HdcApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.ApplicationStatusUpdatesReportRow
@@ -156,7 +156,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
         occurredAt = tooOldSubmitted,
       )
 
-      val hdcApplication = givenAnUnsubmittedCas2HdcApplication()
+      val hdcApplication = givenASubmittedCas2HdcApplication()
       createApplicationSubmittedDomainEvent(
         application = hdcApplication,
         occurredAt = newerSubmitted,
@@ -300,11 +300,13 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
         applicationOrigin = ApplicationOrigin.prisonBail,
       )
       val event1Status = Cas2StatusFactory()
-        .withStatusDetails( listOf(
-          Cas2StatusDetail("personalInformation", "Personal information"),
-          Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
-          Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
-        ))
+        .withStatusDetails(
+          listOf(
+            Cas2StatusDetail("personalInformation", "Personal information"),
+            Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
+            Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
+          ),
+        )
         .produce()
       val event1Data = Cas2ApplicationStatusUpdatedEvent(
         id = UUID.randomUUID(),
@@ -326,16 +328,16 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val application2 = givenASubmittedCas2Application(
         applicationOrigin = ApplicationOrigin.courtBail,
       )
-      val event2StatusDetails = emptyList<Cas2StatusDetail>()
-      val event2Status = Cas2StatusFactory()
-        .withStatusDetails(event2StatusDetails)
-        .produce()
       val event2Data = Cas2ApplicationStatusUpdatedEvent(
         id = UUID.randomUUID(),
         timestamp = Instant.now(),
         eventType = EventType.applicationStatusUpdated,
         eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-          .withStatus(event2Status)
+          .withStatus(
+            Cas2StatusFactory()
+              .withStatusDetails(emptyList())
+              .produce(),
+          )
           .withUpdatedAt(newer)
           .produce(),
       )
@@ -349,6 +351,9 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
 
       // we don't expect this event to be included as it relates to an update
       // outside the time range
+      val application3UpdateOutsideOfTimeRange = givenASubmittedCas2Application(
+        applicationOrigin = ApplicationOrigin.courtBail,
+      )
       val event3Data = Cas2ApplicationStatusUpdatedEvent(
         id = UUID.randomUUID(),
         timestamp = Instant.now(),
@@ -359,9 +364,32 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       )
       domainEventFactory.produceAndPersist {
         withId(event3Data.id)
+        withApplicationId(application3UpdateOutsideOfTimeRange.id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData(jsonMapper.writeValueAsString(event3Data))
+      }
+
+      val hdcApplication = givenASubmittedCas2HdcApplication(applicationOrigin = ApplicationOrigin.courtBail)
+      val event4Data = Cas2ApplicationStatusUpdatedEvent(
+        id = UUID.randomUUID(),
+        timestamp = Instant.now(),
+        eventType = EventType.applicationStatusUpdated,
+        eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+          .withStatus(
+            Cas2StatusFactory()
+              .withStatusDetails(emptyList())
+              .produce(),
+          )
+          .withUpdatedAt(newer)
+          .produce(),
+      )
+      domainEventFactory.produceAndPersist {
+        withId(event4Data.id)
+        withApplicationId(hdcApplication.id)
+        withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withOccurredAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData(jsonMapper.writeValueAsString(event2Data))
       }
 
       val expectedDataFrame = listOf(
