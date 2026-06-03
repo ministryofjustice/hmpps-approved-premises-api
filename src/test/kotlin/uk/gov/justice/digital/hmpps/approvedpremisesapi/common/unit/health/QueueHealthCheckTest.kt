@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.health
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.unit.health
 
 import com.ninjasquad.springmockk.MockkSpyBean
 import org.junit.jupiter.api.Test

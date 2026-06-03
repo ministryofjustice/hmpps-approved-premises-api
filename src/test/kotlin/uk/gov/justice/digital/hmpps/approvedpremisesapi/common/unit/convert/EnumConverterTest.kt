@@ -1,8 +1,8 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.convert
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.unit.convert
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.convert.EnumConverterFactory
 
 class EnumConverterTest {
   @Suppress("UNUSED") // Should be accessed by the enum converter under test

@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 import org.springframework.context.annotation.Configuration
 import org.springframework.format.FormatterRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.convert.EnumConverterFactory
 
 /**
  * Allows Spring to correctly deserialize enums coming in as controller parameters when the "public" value (as defined
@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFac
  * [here](https://github.com/OpenAPITools/openapi-generator/pull/13349)
  * but not for Kotlin as far as I could see.
  *
- * @see uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
+ * @see EnumConverterFactory
  */
 @Configuration
 class ConverterConfig : WebMvcConfigurer {

@@ -1,10 +1,10 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.parser
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.unit.services
 
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.services.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.parser.OffenderRiskNoteParser
 import java.time.LocalDate
 
 class OffenderRiskNoteParserTest {
@@ -26,7 +26,7 @@ class OffenderRiskNoteParserTest {
 
     val result = parser.withParsedRiskNotes(caseDetail)
 
-    assertThat(result.registrations[0].riskNotesDetail).isEmpty()
+    Assertions.assertThat(result.registrations[0].riskNotesDetail).isEmpty()
   }
 
   @Test
@@ -43,7 +43,7 @@ class OffenderRiskNoteParserTest {
 
     val result = parser.withParsedRiskNotes(caseDetail)
 
-    assertThat(result.registrations[0].riskNotesDetail).isEmpty()
+    Assertions.assertThat(result.registrations[0].riskNotesDetail).isEmpty()
   }
 
   @Test
@@ -60,7 +60,7 @@ class OffenderRiskNoteParserTest {
 
     val result = parser.withParsedRiskNotes(caseDetail)
 
-    assertThat(result.registrations[0].riskNotesDetail).isEmpty()
+    Assertions.assertThat(result.registrations[0].riskNotesDetail).isEmpty()
   }
 
   @Test
@@ -79,9 +79,9 @@ class OffenderRiskNoteParserTest {
 
     val result = parser.withParsedRiskNotes(caseDetail)
 
-    assertThat(result.registrations[0].riskNotesDetail).hasSize(1)
-    assertThat(result.registrations[0].riskNotesDetail!![0].note).isEqualTo("This is a risk note")
-    assertThat(result.registrations[0].riskNotesDetail!![0].date).isEqualTo(LocalDate.of(2026, 3, 11))
+    Assertions.assertThat(result.registrations[0].riskNotesDetail).hasSize(1)
+    Assertions.assertThat(result.registrations[0].riskNotesDetail!![0].note).isEqualTo("This is a risk note")
+    Assertions.assertThat(result.registrations[0].riskNotesDetail!![0].date).isEqualTo(LocalDate.of(2026, 3, 11))
   }
 
   @Test
@@ -100,9 +100,9 @@ class OffenderRiskNoteParserTest {
 
     val result = parser.withParsedRiskNotes(caseDetail)
 
-    assertThat(result.registrations[0].riskNotesDetail).hasSize(1)
-    assertThat(result.registrations[0].riskNotesDetail!![0].note).isEqualTo("This is a risk note without a header")
-    assertThat(result.registrations[0].riskNotesDetail!![0].date).isNull()
+    Assertions.assertThat(result.registrations[0].riskNotesDetail).hasSize(1)
+    Assertions.assertThat(result.registrations[0].riskNotesDetail!![0].note).isEqualTo("This is a risk note without a header")
+    Assertions.assertThat(result.registrations[0].riskNotesDetail!![0].date).isNull()
   }
 
   @Test
@@ -126,16 +126,16 @@ class OffenderRiskNoteParserTest {
     val result = parser.withParsedRiskNotes(caseDetail)
 
     val parsedNotes = result.registrations[0].riskNotesDetail!!
-    assertThat(parsedNotes).hasSize(3)
+    Assertions.assertThat(parsedNotes).hasSize(3)
 
-    assertThat(parsedNotes[0].note).isEqualTo("Third note without header")
-    assertThat(parsedNotes[0].date).isNull()
+    Assertions.assertThat(parsedNotes[0].note).isEqualTo("Third note without header")
+    Assertions.assertThat(parsedNotes[0].date).isNull()
 
-    assertThat(parsedNotes[1].note).isEqualTo("Second note")
-    assertThat(parsedNotes[1].date).isEqualTo(LocalDate.of(2026, 1, 2))
+    Assertions.assertThat(parsedNotes[1].note).isEqualTo("Second note")
+    Assertions.assertThat(parsedNotes[1].date).isEqualTo(LocalDate.of(2026, 1, 2))
 
-    assertThat(parsedNotes[2].note).isEqualTo("First note")
-    assertThat(parsedNotes[2].date).isEqualTo(LocalDate.of(2026, 1, 1))
+    Assertions.assertThat(parsedNotes[2].note).isEqualTo("First note")
+    Assertions.assertThat(parsedNotes[2].date).isEqualTo(LocalDate.of(2026, 1, 1))
   }
 
   @Test
@@ -160,8 +160,8 @@ class OffenderRiskNoteParserTest {
     val result = parser.withParsedRiskNotes(caseDetail)
 
     val parsedNotes = result.registrations[0].riskNotesDetail!!
-    assertThat(parsedNotes).hasSize(2)
-    assertThat(parsedNotes[0].note).isEqualTo("Second note")
-    assertThat(parsedNotes[1].note).isEqualTo("First note")
+    Assertions.assertThat(parsedNotes).hasSize(2)
+    Assertions.assertThat(parsedNotes[0].note).isEqualTo("Second note")
+    Assertions.assertThat(parsedNotes[1].note).isEqualTo("First note")
   }
 }
