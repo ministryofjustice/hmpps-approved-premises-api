@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.reporting.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto
 
 @Suppress("LongParameterList")
 class ApplicationStatusUpdatesReportRow(

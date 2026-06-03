@@ -8,9 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2SubmittedApplicationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UnsubmittedApplicationsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.reporting.model.ApplicationStatusUpdatesReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.reporting.model.SubmittedApplicationReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.reporting.model.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.ApplicationStatusUpdatesReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.SubmittedApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.UnsubmittedApplicationsReportRow
 import java.io.OutputStream
 import java.time.format.DateTimeFormatter
 

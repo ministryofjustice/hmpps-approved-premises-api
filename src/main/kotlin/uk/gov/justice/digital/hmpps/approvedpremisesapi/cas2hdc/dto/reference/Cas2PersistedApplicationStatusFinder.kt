@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.reporting.model.reference
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
