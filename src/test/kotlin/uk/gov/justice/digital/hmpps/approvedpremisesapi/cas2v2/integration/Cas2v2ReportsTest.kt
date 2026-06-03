@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
@@ -23,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.factory.events.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenASubmittedCas2Application
@@ -35,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Unsubmitt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusDays
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.io.ByteArrayInputStream
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -107,12 +104,12 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
   inner class SubmittedApplicationReport {
 
     @Test
-    fun `streams spreadsheet of cas2v2 Cas2SubmittedApplicationEvents, last 12 months only`() {
+    fun `only includes submissions from last 12 months, excluding HDC`() {
       val oldSubmitted = OffsetDateTime.now().minusDays(365).withOffsetSameInstant(ZoneOffset.UTC)
       val newerSubmitted = OffsetDateTime.now().minusDays(100)
       val tooOldSubmitted = OffsetDateTime.now().minusDays(366)
 
-      val application1 = givenASubmittedCas2Application(crn = "CRN_1",nomsNumber = "NOMS_1")
+      val application1 = givenASubmittedCas2Application(crn = "CRN_1", nomsNumber = "NOMS_1")
       val event1Data = Cas2ApplicationSubmittedEvent(
         id = UUID.randomUUID(),
         timestamp = Instant.now(),
@@ -129,7 +126,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
         withApplicationId(application1.id)
       }
 
-      val application2 = givenASubmittedCas2Application(crn = "CRN_2",nomsNumber = "NOMS_2")
+      val application2 = givenASubmittedCas2Application(crn = "CRN_2", nomsNumber = "NOMS_2")
       val event2Data = Cas2ApplicationSubmittedEvent(
         id = UUID.randomUUID(),
         timestamp = Instant.now(),
@@ -147,7 +144,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       }
 
       // we don't expect this application to be included because the event occurred at outside of time range
-      val application3 = givenASubmittedCas2Application(crn = "CRN_2",nomsNumber = "NOMS_2")
+      val application3 = givenASubmittedCas2Application(crn = "CRN_2", nomsNumber = "NOMS_2")
       val event3Data = Cas2ApplicationSubmittedEvent(
         id = UUID.randomUUID(),
         timestamp = Instant.now(),
@@ -162,6 +159,23 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
         withData(jsonMapper.writeValueAsString(event3Data))
         withOccurredAt(tooOldSubmitted)
         withApplicationId(application3.id)
+      }
+
+      val hdcApplication = givenAnUnsubmittedCas2HdcApplication()
+      val event4Data = Cas2ApplicationSubmittedEvent(
+        id = UUID.randomUUID(),
+        timestamp = Instant.now(),
+        eventType = EventType.applicationSubmitted,
+        eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
+          .withSubmittedAt(tooOldSubmitted.toInstant())
+          .produce(),
+      )
+      domainEventFactory.produceAndPersist {
+        withId(event4Data.id)
+        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
+        withData(jsonMapper.writeValueAsString(event4Data))
+        withOccurredAt(newerSubmitted)
+        withApplicationId(hdcApplication.id)
       }
 
       val expectedDataFrame = listOf(
@@ -221,8 +235,44 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `streams spreadsheet of cas2v2 Cas2SubmittedApplicationEvents, with application origin`() {
-      seedApplications(DomainEventType.CAS2_APPLICATION_SUBMITTED, EventType.applicationSubmitted)
+    fun `origins are correctly populated`() {
+      val submitted = OffsetDateTime.now()
+      val allApplications: ArrayList<Cas2ApplicationEntity> = ArrayList()
+
+      repeat(10) {
+        allApplications.add(
+          givenASubmittedCas2Application(
+            applicationOrigin = ApplicationOrigin.prisonBail,
+          ),
+        )
+      }
+      repeat(10) {
+        allApplications.add(
+          givenASubmittedCas2Application(
+            applicationOrigin = ApplicationOrigin.courtBail,
+          ),
+        )
+      }
+
+      allApplications.forEach {
+        domainEventFactory.produceAndPersist {
+          withId(UUID.randomUUID())
+          withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
+          withData(
+            jsonMapper.writeValueAsString(
+              Cas2ApplicationSubmittedEvent(
+                id = UUID.randomUUID(),
+                timestamp = Instant.now(),
+                eventType = EventType.applicationSubmitted,
+                eventDetails = Cas2ApplicationSubmittedEventDetailsFactory().withSubmittedAt(submitted.toInstant())
+                  .produce(),
+              ),
+            ),
+          )
+          withOccurredAt(submitted)
+          withApplicationId(it.id)
+        }
+      }
 
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
@@ -246,8 +296,6 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val dataFrame = DataFrame.readExcel(inputStream)
 
       assertThat(dataFrame.columnsCount()).isEqualTo(13)
-      assertThat(dataFrame.rowsCount()).isEqualTo(40)
-
       val headers = dataFrame.columns()
       assertThat(headers[0].name()).isEqualTo("eventId")
       assertThat(headers[1].name()).isEqualTo("applicationId")
@@ -263,16 +311,12 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       assertThat(headers[11].name()).isEqualTo("applicationOrigin")
       assertThat(headers[12].name()).isEqualTo("bailHearingDate")
 
-      val prisonBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "prisonBail" }
-        .rowsCount()
-      val courtBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "courtBail" }
-        .rowsCount()
-      val hdcCount = dataFrame.filter { row -> row["applicationOrigin"] == "homeDetentionCurfew" }
-        .rowsCount()
+      assertThat(dataFrame.rowsCount()).isEqualTo(20)
+      val prisonBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "prisonBail" }.rowsCount()
+      val courtBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "courtBail" }.rowsCount()
 
       assertThat(prisonBailCount).isEqualTo(10)
       assertThat(courtBailCount).isEqualTo(10)
-      assertThat(hdcCount).isEqualTo(20)
     }
   }
 
@@ -483,98 +527,6 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
 
           assertThat(actual).isEqualTo(expectedDataFrame)
         }
-    }
-  }
-
-  private fun seedApplications(domainEventType: DomainEventType, eventType: EventType) {
-    val submitted = OffsetDateTime.now()
-    val created = submitted.minusDays(7)
-
-    val user = cas2UserEntityFactory.produceAndPersist {
-      withUsername("NOMIS_USER_1")
-      withServiceOrigin(Cas2ServiceOrigin.BAIL)
-    }
-
-    val allApplications: ArrayList<Cas2ApplicationEntity> = ArrayList()
-
-    repeat(5) { allApplications.add(createApplication(user, created)) }
-    repeat(5) {
-      allApplications.add(
-        createApplication(
-          user,
-          created,
-          ApplicationOrigin.homeDetentionCurfew,
-        ),
-      )
-    }
-    repeat(5) {
-      allApplications.add(
-        createApplication(
-          user,
-          created,
-          ApplicationOrigin.prisonBail,
-        ),
-      )
-    }
-    repeat(5) {
-      allApplications.add(
-        createApplication(
-          user,
-          created,
-          ApplicationOrigin.courtBail,
-        ),
-      )
-    }
-
-    repeat(40) { index ->
-      val application = allApplications[index % allApplications.count()]
-
-      domainEventFactory.produceAndPersist {
-        withId(UUID.randomUUID())
-        withType(domainEventType)
-        withData(
-          jsonMapper.writeValueAsString(
-            Cas2ApplicationSubmittedEvent(
-              id = UUID.randomUUID(),
-              timestamp = Instant.now(),
-              eventType = eventType,
-              eventDetails = Cas2ApplicationSubmittedEventDetailsFactory().withSubmittedAt(submitted.toInstant())
-                .produce(),
-            ),
-          ),
-        )
-        withOccurredAt(submitted)
-        withApplicationId(application.id)
-      }
-    }
-  }
-
-  private fun createApplication(
-    user: Cas2UserEntity,
-    created: OffsetDateTime,
-    applicationOrigin: ApplicationOrigin? = null,
-  ): Cas2ApplicationEntity {
-    if (applicationOrigin == null) {
-      return cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(user)
-        withCreatedAt(created)
-        withCrn("CRN_2")
-        withNomsNumber("NOMS_2")
-        withData("{}")
-        withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(30))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
-    } else {
-      return cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(user)
-        withCreatedAt(created)
-        withApplicationOrigin(applicationOrigin)
-        withCrn("CRN_2")
-        withNomsNumber("NOMS_2")
-        withData("{}")
-        withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(30))
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
     }
   }
 }

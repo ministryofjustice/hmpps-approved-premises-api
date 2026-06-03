@@ -20,6 +20,7 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2HdcApplication(
   withCreatedAt(createdAt)
   withData("{}")
   withSubmittedAt(null)
+  withServiceOrigin(Cas2ServiceOrigin.HDC)
 }
 
 fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
