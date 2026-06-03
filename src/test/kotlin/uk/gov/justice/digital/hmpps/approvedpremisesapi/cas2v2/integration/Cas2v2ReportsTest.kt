@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.convertTo
-import org.jetbrains.kotlinx.dataframe.api.filter
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Nested
@@ -23,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.C
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenASubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenASubmittedCas2HdcApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens.givenAnUnsubmittedCas2Application
@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusDays
 import java.io.ByteArrayInputStream
+import java.time.Duration
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -177,6 +178,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           startedAt = application2.createdAt.toString().split(".").first(),
           applicationOrigin = ApplicationOrigin.courtBail,
           bailHearingDate = application2.bailHearingDate,
+          cohort = "Court Bail",
         ),
         SubmittedApplicationReportRow(
           eventId = event1Data.id.toString(),
@@ -192,6 +194,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           startedAt = application1.createdAt.toString().split(".").first(),
           applicationOrigin = ApplicationOrigin.courtBail,
           bailHearingDate = application1.bailHearingDate,
+          cohort = "Court Bail",
         ),
       )
         .toDataFrame()
@@ -219,27 +222,31 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `origins are correctly populated`() {
-      val submitted = OffsetDateTime.now()
+    fun `origin and cohort are correctly populated`() {
+      var submitted = OffsetDateTime.now()
 
-      val allPrisonBailApplications = (1..10).map {
-        givenASubmittedCas2Application(
-          applicationOrigin = ApplicationOrigin.prisonBail,
-        )
-      }
-
-      val allCourtBailApplications = (1..10).map {
-        givenASubmittedCas2Application(
-          applicationOrigin = ApplicationOrigin.courtBail,
-        )
-      }
-
-      (allPrisonBailApplications + allCourtBailApplications).forEach {
+      fun createSubmittedApplication(
+        origin: ApplicationOrigin,
+        cohort: Cas2Cohort,
+      ) {
         createApplicationSubmittedDomainEvent(
-          application = it,
+          application = givenASubmittedCas2Application(
+            applicationOrigin = origin,
+            cohort = cohort,
+          ),
           occurredAt = submitted,
         )
+        submitted -= Duration.ofSeconds(10)
       }
+
+      createSubmittedApplication(ApplicationOrigin.prisonBail, Cas2Cohort.PRISON_BAIL)
+      createSubmittedApplication(ApplicationOrigin.courtBail, Cas2Cohort.COURT_BAIL)
+      createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.ATCR)
+      createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.HCRD)
+      createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.HEFR)
+      createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.ISC)
+      createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.RARR)
+      createSubmittedApplication(ApplicationOrigin.other, Cas2Cohort.FROM_AP)
 
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
@@ -262,28 +269,29 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val inputStream = ByteArrayInputStream(responseBody)
       val dataFrame = DataFrame.readExcel(inputStream)
 
-      assertThat(dataFrame.columnsCount()).isEqualTo(13)
-      val headers = dataFrame.columns()
-      assertThat(headers[0].name()).isEqualTo("eventId")
-      assertThat(headers[1].name()).isEqualTo("applicationId")
-      assertThat(headers[2].name()).isEqualTo("personCrn")
-      assertThat(headers[3].name()).isEqualTo("personNoms")
-      assertThat(headers[4].name()).isEqualTo("referringPrisonCode")
-      assertThat(headers[5].name()).isEqualTo("preferredAreas")
-      assertThat(headers[6].name()).isEqualTo("hdcEligibilityDate")
-      assertThat(headers[7].name()).isEqualTo("conditionalReleaseDate")
-      assertThat(headers[8].name()).isEqualTo("submittedAt")
-      assertThat(headers[9].name()).isEqualTo("submittedBy")
-      assertThat(headers[10].name()).isEqualTo("startedAt")
-      assertThat(headers[11].name()).isEqualTo("applicationOrigin")
-      assertThat(headers[12].name()).isEqualTo("bailHearingDate")
+      assertThat(dataFrame[0]["applicationOrigin"]).isEqualTo("prisonBail")
+      assertThat(dataFrame[0]["cohort"]).isEqualTo("Prison Bail")
 
-      assertThat(dataFrame.rowsCount()).isEqualTo(20)
-      val prisonBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "prisonBail" }.rowsCount()
-      val courtBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "courtBail" }.rowsCount()
+      assertThat(dataFrame[1]["applicationOrigin"]).isEqualTo("courtBail")
+      assertThat(dataFrame[1]["cohort"]).isEqualTo("Court Bail")
 
-      assertThat(prisonBailCount).isEqualTo(10)
-      assertThat(courtBailCount).isEqualTo(10)
+      assertThat(dataFrame[2]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[2]["cohort"]).isEqualTo("Alternative to custodial recall")
+
+      assertThat(dataFrame[3]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[3]["cohort"]).isEqualTo("Homeless at conditional release date")
+
+      assertThat(dataFrame[4]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[4]["cohort"]).isEqualTo("Homeless at end of fixed-term recall")
+
+      assertThat(dataFrame[5]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[5]["cohort"]).isEqualTo("Intensive supervision courts")
+
+      assertThat(dataFrame[6]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[6]["cohort"]).isEqualTo("Risk Assessed Recall Review")
+
+      assertThat(dataFrame[7]["applicationOrigin"]).isEqualTo("other")
+      assertThat(dataFrame[7]["cohort"]).isEqualTo("Referral from Approved Premises")
     }
   }
 

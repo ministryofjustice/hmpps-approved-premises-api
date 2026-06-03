@@ -25,6 +25,7 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
         TO_CHAR(events.occurred_at,'YYYY-MM-DD"T"HH24:MI:SS') AS submittedAt,
         TO_CHAR(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
         applications.application_origin as applicationOrigin,
+        applications.cohort as cohort,
         CAST(applications.bail_hearing_date as DATE) as bailHearingDate,
         CASE
             WHEN COUNT(distinct pom_assignments.id) = 0 THEN 0
@@ -40,7 +41,7 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
                        ON events.application_id = location_assignments.application_id and location_assignments.allocated_pom_cas_2_user_id is NULL
     WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
       AND events.occurred_at  > CURRENT_DATE - 365
-    GROUP BY events.id, events.application_id, events.data, events.occurred_at, applications.created_at, applications.application_origin, applications.bail_hearing_date
+    GROUP BY events.id, events.application_id, events.data, events.occurred_at, applications.created_at, applications.application_origin, applications.cohort, applications.bail_hearing_date
     ORDER BY submittedAt DESC;
     """,
     nativeQuery = true,
@@ -53,6 +54,7 @@ interface Cas2SubmittedApplicationReportQueryRow {
   fun getId(): String
   fun getApplicationId(): String
   fun getApplicationOrigin(): ApplicationOrigin
+  fun getCohort(): Cas2Cohort?
   fun getBailHearingDate(): LocalDate?
   fun getSubmittedBy(): String
   fun getSubmittedAt(): String
