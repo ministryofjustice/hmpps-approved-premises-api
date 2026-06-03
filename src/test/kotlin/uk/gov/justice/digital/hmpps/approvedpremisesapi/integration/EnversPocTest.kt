@@ -8,11 +8,12 @@ import org.springframework.security.test.context.support.WithMockUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReleaseActionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReleaseActionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReleasePlanEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReleasePlanRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RevInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.render
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AuditService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AuditTimelineService
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -23,10 +24,10 @@ class EnversPocTest : IntegrationTestBase() {
   lateinit var releasePlanRepository: ReleasePlanRepository
 
   @Autowired
-  lateinit var releaseActionRepository: ReleaseActionRepository
+  lateinit var auditService: AuditService
 
   @Autowired
-  lateinit var auditService: AuditService
+  lateinit var auditTimelineService: AuditTimelineService
 
   @Test
   @WithMockUser(username = "audit_user")
@@ -66,7 +67,6 @@ class EnversPocTest : IntegrationTestBase() {
       id = UUID.randomUUID(),
       description = "Action 1",
       actionCadence = "Daily",
-      releasePlan = releasePlan,
     )
 
     releasePlan.releaseActions.add(action1)
@@ -83,7 +83,6 @@ class EnversPocTest : IntegrationTestBase() {
       id = UUID.randomUUID(),
       description = "Action 2",
       actionCadence = "Weekly",
-      releasePlan = releasePlan,
     )
 
     releasePlan.releaseActions.add(action2)
@@ -94,6 +93,7 @@ class EnversPocTest : IntegrationTestBase() {
     // 3. REMOVE + MODIFY
     // -------------------------
     releasePlan.releaseActions.remove(action1)
+
     action2.description = "Modified Action 2"
 
     releasePlanRepository.saveAndFlush(releasePlan)
@@ -101,52 +101,38 @@ class EnversPocTest : IntegrationTestBase() {
     // -------------------------
     // ASSERT RELEASE PLAN HISTORY
     // -------------------------
-
-    val planRevisions =
-      auditService.getReleasePlanRevisions(releasePlan.id)
+    val planRevisions = auditService.getReleasePlanRevisions(releasePlan.id)
 
     assertThat(planRevisions).hasSize(3)
 
-    assertThat(planRevisions[0].metadata.revisionType)
-      .isEqualTo(RevisionMetadata.RevisionType.INSERT)
+    assertThat(planRevisions.map { it.metadata.revisionType })
+      .contains(
+        RevisionMetadata.RevisionType.INSERT,
+        RevisionMetadata.RevisionType.UPDATE,
+      )
 
-    assertThat(planRevisions[1].metadata.revisionType)
-      .isEqualTo(RevisionMetadata.RevisionType.UPDATE)
-
-    assertThat(planRevisions[2].metadata.revisionType)
-      .isEqualTo(RevisionMetadata.RevisionType.UPDATE)
-
-    val planDescriptions =
-      planRevisions.map { it.entity.description }
+    val planDescriptions = planRevisions.map { it.entity.description }
 
     assertThat(planDescriptions)
       .contains("Initial Plan", "Updated Plan")
 
-    assertThat(planRevisions.last().entity.description)
-      .isEqualTo("Updated Plan")
-
     // -------------------------
-    // ASSERT ACTION 1 (CREATE)
+    // ASSERT ACTION 1
     // -------------------------
+    val action1Revisions = auditService.getReleaseActionRevisions(action1.id)
 
-    val action1Revisions =
-      auditService.getReleaseActionRevisions(action1.id)
-
-    assertThat(action1Revisions).isNotEmpty
-
-    assertThat(action1Revisions).hasSize(1)
+    assertThat(action1Revisions).hasSize(2)
 
     assertThat(action1Revisions.map { it.metadata.revisionType })
-      .contains(RevisionMetadata.RevisionType.INSERT)
+      .containsExactly(
+        RevisionMetadata.RevisionType.INSERT,
+        RevisionMetadata.RevisionType.DELETE,
+      )
 
     // -------------------------
-    // ASSERT ACTION 2 (CREATE + UPDATE)
+    // ASSERT ACTION 2
     // -------------------------
-
-    val action2Revisions =
-      auditService.getReleaseActionRevisions(action2.id)
-
-    assertThat(action2Revisions).isNotEmpty
+    val action2Revisions = auditService.getReleaseActionRevisions(action2.id)
 
     assertThat(action2Revisions).hasSize(2)
 
@@ -154,7 +140,43 @@ class EnversPocTest : IntegrationTestBase() {
       .contains("Action 2", "Modified Action 2")
 
     assertThat(action2Revisions.map { it.metadata.revisionType })
-      .contains(RevisionMetadata.RevisionType.INSERT, RevisionMetadata.RevisionType.UPDATE)
+      .contains(
+        RevisionMetadata.RevisionType.INSERT,
+        RevisionMetadata.RevisionType.UPDATE,
+      )
+
+    /**
+     * --- Audit Timeline ---
+     * Release plan updated By audit_user
+     * on 2026-06-02T13:49:02.449Z
+     *
+     * Release action
+     * - Description changed from 'Action 2' to 'Modified Action 2'
+     *
+     * Release plan updated By audit_user
+     * on 2026-06-02T13:49:02.426Z
+     *
+     * Release plan
+     * - Description changed from 'Initial Plan' to 'Updated Plan'
+     * - Expected release time changed from '10:00' to '11:00'
+     *
+     * Release action
+     * - Created release action with description 'Action 2'
+     *
+     * Release plan updated By audit_user
+     * on 2026-06-02T13:49:02.388Z
+     *
+     * Release plan
+     * - Created release plan with description 'Initial Plan'
+     *
+     * --------------------------
+     */
+
+    val timelines = auditService.getAuditTimeLineForSpaceBooking(spaceBooking)
+
+    println("--- Audit Timeline ---")
+    timelines.forEach { println(it.render()) }
+    println("--------------------------")
   }
 
   @Test
@@ -194,6 +216,102 @@ class EnversPocTest : IntegrationTestBase() {
       .allMatch { it == "audit_user" }
   }
 
+  @Test
+  @WithMockUser(username = "audit_user")
+  fun `print all audit timeline entries for a space booking`() {
+    val spaceBooking = createSpaceBooking()
+
+    // -------------------------
+    // 1. CREATE RELEASE PLAN/ACTION
+    // -------------------------
+    val releasePlan = createReleasePlan(spaceBooking, "Initial Plan")
+
+    val action1 = ReleaseActionEntity(
+      id = UUID.randomUUID(),
+      description = "Action 1",
+      actionCadence = "Daily",
+    )
+
+    releasePlan.releaseActions.add(action1)
+
+    releasePlanRepository.saveAndFlush(releasePlan)
+
+    // -------------------------
+    // 2. UPDATE PLAN + ADD ACTION
+    // -------------------------
+    releasePlan.description = "Updated Plan"
+    releasePlan.expectedReleaseTime = LocalTime.of(11, 0)
+
+    val action2 = ReleaseActionEntity(
+      id = UUID.randomUUID(),
+      description = "Action 2",
+      actionCadence = "Weekly",
+    )
+
+    releasePlan.releaseActions.add(action2)
+
+    releasePlanRepository.saveAndFlush(releasePlan)
+
+    // -------------------------
+    // 3. REMOVE ACTION + MODIFY ACTION
+    // -------------------------
+    releasePlan.releaseActions.remove(action1)
+
+    action2.description = "Modified Action 2"
+
+    releasePlanRepository.saveAndFlush(releasePlan)
+
+    // ---------------------------
+    // 4. DELETE RELEASE PLAN
+    releasePlanRepository.delete(releasePlan)
+
+    val timelines = auditTimelineService.getTimelineForSpaceBooking(spaceBooking)
+
+    /**
+     * --- Audit Timeline ---
+     * Release plan updated By audit_user
+     * on 2026-06-03T06:35:03.796Z
+     *
+     * Release Plan
+     * - Deleted release plan with description 'Updated Plan'
+     *
+     * Release Actions
+     * - Deleted release action with description 'Modified Action 2'
+     *
+     * Release plan updated By audit_user
+     * on 2026-06-03T06:35:03.770Z
+     *
+     * Release Actions
+     * - Description changed from 'Action 2' to 'Modified Action 2'
+     *
+     * Release Actions
+     * - Deleted release action with description 'Action 1'
+     *
+     * Release plan updated By audit_user
+     * on 2026-06-03T06:35:03.747Z
+     *
+     * Release Plan
+     * - Description changed from 'Initial Plan' to 'Updated Plan'
+     * - Expected release time changed from '10:00' to '11:00'
+     *
+     * Release Actions
+     * - Created release action with description 'Action 2'
+     *
+     * Release plan updated By audit_user
+     * on 2026-06-03T06:35:03.715Z
+     *
+     * Release Plan
+     * - Created release plan with description 'Initial Plan'
+     *
+     * Release Actions
+     * - Created release action with description 'Action 1'
+     */
+
+    println("--- Audit Timeline ---")
+    timelines.forEach { println(it.render()) }
+    println("--------------------------")
+  }
+
   private fun createSpaceBooking(): Cas1SpaceBookingEntity = givenACas1SpaceBooking(
     crn = "CRN123",
     actualArrivalDate = null,
@@ -203,16 +321,13 @@ class EnversPocTest : IntegrationTestBase() {
     nonArrivalConfirmedAt = null,
   )
 
-  private fun createReleasePlan(spaceBooking: Cas1SpaceBookingEntity, description: String): ReleasePlanEntity {
-    val rp = ReleasePlanEntity(
-      id = UUID.randomUUID(),
-      spaceBooking = spaceBooking,
-      expectedReleaseTime = LocalTime.of(10, 0),
-      expectedArrivalTime = LocalTime.of(14, 0),
-      description = description,
-      otherInformation = "Info",
-      releaseActions = mutableListOf(),
-    )
-    return releasePlanRepository.saveAndFlush(rp)
-  }
+  private fun createReleasePlan(spaceBooking: Cas1SpaceBookingEntity, description: String): ReleasePlanEntity = ReleasePlanEntity(
+    id = UUID.randomUUID(),
+    spaceBooking = spaceBooking,
+    expectedReleaseTime = LocalTime.of(10, 0),
+    expectedArrivalTime = LocalTime.of(14, 0),
+    description = description,
+    otherInformation = "Info",
+    releaseActions = mutableListOf(),
+  )
 }

@@ -45,6 +45,9 @@ CREATE TABLE release_action
     CONSTRAINT fk_release_action_release_plan FOREIGN KEY (release_plan_id) REFERENCES release_plan (id)
 );
 
+CREATE INDEX idx_release_action_release_plan_id
+    ON release_action(release_plan_id);
+
 CREATE TABLE release_action_aud
 (
     id                UUID    NOT NULL,
@@ -56,4 +59,14 @@ CREATE TABLE release_action_aud
     other_information TEXT,
     PRIMARY KEY (id, rev),
     CONSTRAINT fk_release_action_aud_revinfo FOREIGN KEY (rev) REFERENCES revinfo (id)
+);
+
+CREATE TABLE release_plan_release_action_aud
+(
+    rev             INTEGER NOT NULL,
+    release_plan_id UUID    NOT NULL,
+    id              UUID    NOT NULL,
+    revtype         SMALLINT,
+    PRIMARY KEY (rev, release_plan_id, id),
+    CONSTRAINT fk_release_plan_release_action_aud_revinfo FOREIGN KEY (rev) REFERENCES revinfo (id)
 );

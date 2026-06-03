@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.hibernate.envers.AuditJoinTable
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode
 import org.springframework.data.jpa.repository.JpaRepository
@@ -42,9 +44,10 @@ class ReleasePlanEntity(
   var otherInformation: String?,
 
   @OneToMany(
-    mappedBy = "releasePlan",
     cascade = [CascadeType.ALL],
     orphanRemoval = true,
   )
+  @JoinColumn(name = "release_plan_id", nullable = false)
+  @AuditJoinTable(name = "release_plan_release_action_aud")
   var releaseActions: MutableList<ReleaseActionEntity> = mutableListOf(),
 )

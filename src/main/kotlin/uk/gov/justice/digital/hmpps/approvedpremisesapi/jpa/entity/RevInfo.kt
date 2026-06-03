@@ -46,14 +46,14 @@ class RevInfo(
   @SequenceGenerator(
     name = "revinfo_seq_generator",
     sequenceName = "revinfo_seq",
-    allocationSize = 50,
+    allocationSize = 1,
   )
   @RevisionNumber
   var id: Int? = null,
 
   @RevisionTimestamp
   val timestamp: Long? = null,
-  var username: String? = null,
+  var username: String,
 
 ) {
   /*

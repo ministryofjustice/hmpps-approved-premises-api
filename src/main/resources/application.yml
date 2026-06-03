@@ -46,6 +46,7 @@ spring:
     hibernate:
       ddl-auto: none
     properties:
+      org.hibernate.envers.store_data_at_delete: true
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         cache:
