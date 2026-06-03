@@ -1,8 +1,8 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.datasource
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.unit.services
 
 import io.mockk.every
 import io.mockk.mockk
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserOffenderAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.services.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseAccess
@@ -39,7 +39,7 @@ class OffenderDetailsDataSourceTest {
 
     val result = offenderDetailsDataSource.getOffenderDetailSummary("SOME-CRN")
 
-    assertThat(result).isEqualTo(expectedResult)
+    Assertions.assertThat(result).isEqualTo(expectedResult)
   }
 
   @Test
@@ -50,8 +50,8 @@ class OffenderDetailsDataSourceTest {
 
     val result = offenderDetailsDataSource.getOffenderDetailSummary("SOME-CRN")
 
-    assertThat(result).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
-    assertThat((result as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+    Assertions.assertThat(result).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
+    Assertions.assertThat((result as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
   }
 
   @Test
@@ -74,7 +74,7 @@ class OffenderDetailsDataSourceTest {
 
     val results = offenderDetailsDataSource.getOffenderDetailSummaries(crns)
 
-    assertThat(results).isEqualTo(expectedResults)
+    Assertions.assertThat(results).isEqualTo(expectedResults)
   }
 
   @Test
@@ -85,10 +85,10 @@ class OffenderDetailsDataSourceTest {
     every { mockApDeliusContextApiClient.getCaseSummaries(crns) } returns cacheTimeoutClientResult
 
     val results = offenderDetailsDataSource.getOffenderDetailSummaries(crns)
-    assertThat(results).hasSize(3)
-    assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
-    assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
-    assertThat(results["CRN-C"]).isEqualTo(cacheTimeoutClientResult)
+    Assertions.assertThat(results).hasSize(3)
+    Assertions.assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
+    Assertions.assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
+    Assertions.assertThat(results["CRN-C"]).isEqualTo(cacheTimeoutClientResult)
   }
 
   @Test
@@ -107,19 +107,19 @@ class OffenderDetailsDataSourceTest {
 
     val results = offenderDetailsDataSource.getOffenderDetailSummaries(crns)
 
-    assertThat(results).hasSize(3)
+    Assertions.assertThat(results).hasSize(3)
 
     val crnAResult = results["CRN-A"]
-    assertThat(crnAResult).isInstanceOf(ClientResult.Success::class.java)
-    assertThat((crnAResult as ClientResult.Success).body).isEqualTo(crnACaseSummary.asOffenderDetailSummary())
+    Assertions.assertThat(crnAResult).isInstanceOf(ClientResult.Success::class.java)
+    Assertions.assertThat((crnAResult as ClientResult.Success).body).isEqualTo(crnACaseSummary.asOffenderDetailSummary())
 
     val crnBResult = results["CRN-B"]
-    assertThat(crnBResult).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
-    assertThat((crnBResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+    Assertions.assertThat(crnBResult).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
+    Assertions.assertThat((crnBResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
 
     val crnCResult = results["CRN-C"]
-    assertThat(crnCResult).isInstanceOf(ClientResult.Success::class.java)
-    assertThat((crnCResult as ClientResult.Success).body).isEqualTo(crnCCaseSummary.asOffenderDetailSummary())
+    Assertions.assertThat(crnCResult).isInstanceOf(ClientResult.Success::class.java)
+    Assertions.assertThat((crnCResult as ClientResult.Success).body).isEqualTo(crnCCaseSummary.asOffenderDetailSummary())
   }
 
   @ParameterizedTest
@@ -132,7 +132,7 @@ class OffenderDetailsDataSourceTest {
 
     val result = offenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
 
-    assertThat(result).isEqualTo(expectedResult)
+    Assertions.assertThat(result).isEqualTo(expectedResult)
   }
 
   @Test
@@ -143,8 +143,8 @@ class OffenderDetailsDataSourceTest {
 
     val result = offenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
 
-    assertThat(result).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
-    assertThat((result as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+    Assertions.assertThat(result).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
+    Assertions.assertThat((result as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
   }
 
   @Test
@@ -166,7 +166,7 @@ class OffenderDetailsDataSourceTest {
 
     val results = offenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
 
-    assertThat(results).isEqualTo(expectedResults)
+    Assertions.assertThat(results).isEqualTo(expectedResults)
   }
 
   @Test
@@ -177,10 +177,10 @@ class OffenderDetailsDataSourceTest {
     every { mockApDeliusContextApiClient.getUserAccessForCrns("DELIUS-USER", crns) } returns cacheTimeoutClientResult
 
     val results = offenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
-    assertThat(results).hasSize(3)
-    assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
-    assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
-    assertThat(results["CRN-C"]).isEqualTo(cacheTimeoutClientResult)
+    Assertions.assertThat(results).hasSize(3)
+    Assertions.assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
+    Assertions.assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
+    Assertions.assertThat(results["CRN-C"]).isEqualTo(cacheTimeoutClientResult)
   }
 
   @Test
@@ -199,18 +199,18 @@ class OffenderDetailsDataSourceTest {
 
     val results = offenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
 
-    assertThat(results).hasSize(3)
+    Assertions.assertThat(results).hasSize(3)
     val crnAResult = results["CRN-A"]
-    assertThat(crnAResult).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
-    assertThat((crnAResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+    Assertions.assertThat(crnAResult).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
+    Assertions.assertThat((crnAResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
 
     val crnBResult = results["CRN-B"]
-    assertThat(crnBResult).isInstanceOf(ClientResult.Success::class.java)
-    assertThat((crnBResult as ClientResult.Success).body).isEqualTo(crnBCaseAccess.asUserOffenderAccess())
+    Assertions.assertThat(crnBResult).isInstanceOf(ClientResult.Success::class.java)
+    Assertions.assertThat((crnBResult as ClientResult.Success).body).isEqualTo(crnBCaseAccess.asUserOffenderAccess())
 
     val crnCResult = results["CRN-C"]
-    assertThat(crnCResult).isInstanceOf(ClientResult.Success::class.java)
-    assertThat((crnCResult as ClientResult.Success).body).isEqualTo(crnCCaseAccess.asUserOffenderAccess())
+    Assertions.assertThat(crnCResult).isInstanceOf(ClientResult.Success::class.java)
+    Assertions.assertThat((crnCResult as ClientResult.Success).body).isEqualTo(crnCCaseAccess.asUserOffenderAccess())
   }
 
   private companion object {
