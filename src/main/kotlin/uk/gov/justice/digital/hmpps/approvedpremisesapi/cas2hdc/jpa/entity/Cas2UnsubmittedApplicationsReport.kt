@@ -26,10 +26,10 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
     """,
     nativeQuery = true,
   )
-  fun generateUnsubmittedApplicationsReportRows(serviceOrigin: String): List<Cas2UnsubmittedApplicationReportRow>
+  fun generateUnsubmittedApplicationsReportRows(serviceOrigin: String): List<Cas2UnsubmittedApplicationReportQueryRow>
 }
 
-interface Cas2UnsubmittedApplicationReportRow {
+interface Cas2UnsubmittedApplicationReportQueryRow {
   fun getApplicationId(): String
   fun getApplicationOrigin(): ApplicationOrigin
   fun getPersonNoms(): String

@@ -45,11 +45,11 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
     """,
     nativeQuery = true,
   )
-  fun generateSubmittedApplicationReportRows(serviceOrigin: String): List<Cas2SubmittedApplicationReportRow>
+  fun generateSubmittedApplicationReportRows(serviceOrigin: String): List<Cas2SubmittedApplicationReportQueryRow>
 }
 
 @SuppressWarnings("TooManyFunctions")
-interface Cas2SubmittedApplicationReportRow {
+interface Cas2SubmittedApplicationReportQueryRow {
   fun getId(): String
   fun getApplicationId(): String
   fun getApplicationOrigin(): ApplicationOrigin

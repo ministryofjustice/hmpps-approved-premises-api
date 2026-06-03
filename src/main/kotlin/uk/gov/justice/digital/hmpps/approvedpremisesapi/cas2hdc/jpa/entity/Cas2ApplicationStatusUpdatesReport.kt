@@ -37,10 +37,10 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
     """,
     nativeQuery = true,
   )
-  fun generateApplicationStatusUpdatesReportRows(serviceOrigin: String): List<Cas2ApplicationStatusUpdatedReportRow>
+  fun generateApplicationStatusUpdatesReportRows(serviceOrigin: String): List<Cas2ApplicationStatusUpdatedReportQueryRow>
 }
 
-interface Cas2ApplicationStatusUpdatedReportRow {
+interface Cas2ApplicationStatusUpdatedReportQueryRow {
   fun getId(): String
   fun getApplicationId(): String
   fun getUpdatedBy(): String
