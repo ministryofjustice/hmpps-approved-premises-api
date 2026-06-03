@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.UnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.minusDays
 import java.io.ByteArrayInputStream
@@ -100,6 +101,33 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
     }
   }
 
+  private fun createApplicationSubmittedDomainEvent(
+    application: Cas2ApplicationEntity,
+    occurredAt: OffsetDateTime,
+  ): CreatedEvent {
+    val eventData = Cas2ApplicationSubmittedEvent(
+      id = UUID.randomUUID(),
+      timestamp = Instant.now(),
+      eventType = EventType.applicationSubmitted,
+      eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
+        .withSubmittedAt(occurredAt.toInstant())
+        .produce(),
+    )
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventData.id)
+      withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
+      withData(jsonMapper.writeValueAsString(eventData))
+      withOccurredAt(occurredAt)
+      withApplicationId(application.id)
+    }
+    return CreatedEvent(event, eventData)
+  }
+
+  private data class CreatedEvent(
+    val event: DomainEventEntity,
+    val data: Cas2ApplicationSubmittedEvent,
+  )
+
   @Nested
   inner class SubmittedApplicationReport {
 
@@ -110,73 +138,29 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val tooOldSubmitted = OffsetDateTime.now().minusDays(366)
 
       val application1 = givenASubmittedCas2Application(crn = "CRN_1", nomsNumber = "NOMS_1")
-      val event1Data = Cas2ApplicationSubmittedEvent(
-        id = UUID.randomUUID(),
-        timestamp = Instant.now(),
-        eventType = EventType.applicationSubmitted,
-        eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
-          .withSubmittedAt(oldSubmitted.toInstant())
-          .produce(),
+      val (event1, event1Data) = createApplicationSubmittedDomainEvent(
+        application = application1,
+        occurredAt = oldSubmitted,
       )
-      val event1 = domainEventFactory.produceAndPersist {
-        withId(event1Data.id)
-        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(jsonMapper.writeValueAsString(event1Data))
-        withOccurredAt(oldSubmitted)
-        withApplicationId(application1.id)
-      }
 
       val application2 = givenASubmittedCas2Application(crn = "CRN_2", nomsNumber = "NOMS_2")
-      val event2Data = Cas2ApplicationSubmittedEvent(
-        id = UUID.randomUUID(),
-        timestamp = Instant.now(),
-        eventType = EventType.applicationSubmitted,
-        eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
-          .withSubmittedAt(newerSubmitted.toInstant())
-          .produce(),
+      val (event2, event2Data) = createApplicationSubmittedDomainEvent(
+        application = application2,
+        occurredAt = newerSubmitted,
       )
-      val event2 = domainEventFactory.produceAndPersist {
-        withId(event2Data.id)
-        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(jsonMapper.writeValueAsString(event2Data))
-        withOccurredAt(newerSubmitted)
-        withApplicationId(application2.id)
-      }
 
       // we don't expect this application to be included because the event occurred at outside of time range
       val application3 = givenASubmittedCas2Application(crn = "CRN_2", nomsNumber = "NOMS_2")
-      val event3Data = Cas2ApplicationSubmittedEvent(
-        id = UUID.randomUUID(),
-        timestamp = Instant.now(),
-        eventType = EventType.applicationSubmitted,
-        eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
-          .withSubmittedAt(tooOldSubmitted.toInstant())
-          .produce(),
+      createApplicationSubmittedDomainEvent(
+        application = application3,
+        occurredAt = tooOldSubmitted,
       )
-      domainEventFactory.produceAndPersist {
-        withId(event3Data.id)
-        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(jsonMapper.writeValueAsString(event3Data))
-        withOccurredAt(tooOldSubmitted)
-        withApplicationId(application3.id)
-      }
 
       val hdcApplication = givenAnUnsubmittedCas2HdcApplication()
-      val event4Data = Cas2ApplicationSubmittedEvent(
-        id = UUID.randomUUID(),
-        timestamp = Instant.now(),
-        eventType = EventType.applicationSubmitted,
-        eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
-          .withSubmittedAt(tooOldSubmitted.toInstant())
-          .produce(),
+      createApplicationSubmittedDomainEvent(
+        application = hdcApplication,
+        occurredAt = newerSubmitted,
       )
-      domainEventFactory.produceAndPersist {
-        withId(event4Data.id)
-        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-        withData(jsonMapper.writeValueAsString(event4Data))
-        withOccurredAt(newerSubmitted)
-        withApplicationId(hdcApplication.id)
-      }
 
       val expectedDataFrame = listOf(
         SubmittedApplicationReportRow(
@@ -237,41 +221,24 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
     @Test
     fun `origins are correctly populated`() {
       val submitted = OffsetDateTime.now()
-      val allApplications: ArrayList<Cas2ApplicationEntity> = ArrayList()
 
-      repeat(10) {
-        allApplications.add(
-          givenASubmittedCas2Application(
-            applicationOrigin = ApplicationOrigin.prisonBail,
-          ),
-        )
-      }
-      repeat(10) {
-        allApplications.add(
-          givenASubmittedCas2Application(
-            applicationOrigin = ApplicationOrigin.courtBail,
-          ),
+      val allPrisonBailApplications = (1..10).map {
+        givenASubmittedCas2Application(
+          applicationOrigin = ApplicationOrigin.prisonBail,
         )
       }
 
-      allApplications.forEach {
-        domainEventFactory.produceAndPersist {
-          withId(UUID.randomUUID())
-          withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-          withData(
-            jsonMapper.writeValueAsString(
-              Cas2ApplicationSubmittedEvent(
-                id = UUID.randomUUID(),
-                timestamp = Instant.now(),
-                eventType = EventType.applicationSubmitted,
-                eventDetails = Cas2ApplicationSubmittedEventDetailsFactory().withSubmittedAt(submitted.toInstant())
-                  .produce(),
-              ),
-            ),
-          )
-          withOccurredAt(submitted)
-          withApplicationId(it.id)
-        }
+      val allCourtBailApplications = (1..10).map {
+        givenASubmittedCas2Application(
+          applicationOrigin = ApplicationOrigin.courtBail,
+        )
+      }
+
+      (allPrisonBailApplications + allCourtBailApplications).forEach {
+        createApplicationSubmittedDomainEvent(
+          application = it,
+          occurredAt = submitted,
+        )
       }
 
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
