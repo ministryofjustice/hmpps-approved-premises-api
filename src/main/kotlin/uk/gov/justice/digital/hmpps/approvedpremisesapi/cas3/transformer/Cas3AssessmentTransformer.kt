@@ -140,5 +140,5 @@ class Cas3AssessmentTransformer(
     null -> null
   }
 
-  fun transformToCas3StaffDto(user: UserEntity) = Cas3StaffDto(user.deliusUsername, user.deliusStaffCode)
+  fun transformToCas3StaffDto(user: UserEntity) = Cas3StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
 }
