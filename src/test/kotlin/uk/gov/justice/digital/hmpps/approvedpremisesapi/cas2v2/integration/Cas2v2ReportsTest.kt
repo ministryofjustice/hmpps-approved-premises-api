@@ -292,128 +292,99 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
 
     @Test
     fun `streams spreadsheet of cas2v2 Cas2ApplicationStatusUpdatedEvents, last 12 months only`() {
-      // create applications and then
-
-      val user = cas2UserEntityFactory.produceAndPersist {
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
-      val application1 = cas2ApplicationEntityFactory.produceAndPersist {
-        withCreatedByUser(user)
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
-      val application1ID = application1.id
-
-      val application2 = cas2ApplicationEntityFactory.produceAndPersist {
-        withApplicationOrigin(ApplicationOrigin.courtBail)
-        withCreatedByUser(user)
-        withServiceOrigin(Cas2ServiceOrigin.BAIL)
-      }
-      val application2ID = application2.id
-
-      val event1Id = UUID.randomUUID()
-      val event2Id = UUID.randomUUID()
-      val event3Id = UUID.randomUUID()
-
       val old = Instant.now().minusDays(365)
       val newer = Instant.now().minusDays(100)
       val tooOld = Instant.now().minusDays(366)
 
-      val event1StatusDetails = listOf(
-        Cas2StatusDetail("personalInformation", "Personal information"),
-        Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
-        Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
+      val application1 = givenASubmittedCas2Application(
+        applicationOrigin = ApplicationOrigin.prisonBail,
       )
-
       val event1Status = Cas2StatusFactory()
-        .withStatusDetails(event1StatusDetails)
+        .withStatusDetails( listOf(
+          Cas2StatusDetail("personalInformation", "Personal information"),
+          Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
+          Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
+        ))
         .produce()
+      val event1Data = Cas2ApplicationStatusUpdatedEvent(
+        id = UUID.randomUUID(),
+        timestamp = Instant.now(),
+        eventType = EventType.applicationStatusUpdated,
+        eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+          .withStatus(event1Status)
+          .withUpdatedAt(old)
+          .produce(),
+      )
+      val event1 = domainEventFactory.produceAndPersist {
+        withId(event1Data.id)
+        withApplicationId(application1.id)
+        withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData(jsonMapper.writeValueAsString(event1Data))
+      }
 
-      val event1Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-        .withStatus(event1Status)
-        .withUpdatedAt(old)
-        .produce()
-
+      val application2 = givenASubmittedCas2Application(
+        applicationOrigin = ApplicationOrigin.courtBail,
+      )
       val event2StatusDetails = emptyList<Cas2StatusDetail>()
-
       val event2Status = Cas2StatusFactory()
         .withStatusDetails(event2StatusDetails)
         .produce()
-
-      val event2Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-        .withStatus(event2Status)
-        .withUpdatedAt(newer)
-        .produce()
-      val event3Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-        .withUpdatedAt(tooOld)
-        .produce()
-
-      val event1ToSave = Cas2ApplicationStatusUpdatedEvent(
-        id = event1Id,
+      val event2Data = Cas2ApplicationStatusUpdatedEvent(
+        id = UUID.randomUUID(),
         timestamp = Instant.now(),
         eventType = EventType.applicationStatusUpdated,
-        eventDetails = event1Details,
+        eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+          .withStatus(event2Status)
+          .withUpdatedAt(newer)
+          .produce(),
       )
-
-      val event2ToSave = Cas2ApplicationStatusUpdatedEvent(
-        id = event2Id,
-        timestamp = Instant.now(),
-        eventType = EventType.applicationStatusUpdated,
-        eventDetails = event2Details,
-      )
-
-      val event3ToSave = Cas2ApplicationStatusUpdatedEvent(
-        id = event3Id,
-        timestamp = Instant.now(),
-        eventType = EventType.applicationStatusUpdated,
-        eventDetails = event3Details,
-      )
-
-      val event1 = domainEventFactory.produceAndPersist {
-        withId(event1Id)
-        withApplicationId(application1ID)
-        withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
-        withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(jsonMapper.writeValueAsString(event1ToSave))
-      }
-
       val event2 = domainEventFactory.produceAndPersist {
-        withId(event2Id)
-        withApplicationId(application2ID)
+        withId(event2Data.id)
+        withApplicationId(application2.id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(jsonMapper.writeValueAsString(event2ToSave))
+        withData(jsonMapper.writeValueAsString(event2Data))
       }
 
       // we don't expect this event to be included as it relates to an update
       // outside the time range
+      val event3Data = Cas2ApplicationStatusUpdatedEvent(
+        id = UUID.randomUUID(),
+        timestamp = Instant.now(),
+        eventType = EventType.applicationStatusUpdated,
+        eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+          .withUpdatedAt(tooOld)
+          .produce(),
+      )
       domainEventFactory.produceAndPersist {
-        withId(event3Id)
+        withId(event3Data.id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
-        withData(jsonMapper.writeValueAsString(event3ToSave))
+        withData(jsonMapper.writeValueAsString(event3Data))
       }
 
       val expectedDataFrame = listOf(
         ApplicationStatusUpdatesReportRow(
-          eventId = event2Id.toString(),
+          eventId = event2.id.toString(),
           applicationId = event2.applicationId.toString(),
           applicationOrigin = ApplicationOrigin.courtBail.toString(),
-          personCrn = event2Details.personReference.crn.toString(),
-          personNoms = event2Details.personReference.noms,
-          newStatus = event2Details.newStatus.name,
-          updatedAt = event2Details.updatedAt.toString().split(".").first(),
-          updatedBy = event2Details.updatedBy.username,
+          personCrn = event2Data.eventDetails.personReference.crn.toString(),
+          personNoms = event2Data.eventDetails.personReference.noms,
+          newStatus = event2Data.eventDetails.newStatus.name,
+          updatedAt = event2Data.eventDetails.updatedAt.toString().split(".").first(),
+          updatedBy = event2Data.eventDetails.updatedBy.username,
           statusDetails = "",
         ),
         ApplicationStatusUpdatesReportRow(
-          eventId = event1Id.toString(),
+          eventId = event1.id.toString(),
           applicationId = event1.applicationId.toString(),
-          applicationOrigin = ApplicationOrigin.homeDetentionCurfew.toString(),
-          personCrn = event1Details.personReference.crn.toString(),
-          personNoms = event1Details.personReference.noms,
-          newStatus = event1Details.newStatus.name,
-          updatedAt = event1Details.updatedAt.toString().split(".").first(),
-          updatedBy = event1Details.updatedBy.username,
+          applicationOrigin = ApplicationOrigin.prisonBail.toString(),
+          personCrn = event1Data.eventDetails.personReference.crn.toString(),
+          personNoms = event1Data.eventDetails.personReference.noms,
+          newStatus = event1Data.eventDetails.newStatus.name,
+          updatedAt = event1Data.eventDetails.updatedAt.toString().split(".").first(),
+          updatedBy = event1Data.eventDetails.updatedBy.username,
           statusDetails = "hdcAndCpp|personalInformation|riskOfSeriousHarm",
         ),
       )
