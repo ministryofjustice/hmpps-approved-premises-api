@@ -72,14 +72,6 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     .build()
 
   @Bean
-  fun cas2Shared(): GroupedOpenApi = GroupedOpenApi.builder()
-    .group("CAS2Shared")
-    .displayName("CAS2 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2-hdc/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
-    .addOpenApiCustomizer(openApiCustomizer())
-    .build()
-
-  @Bean
   fun cas2(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2")
     .displayName("CAS2")
@@ -97,10 +89,11 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
     .build()
 
   @Bean
-  fun cas2v2Shared(): GroupedOpenApi = GroupedOpenApi.builder()
-    .group("CAS2v2Shared")
-    .displayName("CAS2v2 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2-hdc/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
+  fun cas2v2(): GroupedOpenApi = GroupedOpenApi.builder()
+    .group("CAS2v2")
+    .displayName("CAS2v2")
+    .pathsToMatch("/**/cas2v2/**")
+    .pathsToExclude("/**/events/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
