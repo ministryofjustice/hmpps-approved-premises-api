@@ -161,7 +161,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
     }
   }
 
-  private fun createCas3StaffDto(user: UserEntity) = Cas3StaffDto(user.deliusUsername, user.deliusStaffCode)
+  private fun createCas3StaffDto(user: UserEntity) = Cas3StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
 
   private fun createAssessment(
     user: UserEntity,
