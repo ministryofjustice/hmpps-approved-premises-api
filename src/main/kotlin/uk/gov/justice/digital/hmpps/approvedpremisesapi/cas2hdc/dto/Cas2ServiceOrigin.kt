@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto
 
 /**
  * The Entity Model is multi-tenanted, with the Service Origin value used to determine if a given entry corresponds to
