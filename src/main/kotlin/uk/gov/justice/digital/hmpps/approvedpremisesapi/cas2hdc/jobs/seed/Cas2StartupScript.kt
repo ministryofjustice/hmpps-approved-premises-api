@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed
 
 import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component

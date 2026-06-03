@@ -12,8 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.NomisUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.seed.Cas2NomisUserEmailSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.seed.NomisUsernameEmailRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2NomisUserEmailSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.NomisUsernameEmailRow
 
 @ExtendWith(MockKExtension::class)
 class Cas2NomisUserEmailSeedJobTest {
