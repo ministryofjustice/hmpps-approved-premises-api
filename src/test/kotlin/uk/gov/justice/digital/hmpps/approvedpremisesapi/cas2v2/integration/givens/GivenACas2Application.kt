@@ -44,8 +44,9 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
 
 fun IntegrationTestBase.givenASubmittedCas2Application(
   createdBy: Cas2UserEntity? = null,
+  applicationOrigin: ApplicationOrigin = ApplicationOrigin.courtBail,
   crn: String = "CRN_1",
-  noms: String = "NOMS_1",
+  nomsNumber: String = "NOMS_1",
   createdAt: OffsetDateTime = OffsetDateTime.now().minusDays(5),
   submittedAt: OffsetDateTime = OffsetDateTime.now(),
 ) = cas2ApplicationEntityFactory.produceAndPersist {
@@ -55,8 +56,8 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
     },
   )
   withCrn(crn)
-  withApplicationOrigin(ApplicationOrigin.prisonBail)
-  withNomsNumber(noms)
+  withApplicationOrigin(applicationOrigin)
+  withNomsNumber(nomsNumber)
   withCreatedAt(createdAt)
   withData("{}")
   withSubmittedAt(submittedAt)
