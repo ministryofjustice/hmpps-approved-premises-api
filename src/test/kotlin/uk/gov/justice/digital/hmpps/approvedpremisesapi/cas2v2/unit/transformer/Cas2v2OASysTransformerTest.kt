@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2OASysTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -72,6 +73,41 @@ class Cas2v2OASysTransformerTest {
 
       assertThat(result.analysisSuicideSelfharm).isNull()
       assertThat(result.analysisVulnerabilities).isNull()
+    }
+  }
+
+  @Nested
+  inner class ToCas2v2OAsysRoshSummaryDto {
+
+    @Test
+    fun found() {
+      val result = transformer.toOASysRoshSummaryDto(
+        RoshSummaryFactory()
+          .withWhoAtRisk("who at risk answer")
+          .withNatureOfRisk("nature of risk answer")
+          .withInitiationDate(OffsetDateTime.parse("2007-12-03T10:15:30+01:00"))
+          .withDateCompleted(OffsetDateTime.parse("2008-12-03T10:15:30+01:00"))
+          .produce(),
+      )
+
+      assertThat(result.metadata.hasApplicableAssessment).isTrue()
+      assertThat(result.metadata.dateStarted).isEqualTo(Instant.parse("2007-12-03T10:15:30+01:00"))
+      assertThat(result.metadata.dateCompleted).isEqualTo(Instant.parse("2008-12-03T10:15:30+01:00"))
+
+      assertThat(result.whoIsAtRisk).isEqualTo("who at risk answer")
+      assertThat(result.natureOfRisk).isEqualTo("nature of risk answer")
+    }
+
+    @Test
+    fun not_found() {
+      val result = transformer.toOASysRoshSummaryDto(null)
+
+      assertThat(result.metadata.hasApplicableAssessment).isFalse()
+      assertThat(result.metadata.dateStarted).isNull()
+      assertThat(result.metadata.dateCompleted).isNull()
+
+      assertThat(result.whoIsAtRisk).isNull()
+      assertThat(result.natureOfRisk).isNull()
     }
   }
 }
