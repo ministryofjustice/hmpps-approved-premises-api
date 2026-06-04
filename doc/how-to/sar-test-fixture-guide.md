@@ -50,8 +50,8 @@ Once you have verified that the generated `.log` files contain the correct and e
 **Example for CAS3:**
 
 ```bash
-cp src/test/resources/cas3-sar-api-response.json.log src/test/resources/sar/cas3-expected-api-response.json
-cp src/test/resources/cas3-sar-report.html.log src/test/resources/sar/cas3-expected-report.html
+cp src/test/resources/cas3-sar-api-response.json.log src/test/resources/sar/cas3-expected-api-response.json 
+&& cp src/test/resources/cas3-sar-report.html.log src/test/resources/sar/cas3-expected-report.html
 ```
 
 **Example for CAS1:**
