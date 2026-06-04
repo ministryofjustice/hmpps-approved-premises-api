@@ -53,6 +53,7 @@ class Cas2v2ReportsService(
         updatedAt = row.getUpdatedAt(),
         statusDetails = row.getStatusDetails(),
         applicationOrigin = row.getApplicationOrigin(),
+        cohort = row.getCohort()?.toDescription(),
       )
     }
     .toCas2v2Report(outputStream)
@@ -94,6 +95,7 @@ class Cas2v2ReportsService(
     val updatedBy: String,
     val statusDetails: String,
     val applicationOrigin: String,
+    val cohort: String?,
   )
 
   data class SubmittedApplicationReportRow(

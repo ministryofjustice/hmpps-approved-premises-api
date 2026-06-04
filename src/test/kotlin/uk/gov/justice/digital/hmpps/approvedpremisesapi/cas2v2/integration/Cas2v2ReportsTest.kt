@@ -298,7 +298,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
   inner class ApplicationStatusUpdateReport {
 
     @Test
-    fun `streams spreadsheet of cas2v2 Cas2ApplicationStatusUpdatedEvents, last 12 months only`() {
+    fun `provide last 12 months only, excluding hdc`() {
       val old = Instant.now().minusDays(365)
       val newer = Instant.now().minusDays(100)
       val tooOld = Instant.now().minusDays(366)
@@ -404,6 +404,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           eventId = event2.id.toString(),
           applicationId = event2.applicationId.toString(),
           applicationOrigin = ApplicationOrigin.courtBail.toString(),
+          cohort = "Court Bail",
           personCrn = event2Data.eventDetails.personReference.crn.toString(),
           personNoms = event2Data.eventDetails.personReference.noms,
           newStatus = event2Data.eventDetails.newStatus.name,
@@ -415,6 +416,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
           eventId = event1.id.toString(),
           applicationId = event1.applicationId.toString(),
           applicationOrigin = ApplicationOrigin.prisonBail.toString(),
+          cohort = "Court Bail",
           personCrn = event1Data.eventDetails.personReference.crn.toString(),
           personNoms = event1Data.eventDetails.personReference.noms,
           newStatus = event1Data.eventDetails.newStatus.name,
@@ -444,6 +446,95 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationStatusUpdatesReportRow>(ExcessiveColumns.Remove)
 
           assertThat(actual).isEqualTo(expectedDataFrame)
+        }
+    }
+
+    @Test
+    fun `maps cohort correctly`() {
+      var occurredAt = OffsetDateTime.now()
+
+      fun createApplicationWithStatusUpdateEvent(
+        origin: ApplicationOrigin,
+        cohort: Cas2Cohort,
+      ) {
+        val application1 = givenASubmittedCas2Application(
+          applicationOrigin = origin,
+          cohort = cohort,
+        )
+
+        val eventData = Cas2ApplicationStatusUpdatedEvent(
+          id = UUID.randomUUID(),
+          timestamp = Instant.now(),
+          eventType = EventType.applicationStatusUpdated,
+          eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+            .withStatus(
+              Cas2StatusFactory()
+                .withStatusDetails(emptyList())
+                .produce(),
+            )
+            .withUpdatedAt(occurredAt.toInstant())
+            .produce(),
+        )
+
+        domainEventFactory.produceAndPersist {
+          withId(eventData.id)
+          withApplicationId(application1.id)
+          withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+          withOccurredAt(occurredAt)
+          withData(jsonMapper.writeValueAsString(eventData))
+        }
+
+        occurredAt -= Duration.ofSeconds(10)
+      }
+
+      createApplicationWithStatusUpdateEvent(ApplicationOrigin.prisonBail, Cas2Cohort.PRISON_BAIL)
+      createApplicationWithStatusUpdateEvent(ApplicationOrigin.courtBail, Cas2Cohort.COURT_BAIL)
+      createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.ATCR)
+      createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.HCRD)
+      createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.HEFR)
+      createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.ISC)
+      createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.RARR)
+      createApplicationWithStatusUpdateEvent(ApplicationOrigin.other, Cas2Cohort.FROM_AP)
+
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+      )
+
+      webTestClient.get()
+        .uri("/cas2v2/reports/application-status-updates")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .consumeWith {
+          val dataFrame = DataFrame.readExcel(it.responseBody!!.inputStream())
+
+          assertThat(dataFrame[0]["applicationOrigin"]).isEqualTo("prisonBail")
+          assertThat(dataFrame[0]["cohort"]).isEqualTo("Prison Bail")
+
+          assertThat(dataFrame[1]["applicationOrigin"]).isEqualTo("courtBail")
+          assertThat(dataFrame[1]["cohort"]).isEqualTo("Court Bail")
+
+          assertThat(dataFrame[2]["applicationOrigin"]).isEqualTo("other")
+          assertThat(dataFrame[2]["cohort"]).isEqualTo("Alternative to custodial recall")
+
+          assertThat(dataFrame[3]["applicationOrigin"]).isEqualTo("other")
+          assertThat(dataFrame[3]["cohort"]).isEqualTo("Homeless at conditional release date")
+
+          assertThat(dataFrame[4]["applicationOrigin"]).isEqualTo("other")
+          assertThat(dataFrame[4]["cohort"]).isEqualTo("Homeless at end of fixed-term recall")
+
+          assertThat(dataFrame[5]["applicationOrigin"]).isEqualTo("other")
+          assertThat(dataFrame[5]["cohort"]).isEqualTo("Intensive supervision courts")
+
+          assertThat(dataFrame[6]["applicationOrigin"]).isEqualTo("other")
+          assertThat(dataFrame[6]["cohort"]).isEqualTo("Risk Assessed Recall Review")
+
+          assertThat(dataFrame[7]["applicationOrigin"]).isEqualTo("other")
+          assertThat(dataFrame[7]["cohort"]).isEqualTo("Referral from Approved Premises")
         }
     }
   }
