@@ -103,33 +103,6 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
     }
   }
 
-  private fun createApplicationSubmittedDomainEvent(
-    application: Cas2ApplicationEntity,
-    occurredAt: OffsetDateTime,
-  ): CreatedEvent {
-    val eventData = Cas2ApplicationSubmittedEvent(
-      id = UUID.randomUUID(),
-      timestamp = Instant.now(),
-      eventType = EventType.applicationSubmitted,
-      eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
-        .withSubmittedAt(occurredAt.toInstant())
-        .produce(),
-    )
-    val event = domainEventFactory.produceAndPersist {
-      withId(eventData.id)
-      withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
-      withData(jsonMapper.writeValueAsString(eventData))
-      withOccurredAt(occurredAt)
-      withApplicationId(application.id)
-    }
-    return CreatedEvent(event, eventData)
-  }
-
-  private data class CreatedEvent(
-    val event: DomainEventEntity,
-    val data: Cas2ApplicationSubmittedEvent,
-  )
-
   @Nested
   inner class SubmittedApplicationReport {
 
@@ -663,4 +636,32 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       assertThat(dataFrame[7]["cohort"]).isEqualTo("Referral from Approved Premises")
     }
   }
+
+  private fun createApplicationSubmittedDomainEvent(
+    application: Cas2ApplicationEntity,
+    occurredAt: OffsetDateTime,
+  ): CreatedEvent {
+    val eventData = Cas2ApplicationSubmittedEvent(
+      id = UUID.randomUUID(),
+      timestamp = Instant.now(),
+      eventType = EventType.applicationSubmitted,
+      eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
+        .withSubmittedAt(occurredAt.toInstant())
+        .produce(),
+    )
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventData.id)
+      withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
+      withData(jsonMapper.writeValueAsString(eventData))
+      withOccurredAt(occurredAt)
+      withApplicationId(application.id)
+    }
+    return CreatedEvent(event, eventData)
+  }
+
+  private data class CreatedEvent(
+    val event: DomainEventEntity,
+    val data: Cas2ApplicationSubmittedEvent,
+  )
+
 }
