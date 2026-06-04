@@ -27,6 +27,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
+  implementation("org.springframework.data:spring-data-envers")
   implementation("io.hypersistence:hypersistence-utils-hibernate-71:3.15.2")
   implementation("org.hibernate.orm:hibernate-spatial")
   implementation("org.hibernate.orm:hibernate-jcache")
@@ -92,6 +93,7 @@ dependencies {
   testImplementation("com.ninja-squad:springmockk:5.0.1")
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
   testImplementation("org.zalando:logbook-spring-boot-starter:4.0.4")
+  testImplementation("org.springframework.security:spring-security-test")
 
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.43") {
     exclude(group = "io.swagger.core.v3")
