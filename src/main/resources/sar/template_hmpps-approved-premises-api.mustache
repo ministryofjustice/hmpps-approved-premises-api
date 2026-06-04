@@ -36,6 +36,24 @@
                 <tr><td>Home Detention Curfew eligibility date</td><td>{{ optionalValue (formatDate hdc_eligibility_date) }}</td></tr>
             </table>
 
+            <h5>Unsubmitted Document</h5>
+            {{^document}}
+                {{#data}}
+                    <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
+                    <table class="summary-list">
+                        {{#each .}}
+                            <tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ this }}</td></tr>
+                        {{/each}}
+                    </table>
+                {{/data}}
+                {{^data}}
+                    <p>No Data Held</p>
+                {{/data}}
+            {{/document}}
+            {{#document}}
+                <p>No Data Held</p>
+            {{/document}}
+
             <h5>Document</h5>
             {{#document}}
                 {{#sections}}
@@ -239,6 +257,24 @@
                 <tr><td>Preferred areas</td><td>{{ optionalValue preferred_areas }}</td></tr>
                 <tr><td>Home Detention Curfew eligibility date</td><td>{{ optionalValue (formatDate hdc_eligibility_date) }}</td></tr>
             </table>
+
+            <h5>Unsubmitted Document</h5>
+            {{^document}}
+                {{#data}}
+                    <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
+                    <table class="summary-list">
+                        {{#each .}}
+                            <tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ this }}</td></tr>
+                        {{/each}}
+                    </table>
+                {{/data}}
+                {{^data}}
+                    <p>No Data Held</p>
+                {{/data}}
+            {{/document}}
+            {{#document}}
+                <p>No Data Held</p>
+            {{/document}}
 
             <h5>Document</h5>
             {{#document}}
@@ -571,6 +607,24 @@
                 <p>No Data Held</p>
             {{/risk_ratings}}
 
+            <h5>Unsubmitted Document</h5>
+            {{^document}}
+                {{#data}}
+                    <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
+                    <table class="summary-list">
+                        {{#each .}}
+                            <tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ this }}</td></tr>
+                        {{/each}}
+                    </table>
+                {{/data}}
+                {{^data}}
+                    <p>No Data Held</p>
+                {{/data}}
+            {{/document}}
+            {{#document}}
+                <p>No Data Held</p>
+            {{/document}}
+
             <h5>Document</h5>
             {{#document}}
                 <p><b>Offender Assessment System Import</b></p>
@@ -786,6 +840,24 @@
                 </tr>
             </table>
 
+            <h5>Unsubmitted Document</h5>
+            {{^document}}
+                {{#data}}
+                    <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
+                    <table class="summary-list">
+                        {{#each .}}
+                            <tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ this }}</td></tr>
+                        {{/each}}
+                    </table>
+                {{/data}}
+                {{^data}}
+                    <p>No Data Held</p>
+                {{/data}}
+            {{/document}}
+            {{#document}}
+                <p>No Data Held</p>
+            {{/document}}
+
             <h5>Document</h5>
             {{#document}}
                 <p><b>Make a Decision</b></p>
@@ -977,6 +1049,24 @@
                     <td>{{ optionalValue withdrawal_reason }}</td>
                 </tr>
             </table>
+
+            <h5>Unsubmitted Document</h5>
+            {{^document}}
+                {{#data}}
+                    <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
+                    <table class="summary-list">
+                        {{#each .}}
+                            <tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ this }}</td></tr>
+                        {{/each}}
+                    </table>
+                {{/data}}
+                {{^data}}
+                    <p>No Data Held</p>
+                {{/data}}
+            {{/document}}
+            {{#document}}
+                <p>No Data Held</p>
+            {{/document}}
 
             <h5>Document</h5>
             {{#document}}
@@ -1859,6 +1949,24 @@
                     <td>{{ optionalValue (formatDate person_release_date) }}</td>
                 </tr>
             </table>
+
+            <h5>Unsubmitted Document</h5>
+            {{^document}}
+                {{#data}}
+                    <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
+                    <table class="summary-list">
+                        {{#each .}}
+                            <tr><td class="data-column-50">{{ @key }}</td><td class="data-column-50">{{ this }}</td></tr>
+                        {{/each}}
+                    </table>
+                {{/data}}
+                {{^data}}
+                    <p>No Data Held</p>
+                {{/data}}
+            {{/document}}
+            {{#document}}
+                <p>No Data Held</p>
+            {{/document}}
 
             <h5>Document</h5>
             {{#document}}

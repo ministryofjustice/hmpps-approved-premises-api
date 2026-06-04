@@ -18,6 +18,7 @@ class CAS3SubjectAccessRequestRepository(
         select
              a.crn,
              a.noms_number,
+             a."data",
              taa."name" as offender_name,
              a."document",
              a.created_at,
@@ -73,6 +74,7 @@ class CAS3SubjectAccessRequestRepository(
                 app.crn,
                 app.noms_number,
                 u."name" as assessor_name,
+                assess."data" ,
                 assess."document",
                 assess.created_at,
                 assess.allocated_at,
