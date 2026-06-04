@@ -102,6 +102,16 @@ hmpps:
     url: http://localhost:#WIREMOCK_PORT/auth
     client-id: integration-test-client-id
     client-secret: secret
+  sar:
+    template:
+      path: /sar/template_hmpps-approved-premises-api.mustache
+      enabled: true
+    tests:
+      attachments-expected: false
+      expected-flyway-schema-version: 20260209120000000
+      expected-jpa-entity-schema:
+        path: /sar/cas-entities-schema.json
+
 
 services:
   default:
