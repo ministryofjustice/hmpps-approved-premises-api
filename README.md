@@ -18,17 +18,13 @@ To install Java you can use sdkman:
 
 ## Running Tests
 
-To run tests, you'll need to start a few docker dependencies using:
+To run tests, you'll need to first start some dependencies using:
 
 ```shell
-/script/test_database
+./script/test_database
 ```
 
-You can then run tests in intellij or via the command line e.g.
-
-```shell
-/script/test
-```
+Whilst you can run all the tests locally using `./script/test`, this takes quite a long time. Instead, it's recommended that you run specific tests of interest locally and rely on github to run the full suite which runs batches concurrently.
 
 ## Running the Application
 
