@@ -226,7 +226,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
         roles = listOf("ROLE_CAS2_MI"),
       )
 
-      val responseBody = webTestClient.get()
+      webTestClient.get()
         .uri("/cas2v2/reports/submitted-applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
@@ -401,7 +401,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+        roles = listOf("ROLE_CAS2_MI"),
       )
 
       webTestClient.get()
@@ -470,7 +470,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+        roles = listOf("ROLE_CAS2_MI"),
       )
 
       webTestClient.get()
@@ -546,7 +546,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+        roles = listOf("ROLE_CAS2_MI"),
       )
 
       webTestClient.get()
@@ -594,10 +594,10 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+        roles = listOf("ROLE_CAS2_MI"),
       )
 
-      val responseBody = webTestClient.get()
+      webTestClient.get()
         .uri("/cas2v2/reports/unsubmitted-applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
