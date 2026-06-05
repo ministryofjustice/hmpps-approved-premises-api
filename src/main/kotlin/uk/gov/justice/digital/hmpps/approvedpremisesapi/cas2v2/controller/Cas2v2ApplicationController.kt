@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
@@ -153,23 +152,19 @@ class Cas2v2ApplicationController(
   @PutMapping("/applications/{applicationId}")
   fun applicationsApplicationIdPut(
     @PathVariable applicationId: UUID,
-    @RequestBody body: UpdateApplication,
+    @RequestBody body: UpdateCas2v2Application,
   ): ResponseEntity<Cas2v2Application> {
     val user = userService.getUserForRequest()
 
     val serializedData = jsonMapper.writeValueAsString(body.data)
 
-    val applicationResult = when (body) {
-      is UpdateCas2v2Application -> cas2v2ApplicationService.updateCas2v2Application(
-        applicationId = applicationId,
-        data = serializedData,
-        user,
-        body.bailHearingDate,
-        body.cohort,
-      )
-
-      else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
-    }
+    val applicationResult = cas2v2ApplicationService.updateCas2v2Application(
+      applicationId = applicationId,
+      data = serializedData,
+      user,
+      body.bailHearingDate,
+      body.cohort,
+    )
 
     val entity = extractEntityFromCasResult(applicationResult)
     return ResponseEntity.ok(getPersonDetailAndTransform(entity))
