@@ -27,7 +27,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
-  implementation("io.hypersistence:hypersistence-utils-hibernate-71:3.15.2")
+  implementation("io.hypersistence:hypersistence-utils-hibernate-71:3.15.3")
   implementation("org.hibernate.orm:hibernate-spatial")
   implementation("org.hibernate.orm:hibernate-jcache")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
@@ -50,7 +50,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("io.sentry:sentry-spring-boot-4:8.43.0")
+  implementation("io.sentry:sentry-spring-boot-4:8.43.1")
 
   runtimeOnly("org.ehcache:ehcache")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
@@ -66,7 +66,7 @@ dependencies {
   }
   implementation("org.apache.poi:poi-ooxml:5.5.1")
 
-  implementation("io.arrow-kt:arrow-core:2.2.2.1")
+  implementation("io.arrow-kt:arrow-core:2.2.3")
 
   implementation("com.opencsv:opencsv:5.12.0")
 
