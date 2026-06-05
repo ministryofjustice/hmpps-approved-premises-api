@@ -21,6 +21,7 @@ class Cas2HdcExternalUsersSeedJob(
     email = columns["email"]!!.trim(),
   )
 
+  @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
   override fun processRow(row: ExternalUserSeedCsvRow) {
     log.info("Setting up ${row.username}")
 

@@ -22,6 +22,7 @@ class Cas2HdcNomisUsersSeedJob(
     email = columns["email"]!!.trim(),
   )
 
+  @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
   override fun processRow(row: NomisUserSeedCsvRow) {
     log.info("Setting up ${row.nomisUsername}")
 
@@ -51,6 +52,7 @@ class Cas2HdcNomisUsersSeedJob(
     )
   }
 
+  @SuppressWarnings("MagicNumber")
   private fun randomId(): Long = Random.nextInt(100000, 900000).toLong()
 }
 

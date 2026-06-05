@@ -52,13 +52,13 @@ class Cas2HdcApplicationsSeedJob(
     referringPrisonCode = columns["referringPrisonCode"]!!.trim(),
   )
 
+  @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught", "ThrowsCount")
   override fun processRow(row: Cas2HdcApplicationSeedCsvRow) {
     log.info("Setting up Application id ${row.id}")
     if (repository.findById(row.id).isPresent) {
       return log.info("Skipping ${row.id}: already seeded")
     }
 
-    @SuppressWarnings("TooGenericExceptionThrown")
     val applicant = if (row.referringPrisonCode != "") {
       cas2UserRepository.findByUsernameAndUserTypeAndServiceOriginAndActiveNomisCaseloadId(
         row.createdBy,

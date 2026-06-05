@@ -39,6 +39,7 @@ class Cas2HdcUpdateAssessmentStatusSeedJob(
     newStatusDetails = columns["newStatusDetails"]?.split("||") ?: emptyList(),
   )
 
+  @SuppressWarnings("ThrowsCount")
   override fun processRow(row: Cas2HdcAssessmentUpdateStatusSeedRow) {
     log.info(
       "Processing assessment cancellation for assessment ${row.assessmentId} " +
