@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# script/database: Launch the integration test development database
+# script/test_database: Launch the integration test dependencies
 
 set -e
 
@@ -8,9 +8,9 @@ cd "$(dirname "$0")/.."
 
 script/utils/launch-docker.sh
 
-echo "==> Starting integration test database..."
+echo "==> Starting integration test dependencies..."
 if [ "$(uname -m)" = "arm64" ]; then
-  docker compose -f script/test-database/docker-compose.test.yml -f script/test-database/docker-compose.test.arm64.yml up -d
+  docker compose -f script/test-dependencies/docker-compose.test.yml -f script/test-dependencies/docker-compose.test.arm64.yml up -d
 else
-  docker compose -f script/test-database/docker-compose.test.yml up -d
+  docker compose -f script/test-dependencies/docker-compose.test.yml up -d
 fi
