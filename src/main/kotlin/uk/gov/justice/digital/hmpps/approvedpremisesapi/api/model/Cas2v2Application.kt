@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.model.Cas2TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2TimelineEvent
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID

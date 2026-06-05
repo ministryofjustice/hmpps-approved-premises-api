@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.model.Cas2ApplicationNote
 
 @Component("Cas2ApplicationNoteTransformer")
 class ApplicationNotesTransformer {
