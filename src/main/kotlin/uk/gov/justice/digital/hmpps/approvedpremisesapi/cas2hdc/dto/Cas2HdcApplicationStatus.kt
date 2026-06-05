@@ -12,7 +12,7 @@ import java.util.UUID
  * @param description
  * @param statusDetails
  */
-data class Cas2ApplicationStatus(
+data class Cas2HdcApplicationStatus(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
@@ -25,5 +25,5 @@ data class Cas2ApplicationStatus(
   @Schema(example = "More information about the application has been requested from the POM (Prison Offender Manager).", required = true, description = "")
   @get:JsonProperty("description", required = true) val description: String,
 
-  @get:JsonProperty("statusDetails", required = true) val statusDetails: List<Cas2ApplicationStatusDetail>,
+  @get:JsonProperty("statusDetails", required = true) val statusDetails: List<Cas2HdcApplicationStatusDetail>,
 )

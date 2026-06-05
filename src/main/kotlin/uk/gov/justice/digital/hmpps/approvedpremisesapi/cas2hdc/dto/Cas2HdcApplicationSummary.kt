@@ -30,7 +30,7 @@ import java.util.UUID
  * @param applicationOrigin
  * @param bailHearingDate
  */
-data class Cas2ApplicationSummary(
+data class Cas2HdcApplicationSummary(
 
   @get:JsonProperty("type", required = true) val type: String,
 
@@ -58,7 +58,7 @@ data class Cas2ApplicationSummary(
 
   @get:JsonProperty("createdByUserName") val createdByUserName: String? = null,
 
-  @get:JsonProperty("latestStatusUpdate") val latestStatusUpdate: LatestCas2StatusUpdate? = null,
+  @get:JsonProperty("latestStatusUpdate") val latestStatusUpdate: Cas2HdcLatestStatusUpdate? = null,
 
   @get:JsonProperty("risks") val risks: PersonRisks? = null,
 

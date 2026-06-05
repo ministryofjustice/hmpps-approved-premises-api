@@ -13,7 +13,7 @@ import java.util.UUID
  * @param createdAt
  * @param id
  */
-data class Cas2ApplicationNote(
+data class Cas2HdcApplicationNote(
 
   @Schema(example = "roger@example.com", required = true, description = "")
   @get:JsonProperty("email", required = true) val email: String,

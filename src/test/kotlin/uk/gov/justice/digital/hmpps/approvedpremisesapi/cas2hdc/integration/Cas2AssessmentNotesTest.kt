@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.NewCas2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcNewApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
@@ -108,7 +108,7 @@ class Cas2AssessmentNotesTest(
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
-              NewCas2ApplicationNote(note = "New note content"),
+              Cas2HdcNewApplicationNote(note = "New note content"),
             )
             .exchange()
             .expectStatus()
@@ -120,7 +120,7 @@ class Cas2AssessmentNotesTest(
           Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
           val responseBody =
-            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+            jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2HdcApplicationNote>() {})
 
           Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
@@ -180,7 +180,7 @@ class Cas2AssessmentNotesTest(
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .bodyValue(
-                  NewCas2ApplicationNote(note = "New note content"),
+                  Cas2HdcNewApplicationNote(note = "New note content"),
                 )
                 .exchange()
                 .expectStatus()
@@ -192,7 +192,7 @@ class Cas2AssessmentNotesTest(
               Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
               val responseBody =
-                jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2HdcApplicationNote>() {})
 
               Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
@@ -248,7 +248,7 @@ class Cas2AssessmentNotesTest(
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.cas2.value)
                   .bodyValue(
-                    NewCas2ApplicationNote(note = "New note content"),
+                    Cas2HdcNewApplicationNote(note = "New note content"),
                   )
                   .exchange()
                   .expectStatus()
@@ -293,7 +293,7 @@ class Cas2AssessmentNotesTest(
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.cas2.value)
                   .bodyValue(
-                    NewCas2ApplicationNote(note = "New prison note content"),
+                    Cas2HdcNewApplicationNote(note = "New prison note content"),
                   )
                   .exchange()
                   .expectStatus()
@@ -305,7 +305,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
                 val responseBody =
-                  jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                  jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2HdcApplicationNote>() {})
 
                 Assertions.assertThat(responseBody.body).isEqualTo("New prison note content")
 
@@ -362,7 +362,7 @@ class Cas2AssessmentNotesTest(
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .bodyValue(
-                  NewCas2ApplicationNote(note = "New note content"),
+                  Cas2HdcNewApplicationNote(note = "New note content"),
                 )
                 .exchange()
                 .expectStatus()
@@ -374,7 +374,7 @@ class Cas2AssessmentNotesTest(
               Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
               val responseBody =
-                jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2HdcApplicationNote>() {})
 
               Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
@@ -430,7 +430,7 @@ class Cas2AssessmentNotesTest(
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.cas2.value)
                   .bodyValue(
-                    NewCas2ApplicationNote(note = "New note content"),
+                    Cas2HdcNewApplicationNote(note = "New note content"),
                   )
                   .exchange()
                   .expectStatus()
@@ -475,7 +475,7 @@ class Cas2AssessmentNotesTest(
                   .header("Authorization", "Bearer $jwt")
                   .header("X-Service-Name", ServiceName.cas2.value)
                   .bodyValue(
-                    NewCas2ApplicationNote(note = "New prison note content"),
+                    Cas2HdcNewApplicationNote(note = "New prison note content"),
                   )
                   .exchange()
                   .expectStatus()
@@ -487,7 +487,7 @@ class Cas2AssessmentNotesTest(
                 Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
 
                 val responseBody =
-                  jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+                  jsonMapper.readValue(rawResponseBody, object : TypeReference<Cas2HdcApplicationNote>() {})
 
                 Assertions.assertThat(responseBody.body).isEqualTo("New prison note content")
 

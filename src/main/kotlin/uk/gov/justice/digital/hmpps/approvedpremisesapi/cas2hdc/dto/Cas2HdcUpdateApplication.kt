@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 /**
  *
  */
-class UpdateCas2Application(
+class Cas2HdcUpdateApplication(
 
   @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
 

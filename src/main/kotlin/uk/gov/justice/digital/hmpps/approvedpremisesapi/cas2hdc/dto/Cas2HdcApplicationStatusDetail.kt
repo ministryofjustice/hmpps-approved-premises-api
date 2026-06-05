@@ -10,7 +10,7 @@ import java.util.UUID
  * @param name
  * @param label
  */
-data class Cas2ApplicationStatusDetail(
+data class Cas2HdcApplicationStatusDetail(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 

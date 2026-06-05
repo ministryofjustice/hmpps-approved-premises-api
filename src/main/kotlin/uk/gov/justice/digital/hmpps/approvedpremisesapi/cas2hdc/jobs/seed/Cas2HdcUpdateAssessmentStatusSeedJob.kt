@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
@@ -47,7 +47,7 @@ class Cas2HdcUpdateAssessmentStatusSeedJob(
     )
 
     val assessment =
-      assessmentRepository.findByIdAndServiceOrigin(row.assessmentId, Cas2ServiceOrigin.HDC)
+      assessmentRepository.findByIdAndServiceOrigin(row.assessmentId, Cas2HdcServiceOrigin.HDC)
         ?: throw SeedException(
           "Assessment with id ${row.assessmentId} not found",
         )
@@ -77,7 +77,7 @@ class Cas2HdcUpdateAssessmentStatusSeedJob(
 
     cas2UpdateService.createForAssessment(
       assessmentId = assessment.id,
-      statusUpdate = Cas2AssessmentStatusUpdate(
+      statusUpdate = Cas2HdcAssessmentStatusUpdate(
         newStatus = row.newStatus,
         newStatusDetails = row.newStatusDetails,
       ),

@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2StatusUpdateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.LatestCas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcLatestStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
@@ -16,7 +16,7 @@ class Cas2HdcStatusUpdateTransformer(
 
   fun transformJpaToApi(
     jpa: Cas2StatusUpdateEntity,
-  ): Cas2StatusUpdate = Cas2StatusUpdate(
+  ): Cas2HdcStatusUpdate = Cas2HdcStatusUpdate(
     id = jpa.id,
     name = jpa.status().name,
     label = jpa.label,
@@ -26,15 +26,15 @@ class Cas2HdcStatusUpdateTransformer(
     statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
   )
 
-  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2StatusUpdateDetailEntity): Cas2StatusUpdateDetail = Cas2StatusUpdateDetail(
+  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2StatusUpdateDetailEntity): Cas2HdcStatusUpdateDetail = Cas2HdcStatusUpdateDetail(
     id = jpa.id,
     name = jpa.statusDetail(jpa.statusUpdate.statusId, jpa.statusDetailId).name,
     label = jpa.label,
   )
 
-  fun transformJpaSummaryToLatestStatusUpdateApi(jpa: Cas2ApplicationSummaryEntity): LatestCas2StatusUpdate? {
+  fun transformJpaSummaryToLatestStatusUpdateApi(jpa: Cas2ApplicationSummaryEntity): Cas2HdcLatestStatusUpdate? {
     if (jpa.latestStatusUpdateStatusId !== null) {
-      return LatestCas2StatusUpdate(
+      return Cas2HdcLatestStatusUpdate(
         statusId = UUID.fromString(jpa.latestStatusUpdateStatusId!!),
         label = jpa.latestStatusUpdateLabel!!,
       )

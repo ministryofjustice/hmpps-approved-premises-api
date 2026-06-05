@@ -4,8 +4,8 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcTimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -19,16 +19,16 @@ import java.util.UUID
 
 class Cas2v2TimelineEventsTransformerTest {
   private val user = Cas2UserEntityFactory()
-    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     .produce()
 
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
     .withCreatedByUser(user)
-    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
 
   private val submittedCas2ApplicationFactory = Cas2ApplicationEntityFactory()
     .withCreatedByUser(user)
-    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     .withSubmittedAt(OffsetDateTime.now())
 
   private val timelineEventTransformer = Cas2v2TimelineEventsTransformer()
@@ -44,13 +44,13 @@ class Cas2v2TimelineEventsTransformerTest {
         .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
           Cas2UserEntityFactory()
-            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
             .withName("Anne Assessor")
             .produce(),
         ).produce()
       val assessor = Cas2UserEntityFactory()
         .withUserType(Cas2UserType.EXTERNAL)
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
         .produce()
       val statusWithDetailCreatedAt = OffsetDateTime.now().minusDays(1)
       val statusUpdateWithDetailsEntity = Cas2StatusUpdateEntityFactory()
@@ -81,7 +81,7 @@ class Cas2v2TimelineEventsTransformerTest {
         .withApplication(submittedCas2ApplicationFactory.produce())
         .withAssessor(
           Cas2UserEntityFactory()
-            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
             .withName("Anne Other Assessor")
             .withUserType(Cas2UserType.EXTERNAL)
             .produce(),
@@ -89,7 +89,7 @@ class Cas2v2TimelineEventsTransformerTest {
         .produce()
 
       val nomisUser = Cas2UserEntityFactory()
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
         .withName("Some Nomis User")
         .produce()
 
@@ -101,7 +101,7 @@ class Cas2v2TimelineEventsTransformerTest {
         application = submittedCas2ApplicationFactory.produce(),
         body = "a comment",
         assessment = Cas2AssessmentEntityFactory()
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
           .produce(),
       )
 
@@ -118,28 +118,28 @@ class Cas2v2TimelineEventsTransformerTest {
 
       Assertions.assertThat(transformation).isEqualTo(
         listOf(
-          Cas2TimelineEvent(
+          Cas2HdcTimelineEvent(
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusWithDetailCreatedAt.toInstant(),
             label = statusUpdateWithDetailsEntity.label,
             createdByName = statusUpdateWithDetailsEntity.assessor.name,
             body = "first detail, second detail",
           ),
-          Cas2TimelineEvent(
+          Cas2HdcTimelineEvent(
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusCreatedAt.toInstant(),
             label = statusUpdateEntity.label,
             createdByName = statusUpdateEntity.assessor.name,
             body = null,
           ),
-          Cas2TimelineEvent(
+          Cas2HdcTimelineEvent(
             type = TimelineEventType.cas2Note,
             occurredAt = noteCreatedAt.toInstant(),
             label = "Note",
             createdByName = note.createdByUser.name,
             body = "a comment",
           ),
-          Cas2TimelineEvent(
+          Cas2HdcTimelineEvent(
             type = TimelineEventType.cas2ApplicationSubmitted,
             occurredAt = submittedAt.toInstant(),
             label = "Application submitted",
@@ -160,7 +160,7 @@ class Cas2v2TimelineEventsTransformerTest {
       val transformation = timelineEventTransformer.transformApplicationToTimelineEvents(jpaEntity)
 
       Assertions.assertThat(transformation).isEqualTo(
-        emptyList<Cas2TimelineEvent>(),
+        emptyList<Cas2HdcTimelineEvent>(),
       )
     }
   }

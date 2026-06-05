@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcTimelineEvent
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -32,7 +32,7 @@ data class Cas2v2Application(
 
   @get:JsonProperty("assessment") val assessment: Cas2v2Assessment? = null,
 
-  @get:JsonProperty("timelineEvents") val timelineEvents: List<Cas2TimelineEvent>? = null,
+  @get:JsonProperty("timelineEvents") val timelineEvents: List<Cas2HdcTimelineEvent>? = null,
 
   @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
 

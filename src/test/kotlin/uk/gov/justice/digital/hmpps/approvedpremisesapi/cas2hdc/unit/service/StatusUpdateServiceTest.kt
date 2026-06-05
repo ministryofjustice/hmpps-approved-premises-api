@@ -16,11 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -67,7 +67,7 @@ class StatusUpdateServiceTest {
     .produce()
   private val applicationId = application.id
   val assessment = Cas2AssessmentEntityFactory().withApplication(application).produce()
-  private val mockStatusFinder = mockk<Cas2PersistedApplicationStatusFinder>()
+  private val mockStatusFinder = mockk<Cas2HdcPersistedApplicationStatusFinder>()
   private val applicationUrlTemplate = "http://example.com/application-status-updated/#eventId"
   private val applicationOverviewUrlTemplate = "http://example.com/application/#id/overview"
 
@@ -84,21 +84,21 @@ class StatusUpdateServiceTest {
     applicationOverviewUrlTemplate,
   )
 
-  val activeStatus = Cas2PersistedApplicationStatus(
+  val activeStatus = Cas2HdcPersistedApplicationStatus(
     id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
     name = "activeStatusName",
     label = "",
     description = "",
     isActive = true,
   )
-  private val applicationStatusUpdate = Cas2AssessmentStatusUpdate(newStatus = activeStatus.name)
+  private val applicationStatusUpdate = Cas2HdcAssessmentStatusUpdate(newStatus = activeStatus.name)
 
-  val statusDetail = Cas2PersistedApplicationStatusDetail(
+  val statusDetail = Cas2HdcPersistedApplicationStatusDetail(
     id = UUID.fromString("390e81d4-2ace-4e76-a9e3-5efa47be606e"),
     name = "exampleStatusDetail",
     label = "",
   )
-  val activeStatusWithDetail = Cas2PersistedApplicationStatus(
+  val activeStatusWithDetail = Cas2HdcPersistedApplicationStatus(
     id = UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"),
     name = "activeStatusWithDetail",
     label = "",
@@ -108,7 +108,7 @@ class StatusUpdateServiceTest {
     ),
     isActive = true,
   )
-  private val applicationStatusUpdateWithDetail = Cas2AssessmentStatusUpdate(
+  private val applicationStatusUpdateWithDetail = Cas2HdcAssessmentStatusUpdate(
     newStatus = activeStatusWithDetail.name,
     newStatusDetails = listOf(statusDetail.name),
   )
@@ -126,14 +126,14 @@ class StatusUpdateServiceTest {
 
     @Test
     fun `returns true when the given newStatus is valid`() {
-      val validUpdate = Cas2AssessmentStatusUpdate(newStatus = "activeStatusName")
+      val validUpdate = Cas2HdcAssessmentStatusUpdate(newStatus = "activeStatusName")
 
       assertThat(cas2HdcStatusUpdateService.isValidStatus(validUpdate)).isTrue()
     }
 
     @Test
     fun `returns false when the given newStatus is NOT valid`() {
-      val invalidUpdate = Cas2AssessmentStatusUpdate(newStatus = "invalidStatus")
+      val invalidUpdate = Cas2HdcAssessmentStatusUpdate(newStatus = "invalidStatus")
 
       assertThat(cas2HdcStatusUpdateService.isValidStatus(invalidUpdate)).isFalse()
     }
@@ -153,7 +153,7 @@ class StatusUpdateServiceTest {
           .withStatusId(activeStatus.id)
           .produce()
 
-        every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC) } answers
+        every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2HdcServiceOrigin.HDC) } answers
           {
             assessment
           }
@@ -233,7 +233,7 @@ class StatusUpdateServiceTest {
 
       @BeforeEach
       fun setUp() {
-        every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC) } answers
+        every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2HdcServiceOrigin.HDC) } answers
           {
             null
           }
@@ -276,7 +276,7 @@ class StatusUpdateServiceTest {
             label = statusDetail.label,
           )
 
-          every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC) } answers
+          every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2HdcServiceOrigin.HDC) } answers
             {
               assessment
             }
@@ -382,7 +382,7 @@ class StatusUpdateServiceTest {
           val assessmentWithNoEmail = Cas2AssessmentEntityFactory()
             .withApplication(submittedApplicationWithNoReferrerEmail).produce()
 
-          every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentWithNoEmail.id, Cas2ServiceOrigin.HDC) } answers
+          every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentWithNoEmail.id, Cas2HdcServiceOrigin.HDC) } answers
             {
               assessmentWithNoEmail
             }
@@ -410,7 +410,7 @@ class StatusUpdateServiceTest {
 
         @BeforeEach
         fun setUp() {
-          every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC) } answers
+          every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2HdcServiceOrigin.HDC) } answers
             {
               null
             }

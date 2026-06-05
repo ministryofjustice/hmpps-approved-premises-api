@@ -13,10 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.UpdateCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
@@ -43,8 +43,8 @@ class Cas2HdcApplicationsController(
   fun getCas2HdcApplicationSummaries(
     @RequestParam assignmentType: AssignmentType,
     @RequestParam page: Int?,
-  ): ResponseEntity<List<Cas2ApplicationSummary>> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
+  ): ResponseEntity<List<Cas2HdcApplicationSummary>> {
+    val user = userService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
 
     if (user.activeNomisCaseloadId == null) throw ForbiddenProblem()
 
@@ -61,16 +61,16 @@ class Cas2HdcApplicationsController(
   }
 
   @GetMapping("/applications/{applicationId}")
-  fun getCas2HdcApplication(@PathVariable applicationId: UUID): ResponseEntity<Cas2Application> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
+  fun getCas2HdcApplication(@PathVariable applicationId: UUID): ResponseEntity<Cas2HdcApplication> {
+    val user = userService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
     val application = extractEntityFromCasResult(applicationService.getApplicationForUser(applicationId, user))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
   @Transactional
   @PostMapping("/applications")
-  fun createCas2HdcApplication(@RequestBody body: NewApplication): ResponseEntity<Cas2Application> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
+  fun createCas2HdcApplication(@RequestBody body: NewApplication): ResponseEntity<Cas2HdcApplication> {
+    val user = userService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
     val applicationResult = applicationService.createApplication(personInfo, user)
 
@@ -85,9 +85,9 @@ class Cas2HdcApplicationsController(
   @PutMapping("/applications/{applicationId}")
   fun updateCas2HdcApplication(
     @PathVariable applicationId: UUID,
-    @RequestBody body: UpdateCas2Application,
-  ): ResponseEntity<Cas2Application> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
+    @RequestBody body: Cas2HdcUpdateApplication,
+  ): ResponseEntity<Cas2HdcApplication> {
+    val user = userService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
 
     val serializedData = jsonMapper.writeValueAsString(body.data)
 
@@ -104,12 +104,12 @@ class Cas2HdcApplicationsController(
   @Transactional
   @PutMapping("/applications/{applicationId}/abandon")
   fun abandonCas2HdcApplication(@PathVariable applicationId: UUID): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
+    val user = userService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
     extractEntityFromCasResult(applicationService.abandonApplication(applicationId, user))
     return ResponseEntity.ok(Unit)
   }
 
-  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<Cas2ApplicationSummary> {
+  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<Cas2HdcApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
@@ -121,7 +121,7 @@ class Cas2HdcApplicationsController(
 
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
-  ): Cas2Application {
+  ): Cas2HdcApplication {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
     return cas2HdcApplicationsTransformer.transformJpaToApi(application, personInfo)

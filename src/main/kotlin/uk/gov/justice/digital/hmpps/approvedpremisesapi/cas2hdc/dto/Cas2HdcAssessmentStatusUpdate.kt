@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @param newStatus The \"name\" of the new status to be applied
  * @param newStatusDetails
  */
-data class Cas2AssessmentStatusUpdate(
+data class Cas2HdcAssessmentStatusUpdate(
 
   @Schema(example = "moreInfoRequired", required = true, description = "The \"name\" of the new status to be applied")
   @get:JsonProperty("newStatus", required = true) val newStatus: String,

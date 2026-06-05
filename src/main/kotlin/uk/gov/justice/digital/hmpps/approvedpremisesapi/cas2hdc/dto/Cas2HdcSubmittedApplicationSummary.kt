@@ -14,7 +14,7 @@ import java.util.UUID
  * @param createdAt
  * @param submittedAt
  */
-data class Cas2SubmittedApplicationSummary(
+data class Cas2HdcSubmittedApplicationSummary(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 

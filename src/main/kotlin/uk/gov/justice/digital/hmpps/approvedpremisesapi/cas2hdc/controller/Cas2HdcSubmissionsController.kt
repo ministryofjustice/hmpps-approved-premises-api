@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2SubmittedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2SubmittedApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
@@ -32,8 +32,8 @@ class Cas2HdcSubmissionsController(
 ) {
 
   @GetMapping("/submissions")
-  fun submissionsGet(@RequestParam page: Int?): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
-    cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC)
+  fun submissionsGet(@RequestParam page: Int?): ResponseEntity<List<Cas2HdcSubmittedApplicationSummary>> {
+    cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
 
     val sortDirection = SortDirection.asc
     val sortBy = "submittedAt"
@@ -46,8 +46,8 @@ class Cas2HdcSubmissionsController(
   }
 
   @GetMapping("/submissions/{applicationId}")
-  fun submissionsApplicationIdGet(@PathVariable applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
-    cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC)
+  fun submissionsApplicationIdGet(@PathVariable applicationId: UUID): ResponseEntity<Cas2HdcSubmittedApplication> {
+    cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
 
     val application = extractEntityFromCasResult(applicationService.getSubmittedApplicationForAssessor(applicationId))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
@@ -55,16 +55,16 @@ class Cas2HdcSubmissionsController(
 
   @PostMapping("/submissions")
   @Transactional
-  fun submissionsPost(@RequestBody submitCas2Application: SubmitCas2Application): ResponseEntity<Unit> {
-    val user = cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC)
-    val submitResult = applicationService.submitApplication(submitCas2Application, user)
+  fun submissionsPost(@RequestBody cas2HdcSubmitApplication: Cas2HdcSubmitApplication): ResponseEntity<Unit> {
+    val user = cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
+    val submitResult = applicationService.submitApplication(cas2HdcSubmitApplication, user)
 
     extractEntityFromCasResult(submitResult)
 
     return ResponseEntity(HttpStatus.OK)
   }
 
-  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<Cas2SubmittedApplicationSummary> {
+  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummaryEntity>): List<Cas2HdcSubmittedApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
@@ -76,7 +76,7 @@ class Cas2HdcSubmissionsController(
 
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
-  ): Cas2SubmittedApplication {
+  ): Cas2HdcSubmittedApplication {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
     return cas2HdcSubmissionsTransformer.transformJpaToApiRepresentation(

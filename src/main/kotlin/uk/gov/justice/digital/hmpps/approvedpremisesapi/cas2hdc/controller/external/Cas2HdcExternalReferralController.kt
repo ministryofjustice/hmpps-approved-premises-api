@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationsTransformer
 
@@ -19,7 +19,7 @@ class Cas2HdcExternalReferralController(
   @GetMapping("/referrals/{crn}")
   fun getReferralsByCrn(
     @PathVariable crn: String,
-  ): ResponseEntity<List<Cas2ReferralHistory>> = ResponseEntity.ok(
+  ): ResponseEntity<List<Cas2HdcReferralHistory>> = ResponseEntity.ok(
     cas2HdcApplicationService.getSubmittedApplicationsByCrn(crn).map {
       cas2HdcApplicationsTransformer.transformJpaToCas2HdcReferralHistory(it)
     },

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -86,7 +86,7 @@ class Cas2AllocationChangedServiceTest {
     every { applicationService.findApplicationToAssign(any()) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
     every { cas2HdcEmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
-    every { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) } returns Cas2UserEntityFactory().produce()
+    every { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2HdcServiceOrigin.HDC)) } returns Cas2UserEntityFactory().produce()
 
     val applicationWithLocationChangedAssignment = application.copy()
     applicationWithLocationChangedAssignment.createApplicationAssignment("TWO", null)
@@ -101,7 +101,7 @@ class Cas2AllocationChangedServiceTest {
 
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
-    verify(exactly = 1) { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) }
+    verify(exactly = 1) { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2HdcServiceOrigin.HDC)) }
     verify(exactly = 1) { cas2HdcEmailService.sendAllocationChangedEmails(any(), any(), any()) }
     verify(exactly = 1) { applicationRepository.save(any()) }
     verify(exactly = 1) { cas2HdcLocationChangedService.createLocationChangeAssignmentAndSendEmails(any(), any()) }
@@ -117,13 +117,13 @@ class Cas2AllocationChangedServiceTest {
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
     every { cas2HdcEmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
-    every { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) } returns Cas2UserEntityFactory().produce()
+    every { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2HdcServiceOrigin.HDC)) } returns Cas2UserEntityFactory().produce()
 
     allocationChangedService.process(allocationEvent)
 
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
-    verify(exactly = 1) { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) }
+    verify(exactly = 1) { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2HdcServiceOrigin.HDC)) }
     verify(exactly = 1) { cas2HdcEmailService.sendAllocationChangedEmails(any(), any(), any()) }
     verify(exactly = 1) { applicationRepository.save(any()) }
     verify(exactly = 0) { cas2HdcLocationChangedService.createLocationChangeAssignmentAndSendEmails(any(), any()) }
@@ -135,7 +135,7 @@ class Cas2AllocationChangedServiceTest {
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
-    every { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) } returns user
+    every { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2HdcServiceOrigin.HDC)) } returns user
 
     assertThrows<RuntimeException> { allocationChangedService.process(allocationEvent) }
   }
@@ -209,7 +209,7 @@ class Cas2AllocationChangedServiceTest {
       pomAllocation.copy(manager = Manager(user.nomisStaffId!!)),
     )
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
-    every { cas2HdcUserService.getUserByStaffId(any(), eq(Cas2ServiceOrigin.HDC)) } returns user
+    every { cas2HdcUserService.getUserByStaffId(any(), eq(Cas2HdcServiceOrigin.HDC)) } returns user
 
     allocationChangedService.process(allocationEvent)
 

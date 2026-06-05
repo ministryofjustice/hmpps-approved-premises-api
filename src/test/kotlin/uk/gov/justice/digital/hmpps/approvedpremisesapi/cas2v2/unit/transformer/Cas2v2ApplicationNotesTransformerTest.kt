@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
@@ -17,7 +17,7 @@ import java.util.UUID
 
 class Cas2v2ApplicationNotesTransformerTest {
   private val user = Cas2UserEntityFactory()
-    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     .produce()
   private val submittedApplication = Cas2ApplicationEntityFactory()
     .withCreatedByUser(user)
@@ -31,7 +31,7 @@ class Cas2v2ApplicationNotesTransformerTest {
     @Test
     fun `transforms JPA Cas2v2ApplicationNote db entity to API representation`() {
       val externalUser = Cas2UserEntityFactory()
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
         .produce()
       externalUser.userType = Cas2UserType.EXTERNAL
 
@@ -43,7 +43,7 @@ class Cas2v2ApplicationNotesTransformerTest {
         body = "new note",
         createdAt = createdAt,
         assessment = Cas2AssessmentEntityFactory()
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
           .produce(),
       )
 
@@ -66,7 +66,7 @@ class Cas2v2ApplicationNotesTransformerTest {
     @Test
     fun `transforms JPA Cas2v2ApplicationNote db entity to API representation`() {
       val nomisUser = Cas2UserEntityFactory()
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
         .produce()
       val createdAt = OffsetDateTime.now().randomDateTimeBefore(1)
       val jpaEntity = Cas2ApplicationNoteEntity(
@@ -76,7 +76,7 @@ class Cas2v2ApplicationNotesTransformerTest {
         body = "new note",
         createdAt = createdAt,
         assessment = Cas2AssessmentEntityFactory()
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
           .produce(),
       )
 

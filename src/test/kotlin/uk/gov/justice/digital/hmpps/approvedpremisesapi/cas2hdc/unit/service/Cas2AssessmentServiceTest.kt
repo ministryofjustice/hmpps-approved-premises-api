@@ -6,8 +6,8 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.UpdateCas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -78,7 +78,7 @@ class Cas2AssessmentServiceTest {
         serviceOrigin = application.serviceOrigin,
       )
 
-      val newAssessmentData = UpdateCas2Assessment(
+      val newAssessmentData = Cas2HdcUpdateAssessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )
@@ -88,7 +88,7 @@ class Cas2AssessmentServiceTest {
           assessEntity
         }
 
-      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC) } answers
+      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2HdcServiceOrigin.HDC) } answers
         {
           assessEntity
         }
@@ -117,12 +117,12 @@ class Cas2AssessmentServiceTest {
     @Test
     fun `returns NotFound if entity is not found`() {
       val assessmentId = UUID.randomUUID()
-      val newAssessmentData = UpdateCas2Assessment(
+      val newAssessmentData = Cas2HdcUpdateAssessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )
 
-      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC) } answers
+      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2HdcServiceOrigin.HDC) } answers
         {
           null
         }

@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.NewCas2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.UpdateCas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcNewApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAssessmentNoteService
@@ -43,7 +43,7 @@ class Cas2HdcAssessmentsController(
 
   @SuppressWarnings("ThrowsCount")
   @GetMapping("/assessments/{assessmentId}")
-  fun assessmentsAssessmentIdGet(@PathVariable assessmentId: UUID): ResponseEntity<Cas2Assessment> {
+  fun assessmentsAssessmentIdGet(@PathVariable assessmentId: UUID): ResponseEntity<Cas2HdcAssessment> {
     val assessment = when (
       val assessmentResult = assessmentService.getAssessment(assessmentId)
     ) {
@@ -63,9 +63,9 @@ class Cas2HdcAssessmentsController(
   @PutMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdPut(
     @PathVariable assessmentId: UUID,
-    @RequestBody updateCas2Assessment: UpdateCas2Assessment,
-  ): ResponseEntity<Cas2Assessment> {
-    val assessmentResult = assessmentService.updateAssessment(assessmentId, updateCas2Assessment)
+    @RequestBody cas2HdcUpdateAssessment: Cas2HdcUpdateAssessment,
+  ): ResponseEntity<Cas2HdcAssessment> {
+    val assessmentResult = assessmentService.updateAssessment(assessmentId, cas2HdcUpdateAssessment)
     val validationResult = when (assessmentResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
@@ -87,12 +87,12 @@ class Cas2HdcAssessmentsController(
   @PostMapping("/assessments/{assessmentId}/status-updates")
   fun assessmentsAssessmentIdStatusUpdatesPost(
     @PathVariable assessmentId: UUID,
-    @RequestBody cas2AssessmentStatusUpdate: Cas2AssessmentStatusUpdate,
+    @RequestBody cas2HdcAssessmentStatusUpdate: Cas2HdcAssessmentStatusUpdate,
   ): ResponseEntity<Unit> {
     val result = cas2HdcStatusUpdateService.createForAssessment(
       assessmentId = assessmentId,
-      statusUpdate = cas2AssessmentStatusUpdate,
-      assessor = cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC),
+      statusUpdate = cas2HdcAssessmentStatusUpdate,
+      assessor = cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC),
     )
 
     processAuthorisationFor(assessmentId, result)
@@ -104,11 +104,11 @@ class Cas2HdcAssessmentsController(
   @PostMapping("/assessments/{assessmentId}/notes")
   fun assessmentsAssessmentIdNotesPost(
     @PathVariable assessmentId: UUID,
-    @RequestBody body: NewCas2ApplicationNote,
-  ): ResponseEntity<Cas2ApplicationNote> {
+    @RequestBody body: Cas2HdcNewApplicationNote,
+  ): ResponseEntity<Cas2HdcApplicationNote> {
     val noteResult = assessmentNoteService.createAssessmentNote(assessmentId, body)
 
-    val validationResult = processAuthorisationFor(assessmentId, noteResult) as ValidatableActionResult<Cas2ApplicationNote>
+    val validationResult = processAuthorisationFor(assessmentId, noteResult) as ValidatableActionResult<Cas2HdcApplicationNote>
 
     val note = processValidation(validationResult) as Cas2ApplicationNoteEntity
 

@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcAssessmentUpdateStatusSeedRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
@@ -60,7 +60,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     seed(SeedFileType.cas2UpdateAssessmentStatus, rowsToCsv(listOf(seedRow)))
 
     // Then
-    val persistedAssessment = cas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC)!!
+    val persistedAssessment = cas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2HdcServiceOrigin.HDC)!!
     assertThat(persistedAssessment.statusUpdates).hasSize(1)
 
     val statusUpdate =
@@ -458,7 +458,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     seed(SeedFileType.cas2UpdateAssessmentStatus, rowsToCsv(listOf(seedRow1, seedRow2)))
 
     // Then
-    val persistedAssessment = cas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC)
+    val persistedAssessment = cas2AssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2HdcServiceOrigin.HDC)
     assertThat(persistedAssessment?.statusUpdates).hasSize(2)
 
     // Verify both status updates were created

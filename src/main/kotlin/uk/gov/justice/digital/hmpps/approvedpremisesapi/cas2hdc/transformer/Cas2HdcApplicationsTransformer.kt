@@ -5,10 +5,10 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ReferralHistory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
@@ -31,10 +31,10 @@ class Cas2HdcApplicationsTransformer(
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
 ) {
 
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
+  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2HdcApplication {
     val currentUser = jpa.currentPomUserId?.let { cas2HdcUserService.getNomisUserById(jpa.currentPomUserId!!, jpa.serviceOrigin) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
-    return Cas2Application(
+    return Cas2HdcApplication(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
       createdBy = cas2HdcNomisUserTransformer.transformJpaToApi(jpa),
@@ -61,7 +61,7 @@ class Cas2HdcApplicationsTransformer(
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
-  ): Cas2ApplicationSummary = Cas2ApplicationSummary(
+  ): Cas2HdcApplicationSummary = Cas2HdcApplicationSummary(
     id = jpaSummary.id,
     createdByUserId = UUID.fromString(jpaSummary.userId),
     createdByUserName = jpaSummary.userName,
@@ -86,7 +86,7 @@ class Cas2HdcApplicationsTransformer(
 
   fun transformJpaToCas2HdcReferralHistory(
     jpa: Cas2ApplicationEntity,
-  ): Cas2ReferralHistory {
+  ): Cas2HdcReferralHistory {
     val latestStatusUpdate = getReferralHistoryStatus(jpa)
     val rejectionReason = latestStatusUpdate
       ?.takeIf { it.label in listOf(Cas2StatusUpdateNonAssignable.REFERRAL_CANCELLED.label, Cas2StatusUpdateNonAssignable.REFERRAL_WITHDRAWN.label) }
@@ -95,7 +95,7 @@ class Cas2HdcApplicationsTransformer(
     val omu = jpa.referringPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     val placementAddress = omu?.prisonName ?: jpa.referringPrisonCode
 
-    return Cas2ReferralHistory(
+    return Cas2HdcReferralHistory(
       id = jpa.assessment!!.id,
       applicationId = jpa.id,
       type = ServiceType.CAS2,
@@ -125,9 +125,9 @@ class Cas2HdcApplicationsTransformer(
     else -> ApplicationStatus.inProgress
   }
 
-  fun serviceOriginFromText(serviceOrigin: String): Cas2ServiceOrigin = when (serviceOrigin.uppercase()) {
-    "HDC" -> Cas2ServiceOrigin.HDC
-    "BAIL" -> Cas2ServiceOrigin.BAIL
+  fun serviceOriginFromText(serviceOrigin: String): Cas2HdcServiceOrigin = when (serviceOrigin.uppercase()) {
+    "HDC" -> Cas2HdcServiceOrigin.HDC
+    "BAIL" -> Cas2HdcServiceOrigin.BAIL
     else -> error("Unexpected service origin value $serviceOrigin")
   }
 }

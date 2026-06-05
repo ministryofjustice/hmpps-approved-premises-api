@@ -8,7 +8,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-data class Cas2Application(
+data class Cas2HdcApplication(
   val createdBy: NomisUser,
   val status: ApplicationStatus,
   val isTransferredApplication: Boolean,
@@ -20,8 +20,8 @@ data class Cas2Application(
   val document: Any? = null,
   val submittedAt: Instant? = null,
   val telephoneNumber: String? = null,
-  val assessment: Cas2Assessment? = null,
-  val timelineEvents: List<Cas2TimelineEvent>? = null,
+  val assessment: Cas2HdcAssessment? = null,
+  val timelineEvents: List<Cas2HdcTimelineEvent>? = null,
   val allocatedPomName: String? = null,
   val currentPrisonName: String? = null,
   val allocatedPomEmailAddress: String? = null,

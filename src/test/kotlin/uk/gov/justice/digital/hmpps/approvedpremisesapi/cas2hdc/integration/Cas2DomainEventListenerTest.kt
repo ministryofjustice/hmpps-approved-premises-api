@@ -16,7 +16,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -155,7 +155,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
           await().until { applicationAssignmentRepository.count().toInt() == 2 }
 
-          val updatedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)!!
+          val updatedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2HdcServiceOrigin.HDC)!!
           assertThat(updatedApplication.applicationAssignments.size).isEqualTo(2)
           assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
           assertThat(updatedApplication.currentPomUserId).isNull()
@@ -200,7 +200,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             publishMessageToTopic(eventType, event)
             await().until { applicationAssignmentRepository.count().toInt() == 3 }
 
-            val updatedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)!!
+            val updatedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2HdcServiceOrigin.HDC)!!
             assertThat(updatedApplication.applicationAssignments.size).isEqualTo(3)
 
             assertThat(updatedApplication.applicationAssignments.get(1).allocatedPomUser).isNull()
@@ -252,7 +252,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             // pom allocation message should create location change assignment, and pom allocation assignment
             await().until { applicationAssignmentRepository.count().toInt() == 3 }
 
-            val updatedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)!!
+            val updatedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2HdcServiceOrigin.HDC)!!
             assertThat(updatedApplication.applicationAssignments.size).isEqualTo(3)
 
             assertThat(updatedApplication.applicationAssignments.get(1).allocatedPomUser).isNull()
@@ -347,13 +347,13 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             nomisUserDetailsResponse,
           )
 
-          assertThat(cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username = newUserName, type = Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC)).isNull()
+          assertThat(cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username = newUserName, type = Cas2UserType.NOMIS, Cas2HdcServiceOrigin.HDC)).isNull()
 
           val event = stubEvent(eventType, detailUrl, application.nomsNumber)
           publishMessageToTopic(eventType, event)
           await().until { applicationAssignmentRepository.count().toInt() == 3 }
 
-          val updatedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2ServiceOrigin.HDC)!!
+          val updatedApplication = cas2ApplicationRepository.findByIdAndServiceOrigin(application.id, Cas2HdcServiceOrigin.HDC)!!
           assertThat(updatedApplication.applicationAssignments.size).isEqualTo(3)
 
           assertThat(updatedApplication.applicationAssignments.get(1).allocatedPomUser).isNull()
@@ -361,7 +361,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
           assertThat(updatedApplication.currentPrisonCode).isEqualTo(newOmu.prisonCode)
 
-          val missingUser = cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(newUserName, Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC)
+          val missingUser = cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(newUserName, Cas2UserType.NOMIS, Cas2HdcServiceOrigin.HDC)
           assertThat(updatedApplication.currentPomUserId).isEqualTo(missingUser!!.id)
 
           verifyEmailsSentForAllocationChangedCase(
@@ -369,7 +369,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             pomManagerEmail = nomisUserDetailsResponse.primaryEmail!!,
           )
 
-          assertThat(cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username = newUserName, Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC)).isNotNull
+          assertThat(cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username = newUserName, Cas2UserType.NOMIS, Cas2HdcServiceOrigin.HDC)).isNotNull
         }
       }
     }

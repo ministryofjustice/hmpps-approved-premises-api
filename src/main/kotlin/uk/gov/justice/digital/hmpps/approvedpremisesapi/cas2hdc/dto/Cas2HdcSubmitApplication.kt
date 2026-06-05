@@ -14,7 +14,7 @@ import java.util.UUID
  * @param hdcEligibilityDate
  * @param conditionalReleaseDate
  */
-data class SubmitCas2Application(
+data class Cas2HdcSubmitApplication(
 
   @get:JsonProperty("translatedDocument", required = true) val translatedDocument: Any,
 

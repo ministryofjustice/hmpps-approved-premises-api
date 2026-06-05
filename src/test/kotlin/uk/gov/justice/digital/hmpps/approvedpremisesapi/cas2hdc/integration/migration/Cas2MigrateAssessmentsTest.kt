@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
@@ -59,17 +59,17 @@ class Cas2MigrateAssessmentsTest : MigrationJobTestBase() {
   }
 
   private fun checkApplicationHasAssociationWithAssessment(submittedWithoutAssessment: Cas2ApplicationEntity) {
-    val application = realApplicationRepository.findByIdAndServiceOrigin(submittedWithoutAssessment.id, Cas2ServiceOrigin.HDC)
+    val application = realApplicationRepository.findByIdAndServiceOrigin(submittedWithoutAssessment.id, Cas2HdcServiceOrigin.HDC)
     Assertions.assertThat(application!!.assessment).isNotNull()
   }
 
   private fun checkAssessmentWasCreated(submittedWithoutAssessment: Cas2ApplicationEntity) {
-    val newAssessment = realAssessmentRepository.findFirstByApplicationIdAndServiceOrigin(submittedWithoutAssessment.id, Cas2ServiceOrigin.HDC)
+    val newAssessment = realAssessmentRepository.findFirstByApplicationIdAndServiceOrigin(submittedWithoutAssessment.id, Cas2HdcServiceOrigin.HDC)
     Assertions.assertThat(newAssessment).isNotNull()
   }
 
   private fun checkUnsubmittedDoesNotHaveAssessment(unsubmittedApp: Cas2ApplicationEntity) {
-    val unsubmittedApplication = realApplicationRepository.findByIdAndServiceOrigin(unsubmittedApp.id, Cas2ServiceOrigin.HDC)
+    val unsubmittedApplication = realApplicationRepository.findByIdAndServiceOrigin(unsubmittedApp.id, Cas2HdcServiceOrigin.HDC)
     Assertions.assertThat(unsubmittedApplication?.assessment).isNull()
   }
 

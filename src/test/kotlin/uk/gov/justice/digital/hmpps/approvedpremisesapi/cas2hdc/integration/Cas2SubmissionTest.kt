@@ -16,10 +16,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2SubmittedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2SubmittedApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -196,7 +196,7 @@ class Cas2SubmissionTest(
         .isOk
 
       assertThat(
-        cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.EXTERNAL, Cas2ServiceOrigin.HDC),
+        cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.EXTERNAL, Cas2HdcServiceOrigin.HDC),
       ).isNotNull
     }
 
@@ -259,7 +259,7 @@ class Cas2SubmissionTest(
             val responseBody =
               jsonMapper.readValue(
                 rawResponseBody,
-                object : TypeReference<List<Cas2SubmittedApplicationSummary>>() {},
+                object : TypeReference<List<Cas2HdcSubmittedApplicationSummary>>() {},
               )
 
             assertApplicationResponseMatchesExpected(
@@ -289,7 +289,7 @@ class Cas2SubmissionTest(
     }
 
     private fun assertApplicationResponseMatchesExpected(
-      response: Cas2SubmittedApplicationSummary,
+      response: Cas2HdcSubmittedApplicationSummary,
       expectedSubmittedApplication: Cas2ApplicationEntity,
       offenderDetails: OffenderDetailSummary,
     ) {
@@ -354,7 +354,7 @@ class Cas2SubmissionTest(
         .isNotFound
 
       assertThat(
-        cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin("PREVIOUSLY_UNKNOWN_ASSESSOR", Cas2UserType.EXTERNAL, Cas2ServiceOrigin.HDC),
+        cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin("PREVIOUSLY_UNKNOWN_ASSESSOR", Cas2UserType.EXTERNAL, Cas2HdcServiceOrigin.HDC),
       ).isNotNull
     }
 
@@ -480,7 +480,7 @@ class Cas2SubmissionTest(
 
             val responseBody = jsonMapper.readValue(
               rawResponseBody,
-              Cas2SubmittedApplication::class.java,
+              Cas2HdcSubmittedApplication::class.java,
             )
 
             val applicant = cas2HdcNomisUserTransformer.transformJpaToApi(
@@ -645,7 +645,7 @@ class Cas2SubmissionTest(
 
                 val responseBody = jsonMapper.readValue(
                   rawResponseBody,
-                  Cas2SubmittedApplication::class.java,
+                  Cas2HdcSubmittedApplication::class.java,
                 )
 
                 val applicant = cas2HdcNomisUserTransformer.transformJpaToApi(
@@ -747,7 +747,7 @@ class Cas2SubmissionTest(
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
-              SubmitCas2Application(
+              Cas2HdcSubmitApplication(
                 applicationId = applicationId,
                 translatedDocument = {},
                 preferredAreas = "Leeds | Bradford",
@@ -775,7 +775,7 @@ class Cas2SubmissionTest(
         assertThat(domainEventFromJson.eventDetails.applicationUrl)
           .isEqualTo(expectedFrontEndUrl)
 
-        val persistedAssessment = realAssessmentRepository.findByServiceOrigin(Cas2ServiceOrigin.HDC).first()
+        val persistedAssessment = realAssessmentRepository.findByServiceOrigin(Cas2HdcServiceOrigin.HDC).first()
         assertThat(persistedAssessment.application.id).isEqualTo(applicationId)
 
         val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
@@ -839,7 +839,7 @@ class Cas2SubmissionTest(
                 .uri("/cas2-hdc/submissions")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  SubmitCas2Application(
+                  Cas2HdcSubmitApplication(
                     applicationId = applicationId,
                     translatedDocument = {},
                     telephoneNumber = "123 456 7891",
@@ -893,7 +893,7 @@ class Cas2SubmissionTest(
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
-              SubmitCas2Application(
+              Cas2HdcSubmitApplication(
                 applicationId = applicationId,
                 translatedDocument = {},
                 preferredAreas = "Leeds | Bradford",
@@ -908,7 +908,7 @@ class Cas2SubmissionTest(
 
           assertThat(domainEventRepository.count()).isEqualTo(0)
           assertThat(realAssessmentRepository.count()).isEqualTo(0)
-          assertThat(realApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)!!.submittedAt).isNull()
+          assertThat(realApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2HdcServiceOrigin.HDC)!!.submittedAt).isNull()
         }
       }
     }

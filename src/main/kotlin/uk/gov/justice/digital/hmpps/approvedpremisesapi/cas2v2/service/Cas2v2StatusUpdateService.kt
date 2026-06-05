@@ -13,9 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
@@ -58,7 +58,7 @@ class Cas2v2StatusUpdateService(
     statusUpdate: Cas2v2AssessmentStatusUpdate,
     assessor: Cas2UserEntity,
   ): CasResult<Cas2StatusUpdateEntity> {
-    val assessment = cas2AssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.BAIL)
+    val assessment = cas2AssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2HdcServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2StatusUpdateEntity", assessmentId.toString())
 
     val status = findActiveStatusByName(statusUpdate.newStatus)
@@ -109,12 +109,12 @@ class Cas2v2StatusUpdateService(
     return CasResult.Success(createdStatusUpdate)
   }
 
-  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = cas2v2PersistedApplicationStatusFinder.active()
+  private fun findActiveStatusByName(statusName: String): Cas2HdcPersistedApplicationStatus? = cas2v2PersistedApplicationStatusFinder.active()
     .find { status -> status.name == statusName }
 
   fun createStatusUpdatedDomainEvent(
     statusUpdate: Cas2StatusUpdateEntity,
-    statusDetails: List<Cas2PersistedApplicationStatusDetail>? = emptyList(),
+    statusDetails: List<Cas2HdcPersistedApplicationStatusDetail>? = emptyList(),
   ) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt

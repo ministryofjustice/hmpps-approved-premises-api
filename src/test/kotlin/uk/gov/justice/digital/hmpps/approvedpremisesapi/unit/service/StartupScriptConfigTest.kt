@@ -6,7 +6,7 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcStartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
@@ -43,7 +43,7 @@ class StartupScriptConfigTest {
 
   private val mockApplicationService = mockk<Cas2HdcApplicationService>()
   private val mockCas2HdcStatusUpdateService = mockk<Cas2HdcStatusUpdateService>()
-  private val statusFinder = Cas2PersistedApplicationStatusFinder()
+  private val statusFinder = Cas2HdcPersistedApplicationStatusFinder()
 
   private val seedConfig = SeedConfig()
 

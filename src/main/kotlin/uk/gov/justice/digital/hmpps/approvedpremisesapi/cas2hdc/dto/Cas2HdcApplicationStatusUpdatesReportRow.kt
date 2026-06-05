@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto
 
 @Suppress("LongParameterList")
-class ApplicationStatusUpdatesReportRow(
+class Cas2HdcApplicationStatusUpdatesReportRow(
   val eventId: String,
   val applicationId: String,
   val personCrn: String,

@@ -27,7 +27,7 @@ import java.util.UUID
  * @param omuEmailAddress
  * @param assignmentDate
  */
-data class Cas2SubmittedApplication(
+data class Cas2HdcSubmittedApplication(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
@@ -35,9 +35,9 @@ data class Cas2SubmittedApplication(
 
   @get:JsonProperty("createdAt", required = true) val createdAt: Instant,
 
-  @get:JsonProperty("timelineEvents", required = true) val timelineEvents: List<Cas2TimelineEvent>,
+  @get:JsonProperty("timelineEvents", required = true) val timelineEvents: List<Cas2HdcTimelineEvent>,
 
-  @get:JsonProperty("assessment", required = true) val assessment: Cas2Assessment,
+  @get:JsonProperty("assessment", required = true) val assessment: Cas2HdcAssessment,
 
   @get:JsonProperty("isTransferredApplication", required = true) val isTransferredApplication: Boolean,
 

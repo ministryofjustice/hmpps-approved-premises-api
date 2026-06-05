@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
@@ -63,7 +63,7 @@ class Cas2v2UserService(
 
   private fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority> = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
 
-  private fun getExistingUser(username: String, userType: Cas2UserType): Cas2UserEntity? = cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, userType, Cas2ServiceOrigin.BAIL)
+  private fun getExistingUser(username: String, userType: Cas2UserType): Cas2UserEntity? = cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, userType, Cas2HdcServiceOrigin.BAIL)
 
   private fun getEntityForNomisUser(username: String, jwt: String): Cas2UserEntity {
     val nomisUserDetails: NomisUserDetail = when (
@@ -98,7 +98,7 @@ class Cas2v2UserService(
         isActive = nomisUserDetails.active,
         deliusTeamCodes = null,
         deliusStaffCode = null,
-        serviceOrigin = Cas2ServiceOrigin.BAIL,
+        serviceOrigin = Cas2HdcServiceOrigin.BAIL,
         nomisAccountType = nomisUserDetails.accountType,
       ),
     )
@@ -137,7 +137,7 @@ class Cas2v2UserService(
         isActive = deliusUser.active,
         deliusTeamCodes = deliusUser.teamCodes(),
         deliusStaffCode = deliusUser.code,
-        serviceOrigin = Cas2ServiceOrigin.BAIL,
+        serviceOrigin = Cas2HdcServiceOrigin.BAIL,
       ),
     )
     return getExistingUser(username, Cas2UserType.DELIUS)!!
@@ -167,7 +167,7 @@ class Cas2v2UserService(
         email = externalUserDetails.email,
         isEnabled = externalUserDetails.enabled,
         isActive = true,
-        serviceOrigin = Cas2ServiceOrigin.BAIL,
+        serviceOrigin = Cas2HdcServiceOrigin.BAIL,
         externalType = "NACRO",
       ),
     )

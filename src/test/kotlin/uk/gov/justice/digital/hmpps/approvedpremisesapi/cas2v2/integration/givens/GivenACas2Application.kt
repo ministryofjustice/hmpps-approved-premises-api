@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import java.time.OffsetDateTime
@@ -12,7 +12,7 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2HdcApplication(
   withCreatedByUser(
     cas2UserEntityFactory.produceAndPersist {
       withUsername("NOMIS_USER_2")
-      withServiceOrigin(Cas2ServiceOrigin.HDC)
+      withServiceOrigin(Cas2HdcServiceOrigin.HDC)
     },
   )
   withCrn("CRN_1")
@@ -20,7 +20,7 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2HdcApplication(
   withCreatedAt(createdAt)
   withData("{}")
   withSubmittedAt(null)
-  withServiceOrigin(Cas2ServiceOrigin.HDC)
+  withServiceOrigin(Cas2HdcServiceOrigin.HDC)
 }
 
 fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
@@ -31,7 +31,7 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
 ) = cas2ApplicationEntityFactory.produceAndPersist {
   withCreatedByUser(
     createdBy ?: cas2UserEntityFactory.produceAndPersist {
-      withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     },
   )
   withCrn(crn)
@@ -40,7 +40,7 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
   withCreatedAt(createdAt)
   withData("{}")
   withSubmittedAt(null)
-  withServiceOrigin(Cas2ServiceOrigin.BAIL)
+  withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
 }
 
 fun IntegrationTestBase.givenASubmittedCas2Application(
@@ -53,7 +53,7 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
 ) = cas2ApplicationEntityFactory.produceAndPersist {
   withCreatedByUser(
     createdBy ?: cas2UserEntityFactory.produceAndPersist {
-      withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     },
   )
   withCrn(crn)
@@ -62,7 +62,7 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
   withCreatedAt(createdAt)
   withData("{}")
   withSubmittedAt(submittedAt)
-  withServiceOrigin(Cas2ServiceOrigin.BAIL)
+  withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
 }
 
 fun IntegrationTestBase.givenASubmittedCas2HdcApplication(
@@ -75,7 +75,7 @@ fun IntegrationTestBase.givenASubmittedCas2HdcApplication(
 ) = cas2ApplicationEntityFactory.produceAndPersist {
   withCreatedByUser(
     createdBy ?: cas2UserEntityFactory.produceAndPersist {
-      withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     },
   )
   withCrn(crn)
@@ -84,5 +84,5 @@ fun IntegrationTestBase.givenASubmittedCas2HdcApplication(
   withCreatedAt(createdAt)
   withData("{}")
   withSubmittedAt(submittedAt)
-  withServiceOrigin(Cas2ServiceOrigin.HDC)
+  withServiceOrigin(Cas2HdcServiceOrigin.HDC)
 }

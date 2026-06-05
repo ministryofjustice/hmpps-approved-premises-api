@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * @param nacroReferralId
  * @param assessorName
  */
-data class UpdateCas2Assessment(
+data class Cas2HdcUpdateAssessment(
 
   @get:JsonProperty("nacroReferralId") val nacroReferralId: String? = null,
 

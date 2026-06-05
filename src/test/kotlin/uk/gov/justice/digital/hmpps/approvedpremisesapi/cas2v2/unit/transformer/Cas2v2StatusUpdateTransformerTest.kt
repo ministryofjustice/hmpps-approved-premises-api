@@ -9,8 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -23,10 +23,10 @@ import java.util.UUID
 
 class Cas2v2StatusUpdateTransformerTest {
   private val user = Cas2UserEntityFactory()
-    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     .produce()
   private val cas2v2SubmittedApplication = Cas2ApplicationEntityFactory()
-    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
@@ -42,9 +42,9 @@ class Cas2v2StatusUpdateTransformerTest {
 
   @Test
   fun `transforms JPA Cas2v2StatusUpdate db entity to API representation`() {
-    val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2).random()
+    val status = Cas2HdcApplicationStatusSeeding.statusList(ServiceName.cas2v2).random()
     val assessor = Cas2UserEntityFactory()
-      .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+      .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
       .produce()
     val jpaEntity = Cas2StatusUpdateEntityFactory()
       .withStatusId(status.id)

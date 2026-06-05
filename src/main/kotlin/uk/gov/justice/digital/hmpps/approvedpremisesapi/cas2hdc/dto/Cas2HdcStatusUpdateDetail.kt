@@ -6,12 +6,16 @@ import java.util.UUID
 
 /**
  *
- * @param statusId
+ * @param id
+ * @param name
  * @param label
  */
-data class LatestCas2StatusUpdate(
+data class Cas2HdcStatusUpdateDetail(
 
-  @get:JsonProperty("statusId", required = true) val statusId: UUID,
+  @get:JsonProperty("id", required = true) val id: UUID,
+
+  @Schema(example = "moreInfoRequested", required = true, description = "")
+  @get:JsonProperty("name", required = true) val name: String,
 
   @Schema(example = "More information requested", required = true, description = "")
   @get:JsonProperty("label", required = true) val label: String,

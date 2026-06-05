@@ -12,7 +12,7 @@ import java.time.Instant
  * @param body
  * @param createdByName
  */
-data class Cas2TimelineEvent(
+data class Cas2HdcTimelineEvent(
 
   @get:JsonProperty("type", required = true) val type: TimelineEventType,
 

@@ -16,7 +16,7 @@ import java.util.UUID
  * @param updatedAt
  * @param statusUpdateDetails
  */
-data class Cas2StatusUpdate(
+data class Cas2HdcStatusUpdate(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
@@ -33,5 +33,5 @@ data class Cas2StatusUpdate(
 
   @get:JsonProperty("updatedAt") val updatedAt: Instant? = null,
 
-  @get:JsonProperty("statusUpdateDetails") val statusUpdateDetails: List<Cas2StatusUpdateDetail>? = null,
+  @get:JsonProperty("statusUpdateDetails") val statusUpdateDetails: List<Cas2HdcStatusUpdateDetail>? = null,
 )

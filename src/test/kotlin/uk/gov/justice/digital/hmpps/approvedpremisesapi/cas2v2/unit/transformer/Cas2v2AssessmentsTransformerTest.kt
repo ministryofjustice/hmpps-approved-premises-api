@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
@@ -18,7 +18,7 @@ class Cas2v2AssessmentsTransformerTest {
     .withNacroReferralId("NACRO_ID")
     .withAssessorName("Firsty Lasty")
     .withStatusUpdates(mutableListOf(mockCas2StatusUpdateEntity, mockCas2StatusUpdateEntity))
-    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     .produce()
   private val mockCas2v2StatusUpdateTransformer = mockk<Cas2v2StatusUpdateTransformer>()
   private val mockStatusUpdateApi = mockk<Cas2v2StatusUpdate>()

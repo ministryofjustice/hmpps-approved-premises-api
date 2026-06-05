@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -313,7 +313,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     withAssessorName(randomStringMultiCaseWithNumbers(10))
     withNacroReferralId(randomNumberChars(10))
     withCreatedAt(OffsetDateTime.parse(CREATED_AT).withOffsetSameInstant(ZoneOffset.UTC))
-    withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
   }
 
   private fun cas2ApplicationEntity(
@@ -329,7 +329,7 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
     withReferringPrisonCode(randomStringMultiCaseWithNumbers(3))
     withTelephoneNumber(randomStringMultiCaseWithNumbers(7))
-    withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     withConditionalReleaseDate(LocalDate.parse(arrivedAtDateOnly))
     withHdcEligibilityDate(LocalDate.parse(arrivedAtDateOnly))
     withBailHearingDate(LocalDate.parse(arrivedAtDateOnly))
@@ -341,6 +341,6 @@ class Cas2v2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBas
     withEmail(randomEmailAddress())
     withNomisStaffCode(9L)
     withNomisStaffIdentifier(90L)
-    withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
   }
 }

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
@@ -222,7 +222,7 @@ class Cas2EmailServiceTest {
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
-    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2ServiceOrigin.HDC)) } returns oldUser
+    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2HdcServiceOrigin.HDC)) } returns oldUser
 
     every {
       emailNotificationService.sendCas2Email(
@@ -288,7 +288,7 @@ class Cas2EmailServiceTest {
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns newOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
-    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2ServiceOrigin.HDC)) } returns oldUser
+    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2HdcServiceOrigin.HDC)) } returns oldUser
 
     every {
       emailNotificationService.sendCas2Email(
@@ -386,7 +386,7 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `should send CAS2_TO_TRANSFERRING_POM_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON email when user id is provided`() {
-    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2ServiceOrigin.HDC)) } returns oldUser
+    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2HdcServiceOrigin.HDC)) } returns oldUser
     every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns oldOmu
     every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(any()) } returns null
@@ -436,7 +436,7 @@ class Cas2EmailServiceTest {
 
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(eq(newOmu.prisonCode)) } returns null
-    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2ServiceOrigin.HDC)) } returns oldUser
+    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2HdcServiceOrigin.HDC)) } returns oldUser
 
     val exception = assertThrows<IllegalStateException> {
       emailService.sendLocationChangedEmails(
@@ -454,7 +454,7 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentOlder)
 
     every { offenderManagementUnitRepository.findByPrisonCode(eq(oldOmu.prisonCode)) } returns null
-    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2ServiceOrigin.HDC)) } returns oldUser
+    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2HdcServiceOrigin.HDC)) } returns oldUser
 
     val exception = assertThrows<IllegalStateException> {
       emailService.sendLocationChangedEmails(
@@ -477,7 +477,7 @@ class Cas2EmailServiceTest {
   fun `throws when nomis user not found`() {
     every { offenderManagementUnitRepository.findByPrisonCode(oldOmu.prisonCode) } returns oldOmu
     every { offenderManagementUnitRepository.findByPrisonCode(newOmu.prisonCode) } returns newOmu
-    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2ServiceOrigin.HDC)) } returns null
+    every { cas2UserRepository.findByIdAndServiceOrigin(eq(oldUser.id), eq(Cas2HdcServiceOrigin.HDC)) } returns null
 
     application.createApplicationAssignment(oldOmu.prisonCode, oldUser)
 

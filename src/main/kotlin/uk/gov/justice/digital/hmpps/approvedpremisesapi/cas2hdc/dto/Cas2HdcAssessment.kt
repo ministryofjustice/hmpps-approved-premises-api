@@ -10,7 +10,7 @@ import java.util.UUID
  * @param assessorName
  * @param statusUpdates
  */
-data class Cas2Assessment(
+data class Cas2HdcAssessment(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
@@ -18,5 +18,5 @@ data class Cas2Assessment(
 
   @get:JsonProperty("assessorName") val assessorName: String? = null,
 
-  @get:JsonProperty("statusUpdates") val statusUpdates: List<Cas2StatusUpdate>? = null,
+  @get:JsonProperty("statusUpdates") val statusUpdates: List<Cas2HdcStatusUpdate>? = null,
 )

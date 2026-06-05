@@ -5,9 +5,9 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -33,7 +33,7 @@ class Cas2HdcApplicationsSeedJob(
   private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
-  private val statusFinder: Cas2PersistedApplicationStatusFinder,
+  private val statusFinder: Cas2HdcPersistedApplicationStatusFinder,
 ) : SeedJob<Cas2HdcApplicationSeedCsvRow>(
   requiredHeaders = setOf("id", "nomsNumber", "crn", "state", "createdBy", "createdAt", "submittedAt", "statusUpdates", "location"),
 ) {
@@ -63,14 +63,14 @@ class Cas2HdcApplicationsSeedJob(
       cas2UserRepository.findByUsernameAndUserTypeAndServiceOriginAndActiveNomisCaseloadId(
         row.createdBy,
         Cas2UserType.NOMIS,
-        Cas2ServiceOrigin.HDC,
+        Cas2HdcServiceOrigin.HDC,
         row.referringPrisonCode,
       ) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
     } else {
       cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(
         row.createdBy,
         Cas2UserType.NOMIS,
-        Cas2ServiceOrigin.HDC,
+        Cas2HdcServiceOrigin.HDC,
       ) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
     }
 
@@ -93,7 +93,7 @@ class Cas2HdcApplicationsSeedJob(
         document = documentFor(state = row.state, nomsNumber = row.nomsNumber),
         submittedAt = row.submittedAt,
         applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
-        serviceOrigin = Cas2ServiceOrigin.HDC,
+        serviceOrigin = Cas2HdcServiceOrigin.HDC,
         cohort = Cas2Cohort.HDC,
       ),
     )
@@ -151,7 +151,7 @@ class Cas2HdcApplicationsSeedJob(
     application.assessment = assessment
   }
 
-  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = statusFinder.active()[idx]
+  private fun findStatusAtPosition(idx: Int): Cas2HdcPersistedApplicationStatus = statusFinder.active()[idx]
 
   private fun dataFor(state: String, nomsNumber: String): String {
     if (state != "NOT_STARTED") {

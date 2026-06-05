@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2SubmittedApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcTimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
@@ -55,13 +55,13 @@ class SubmissionsTransformerTest {
 
   private val submittedCas2ApplicationFactory = cas2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
-  private val mockStatusUpdate = Cas2StatusUpdate(
+  private val mockStatusUpdate = Cas2HdcStatusUpdate(
     id = UUID.fromString("c426c63a-be35-421f-a1a0-fc286b60da41"),
     description = "On Waiting List",
     label = "On Waiting List",
     name = "onWaitingList",
   )
-  private val mockAssessment = Cas2Assessment(
+  private val mockAssessment = Cas2HdcAssessment(
     id = UUID.fromString("6e631a8c-a013-4bb4-812c-886c8fc25354"),
     statusUpdates = listOf(mockStatusUpdate),
   )
@@ -77,10 +77,10 @@ class SubmissionsTransformerTest {
         nomisUserEntity,
       )
     } returns mockNomisUser
-    every { mockCas2HdcTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
+    every { mockCas2HdcTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2HdcTimelineEvent>())
     every { mockCas2HdcAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
     every { mockOffenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
-    every { mockCas2HdcUserService.getNomisUserById(any(), eq(Cas2ServiceOrigin.HDC)) } returns nomisUserEntity
+    every { mockCas2HdcUserService.getNomisUserById(any(), eq(Cas2HdcServiceOrigin.HDC)) } returns nomisUserEntity
   }
 
   @Nested
@@ -96,7 +96,7 @@ class SubmissionsTransformerTest {
       val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
 
       every { mockCas2HdcAssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
-      every { mockCas2HdcUserService.getNomisUserById(any(), eq(Cas2ServiceOrigin.HDC)) } returns nomisUserEntity
+      every { mockCas2HdcUserService.getNomisUserById(any(), eq(Cas2HdcServiceOrigin.HDC)) } returns nomisUserEntity
 
       every { mockCas2HdcNomisUserTransformer.transformJpaToApi(any<Cas2ApplicationEntity>()) } returns mockNomisUser
 
@@ -134,7 +134,7 @@ class SubmissionsTransformerTest {
     fun `transforms submitted summary application to API summary representation `() {
       val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
 
-      val expectedSubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
+      val expectedSubmittedApplicationSummary = Cas2HdcSubmittedApplicationSummary(
         id = applicationSummary.id,
         crn = applicationSummary.crn,
         nomsNumber = applicationSummary.nomsNumber,

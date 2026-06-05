@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import java.time.Instant
 import java.util.UUID
 
-data class Cas2ReferralHistory(
+data class Cas2HdcReferralHistory(
   val type: ServiceType,
   val id: UUID,
   val applicationId: UUID,

@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcReportsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
 
@@ -18,16 +18,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxS
 class Cas2HdcReportsController(private val reportService: Cas2HdcReportsService) {
 
   @GetMapping("/reports/{reportName}")
-  fun reportsReportNameGet(@PathVariable reportName: Cas2ReportName): ResponseEntity<StreamingResponseBody> = when (reportName) {
-    Cas2ReportName.submittedMinusApplications -> generateXlsxStreamingResponse { outputStream ->
+  fun reportsReportNameGet(@PathVariable reportName: Cas2HdcReportName): ResponseEntity<StreamingResponseBody> = when (reportName) {
+    Cas2HdcReportName.submittedMinusApplications -> generateXlsxStreamingResponse { outputStream ->
       reportService.createSubmittedApplicationsReport(outputStream)
     }
 
-    Cas2ReportName.applicationMinusStatusMinusUpdates -> generateXlsxStreamingResponse { outputStream ->
+    Cas2HdcReportName.applicationMinusStatusMinusUpdates -> generateXlsxStreamingResponse { outputStream ->
       reportService.createApplicationStatusUpdatesReport(outputStream)
     }
 
-    Cas2ReportName.unsubmittedMinusApplications -> generateXlsxStreamingResponse { outputStream ->
+    Cas2HdcReportName.unsubmittedMinusApplications -> generateXlsxStreamingResponse { outputStream ->
       reportService.createUnsubmittedApplicationsReport(outputStream)
     }
   }

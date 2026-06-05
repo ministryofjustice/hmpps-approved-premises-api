@@ -10,7 +10,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto
  * we deliberately maintain these as separate fields to simplify how to identify which API/UI this
  * record originated from
  */
-enum class Cas2ServiceOrigin {
+enum class Cas2HdcServiceOrigin {
   BAIL,
   HDC,
 }

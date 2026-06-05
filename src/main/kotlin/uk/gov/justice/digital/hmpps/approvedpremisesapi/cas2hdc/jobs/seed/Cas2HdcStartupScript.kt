@@ -4,9 +4,9 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -47,7 +47,7 @@ class Cas2HdcStartupScript(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationService: Cas2HdcApplicationService,
   private val cas2HdcStatusUpdateService: Cas2HdcStatusUpdateService,
-  private val statusFinder: Cas2PersistedApplicationStatusFinder,
+  private val statusFinder: Cas2HdcPersistedApplicationStatusFinder,
 ) {
   fun script() {
     seedLogger.info("Running Start up Script for CAS2")
@@ -56,7 +56,7 @@ class Cas2HdcStartupScript(
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting CAS2 applications")
-    cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC).forEach { user ->
+    cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.NOMIS, Cas2HdcServiceOrigin.HDC).forEach { user ->
       listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
         createApplicationFor(applicant = user, state = state)
       }
@@ -79,7 +79,7 @@ class Cas2HdcStartupScript(
         submittedAt = submittedAt,
         referringPrisonCode = if (submittedAt != null) applicant.activeNomisCaseloadId else null,
         applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
-        serviceOrigin = Cas2ServiceOrigin.HDC,
+        serviceOrigin = Cas2HdcServiceOrigin.HDC,
       )
 
     // create application assignments for submitted applications
@@ -132,7 +132,7 @@ class Cas2HdcStartupScript(
     cas2HdcStatusUpdateService.createStatusUpdatedDomainEvent(update)
   }
 
-  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = statusFinder.active()[idx]
+  private fun findStatusAtPosition(idx: Int): Cas2HdcPersistedApplicationStatus = statusFinder.active()[idx]
 
   private fun createAssessment(application: Cas2ApplicationEntity) {
     val id = UUID.randomUUID()

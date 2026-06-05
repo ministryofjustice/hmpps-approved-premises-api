@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
@@ -92,7 +92,7 @@ class Cas2v2ApplicationService(
       spec = spec.and(Cas2ApplicationSummarySpecifications.isSubmitted(isSubmitted))
     }
 
-    spec = spec.and(Cas2ApplicationSummarySpecifications.hasServiceOrigin(Cas2ServiceOrigin.BAIL.toString()))
+    spec = spec.and(Cas2ApplicationSummarySpecifications.hasServiceOrigin(Cas2HdcServiceOrigin.BAIL.toString()))
 
     val response = cas2ApplicationSummaryRepository.findAll(spec, getPageableOrAllPages(pageCriteria))
 
@@ -103,7 +103,7 @@ class Cas2v2ApplicationService(
   fun getAllSubmittedCas2v2ApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 
-    val response = cas2ApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(Cas2ServiceOrigin.BAIL.toString(), pageable)
+    val response = cas2ApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(Cas2HdcServiceOrigin.BAIL.toString(), pageable)
 
     val metadata = getMetadata(response, pageCriteria)
 
@@ -111,7 +111,7 @@ class Cas2v2ApplicationService(
   }
 
   fun getSubmittedCas2v2ApplicationForAssessor(applicationId: UUID): CasResult<Cas2ApplicationEntity> {
-    val applicationEntity = cas2ApplicationRepository.findByIdAndServiceOriginAndSubmittedAtIsNotNull(applicationId, Cas2ServiceOrigin.BAIL)
+    val applicationEntity = cas2ApplicationRepository.findByIdAndServiceOriginAndSubmittedAtIsNotNull(applicationId, Cas2HdcServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
     return CasResult.Success(
@@ -120,7 +120,7 @@ class Cas2v2ApplicationService(
   }
 
   fun getCas2v2ApplicationForUser(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val applicationEntity = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
+    val applicationEntity = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2HdcServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
     if (applicationEntity.abandonedAt != null) {
@@ -170,7 +170,7 @@ class Cas2v2ApplicationService(
       telephoneNumber = null,
       applicationOrigin = applicationOrigin,
       bailHearingDate = bailHearingDate,
-      serviceOrigin = Cas2ServiceOrigin.BAIL,
+      serviceOrigin = Cas2HdcServiceOrigin.BAIL,
     )
 
     val createdApplication = cas2ApplicationRepository.save(
@@ -188,7 +188,7 @@ class Cas2v2ApplicationService(
     bailHearingDate: LocalDate?,
     cohort: Cas2CohortDto?,
   ): CasResult<Cas2ApplicationEntity> {
-    val application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
+    val application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2HdcServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
@@ -217,7 +217,7 @@ class Cas2v2ApplicationService(
 
   @SuppressWarnings("ReturnCount")
   fun abandonCas2v2Application(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
-    val application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
+    val application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2HdcServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
@@ -252,7 +252,7 @@ class Cas2v2ApplicationService(
 
     cas2LockableApplicationRepository.acquirePessimisticLock(applicationId)
 
-    var application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
+    var application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2HdcServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
     val serializedTranslatedDocument = jsonMapper.writeValueAsString(submitCas2v2Application.translatedDocument)

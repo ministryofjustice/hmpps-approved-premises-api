@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.ProbationOffenderSearchResult
@@ -35,7 +35,7 @@ class Cas2HdcPeopleController(
   @SuppressWarnings("TooGenericExceptionThrown", "ThrowsCount")
   @GetMapping("/people/search")
   fun peopleSearchGet(@RequestParam nomsNumber: String): ResponseEntity<Person> {
-    val currentUser = cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC)
+    val currentUser = cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
 
     when (val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)) {
       is ProbationOffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")

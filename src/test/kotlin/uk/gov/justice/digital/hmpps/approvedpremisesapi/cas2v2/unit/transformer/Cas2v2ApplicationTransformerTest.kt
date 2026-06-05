@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcTimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
@@ -53,11 +53,11 @@ class Cas2v2ApplicationTransformerTest {
   )
 
   private val user = Cas2UserEntityFactory()
-    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     .produce()
 
   private val cas2ApplicationFactory = Cas2ApplicationEntityFactory()
-    .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+    .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
     .withCreatedByUser(user)
 
   private val submittedCas2ApplicationFactory = cas2ApplicationFactory
@@ -86,7 +86,7 @@ class Cas2v2ApplicationTransformerTest {
       val application = cas2ApplicationFactory
         .withSubmittedAt(null)
         .withApplicationOrigin(ApplicationOrigin.prisonBail)
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+        .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
         .withCohort(Cas2Cohort.PRISON_BAIL)
         .produce()
 
@@ -113,7 +113,7 @@ class Cas2v2ApplicationTransformerTest {
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.createdBy.id).isEqualTo(user.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
-      assertThat(result.timelineEvents).isEqualTo(listOf<Cas2TimelineEvent>())
+      assertThat(result.timelineEvents).isEqualTo(listOf<Cas2HdcTimelineEvent>())
       assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
       assertThat(result.cohort).isEqualTo(Cas2CohortDto.PRISON_BAIL)
     }
@@ -126,7 +126,7 @@ class Cas2v2ApplicationTransformerTest {
       val application = submittedCas2ApplicationFactory
         .withAssessment(
           Cas2AssessmentEntityFactory()
-            .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
             .produce(),
         ).produce()
 
@@ -154,7 +154,7 @@ class Cas2v2ApplicationTransformerTest {
 
       val application = submittedCas2ApplicationFactory.withAssessment(
         Cas2AssessmentEntityFactory()
-          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
+          .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
           .produce(),
       ).produce()
 

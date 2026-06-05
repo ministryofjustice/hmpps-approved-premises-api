@@ -4,8 +4,8 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcAssessmentsTransformer
@@ -19,7 +19,7 @@ class AssessmentsTransformerTest {
     .withStatusUpdates(mutableListOf(mockStatusUpdateEntity, mockStatusUpdateEntity))
     .produce()
   private val mockCas2HdcStatusUpdateTransformer = mockk<Cas2HdcStatusUpdateTransformer>()
-  private val mockStatusUpdateApi = mockk<Cas2StatusUpdate>()
+  private val mockStatusUpdateApi = mockk<Cas2HdcStatusUpdate>()
   private val cas2HdcAssessmentsTransformer = Cas2HdcAssessmentsTransformer(mockCas2HdcStatusUpdateTransformer)
 
   @Test
@@ -28,7 +28,7 @@ class AssessmentsTransformerTest {
     val transformation = cas2HdcAssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity)
 
     Assertions.assertThat(transformation).isEqualTo(
-      Cas2Assessment(
+      Cas2HdcAssessment(
         assessmentEntity.id,
         assessmentEntity.nacroReferralId,
         assessmentEntity.assessorName,
