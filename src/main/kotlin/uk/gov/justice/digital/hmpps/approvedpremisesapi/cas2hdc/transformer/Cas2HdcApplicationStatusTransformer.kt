@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusDetail
 
 @Component("Cas2ApplicationStatusTransformer")
-class ApplicationStatusTransformer {
+class Cas2HdcApplicationStatusTransformer {
   fun transformModelToApi(status: Cas2PersistedApplicationStatus): Cas2ApplicationStatus = Cas2ApplicationStatus(
     id = status.id,
     name = status.name,

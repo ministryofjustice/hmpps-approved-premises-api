@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 
 @Component("Cas2TimelineEventsTransformer")
-class TimelineEventsTransformer(
+class Cas2HdcTimelineEventsTransformer(
   private val prisonsApiClient: PrisonsApiClient,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)

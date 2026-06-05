@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.NomisUserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcNomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
@@ -65,7 +65,7 @@ class Cas2SubmissionTest(
   lateinit var realStatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @Autowired
-  lateinit var nomisUserTransformer: NomisUserTransformer
+  lateinit var cas2HdcNomisUserTransformer: Cas2HdcNomisUserTransformer
 
   @Autowired
   lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
@@ -483,7 +483,7 @@ class Cas2SubmissionTest(
               Cas2SubmittedApplication::class.java,
             )
 
-            val applicant = nomisUserTransformer.transformJpaToApi(
+            val applicant = cas2HdcNomisUserTransformer.transformJpaToApi(
               applicationEntity
                 .createdByUser,
             )
@@ -648,7 +648,7 @@ class Cas2SubmissionTest(
                   Cas2SubmittedApplication::class.java,
                 )
 
-                val applicant = nomisUserTransformer.transformJpaToApi(
+                val applicant = cas2HdcNomisUserTransformer.transformJpaToApi(
                   applicationEntity
                     .createdByUser,
                 )

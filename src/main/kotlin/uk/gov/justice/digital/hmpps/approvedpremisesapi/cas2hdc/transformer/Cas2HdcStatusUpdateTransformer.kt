@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import java.util.UUID
 
 @Component("Cas2StatusUpdateTransformer")
-class StatusUpdateTransformer(
-  private val externalUserTransformer: ExternalUserTransformer,
+class Cas2HdcStatusUpdateTransformer(
+  private val cas2HdcExternalUserTransformer: Cas2HdcExternalUserTransformer,
 ) {
 
   fun transformJpaToApi(
@@ -21,7 +21,7 @@ class StatusUpdateTransformer(
     name = jpa.status().name,
     label = jpa.label,
     description = jpa.description,
-    updatedBy = externalUserTransformer.transformJpaToApi(jpa.assessor),
+    updatedBy = cas2HdcExternalUserTransformer.transformJpaToApi(jpa.assessor),
     updatedAt = jpa.createdAt.toInstant(),
     statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
   )

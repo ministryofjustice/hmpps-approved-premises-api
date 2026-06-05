@@ -20,13 +20,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import java.util.UUID
 
 @Component()
-class Cas2ApplicationsTransformer(
+class Cas2HdcApplicationsTransformer(
   private val jsonMapper: JsonMapper,
   private val personTransformer: PersonTransformer,
-  private val nomisUserTransformer: NomisUserTransformer,
-  private val statusUpdateTransformer: StatusUpdateTransformer,
-  private val timelineEventsTransformer: TimelineEventsTransformer,
-  private val assessmentsTransformer: AssessmentsTransformer,
+  private val cas2HdcNomisUserTransformer: Cas2HdcNomisUserTransformer,
+  private val cas2HdcStatusUpdateTransformer: Cas2HdcStatusUpdateTransformer,
+  private val cas2HdcTimelineEventsTransformer: Cas2HdcTimelineEventsTransformer,
+  private val cas2HdcAssessmentsTransformer: Cas2HdcAssessmentsTransformer,
   private val cas2HdcUserService: Cas2HdcUserService,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
 ) {
@@ -37,7 +37,7 @@ class Cas2ApplicationsTransformer(
     return Cas2Application(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
-      createdBy = nomisUserTransformer.transformJpaToApi(jpa),
+      createdBy = cas2HdcNomisUserTransformer.transformJpaToApi(jpa),
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
       data = if (jpa.data != null) jsonMapper.readTree(jpa.data) else null,
@@ -45,8 +45,8 @@ class Cas2ApplicationsTransformer(
       status = getStatus(jpa),
       type = "CAS2",
       telephoneNumber = jpa.telephoneNumber,
-      assessment = if (jpa.assessment != null) assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
-      timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
+      assessment = if (jpa.assessment != null) cas2HdcAssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
+      timelineEvents = cas2HdcTimelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
       allocatedPomName = currentUser?.name,
       allocatedPomEmailAddress = currentUser?.email,
       currentPrisonName = omu?.prisonName ?: jpa.currentPrisonCode,
@@ -74,7 +74,7 @@ class Cas2ApplicationsTransformer(
     createdAt = jpaSummary.createdAt.toInstant(),
     submittedAt = jpaSummary.submittedAt?.toInstant(),
     status = getStatusFromSummary(jpaSummary),
-    latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
+    latestStatusUpdate = cas2HdcStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
     type = "CAS2",
     hdcEligibilityDate = jpaSummary.hdcEligibilityDate,
     crn = jpaSummary.crn,
@@ -84,7 +84,7 @@ class Cas2ApplicationsTransformer(
     bailHearingDate = jpaSummary.bailHearingDate,
   )
 
-  fun transformJpaToCas2ReferralHistory(
+  fun transformJpaToCas2HdcReferralHistory(
     jpa: Cas2ApplicationEntity,
   ): Cas2ReferralHistory {
     val latestStatusUpdate = getReferralHistoryStatus(jpa)

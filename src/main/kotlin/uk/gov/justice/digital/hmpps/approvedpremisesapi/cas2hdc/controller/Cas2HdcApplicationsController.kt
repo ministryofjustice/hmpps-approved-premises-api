@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -32,7 +32,7 @@ import java.util.UUID
 @Cas2HdcController
 class Cas2HdcApplicationsController(
   private val applicationService: Cas2HdcApplicationService,
-  private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
+  private val cas2HdcApplicationsTransformer: Cas2HdcApplicationsTransformer,
   private val jsonMapper: JsonMapper,
   private val offenderService: Cas2HdcOffenderService,
   private val userService: Cas2HdcUserService,
@@ -78,7 +78,7 @@ class Cas2HdcApplicationsController(
 
     return ResponseEntity
       .created(URI.create("/cas2-hdc/applications/${application.id}"))
-      .body(cas2ApplicationsTransformer.transformJpaToApi(application, personInfo))
+      .body(cas2HdcApplicationsTransformer.transformJpaToApi(application, personInfo))
   }
 
   @Transactional
@@ -115,7 +115,7 @@ class Cas2HdcApplicationsController(
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
-      cas2ApplicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)
+      cas2HdcApplicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)
     }
   }
 
@@ -124,6 +124,6 @@ class Cas2HdcApplicationsController(
   ): Cas2Application {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
-    return cas2ApplicationsTransformer.transformJpaToApi(application, personInfo)
+    return cas2HdcApplicationsTransformer.transformJpaToApi(application, personInfo)
   }
 }

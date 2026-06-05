@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ExternalUserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcExternalUserTransformer
 
 class ExternalUserTransformerTest {
-  private val externalUserTransformer = ExternalUserTransformer()
+  private val cas2HdcExternalUserTransformer = Cas2HdcExternalUserTransformer()
 
   @Test
   fun `transforms JPA Cas2User db entity to ExternalUser api representation`() {
@@ -24,7 +24,7 @@ class ExternalUserTransformerTest {
       email = jpaEntity.email!!,
     )
 
-    val transformation = externalUserTransformer.transformJpaToApi(jpaEntity)
+    val transformation = cas2HdcExternalUserTransformer.transformJpaToApi(jpaEntity)
 
     Assertions.assertThat(transformation).isEqualTo(expectedRepresentation)
   }

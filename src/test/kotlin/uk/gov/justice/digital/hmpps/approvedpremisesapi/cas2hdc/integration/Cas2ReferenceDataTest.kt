@@ -3,13 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusFinder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 
 class Cas2ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
-  lateinit var statusTransformer: ApplicationStatusTransformer
+  lateinit var statusTransformer: Cas2HdcApplicationStatusTransformer
 
   @Autowired
   lateinit var statusFinder: Cas2PersistedApplicationStatusFinder

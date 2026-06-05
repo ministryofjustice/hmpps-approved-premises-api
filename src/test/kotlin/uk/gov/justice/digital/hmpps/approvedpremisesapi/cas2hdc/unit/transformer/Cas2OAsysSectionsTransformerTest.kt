@@ -12,7 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysAssessmentState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2OAsysSectionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcOAsysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
@@ -24,7 +24,7 @@ class Cas2OAsysSectionsTransformerTest {
   lateinit var featureFlagService: FeatureFlagService
 
   @InjectMockKs
-  lateinit var transformer: Cas2OAsysSectionsTransformer
+  lateinit var transformer: Cas2HdcOAsysSectionsTransformer
 
   @Nested
   inner class RiskToIndividual {

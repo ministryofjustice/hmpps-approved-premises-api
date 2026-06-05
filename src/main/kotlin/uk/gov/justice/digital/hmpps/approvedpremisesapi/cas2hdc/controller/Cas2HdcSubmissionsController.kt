@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.SubmissionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcSubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
@@ -26,7 +26,7 @@ import java.util.UUID
 @Cas2HdcController
 class Cas2HdcSubmissionsController(
   private val applicationService: Cas2HdcApplicationService,
-  private val submissionsTransformer: SubmissionsTransformer,
+  private val cas2HdcSubmissionsTransformer: Cas2HdcSubmissionsTransformer,
   private val offenderService: Cas2HdcOffenderService,
   private val cas2HdcUserService: Cas2HdcUserService,
 ) {
@@ -70,7 +70,7 @@ class Cas2HdcSubmissionsController(
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
-      submissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.crn]!!)
+      cas2HdcSubmissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.crn]!!)
     }
   }
 
@@ -79,7 +79,7 @@ class Cas2HdcSubmissionsController(
   ): Cas2SubmittedApplication {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
-    return submissionsTransformer.transformJpaToApiRepresentation(
+    return cas2HdcSubmissionsTransformer.transformJpaToApiRepresentation(
       application,
       personInfo,
     )

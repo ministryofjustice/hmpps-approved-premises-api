@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.TimelineEventsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcTimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
@@ -35,7 +35,7 @@ class TimelineEventsTransformerTest {
 
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
 
-  private val timelineEventTransformer = TimelineEventsTransformer(mockPrisonsApiClient)
+  private val timelineEventTransformer = Cas2HdcTimelineEventsTransformer(mockPrisonsApiClient)
 
   @Nested
   inner class WhenThereAreTimelineEvents {

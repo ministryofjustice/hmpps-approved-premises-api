@@ -33,7 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2U
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -55,7 +55,7 @@ class StatusUpdateServiceTest {
     .produce()
 
   private val mockDomainEventService = mockk<Cas2HdcDomainEventService>()
-  private val mockStatusTransformer = mockk<ApplicationStatusTransformer>()
+  private val mockStatusTransformer = mockk<Cas2HdcApplicationStatusTransformer>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val cas2HdcEmailService = mockk<Cas2HdcEmailService>()
 

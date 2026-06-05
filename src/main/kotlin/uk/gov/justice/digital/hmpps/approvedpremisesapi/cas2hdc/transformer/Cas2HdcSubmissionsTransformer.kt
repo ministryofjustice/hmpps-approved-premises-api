@@ -13,12 +13,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import java.util.UUID
 
 @Component("Cas2SubmittedApplicationTransformer")
-class SubmissionsTransformer(
+class Cas2HdcSubmissionsTransformer(
   private val jsonMapper: JsonMapper,
   private val personTransformer: PersonTransformer,
-  private val nomisUserTransformer: NomisUserTransformer,
-  private val timelineEventsTransformer: TimelineEventsTransformer,
-  private val assessmentsTransformer: AssessmentsTransformer,
+  private val cas2HdcNomisUserTransformer: Cas2HdcNomisUserTransformer,
+  private val cas2HdcTimelineEventsTransformer: Cas2HdcTimelineEventsTransformer,
+  private val cas2HdcAssessmentsTransformer: Cas2HdcAssessmentsTransformer,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
   private val cas2HdcUserService: Cas2HdcUserService,
 ) {
@@ -32,13 +32,13 @@ class SubmissionsTransformer(
     return Cas2SubmittedApplication(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
-      submittedBy = nomisUserTransformer.transformJpaToApi(jpa),
+      submittedBy = cas2HdcNomisUserTransformer.transformJpaToApi(jpa),
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
       document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
       telephoneNumber = jpa.telephoneNumber,
-      timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
-      assessment = assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
+      timelineEvents = cas2HdcTimelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
+      assessment = cas2HdcAssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
       allocatedPomName = currentUser?.name,
       allocatedPomEmailAddress = currentUser?.email,
       currentPrisonName = omu?.prisonName ?: jpa.currentPrisonCode,

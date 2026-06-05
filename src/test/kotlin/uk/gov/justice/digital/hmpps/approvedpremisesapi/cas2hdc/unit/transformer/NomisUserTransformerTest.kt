@@ -7,10 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.NomisUserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcNomisUserTransformer
 
 class NomisUserTransformerTest {
-  private val nomisUserTransformer = NomisUserTransformer()
+  private val cas2HdcNomisUserTransformer = Cas2HdcNomisUserTransformer()
 
   @Test
   fun `transforms JPA NomisUser db entity to NomisUser api representation`() {
@@ -24,7 +24,7 @@ class NomisUserTransformerTest {
       isActive = jpaEntity.isActive,
     )
 
-    val transformation = nomisUserTransformer.transformJpaToApi(jpaEntity)
+    val transformation = cas2HdcNomisUserTransformer.transformJpaToApi(jpaEntity)
 
     assertThat(transformation).isEqualTo(expectedRepresentation)
   }
@@ -44,7 +44,7 @@ class NomisUserTransformerTest {
       isActive = jpaEntity.isActive,
     )
 
-    val transformation = nomisUserTransformer.transformJpaToApi(jpaEntity)
+    val transformation = cas2HdcNomisUserTransformer.transformJpaToApi(jpaEntity)
 
     assertThat(transformation).isEqualTo(expectedRepresentation)
   }
@@ -65,7 +65,7 @@ class NomisUserTransformerTest {
       isActive = jpaEntity.isActive,
     )
 
-    val transformation = nomisUserTransformer.transformJpaToApi(application)
+    val transformation = cas2HdcNomisUserTransformer.transformJpaToApi(application)
 
     assertThat(transformation).isEqualTo(expectedRepresentation)
   }

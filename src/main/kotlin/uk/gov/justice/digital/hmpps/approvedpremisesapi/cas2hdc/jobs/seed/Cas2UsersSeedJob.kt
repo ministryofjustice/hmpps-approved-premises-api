@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceO
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -16,7 +16,7 @@ import kotlin.random.Random
 @Component
 class Cas2UsersSeedJob(
   private val cas2UserRepository: Cas2UserRepository,
-  private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
+  private val cas2HdcApplicationsTransformer: Cas2HdcApplicationsTransformer,
 ) : SeedJob<Cas2UserSeedCsvRow>(
   requiredHeaders = setOf(
     "username",
@@ -47,7 +47,7 @@ class Cas2UsersSeedJob(
     deliusStaffCode = columns["deliusStaffCode"]?.trim()?.takeIf { it.isNotEmpty() },
     isEnabled = columns["isEnabled"]!!.trim().uppercase() == "TRUE",
     isActive = columns["isActive"]!!.trim().uppercase() == "TRUE",
-    serviceOrigin = cas2ApplicationsTransformer.serviceOriginFromText(columns["serviceOrigin"]!!.trim()),
+    serviceOrigin = cas2HdcApplicationsTransformer.serviceOriginFromText(columns["serviceOrigin"]!!.trim()),
     nomisAccountType = columns["nomisAccountType"]!!.trim(),
     externalType = columns["externalType"]!!.trim(),
   )

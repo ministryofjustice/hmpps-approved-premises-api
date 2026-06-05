@@ -19,8 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ApplicationNotesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.AssessmentsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationNotesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcAssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -35,8 +35,8 @@ import java.util.UUID
 class Cas2HdcAssessmentsController(
   private val assessmentService: Cas2HdcAssessmentService,
   private val assessmentNoteService: Cas2HdcAssessmentNoteService,
-  private val assessmentsTransformer: AssessmentsTransformer,
-  private val applicationNotesTransformer: ApplicationNotesTransformer,
+  private val cas2HdcAssessmentsTransformer: Cas2HdcAssessmentsTransformer,
+  private val cas2HdcApplicationNotesTransformer: Cas2HdcApplicationNotesTransformer,
   private val cas2HdcStatusUpdateService: Cas2HdcStatusUpdateService,
   private val cas2HdcUserService: Cas2HdcUserService,
 ) {
@@ -53,7 +53,7 @@ class Cas2HdcAssessmentsController(
     }
 
     if (assessment != null) {
-      return ResponseEntity.ok(assessmentsTransformer.transformJpaToApiRepresentation(assessment))
+      return ResponseEntity.ok(cas2HdcAssessmentsTransformer.transformJpaToApiRepresentation(assessment))
     }
 
     throw NotFoundProblem(assessmentId, "Assessment")
@@ -80,7 +80,7 @@ class Cas2HdcAssessmentsController(
     }
 
     return ResponseEntity.ok(
-      assessmentsTransformer.transformJpaToApiRepresentation(updatedAssessment),
+      cas2HdcAssessmentsTransformer.transformJpaToApiRepresentation(updatedAssessment),
     )
   }
 
@@ -115,7 +115,7 @@ class Cas2HdcAssessmentsController(
     return ResponseEntity
       .created(URI.create("/cas2-hdc/assessments/$assessmentId/notes/${note.id}"))
       .body(
-        applicationNotesTransformer.transformJpaToApi(note),
+        cas2HdcApplicationNotesTransformer.transformJpaToApi(note),
       )
   }
 

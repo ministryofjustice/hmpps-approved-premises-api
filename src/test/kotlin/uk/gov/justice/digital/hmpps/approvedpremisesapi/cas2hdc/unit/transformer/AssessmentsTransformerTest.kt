@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2Assessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.AssessmentsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.StatusUpdateTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcAssessmentsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcStatusUpdateTransformer
 
 class AssessmentsTransformerTest {
   private val mockStatusUpdateEntity = mockk<Cas2StatusUpdateEntity>()
@@ -18,14 +18,14 @@ class AssessmentsTransformerTest {
     .withAssessorName("Firsty Lasty")
     .withStatusUpdates(mutableListOf(mockStatusUpdateEntity, mockStatusUpdateEntity))
     .produce()
-  private val mockStatusUpdateTransformer = mockk<StatusUpdateTransformer>()
+  private val mockCas2HdcStatusUpdateTransformer = mockk<Cas2HdcStatusUpdateTransformer>()
   private val mockStatusUpdateApi = mockk<Cas2StatusUpdate>()
-  private val assessmentsTransformer = AssessmentsTransformer(mockStatusUpdateTransformer)
+  private val cas2HdcAssessmentsTransformer = Cas2HdcAssessmentsTransformer(mockCas2HdcStatusUpdateTransformer)
 
   @Test
   fun `transforms an assessment entity`() {
-    every { mockStatusUpdateTransformer.transformJpaToApi(mockStatusUpdateEntity) } returns mockStatusUpdateApi
-    val transformation = assessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity)
+    every { mockCas2HdcStatusUpdateTransformer.transformJpaToApi(mockStatusUpdateEntity) } returns mockStatusUpdateApi
+    val transformation = cas2HdcAssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity)
 
     Assertions.assertThat(transformation).isEqualTo(
       Cas2Assessment(

@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2OAsysSectionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcOAsysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 
 class Cas2PersonOASysRoshTest : IntegrationTestBase() {
   @Autowired
-  lateinit var oaSysSectionsTransformer: Cas2OAsysSectionsTransformer
+  lateinit var oaSysSectionsTransformer: Cas2HdcOAsysSectionsTransformer
 
   @Test
   fun `Getting RoSH by CRN without a JWT returns 401`() {

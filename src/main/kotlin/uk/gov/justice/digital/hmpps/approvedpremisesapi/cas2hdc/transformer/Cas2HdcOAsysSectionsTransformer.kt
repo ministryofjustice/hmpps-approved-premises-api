@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 
 @Service
-class Cas2OAsysSectionsTransformer(val featureFlagService: FeatureFlagService) {
+class Cas2HdcOAsysSectionsTransformer(val featureFlagService: FeatureFlagService) {
   fun transformRiskToIndividual(
     risksToTheIndividual: RisksToTheIndividual,
   ): OASysRiskToSelf = OASysRiskToSelf(

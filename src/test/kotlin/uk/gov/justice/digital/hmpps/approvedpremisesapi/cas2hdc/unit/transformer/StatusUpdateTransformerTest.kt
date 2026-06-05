@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ExternalUserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.StatusUpdateTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcExternalUserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcStatusUpdateTransformer
 import java.time.OffsetDateTime
 
 class StatusUpdateTransformerTest {
@@ -34,12 +34,12 @@ class StatusUpdateTransformerTest {
     .produce()
 
   private val mockExternalUserApi = mockk<ExternalUser>()
-  private val mockExternalUserTransformer = mockk<ExternalUserTransformer>()
-  private val statusUpdateTransformer = StatusUpdateTransformer(mockExternalUserTransformer)
+  private val mockCas2HdcExternalUserTransformer = mockk<Cas2HdcExternalUserTransformer>()
+  private val cas2HdcStatusUpdateTransformer = Cas2HdcStatusUpdateTransformer(mockCas2HdcExternalUserTransformer)
 
   @BeforeEach
   fun setup() {
-    every { mockExternalUserTransformer.transformJpaToApi(ofType()) } returns mockExternalUserApi
+    every { mockCas2HdcExternalUserTransformer.transformJpaToApi(ofType()) } returns mockExternalUserApi
   }
 
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by NomisUser`() {
@@ -60,7 +60,7 @@ class StatusUpdateTransformerTest {
       statusUpdateDetails = null,
     )
 
-    val transformation = statusUpdateTransformer.transformJpaToApi(jpaEntity)
+    val transformation = cas2HdcStatusUpdateTransformer.transformJpaToApi(jpaEntity)
 
     Assertions.assertThat(transformation).isEqualTo(expectedRepresentation)
   }
@@ -85,7 +85,7 @@ class StatusUpdateTransformerTest {
       statusUpdateDetails = null,
     )
 
-    val transformation = statusUpdateTransformer.transformJpaToApi(jpaEntity)
+    val transformation = cas2HdcStatusUpdateTransformer.transformJpaToApi(jpaEntity)
 
     Assertions.assertThat(transformation).isEqualTo(expectedRepresentation)
   }

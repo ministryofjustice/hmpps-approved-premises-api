@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2U
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.NomisUserEntity
 
 @Component
-class NomisUserTransformer {
+class Cas2HdcNomisUserTransformer {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity): NomisUser = NomisUser(
     id = jpa.createdByUser.id,
