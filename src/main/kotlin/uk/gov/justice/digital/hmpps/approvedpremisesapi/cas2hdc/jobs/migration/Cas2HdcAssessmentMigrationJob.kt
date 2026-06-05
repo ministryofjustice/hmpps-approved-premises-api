@@ -14,7 +14,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Component
-class Cas2AssessmentMigrationJob(
+class Cas2HdcAssessmentMigrationJob(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationRepository: Cas2ApplicationRepository,
   private val transactionTemplate: TransactionTemplate,

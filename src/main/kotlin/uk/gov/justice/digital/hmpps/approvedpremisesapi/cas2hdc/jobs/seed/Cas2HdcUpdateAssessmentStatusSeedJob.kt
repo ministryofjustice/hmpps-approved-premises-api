@@ -14,12 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
 @Component
-class Cas2UpdateAssessmentStatusSeedJob(
+class Cas2HdcUpdateAssessmentStatusSeedJob(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationRepository: Cas2ApplicationRepository,
   private val cas2UserRepository: Cas2UserRepository,
   private val cas2UpdateService: Cas2HdcStatusUpdateService,
-) : SeedJob<Cas2AssessmentUpdateStatusSeedRow>(
+) : SeedJob<Cas2HdcAssessmentUpdateStatusSeedRow>(
   requiredHeaders =
   setOf(
     "assessmentId",
@@ -31,7 +31,7 @@ class Cas2UpdateAssessmentStatusSeedJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun deserializeRow(columns: Map<String, String>) = Cas2AssessmentUpdateStatusSeedRow(
+  override fun deserializeRow(columns: Map<String, String>) = Cas2HdcAssessmentUpdateStatusSeedRow(
     assessmentId = UUID.fromString(columns["assessmentId"]!!.trim()),
     applicationId = UUID.fromString(columns["applicationId"]!!.trim()),
     assessorUsername = columns["assessorUsername"]!!.trim(),
@@ -39,7 +39,7 @@ class Cas2UpdateAssessmentStatusSeedJob(
     newStatusDetails = columns["newStatusDetails"]?.split("||") ?: emptyList(),
   )
 
-  override fun processRow(row: Cas2AssessmentUpdateStatusSeedRow) {
+  override fun processRow(row: Cas2HdcAssessmentUpdateStatusSeedRow) {
     log.info(
       "Processing assessment cancellation for assessment ${row.assessmentId} " +
         "for application ${row.applicationId}",
@@ -85,7 +85,7 @@ class Cas2UpdateAssessmentStatusSeedJob(
   }
 }
 
-data class Cas2AssessmentUpdateStatusSeedRow(
+data class Cas2HdcAssessmentUpdateStatusSeedRow(
   val assessmentId: UUID,
   val applicationId: UUID,
   val assessorUsername: String,

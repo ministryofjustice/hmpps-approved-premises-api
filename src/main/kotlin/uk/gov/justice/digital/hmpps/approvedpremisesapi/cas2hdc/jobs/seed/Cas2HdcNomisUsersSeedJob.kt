@@ -9,7 +9,7 @@ import java.util.UUID
 import kotlin.random.Random
 
 @Component
-class NomisUsersSeedJob(
+class Cas2HdcNomisUsersSeedJob(
   private val repository: NomisUserRepository,
 ) : SeedJob<NomisUserSeedCsvRow>(
   requiredHeaders = setOf("nomisUsername", "name", "email"),

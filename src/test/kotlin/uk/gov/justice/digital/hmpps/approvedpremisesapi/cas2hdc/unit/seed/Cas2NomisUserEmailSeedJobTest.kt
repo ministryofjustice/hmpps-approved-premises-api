@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2NomisUserEmailSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcNomisUserEmailSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.NomisUsernameEmailRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.NomisUserRepository
@@ -22,7 +22,7 @@ class Cas2NomisUserEmailSeedJobTest {
   private lateinit var nomisUserRepository: NomisUserRepository
 
   @InjectMockKs
-  private lateinit var seedJob: Cas2NomisUserEmailSeedJob
+  private lateinit var seedJob: Cas2HdcNomisUserEmailSeedJob
 
   @Test
   fun `fails if no user found`() {

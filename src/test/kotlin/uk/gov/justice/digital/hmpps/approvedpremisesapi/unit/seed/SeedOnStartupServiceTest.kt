@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1SeedPremisesFromCsvJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1StartupScript
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2StartupScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcStartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed.Cas2v2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
@@ -42,7 +42,7 @@ class SeedOnStartupServiceTest {
   private val mockTransactionTemplate = mockk<TransactionTemplate>()
   private val mockSeedLogger = mockk<SeedLogger>()
   private val mockCas1StartupScript = mockk<Cas1StartupScript>()
-  private val mockCas2StartupScript = mockk<Cas2StartupScript>()
+  private val mockCas2HdcStartupScript = mockk<Cas2HdcStartupScript>()
   private val mockCas2v2StartupScript = mockk<Cas2v2StartupScript>()
   private val mockSeedService = mockk<SeedService>()
   private val mockEnvironmentService = mockk<EnvironmentService>()
@@ -53,7 +53,7 @@ class SeedOnStartupServiceTest {
   private val seedService = SeedOnStartupService(
     seedConfig,
     mockCas1StartupScript,
-    mockCas2StartupScript,
+    mockCas2HdcStartupScript,
     mockCas2v2StartupScript,
     mockSeedService,
     mockSeedLogger,
@@ -76,7 +76,7 @@ class SeedOnStartupServiceTest {
       logEntries += LogEntry(it.invocation.args[0] as String, "error", it.invocation.args[1] as Throwable)
     }
     every { mockCas1StartupScript.script() } answers { }
-    every { mockCas2StartupScript.script() } answers { }
+    every { mockCas2HdcStartupScript.script() } answers { }
   }
 
   @Test
@@ -205,7 +205,7 @@ class SeedOnStartupServiceTest {
       seedService.seedOnStartup()
 
       verify { mockCas1StartupScript wasNot Called }
-      verify { mockCas2StartupScript wasNot Called }
+      verify { mockCas2HdcStartupScript wasNot Called }
     }
 
     @Test
@@ -218,7 +218,7 @@ class SeedOnStartupServiceTest {
       seedService.seedOnStartup()
 
       verify { mockCas1StartupScript.script() }
-      verify { mockCas2StartupScript wasNot Called }
+      verify { mockCas2HdcStartupScript wasNot Called }
     }
   }
 
@@ -234,7 +234,7 @@ class SeedOnStartupServiceTest {
       seedService.seedOnStartup()
 
       verify { mockCas1StartupScript wasNot Called }
-      verify { mockCas2StartupScript wasNot Called }
+      verify { mockCas2HdcStartupScript wasNot Called }
     }
 
     @Test
@@ -247,7 +247,7 @@ class SeedOnStartupServiceTest {
       seedService.seedOnStartup()
 
       verify { mockCas1StartupScript wasNot Called }
-      verify { mockCas2StartupScript.script() }
+      verify { mockCas2HdcStartupScript.script() }
     }
   }
 }

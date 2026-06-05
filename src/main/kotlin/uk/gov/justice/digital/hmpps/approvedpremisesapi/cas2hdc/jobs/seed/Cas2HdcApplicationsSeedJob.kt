@@ -28,18 +28,18 @@ import java.util.UUID
 
 @Component
 @SuppressWarnings("LongParameterList")
-class Cas2ApplicationsSeedJob(
+class Cas2HdcApplicationsSeedJob(
   private val repository: Cas2ApplicationRepository,
   private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
-) : SeedJob<Cas2ApplicationSeedCsvRow>(
+) : SeedJob<Cas2HdcApplicationSeedCsvRow>(
   requiredHeaders = setOf("id", "nomsNumber", "crn", "state", "createdBy", "createdAt", "submittedAt", "statusUpdates", "location"),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun deserializeRow(columns: Map<String, String>) = Cas2ApplicationSeedCsvRow(
+  override fun deserializeRow(columns: Map<String, String>) = Cas2HdcApplicationSeedCsvRow(
     id = UUID.fromString(columns["id"]!!.trim()),
     nomsNumber = columns["nomsNumber"]!!.trim(),
     crn = columns["crn"]!!.trim(),
@@ -52,7 +52,7 @@ class Cas2ApplicationsSeedJob(
     referringPrisonCode = columns["referringPrisonCode"]!!.trim(),
   )
 
-  override fun processRow(row: Cas2ApplicationSeedCsvRow) {
+  override fun processRow(row: Cas2HdcApplicationSeedCsvRow) {
     log.info("Setting up Application id ${row.id}")
     if (repository.findById(row.id).isPresent) {
       return log.info("Skipping ${row.id}: already seeded")
@@ -81,7 +81,7 @@ class Cas2ApplicationsSeedJob(
     }
   }
 
-  private fun createApplication(row: Cas2ApplicationSeedCsvRow, applicant: Cas2UserEntity) {
+  private fun createApplication(row: Cas2HdcApplicationSeedCsvRow, applicant: Cas2UserEntity) {
     val application = repository.save(
       Cas2ApplicationEntity(
         id = row.id,
@@ -107,7 +107,7 @@ class Cas2ApplicationsSeedJob(
     }
   }
 
-  private fun applyFirstClassFields(application: Cas2ApplicationEntity, row: Cas2ApplicationSeedCsvRow) {
+  private fun applyFirstClassFields(application: Cas2ApplicationEntity, row: Cas2HdcApplicationSeedCsvRow) {
     repository.saveAndFlush(
       application.apply {
         referringPrisonCode = row.referringPrisonCode
@@ -188,7 +188,7 @@ class Cas2ApplicationsSeedJob(
   private fun parseDateIfNotNull(date: String?) = date?.let { OffsetDateTime.parse(it) }
 }
 
-data class Cas2ApplicationSeedCsvRow(
+data class Cas2HdcApplicationSeedCsvRow(
   val id: UUID,
   val nomsNumber: String,
   val crn: String,

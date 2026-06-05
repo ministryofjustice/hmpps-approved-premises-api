@@ -7,7 +7,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusFinder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2StartupScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcStartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -47,7 +47,7 @@ class StartupScriptConfigTest {
 
   private val seedConfig = SeedConfig()
 
-  private val autoScript = Cas2StartupScript(
+  private val autoScript = Cas2HdcStartupScript(
     mockSeedLogger,
     seedConfig,
     mockCas2UserRepository,

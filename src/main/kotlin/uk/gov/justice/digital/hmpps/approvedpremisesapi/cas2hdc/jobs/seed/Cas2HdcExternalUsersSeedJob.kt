@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
 @Component
-class ExternalUsersSeedJob(
+class Cas2HdcExternalUsersSeedJob(
   private val repository: ExternalUserRepository,
 ) : SeedJob<ExternalUserSeedCsvRow>(
   requiredHeaders = setOf("username", "name", "email"),

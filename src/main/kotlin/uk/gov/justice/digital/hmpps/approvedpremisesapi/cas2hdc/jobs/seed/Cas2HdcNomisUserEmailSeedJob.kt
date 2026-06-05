@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Nomis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 
 @Component
-class Cas2NomisUserEmailSeedJob(
+class Cas2HdcNomisUserEmailSeedJob(
   private val nomisUsersRepository: NomisUserRepository,
 ) : SeedJob<NomisUsernameEmailRow>() {
   private val log = LoggerFactory.getLogger(this::class.java)

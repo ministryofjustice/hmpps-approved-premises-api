@@ -38,7 +38,7 @@ const val MOST_UPDATES = 6
 const val MINUTES_PER_DAY = 60 * 24
 
 @Component
-class Cas2StartupScript(
+class Cas2HdcStartupScript(
   private val seedLogger: SeedLogger,
   private val seedConfig: SeedConfig,
   private val cas2UserRepository: Cas2UserRepository,

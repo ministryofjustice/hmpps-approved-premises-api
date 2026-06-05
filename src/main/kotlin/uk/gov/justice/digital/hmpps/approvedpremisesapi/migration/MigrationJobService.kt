@@ -16,10 +16,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1Updat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateAssessmentReportPropertiesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateRoomCodesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.UpdateSentenceTypeAndSituationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2AssessmentMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2BackfillApplicationCohortJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2NoteMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2StatusUpdateMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcAssessmentMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcBackfillApplicationCohortJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcNoteMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcStatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3AdjustPremisesDomainEventDatesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3FixWalesHptPremises
@@ -53,9 +53,9 @@ class MigrationJobService(
         MigrationJobType.updateBookingStatus -> getBean(BookingStatusMigrationJob::class)
         MigrationJobType.updateTaskDueDates -> getBean(Cas1TaskDueMigrationJob::class)
         MigrationJobType.updateUsersPduByApi -> getBean(UpdateUsersPduJob::class)
-        MigrationJobType.updateCas2ApplicationsWithAssessments -> getBean(Cas2AssessmentMigrationJob::class)
-        MigrationJobType.updateCas2StatusUpdatesWithAssessments -> getBean(Cas2StatusUpdateMigrationJob::class)
-        MigrationJobType.updateCas2NotesWithAssessments -> getBean(Cas2NoteMigrationJob::class)
+        MigrationJobType.updateCas2ApplicationsWithAssessments -> getBean(Cas2HdcAssessmentMigrationJob::class)
+        MigrationJobType.updateCas2StatusUpdatesWithAssessments -> getBean(Cas2HdcStatusUpdateMigrationJob::class)
+        MigrationJobType.updateCas2NotesWithAssessments -> getBean(Cas2HdcNoteMigrationJob::class)
         MigrationJobType.updateCas1BackfillUserApArea -> getBean(Cas1BackfillUserApArea::class)
         MigrationJobType.updateCas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
         MigrationJobType.updateCas3BookingOffenderName -> getBean(Cas3UpdateBookingOffenderNameJob::class)
@@ -74,7 +74,7 @@ class MigrationJobService(
         MigrationJobType.updateCas3ArchiveUnarchiveDomainEventDetails -> getBean(Cas3UpdateArchiveUnarchiveDomainEventDetailsJob::class)
         MigrationJobType.updateCas3BedspaceStartDate -> getBean(Cas3UpdateBedspaceStartDateJob::class)
         MigrationJobType.updateCas3PremisesDomainEventDates -> getBean(Cas3AdjustPremisesDomainEventDatesJob::class)
-        MigrationJobType.cas2BackfillApplicationCohorts -> getBean(Cas2BackfillApplicationCohortJob::class)
+        MigrationJobType.cas2BackfillApplicationCohorts -> getBean(Cas2HdcBackfillApplicationCohortJob::class)
       }
 
       if (job.shouldRunInTransaction) {

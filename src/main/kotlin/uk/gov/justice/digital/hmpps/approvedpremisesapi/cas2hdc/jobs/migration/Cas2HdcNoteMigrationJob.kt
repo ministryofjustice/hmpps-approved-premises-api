@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 
 @Component
-class Cas2NoteMigrationJob(
+class Cas2HdcNoteMigrationJob(
   private val noteRepository: Cas2ApplicationNoteRepository,
   private val transactionTemplate: TransactionTemplate,
 ) : MigrationJob() {

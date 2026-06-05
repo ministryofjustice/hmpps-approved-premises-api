@@ -10,7 +10,7 @@ import java.util.regex.Pattern
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
 @Component
-class ShortTermAccommodationCreateOmusSeedJob(
+class Cas2HdcShortTermAccommodationCreateOmusSeedJob(
   private val repository: OffenderManagementUnitRepository,
 ) : SeedJob<OmuSeedCsvRow>(
   requiredHeaders = setOf("prisonCode", "prisonName", "email"),

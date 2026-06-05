@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2I
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 
 @Component
-class Cas2BackfillApplicationCohortJob(
+class Cas2HdcBackfillApplicationCohortJob(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
   private val transactionTemplate: TransactionTemplate,
 ) : MigrationJob() {
