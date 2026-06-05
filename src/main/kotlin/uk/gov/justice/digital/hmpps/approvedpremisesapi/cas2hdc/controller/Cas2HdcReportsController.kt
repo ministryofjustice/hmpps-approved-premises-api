@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxS
   value = [ "\${api.base-path:}/cas2-hdc"],
   produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
 )
-class Cas2ReportsController(private val reportService: Cas2ReportsService) {
+class Cas2HdcReportsController(private val reportService: Cas2ReportsService) {
 
   @GetMapping("/reports/{reportName}")
   fun reportsReportNameGet(@PathVariable reportName: Cas2ReportName): ResponseEntity<StreamingResponseBody> = when (reportName) {

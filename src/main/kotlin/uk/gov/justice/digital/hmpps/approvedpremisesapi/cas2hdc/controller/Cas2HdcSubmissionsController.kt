@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
-@Cas2Controller
-class Cas2SubmissionsController(
+@Cas2HdcController
+class Cas2HdcSubmissionsController(
   private val applicationService: Cas2ApplicationService,
   private val submissionsTransformer: SubmissionsTransformer,
   private val offenderService: Cas2OffenderService,

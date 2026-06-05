@@ -23,4 +23,4 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
   required = true,
   content = [Content(schema = Schema(implementation = ServiceName::class))],
 )
-internal annotation class Cas2Controller
+internal annotation class Cas2HdcController

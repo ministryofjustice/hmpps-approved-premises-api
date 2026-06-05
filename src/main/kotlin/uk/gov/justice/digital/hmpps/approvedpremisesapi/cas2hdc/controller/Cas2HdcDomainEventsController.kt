@@ -13,10 +13,10 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("\${openapi.cAS2DomainEvents.base-path:}/events/cas2/")
-class Cas2DomainEventsController(private val domainEventService: Cas2DomainEventService) {
+class Cas2HdcDomainEventsController(private val domainEventService: Cas2DomainEventService) {
 
   @GetMapping("application-submitted/{eventId}")
-  fun eventsCas2ApplicationSubmittedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<Cas2ApplicationSubmittedEvent> {
+  fun eventsCas2HdcApplicationSubmittedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<Cas2ApplicationSubmittedEvent> {
     val event = domainEventService.getCas2ApplicationSubmittedDomainEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
@@ -24,7 +24,7 @@ class Cas2DomainEventsController(private val domainEventService: Cas2DomainEvent
   }
 
   @GetMapping("application-status-updated/{eventId}")
-  fun eventsCas2ApplicationStatusUpdatedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<Cas2ApplicationStatusUpdatedEvent> {
+  fun eventsCas2HdcApplicationStatusUpdatedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<Cas2ApplicationStatusUpdatedEvent> {
     val event = domainEventService.getCas2ApplicationStatusUpdatedDomainEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 

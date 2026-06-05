@@ -22,8 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
-@Cas2Controller
-class Cas2PeopleController(
+@Cas2HdcController
+class Cas2HdcPeopleController(
   private val offenderService: Cas2OffenderService,
   private val oasysService: OASysService,
   private val oaSysSectionsTransformer: Cas2OAsysSectionsTransformer,

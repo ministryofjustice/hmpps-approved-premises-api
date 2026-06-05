@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 import java.net.URI
 import java.util.UUID
 
-@Cas2Controller
-class Cas2ApplicationsController(
+@Cas2HdcController
+class Cas2HdcApplicationsController(
   private val applicationService: Cas2ApplicationService,
   private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
   private val jsonMapper: JsonMapper,
@@ -40,7 +40,7 @@ class Cas2ApplicationsController(
 
   @PaginationHeaders
   @GetMapping("/applications")
-  fun getCas2ApplicationSummaries(
+  fun getCas2HdcApplicationSummaries(
     @RequestParam assignmentType: AssignmentType,
     @RequestParam page: Int?,
   ): ResponseEntity<List<Cas2ApplicationSummary>> {
@@ -61,7 +61,7 @@ class Cas2ApplicationsController(
   }
 
   @GetMapping("/applications/{applicationId}")
-  fun getCas2Application(@PathVariable applicationId: UUID): ResponseEntity<Cas2Application> {
+  fun getCas2HdcApplication(@PathVariable applicationId: UUID): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
     val application = extractEntityFromCasResult(applicationService.getApplicationForUser(applicationId, user))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
@@ -69,7 +69,7 @@ class Cas2ApplicationsController(
 
   @Transactional
   @PostMapping("/applications")
-  fun createCas2Application(@RequestBody body: NewApplication): ResponseEntity<Cas2Application> {
+  fun createCas2HdcApplication(@RequestBody body: NewApplication): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
     val applicationResult = applicationService.createApplication(personInfo, user)
@@ -83,7 +83,7 @@ class Cas2ApplicationsController(
 
   @Transactional
   @PutMapping("/applications/{applicationId}")
-  fun updateCas2Application(
+  fun updateCas2HdcApplication(
     @PathVariable applicationId: UUID,
     @RequestBody body: UpdateCas2Application,
   ): ResponseEntity<Cas2Application> {
@@ -103,7 +103,7 @@ class Cas2ApplicationsController(
 
   @Transactional
   @PutMapping("/applications/{applicationId}/abandon")
-  fun abandonCas2Application(@PathVariable applicationId: UUID): ResponseEntity<Unit> {
+  fun abandonCas2HdcApplication(@PathVariable applicationId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest(Cas2ServiceOrigin.HDC)
     extractEntityFromCasResult(applicationService.abandonApplication(applicationId, user))
     return ResponseEntity.ok(Unit)

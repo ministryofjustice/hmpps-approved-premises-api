@@ -31,8 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import java.net.URI
 import java.util.UUID
 
-@Cas2Controller
-class Cas2AssessmentsController(
+@Cas2HdcController
+class Cas2HdcAssessmentsController(
   private val assessmentService: Cas2AssessmentService,
   private val assessmentNoteService: Cas2AssessmentNoteService,
   private val assessmentsTransformer: AssessmentsTransformer,

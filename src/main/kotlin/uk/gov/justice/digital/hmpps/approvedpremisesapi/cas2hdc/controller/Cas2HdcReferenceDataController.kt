@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ApplicationStatusTransformer
 
-@Cas2Controller
-class Cas2ReferenceDataController(
+@Cas2HdcController
+class Cas2HdcReferenceDataController(
   private val statusTransformer: ApplicationStatusTransformer,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) {
