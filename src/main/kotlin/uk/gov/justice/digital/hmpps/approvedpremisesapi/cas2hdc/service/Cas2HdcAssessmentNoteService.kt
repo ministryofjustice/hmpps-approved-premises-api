@@ -23,15 +23,15 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class Cas2AssessmentNoteService(
+class Cas2HdcAssessmentNoteService(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationNoteRepository: Cas2ApplicationNoteRepository,
-  private val cas2UserService: Cas2UserService,
+  private val cas2HdcUserService: Cas2HdcUserService,
   private val httpAuthService: HttpAuthService,
   private val emailNotificationService: EmailNotificationService,
-  private val userAccessService: Cas2UserAccessService,
+  private val userAccessService: Cas2HdcUserAccessService,
   private val notifyConfig: NotifyConfig,
-  private val cas2EmailService: Cas2EmailService,
+  private val cas2HdcEmailService: Cas2HdcEmailService,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) {
@@ -44,7 +44,7 @@ class Cas2AssessmentNoteService(
       ?: return AuthorisableActionResult.NotFound()
 
     if (httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()) {
-      val savedNote = saveNote(assessment, note.note, cas2UserService.getUserForRequest(assessment.serviceOrigin))
+      val savedNote = saveNote(assessment, note.note, cas2HdcUserService.getUserForRequest(assessment.serviceOrigin))
       sendEmailToReferrer(savedNote)
 
       return AuthorisableActionResult.Success(
@@ -53,7 +53,7 @@ class Cas2AssessmentNoteService(
         ),
       )
     } else {
-      val user = cas2UserService.getUserForRequest(assessment.serviceOrigin)
+      val user = cas2HdcUserService.getUserForRequest(assessment.serviceOrigin)
       if (userAccessService.offenderIsFromSamePrisonAsUser(assessment.application.currentPrisonCode, user.activeNomisCaseloadId)) {
         val savedNote = saveNote(assessment, note.note, user)
         sendEmailToAssessors(savedNote)
@@ -70,7 +70,7 @@ class Cas2AssessmentNoteService(
   }
 
   private fun sendEmailToReferrer(savedNote: Cas2ApplicationNoteEntity) {
-    val email = cas2EmailService.getReferrerEmail(savedNote.application)
+    val email = cas2HdcEmailService.getReferrerEmail(savedNote.application)
     if (email != null) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = email,

@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.SubmissionsTransformer
@@ -36,7 +36,7 @@ class SubmissionsTransformerTest {
   private val mockTimelineEventsTransformer = mockk<TimelineEventsTransformer>()
   private val mockAssessmentsTransformer = mockk<AssessmentsTransformer>()
   private val mockOffenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
-  private val mockCas2UserService = mockk<Cas2UserService>()
+  private val mockCas2HdcUserService = mockk<Cas2HdcUserService>()
 
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()
 
@@ -47,7 +47,7 @@ class SubmissionsTransformerTest {
     mockTimelineEventsTransformer,
     mockAssessmentsTransformer,
     mockOffenderManagementUnitRepository,
-    mockCas2UserService,
+    mockCas2HdcUserService,
   )
 
   private val nomisUserEntity = Cas2UserEntityFactory().produce()
@@ -80,7 +80,7 @@ class SubmissionsTransformerTest {
     every { mockTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
     every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
     every { mockOffenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
-    every { mockCas2UserService.getNomisUserById(any(), eq(Cas2ServiceOrigin.HDC)) } returns nomisUserEntity
+    every { mockCas2HdcUserService.getNomisUserById(any(), eq(Cas2ServiceOrigin.HDC)) } returns nomisUserEntity
   }
 
   @Nested
@@ -96,7 +96,7 @@ class SubmissionsTransformerTest {
       val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
 
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
-      every { mockCas2UserService.getNomisUserById(any(), eq(Cas2ServiceOrigin.HDC)) } returns nomisUserEntity
+      every { mockCas2HdcUserService.getNomisUserById(any(), eq(Cas2ServiceOrigin.HDC)) } returns nomisUserEntity
 
       every { mockNomisUserTransformer.transformJpaToApi(any<Cas2ApplicationEntity>()) } returns mockNomisUser
 

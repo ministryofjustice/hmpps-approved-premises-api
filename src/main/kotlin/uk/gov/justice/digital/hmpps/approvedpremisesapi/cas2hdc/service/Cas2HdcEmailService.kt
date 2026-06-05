@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import java.util.UUID
 
 @Service
-class Cas2EmailService(
+class Cas2HdcEmailService(
   private val emailNotificationService: EmailNotificationService,
   private val cas2UserRepository: Cas2UserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,

@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
@@ -41,7 +41,7 @@ class Cas2v2StatusUpdateService(
   private val cas2AssessmentRepository: Cas2AssessmentRepository,
   private val cas2StatusUpdateRepository: Cas2StatusUpdateRepository,
   private val cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
-  private val domainEventService: Cas2DomainEventService,
+  private val domainEventService: Cas2HdcDomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val cas2v2PersistedApplicationStatusFinder: Cas2v2PersistedApplicationStatusFinder,
   private val statusTransformer: ApplicationStatusTransformer,
@@ -122,7 +122,7 @@ class Cas2v2StatusUpdateService(
     val newStatus = statusUpdate.status()
     val assessor = statusUpdate.assessor
 
-    domainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(
+    domainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,

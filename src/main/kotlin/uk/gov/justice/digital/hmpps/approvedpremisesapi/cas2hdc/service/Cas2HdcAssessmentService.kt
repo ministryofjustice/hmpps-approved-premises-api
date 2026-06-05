@@ -13,12 +13,12 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class Cas2AssessmentService(
+class Cas2HdcAssessmentService(
   private val assessmentRepository: Cas2AssessmentRepository,
 ) {
 
   @Transactional
-  fun createCas2Assessment(cas2ApplicationEntity: Cas2ApplicationEntity): Cas2AssessmentEntity = assessmentRepository.save(
+  fun createCas2HdcAssessment(cas2ApplicationEntity: Cas2ApplicationEntity): Cas2AssessmentEntity = assessmentRepository.save(
     Cas2AssessmentEntity(
       id = UUID.randomUUID(),
       createdAt = OffsetDateTime.now(),

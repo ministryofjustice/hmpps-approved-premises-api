@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateNonAssignable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -27,12 +27,12 @@ class Cas2ApplicationsTransformer(
   private val statusUpdateTransformer: StatusUpdateTransformer,
   private val timelineEventsTransformer: TimelineEventsTransformer,
   private val assessmentsTransformer: AssessmentsTransformer,
-  private val cas2UserService: Cas2UserService,
+  private val cas2HdcUserService: Cas2HdcUserService,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
-    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getNomisUserById(jpa.currentPomUserId!!, jpa.serviceOrigin) }
+    val currentUser = jpa.currentPomUserId?.let { cas2HdcUserService.getNomisUserById(jpa.currentPomUserId!!, jpa.serviceOrigin) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     return Cas2Application(
       id = jpa.id,

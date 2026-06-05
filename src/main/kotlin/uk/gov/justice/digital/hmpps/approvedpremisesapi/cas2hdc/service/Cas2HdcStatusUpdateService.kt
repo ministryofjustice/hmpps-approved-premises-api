@@ -43,15 +43,15 @@ object Constants {
 }
 
 @Service
-class StatusUpdateService(
+class Cas2HdcStatusUpdateService(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
-  private val domainEventService: Cas2DomainEventService,
+  private val domainEventService: Cas2HdcDomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
   private val statusTransformer: ApplicationStatusTransformer,
-  private val cas2EmailService: Cas2EmailService,
+  private val cas2HdcEmailService: Cas2HdcEmailService,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
@@ -137,7 +137,7 @@ class StatusUpdateService(
     val newStatus = statusUpdate.status()
     val assessor = statusUpdate.assessor
 
-    domainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(
+    domainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,
@@ -176,7 +176,7 @@ class StatusUpdateService(
 
   // BAIL-WIP - we only use the email address in the function, can we just pass that instead
   private fun sendEmailStatusUpdated(application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
-    val email = cas2EmailService.getReferrerEmail(application)
+    val email = cas2HdcEmailService.getReferrerEmail(application)
     if (email != null) { // BAIL-WIP
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = email,

@@ -19,7 +19,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class Cas2UserService(
+class Cas2HdcUserService(
   private val httpAuthService: HttpAuthService,
   private val nomisUserRolesApiClient: NomisUserRolesApiClient,
   private val nomisUserRolesForRequesterApiClient: NomisUserRolesForRequesterApiClient,

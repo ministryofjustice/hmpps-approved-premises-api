@@ -16,8 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.StatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
@@ -45,8 +45,8 @@ class Cas2StartupScript(
   private val applicationRepository: Cas2ApplicationRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
-  private val applicationService: Cas2ApplicationService,
-  private val statusUpdateService: StatusUpdateService,
+  private val applicationService: Cas2HdcApplicationService,
+  private val cas2HdcStatusUpdateService: Cas2HdcStatusUpdateService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) {
   fun script() {
@@ -90,7 +90,7 @@ class Cas2StartupScript(
 
     if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
       val appWithPromotedProperties = applyFirstClassProperties(application)
-      applicationService.createCas2ApplicationSubmittedEvent(appWithPromotedProperties)
+      applicationService.createCas2HdcApplicationSubmittedEvent(appWithPromotedProperties)
       createAssessment(application)
     }
 
@@ -129,7 +129,7 @@ class Cas2StartupScript(
     )
     update.apply { this.createdAt = application.submittedAt!!.plusDays(idx + 1.toLong()) }
     statusUpdateRepository.save(update)
-    statusUpdateService.createStatusUpdatedDomainEvent(update)
+    cas2HdcStatusUpdateService.createStatusUpdatedDomainEvent(update)
   }
 
   private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = statusFinder.active()[idx]

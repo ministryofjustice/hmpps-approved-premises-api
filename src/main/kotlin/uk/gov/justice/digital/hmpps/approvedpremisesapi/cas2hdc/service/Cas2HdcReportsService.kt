@@ -15,7 +15,7 @@ import java.io.OutputStream
 import java.time.format.DateTimeFormatter
 
 @Service
-class Cas2ReportsService(
+class Cas2HdcReportsService(
   private val submittedApplicationReportRepository: Cas2SubmittedApplicationReportRepository,
   private val applicationStatusUpdatesReportRepository: Cas2ApplicationStatusUpdatesReportRepository,
   private val unsubmittedApplicationsReportRepository: Cas2UnsubmittedApplicationsReportRepository,

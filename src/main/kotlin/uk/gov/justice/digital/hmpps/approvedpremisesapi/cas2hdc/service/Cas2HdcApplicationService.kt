@@ -39,15 +39,15 @@ import java.util.UUID
 
 @SuppressWarnings("TooGenericExceptionThrown")
 @Service
-class Cas2ApplicationService(
+class Cas2HdcApplicationService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val lockableApplicationRepository: Cas2LockableApplicationRepository,
   private val applicationSummaryRepository: Cas2ApplicationSummaryRepository,
-  private val offenderService: Cas2OffenderService,
-  private val userAccessService: Cas2UserAccessService,
-  private val domainEventService: Cas2DomainEventService,
+  private val offenderService: Cas2HdcOffenderService,
+  private val userAccessService: Cas2HdcUserAccessService,
+  private val domainEventService: Cas2HdcDomainEventService,
   private val emailNotificationService: EmailNotificationService,
-  private val assessmentService: Cas2AssessmentService,
+  private val assessmentService: Cas2HdcAssessmentService,
   private val notifyConfig: NotifyConfig,
   private val jsonMapper: JsonMapper,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
@@ -277,7 +277,7 @@ class Cas2ApplicationService(
 
     application = applicationRepository.save(application)
 
-    createCas2ApplicationSubmittedEvent(application)
+    createCas2HdcApplicationSubmittedEvent(application)
 
     createAssessment(application)
 
@@ -286,11 +286,11 @@ class Cas2ApplicationService(
     return CasResult.Success(application)
   }
 
-  fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
+  fun createCas2HdcApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
-    domainEventService.saveCas2ApplicationSubmittedDomainEvent(
+    domainEventService.saveCas2HdcApplicationSubmittedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,
@@ -331,7 +331,7 @@ class Cas2ApplicationService(
   }
 
   fun createAssessment(application: Cas2ApplicationEntity) {
-    assessmentService.createCas2Assessment(application)
+    assessmentService.createCas2HdcAssessment(application)
   }
 
   @SuppressWarnings("ThrowsCount")

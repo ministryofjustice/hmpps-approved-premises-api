@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserAccessService
 import java.time.OffsetDateTime
 
 class Cas2UserAccessServiceTest {
@@ -13,7 +13,7 @@ class Cas2UserAccessServiceTest {
   @Nested
   inner class UserCanViewApplication {
 
-    private val userAccessService = Cas2UserAccessService()
+    private val userAccessService = Cas2HdcUserAccessService()
 
     @Nested
     inner class WhenTransferredApplication {

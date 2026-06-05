@@ -41,7 +41,7 @@ import java.util.stream.Collectors
 @Suppress(
   "ReturnCount",
 )
-class Cas2OffenderService(
+class Cas2HdcOffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val apAndOASysClient: ApAndOASysClient,

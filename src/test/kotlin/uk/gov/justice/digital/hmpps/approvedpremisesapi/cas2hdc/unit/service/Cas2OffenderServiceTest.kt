@@ -10,7 +10,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -43,7 +43,7 @@ class Cas2OffenderServiceTest {
   private val mockApOASysContextApiClient = mockk<ApAndOASysClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
 
-  private val offenderService = Cas2OffenderService(
+  private val offenderService = Cas2HdcOffenderService(
     mockPrisonsApiClient,
     mockApDeliusContextApiClient,
     mockApOASysContextApiClient,

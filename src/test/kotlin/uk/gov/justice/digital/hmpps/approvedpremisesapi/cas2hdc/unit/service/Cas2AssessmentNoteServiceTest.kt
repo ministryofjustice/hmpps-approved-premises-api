@@ -21,10 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2AssessmentNoteService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2EmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAssessmentNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -41,14 +41,14 @@ import java.util.UUID
 class Cas2AssessmentNoteServiceTest {
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
   private val mockApplicationNoteRepository = mockk<Cas2ApplicationNoteRepository>()
-  private val mockUserService = mockk<Cas2UserService>()
+  private val mockUserService = mockk<Cas2HdcUserService>()
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
-  private val mockUserAccessService = mockk<Cas2UserAccessService>()
+  private val mockUserAccessService = mockk<Cas2HdcUserAccessService>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
-  private val cas2EmailService = mockk<Cas2EmailService>()
+  private val cas2HdcEmailService = mockk<Cas2HdcEmailService>()
 
-  private val assessmentNoteService = Cas2AssessmentNoteService(
+  private val assessmentNoteService = Cas2HdcAssessmentNoteService(
     mockAssessmentRepository,
     mockApplicationNoteRepository,
     mockUserService,
@@ -56,7 +56,7 @@ class Cas2AssessmentNoteServiceTest {
     mockEmailNotificationService,
     mockUserAccessService,
     mockNotifyConfig,
-    cas2EmailService,
+    cas2HdcEmailService,
     "http://frontend/applications/#id/overview",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -471,7 +471,7 @@ class Cas2AssessmentNoteServiceTest {
         )
         every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC) } returns assessment
         every { mockUserService.getUserForRequest(Cas2ServiceOrigin.HDC) } returns externalUser
-        every { cas2EmailService.getReferrerEmail(any()) } returns "email"
+        every { cas2HdcEmailService.getReferrerEmail(any()) } returns "email"
         every { mockApplicationNoteRepository.save(any()) } answers
           {
             noteEntity
@@ -532,7 +532,7 @@ class Cas2AssessmentNoteServiceTest {
 
         every { mockAssessmentRepository.findByIdAndServiceOrigin(assessment.id, Cas2ServiceOrigin.HDC) } returns assessment
         every { mockUserService.getUserForRequest(Cas2ServiceOrigin.HDC) } returns externalUser
-        every { cas2EmailService.getReferrerEmail(any()) } answers { callOriginal() }
+        every { cas2HdcEmailService.getReferrerEmail(any()) } answers { callOriginal() }
         every { mockApplicationNoteRepository.save(any()) } answers
           {
             noteEntity

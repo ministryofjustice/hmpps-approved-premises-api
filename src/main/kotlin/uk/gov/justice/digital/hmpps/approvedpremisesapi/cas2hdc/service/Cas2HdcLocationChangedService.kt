@@ -12,11 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.catego
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 
 @Service
-class Cas2LocationChangedService(
+class Cas2HdcLocationChangedService(
   private val prisonerSearchClient: PrisonerSearchClient,
-  private val applicationService: Cas2ApplicationService,
+  private val applicationService: Cas2HdcApplicationService,
   private val applicationRepository: Cas2ApplicationRepository,
-  private val emailService: Cas2EmailService,
+  private val emailService: Cas2HdcEmailService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

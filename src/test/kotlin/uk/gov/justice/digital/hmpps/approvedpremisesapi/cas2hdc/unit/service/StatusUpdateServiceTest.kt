@@ -30,9 +30,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2EmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.StatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
@@ -54,10 +54,10 @@ class StatusUpdateServiceTest {
     .withUserType(Cas2UserType.EXTERNAL)
     .produce()
 
-  private val mockDomainEventService = mockk<Cas2DomainEventService>()
+  private val mockDomainEventService = mockk<Cas2HdcDomainEventService>()
   private val mockStatusTransformer = mockk<ApplicationStatusTransformer>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
-  private val cas2EmailService = mockk<Cas2EmailService>()
+  private val cas2HdcEmailService = mockk<Cas2HdcEmailService>()
 
   private val applicant = Cas2UserEntityFactory().produce()
   private val application = Cas2ApplicationEntityFactory()
@@ -71,7 +71,7 @@ class StatusUpdateServiceTest {
   private val applicationUrlTemplate = "http://example.com/application-status-updated/#eventId"
   private val applicationOverviewUrlTemplate = "http://example.com/application/#id/overview"
 
-  private val statusUpdateService = StatusUpdateService(
+  private val cas2HdcStatusUpdateService = Cas2HdcStatusUpdateService(
     mockAssessmentRepository,
     mockStatusUpdateRepository,
     mockStatusUpdateDetailRepository,
@@ -79,7 +79,7 @@ class StatusUpdateServiceTest {
     mockEmailNotificationService,
     mockStatusFinder,
     mockStatusTransformer,
-    cas2EmailService,
+    cas2HdcEmailService,
     applicationUrlTemplate,
     applicationOverviewUrlTemplate,
   )
@@ -128,14 +128,14 @@ class StatusUpdateServiceTest {
     fun `returns true when the given newStatus is valid`() {
       val validUpdate = Cas2AssessmentStatusUpdate(newStatus = "activeStatusName")
 
-      assertThat(statusUpdateService.isValidStatus(validUpdate)).isTrue()
+      assertThat(cas2HdcStatusUpdateService.isValidStatus(validUpdate)).isTrue()
     }
 
     @Test
     fun `returns false when the given newStatus is NOT valid`() {
       val invalidUpdate = Cas2AssessmentStatusUpdate(newStatus = "invalidStatus")
 
-      assertThat(statusUpdateService.isValidStatus(invalidUpdate)).isFalse()
+      assertThat(cas2HdcStatusUpdateService.isValidStatus(invalidUpdate)).isFalse()
     }
   }
 
@@ -163,7 +163,7 @@ class StatusUpdateServiceTest {
             cas2StatusUpdateEntity
           }
 
-        every { mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any()) } answers { }
+        every { mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(any()) } answers { }
 
         every {
           mockEmailNotificationService.sendCas2Email(
@@ -183,15 +183,15 @@ class StatusUpdateServiceTest {
 
       @Test
       fun `saves and asks the domain event service to create a status-updated event`() {
-        every { cas2EmailService.getReferrerEmail(any()) }.returns(application.createdByUser.email)
-        statusUpdateService.createForAssessment(
+        every { cas2HdcEmailService.getReferrerEmail(any()) }.returns(application.createdByUser.email)
+        cas2HdcStatusUpdateService.createForAssessment(
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
           assessor = assessor,
         )
 
         verify {
-          mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(
+          mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(
             match {
               it.crn == "CRN123" &&
                 it.applicationId == applicationId &&
@@ -241,14 +241,14 @@ class StatusUpdateServiceTest {
 
       @Test
       fun `does NOT ask the domain event service to create a status-updated event`() {
-        statusUpdateService.createForAssessment(
+        cas2HdcStatusUpdateService.createForAssessment(
           assessmentId = assessment.id,
           statusUpdate = applicationStatusUpdate,
           assessor = assessor,
         )
 
         verify(exactly = 0) {
-          mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any())
+          mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(any())
         }
 
         verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
@@ -291,7 +291,7 @@ class StatusUpdateServiceTest {
               cas2StatusUpdateDetailEntity
             }
 
-          every { mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any()) } answers { }
+          every { mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(any()) } answers { }
 
           every {
             mockEmailNotificationService.sendCas2Email(
@@ -314,9 +314,9 @@ class StatusUpdateServiceTest {
           every { mockStatusTransformer.transformStatusDetailListToDetailItemList(listOf(statusDetail)) } returns listOf(
             Cas2StatusDetail("exampleStatusDetail", ""),
           )
-          every { cas2EmailService.getReferrerEmail(any()) } returns assessment.application.createdByUser.email
+          every { cas2HdcEmailService.getReferrerEmail(any()) } returns assessment.application.createdByUser.email
 
-          statusUpdateService.createForAssessment(
+          cas2HdcStatusUpdateService.createForAssessment(
             assessmentId = assessment.id,
             statusUpdate = applicationStatusUpdateWithDetail,
             assessor = assessor,
@@ -340,7 +340,7 @@ class StatusUpdateServiceTest {
           }
 
           verify {
-            mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(
+            mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(
               match {
                 it.crn == "CRN123" &&
                   it.applicationId == applicationId &&
@@ -387,11 +387,11 @@ class StatusUpdateServiceTest {
               assessmentWithNoEmail
             }
 
-          every { cas2EmailService.getReferrerEmail(any()) } answers { callOriginal() }
+          every { cas2HdcEmailService.getReferrerEmail(any()) } answers { callOriginal() }
 
           mockkStatic(Sentry::class)
 
-          statusUpdateService.createForAssessment(
+          cas2HdcStatusUpdateService.createForAssessment(
             assessmentId = assessmentWithNoEmail.id,
             statusUpdate = applicationStatusUpdateWithDetail,
             assessor = assessor,
@@ -418,14 +418,14 @@ class StatusUpdateServiceTest {
 
         @Test
         fun `does NOT ask the domain event service to create a status-updated event`() {
-          statusUpdateService.createForAssessment(
+          cas2HdcStatusUpdateService.createForAssessment(
             assessmentId = assessment.id,
             statusUpdate = applicationStatusUpdate,
             assessor = assessor,
           )
 
           verify(exactly = 0) {
-            mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any())
+            mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(any())
           }
 
           verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }

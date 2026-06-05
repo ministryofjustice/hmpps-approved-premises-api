@@ -9,8 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2OAsysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -24,18 +24,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 
 @Cas2HdcController
 class Cas2HdcPeopleController(
-  private val offenderService: Cas2OffenderService,
+  private val offenderService: Cas2HdcOffenderService,
   private val oasysService: OASysService,
   private val oaSysSectionsTransformer: Cas2OAsysSectionsTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
-  private val cas2UserService: Cas2UserService,
+  private val cas2HdcUserService: Cas2HdcUserService,
 ) {
 
   @SuppressWarnings("TooGenericExceptionThrown", "ThrowsCount")
   @GetMapping("/people/search")
   fun peopleSearchGet(@RequestParam nomsNumber: String): ResponseEntity<Person> {
-    val currentUser = cas2UserService.getUserForRequest(Cas2ServiceOrigin.HDC)
+    val currentUser = cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC)
 
     when (val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)) {
       is ProbationOffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")

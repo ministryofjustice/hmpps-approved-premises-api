@@ -14,13 +14,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 
 @Service
-class Cas2AllocationChangedService(
+class Cas2HdcAllocationChangedService(
   private val managePomCasesClient: ManagePomCasesClient,
-  private val applicationService: Cas2ApplicationService,
+  private val applicationService: Cas2HdcApplicationService,
   private val applicationRepository: Cas2ApplicationRepository,
-  private val cas2UserService: Cas2UserService,
-  private val emailService: Cas2EmailService,
-  private val cas2LocationChangedService: Cas2LocationChangedService,
+  private val cas2HdcUserService: Cas2HdcUserService,
+  private val emailService: Cas2HdcEmailService,
+  private val cas2HdcLocationChangedService: Cas2HdcLocationChangedService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -38,7 +38,7 @@ class Cas2AllocationChangedService(
 
       when (val pomAllocation = getAllocationResponse(detailUrl)) {
         is PomAllocation -> {
-          val allocatedUser = cas2UserService.getUserByStaffId(staffId = pomAllocation.manager.code, application.serviceOrigin)
+          val allocatedUser = cas2HdcUserService.getUserByStaffId(staffId = pomAllocation.manager.code, application.serviceOrigin)
           val isSamePOM = allocatedUser.id == application.currentPomUserId
           if (isSamePOM) {
             log.info("POM has not changed for $nomsNumber.")
@@ -46,7 +46,7 @@ class Cas2AllocationChangedService(
           }
 
           if (application.isLocationChange(pomAllocation.prison.code)) {
-            cas2LocationChangedService.createLocationChangeAssignmentAndSendEmails(
+            cas2HdcLocationChangedService.createLocationChangeAssignmentAndSendEmails(
               application,
               pomAllocation.prison.code,
             )

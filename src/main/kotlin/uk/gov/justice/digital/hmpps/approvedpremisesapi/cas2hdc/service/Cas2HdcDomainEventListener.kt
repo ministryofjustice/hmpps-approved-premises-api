@@ -12,10 +12,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
 @ConditionalOnProperty(prefix = "feature-flags", name = ["cas2-sqs-listener-enabled"], havingValue = "true")
 @Service
-class Cas2DomainEventListener(
+class Cas2HdcDomainEventListener(
   private val jsonMapper: JsonMapper,
-  private val locationChangedService: Cas2LocationChangedService,
-  private val allocationChangedService: Cas2AllocationChangedService,
+  private val locationChangedService: Cas2HdcLocationChangedService,
+  private val allocationChangedService: Cas2HdcAllocationChangedService,
   private val sentryService: SentryService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)

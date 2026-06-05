@@ -15,9 +15,9 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2EmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2LocationChangedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcLocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
@@ -36,16 +36,16 @@ class Cas2LocationChangedServiceTest {
   lateinit var applicationRepository: Cas2ApplicationRepository
 
   @MockK
-  lateinit var applicationService: Cas2ApplicationService
+  lateinit var applicationService: Cas2HdcApplicationService
 
   @MockK
   lateinit var prisonerSearchClient: PrisonerSearchClient
 
   @MockK
-  lateinit var cas2EmailService: Cas2EmailService
+  lateinit var cas2HdcEmailService: Cas2HdcEmailService
 
   @InjectMockKs
-  lateinit var locationChangedService: Cas2LocationChangedService
+  lateinit var locationChangedService: Cas2HdcLocationChangedService
 
   private val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "LONDON")
   private val eventType = "prisoner-offender-search.prisoner.updated"
@@ -75,14 +75,14 @@ class Cas2LocationChangedServiceTest {
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
-    every { cas2EmailService.sendLocationChangedEmails(any(), any(), any()) } returns Unit
+    every { cas2HdcEmailService.sendLocationChangedEmails(any(), any(), any()) } returns Unit
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
     verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
     verify(exactly = 1) { applicationRepository.save(any()) }
-    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmails(any(), any(), user.id) }
+    verify(exactly = 1) { cas2HdcEmailService.sendLocationChangedEmails(any(), any(), user.id) }
   }
 
   @Test

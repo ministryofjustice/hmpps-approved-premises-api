@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
@@ -44,7 +44,7 @@ class Cas2v2ApplicationController(
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val jsonMapper: JsonMapper,
   private val cas2v2OffenderService: Cas2v2OffenderService,
-  private val cas2OffenderService: Cas2OffenderService,
+  private val cas2HdcOffenderService: Cas2HdcOffenderService,
   private val userService: Cas2v2UserService,
 ) {
 
@@ -188,7 +188,7 @@ class Cas2v2ApplicationController(
   ): List<ModelCas2v2ApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
-    val personNamesMap = cas2OffenderService.getMapOfPersonNamesAndCrns(crns)
+    val personNamesMap = cas2HdcOffenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
       cas2v2ApplicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)

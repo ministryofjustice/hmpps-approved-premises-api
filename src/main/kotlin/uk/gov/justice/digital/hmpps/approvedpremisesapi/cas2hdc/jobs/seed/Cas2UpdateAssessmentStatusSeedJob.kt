@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.StatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
@@ -18,7 +18,7 @@ class Cas2UpdateAssessmentStatusSeedJob(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationRepository: Cas2ApplicationRepository,
   private val cas2UserRepository: Cas2UserRepository,
-  private val cas2UpdateService: StatusUpdateService,
+  private val cas2UpdateService: Cas2HdcStatusUpdateService,
 ) : SeedJob<Cas2AssessmentUpdateStatusSeedRow>(
   requiredHeaders =
   setOf(

@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2Submitte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -20,14 +20,14 @@ class SubmissionsTransformer(
   private val timelineEventsTransformer: TimelineEventsTransformer,
   private val assessmentsTransformer: AssessmentsTransformer,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
-  private val cas2UserService: Cas2UserService,
+  private val cas2HdcUserService: Cas2HdcUserService,
 ) {
 
   fun transformJpaToApiRepresentation(
     jpa: Cas2ApplicationEntity,
     personInfo: PersonInfoResult.Success,
   ): Cas2SubmittedApplication {
-    val currentUser = jpa.currentPomUserId?.let { cas2UserService.getNomisUserById(jpa.currentPomUserId!!, jpa.serviceOrigin) }
+    val currentUser = jpa.currentPomUserId?.let { cas2HdcUserService.getNomisUserById(jpa.currentPomUserId!!, jpa.serviceOrigin) }
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     return Cas2SubmittedApplication(
       id = jpa.id,

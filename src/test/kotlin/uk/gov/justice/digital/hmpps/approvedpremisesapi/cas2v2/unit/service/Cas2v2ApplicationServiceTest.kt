@@ -40,7 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2C
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
@@ -71,7 +71,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2ApplicationSummaryRepository = mockk<Cas2ApplicationSummaryRepository>()
   private val mockCas2v2OffenderService = mockk<Cas2v2OffenderService>()
   private val mockCas2v2UserAccessService = mockk<Cas2v2UserAccessService>()
-  private val mockDomainEventService = mockk<Cas2DomainEventService>()
+  private val mockDomainEventService = mockk<Cas2HdcDomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
   private val mockJsonMapper = mockk<JsonMapper>()
@@ -747,7 +747,7 @@ class Cas2v2ApplicationServiceTest {
     fun setup() {
       every { mockCas2LockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(UUID.randomUUID())
       every { mockJsonMapper.writeValueAsString(submitCas2v2Application.translatedDocument) } returns "{}"
-      every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
+      every { mockDomainEventService.saveCas2HdcApplicationSubmittedDomainEvent(any()) } just Runs
     }
 
     @Test
@@ -906,7 +906,7 @@ class Cas2v2ApplicationServiceTest {
       verify { mockCas2ApplicationRepository.save(any()) }
 
       verify(exactly = 1) {
-        mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
+        mockDomainEventService.saveCas2HdcApplicationSubmittedDomainEvent(
           match {
             val data = it.data.eventDetails
 

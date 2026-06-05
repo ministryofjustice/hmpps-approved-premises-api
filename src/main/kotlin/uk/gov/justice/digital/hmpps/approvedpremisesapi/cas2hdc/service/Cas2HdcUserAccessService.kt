@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 
 @Service
-class Cas2UserAccessService {
+class Cas2HdcUserAccessService {
   fun userCanViewApplication(user: Cas2UserEntity, application: Cas2ApplicationEntity): Boolean {
     /*this needs to be refactored, but it involves refactoring other classes. This will be done
     in CAS-1598.

@@ -15,10 +15,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.NewCas2Appli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2AssessmentNoteService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.StatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAssessmentNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -33,12 +33,12 @@ import java.util.UUID
 
 @Cas2HdcController
 class Cas2HdcAssessmentsController(
-  private val assessmentService: Cas2AssessmentService,
-  private val assessmentNoteService: Cas2AssessmentNoteService,
+  private val assessmentService: Cas2HdcAssessmentService,
+  private val assessmentNoteService: Cas2HdcAssessmentNoteService,
   private val assessmentsTransformer: AssessmentsTransformer,
   private val applicationNotesTransformer: ApplicationNotesTransformer,
-  private val statusUpdateService: StatusUpdateService,
-  private val cas2UserService: Cas2UserService,
+  private val cas2HdcStatusUpdateService: Cas2HdcStatusUpdateService,
+  private val cas2HdcUserService: Cas2HdcUserService,
 ) {
 
   @SuppressWarnings("ThrowsCount")
@@ -89,10 +89,10 @@ class Cas2HdcAssessmentsController(
     @PathVariable assessmentId: UUID,
     @RequestBody cas2AssessmentStatusUpdate: Cas2AssessmentStatusUpdate,
   ): ResponseEntity<Unit> {
-    val result = statusUpdateService.createForAssessment(
+    val result = cas2HdcStatusUpdateService.createForAssessment(
       assessmentId = assessmentId,
       statusUpdate = cas2AssessmentStatusUpdate,
-      assessor = cas2UserService.getUserForRequest(Cas2ServiceOrigin.HDC),
+      assessor = cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC),
     )
 
     processAuthorisationFor(assessmentId, result)

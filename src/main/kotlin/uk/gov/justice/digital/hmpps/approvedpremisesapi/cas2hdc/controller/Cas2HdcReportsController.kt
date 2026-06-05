@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ReportName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2ReportsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcReportsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
 
 @RestController
@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxS
   value = [ "\${api.base-path:}/cas2-hdc"],
   produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
 )
-class Cas2HdcReportsController(private val reportService: Cas2ReportsService) {
+class Cas2HdcReportsController(private val reportService: Cas2HdcReportsService) {
 
   @GetMapping("/reports/{reportName}")
   fun reportsReportNameGet(@PathVariable reportName: Cas2ReportName): ResponseEntity<StreamingResponseBody> = when (reportName) {
