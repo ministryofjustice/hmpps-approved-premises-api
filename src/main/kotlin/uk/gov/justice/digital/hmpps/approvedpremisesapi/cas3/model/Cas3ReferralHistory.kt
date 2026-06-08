@@ -15,7 +15,7 @@ data class Cas3ReferralHistory(
   val referralRejectionReasonDetail: String?,
   val localAuthorityArea: String?,
   val pdu: String?,
-  val referredBy: Cas3StaffDto?,
+  val referredBy: Cas3StaffDto,
   val placementAddress: String?,
   val placementStatus: String?,
 )

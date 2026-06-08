@@ -12,7 +12,7 @@ data class Cas1ReferralHistory(
   val referralRejectionReason: String?,
   val localAuthorityArea: String?,
   val pdu: String?,
-  val referredBy: String?,
+  val referredBy: String,
   val placementAddress: String?,
   val placementStatus: String?,
 )
