@@ -16,13 +16,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.OASysAssessmentSuitabilityStrategyDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetailsInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService.SuitabilityStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
@@ -30,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1CreateApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysAssessmentInfoTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Cas1Controller
@@ -42,7 +42,6 @@ class Cas1OasysController(
   private val oaSysService: OASysService,
   private val cas1OASysAssessmentInfoTransformer: Cas1OASysAssessmentInfoTransformer,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
-  private val oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer,
   private val userAccessService: Cas1UserAccessService,
 ) {
 
@@ -61,10 +60,11 @@ class Cas1OasysController(
   )
   fun metadata(
     @PathVariable crn: String,
+    @RequestParam(defaultValue = "completed_in_last_six_months", name = "suitabilityStrategy") suitabilityStrategyDto: OASysAssessmentSuitabilityStrategyDto,
   ): ResponseEntity<Cas1OASysMetadata> {
     ensureOffenderAccess(crn)
 
-    val needDetails = extractNullableOAsysResult(oaSysService.getNeedsDetails(crn))
+    val needDetails = extractNullableOAsysResult(oaSysService.getNeedsDetails(crn, suitabilityStrategyDto.toSuitabilityStrategy()))
 
     return ResponseEntity.ok(
       Cas1OASysMetadata(
@@ -92,12 +92,15 @@ class Cas1OasysController(
     @PathVariable @Parameter(description = "CRN of the Person to fetch latest OASys selection") crn: String,
     @RequestParam group: Cas1OASysGroupName,
     @RequestParam includeOptionalSections: List<Int>?,
+    @RequestParam(defaultValue = "completed_in_last_six_months", name = "suitabilityStrategy") suitabilityStrategyDto: OASysAssessmentSuitabilityStrategyDto,
   ): ResponseEntity<Cas1OASysGroup> {
     ensureOffenderAccess(crn)
 
+    val suitabilityStrategy = suitabilityStrategyDto.toSuitabilityStrategy()
+
     val group = when (group) {
       Cas1OASysGroupName.RISK_MANAGEMENT_PLAN -> {
-        val riskManagementPlan = extractNullableOAsysResult(oaSysService.getRiskManagementPlan(crn))
+        val riskManagementPlan = extractNullableOAsysResult(oaSysService.getRiskManagementPlan(crn, suitabilityStrategy))
         Cas1OASysGroup(
           group = group,
           assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(riskManagementPlan),
@@ -105,7 +108,7 @@ class Cas1OasysController(
         )
       }
       Cas1OASysGroupName.OFFENCE_DETAILS -> {
-        val offenceDetails = extractNullableOAsysResult(oaSysService.getOffenceDetails(crn))
+        val offenceDetails = extractNullableOAsysResult(oaSysService.getOffenceDetails(crn, suitabilityStrategy))
         Cas1OASysGroup(
           group = group,
           assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(offenceDetails),
@@ -113,7 +116,7 @@ class Cas1OasysController(
         )
       }
       Cas1OASysGroupName.ROSH_SUMMARY -> {
-        val roshSummary = extractNullableOAsysResult(oaSysService.getRoshSummary(crn))
+        val roshSummary = extractNullableOAsysResult(oaSysService.getRoshSummary(crn, suitabilityStrategy))
         Cas1OASysGroup(
           group = group,
           assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(roshSummary),
@@ -121,8 +124,8 @@ class Cas1OasysController(
         )
       }
       Cas1OASysGroupName.SUPPORTING_INFORMATION -> {
-        val needsDetails = extractNullableOAsysResult(oaSysService.getNeedsDetails(crn))
-        val healthDetails = extractNullableOAsysResult(oaSysService.getHealthDetails(crn))
+        val needsDetails = extractNullableOAsysResult(oaSysService.getNeedsDetails(crn, suitabilityStrategy))
+        val healthDetails = extractNullableOAsysResult(oaSysService.getHealthDetails(crn, suitabilityStrategy))
         Cas1OASysGroup(
           group = group,
           assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(needsDetails),
@@ -134,7 +137,7 @@ class Cas1OasysController(
         )
       }
       Cas1OASysGroupName.RISK_TO_SELF -> {
-        val riskToTheIndividual = extractNullableOAsysResult(oaSysService.getRiskToTheIndividual(crn))
+        val riskToTheIndividual = extractNullableOAsysResult(oaSysService.getRiskToTheIndividual(crn, suitabilityStrategy))
         Cas1OASysGroup(
           group = group,
           assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(riskToTheIndividual),
@@ -160,7 +163,7 @@ class Cas1OasysController(
     val risksToTheIndividualWrapper = extractEntityFromCasResult(
       oaSysService.getRiskToTheIndividual(
         crn = crn,
-        suitabilityStrategy = OASysSuitabilityService.SuitabilityStrategy.AllowAll,
+        suitabilityStrategy = SuitabilityStrategy.AllowAll,
       ),
     )
 
@@ -183,7 +186,7 @@ class Cas1OasysController(
     val healthDetailsWrapper = extractEntityFromCasResult(
       oaSysService.getHealthDetails(
         crn = crn,
-        suitabilityStrategy = OASysSuitabilityService.SuitabilityStrategy.AllowAll,
+        suitabilityStrategy = SuitabilityStrategy.AllowAll,
       ),
     )
 
@@ -208,5 +211,10 @@ class Cas1OasysController(
   private fun <EntityType> extractNullableOAsysResult(result: CasResult<EntityType>) = when (result) {
     is CasResult.NotFound -> null
     else -> extractEntityFromCasResult(result)
+  }
+
+  private fun OASysAssessmentSuitabilityStrategyDto.toSuitabilityStrategy() = when (this) {
+    OASysAssessmentSuitabilityStrategyDto.ALLOW_ALL -> SuitabilityStrategy.AllowAll
+    OASysAssessmentSuitabilityStrategyDto.COMPLETED_IN_LAST_SIX_MONTHS -> SuitabilityStrategy.CompletedInLastSixMonths
   }
 }

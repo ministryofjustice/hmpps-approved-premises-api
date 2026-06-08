@@ -22,7 +22,7 @@ enum class EventChangeRequestType(@get:JsonValue val value: String) {
     companion object {
         @JvmStatic
         @JsonCreator
-        fun forValue(value: kotlin.String) = values().first { it.value == value }
+        fun forValue(value: String) = entries.first { it.value == value }
     }
 }
 ```

@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockOffenceDetails404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRiskManagementPlan404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRiskToTheIndividual404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRoshSummary404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulHealthDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulOffenceDetailsCall
@@ -105,34 +106,70 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun success() {
+    fun `default 6 month suitability strategy, assessment is less than 6 months old`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
-      val needsDetails = NeedsDetailsFactory().apply {
-        withAssessmentId(34853487)
-        withAccommodationIssuesDetails("Accommodation", true, false)
-        withAttitudeIssuesDetails("Attitude", false, true)
-        withFinanceIssuesDetails(null, null, null)
-      }.produce()
+      val needsDetails = NeedsDetailsFactory().produce()
       apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
-      webTestClient.get()
+      val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/metadata")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
         .isOk
-        .expectBody()
-        .json(
-          jsonMapper.writeValueAsString(
-            Cas1OASysMetadata(
-              cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(needsDetails),
-              oaSysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails),
-            ),
-          ),
-        )
+        .bodyAsObject<Cas1OASysMetadata>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.supportingInformation).isEqualTo(oaSysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails))
+    }
+
+    @Test
+    fun `default 6 month suitability strategy, assessment is more than 6 months old`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val needsDetails = NeedsDetailsFactory()
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/metadata")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysMetadata>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.supportingInformation).isEmpty()
+    }
+
+    @Test
+    fun `allow all suitability strategy, assessment is more than 6 months old`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val needsDetails = NeedsDetailsFactory()
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/metadata?suitabilityStrategy=allow_all")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysMetadata>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.supportingInformation).isEqualTo(oaSysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails))
     }
   }
 
@@ -168,7 +205,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk Management Not Found, return empty questions`() {
+    fun `Risk Management - Not Found, return empty answers`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -194,13 +231,14 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk Management Plan Success`() {
+    fun `Risk Management - Default 6 month suitability strategy, assessment is less than 6 months old`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
       val riskManagementPlan = RiskManagementPlanFactory()
         .withSupervision("The supervision answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(5))
         .produce()
       apAndOASysMockSuccessfulRiskManagementPlanCall(CRN, riskManagementPlan)
 
@@ -224,7 +262,69 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Offence Details Not Found, return empty questions`() {
+    fun `Risk Management - Default 6 month suitability strategy, assessment is more than 6 months old, return empty answers`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val riskManagementPlan = RiskManagementPlanFactory()
+        .withSupervision("The supervision answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulRiskManagementPlanCall(CRN, riskManagementPlan)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Supervision",
+          questionNumber = "RM30",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `Risk Management - Allow all suitability strategy, assessment is more than 6 months old`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val riskManagementPlan = RiskManagementPlanFactory()
+        .withSupervision("The supervision answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulRiskManagementPlanCall(CRN, riskManagementPlan)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan&suitabilityStrategy=allow_all")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Supervision",
+          questionNumber = "RM30",
+          answer = "The supervision answer",
+        ),
+      )
+    }
+
+    @Test
+    fun `Offence Details - Not Found, return empty answers`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -250,13 +350,14 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Offence Details Success`() {
+    fun `Offence Details - Default 6 month suitability strategy, assessment is less than 6 months old`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
       val offenceDetails = OffenceDetailsFactory()
         .withVictimImpact("Victim impact answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(5))
         .produce()
       apAndOASysMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
 
@@ -280,13 +381,103 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `ROSH Summary Success`() {
+    fun `Offence Details - Default 6 month suitability strategy, assessment is more than 6 months old, return empty answers`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val offenceDetails = OffenceDetailsFactory()
+        .withVictimImpact("Victim impact answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Impact on the victim",
+          questionNumber = "2.5",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `Offence Details - Allow all suitability strategy, assessment is more than 6 months old`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val offenceDetails = OffenceDetailsFactory()
+        .withVictimImpact("Victim impact answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=offenceDetails&suitabilityStrategy=allow_all")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Impact on the victim",
+          questionNumber = "2.5",
+          answer = "Victim impact answer",
+        ),
+      )
+    }
+
+    @Test
+    fun `ROSH Summary - Not Found, return empty answers`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      apAndOASysMockRoshSummary404Call(CRN)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=roshSummary")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.ROSH_SUMMARY)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `ROSH Summary - Default 6 month suitability strategy, assessment is less than 6 months old`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
       val roshSummary = RoshSummaryFactory()
         .withWhoAtRisk("Who at risk answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(5))
         .produce()
       apAndOASysMockSuccessfulRoSHSummaryCall(CRN, roshSummary)
 
@@ -310,7 +501,69 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk to self Success Not Found, return empty questions`() {
+    fun `ROSH Summary - Default 6 month suitability strategy, assessment is more than 6 months old, return empty answers`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val roshSummary = RoshSummaryFactory()
+        .withWhoAtRisk("Who at risk answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulRoSHSummaryCall(CRN, roshSummary)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=roshSummary")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.ROSH_SUMMARY)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `ROSH Summary - Allow all suitability strategy, assessment is more than 6 months old`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val roshSummary = RoshSummaryFactory()
+        .withWhoAtRisk("Who at risk answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulRoSHSummaryCall(CRN, roshSummary)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=roshSummary&suitabilityStrategy=allow_all")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.ROSH_SUMMARY)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Who is at risk",
+          questionNumber = "R10.1",
+          answer = "Who at risk answer",
+        ),
+      )
+    }
+
+    @Test
+    fun `Risk to self - Not Found, return empty answers`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -324,6 +577,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .bodyAsObject<Cas1OASysGroup>()
 
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -335,13 +589,14 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Risk to self Success`() {
+    fun `Risk to self - Default 6 month suitability strategy, assessment is less than 6 months old`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
       val riskToIndividual = RisksToTheIndividualFactory()
         .withCurrentVulnerability("Current vuln answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(5))
         .produce()
       apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, riskToIndividual)
 
@@ -365,7 +620,69 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Supporting Information Not Found, return empty questions`() {
+    fun `Risk to self - Default 6 month suitability strategy, assessment is more than 6 months old, return empty answers`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val riskToIndividual = RisksToTheIndividualFactory()
+        .withCurrentVulnerability("Current vuln answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, riskToIndividual)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Analysis of vulnerabilities",
+          questionNumber = "FA64",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `Risk to self - Allow all suitability strategy, assessment is more than 6 months old`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val riskToIndividual = RisksToTheIndividualFactory()
+        .withCurrentVulnerability("Current vuln answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .produce()
+      apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, riskToIndividual)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskToSelf&suitabilityStrategy=allow_all")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Current concerns about Vulnerability",
+          questionNumber = "R8.3.1",
+          answer = "Current vuln answer",
+        ),
+      )
+    }
+
+    @Test
+    fun `Supporting Information - Not Found, return empty answers`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
@@ -401,18 +718,20 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Supporting Information Success`() {
+    fun `Supporting Information - Default 6 month suitability strategy, assessment is less than 6 months old`() {
       val (_, jwt) = givenAUser()
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
       val needsDetails = NeedsDetailsFactory().apply {
+        withDateCompleted(OffsetDateTime.now().minusMonths(5))
         withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
         withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
         withEmotionalIssuesDetails(linkedToHarm = null, emotionalIssuesDetails = "emotional answer")
       }.produce()
 
       val healthDetails = HealthDetailsFactory().apply {
+        withDateCompleted(OffsetDateTime.now().minusMonths(5))
         withGeneralHealth(generalHealth = false, generalHealthSpecify = "health answer")
       }.produce()
 
@@ -421,6 +740,108 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       val result = webTestClient.get()
         .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Relationship issues contributing to risks of offending and harm",
+          questionNumber = "6.9",
+          answer = "relationship answer",
+        ),
+        OASysQuestion(
+          label = "Issues of emotional well-being contributing to risks of offending and harm",
+          questionNumber = "10.9",
+          answer = "emotional answer",
+        ),
+      )
+      assertThat(result.answers).doesNotContain(
+        OASysQuestion(
+          label = "Lifestyle issues contributing to risks of offending and harm",
+          questionNumber = "7.9",
+          answer = "relationship answer",
+        ),
+      )
+    }
+
+    @Test
+    fun `Supporting Information - Default 6 month suitability strategy, assessment is more than 6 months old, return empty answers`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val needsDetails = NeedsDetailsFactory().apply {
+        withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
+        withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
+        withEmotionalIssuesDetails(linkedToHarm = null, emotionalIssuesDetails = "emotional answer")
+      }.produce()
+
+      val healthDetails = HealthDetailsFactory().apply {
+        withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        withGeneralHealth(generalHealth = false, generalHealthSpecify = "health answer")
+      }.produce()
+
+      apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
+      apAndOASysMockSuccessfulHealthDetailsCall(CRN, healthDetails)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Relationship issues contributing to risks of offending and harm",
+          questionNumber = "6.9",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Issues of emotional well-being contributing to risks of offending and harm",
+          questionNumber = "10.9",
+          answer = null,
+        ),
+        OASysQuestion(
+          label = "Lifestyle issues contributing to risks of offending and harm",
+          questionNumber = "7.9",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
+    fun `Supporting Information - Allow all suitability strategy, assessment is more than 6 months old`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val needsDetails = NeedsDetailsFactory().apply {
+        withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
+        withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
+        withEmotionalIssuesDetails(linkedToHarm = null, emotionalIssuesDetails = "emotional answer")
+      }.produce()
+
+      val healthDetails = HealthDetailsFactory().apply {
+        withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        withGeneralHealth(generalHealth = false, generalHealthSpecify = "health answer")
+      }.produce()
+
+      apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
+      apAndOASysMockSuccessfulHealthDetailsCall(CRN, healthDetails)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=supportingInformation&includeOptionalSections=10&suitabilityStrategy=allow_all")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
