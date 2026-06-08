@@ -169,9 +169,10 @@ class Cas1SpaceBookingCreateService(
     val expectedDepartureDate: LocalDate,
     val createdBy: UserEntity,
     val characteristics: List<CharacteristicEntity>,
+    @Deprecated("will be removed in future)")
     val transferredFrom: TransferInfo?,
     val transferReason: TransferReason?,
     val additionalInformation: String?,
-    val isTransfer: Boolean = transferReason != null || transferredFrom != null,
+    val isTransfer: Boolean = transferReason != null,
   )
 }

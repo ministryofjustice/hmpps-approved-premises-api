@@ -261,6 +261,7 @@ class Cas1SpaceBookingService(
 
   @Transactional
   @Suppress("ReturnCount", "MagicNumber")
+  @Deprecated("This method will be removed soon")
   fun createEmergencyTransfer(
     premisesId: UUID,
     bookingId: UUID,
@@ -329,6 +330,7 @@ class Cas1SpaceBookingService(
 
   @Transactional
   @Suppress("ReturnCount")
+  @Deprecated("This method will be removed soon")
   fun createPlannedTransfer(
     bookingId: UUID,
     user: UserEntity,

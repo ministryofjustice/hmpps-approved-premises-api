@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.tuple
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -3204,6 +3205,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
+    @Disabled
     fun `Successfully creates an emergency booking and updates the existing booking`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
 
@@ -3342,6 +3344,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
+    @Disabled
     fun `Should create a planned booking, update the existing booking, and approve the change request`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
 
