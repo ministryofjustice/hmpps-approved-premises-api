@@ -1,16 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.test.context.support.WithMockUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineRecord
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateFieldChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MonitoringInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReleaseActionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReleasePlanEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReleasePlanRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JaversTimelineService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TimelineService
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -23,25 +26,47 @@ class JaversPocTest : IntegrationTestBase() {
   @Autowired
   lateinit var javersTimelineService: JaversTimelineService
 
+  @Autowired
+  lateinit var timelineService: TimelineService
+
   @Test
   @WithMockUser(username = "audit_user")
   fun `print all audit timeline entries for a space booking`() {
     val spaceBooking = createSpaceBooking()
 
+    /**
+     * Create release plan
+     */
     val releasePlan = createReleasePlan(spaceBooking, "Initial Plan")
+    releasePlanRepository.saveAndFlush(releasePlan)
+
+    /**
+     * Create release action and monitoring information
+     */
     val action1 = ReleaseActionEntity(
       id = UUID.randomUUID(),
       description = "Action 1",
       actionCadence = "Daily",
     )
 
-    releasePlan.releaseActions.add(action1)
-    releasePlanRepository.save(releasePlan)
-    releasePlanRepository.flush()
+    val monitoringInformation = MonitoringInformation(
+      description = "some description",
+      otherInformation = null,
+    )
 
+    releasePlan.releaseActions.add(action1)
+    releasePlan.monitoringInformation.add(monitoringInformation)
+    releasePlanRepository.saveAndFlush(releasePlan)
+
+    /**
+     * Update release plan
+     */
     releasePlan.description = "Updated Plan"
     releasePlan.expectedReleaseTime = LocalTime.of(11, 0)
 
+    /**
+     * Add release action and remove the release action
+     */
     val action2 = ReleaseActionEntity(
       id = UUID.randomUUID(),
       description = "Action 2",
@@ -49,50 +74,33 @@ class JaversPocTest : IntegrationTestBase() {
     )
 
     releasePlan.releaseActions.add(action2)
-    releasePlanRepository.save(releasePlan)
-    releasePlanRepository.flush()
-
     releasePlan.releaseActions.remove(action1)
-    action2.description = "Modified Action 2"
-
-    releasePlanRepository.save(releasePlan)
-    releasePlanRepository.flush()
-
-    releasePlanRepository.delete(releasePlan)
-
-    val timelines = javersTimelineService.getFullAuditHistory(releasePlan.id, ReleasePlanEntity::class.java)
+    releasePlanRepository.saveAndFlush(releasePlan)
 
     /**
-     *UPDATE by audit_user on 2026-06-03T12:20:31.724134Z
-     * - Change: 'ObjectRemoved{ object removed: ReleasePlan/ff527f4a-40b5-4ed3-a0b8-9e3c07a2a3f1 }'
-     * - Change: 'TerminalValueChange{ property: 'id', left:'ff527f4a-40b5-4ed3-a0b8-9e3c07a2a3f1',  right:'' }'
-     * - Change: 'TerminalValueChange{ property: 'expectedReleaseTime', left:'11:00:00',  right:'' }'
-     * - Change: 'TerminalValueChange{ property: 'expectedArrivalTime', left:'14:00:00',  right:'' }'
-     * - Change: 'TerminalValueChange{ property: 'description', left:'Updated Plan',  right:'' }'
-     * - Change: 'TerminalValueChange{ property: 'otherInformation', left:'Info',  right:'' }'
-     * - Change: 'ListChange{ property: 'releaseActions', elementChanges:1, left.size: 1, right.size: 0}'
-     *
-     * UPDATE by audit_user on 2026-06-03T12:20:31.652459Z
-     * - Change: 'ListChange{ property: 'releaseActions', elementChanges:2, left.size: 2, right.size: 1}'
-     *
-     * UPDATE by audit_user on 2026-06-03T12:20:31.593295Z
-     * - Change: 'ValueChange{ property: 'expectedReleaseTime', left:'10:00:00',  right:'11:00:00' }'
-     * - Change: 'ValueChange{ property: 'description', left:'Initial Plan',  right:'Updated Plan' }'
-     * - Change: 'ListChange{ property: 'releaseActions', elementChanges:1, left.size: 1, right.size: 2}'
-     *
-     * UPDATE by audit_user on 2026-06-03T12:20:31.524545Z
-     * - Change: 'NewObject{ new object: ReleasePlan/ff527f4a-40b5-4ed3-a0b8-9e3c07a2a3f1 }'
-     * - Change: 'InitialValueChange{ property: 'id', left:'',  right:'ff527f4a-40b5-4ed3-a0b8-9e3c07a2a3f1' }'
-     * - Change: 'InitialValueChange{ property: 'expectedReleaseTime', left:'',  right:'10:00:00' }'
-     * - Change: 'InitialValueChange{ property: 'expectedArrivalTime', left:'',  right:'14:00:00' }'
-     * - Change: 'InitialValueChange{ property: 'description', left:'',  right:'Initial Plan' }'
-     * - Change: 'InitialValueChange{ property: 'otherInformation', left:'',  right:'Info' }'
-     * - Change: 'ListChange{ property: 'releaseActions', elementChanges:1, left.size: 0, right.size: 1}'
+     * Delete release plan
      */
+    releasePlanRepository.delete(releasePlan)
 
-    println("--- JaVers Timeline Records ---")
-    timelines.forEach { println(it.renderForPoc()) }
-    println("-------------------------------")
+    val mapper = JsonMapper.builder()
+      .addModule(JavaTimeModule())
+      .enable(SerializationFeature.INDENT_OUTPUT)
+      .build()
+
+    println("********TimelineRecordsV1************")
+
+    val timelinesV1 = javersTimelineService.getTimelineRecordsForSpaceBooking(spaceBooking.id)
+
+    println(mapper.writeValueAsString(timelinesV1))
+
+    println("*****************************")
+
+    println("********TimelineRecordsV2************")
+
+    val timelinesV2 = timelineService.getTimelineRecordsForSpaceBooking(spaceBooking.id)
+
+    println(mapper.writeValueAsString(timelinesV2))
+    println("*****************************")
   }
 
   private fun createSpaceBooking(): Cas1SpaceBookingEntity = givenACas1SpaceBooking(
@@ -115,7 +123,7 @@ class JaversPocTest : IntegrationTestBase() {
   )
 }
 
-private fun TimelineRecord.renderForPoc(): String = buildString {
+/*private fun TimelineRecord.renderForPoc(): String = buildString {
   appendLine("$type by $author on $commitDate")
   changes.forEach { change ->
     when (change) {
@@ -123,4 +131,4 @@ private fun TimelineRecord.renderForPoc(): String = buildString {
       else -> appendLine("- ${change.field}: '${change.value}'")
     }
   }
-}
+}*/

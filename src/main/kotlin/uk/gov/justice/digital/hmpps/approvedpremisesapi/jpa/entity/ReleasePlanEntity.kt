@@ -1,7 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import jakarta.persistence.CascadeType
+import jakarta.persistence.CollectionTable
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
+import jakarta.persistence.Embeddable
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -29,6 +34,7 @@ interface ReleasePlanRepository : JpaRepository<ReleasePlanEntity, UUID> {
 @Table(name = "release_plan")
 class ReleasePlanEntity(
   @Id
+  @DiffIgnore
   val id: UUID,
 
   @ManyToOne
@@ -49,4 +55,22 @@ class ReleasePlanEntity(
   )
   @JoinColumn(name = "release_plan_id", nullable = false)
   var releaseActions: MutableList<ReleaseActionEntity> = mutableListOf(),
+
+  @ElementCollection(fetch = FetchType.LAZY)
+  @CollectionTable(
+    name = "monitoring_information",
+    joinColumns = [JoinColumn(name = "release_plan_id")],
+  )
+  var monitoringInformation: MutableList<MonitoringInformation> = mutableListOf(),
+)
+
+@TypeName("MonitoringInformation")
+@Embeddable
+@Table(name = "monitoring_information")
+class MonitoringInformation(
+  @Column(name = "monitoring_info_description")
+  var description: String?,
+  @Column(name = "monitoring_info_other_information")
+  var otherInformation: String?,
+
 )

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import org.javers.core.ChangesByCommit
 import org.javers.core.Javers
 import org.javers.repository.jql.QueryBuilder
 import org.springframework.stereotype.Service
@@ -10,25 +9,27 @@ import java.util.UUID
 @Service
 class JaversTimelineService(
   private val javers: Javers,
+  private val timelineMapper: TimeLineMapper,
 ) {
 
-  fun <T : Any> getFullAuditHistory(id: UUID, entityClass: Class<T>): List<TimelineRecord> {
-    val query = QueryBuilder.byInstanceId(id, entityClass)
+  fun getTimelineRecordsForSpaceBooking(spaceBookingId: UUID): List<TimelineRecord> {
+    val query = QueryBuilder.anyDomainObject()
+      .withCommitProperty(COMMIT_PROPERTY_SPACE_BOOKING_ID, spaceBookingId.toString())
       .limit(200)
       .build()
 
     return javers.findChanges(query)
       .groupByCommit()
-      .map { it.toTimelineRecord() }
+      .map { changesByCommit ->
+        TimelineRecord(
+          author = changesByCommit.commit.author,
+          commitDate = changesByCommit.commit.commitDateInstant,
+          sections = timelineMapper.buildSections(changesByCommit.get()),
+        )
+      }
   }
 
-  private fun ChangesByCommit.toTimelineRecord(): TimelineRecord {
-    val commit = getCommit()
-    return TimelineRecord(
-      author = commit.author,
-      commitDate = commit.commitDateInstant,
-      //  changes = get().map { it.toString() }.map { TimelineSection() },
-      sections = TODO(),
-    )
+  companion object {
+    private const val COMMIT_PROPERTY_SPACE_BOOKING_ID = "spaceBookingId"
   }
 }

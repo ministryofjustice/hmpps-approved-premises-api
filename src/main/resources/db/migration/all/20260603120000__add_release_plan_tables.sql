@@ -23,3 +23,11 @@ CREATE TABLE release_action
 
 CREATE INDEX idx_release_action_release_plan_id
     ON release_action(release_plan_id);
+
+create table monitoring_information
+(
+    release_plan_id   UUID NOT NULL,
+    monitoring_info_description       TEXT NOT NULL,
+    monitoring_info_other_information TEXT,
+    CONSTRAINT fk_monitoring_information_release_plan FOREIGN KEY (release_plan_id) REFERENCES release_plan (id)
+)

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.javers.core.metamodel.annotation.DiffIgnore
 import org.javers.core.metamodel.annotation.TypeName
 import java.util.UUID
 import org.javers.core.metamodel.annotation.Entity as JaversEntity
@@ -13,6 +14,7 @@ import org.javers.core.metamodel.annotation.Entity as JaversEntity
 @Table(name = "release_action")
 class ReleaseActionEntity(
   @Id
+  @DiffIgnore
   val id: UUID,
 
   var description: String,

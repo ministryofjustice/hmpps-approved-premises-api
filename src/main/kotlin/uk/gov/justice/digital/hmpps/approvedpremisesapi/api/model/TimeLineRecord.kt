@@ -1,42 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonInclude
 import java.time.Instant
 
-/**
- * {
- *   "author": "audit_user",
- *   "commitDate": "2026-06-03T06:35:03Z",
- *   "sections": [
- *     {
- *       "entityType": "RELEASE_PLAN",
- *       "changes": [
- *         {
- *           "changeType": "UPDATE",
- *           "field": "description",
- *           "oldValue": "Initial Plan",
- *           "newValue": "Updated Plan",
- *           "message": "Description changed from 'Initial Plan' to 'Updated Plan'"
- *         }
- *       ]
- *     },
- *     {
- *       "entityType": "RELEASE_ACTION",
- *       "changes": [
- *         {
- *           "changeType": "CREATE",
- *           "message": "Created release action with description 'Action 2'"
- *         },
- *         {
- *           "changeType": "DELETE",
- *           "message": "Deleted release action with description 'Action 1'"
- *         }
- *       ]
- *     }
- *   ]
- * }
- */
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class TimelineRecord(
   val author: String,
 
@@ -58,8 +26,10 @@ data class TimelineSection(
 enum class AuditEntityType {
   RELEASE_PLAN,
   RELEASE_ACTION,
+  MONITORING_INFORMATION,
 }
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class TimelineChange(
 
   val changeType: ChangeType,
