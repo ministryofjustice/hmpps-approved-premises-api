@@ -8,6 +8,13 @@
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "all non major Gradle dependencies",
       "groupSlug": "all-gradle-minor-patch"
+    },
+    {
+      "description": "Ignore openapi version that breaks our swagger (see build.kts)",
+      "matchPackageNames": [
+        "org.springdoc:springdoc-openapi-starter-webmvc-ui"
+      ],
+      "allowedVersions": "!/3.0.3/"
     }
   ]
 }
