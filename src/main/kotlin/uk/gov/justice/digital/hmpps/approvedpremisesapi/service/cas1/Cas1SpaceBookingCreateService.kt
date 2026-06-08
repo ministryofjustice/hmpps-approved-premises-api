@@ -172,6 +172,6 @@ class Cas1SpaceBookingCreateService(
     val transferredFrom: TransferInfo?,
     val transferReason: TransferReason?,
     val additionalInformation: String?,
-    val isTransfer: Boolean = transferReason != null,
+    val isTransfer: Boolean = transferReason != null || transferredFrom != null,
   )
 }

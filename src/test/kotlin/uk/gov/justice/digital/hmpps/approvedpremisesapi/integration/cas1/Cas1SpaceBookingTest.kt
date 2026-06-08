@@ -260,7 +260,7 @@ class Cas1SpaceBookingTest {
               .produce(),
           )
 
-          givenACas1SpaceBooking(placementRequest = placementRequest)
+          givenACas1SpaceBooking(placementRequest = placementRequest, cancellationOccurredAt = LocalDate.now())
 
           val response = webTestClient.post()
             .uri("/cas1/placement-requests/${placementRequest.id}/space-bookings")
@@ -492,7 +492,7 @@ class Cas1SpaceBookingTest {
             }
           }
 
-          givenACas1SpaceBooking(placementRequest = placementRequest)
+          givenACas1SpaceBooking(placementRequest = placementRequest, cancellationOccurredAt = LocalDate.now())
 
           val bohBeforeSpaceBooking = cas1OutOfServiceBedTestRepository.findAll().first()
 
@@ -606,7 +606,7 @@ class Cas1SpaceBookingTest {
             }
           }
 
-          givenACas1SpaceBooking(placementRequest = placementRequest)
+          givenACas1SpaceBooking(placementRequest = placementRequest, cancellationOccurredAt = LocalDate.now())
 
           val bohBeforeSpaceBooking = cas1OutOfServiceBedTestRepository.findById(bohNotOverlapping.id).get()
 
