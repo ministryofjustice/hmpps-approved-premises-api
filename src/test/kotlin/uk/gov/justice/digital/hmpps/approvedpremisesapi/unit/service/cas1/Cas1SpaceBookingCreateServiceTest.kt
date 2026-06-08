@@ -279,6 +279,30 @@ class Cas1SpaceBookingCreateServiceTest {
         assertThat(bookingToCreate.transferReason).isEqualTo(TransferReason.riskToResident)
       }
     }
+
+    @Test
+    fun `Error if placement request already have active space booking`() {
+      placementRequest.spaceBookings.add(Cas1SpaceBookingEntityFactory().produce())
+      every { cas1PremisesService.findPremisesById(premises.id) } returns premises
+      every { placementRequestService.getPlacementRequestOrNull(any()) } returns placementRequest
+      LockablePlacementRequestEntity(placementRequest.id)
+
+      val result = service.validate(
+        CreateBookingDetails(
+          premisesId = premises.id,
+          placementRequestId = placementRequest.id,
+          expectedArrivalDate = LocalDate.now(),
+          expectedDepartureDate = LocalDate.now().plusDays(1),
+          createdBy = user,
+          characteristics = emptyList(),
+          transferredFrom = null,
+          additionalInformation = null,
+          transferReason = null,
+        ),
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.placementRequestId", "alreadyHasAnInitialSpaceBooking")
+    }
   }
 
   @Nested

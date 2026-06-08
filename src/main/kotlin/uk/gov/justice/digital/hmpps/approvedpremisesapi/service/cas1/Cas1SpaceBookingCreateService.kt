@@ -82,6 +82,10 @@ class Cas1SpaceBookingCreateService(
       "$.placementRequestId" hasValidationError "doesNotExist"
     }
 
+    if (!details.isTransfer && placementRequest?.hasActiveBooking() == true) {
+      "$.placementRequestId" hasValidationError "alreadyHasAnInitialSpaceBooking"
+    }
+
     if (!premises.supportsSpaceBookings) {
       "$.premisesId" hasValidationError "doesNotSupportSpaceBookings"
     }
@@ -168,5 +172,6 @@ class Cas1SpaceBookingCreateService(
     val transferredFrom: TransferInfo?,
     val transferReason: TransferReason?,
     val additionalInformation: String?,
+    val isTransfer: Boolean = transferReason != null,
   )
 }
