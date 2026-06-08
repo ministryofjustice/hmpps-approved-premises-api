@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.OASysAssessmentSuitabilityStrategyDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OASysAssessmentSuitabilityStrategyDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetailsInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
@@ -60,7 +60,7 @@ class Cas1OasysController(
   )
   fun metadata(
     @PathVariable crn: String,
-    @RequestParam(defaultValue = "completed_in_last_six_months", name = "suitabilityStrategy") suitabilityStrategyDto: OASysAssessmentSuitabilityStrategyDto,
+    @RequestParam(defaultValue = "completed_in_last_six_months", name = "suitabilityStrategy") suitabilityStrategyDto: Cas1OASysAssessmentSuitabilityStrategyDto,
   ): ResponseEntity<Cas1OASysMetadata> {
     ensureOffenderAccess(crn)
 
@@ -92,7 +92,7 @@ class Cas1OasysController(
     @PathVariable @Parameter(description = "CRN of the Person to fetch latest OASys selection") crn: String,
     @RequestParam group: Cas1OASysGroupName,
     @RequestParam includeOptionalSections: List<Int>?,
-    @RequestParam(defaultValue = "completed_in_last_six_months", name = "suitabilityStrategy") suitabilityStrategyDto: OASysAssessmentSuitabilityStrategyDto,
+    @RequestParam(defaultValue = "completed_in_last_six_months", name = "suitabilityStrategy") suitabilityStrategyDto: Cas1OASysAssessmentSuitabilityStrategyDto,
   ): ResponseEntity<Cas1OASysGroup> {
     ensureOffenderAccess(crn)
 
@@ -213,8 +213,8 @@ class Cas1OasysController(
     else -> extractEntityFromCasResult(result)
   }
 
-  private fun OASysAssessmentSuitabilityStrategyDto.toSuitabilityStrategy() = when (this) {
-    OASysAssessmentSuitabilityStrategyDto.ALLOW_ALL -> SuitabilityStrategy.AllowAll
-    OASysAssessmentSuitabilityStrategyDto.COMPLETED_IN_LAST_SIX_MONTHS -> SuitabilityStrategy.CompletedInLastSixMonths
+  private fun Cas1OASysAssessmentSuitabilityStrategyDto.toSuitabilityStrategy() = when (this) {
+    Cas1OASysAssessmentSuitabilityStrategyDto.ALLOW_ALL -> SuitabilityStrategy.AllowAll
+    Cas1OASysAssessmentSuitabilityStrategyDto.COMPLETED_IN_LAST_SIX_MONTHS -> SuitabilityStrategy.CompletedInLastSixMonths
   }
 }
