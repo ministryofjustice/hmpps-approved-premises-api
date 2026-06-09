@@ -10,7 +10,6 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -20,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcLocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager

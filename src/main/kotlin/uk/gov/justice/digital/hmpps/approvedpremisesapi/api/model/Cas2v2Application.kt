@@ -38,4 +38,4 @@ data class Cas2v2Application(
 
   @get:JsonProperty("cohort") val cohort: Cas2CohortDto? = null,
 
-  ) : Application
+) : Application
