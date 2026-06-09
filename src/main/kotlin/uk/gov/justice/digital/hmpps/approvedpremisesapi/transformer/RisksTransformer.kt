@@ -3,9 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskEnvelopeStatusDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierEnvelopeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -47,10 +48,10 @@ class RisksTransformer {
     },
   )
 
-  fun transformTierDomainToApi(domain: RiskWithStatus<RiskTier>) = RiskTierEnvelope(
+  fun transformTierDomainToApi(domain: RiskWithStatus<RiskTier>) = RiskTierEnvelopeDto(
     status = transformStatusDomainToApi(domain.status),
     value = domain.value?.let {
-      uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTier(
+      RiskTierDto(
         level = it.level,
         lastUpdated = it.lastUpdated,
       )
@@ -63,8 +64,8 @@ class RisksTransformer {
   )
 
   private fun transformStatusDomainToApi(domain: RiskStatus) = when (domain) {
-    RiskStatus.Retrieved -> RiskEnvelopeStatus.retrieved
-    RiskStatus.NotFound -> RiskEnvelopeStatus.notFound
-    RiskStatus.Error -> RiskEnvelopeStatus.error
+    RiskStatus.Retrieved -> RiskEnvelopeStatusDto.retrieved
+    RiskStatus.NotFound -> RiskEnvelopeStatusDto.notFound
+    RiskStatus.Error -> RiskEnvelopeStatusDto.error
   }
 }
