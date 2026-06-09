@@ -26,6 +26,12 @@ fun IntegrationTestBase.apAndOASysMockSuccessfulRoSHSummaryCall(crn: String, res
   responseBody = response,
 )
 
+fun IntegrationTestBase.apAndOASysMockRoSHSummary404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
+  url = "/rosh-summary/$crn",
+  responseStatus = 404,
+  delayMs = 0,
+)
+
 fun IntegrationTestBase.apAndOASysMockSuccessfulRiskToTheIndividualCall(crn: String, response: RisksToTheIndividual) = mockSuccessfulGetCallWithJsonResponse(
   url = "/risk-to-the-individual/$crn",
   responseBody = response,
