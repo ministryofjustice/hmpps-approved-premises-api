@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.controller
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -13,7 +13,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("\${openapi.cAS2DomainEvents.base-path:}/events/cas2/")
-class Cas2HdcDomainEventsController(private val domainEventService: Cas2DomainEventService) {
+class Cas2DomainEventsController(private val domainEventService: Cas2DomainEventService) {
 
   @GetMapping("application-submitted/{eventId}")
   fun eventsCas2HdcApplicationSubmittedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<Cas2ApplicationSubmittedEvent> {
