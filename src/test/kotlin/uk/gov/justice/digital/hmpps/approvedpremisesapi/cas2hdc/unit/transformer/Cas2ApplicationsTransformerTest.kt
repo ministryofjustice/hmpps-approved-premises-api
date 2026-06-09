@@ -347,7 +347,6 @@ class Cas2ApplicationsTransformerTest {
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.createdByUserId.toString()).isEqualTo(application.userId)
-      assertThat(result.risks).isNull()
       assertThat(result.personName).isEqualTo("firstName surname")
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)

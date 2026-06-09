@@ -32,8 +32,6 @@ data class Cas2v2ApplicationSummary(
 
   @get:JsonProperty("latestStatusUpdate") val latestStatusUpdate: LatestCas2v2StatusUpdate? = null,
 
-  @get:JsonProperty("risks") val risks: PersonRisks? = null,
-
   @get:JsonProperty("hdcEligibilityDate") val hdcEligibilityDate: LocalDate? = null,
 
   @get:JsonProperty("nomsNumber") val nomsNumber: String? = null,

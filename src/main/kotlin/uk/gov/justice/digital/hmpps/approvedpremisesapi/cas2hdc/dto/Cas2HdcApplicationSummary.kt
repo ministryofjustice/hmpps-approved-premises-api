@@ -3,33 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto
 import com.fasterxml.jackson.annotation.JsonProperty
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-/**
- *
- * @param type
- * @param id
- * @param createdAt
- * @param createdByUserId
- * @param status
- * @param personName
- * @param crn
- * @param nomsNumber
- * @param allocatedPomUserId
- * @param allocatedPomName
- * @param assignmentDate
- * @param submittedAt
- * @param createdByUserName
- * @param latestStatusUpdate
- * @param risks
- * @param hdcEligibilityDate
- * @param currentPrisonName
- * @param applicationOrigin
- * @param bailHearingDate
- */
 data class Cas2HdcApplicationSummary(
 
   @get:JsonProperty("type", required = true) val type: String,
@@ -59,8 +36,6 @@ data class Cas2HdcApplicationSummary(
   @get:JsonProperty("createdByUserName") val createdByUserName: String? = null,
 
   @get:JsonProperty("latestStatusUpdate") val latestStatusUpdate: Cas2HdcLatestStatusUpdate? = null,
-
-  @get:JsonProperty("risks") val risks: PersonRisks? = null,
 
   @get:JsonProperty("hdcEligibilityDate") val hdcEligibilityDate: LocalDate? = null,
 
