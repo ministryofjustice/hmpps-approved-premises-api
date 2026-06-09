@@ -1,16 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierEnvelopeDto
 
 data class PersonRisks(
-
-  @get:JsonProperty("crn", required = true) val crn: String,
-
-  @get:JsonProperty("roshRisks", required = true) val roshRisks: RoshRisksEnvelope,
-
-  @get:JsonProperty("tier", required = true) val tier: RiskTierEnvelope,
-
-  @get:JsonProperty("flags", required = true) val flags: FlagsEnvelope,
-
-  @get:JsonProperty("mappa") val mappa: MappaEnvelope? = null,
+  val crn: String,
+  val roshRisks: RoshRisksEnvelope,
+  val tier: RiskTierEnvelopeDto,
+  val flags: FlagsEnvelope,
+  val mappa: MappaEnvelope? = null,
 )

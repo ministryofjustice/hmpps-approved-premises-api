@@ -18,12 +18,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierEnvelopeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -277,7 +277,7 @@ class TaskTransformerTest {
       .withData(null)
       .produce()
     val application = placementApplication.application
-    private val mockTier = mockk<RiskTierEnvelope>()
+    private val mockTier = mockk<RiskTierEnvelopeDto>()
 
     @BeforeEach
     fun setup() {

@@ -1,0 +1,26 @@
+# we define our own ktlint rules (instead of using the hmpps-gradle-plugin version) because we have
+# a significant amount of code that was originally generated from open-api specs that break the
+# default rules
+
+[*.kt]
+indent_size = 2
+ij_kotlin_allow_trailing_comma_on_call_site = true
+ij_kotlin_allow_trailing_comma = true
+ktlint_code_style = intellij_idea
+
+[*.kts]
+indent_size = 2
+ktlint_code_style = intellij_idea
+
+[*.java]
+ij_java_class_count_to_use_import_on_demand = 99
+ij_java_names_count_to_use_import_on_demand = 99
+ij_java_use_single_class_imports = true
+ij_java_insert_inner_class_imports = true
+indent_size = 4
+
+[*.html]
+indent_size = 2
+
+[**/dto/*]
+ktlint_standard_enum-entry-name-case = disabled

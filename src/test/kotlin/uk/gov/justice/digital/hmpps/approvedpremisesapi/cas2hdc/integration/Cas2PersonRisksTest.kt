@@ -4,11 +4,11 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskEnvelopeStatusDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierEnvelopeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
@@ -103,7 +103,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
               PersonRisks(
                 crn = offenderDetails.otherIds.crn,
                 roshRisks = RoshRisksEnvelope(
-                  status = RiskEnvelopeStatus.retrieved,
+                  status = RiskEnvelopeStatusDto.retrieved,
                   value = RoshRisks(
                     overallRisk = "Very High",
                     riskToChildren = "Low",
@@ -113,16 +113,16 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
                     lastUpdated = LocalDate.parse("2022-09-06"),
                   ),
                 ),
-                tier = RiskTierEnvelope(
-                  status = RiskEnvelopeStatus.notFound,
+                tier = RiskTierEnvelopeDto(
+                  status = RiskEnvelopeStatusDto.notFound,
                   value = null,
                 ),
                 flags = FlagsEnvelope(
-                  status = RiskEnvelopeStatus.notFound,
+                  status = RiskEnvelopeStatusDto.notFound,
                   value = null,
                 ),
                 mappa = MappaEnvelope(
-                  status = RiskEnvelopeStatus.notFound,
+                  status = RiskEnvelopeStatusDto.notFound,
                   value = null,
                 ),
               ),
