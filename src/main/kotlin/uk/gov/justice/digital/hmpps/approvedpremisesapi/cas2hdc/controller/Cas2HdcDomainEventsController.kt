@@ -17,7 +17,7 @@ class Cas2HdcDomainEventsController(private val domainEventService: Cas2DomainEv
 
   @GetMapping("application-submitted/{eventId}")
   fun eventsCas2HdcApplicationSubmittedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<Cas2ApplicationSubmittedEvent> {
-    val event = domainEventService.getCas2HdcApplicationSubmittedDomainEvent(eventId)
+    val event = domainEventService.getApplicationSubmittedDomainEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
     return ResponseEntity.ok(event.data)
@@ -25,7 +25,7 @@ class Cas2HdcDomainEventsController(private val domainEventService: Cas2DomainEv
 
   @GetMapping("application-status-updated/{eventId}")
   fun eventsCas2HdcApplicationStatusUpdatedEventIdGet(@PathVariable eventId: UUID): ResponseEntity<Cas2ApplicationStatusUpdatedEvent> {
-    val event = domainEventService.getCas2HdcApplicationStatusUpdatedDomainEvent(eventId)
+    val event = domainEventService.getApplicationStatusUpdatedDomainEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
     return ResponseEntity.ok(event.data)

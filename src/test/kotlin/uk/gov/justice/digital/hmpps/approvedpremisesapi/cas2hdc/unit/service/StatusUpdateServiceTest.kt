@@ -163,7 +163,7 @@ class StatusUpdateServiceTest {
             cas2StatusUpdateEntity
           }
 
-        every { mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(any()) } answers { }
+        every { mockDomainEventService.saveApplicationStatusUpdatedDomainEvent(any()) } answers { }
 
         every {
           mockEmailNotificationService.sendCas2Email(
@@ -191,7 +191,7 @@ class StatusUpdateServiceTest {
         )
 
         verify {
-          mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(
+          mockDomainEventService.saveApplicationStatusUpdatedDomainEvent(
             match {
               it.crn == "CRN123" &&
                 it.applicationId == applicationId &&
@@ -248,7 +248,7 @@ class StatusUpdateServiceTest {
         )
 
         verify(exactly = 0) {
-          mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(any())
+          mockDomainEventService.saveApplicationStatusUpdatedDomainEvent(any())
         }
 
         verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
@@ -291,7 +291,7 @@ class StatusUpdateServiceTest {
               cas2StatusUpdateDetailEntity
             }
 
-          every { mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(any()) } answers { }
+          every { mockDomainEventService.saveApplicationStatusUpdatedDomainEvent(any()) } answers { }
 
           every {
             mockEmailNotificationService.sendCas2Email(
@@ -340,7 +340,7 @@ class StatusUpdateServiceTest {
           }
 
           verify {
-            mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(
+            mockDomainEventService.saveApplicationStatusUpdatedDomainEvent(
               match {
                 it.crn == "CRN123" &&
                   it.applicationId == applicationId &&
@@ -425,7 +425,7 @@ class StatusUpdateServiceTest {
           )
 
           verify(exactly = 0) {
-            mockDomainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(any())
+            mockDomainEventService.saveApplicationStatusUpdatedDomainEvent(any())
           }
 
           verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }

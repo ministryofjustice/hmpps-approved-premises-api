@@ -65,7 +65,7 @@ class Cas2DomainEventServiceTest {
 
         every { domainEventRepositoryMock.findByIdOrNull(id) } returns null
 
-        assertThat(domainEventService.getCas2HdcApplicationSubmittedDomainEvent(id)).isNull()
+        assertThat(domainEventService.getApplicationSubmittedDomainEvent(id)).isNull()
       }
 
       @Test
@@ -93,7 +93,7 @@ class Cas2DomainEventServiceTest {
           .withNomsNumber(nomsNumber)
           .produce()
 
-        val event = domainEventService.getCas2HdcApplicationSubmittedDomainEvent(id)
+        val event = domainEventService.getApplicationSubmittedDomainEvent(id)
         assertThat(event).isEqualTo(
           DomainEvent(
             id = id,
@@ -142,7 +142,7 @@ class Cas2DomainEventServiceTest {
           PublishResponse.builder().build(),
         )
 
-        domainEventService.saveCas2HdcApplicationSubmittedDomainEvent(domainEventToSave)
+        domainEventService.saveApplicationSubmittedDomainEvent(domainEventToSave)
 
         verify(exactly = 1) {
           domainEventRepositoryMock.save(
@@ -212,7 +212,7 @@ class Cas2DomainEventServiceTest {
         every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
         assertThatExceptionOfType(RuntimeException::class.java)
-          .isThrownBy { domainEventService.saveCas2HdcApplicationSubmittedDomainEvent(domainEventToSave) }
+          .isThrownBy { domainEventService.saveApplicationSubmittedDomainEvent(domainEventToSave) }
 
         verify(exactly = 1) {
           domainEventRepositoryMock.save(
@@ -269,7 +269,7 @@ class Cas2DomainEventServiceTest {
           ),
         )
 
-        domainEventServiceDisabled.saveCas2HdcApplicationSubmittedDomainEvent(domainEventToSave)
+        domainEventServiceDisabled.saveApplicationSubmittedDomainEvent(domainEventToSave)
 
         verify(exactly = 1) {
           domainEventRepositoryMock.save(
@@ -330,7 +330,7 @@ class Cas2DomainEventServiceTest {
           PublishResponse.builder().build(),
         )
 
-        domainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(domainEventToSave)
+        domainEventService.saveApplicationStatusUpdatedDomainEvent(domainEventToSave)
 
         verify(exactly = 1) {
           domainEventRepositoryMock.save(
@@ -404,7 +404,7 @@ class Cas2DomainEventServiceTest {
           ),
         )
 
-        domainEventServiceDisabled.saveCas2HdcApplicationStatusUpdatedDomainEvent(domainEventToSave)
+        domainEventServiceDisabled.saveApplicationStatusUpdatedDomainEvent(domainEventToSave)
 
         verify(exactly = 1) {
           domainEventRepositoryMock.save(
@@ -457,7 +457,7 @@ class Cas2DomainEventServiceTest {
         every { mockHmppsTopic.snsClient.publish(any<PublishRequest>()) } returns CompletableFuture()
 
         assertThatExceptionOfType(RuntimeException::class.java)
-          .isThrownBy { domainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(domainEventToSave) }
+          .isThrownBy { domainEventService.saveApplicationStatusUpdatedDomainEvent(domainEventToSave) }
 
         verify(exactly = 1) {
           domainEventRepositoryMock.save(
@@ -487,7 +487,7 @@ class Cas2DomainEventServiceTest {
 
         every { domainEventRepositoryMock.findByIdOrNull(id) } returns null
 
-        assertThat(domainEventService.getCas2HdcApplicationStatusUpdatedDomainEvent(id)).isNull()
+        assertThat(domainEventService.getApplicationStatusUpdatedDomainEvent(id)).isNull()
       }
 
       @Test
@@ -515,7 +515,7 @@ class Cas2DomainEventServiceTest {
           .withOccurredAt(occurredAt)
           .produce()
 
-        val event = domainEventService.getCas2HdcApplicationStatusUpdatedDomainEvent(id)
+        val event = domainEventService.getApplicationStatusUpdatedDomainEvent(id)
         assertThat(event).isEqualTo(
           DomainEvent(
             id = id,

@@ -44,9 +44,9 @@ class Cas2DomainEventService(
       ?: throw MissingTopicException("domainevents not found")
   }
 
-  fun getCas2HdcApplicationSubmittedDomainEvent(id: UUID) = get<Cas2ApplicationSubmittedEvent>(id)
+  fun getApplicationSubmittedDomainEvent(id: UUID) = get<Cas2ApplicationSubmittedEvent>(id)
 
-  fun getCas2HdcApplicationStatusUpdatedDomainEvent(id: UUID) = get<Cas2ApplicationStatusUpdatedEvent>(id)
+  fun getApplicationStatusUpdatedDomainEvent(id: UUID) = get<Cas2ApplicationStatusUpdatedEvent>(id)
 
   private inline fun <reified T : Cas2Event> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -68,13 +68,13 @@ class Cas2DomainEventService(
   }
 
   @Transactional
-  fun saveCas2HdcApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationSubmittedEvent>) = saveAndEmit(
+  fun saveApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationSubmittedEvent>) = saveAndEmit(
     domainEvent = domainEvent,
     personReference = domainEvent.data.eventDetails.personReference,
   )
 
   @Transactional
-  fun saveCas2HdcApplicationStatusUpdatedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationStatusUpdatedEvent>) = saveAndEmit(
+  fun saveApplicationStatusUpdatedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationStatusUpdatedEvent>) = saveAndEmit(
     domainEvent = domainEvent,
     personReference = domainEvent.data.eventDetails.personReference,
   )

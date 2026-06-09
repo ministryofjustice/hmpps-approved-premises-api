@@ -84,7 +84,7 @@ class Cas2v2DomainEventServiceTest {
         PublishResponse.builder().build(),
       )
 
-      domainEventService.saveCas2HdcApplicationSubmittedDomainEvent(domainEventToSave)
+      domainEventService.saveApplicationSubmittedDomainEvent(domainEventToSave)
 
       verify(exactly = 1) {
         domainEventRepositoryMock.save(

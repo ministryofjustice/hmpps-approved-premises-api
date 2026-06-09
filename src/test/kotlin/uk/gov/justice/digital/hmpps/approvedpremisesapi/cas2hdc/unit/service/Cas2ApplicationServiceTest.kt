@@ -718,7 +718,7 @@ class Cas2ApplicationServiceTest {
           UUID.randomUUID(),
         )
         every { mockJsonMapper.writeValueAsString(cas2HdcSubmitApplication.translatedDocument) } returns "{}"
-        every { mockDomainEventService.saveCas2HdcApplicationSubmittedDomainEvent(any()) } just Runs
+        every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
       }
 
       @Test
@@ -921,7 +921,7 @@ class Cas2ApplicationServiceTest {
         verify { mockApplicationRepository.save(any()) }
 
         verify(exactly = 1) {
-          mockDomainEventService.saveCas2HdcApplicationSubmittedDomainEvent(
+          mockDomainEventService.saveApplicationSubmittedDomainEvent(
             match {
               val data = it.data.eventDetails
 

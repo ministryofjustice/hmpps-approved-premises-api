@@ -138,7 +138,7 @@ class Cas2HdcStatusUpdateService(
     val newStatus = statusUpdate.status()
     val assessor = statusUpdate.assessor
 
-    domainEventService.saveCas2HdcApplicationStatusUpdatedDomainEvent(
+    domainEventService.saveApplicationStatusUpdatedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,

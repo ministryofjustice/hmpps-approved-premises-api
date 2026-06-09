@@ -291,7 +291,7 @@ class Cas2HdcApplicationService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
-    domainEventService.saveCas2HdcApplicationSubmittedDomainEvent(
+    domainEventService.saveApplicationSubmittedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,

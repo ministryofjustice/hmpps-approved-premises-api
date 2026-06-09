@@ -747,7 +747,7 @@ class Cas2v2ApplicationServiceTest {
     fun setup() {
       every { mockCas2LockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(UUID.randomUUID())
       every { mockJsonMapper.writeValueAsString(submitCas2v2Application.translatedDocument) } returns "{}"
-      every { mockDomainEventService.saveCas2HdcApplicationSubmittedDomainEvent(any()) } just Runs
+      every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
     }
 
     @Test
@@ -906,7 +906,7 @@ class Cas2v2ApplicationServiceTest {
       verify { mockCas2ApplicationRepository.save(any()) }
 
       verify(exactly = 1) {
-        mockDomainEventService.saveCas2HdcApplicationSubmittedDomainEvent(
+        mockDomainEventService.saveApplicationSubmittedDomainEvent(
           match {
             val data = it.data.eventDetails
 
