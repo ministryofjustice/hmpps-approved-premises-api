@@ -1,9 +1,9 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.util.UUID
 
-data class Cas2HdcPersistedApplicationStatusDetail(
+data class Cas2PersistedApplicationStatusDetail(
   val id: UUID,
   val name: String,
   val label: String,

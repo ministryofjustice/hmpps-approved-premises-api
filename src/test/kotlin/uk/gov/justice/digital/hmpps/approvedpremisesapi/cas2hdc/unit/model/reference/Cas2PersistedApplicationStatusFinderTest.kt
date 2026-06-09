@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcApplicationStatusSeeding
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusFinder
 import java.util.UUID
 
 class Cas2PersistedApplicationStatusFinderTest {
@@ -20,7 +20,7 @@ class Cas2PersistedApplicationStatusFinderTest {
   inner class All {
     @Test
     fun `returns all statuses`() {
-      val finder = Cas2HdcPersistedApplicationStatusFinder(statusList())
+      val finder = Cas2PersistedApplicationStatusFinder(statusList())
 
       assertThat(finder.all().map { it.name }).isEqualTo(
         listOf(
@@ -36,7 +36,7 @@ class Cas2PersistedApplicationStatusFinderTest {
   inner class Active {
     @Test
     fun `returns only the ACTIVE statuses`() {
-      val finder = Cas2HdcPersistedApplicationStatusFinder(statusList())
+      val finder = Cas2PersistedApplicationStatusFinder(statusList())
 
       assertThat(finder.active().map { it.name }).isEqualTo(
         listOf(
@@ -51,7 +51,7 @@ class Cas2PersistedApplicationStatusFinderTest {
   inner class GetById {
     @Test
     fun `returns the matching status regardless of _isActive_ flag`() {
-      val finder = Cas2HdcPersistedApplicationStatusFinder(statusList())
+      val finder = Cas2PersistedApplicationStatusFinder(statusList())
 
       assertThat(
         finder.getById(UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")).name,
@@ -68,7 +68,7 @@ class Cas2PersistedApplicationStatusFinderTest {
 
     @Test
     fun `throws an exception if the matching status is not found`() {
-      val finder = Cas2HdcPersistedApplicationStatusFinder(statusList())
+      val finder = Cas2PersistedApplicationStatusFinder(statusList())
 
       val exception = assertThrows<RuntimeException> {
         finder.getById(UUID.fromString("9887f81e-1a81-49b8-b0a6-5a17b3c9d7d1"))
@@ -84,8 +84,8 @@ class Cas2PersistedApplicationStatusFinderTest {
   inner class ServiceDifferentiation {
     @Test
     fun `Requests for CAS2 service returns only CAS2 detail updates`() {
-      val statusList = Cas2HdcApplicationStatusSeeding.statusList(ServiceName.cas2)
-      val finder = Cas2HdcPersistedApplicationStatusFinder(statusList)
+      val statusList = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
+      val finder = Cas2PersistedApplicationStatusFinder(statusList)
 
       val statuses = finder.all()
 
@@ -127,8 +127,8 @@ class Cas2PersistedApplicationStatusFinderTest {
 
     @Test
     fun `Requests for CAS2v2 service returns only CAS2v2 detail updates`() {
-      val statusList = Cas2HdcApplicationStatusSeeding.statusList(ServiceName.cas2v2)
-      val finder = Cas2HdcPersistedApplicationStatusFinder(statusList)
+      val statusList = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2)
+      val finder = Cas2PersistedApplicationStatusFinder(statusList)
 
       val statuses = finder.all()
 
@@ -169,21 +169,21 @@ class Cas2PersistedApplicationStatusFinderTest {
     }
   }
 
-  private fun statusList(): List<Cas2HdcPersistedApplicationStatus> = listOf(
-    Cas2HdcPersistedApplicationStatus(
+  private fun statusList(): List<Cas2PersistedApplicationStatus> = listOf(
+    Cas2PersistedApplicationStatus(
       id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
       name = "moreInfoRequested",
       label = "",
       description = "",
     ),
-    Cas2HdcPersistedApplicationStatus(
+    Cas2PersistedApplicationStatus(
       id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
       name = "awaitingDecision",
       label = "",
       description = "",
       isActive = false,
     ),
-    Cas2HdcPersistedApplicationStatus(
+    Cas2PersistedApplicationStatus(
       id = UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2"),
       name = "placeOffered",
       label = "",

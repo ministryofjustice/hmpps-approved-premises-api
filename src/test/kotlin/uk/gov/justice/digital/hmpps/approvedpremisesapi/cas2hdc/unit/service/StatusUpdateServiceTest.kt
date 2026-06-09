@@ -18,9 +18,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -67,7 +67,7 @@ class StatusUpdateServiceTest {
     .produce()
   private val applicationId = application.id
   val assessment = Cas2AssessmentEntityFactory().withApplication(application).produce()
-  private val mockStatusFinder = mockk<Cas2HdcPersistedApplicationStatusFinder>()
+  private val mockStatusFinder = mockk<Cas2PersistedApplicationStatusFinder>()
   private val applicationUrlTemplate = "http://example.com/application-status-updated/#eventId"
   private val applicationOverviewUrlTemplate = "http://example.com/application/#id/overview"
 
@@ -84,7 +84,7 @@ class StatusUpdateServiceTest {
     applicationOverviewUrlTemplate,
   )
 
-  val activeStatus = Cas2HdcPersistedApplicationStatus(
+  val activeStatus = Cas2PersistedApplicationStatus(
     id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
     name = "activeStatusName",
     label = "",
@@ -93,12 +93,12 @@ class StatusUpdateServiceTest {
   )
   private val applicationStatusUpdate = Cas2HdcAssessmentStatusUpdate(newStatus = activeStatus.name)
 
-  val statusDetail = Cas2HdcPersistedApplicationStatusDetail(
+  val statusDetail = Cas2PersistedApplicationStatusDetail(
     id = UUID.fromString("390e81d4-2ace-4e76-a9e3-5efa47be606e"),
     name = "exampleStatusDetail",
     label = "",
   )
-  val activeStatusWithDetail = Cas2HdcPersistedApplicationStatus(
+  val activeStatusWithDetail = Cas2PersistedApplicationStatus(
     id = UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"),
     name = "activeStatusWithDetail",
     label = "",

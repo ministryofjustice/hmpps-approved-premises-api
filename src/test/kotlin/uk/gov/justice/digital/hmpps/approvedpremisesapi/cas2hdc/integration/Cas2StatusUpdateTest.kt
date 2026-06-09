@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -112,7 +112,7 @@ class Cas2StatusUpdateTest(
           val persistedStatusUpdate = realStatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
           assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
 
-          val appliedStatus = Cas2HdcApplicationStatusSeeding.statusList(ServiceName.cas2)
+          val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
             .find { status ->
               status.id == persistedStatusUpdate.statusId
             }
@@ -226,7 +226,7 @@ class Cas2StatusUpdateTest(
                 realStatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate!!.id)
               assertThat(persistedStatusDetailUpdate).isNotNull
 
-              val appliedStatus = Cas2HdcApplicationStatusSeeding.statusList(ServiceName.cas2)
+              val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
                 .find { status ->
                   status.id == persistedStatusUpdate.statusId
                 }

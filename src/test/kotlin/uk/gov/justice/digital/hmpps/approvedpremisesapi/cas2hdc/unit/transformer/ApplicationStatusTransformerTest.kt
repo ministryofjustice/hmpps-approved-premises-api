@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcPersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
 import java.util.UUID
 
@@ -21,13 +21,13 @@ class ApplicationStatusTransformerTest {
     inner class WhenThereAreStatusDetails {
       @Test
       fun `returns the expected properties from the internal _model_`() {
-        val internalModel = Cas2HdcPersistedApplicationStatus(
+        val internalModel = Cas2PersistedApplicationStatus(
           id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
           name = "cancelled",
           label = "Referral cancelled",
           description = "The application has been cancelled.",
           statusDetails = listOf(
-            Cas2HdcPersistedApplicationStatusDetail(
+            Cas2PersistedApplicationStatusDetail(
               id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
               name = "changeOfCircumstances",
               label = "Change of circumstances",
@@ -60,7 +60,7 @@ class ApplicationStatusTransformerTest {
     inner class WhenThereAreNotStatusDetails {
       @Test
       fun `returns the expected properties from the internal _model_`() {
-        val internalModel = Cas2HdcPersistedApplicationStatus(
+        val internalModel = Cas2PersistedApplicationStatus(
           id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
           name = "cancelled",
           label = "Referral cancelled",

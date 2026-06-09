@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -42,7 +42,7 @@ class Cas2v2StatusUpdateTransformerTest {
 
   @Test
   fun `transforms JPA Cas2v2StatusUpdate db entity to API representation`() {
-    val status = Cas2HdcApplicationStatusSeeding.statusList(ServiceName.cas2v2).random()
+    val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2).random()
     val assessor = Cas2UserEntityFactory()
       .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
       .produce()

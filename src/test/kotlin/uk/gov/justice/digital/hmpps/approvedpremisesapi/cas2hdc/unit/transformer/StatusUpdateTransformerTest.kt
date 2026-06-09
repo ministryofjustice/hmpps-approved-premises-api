@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2HdcApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
@@ -43,7 +43,7 @@ class StatusUpdateTransformerTest {
   }
 
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by NomisUser`() {
-    val status = Cas2HdcApplicationStatusSeeding.statusList(ServiceName.cas2).random()
+    val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2).random()
 
     val jpaEntity = Cas2StatusUpdateEntityFactory()
       .withStatusId(status.id)
@@ -67,7 +67,7 @@ class StatusUpdateTransformerTest {
 
   @Test
   fun `transforms JPA Cas2StatusUpdate db entity to API representation with application submitted by Cas2User of type delius`() {
-    val status = Cas2HdcApplicationStatusSeeding.statusList(ServiceName.cas2).random()
+    val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2).random()
     val assessor = Cas2UserEntityFactory().withUserType(Cas2UserType.EXTERNAL).produce()
     val jpaEntity = Cas2StatusUpdateEntityFactory()
       .withStatusId(status.id)
