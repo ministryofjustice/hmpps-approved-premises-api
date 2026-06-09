@@ -151,6 +151,7 @@ class Cas1SpaceBookingUpdateService(
     val characteristics: List<CharacteristicEntity>? = null,
     val updatedBy: UserEntity,
     val updateType: Cas1SpaceBookingService.UpdateType,
+    @Deprecated("will be removed soon)")
     val transferredTo: TransferInfo? = null,
   )
 }
