@@ -34,7 +34,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.6.0-jre")
-  implementation("org.postgresql:postgresql:42.7.11")
   implementation("org.javers:javers-core:7.11.1")
 
   val springDocOpenApiStarterVersion = "3.0.2"
@@ -52,6 +51,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("io.sentry:sentry-spring-boot-4:8.43.1")
 
+  runtimeOnly("org.postgresql:postgresql:42.7.11")
   runtimeOnly("org.ehcache:ehcache")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
