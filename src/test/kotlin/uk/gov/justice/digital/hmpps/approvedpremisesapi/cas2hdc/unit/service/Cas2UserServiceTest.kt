@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
@@ -123,7 +123,7 @@ class Cas2UserServiceTest {
           .withName("This Should Not Be Updated")
           .withEmail("same@example.com")
           .withActiveNomisCaseloadId("123")
-          .withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+          .withServiceOrigin(Cas2ServiceOrigin.BAIL)
           .withDeliusTeamCodes(
             listOf(
               StaffDetailFactory.team().code,
@@ -138,7 +138,7 @@ class Cas2UserServiceTest {
         every { mockPrincipal.token.tokenValue } returns "abc123"
         every { mockPrincipal.authenticationSource() } returns "delius"
         every { mockPrincipal.name } returns username
-        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.DELIUS, Cas2HdcServiceOrigin.BAIL) } returns existingCas2User
+        every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.DELIUS, Cas2ServiceOrigin.BAIL) } returns existingCas2User
         every { mockCas2UserRepository.save(any()) } answers { it.invocation.args[0] as Cas2UserEntity }
 
         val existingDeliusUser = StaffDetailFactory.staffDetail(
@@ -191,7 +191,7 @@ class Cas2UserServiceTest {
           mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(any(), any(), any())
         } returns null andThenAnswer { createdUserSlot.captured }
 
-        assertThat(cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC)).matches {
+        assertThat(cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC)).matches {
           it.name == "Bob Robson" &&
             it.email == "new.email@example.com" &&
             it.activeNomisCaseloadId == "456"
@@ -227,7 +227,7 @@ class Cas2UserServiceTest {
           mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(any(), any(), any())
         } returns null andThenAnswer { createdUserSlot.captured }
 
-        val cas2user = cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.BAIL)
+        val cas2user = cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.BAIL)
         assertThat(cas2user).isNotNull()
         assertThat(cas2user.name).isEqualTo("Bob Robson")
         assertThat(cas2user.email).isEqualTo("new.email@example.com")
@@ -262,10 +262,10 @@ class Cas2UserServiceTest {
           .withActiveNomisCaseloadId("123")
           .produce()
 
-        every { mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(user.nomisStaffId!!, Cas2HdcServiceOrigin.HDC) } returns user
+        every { mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(user.nomisStaffId!!, Cas2ServiceOrigin.HDC) } returns user
         verify(exactly = 0) { mockCas2UserRepository.save(any()) }
 
-        assertThat(cas2HdcUserService.getUserByStaffId(user.nomisStaffId!!, Cas2HdcServiceOrigin.HDC)).isEqualTo(user)
+        assertThat(cas2HdcUserService.getUserByStaffId(user.nomisStaffId!!, Cas2ServiceOrigin.HDC)).isEqualTo(user)
       }
     }
 
@@ -277,16 +277,16 @@ class Cas2UserServiceTest {
         every { mockCas2UserRepository.createCas2User(capture(createdUserSlot)) } answers { it.invocation.args[0] as Cas2UserEntity }
 
         every {
-          mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(newUserData.staffId, Cas2HdcServiceOrigin.HDC)
+          mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(newUserData.staffId, Cas2ServiceOrigin.HDC)
         } returns null andThenAnswer { createdUserSlot.captured }
 
         every {
-          mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, Cas2HdcServiceOrigin.HDC)
+          mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC)
         } returns null andThenAnswer { createdUserSlot.captured }
 
         val user = cas2HdcUserService.getUserByStaffId(
           newUserData.staffId,
-          Cas2HdcServiceOrigin.HDC,
+          Cas2ServiceOrigin.HDC,
         )
 
         assertAll(
@@ -310,7 +310,7 @@ class Cas2UserServiceTest {
         every { mockCas2UserRepository.findByNomisStaffIdAndServiceOrigin(any(), any()) } returns null
         every { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, userEntity.userType, userEntity.serviceOrigin) } returns userEntity
 
-        val result = cas2HdcUserService.getUserByStaffId(newUserData.staffId, Cas2HdcServiceOrigin.HDC)
+        val result = cas2HdcUserService.getUserByStaffId(newUserData.staffId, Cas2ServiceOrigin.HDC)
         verify(exactly = 0) { mockCas2UserRepository.createCas2User(any()) }
         verify(exactly = 0) { mockCas2UserRepository.save(any()) }
         verify(exactly = 1) { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(any(), any(), any()) }

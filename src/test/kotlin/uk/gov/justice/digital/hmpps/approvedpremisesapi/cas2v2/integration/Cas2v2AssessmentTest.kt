@@ -11,7 +11,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
@@ -101,7 +101,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
             withApplication(submittedApplication)
             withNacroReferralId("someID")
             withAssessorName("some name")
-            withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           val updatedNacroReferralId = "123N"
@@ -137,7 +137,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
       withId(applicationId)
       withCreatedByUser(referrer)
       withSubmittedAt(OffsetDateTime.now())
-      withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+      withServiceOrigin(Cas2ServiceOrigin.BAIL)
     }
   }
 
@@ -206,7 +206,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
             withApplication(submittedApplication)
             withNacroReferralId("someID")
             withAssessorName("some name")
-            withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           val rawResponseBody = webTestClient.get()
@@ -242,7 +242,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
             withApplication(submittedApplication)
             withNacroReferralId("someID")
             withAssessorName("some name")
-            withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           val rawResponseBody = webTestClient.get()
@@ -270,7 +270,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
       withCreatedByUser(referrer)
       withSubmittedAt(OffsetDateTime.now())
       withApplicationOrigin(ApplicationOrigin.courtBail)
-      withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+      withServiceOrigin(Cas2ServiceOrigin.BAIL)
     }
   }
 }

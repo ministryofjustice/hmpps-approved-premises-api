@@ -5,7 +5,7 @@ import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatusUpdatesReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationStatusUpdatesReportRepository
@@ -22,7 +22,7 @@ class Cas2HdcReportsService(
 ) {
 
   fun createSubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = submittedApplicationReportRepository.generateSubmittedApplicationReportRows(Cas2HdcServiceOrigin.HDC.name).map { row ->
+    val reportData = submittedApplicationReportRepository.generateSubmittedApplicationReportRows(Cas2ServiceOrigin.HDC.name).map { row ->
       Cas2HdcSubmittedApplicationReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
@@ -50,7 +50,7 @@ class Cas2HdcReportsService(
   }
 
   fun createApplicationStatusUpdatesReport(outputStream: OutputStream) {
-    val reportData = applicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows(Cas2HdcServiceOrigin.HDC.name).map { row ->
+    val reportData = applicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows(Cas2ServiceOrigin.HDC.name).map { row ->
       Cas2HdcApplicationStatusUpdatesReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
@@ -73,7 +73,7 @@ class Cas2HdcReportsService(
   }
 
   fun createUnsubmittedApplicationsReport(outputStream: OutputStream) {
-    val reportData = unsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows(Cas2HdcServiceOrigin.HDC.name).map { row ->
+    val reportData = unsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows(Cas2ServiceOrigin.HDC.name).map { row ->
       Cas2HdcUnsubmittedApplicationsReportRow(
         applicationId = row.getApplicationId(),
         personCrn = row.getPersonCrn(),

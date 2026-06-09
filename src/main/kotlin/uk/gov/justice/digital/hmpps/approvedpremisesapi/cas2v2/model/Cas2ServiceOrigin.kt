@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model
 
 /**
  * The Entity Model is multi-tenanted, with the Service Origin value used to determine if a given entry corresponds to
@@ -10,7 +10,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto
  * we deliberately maintain these as separate fields to simplify how to identify which API/UI this
  * record originated from
  */
-enum class Cas2HdcServiceOrigin {
+enum class Cas2ServiceOrigin {
   BAIL,
   HDC,
 }

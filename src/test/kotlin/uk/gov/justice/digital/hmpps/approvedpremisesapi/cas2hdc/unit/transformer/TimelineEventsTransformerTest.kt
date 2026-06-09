@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcTimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -154,40 +154,40 @@ class TimelineEventsTransformerTest {
 
       Assertions.assertThat(transformation).isEqualTo(
         listOf(
-          Cas2HdcTimelineEvent(
+          Cas2TimelineEvent(
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusWithDetailCreatedAt.toInstant(),
             label = statusUpdateWithDetailsEntity.label,
             createdByName = statusUpdateWithDetailsEntity.assessor.name,
             body = "first detail, second detail",
           ),
-          Cas2HdcTimelineEvent(
+          Cas2TimelineEvent(
             type = TimelineEventType.cas2StatusUpdate,
             occurredAt = statusCreatedAt.toInstant(),
             label = statusUpdateEntity.label,
             createdByName = statusUpdateEntity.assessor.name,
             body = null,
           ),
-          Cas2HdcTimelineEvent(
+          Cas2TimelineEvent(
             type = TimelineEventType.cas2Note,
             occurredAt = noteCreatedAt.toInstant(),
             label = "Note",
             createdByName = note.createdByUser.name,
             body = "a comment",
           ),
-          Cas2HdcTimelineEvent(
+          Cas2TimelineEvent(
             type = TimelineEventType.cas2ApplicationSubmitted,
             occurredAt = submittedAt.toInstant(),
             label = "Application submitted",
             createdByName = "Some Nomis User",
           ),
-          Cas2HdcTimelineEvent(
+          Cas2TimelineEvent(
             type = TimelineEventType.cas2PrisonTransfer,
             occurredAt = prisonTransferApplicationAssignment.createdAt.toInstant(),
             label = "Prison transfer from Fosse Way (HMP) to Moorland (HMP & YOI)",
             createdByName = null,
           ),
-          Cas2HdcTimelineEvent(
+          Cas2TimelineEvent(
             type = TimelineEventType.cas2NewPomAssigned,
             occurredAt = newPomAssignedApplicationAssignment.createdAt.toInstant(),
             label = "New Prison offender manager Pom User allocated",
@@ -208,7 +208,7 @@ class TimelineEventsTransformerTest {
       val transformation = timelineEventTransformer.transformApplicationToTimelineEvents(jpaEntity)
 
       Assertions.assertThat(transformation).isEqualTo(
-        emptyList<Cas2HdcTimelineEvent>(),
+        emptyList<Cas2TimelineEvent>(),
       )
     }
   }

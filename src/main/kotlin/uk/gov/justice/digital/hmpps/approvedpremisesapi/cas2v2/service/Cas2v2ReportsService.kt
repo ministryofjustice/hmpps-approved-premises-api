@@ -5,7 +5,7 @@ import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationStatusUpdatesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2SubmittedApplicationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UnsubmittedApplicationsReportRepository
@@ -19,7 +19,7 @@ class Cas2v2ReportsService(
   private val unsubmittedApplicationsReportRepository: Cas2UnsubmittedApplicationsReportRepository,
 ) {
 
-  fun createSubmittedApplicationsReport(outputStream: OutputStream) = submittedApplicationReportRepository.generateSubmittedApplicationReportRows(Cas2HdcServiceOrigin.BAIL.name).map { row ->
+  fun createSubmittedApplicationsReport(outputStream: OutputStream) = submittedApplicationReportRepository.generateSubmittedApplicationReportRows(Cas2ServiceOrigin.BAIL.name).map { row ->
     SubmittedApplicationReportRow(
       eventId = row.getId(),
       applicationId = row.getApplicationId(),
@@ -39,7 +39,7 @@ class Cas2v2ReportsService(
     .toCas2v2Report(outputStream)
 
   fun createApplicationStatusUpdatesReport(outputStream: OutputStream) = applicationStatusUpdatesReportRepository
-    .generateApplicationStatusUpdatesReportRows(Cas2HdcServiceOrigin.BAIL.name)
+    .generateApplicationStatusUpdatesReportRows(Cas2ServiceOrigin.BAIL.name)
     .map { row ->
       ApplicationStatusUpdatesReportRow(
         eventId = row.getId(),
@@ -56,7 +56,7 @@ class Cas2v2ReportsService(
     .toCas2v2Report(outputStream)
 
   fun createUnsubmittedApplicationsReport(outputStream: OutputStream) = unsubmittedApplicationsReportRepository
-    .generateUnsubmittedApplicationsReportRows(Cas2HdcServiceOrigin.BAIL.name)
+    .generateUnsubmittedApplicationsReportRows(Cas2ServiceOrigin.BAIL.name)
     .map { row ->
       UnsubmittedApplicationsReportRow(
         applicationId = row.getApplicationId(),

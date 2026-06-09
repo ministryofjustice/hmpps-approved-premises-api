@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplicationSummary
@@ -33,7 +33,7 @@ class Cas2HdcSubmissionsController(
 
   @GetMapping("/submissions")
   fun submissionsGet(@RequestParam page: Int?): ResponseEntity<List<Cas2HdcSubmittedApplicationSummary>> {
-    cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
+    cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC)
 
     val sortDirection = SortDirection.asc
     val sortBy = "submittedAt"
@@ -47,7 +47,7 @@ class Cas2HdcSubmissionsController(
 
   @GetMapping("/submissions/{applicationId}")
   fun submissionsApplicationIdGet(@PathVariable applicationId: UUID): ResponseEntity<Cas2HdcSubmittedApplication> {
-    cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
+    cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC)
 
     val application = extractEntityFromCasResult(applicationService.getSubmittedApplicationForAssessor(applicationId))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
@@ -56,7 +56,7 @@ class Cas2HdcSubmissionsController(
   @PostMapping("/submissions")
   @Transactional
   fun submissionsPost(@RequestBody cas2HdcSubmitApplication: Cas2HdcSubmitApplication): ResponseEntity<Unit> {
-    val user = cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC)
+    val user = cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC)
     val submitResult = applicationService.submitApplication(cas2HdcSubmitApplication, user)
 
     extractEntityFromCasResult(submitResult)

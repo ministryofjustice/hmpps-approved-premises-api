@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Submitte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
@@ -186,7 +186,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
         .isOk
 
       Assertions.assertThat(
-        cas2UserRepository.findByUsernameAndServiceOrigin(username, Cas2HdcServiceOrigin.BAIL),
+        cas2UserRepository.findByUsernameAndServiceOrigin(username, Cas2ServiceOrigin.BAIL),
       ).isNotNull
     }
 
@@ -202,7 +202,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-02T09:00:00+01:00"))
                 withData("{}")
-                withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
             val submittedCas2ApplicationEntityFirst = cas2ApplicationEntityFactory
@@ -212,7 +212,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-01T09:00:00+01:00"))
                 withData("{}")
-                withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
             val submittedCas2ApplicationEntityThird = cas2ApplicationEntityFactory
@@ -222,7 +222,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-03T09:00:00+01:00"))
                 withData("{}")
-                withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
             val inProgressCas2ApplicationEntity = cas2ApplicationEntityFactory
@@ -232,7 +232,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
                 withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
                 withSubmittedAt(null)
                 withData("{}")
-                withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
             val rawResponseBody = webTestClient.get()
@@ -311,7 +311,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
       val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
         withCrn(crn)
         withCreatedByUser(user)
-        withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
         withSubmittedAt(null)
         withData(
           """
@@ -349,7 +349,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
         .isNotFound
 
       Assertions.assertThat(
-        cas2UserRepository.findByUsernameAndServiceOrigin("PREVIOUSLY_UNKNOWN_ASSESSOR", Cas2HdcServiceOrigin.BAIL),
+        cas2UserRepository.findByUsernameAndServiceOrigin("PREVIOUSLY_UNKNOWN_ASSESSOR", Cas2ServiceOrigin.BAIL),
       ).isNotNull
     }
 
@@ -377,7 +377,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withApplicationOrigin(ApplicationOrigin.courtBail)
-              withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
               withData(
                 """
             {
@@ -391,7 +391,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
               withApplication(applicationEntity)
               withNacroReferralId("OH123")
               withAssessorName("Assessor name")
-              withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
             }
 
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -511,7 +511,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withApplicationOrigin(ApplicationOrigin.courtBail)
-              withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
               withData(
                 """
             {
@@ -558,7 +558,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withApplicationOrigin(ApplicationOrigin.courtBail)
-              withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
               withData(
                 """
             {
@@ -572,7 +572,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
               withApplication(applicationEntity)
               withNacroReferralId("OH123")
               withAssessorName("Assessor name")
-              withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+              withServiceOrigin(Cas2ServiceOrigin.BAIL)
             }
 
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -715,7 +715,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
                   withCreatedByUser(user)
                   withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                   withApplicationOrigin(ApplicationOrigin.courtBail)
-                  withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+                  withServiceOrigin(Cas2ServiceOrigin.BAIL)
                   withData(
                     """
                     {
@@ -729,7 +729,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
                   withApplication(applicationEntity)
                   withNacroReferralId("OH123")
                   withAssessorName("Assessor name")
-                  withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+                  withServiceOrigin(Cas2ServiceOrigin.BAIL)
                 }
 
                 val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
@@ -851,7 +851,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
             withId(applicationId)
             withCreatedByUser(submittingUser)
             withApplicationOrigin(ApplicationOrigin.courtBail)
-            withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
             withData(
               """
             {
@@ -914,7 +914,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
             withId(applicationId)
             withCreatedByUser(submittingUser)
             withApplicationOrigin(ApplicationOrigin.courtBail)
-            withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
             withData(
               """
             {
@@ -949,7 +949,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
 
           Assertions.assertThat(domainEventRepository.count()).isEqualTo(1)
           Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(1)
-          Assertions.assertThat(cas2RealApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2HdcServiceOrigin.BAIL)!!.submittedAt).isNotNull()
+          Assertions.assertThat(cas2RealApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)!!.submittedAt).isNotNull()
         }
       }
     }

@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -59,13 +59,13 @@ interface Cas2UserRepository : JpaRepository<Cas2UserEntity, UUID> {
   )
   fun createCas2User(user: Cas2UserEntity)
 
-  fun findByServiceOrigin(serviceOrigin: Cas2HdcServiceOrigin): List<Cas2UserEntity>
-  fun findByUsernameAndServiceOrigin(username: String, serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity?
-  fun findByUserTypeAndServiceOrigin(type: Cas2UserType, serviceOrigin: Cas2HdcServiceOrigin): List<Cas2UserEntity>
-  fun findByIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity?
-  fun findByNomisStaffIdAndServiceOrigin(nomisStaffId: Long, serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity?
-  fun findByUsernameAndUserTypeAndServiceOrigin(username: String, type: Cas2UserType, serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity?
-  fun findByUsernameAndUserTypeAndServiceOriginAndActiveNomisCaseloadId(username: String, type: Cas2UserType, serviceOrigin: Cas2HdcServiceOrigin, activeNomisCaseloadId: String?): Cas2UserEntity?
+  fun findByServiceOrigin(serviceOrigin: Cas2ServiceOrigin): List<Cas2UserEntity>
+  fun findByUsernameAndServiceOrigin(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByUserTypeAndServiceOrigin(type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): List<Cas2UserEntity>
+  fun findByIdAndServiceOrigin(id: UUID, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByNomisStaffIdAndServiceOrigin(nomisStaffId: Long, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByUsernameAndUserTypeAndServiceOrigin(username: String, type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity?
+  fun findByUsernameAndUserTypeAndServiceOriginAndActiveNomisCaseloadId(username: String, type: Cas2UserType, serviceOrigin: Cas2ServiceOrigin, activeNomisCaseloadId: String?): Cas2UserEntity?
 }
 
 @Entity
@@ -109,7 +109,7 @@ data class Cas2UserEntity(
   val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
 
   @Enumerated(EnumType.STRING)
-  var serviceOrigin: Cas2HdcServiceOrigin,
+  var serviceOrigin: Cas2ServiceOrigin,
 ) {
   override fun toString() = "CAS2 user $id"
 

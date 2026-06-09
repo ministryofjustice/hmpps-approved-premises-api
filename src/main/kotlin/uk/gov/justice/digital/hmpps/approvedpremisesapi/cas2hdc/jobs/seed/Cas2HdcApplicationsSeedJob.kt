@@ -5,7 +5,7 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -63,14 +63,14 @@ class Cas2HdcApplicationsSeedJob(
       cas2UserRepository.findByUsernameAndUserTypeAndServiceOriginAndActiveNomisCaseloadId(
         row.createdBy,
         Cas2UserType.NOMIS,
-        Cas2HdcServiceOrigin.HDC,
+        Cas2ServiceOrigin.HDC,
         row.referringPrisonCode,
       ) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
     } else {
       cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(
         row.createdBy,
         Cas2UserType.NOMIS,
-        Cas2HdcServiceOrigin.HDC,
+        Cas2ServiceOrigin.HDC,
       ) ?: throw RuntimeException("Could not find applicant with cas2Username ${row.createdBy}")
     }
 
@@ -93,7 +93,7 @@ class Cas2HdcApplicationsSeedJob(
         document = documentFor(state = row.state, nomsNumber = row.nomsNumber),
         submittedAt = row.submittedAt,
         applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
-        serviceOrigin = Cas2HdcServiceOrigin.HDC,
+        serviceOrigin = Cas2ServiceOrigin.HDC,
         cohort = Cas2Cohort.HDC,
       ),
     )

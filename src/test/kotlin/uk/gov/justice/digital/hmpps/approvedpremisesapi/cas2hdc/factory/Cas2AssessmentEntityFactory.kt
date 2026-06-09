@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
@@ -20,7 +20,7 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
   private var nacroReferralId: String? = null
   private var assessorName: String? = null
   private var statusUpdates: MutableList<Cas2StatusUpdateEntity> = mutableListOf()
-  private var serviceOrigin: Yielded<Cas2HdcServiceOrigin> = { Cas2HdcServiceOrigin.HDC }
+  private var serviceOrigin: Yielded<Cas2ServiceOrigin> = { Cas2ServiceOrigin.HDC }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -46,7 +46,7 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
     this.createdAt = { createdAt }
   }
 
-  fun withServiceOrigin(serviceOrigin: Cas2HdcServiceOrigin) = apply {
+  fun withServiceOrigin(serviceOrigin: Cas2ServiceOrigin) = apply {
     this.serviceOrigin = { serviceOrigin }
   }
 

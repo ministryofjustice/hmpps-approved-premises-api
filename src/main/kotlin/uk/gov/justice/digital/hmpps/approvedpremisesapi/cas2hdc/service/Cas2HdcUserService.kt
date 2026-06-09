@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
@@ -27,7 +27,7 @@ class Cas2HdcUserService(
   private val manageUsersApiClient: ManageUsersApiClient,
   private val cas2UserRepository: Cas2UserRepository,
 ) {
-  fun getUserForRequest(serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity {
+  fun getUserForRequest(serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val authenticatedPrincipal = httpAuthService.getPrincipalOrThrow(listOf("nomis", "auth", "delius"))
     val jwt = authenticatedPrincipal.token.tokenValue
     val username = authenticatedPrincipal.name
@@ -36,9 +36,9 @@ class Cas2HdcUserService(
     return getCas2UserForUsername(username, jwt, userType, serviceOrigin)
   }
 
-  fun getNomisUserById(id: UUID, serviceOrigin: Cas2HdcServiceOrigin) = cas2UserRepository.findByIdAndServiceOrigin(id, serviceOrigin) ?: throw NotFoundProblem(id, "NomisUser")
+  fun getNomisUserById(id: UUID, serviceOrigin: Cas2ServiceOrigin) = cas2UserRepository.findByIdAndServiceOrigin(id, serviceOrigin) ?: throw NotFoundProblem(id, "NomisUser")
 
-  fun getUserByStaffId(staffId: Long, serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity {
+  fun getUserByStaffId(staffId: Long, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val userDetails = cas2UserRepository.findByNomisStaffIdAndServiceOrigin(staffId, serviceOrigin)
     if (userDetails != null) {
       return userDetails
@@ -66,7 +66,7 @@ class Cas2HdcUserService(
   private fun findOrCreateNomisUser(
     username: String,
     nomisUserDetails: NomisUserDetail,
-    serviceOrigin: Cas2HdcServiceOrigin,
+    serviceOrigin: Cas2ServiceOrigin,
   ): Cas2UserEntity {
     /* This call to get user is unnecessary - we already check the user before this point so can be removed. */
     cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, Cas2UserType.NOMIS, serviceOrigin)
@@ -90,7 +90,7 @@ class Cas2HdcUserService(
     return findCas2User(username, Cas2UserType.NOMIS, serviceOrigin)!!
   }
 
-  private fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType, serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity {
+  private fun getCas2UserForUsername(username: String, jwt: String, userType: Cas2UserType, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val normalisedUsername = username.uppercase()
 
     val userEntity = when (userType) {
@@ -105,10 +105,10 @@ class Cas2HdcUserService(
   private fun findCas2User(
     username: String,
     userType: Cas2UserType,
-    serviceOrigin: Cas2HdcServiceOrigin,
+    serviceOrigin: Cas2ServiceOrigin,
   ): Cas2UserEntity? = cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, userType, serviceOrigin)
 
-  private fun getCas2UserEntityForNomisUser(username: String, jwt: String, serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity {
+  private fun getCas2UserEntityForNomisUser(username: String, jwt: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val nomisUserDetails: NomisUserDetail = when (
       val nomisUserDetailResponse = nomisUserRolesForRequesterApiClient.getUserDetailsForMe(jwt)
     ) {
@@ -152,7 +152,7 @@ class Cas2HdcUserService(
     return findCas2User(username, Cas2UserType.NOMIS, serviceOrigin)!!
   }
 
-  private fun getCas2UserEntityForDeliusUser(username: String, serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity {
+  private fun getCas2UserEntityForDeliusUser(username: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val deliusUser: StaffDetail =
       when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(username)) {
         is ClientResult.Success<*> -> staffUserDetailsResponse.body as StaffDetail
@@ -190,7 +190,7 @@ class Cas2HdcUserService(
     return findCas2User(username, Cas2UserType.DELIUS, serviceOrigin)!!
   }
 
-  private fun getCas2UserEntityForExternalUser(username: String, jwt: String, serviceOrigin: Cas2HdcServiceOrigin): Cas2UserEntity {
+  private fun getCas2UserEntityForExternalUser(username: String, jwt: String, serviceOrigin: Cas2ServiceOrigin): Cas2UserEntity {
     val existingUser = findCas2User(username, Cas2UserType.EXTERNAL, serviceOrigin = serviceOrigin)
     if (existingUser != null) return existingUser
 

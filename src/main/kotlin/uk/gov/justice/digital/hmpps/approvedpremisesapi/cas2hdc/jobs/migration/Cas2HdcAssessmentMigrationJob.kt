@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -29,7 +29,7 @@ class Cas2HdcAssessmentMigrationJob(
     var slice: Slice<Cas2ApplicationEntity>
 
     while (hasNext) {
-      slice = applicationRepository.findAllSubmittedApplicationsWithoutAssessments(Cas2HdcServiceOrigin.HDC)
+      slice = applicationRepository.findAllSubmittedApplicationsWithoutAssessments(Cas2ServiceOrigin.HDC)
       slice.content.forEach { application ->
         transactionTemplate.executeWithoutResult {
           log.info("Saving assessment for ${application.id}")

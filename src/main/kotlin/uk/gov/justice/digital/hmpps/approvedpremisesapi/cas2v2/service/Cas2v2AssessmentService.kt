@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
@@ -30,7 +30,7 @@ class Cas2v2AssessmentService(
     assessmentId: UUID,
     newAssessment: UpdateCas2v2Assessment,
   ): CasResult<Cas2AssessmentEntity> {
-    val assessmentEntity = cas2AssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2HdcServiceOrigin.BAIL)
+    val assessmentEntity = cas2AssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2AssessmentEntity", assessmentId.toString())
 
     assessmentEntity.apply {
@@ -44,7 +44,7 @@ class Cas2v2AssessmentService(
   }
 
   fun getAssessment(assessmentId: UUID): CasResult<Cas2AssessmentEntity> {
-    val assessmentEntity = cas2AssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2HdcServiceOrigin.BAIL)
+    val assessmentEntity = cas2AssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2AssessmentEntity", assessmentId.toString())
 
     return CasResult.Success(assessmentEntity)

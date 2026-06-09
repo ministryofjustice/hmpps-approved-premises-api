@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
@@ -57,7 +57,7 @@ class Cas2v2UsersSeedJob(
     users.map { user ->
     }
 
-    if (cas2UserRepository.findByUsernameAndServiceOrigin(row.username, Cas2HdcServiceOrigin.BAIL) !== null) {
+    if (cas2UserRepository.findByUsernameAndServiceOrigin(row.username, Cas2ServiceOrigin.BAIL) !== null) {
       return log.info("Skipping ${row.username}: already seeded")
     }
 
@@ -85,7 +85,7 @@ class Cas2v2UsersSeedJob(
         isActive = row.isActive,
         createdAt = OffsetDateTime.now(ZoneOffset.UTC).minusDays(Random.nextLong(1, 365)),
         applications = mutableListOf(),
-        serviceOrigin = Cas2HdcServiceOrigin.BAIL,
+        serviceOrigin = Cas2ServiceOrigin.BAIL,
         externalType = row.externalType,
         nomisAccountType = row.nomisAccountType,
       ),

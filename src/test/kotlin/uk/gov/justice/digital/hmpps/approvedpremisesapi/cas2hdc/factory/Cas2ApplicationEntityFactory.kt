@@ -4,7 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import io.mockk.mockk
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
@@ -42,7 +42,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
   private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.homeDetentionCurfew }
-  private var serviceOrigin: Yielded<Cas2HdcServiceOrigin> = { Cas2HdcServiceOrigin.HDC }
+  private var serviceOrigin: Yielded<Cas2ServiceOrigin> = { Cas2ServiceOrigin.HDC }
   private var bailHearingDate: Yielded<LocalDate?> = { null }
   private var cohort: Yielded<Cas2Cohort?> = { null }
 
@@ -147,7 +147,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.applicationOrigin = { applicationOrigin }
   }
 
-  fun withServiceOrigin(serviceOrigin: Cas2HdcServiceOrigin) = apply {
+  fun withServiceOrigin(serviceOrigin: Cas2ServiceOrigin) = apply {
     this.serviceOrigin = { serviceOrigin }
   }
 

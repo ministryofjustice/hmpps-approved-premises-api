@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReferralHistory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
@@ -125,9 +125,9 @@ class Cas2HdcApplicationsTransformer(
     else -> ApplicationStatus.inProgress
   }
 
-  fun serviceOriginFromText(serviceOrigin: String): Cas2HdcServiceOrigin = when (serviceOrigin.uppercase()) {
-    "HDC" -> Cas2HdcServiceOrigin.HDC
-    "BAIL" -> Cas2HdcServiceOrigin.BAIL
+  fun serviceOriginFromText(serviceOrigin: String): Cas2ServiceOrigin = when (serviceOrigin.uppercase()) {
+    "HDC" -> Cas2ServiceOrigin.HDC
+    "BAIL" -> Cas2ServiceOrigin.BAIL
     else -> error("Unexpected service origin value $serviceOrigin")
   }
 }

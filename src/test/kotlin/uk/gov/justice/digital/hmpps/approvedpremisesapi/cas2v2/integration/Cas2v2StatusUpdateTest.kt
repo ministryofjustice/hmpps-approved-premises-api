@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
@@ -90,13 +90,13 @@ class Cas2v2StatusUpdateTest(
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
             withApplicationOrigin(ApplicationOrigin.courtBail)
-            withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
             withId(assessmentId)
-            withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)
@@ -160,12 +160,12 @@ class Cas2v2StatusUpdateTest(
             withCreatedByUser(applicant)
             withSubmittedAt(OffsetDateTime.now())
             withApplicationOrigin(ApplicationOrigin.courtBail)
-            withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           val assessment = cas2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
-            withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+            withServiceOrigin(Cas2ServiceOrigin.BAIL)
           }
 
           webTestClient.post()
@@ -197,13 +197,13 @@ class Cas2v2StatusUpdateTest(
                 withCreatedByUser(applicant)
                 withSubmittedAt(submittedAt)
                 withNomsNumber("123NOMS")
-                withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               cas2AssessmentEntityFactory.produceAndPersist {
                 withId(assessmentId)
                 withApplication(application)
-                withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
               }
 
               assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)

@@ -5,7 +5,7 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -59,7 +59,7 @@ class Cas2v2StartupScript(
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting CAS2v2 applications")
-    cas2UserRepository.findByServiceOrigin(Cas2HdcServiceOrigin.BAIL).filter { it.userType != Cas2UserType.EXTERNAL }.forEach { user ->
+    cas2UserRepository.findByServiceOrigin(Cas2ServiceOrigin.BAIL).filter { it.userType != Cas2UserType.EXTERNAL }.forEach { user ->
       listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
         listOf(ApplicationOrigin.prisonBail, ApplicationOrigin.courtBail).forEach { applicationOrigin ->
           createApplicationFor(cas2UserEntity = user, state = state, applicationOrigin = applicationOrigin)
@@ -83,7 +83,7 @@ class Cas2v2StartupScript(
         document = documentFor(state = state, nomsNumber = "DO16821"),
         submittedAt = submittedAt,
         applicationOrigin = applicationOrigin,
-        serviceOrigin = Cas2HdcServiceOrigin.BAIL,
+        serviceOrigin = Cas2ServiceOrigin.BAIL,
       ),
     )
 
@@ -112,7 +112,7 @@ class Cas2v2StartupScript(
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     seedLogger.info("Auto-scripting status update $idx for application ${application.id}")
-    val assessor = cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.EXTERNAL, Cas2HdcServiceOrigin.BAIL).random()
+    val assessor = cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.EXTERNAL, Cas2ServiceOrigin.BAIL).random()
     log.info(assessor.toString())
     val status = findStatusAtPosition(idx)
     val update = cas2statusUpdateRepository.save(

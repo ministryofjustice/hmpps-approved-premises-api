@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcNewApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
@@ -92,7 +92,7 @@ class Cas2HdcAssessmentsController(
     val result = cas2HdcStatusUpdateService.createForAssessment(
       assessmentId = assessmentId,
       statusUpdate = cas2HdcAssessmentStatusUpdate,
-      assessor = cas2HdcUserService.getUserForRequest(Cas2HdcServiceOrigin.HDC),
+      assessor = cas2HdcUserService.getUserForRequest(Cas2ServiceOrigin.HDC),
     )
 
     processAuthorisationFor(assessmentId, result)

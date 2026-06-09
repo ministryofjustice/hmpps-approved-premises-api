@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcNewApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -40,7 +40,7 @@ class Cas2HdcAssessmentNoteService(
 
   @Suppress("ReturnCount")
   fun createAssessmentNote(assessmentId: UUID, note: Cas2HdcNewApplicationNote): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
-    val assessment = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2HdcServiceOrigin.HDC)
+    val assessment = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)
       ?: return AuthorisableActionResult.NotFound()
 
     if (httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()) {

@@ -4,7 +4,7 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -56,7 +56,7 @@ class Cas2HdcStartupScript(
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting CAS2 applications")
-    cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.NOMIS, Cas2HdcServiceOrigin.HDC).forEach { user ->
+    cas2UserRepository.findByUserTypeAndServiceOrigin(Cas2UserType.NOMIS, Cas2ServiceOrigin.HDC).forEach { user ->
       listOf("IN_PROGRESS", "SUBMITTED", "IN_REVIEW").forEach { state ->
         createApplicationFor(applicant = user, state = state)
       }
@@ -79,7 +79,7 @@ class Cas2HdcStartupScript(
         submittedAt = submittedAt,
         referringPrisonCode = if (submittedAt != null) applicant.activeNomisCaseloadId else null,
         applicationOrigin = ApplicationOrigin.homeDetentionCurfew,
-        serviceOrigin = Cas2HdcServiceOrigin.HDC,
+        serviceOrigin = Cas2ServiceOrigin.HDC,
       )
 
     // create application assignments for submitted applications

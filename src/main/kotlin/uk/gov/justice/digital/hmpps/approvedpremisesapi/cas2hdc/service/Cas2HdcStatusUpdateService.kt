@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusFinder
@@ -68,7 +68,7 @@ class Cas2HdcStatusUpdateService(
     statusUpdate: Cas2HdcAssessmentStatusUpdate,
     assessor: Cas2UserEntity,
   ): AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>> {
-    val assessment = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2HdcServiceOrigin.HDC)
+    val assessment = assessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC)
       ?: return AuthorisableActionResult.NotFound()
 
     val status = findActiveStatusByName(statusUpdate.newStatus)

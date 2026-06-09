@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
@@ -1050,7 +1050,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   private fun addStatusUpdates(applicationId: UUID, assessor: Cas2UserEntity) {
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withLabel("More information requested")
-      withApplication(cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2HdcServiceOrigin.HDC)!!)
+      withApplication(cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)!!)
       withAssessor(assessor)
       withCreatedAt(OffsetDateTime.now().minusDays(2))
     }
@@ -1058,7 +1058,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     cas2StatusUpdateEntityFactory.produceAndPersist {
       withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
       withLabel("Awaiting decision")
-      withApplication(cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2HdcServiceOrigin.HDC)!!)
+      withApplication(cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)!!)
       withAssessor(assessor)
       withCreatedAt(OffsetDateTime.now().minusDays(1))
     }

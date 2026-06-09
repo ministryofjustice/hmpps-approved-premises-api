@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReportName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationStatusUpdatedEventDetailsFactory
@@ -437,7 +437,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val user2v2 = cas2UserEntityFactory.produceAndPersist {
         withUsername("NOMIS_USER_1")
         withUserType(Cas2UserType.NOMIS)
-        withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       val application1 = cas2ApplicationEntityFactory.produceAndPersist {
@@ -474,7 +474,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withNomsNumber(event2Details.personReference.noms)
         withData("{}")
         withReferringPrisonCode("NEW")
-        withServiceOrigin(Cas2HdcServiceOrigin.BAIL)
+        withServiceOrigin(Cas2ServiceOrigin.BAIL)
       }
 
       val user3 = cas2UserEntityFactory.produceAndPersist {

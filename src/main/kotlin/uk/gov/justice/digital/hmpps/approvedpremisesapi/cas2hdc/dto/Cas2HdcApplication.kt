@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2TimelineEvent
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -21,7 +22,7 @@ data class Cas2HdcApplication(
   val submittedAt: Instant? = null,
   val telephoneNumber: String? = null,
   val assessment: Cas2HdcAssessment? = null,
-  val timelineEvents: List<Cas2HdcTimelineEvent>? = null,
+  val timelineEvents: List<Cas2TimelineEvent>? = null,
   val allocatedPomName: String? = null,
   val currentPrisonName: String? = null,
   val allocatedPomEmailAddress: String? = null,

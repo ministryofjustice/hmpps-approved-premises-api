@@ -6,7 +6,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
@@ -88,7 +88,7 @@ class Cas2AssessmentServiceTest {
           assessEntity
         }
 
-      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2HdcServiceOrigin.HDC) } answers
+      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC) } answers
         {
           assessEntity
         }
@@ -122,7 +122,7 @@ class Cas2AssessmentServiceTest {
         assessorName = "Anne Assessor",
       )
 
-      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2HdcServiceOrigin.HDC) } answers
+      every { mockAssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.HDC) } answers
         {
           null
         }
