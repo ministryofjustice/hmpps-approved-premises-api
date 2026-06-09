@@ -6,13 +6,13 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.UpdateCas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
@@ -21,7 +21,7 @@ import java.util.UUID
 class Cas2AssessmentServiceTest {
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
 
-  private val assessmentService = Cas2AssessmentService(
+  private val assessmentService = Cas2HdcAssessmentService(
     mockAssessmentRepository,
   )
 
@@ -47,7 +47,7 @@ class Cas2AssessmentServiceTest {
           assessEntity
         }
 
-      val result = assessmentService.createCas2Assessment(
+      val result = assessmentService.createCas2HdcAssessment(
         application,
       )
       Assertions.assertThat(result).isEqualTo(assessEntity)
@@ -78,7 +78,7 @@ class Cas2AssessmentServiceTest {
         serviceOrigin = application.serviceOrigin,
       )
 
-      val newAssessmentData = UpdateCas2Assessment(
+      val newAssessmentData = Cas2HdcUpdateAssessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )
@@ -117,7 +117,7 @@ class Cas2AssessmentServiceTest {
     @Test
     fun `returns NotFound if entity is not found`() {
       val assessmentId = UUID.randomUUID()
-      val newAssessmentData = UpdateCas2Assessment(
+      val newAssessmentData = Cas2HdcUpdateAssessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )

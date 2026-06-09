@@ -34,13 +34,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdatePrem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateSpaceBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1WithdrawPlacementRequestSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2ApplicationsSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2NomisUserEmailSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2UpdateAssessmentStatusSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2UsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.ExternalUsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.NomisUsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.ShortTermAccommodationCreateOmusSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcApplicationsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcExternalUsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcNomisUserEmailSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcNomisUsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcShortTermAccommodationCreateOmusSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcUpdateAssessmentStatusSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed.Cas2v2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed.Cas2v2UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3AssignApplicationToPduSeedJob
@@ -83,12 +83,12 @@ class SeedService(
         SeedFileType.approvedPremisesRooms -> getBean(ApprovedPremisesRoomsSeedJob::class)
         SeedFileType.user -> getBean(UsersSeedJob::class)
         SeedFileType.usersBasic -> getBean(UsersBasicSeedJob::class)
-        SeedFileType.nomisUsers -> getBean(NomisUsersSeedJob::class)
-        SeedFileType.externalUsers -> getBean(ExternalUsersSeedJob::class)
-        SeedFileType.cas2Applications -> getBean(Cas2ApplicationsSeedJob::class)
+        SeedFileType.nomisUsers -> getBean(Cas2HdcNomisUsersSeedJob::class)
+        SeedFileType.externalUsers -> getBean(Cas2HdcExternalUsersSeedJob::class)
+        SeedFileType.cas2Applications -> getBean(Cas2HdcApplicationsSeedJob::class)
         SeedFileType.cas2v2Applications -> getBean(Cas2v2ApplicationsSeedJob::class)
         SeedFileType.cas2v2Users -> getBean(Cas2v2UsersSeedJob::class)
-        SeedFileType.cas2Users -> getBean(Cas2UsersSeedJob::class)
+        SeedFileType.cas2Users -> getBean(Cas2HdcUsersSeedJob::class)
         SeedFileType.approvedPremisesUsers -> getBean(Cas1UsersSeedJob::class)
         SeedFileType.temporaryAccommodationUsers -> getBean(Cas3UsersSeedJob::class)
         SeedFileType.characteristics -> getBean(CharacteristicsSeedJob::class)
@@ -114,10 +114,10 @@ class SeedService(
         SeedFileType.approvedPremisesUpdatePremisesAllowNewSpaceBookings -> getBean(Cas1UpdatePremisesAllowNewSpaceBookingsSeedJob::class)
         SeedFileType.approvedPremisesUpdatePremisesEmail -> getBean(Cas1UpdatePremisesEmailSeedJob::class)
         SeedFileType.approvedPremisesUpdatePremisesSupportSpaceBooking -> getBean(Cas1UpdatePremisesSupportSpaceBookingSeedJob::class)
-        SeedFileType.shortTermAccommodationCreateOmus -> getBean(ShortTermAccommodationCreateOmusSeedJob::class)
+        SeedFileType.shortTermAccommodationCreateOmus -> getBean(Cas2HdcShortTermAccommodationCreateOmusSeedJob::class)
         SeedFileType.temporaryAccommodationAssignApplicationToPdu -> getBean(Cas3AssignApplicationToPduSeedJob::class)
-        SeedFileType.Cas2UpdateNomisUserEmailAddress -> getBean(Cas2NomisUserEmailSeedJob::class)
-        SeedFileType.cas2UpdateAssessmentStatus -> getBean(Cas2UpdateAssessmentStatusSeedJob::class)
+        SeedFileType.Cas2UpdateNomisUserEmailAddress -> getBean(Cas2HdcNomisUserEmailSeedJob::class)
+        SeedFileType.cas2UpdateAssessmentStatus -> getBean(Cas2HdcUpdateAssessmentStatusSeedJob::class)
         SeedFileType.approvedPremisesCancelOutOfServiceBeds -> getBean(Cas1CancelOutOfServiceBedsByPremisesJob::class)
         SeedFileType.approvedPremisesUpdateOutOfServiceBeds -> getBean(Cas1UpdateOutOfServiceBedsByPremisesJob::class)
         SeedFileType.approvedPremisesClosePremises -> getBean(Cas1ClosePremisesSeedJob::class)

@@ -12,9 +12,9 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2AllocationChangedService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2DomainEventListener
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2LocationChangedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAllocationChangedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcDomainEventListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcLocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 
@@ -22,10 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFact
 class Cas2DomainEventListenerTest {
 
   @MockK
-  lateinit var cas2AllocationChangedService: Cas2AllocationChangedService
+  lateinit var cas2HdcAllocationChangedService: Cas2HdcAllocationChangedService
 
   @MockK
-  lateinit var cas2LocationChangedService: Cas2LocationChangedService
+  lateinit var cas2HdcLocationChangedService: Cas2HdcLocationChangedService
 
   @MockK
   lateinit var sentryService: SentryService
@@ -34,29 +34,29 @@ class Cas2DomainEventListenerTest {
   var objectMapper = JsonMapperFactory.createJackson2JsonMapper()
 
   @InjectMockKs
-  lateinit var cas2DomainEventListener: Cas2DomainEventListener
+  lateinit var cas2HdcDomainEventListener: Cas2HdcDomainEventListener
 
   @Test
   fun `POM Allocation changed message is processed`() {
-    every { cas2AllocationChangedService.process(any()) } returns Unit
+    every { cas2HdcAllocationChangedService.process(any()) } returns Unit
     val msg = """{"Message": "{\"eventType\":\"offender-management.allocation.changed\",\"additionalInformation\":{\"staffCode\":123456,\"prisonId\":\"PPP\"}}"}"""
-    cas2DomainEventListener.processMessage(msg)
-    verify(exactly = 1) { cas2AllocationChangedService.process(any()) }
+    cas2HdcDomainEventListener.processMessage(msg)
+    verify(exactly = 1) { cas2HdcAllocationChangedService.process(any()) }
   }
 
   @Test
   fun `Prisoner updated message is processed`() {
-    every { cas2LocationChangedService.process(any()) } returns Unit
+    every { cas2HdcLocationChangedService.process(any()) } returns Unit
     val msg =
       """{"Message": "{\"eventType\":\"prisoner-offender-search.prisoner.updated\",\"additionalInformation\":{\"categoriesChanged\": [\"LOCATION\"]},\"version\":\"1\"}"}"""
-    cas2DomainEventListener.processMessage(msg)
-    verify(exactly = 1) { cas2LocationChangedService.process(any()) }
+    cas2HdcDomainEventListener.processMessage(msg)
+    verify(exactly = 1) { cas2HdcLocationChangedService.process(any()) }
   }
 
   @Test
   fun `exceptions are captured by sentry and still thrown`() {
     every { sentryService.captureException(any()) } just Runs
-    assertThrows<JsonParseException> { cas2DomainEventListener.processMessage("invalid") }
+    assertThrows<JsonParseException> { cas2HdcDomainEventListener.processMessage("invalid") }
     verify { sentryService.captureException(any()) }
   }
 }

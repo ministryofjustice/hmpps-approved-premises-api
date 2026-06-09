@@ -16,10 +16,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2SubmittedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2SubmittedApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmitApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -30,7 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.NomisUserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcNomisUserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
@@ -65,7 +65,7 @@ class Cas2SubmissionTest(
   lateinit var realStatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
 
   @Autowired
-  lateinit var nomisUserTransformer: NomisUserTransformer
+  lateinit var cas2HdcNomisUserTransformer: Cas2HdcNomisUserTransformer
 
   @Autowired
   lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
@@ -259,7 +259,7 @@ class Cas2SubmissionTest(
             val responseBody =
               jsonMapper.readValue(
                 rawResponseBody,
-                object : TypeReference<List<Cas2SubmittedApplicationSummary>>() {},
+                object : TypeReference<List<Cas2HdcSubmittedApplicationSummary>>() {},
               )
 
             assertApplicationResponseMatchesExpected(
@@ -289,7 +289,7 @@ class Cas2SubmissionTest(
     }
 
     private fun assertApplicationResponseMatchesExpected(
-      response: Cas2SubmittedApplicationSummary,
+      response: Cas2HdcSubmittedApplicationSummary,
       expectedSubmittedApplication: Cas2ApplicationEntity,
       offenderDetails: OffenderDetailSummary,
     ) {
@@ -480,10 +480,10 @@ class Cas2SubmissionTest(
 
             val responseBody = jsonMapper.readValue(
               rawResponseBody,
-              Cas2SubmittedApplication::class.java,
+              Cas2HdcSubmittedApplication::class.java,
             )
 
-            val applicant = nomisUserTransformer.transformJpaToApi(
+            val applicant = cas2HdcNomisUserTransformer.transformJpaToApi(
               applicationEntity
                 .createdByUser,
             )
@@ -645,10 +645,10 @@ class Cas2SubmissionTest(
 
                 val responseBody = jsonMapper.readValue(
                   rawResponseBody,
-                  Cas2SubmittedApplication::class.java,
+                  Cas2HdcSubmittedApplication::class.java,
                 )
 
-                val applicant = nomisUserTransformer.transformJpaToApi(
+                val applicant = cas2HdcNomisUserTransformer.transformJpaToApi(
                   applicationEntity
                     .createdByUser,
                 )
@@ -747,7 +747,7 @@ class Cas2SubmissionTest(
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
-              SubmitCas2Application(
+              Cas2HdcSubmitApplication(
                 applicationId = applicationId,
                 translatedDocument = {},
                 preferredAreas = "Leeds | Bradford",
@@ -839,7 +839,7 @@ class Cas2SubmissionTest(
                 .uri("/cas2-hdc/submissions")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  SubmitCas2Application(
+                  Cas2HdcSubmitApplication(
                     applicationId = applicationId,
                     translatedDocument = {},
                     telephoneNumber = "123 456 7891",
@@ -893,7 +893,7 @@ class Cas2SubmissionTest(
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
-              SubmitCas2Application(
+              Cas2HdcSubmitApplication(
                 applicationId = applicationId,
                 translatedDocument = {},
                 preferredAreas = "Leeds | Bradford",

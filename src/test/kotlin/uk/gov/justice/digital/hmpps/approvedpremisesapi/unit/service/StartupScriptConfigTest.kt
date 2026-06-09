@@ -6,8 +6,7 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusFinder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2StartupScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcStartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -16,8 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.StatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
@@ -41,13 +41,13 @@ class StartupScriptConfigTest {
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
   private val mockAssessmentEntity = mockk<Cas2AssessmentEntity>()
 
-  private val mockApplicationService = mockk<Cas2ApplicationService>()
-  private val mockStatusUpdateService = mockk<StatusUpdateService>()
+  private val mockApplicationService = mockk<Cas2HdcApplicationService>()
+  private val mockCas2HdcStatusUpdateService = mockk<Cas2HdcStatusUpdateService>()
   private val statusFinder = Cas2PersistedApplicationStatusFinder()
 
   private val seedConfig = SeedConfig()
 
-  private val autoScript = Cas2StartupScript(
+  private val autoScript = Cas2HdcStartupScript(
     mockSeedLogger,
     seedConfig,
     mockCas2UserRepository,
@@ -55,7 +55,7 @@ class StartupScriptConfigTest {
     mockStatusUpdateRepository,
     mockAssessmentRepository,
     mockApplicationService,
-    mockStatusUpdateService,
+    mockCas2HdcStatusUpdateService,
     statusFinder,
   )
 
@@ -85,8 +85,8 @@ class StartupScriptConfigTest {
 
     every { mockAssessmentRepository.save(any()) } answers { mockAssessmentEntity }
 
-    every { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) } answers { }
-    every { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) } answers { }
+    every { mockApplicationService.createCas2HdcApplicationSubmittedEvent(any()) } answers { }
+    every { mockCas2HdcStatusUpdateService.createStatusUpdatedDomainEvent(any()) } answers { }
     every { mockCas2UserEntity.activeNomisCaseloadId } returns "ABC"
     mockkStatic(::insertHdcDates)
   }
@@ -111,14 +111,14 @@ class StartupScriptConfigTest {
   fun `creates at application-submitted domain event`() {
     autoScript.script()
 
-    verify(atLeast = 1) { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) }
+    verify(atLeast = 1) { mockApplicationService.createCas2HdcApplicationSubmittedEvent(any()) }
   }
 
   @Test
   fun `creates at application-status-updated domain event`() {
     autoScript.script()
 
-    verify(atLeast = 1) { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) }
+    verify(atLeast = 1) { mockCas2HdcStatusUpdateService.createStatusUpdatedDomainEvent(any()) }
   }
 
   @Test

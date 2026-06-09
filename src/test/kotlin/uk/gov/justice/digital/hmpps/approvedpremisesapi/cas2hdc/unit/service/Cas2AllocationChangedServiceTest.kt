@@ -10,16 +10,16 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2AllocationChangedService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2EmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2LocationChangedService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAllocationChangedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcLocationChangedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
@@ -40,22 +40,22 @@ class Cas2AllocationChangedServiceTest {
   lateinit var applicationRepository: Cas2ApplicationRepository
 
   @MockK
-  lateinit var applicationService: Cas2ApplicationService
+  lateinit var applicationService: Cas2HdcApplicationService
 
   @MockK
   lateinit var managePomCasesClient: ManagePomCasesClient
 
   @MockK
-  lateinit var cas2UserService: Cas2UserService
+  lateinit var cas2HdcUserService: Cas2HdcUserService
 
   @MockK
-  lateinit var cas2EmailService: Cas2EmailService
+  lateinit var cas2HdcEmailService: Cas2HdcEmailService
 
   @MockK
-  lateinit var cas2LocationChangedService: Cas2LocationChangedService
+  lateinit var cas2HdcLocationChangedService: Cas2HdcLocationChangedService
 
   @InjectMockKs
-  lateinit var allocationChangedService: Cas2AllocationChangedService
+  lateinit var allocationChangedService: Cas2HdcAllocationChangedService
 
   private val pomAllocation = PomAllocation(Manager(1234), Prison("NEW"))
   private val eventType = "offender-management.allocation.changed"
@@ -85,13 +85,13 @@ class Cas2AllocationChangedServiceTest {
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findApplicationToAssign(any()) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
-    every { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
-    every { cas2UserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) } returns Cas2UserEntityFactory().produce()
+    every { cas2HdcEmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
+    every { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) } returns Cas2UserEntityFactory().produce()
 
     val applicationWithLocationChangedAssignment = application.copy()
     applicationWithLocationChangedAssignment.createApplicationAssignment("TWO", null)
     every {
-      cas2LocationChangedService.createLocationChangeAssignmentAndSendEmails(
+      cas2HdcLocationChangedService.createLocationChangeAssignmentAndSendEmails(
         any(),
         any(),
       )
@@ -101,10 +101,10 @@ class Cas2AllocationChangedServiceTest {
 
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
-    verify(exactly = 1) { cas2UserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) }
-    verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) }
+    verify(exactly = 1) { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) }
+    verify(exactly = 1) { cas2HdcEmailService.sendAllocationChangedEmails(any(), any(), any()) }
     verify(exactly = 1) { applicationRepository.save(any()) }
-    verify(exactly = 1) { cas2LocationChangedService.createLocationChangeAssignmentAndSendEmails(any(), any()) }
+    verify(exactly = 1) { cas2HdcLocationChangedService.createLocationChangeAssignmentAndSendEmails(any(), any()) }
   }
 
   @Test
@@ -116,17 +116,17 @@ class Cas2AllocationChangedServiceTest {
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
-    every { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
-    every { cas2UserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) } returns Cas2UserEntityFactory().produce()
+    every { cas2HdcEmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
+    every { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) } returns Cas2UserEntityFactory().produce()
 
     allocationChangedService.process(allocationEvent)
 
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
-    verify(exactly = 1) { cas2UserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) }
-    verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) }
+    verify(exactly = 1) { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) }
+    verify(exactly = 1) { cas2HdcEmailService.sendAllocationChangedEmails(any(), any(), any()) }
     verify(exactly = 1) { applicationRepository.save(any()) }
-    verify(exactly = 0) { cas2LocationChangedService.createLocationChangeAssignmentAndSendEmails(any(), any()) }
+    verify(exactly = 0) { cas2HdcLocationChangedService.createLocationChangeAssignmentAndSendEmails(any(), any()) }
   }
 
   @Test
@@ -135,7 +135,7 @@ class Cas2AllocationChangedServiceTest {
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
-    every { cas2UserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) } returns user
+    every { cas2HdcUserService.getUserByStaffId(eq(pomAllocation.manager.code), eq(Cas2ServiceOrigin.HDC)) } returns user
 
     assertThrows<RuntimeException> { allocationChangedService.process(allocationEvent) }
   }
@@ -209,7 +209,7 @@ class Cas2AllocationChangedServiceTest {
       pomAllocation.copy(manager = Manager(user.nomisStaffId!!)),
     )
     every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
-    every { cas2UserService.getUserByStaffId(any(), eq(Cas2ServiceOrigin.HDC)) } returns user
+    every { cas2HdcUserService.getUserByStaffId(any(), eq(Cas2ServiceOrigin.HDC)) } returns user
 
     allocationChangedService.process(allocationEvent)
 

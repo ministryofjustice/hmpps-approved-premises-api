@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -42,7 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
  *
  * This logic has been applied because CAS2 is used by NOMIS and External Users, so we can't always check restrictions.
  *
- * Implemented in [Cas2OffenderService]
+ * Implemented in [Cas2HdcOffenderService]
  *
  * # CAS2 Bail
  *

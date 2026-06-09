@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.sns.model.PublishResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -84,7 +84,7 @@ class Cas2v2DomainEventServiceTest {
         PublishResponse.builder().build(),
       )
 
-      domainEventService.saveCas2ApplicationSubmittedDomainEvent(domainEventToSave)
+      domainEventService.saveApplicationSubmittedDomainEvent(domainEventToSave)
 
       verify(exactly = 1) {
         domainEventRepositoryMock.save(

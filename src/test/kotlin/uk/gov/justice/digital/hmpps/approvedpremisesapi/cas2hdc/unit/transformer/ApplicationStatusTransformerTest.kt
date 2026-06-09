@@ -3,16 +3,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.unit.transforme
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2PersistedApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusDetail
 import java.util.UUID
 
 class ApplicationStatusTransformerTest {
 
-  private val transformer = ApplicationStatusTransformer()
+  private val transformer = Cas2HdcApplicationStatusTransformer()
 
   @Nested
   inner class TransformModelToApi {
@@ -39,12 +39,12 @@ class ApplicationStatusTransformerTest {
         val apiRepresentation = transformer.transformModelToApi(internalModel)
 
         Assertions.assertThat(apiRepresentation).isEqualTo(
-          Cas2ApplicationStatus(
+          Cas2HdcApplicationStatus(
             id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
             name = "cancelled",
             label = "Referral cancelled",
             statusDetails = listOf(
-              Cas2ApplicationStatusDetail(
+              Cas2HdcApplicationStatusDetail(
                 id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
                 name = "changeOfCircumstances",
                 label = "Change of circumstances",
@@ -71,7 +71,7 @@ class ApplicationStatusTransformerTest {
         val apiRepresentation = transformer.transformModelToApi(internalModel)
 
         Assertions.assertThat(apiRepresentation).isEqualTo(
-          Cas2ApplicationStatus(
+          Cas2HdcApplicationStatus(
             id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
             name = "cancelled",
             label = "Referral cancelled",

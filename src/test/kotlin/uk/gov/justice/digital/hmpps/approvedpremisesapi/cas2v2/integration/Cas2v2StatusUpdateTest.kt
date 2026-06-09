@@ -14,11 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.reference.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
@@ -106,7 +106,7 @@ class Cas2v2StatusUpdateTest(
             .uri("/cas2v2/assessments/$assessmentId/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
+              Cas2HdcAssessmentStatusUpdate(newStatus = "moreInfoRequested"),
             )
             .exchange()
             .expectStatus()
@@ -144,7 +144,7 @@ class Cas2v2StatusUpdateTest(
           .uri("/cas2v2/assessments/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
+            Cas2HdcAssessmentStatusUpdate(newStatus = "moreInfoRequested"),
           )
           .exchange()
           .expectStatus()
@@ -172,7 +172,7 @@ class Cas2v2StatusUpdateTest(
             .uri("/cas2v2/assessments/${assessment.id}/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              Cas2AssessmentStatusUpdate(newStatus = "invalidStatus"),
+              Cas2HdcAssessmentStatusUpdate(newStatus = "invalidStatus"),
             )
             .exchange()
             .expectStatus()
@@ -216,7 +216,7 @@ class Cas2v2StatusUpdateTest(
                 .uri("/cas2v2/assessments/$assessmentId/status-updates")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  Cas2AssessmentStatusUpdate(
+                  Cas2HdcAssessmentStatusUpdate(
                     newStatus = "offerDeclined",
                     newStatusDetails = listOf("changeOfCircumstances"),
                   ),

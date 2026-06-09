@@ -11,7 +11,7 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.SQLOrder
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import java.time.OffsetDateTime
 import java.util.UUID
 

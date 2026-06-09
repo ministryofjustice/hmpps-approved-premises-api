@@ -7,7 +7,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1StartupScript
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2StartupScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcStartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed.Cas2v2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
@@ -19,7 +19,7 @@ import java.io.IOException
 class SeedOnStartupService(
   private val seedConfig: SeedConfig,
   private val cas1StartupScript: Cas1StartupScript,
-  private val cas2StartupScript: Cas2StartupScript,
+  private val cas2HdcStartupScript: Cas2HdcStartupScript,
   private val cas2v2StartupScript: Cas2v2StartupScript,
   private val seedService: SeedService,
   private val seedLogger: SeedLogger,
@@ -85,7 +85,7 @@ class SeedOnStartupService(
     }
 
     if (startupConfig.script.cas2Enabled) {
-      cas2StartupScript.script()
+      cas2HdcStartupScript.script()
     }
 
     if (startupConfig.script.cas2v2Enabled) {

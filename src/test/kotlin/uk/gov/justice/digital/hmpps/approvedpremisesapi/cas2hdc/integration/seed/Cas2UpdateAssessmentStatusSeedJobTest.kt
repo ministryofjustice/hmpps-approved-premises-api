@@ -4,9 +4,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2AssessmentUpdateStatusSeedRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcAssessmentUpdateStatusSeedRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
@@ -48,7 +48,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val seedRow =
-      Cas2AssessmentUpdateStatusSeedRow(
+      Cas2HdcAssessmentUpdateStatusSeedRow(
         assessmentId = assessment.id,
         applicationId = application.id,
         assessorUsername = assessor.username,
@@ -128,7 +128,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
 
     val nonExistentAssessmentId = UUID.randomUUID()
     val seedRow =
-      Cas2AssessmentUpdateStatusSeedRow(
+      Cas2HdcAssessmentUpdateStatusSeedRow(
         assessmentId = nonExistentAssessmentId,
         applicationId = application.id,
         assessorUsername = assessor.username,
@@ -180,7 +180,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
 
     val nonExistentApplicationId = UUID.randomUUID()
     val seedRow =
-      Cas2AssessmentUpdateStatusSeedRow(
+      Cas2HdcAssessmentUpdateStatusSeedRow(
         assessmentId = assessment.id,
         applicationId = nonExistentApplicationId,
         assessorUsername = assessor.username,
@@ -223,7 +223,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val seedRow =
-      Cas2AssessmentUpdateStatusSeedRow(
+      Cas2HdcAssessmentUpdateStatusSeedRow(
         assessmentId = assessment.id,
         applicationId = application.id,
         assessorUsername = "non.existent.user",
@@ -283,7 +283,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val seedRow =
-      Cas2AssessmentUpdateStatusSeedRow(
+      Cas2HdcAssessmentUpdateStatusSeedRow(
         assessmentId = assessment.id,
         applicationId = application2.id, // Different application
         assessorUsername = assessor.username,
@@ -334,7 +334,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val seedRow =
-      Cas2AssessmentUpdateStatusSeedRow(
+      Cas2HdcAssessmentUpdateStatusSeedRow(
         assessmentId = assessment.id,
         applicationId = application.id,
         assessorUsername = assessor.username,
@@ -385,7 +385,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val seedRow =
-      Cas2AssessmentUpdateStatusSeedRow(
+      Cas2HdcAssessmentUpdateStatusSeedRow(
         assessmentId = assessment.id,
         applicationId = application.id,
         assessorUsername = assessor.username,
@@ -437,7 +437,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       }
 
     val seedRow1 =
-      Cas2AssessmentUpdateStatusSeedRow(
+      Cas2HdcAssessmentUpdateStatusSeedRow(
         assessmentId = assessment.id,
         applicationId = application.id,
         assessorUsername = assessor.username,
@@ -446,7 +446,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
       )
 
     val seedRow2 =
-      Cas2AssessmentUpdateStatusSeedRow(
+      Cas2HdcAssessmentUpdateStatusSeedRow(
         assessmentId = assessment.id,
         applicationId = application.id,
         assessorUsername = assessor.username,
@@ -500,7 +500,7 @@ class Cas2UpdateAssessmentStatusSeedJobTest : SeedTestBase() {
     assertThat(two.nomsNumber).isEqualTo("J56789E")
   }
 
-  private fun rowsToCsv(rows: List<Cas2AssessmentUpdateStatusSeedRow>): String {
+  private fun rowsToCsv(rows: List<Cas2HdcAssessmentUpdateStatusSeedRow>): String {
     val builder =
       CsvBuilder()
         .withUnquotedFields(

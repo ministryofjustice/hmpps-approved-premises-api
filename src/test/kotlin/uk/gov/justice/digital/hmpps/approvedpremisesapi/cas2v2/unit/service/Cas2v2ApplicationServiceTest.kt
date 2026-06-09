@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -40,7 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2C
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
@@ -747,7 +747,7 @@ class Cas2v2ApplicationServiceTest {
     fun setup() {
       every { mockCas2LockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(UUID.randomUUID())
       every { mockJsonMapper.writeValueAsString(submitCas2v2Application.translatedDocument) } returns "{}"
-      every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
+      every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
     }
 
     @Test
@@ -906,7 +906,7 @@ class Cas2v2ApplicationServiceTest {
       verify { mockCas2ApplicationRepository.save(any()) }
 
       verify(exactly = 1) {
-        mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
+        mockDomainEventService.saveApplicationSubmittedDomainEvent(
           match {
             val data = it.data.eventDetails
 

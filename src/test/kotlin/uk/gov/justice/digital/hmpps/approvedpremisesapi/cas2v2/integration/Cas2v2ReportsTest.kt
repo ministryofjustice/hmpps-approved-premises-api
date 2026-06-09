@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2StatusFactory
@@ -45,8 +45,8 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
   @Nested
   inner class ControlsOnExternalUsers {
     @ParameterizedTest
-    @EnumSource(value = Cas2ReportName::class)
-    fun `downloading cas2v2 report is forbidden to external users without MI role`(reportName: Cas2ReportName) {
+    @EnumSource(value = Cas2HdcReportName::class)
+    fun `downloading cas2v2 report is forbidden to external users without MI role`(reportName: Cas2HdcReportName) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "auth",
@@ -84,8 +84,8 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
   @Nested
   inner class ControlsOnInternalUsers {
     @ParameterizedTest
-    @EnumSource(value = Cas2ReportName::class)
-    fun `downloading cas2v2 report is forbidden to NOMIS users without MI role`(reportName: Cas2ReportName) {
+    @EnumSource(value = Cas2HdcReportName::class)
+    fun `downloading cas2v2 report is forbidden to NOMIS users without MI role`(reportName: Cas2HdcReportName) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",

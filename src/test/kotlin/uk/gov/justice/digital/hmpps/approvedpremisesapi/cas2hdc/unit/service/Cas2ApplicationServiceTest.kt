@@ -24,8 +24,7 @@ import org.springframework.data.domain.Sort
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationSummaryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
@@ -39,11 +38,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2L
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateNonAssignable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -71,10 +71,10 @@ class Cas2ApplicationServiceTest {
   lateinit var mockApplicationSummaryRepository: Cas2ApplicationSummaryRepository
 
   @MockK
-  lateinit var mockOffenderService: Cas2OffenderService
+  lateinit var mockOffenderService: Cas2HdcOffenderService
 
   @MockK
-  lateinit var mockUserAccessService: Cas2UserAccessService
+  lateinit var mockUserAccessService: Cas2HdcUserAccessService
 
   @MockK
   lateinit var mockDomainEventService: Cas2DomainEventService
@@ -83,7 +83,7 @@ class Cas2ApplicationServiceTest {
   lateinit var mockEmailNotificationService: EmailNotificationService
 
   @MockK
-  lateinit var mockAssessmentService: Cas2AssessmentService
+  lateinit var mockAssessmentService: Cas2HdcAssessmentService
 
   @MockK
   lateinit var mockJsonMapper: JsonMapper
@@ -91,11 +91,11 @@ class Cas2ApplicationServiceTest {
   @MockK
   lateinit var mockNotifyConfig: NotifyConfig
 
-  lateinit var applicationService: Cas2ApplicationService
+  lateinit var applicationService: Cas2HdcApplicationService
 
   @BeforeEach
   fun setup() {
-    applicationService = Cas2ApplicationService(
+    applicationService = Cas2HdcApplicationService(
       mockApplicationRepository,
       mockLockableApplicationRepository,
       mockApplicationSummaryRepository,
@@ -703,7 +703,7 @@ class Cas2ApplicationServiceTest {
       val hdcEligibilityDate = LocalDate.parse("2023-03-30")
       val conditionalReleaseDate = LocalDate.parse("2023-04-29")
 
-      private val submitCas2Application = SubmitCas2Application(
+      private val cas2HdcSubmitApplication = Cas2HdcSubmitApplication(
         translatedDocument = {},
         applicationId = applicationId,
         preferredAreas = "Leeds | Bradford",
@@ -717,8 +717,8 @@ class Cas2ApplicationServiceTest {
         every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(
           UUID.randomUUID(),
         )
-        every { mockJsonMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
-        every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
+        every { mockJsonMapper.writeValueAsString(cas2HdcSubmitApplication.translatedDocument) } returns "{}"
+        every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
       }
 
       @Test
@@ -729,7 +729,7 @@ class Cas2ApplicationServiceTest {
 
         assertThatCasResult(
           applicationService.submitApplication(
-            submitCas2Application,
+            cas2HdcSubmitApplication,
             user,
           ),
         ).isNotFound("Application", applicationId)
@@ -749,7 +749,7 @@ class Cas2ApplicationServiceTest {
 
         every { mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC) } returns application
 
-        assertThatCasResult(applicationService.submitApplication(submitCas2Application, user)).isUnauthorised()
+        assertThatCasResult(applicationService.submitApplication(cas2HdcSubmitApplication, user)).isUnauthorised()
 
         assertEmailAndAssessmentsWereNotCreated()
       }
@@ -766,7 +766,7 @@ class Cas2ApplicationServiceTest {
           mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
         } returns application
 
-        val result = applicationService.submitApplication(submitCas2Application, user)
+        val result = applicationService.submitApplication(cas2HdcSubmitApplication, user)
 
         assertThatCasResult(result).isGeneralValidationError("This application has already been submitted")
 
@@ -785,7 +785,7 @@ class Cas2ApplicationServiceTest {
           mockApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.HDC)
         } returns application
 
-        val result = applicationService.submitApplication(submitCas2Application, user)
+        val result = applicationService.submitApplication(cas2HdcSubmitApplication, user)
 
         assertThatCasResult(result).isGeneralValidationError("This application has already been abandoned")
 
@@ -855,13 +855,13 @@ class Cas2ApplicationServiceTest {
       }
 
       private fun assertGeneralValidationError(message: String) {
-        val result = applicationService.submitApplication(submitCas2Application, user)
+        val result = applicationService.submitApplication(cas2HdcSubmitApplication, user)
         assertThatCasResult(result).isGeneralValidationError(message)
       }
 
       private fun assertEmailAndAssessmentsWereNotCreated() {
         verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
-        verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
+        verify(exactly = 0) { mockAssessmentService.createCas2HdcAssessment(any()) }
       }
 
       @SuppressWarnings("CyclomaticComplexMethod")
@@ -906,22 +906,22 @@ class Cas2ApplicationServiceTest {
             as Cas2ApplicationEntity
         }
 
-        every { mockAssessmentService.createCas2Assessment(any()) } returns assessment
+        every { mockAssessmentService.createCas2HdcAssessment(any()) } returns assessment
 
-        val result = applicationService.submitApplication(submitCas2Application, user)
+        val result = applicationService.submitApplication(cas2HdcSubmitApplication, user)
 
         assertThatCasResult(result).isSuccess().with { entity ->
           assertThat(entity.crn).isEqualTo(application.crn)
           assertThat(entity.preferredAreas).isEqualTo("Leeds | Bradford")
           assertThat(entity.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
           assertThat(entity.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
-          verify(exactly = 1) { mockAssessmentService.createCas2Assessment(match { it.id == applicationId }) }
+          verify(exactly = 1) { mockAssessmentService.createCas2HdcAssessment(match { it.id == applicationId }) }
         }
 
         verify { mockApplicationRepository.save(any()) }
 
         verify(exactly = 1) {
-          mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
+          mockDomainEventService.saveApplicationSubmittedDomainEvent(
             match {
               val data = it.data.eventDetails
 

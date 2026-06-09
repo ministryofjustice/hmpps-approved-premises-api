@@ -16,17 +16,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.ApplicationStatusUpdatesReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ReportName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.SubmittedApplicationReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationStatusUpdatesReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcSubmittedApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcUnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.Instant
@@ -42,8 +42,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
   @Nested
   inner class ControlsOnExternalUsers {
     @ParameterizedTest
-    @EnumSource(value = Cas2ReportName::class)
-    fun `downloading report is forbidden to external users without MI role`(reportName: Cas2ReportName) {
+    @EnumSource(value = Cas2HdcReportName::class)
+    fun `downloading report is forbidden to external users without MI role`(reportName: Cas2HdcReportName) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "auth",
@@ -81,8 +81,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
   @Nested
   inner class ControlsOnInternalUsers {
     @ParameterizedTest
-    @EnumSource(value = Cas2ReportName::class)
-    fun `downloading report is forbidden to NOMIS users without MI role`(reportName: Cas2ReportName) {
+    @EnumSource(value = Cas2HdcReportName::class)
+    fun `downloading report is forbidden to NOMIS users without MI role`(reportName: Cas2HdcReportName) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
@@ -253,7 +253,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       }
 
       val expectedDataFrame = listOf(
-        SubmittedApplicationReportRow(
+        Cas2HdcSubmittedApplicationReportRow(
           eventId = event2Id.toString(),
           applicationId = event2.applicationId.toString(),
           personCrn = event2Details.personReference.crn.toString(),
@@ -270,7 +270,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           applicationOrigin = application2.applicationOrigin,
           bailHearingDate = null,
         ),
-        SubmittedApplicationReportRow(
+        Cas2HdcSubmittedApplicationReportRow(
           eventId = event1Id.toString(),
           applicationId = event1.applicationId.toString(),
           personCrn = event1Details.personReference.crn.toString(),
@@ -306,7 +306,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         .consumeWith {
           val actual = DataFrame
             .readExcel(it.responseBody!!.inputStream())
-            .convertTo<SubmittedApplicationReportRow>(ExcessiveColumns.Remove)
+            .convertTo<Cas2HdcSubmittedApplicationReportRow>(ExcessiveColumns.Remove)
 
           Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
         }
@@ -516,7 +516,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       applicationAssignmentRepository.save(application1Assignment4)
 
       val expectedDataFrame = listOf(
-        ApplicationStatusUpdatesReportRow(
+        Cas2HdcApplicationStatusUpdatesReportRow(
           eventId = event2Id.toString(),
           applicationId = event2.applicationId.toString(),
           personCrn = event2Details.personReference.crn.toString(),
@@ -528,7 +528,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           numberOfLocationTransfers = "0",
           numberOfPomTransfers = "0",
         ),
-        ApplicationStatusUpdatesReportRow(
+        Cas2HdcApplicationStatusUpdatesReportRow(
           eventId = event1Id.toString(),
           applicationId = event1.applicationId.toString(),
           personCrn = event1Details.personReference.crn.toString(),
@@ -559,7 +559,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         .consumeWith {
           val actual = DataFrame
             .readExcel(it.responseBody!!.inputStream())
-            .convertTo<ApplicationStatusUpdatesReportRow>(ExcessiveColumns.Remove)
+            .convertTo<Cas2HdcApplicationStatusUpdatesReportRow>(ExcessiveColumns.Remove)
 
           Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
         }
@@ -617,7 +617,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       }
 
       val expectedDataFrame = listOf(
-        UnsubmittedApplicationsReportRow(
+        Cas2HdcUnsubmittedApplicationsReportRow(
           applicationId = application2.id.toString(),
           personCrn = application2.crn,
           personNoms = application2.nomsNumber.toString(),
@@ -625,7 +625,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           startedBy = application2.createdByUser.username,
           applicationOrigin = application2.applicationOrigin,
         ),
-        UnsubmittedApplicationsReportRow(
+        Cas2HdcUnsubmittedApplicationsReportRow(
           applicationId = application1.id.toString(),
           personCrn = application1.crn,
           personNoms = application1.nomsNumber.toString(),
@@ -652,7 +652,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         .consumeWith {
           val actual = DataFrame
             .readExcel(it.responseBody!!.inputStream())
-            .convertTo<UnsubmittedApplicationsReportRow>(ExcessiveColumns.Remove)
+            .convertTo<Cas2HdcUnsubmittedApplicationsReportRow>(ExcessiveColumns.Remove)
 
           Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
         }

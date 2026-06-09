@@ -3,13 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.unit.transforme
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.ApplicationNotesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -21,7 +21,7 @@ class ApplicationNoteTransformerTest {
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
 
-  private val applicationNotesTransformer = ApplicationNotesTransformer()
+  private val cas2HdcApplicationNotesTransformer = Cas2HdcApplicationNotesTransformer()
 
   @Nested
   inner class WithExternalUser {
@@ -38,7 +38,7 @@ class ApplicationNoteTransformerTest {
         assessment = Cas2AssessmentEntityFactory().produce(),
       )
 
-      val expectedRepresentation = Cas2ApplicationNote(
+      val expectedRepresentation = Cas2HdcApplicationNote(
         id = jpaEntity.id,
         createdAt = createdAt.toInstant(),
         email = jpaEntity.createdByUser.email!!,
@@ -46,7 +46,7 @@ class ApplicationNoteTransformerTest {
         body = jpaEntity.body,
       )
 
-      val transformation = applicationNotesTransformer.transformJpaToApi(jpaEntity)
+      val transformation = cas2HdcApplicationNotesTransformer.transformJpaToApi(jpaEntity)
 
       Assertions.assertThat(transformation).isEqualTo(expectedRepresentation)
     }
@@ -67,7 +67,7 @@ class ApplicationNoteTransformerTest {
         assessment = Cas2AssessmentEntityFactory().produce(),
       )
 
-      val expectedRepresentation = Cas2ApplicationNote(
+      val expectedRepresentation = Cas2HdcApplicationNote(
         id = jpaEntity.id,
         createdAt = createdAt.toInstant(),
         email = jpaEntity.createdByUser.email!!,
@@ -75,7 +75,7 @@ class ApplicationNoteTransformerTest {
         body = jpaEntity.body,
       )
 
-      val transformation = applicationNotesTransformer.transformJpaToApi(jpaEntity)
+      val transformation = cas2HdcApplicationNotesTransformer.transformJpaToApi(jpaEntity)
 
       Assertions.assertThat(transformation).isEqualTo(expectedRepresentation)
     }
