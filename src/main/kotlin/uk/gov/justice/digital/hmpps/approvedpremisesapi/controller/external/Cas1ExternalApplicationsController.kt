@@ -12,14 +12,18 @@ class Cas1ExternalApplicationsController(
   private val cas1ExternalApplicationService: Cas1ExternalApplicationService,
 ) {
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
-  @GetMapping("/cases/{crn}/applications/{type}")
-  fun getApplicationsByCrnAndType(
+  @GetMapping("/cases/{crn}/applications/suitable")
+  fun getSuitableApplicationsByCrn(
     @PathVariable crn: String,
-    @PathVariable type: String,
-  ): ResponseEntity<Cas1SuitableApplication> = when (type) {
-    "suitable" -> cas1ExternalApplicationService.getSuitableApplicationByCrn(crn)
-      ?.let { ResponseEntity.ok(it) }
-      ?: ResponseEntity.notFound().build()
-    else -> ResponseEntity.badRequest().build()
-  }
+  ): ResponseEntity<Cas1SuitableApplication> = cas1ExternalApplicationService.getSuitableApplicationByCrn(crn)
+    ?.let { ResponseEntity.ok(it) }
+    ?: ResponseEntity.notFound().build()
+
+  @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
+  @GetMapping("/cases/{crn}/placements/arrived")
+  fun getArrivedPlacementByCrn(
+    @PathVariable crn: String,
+  ): ResponseEntity<Cas1SuitableApplication> = cas1ExternalApplicationService.getArrivedPlacementByCrn(crn)
+    ?.let { ResponseEntity.ok(it) }
+    ?: ResponseEntity.notFound().build()
 }

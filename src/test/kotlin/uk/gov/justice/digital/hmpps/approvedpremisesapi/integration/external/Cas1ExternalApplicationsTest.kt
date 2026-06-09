@@ -89,6 +89,8 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               withCreatedBy(user)
               withExpectedArrivalDate(LocalDate.now())
               withExpectedDepartureDate(LocalDate.now().plusDays(10))
+              withActualDepartureDate(null)
+              withActualArrivalDate(null)
             }
 
             val suitableApplication = Cas1SuitableApplication(
@@ -123,22 +125,184 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get application with unsupported type returns bad request`() {
-      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
-        webTestClient.get()
-          .uri("/cas1/external/cases/$crn/applications/unsupported")
-          .header("Authorization", "Bearer $clientCredentialsJwt")
-          .exchange()
-          .expectStatus()
-          .isBadRequest
-      }
-    }
-
-    @Test
     fun `Get suitable application returns not found`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         webTestClient.get()
           .uri("/cas1/external/cases/$crn/applications/suitable")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+  }
+
+  @Nested
+  inner class GetArrivedApplicationsByCrn {
+    @Test
+    fun `Get arrived application without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/external/cases/$crn/placements/arrived")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get arrived application without correct JWT authority returns 403`() {
+      givenAUser { _, jwt ->
+        webTestClient.get()
+          .uri("/cas1/external/cases/$crn/placements/arrived")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get arrived application returns ok`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          givenAnAssessmentForApprovedPremises(
+            allocatedToUser = null,
+            createdByUser = user,
+          ) { assessment, application ->
+
+            application.status = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED
+
+            approvedPremisesApplicationRepository.save(application)
+
+            val placementRequirements = placementRequirementsFactory.produceAndPersist {
+              withApplication(application)
+              withAssessment(assessment)
+              withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+              withEssentialCriteria(listOf())
+              withDesirableCriteria(listOf())
+            }
+
+            val placementRequest = placementRequestFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.parse("2007-08-03T10:15:30+01"))
+              withApplication(application)
+              withAssessment(assessment)
+              withPlacementRequirements(placementRequirements)
+            }
+
+            val region = givenAProbationRegion()
+
+            val premises = givenAnApprovedPremises(
+              region = region,
+              supportsSpaceBookings = true,
+            )
+
+            val (offender) = givenAnOffender()
+
+            val booking = cas1SpaceBookingEntityFactory.produceAndPersist {
+              withCrn(offender.otherIds.crn)
+              withPremises(premises)
+              withPlacementRequest(placementRequest)
+              withApplication(placementRequest.application)
+              withCreatedBy(user)
+              withExpectedArrivalDate(LocalDate.now().minusDays(1))
+              withExpectedDepartureDate(LocalDate.now().plusDays(10))
+              withActualArrivalDate(LocalDate.now())
+              withActualDepartureDate(null)
+            }
+
+            val suitableApplication = Cas1SuitableApplication(
+              id = application.id,
+              applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
+              requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
+              placementStatus = Cas1SpaceBookingStatus.ARRIVED,
+              premises = Cas1SuitablePremisesDto(
+                startDate = booking.actualArrivalDate,
+                endDate = booking.expectedDepartureDate,
+                addressLine1 = premises.addressLine1,
+                addressLine2 = premises.addressLine2,
+                town = premises.town,
+                postcode = premises.postcode,
+              ),
+            )
+
+            val response = webTestClient.get()
+              .uri("/cas1/external/cases/${application.crn}/placements/arrived")
+              .header("Authorization", "Bearer $clientCredentialsJwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody(Cas1SuitableApplication::class.java)
+              .returnResult()
+              .responseBody
+
+            assertThat(response).isEqualTo(suitableApplication)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get arrived application returns not found when placement is not ARRIVED`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          givenAnAssessmentForApprovedPremises(
+            allocatedToUser = null,
+            createdByUser = user,
+          ) { assessment, application ->
+
+            application.status = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED
+
+            approvedPremisesApplicationRepository.save(application)
+
+            val placementRequirements = placementRequirementsFactory.produceAndPersist {
+              withApplication(application)
+              withAssessment(assessment)
+              withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+              withEssentialCriteria(listOf())
+              withDesirableCriteria(listOf())
+            }
+
+            val placementRequest = placementRequestFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.parse("2007-08-03T10:15:30+01"))
+              withApplication(application)
+              withAssessment(assessment)
+              withPlacementRequirements(placementRequirements)
+            }
+
+            val region = givenAProbationRegion()
+
+            val premises = givenAnApprovedPremises(
+              region = region,
+              supportsSpaceBookings = true,
+            )
+
+            val (offender) = givenAnOffender()
+
+            cas1SpaceBookingEntityFactory.produceAndPersist {
+              withCrn(offender.otherIds.crn)
+              withPremises(premises)
+              withPlacementRequest(placementRequest)
+              withApplication(placementRequest.application)
+              withCreatedBy(user)
+              withExpectedArrivalDate(LocalDate.now())
+              withExpectedDepartureDate(LocalDate.now().plusDays(10))
+            }
+
+            webTestClient.get()
+              .uri("/cas1/external/cases/${application.crn}/placements/arrived")
+              .header("Authorization", "Bearer $clientCredentialsJwt")
+              .exchange()
+              .expectStatus()
+              .isNotFound()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get arrived application returns not found`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+        webTestClient.get()
+          .uri("/cas1/external/cases/$crn/placements/arrived")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
