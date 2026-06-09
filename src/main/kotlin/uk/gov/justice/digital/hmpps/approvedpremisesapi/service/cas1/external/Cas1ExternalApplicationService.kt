@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import java.time.LocalDate
+import java.util.UUID
 
 @SuppressWarnings("TooGenericExceptionThrown")
 @Service
@@ -19,61 +20,61 @@ class Cas1ExternalApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
   private val cas1PremisesService: Cas1PremisesService,
-
 ) {
+
+  private val mostSuitableApplication = compareBy<ApprovedPremisesApplicationEntity> { suitableStatusesAsc[it.status] }
+    .thenBy { it.submittedAt ?: it.createdAt }
+
+  fun getPlacementHistories(applicationId: UUID): List<Cas1PlacementHistory> {
+    val rfps = (cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, requestingUser = null) as CasResult.Success).value
+
+    return rfps.flatMap { rfp ->
+
+      if (rfp.placements.isEmpty()) {
+        listOf(
+          Cas1PlacementHistory(
+            dateApplied = rfp.statusSetDate,
+            requestForPlacementStatus = rfp.status,
+            placementStatus = null,
+            premises = null,
+          ),
+        )
+      } else {
+        rfp.placements.map { placement ->
+          val premises = cas1PremisesService.findPremisesById(placement.premises.id)
+            ?.let {
+              Cas1SuitablePremisesDto(
+                startDate = placement.actualArrivalDate ?: placement.expectedArrivalDate,
+                endDate = placement.actualDepartureDate ?: placement.expectedDepartureDate,
+                postcode = it.postcode,
+                addressLine1 = it.addressLine1,
+                addressLine2 = it.addressLine2,
+                town = it.town,
+              )
+            }
+
+          Cas1PlacementHistory(
+            dateApplied = requireNotNull(placement.statusSetDate),
+            requestForPlacementStatus = rfp.status,
+            placementStatus = placement.status,
+            premises = premises,
+          )
+        }
+      }
+    }.sortedByDescending { it.dateApplied }
+  }
+
   fun getSuitableApplicationByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
-    .maxWithOrNull(
-      compareBy<ApprovedPremisesApplicationEntity> { suitableStatusesAsc[it.status] }
-        .thenBy { it.submittedAt ?: it.createdAt },
-    )
+    .maxWithOrNull(mostSuitableApplication)
     ?.let { application ->
 
-      val rfps = (cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, requestingUser = null) as CasResult.Success).value
-
-      val placementHistories = rfps.flatMap { rfp ->
-
-        if (rfp.placements.isEmpty()) {
-          listOf(
-            Cas1PlacementHistory(
-              dateApplied = rfp.statusSetDate,
-              requestForPlacementStatus = rfp.status,
-              placementStatus = null,
-              premises = null,
-              isSuitable = false,
-            ),
-          )
-        } else {
-          rfp.placements.map { placement ->
-            val premises = cas1PremisesService.findPremisesById(placement.premises.id)
-              ?.let {
-                Cas1SuitablePremisesDto(
-                  startDate = placement.expectedArrivalDate,
-                  endDate = placement.expectedDepartureDate,
-                  postcode = it.postcode,
-                  addressLine1 = it.addressLine1,
-                  addressLine2 = it.addressLine2,
-                  town = it.town,
-                )
-              }
-
-            Cas1PlacementHistory(
-              dateApplied = requireNotNull(placement.statusSetDate),
-              requestForPlacementStatus = rfp.status,
-              placementStatus = placement.status,
-              premises = premises,
-              isSuitable = false,
-            )
-          }
-        }
-      }.sortedByDescending { it.dateApplied }
+      val placementHistories = getPlacementHistories(application.id)
 
       val today = LocalDate.now()
 
       val suitablePlacement =
         placementHistories.lastOrNull { it.dateApplied >= today }
           ?: placementHistories.firstOrNull { it.dateApplied < today }
-
-      suitablePlacement?.isSuitable = true
 
       Cas1SuitableApplication(
         id = application.id,
@@ -82,6 +83,21 @@ class Cas1ExternalApplicationService(
         placementStatus = suitablePlacement?.placementStatus,
         premises = suitablePlacement?.premises,
       )
+    }
+
+  fun getArrivedPlacementByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
+    .sortedWith(mostSuitableApplication).firstNotNullOfOrNull { application ->
+      getPlacementHistories(application.id)
+        .firstOrNull { it.placementStatus == Cas1SpaceBookingStatus.ARRIVED }
+        ?.let {
+          Cas1SuitableApplication(
+            id = application.id,
+            applicationStatus = application.status,
+            requestForPlacementStatus = it.requestForPlacementStatus,
+            placementStatus = it.placementStatus,
+            premises = it.premises,
+          )
+        }
     }
 
   @SuppressWarnings("MagicNumber")
@@ -100,11 +116,10 @@ class Cas1ExternalApplicationService(
     ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED to 11,
   )
 
-  private data class Cas1PlacementHistory(
+  data class Cas1PlacementHistory(
     val dateApplied: LocalDate,
     val requestForPlacementStatus: RequestForPlacementStatus,
     val placementStatus: Cas1SpaceBookingStatus?,
     val premises: Cas1SuitablePremisesDto?,
-    var isSuitable: Boolean,
   )
 }
