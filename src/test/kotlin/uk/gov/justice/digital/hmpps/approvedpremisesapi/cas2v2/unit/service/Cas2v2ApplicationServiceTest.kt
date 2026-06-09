@@ -40,7 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2C
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2OffenderSearchResult
@@ -71,7 +71,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2ApplicationSummaryRepository = mockk<Cas2ApplicationSummaryRepository>()
   private val mockCas2v2OffenderService = mockk<Cas2v2OffenderService>()
   private val mockCas2v2UserAccessService = mockk<Cas2v2UserAccessService>()
-  private val mockDomainEventService = mockk<Cas2HdcDomainEventService>()
+  private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
   private val mockJsonMapper = mockk<JsonMapper>()

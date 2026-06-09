@@ -41,9 +41,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcAssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -77,7 +77,7 @@ class Cas2ApplicationServiceTest {
   lateinit var mockUserAccessService: Cas2HdcUserAccessService
 
   @MockK
-  lateinit var mockDomainEventService: Cas2HdcDomainEventService
+  lateinit var mockDomainEventService: Cas2DomainEventService
 
   @MockK
   lateinit var mockEmailNotificationService: EmailNotificationService

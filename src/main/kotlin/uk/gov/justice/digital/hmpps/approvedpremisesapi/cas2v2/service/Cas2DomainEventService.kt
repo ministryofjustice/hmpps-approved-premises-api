@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service
 
 import com.fasterxml.jackson.databind.json.JsonMapper
 import jakarta.transaction.Transactional
@@ -30,7 +30,7 @@ import kotlin.reflect.KClass
 
 @SuppressWarnings("TooGenericExceptionThrown")
 @Service
-class Cas2HdcDomainEventService(
+class Cas2DomainEventService(
   private val jsonMapper: JsonMapper,
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,

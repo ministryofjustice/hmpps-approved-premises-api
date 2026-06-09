@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2S
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constants.HDC_APPLICATION_TYPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -47,7 +48,7 @@ class Cas2HdcStatusUpdateService(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
-  private val domainEventService: Cas2HdcDomainEventService,
+  private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val statusFinder: Cas2HdcPersistedApplicationStatusFinder,
   private val statusTransformer: Cas2HdcApplicationStatusTransformer,

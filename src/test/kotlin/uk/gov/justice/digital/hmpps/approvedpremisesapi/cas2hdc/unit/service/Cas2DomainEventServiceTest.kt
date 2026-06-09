@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationSubmittedEventDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
@@ -42,7 +42,7 @@ class Cas2DomainEventServiceTest {
 
   private val detailUrl = "http://example.com/123"
 
-  private val domainEventService = Cas2HdcDomainEventService(
+  private val domainEventService = Cas2DomainEventService(
     jsonMapper = jsonMapper,
     domainEventRepository = domainEventRepositoryMock,
     hmppsQueueService = hmppsQueueServiceMock,
@@ -235,7 +235,7 @@ class Cas2DomainEventServiceTest {
 
       @Test
       fun `does not emit if emitDomainEventsEnabled is false`() {
-        val domainEventServiceDisabled = Cas2HdcDomainEventService(
+        val domainEventServiceDisabled = Cas2DomainEventService(
           jsonMapper = jsonMapper,
           domainEventRepository = domainEventRepositoryMock,
           hmppsQueueService = hmppsQueueServiceMock,
@@ -370,7 +370,7 @@ class Cas2DomainEventServiceTest {
 
       @Test
       fun `does not emit if emitDomainEventsEnabled is false`() {
-        val domainEventServiceDisabled = Cas2HdcDomainEventService(
+        val domainEventServiceDisabled = Cas2DomainEventService(
           jsonMapper = jsonMapper,
           domainEventRepository = domainEventRepositoryMock,
           hmppsQueueService = hmppsQueueServiceMock,
