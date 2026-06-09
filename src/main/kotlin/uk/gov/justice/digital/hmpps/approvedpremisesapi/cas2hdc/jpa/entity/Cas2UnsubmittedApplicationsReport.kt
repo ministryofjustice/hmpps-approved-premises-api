@@ -16,7 +16,8 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
         applications.noms_number AS personNoms,
         to_char(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
         users.username AS startedBy,
-        applications.application_origin AS applicationOrigin
+        applications.application_origin AS applicationOrigin,
+        applications.cohort as cohort
       FROM cas_2_applications applications
       JOIN cas_2_users users ON users.id = applications.created_by_cas2_user_id
       WHERE applications.submitted_at IS NULL
@@ -26,12 +27,13 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
     """,
     nativeQuery = true,
   )
-  fun generateUnsubmittedApplicationsReportRows(serviceOrigin: String): List<Cas2UnsubmittedApplicationReportRow>
+  fun generateUnsubmittedApplicationsReportRows(serviceOrigin: String): List<Cas2UnsubmittedApplicationReportQueryRow>
 }
 
-interface Cas2UnsubmittedApplicationReportRow {
+interface Cas2UnsubmittedApplicationReportQueryRow {
   fun getApplicationId(): String
   fun getApplicationOrigin(): ApplicationOrigin
+  fun getCohort(): Cas2Cohort?
   fun getPersonNoms(): String
   fun getPersonCrn(): String
   fun getStartedBy(): String

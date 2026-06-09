@@ -24,7 +24,8 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
         ) AS updatedAt,
         COUNT(distinct location_assignments.id) as numberOfLocationTransfers,
         CASE WHEN COUNT(distinct pom_assignments.id) = 0 THEN 0 ELSE COUNT(distinct pom_assignments.id) - 1 END as numberOfPomTransfers,
-        a.application_origin as applicationOrigin
+        a.application_origin as applicationOrigin,
+        a.cohort as cohort
     FROM domain_events events
              JOIN cas_2_applications as a on a.id = events.application_id and a.service_origin = :serviceOrigin
              LEFT JOIN cas_2_application_assignments as pom_assignments on events.application_id = pom_assignments.application_id and pom_assignments.allocated_pom_cas_2_user_id is NOT NULL
@@ -32,15 +33,15 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
              LEFT JOIN LATERAL jsonb_array_elements(events.data -> 'eventDetails' -> 'newStatus' -> 'statusDetails') as details ON true
     WHERE events.type = 'CAS2_APPLICATION_STATUS_UPDATED'
       AND events.occurred_at  > CURRENT_DATE - 365
-    GROUP BY events.id, a.application_origin
+    GROUP BY events.id, a.application_origin, a.cohort
     ORDER BY updatedAt DESC;
     """,
     nativeQuery = true,
   )
-  fun generateApplicationStatusUpdatesReportRows(serviceOrigin: String): List<Cas2ApplicationStatusUpdatedReportRow>
+  fun generateApplicationStatusUpdatesReportRows(serviceOrigin: String): List<Cas2ApplicationStatusUpdatedReportQueryRow>
 }
 
-interface Cas2ApplicationStatusUpdatedReportRow {
+interface Cas2ApplicationStatusUpdatedReportQueryRow {
   fun getId(): String
   fun getApplicationId(): String
   fun getUpdatedBy(): String
@@ -52,4 +53,5 @@ interface Cas2ApplicationStatusUpdatedReportRow {
   fun getNumberOfLocationTransfers(): String
   fun getNumberOfPomTransfers(): String
   fun getApplicationOrigin(): String
+  fun getCohort(): Cas2Cohort?
 }

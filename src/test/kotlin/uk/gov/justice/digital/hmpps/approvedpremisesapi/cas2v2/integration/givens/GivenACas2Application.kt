@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -25,6 +26,8 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2HdcApplication(
 
 fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
   createdBy: Cas2UserEntity? = null,
+  applicationOrigin: ApplicationOrigin = ApplicationOrigin.prisonBail,
+  cohort: Cas2Cohort = Cas2Cohort.PRISON_BAIL,
   crn: String = "CRN_1",
   noms: String = "NOMS_1",
   createdAt: OffsetDateTime = OffsetDateTime.now(),
@@ -35,7 +38,8 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
     },
   )
   withCrn(crn)
-  withApplicationOrigin(ApplicationOrigin.prisonBail)
+  withApplicationOrigin(applicationOrigin)
+  withCohort(cohort)
   withNomsNumber(noms)
   withCreatedAt(createdAt)
   withData("{}")
@@ -46,6 +50,7 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
 fun IntegrationTestBase.givenASubmittedCas2Application(
   createdBy: Cas2UserEntity? = null,
   applicationOrigin: ApplicationOrigin = ApplicationOrigin.courtBail,
+  cohort: Cas2Cohort = Cas2Cohort.COURT_BAIL,
   crn: String = "CRN_1",
   nomsNumber: String = "NOMS_1",
   createdAt: OffsetDateTime = OffsetDateTime.now().minusDays(5),
@@ -58,6 +63,7 @@ fun IntegrationTestBase.givenASubmittedCas2Application(
   )
   withCrn(crn)
   withApplicationOrigin(applicationOrigin)
+  withCohort(cohort)
   withNomsNumber(nomsNumber)
   withCreatedAt(createdAt)
   withData("{}")
