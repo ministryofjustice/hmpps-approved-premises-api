@@ -4,6 +4,6 @@ import java.time.Instant
 
 data class Cas2v2OASysAssessmentMetadataDto(
   val hasApplicableAssessment: Boolean,
-  val dateStarted: Instant?,
-  val dateCompleted: Instant?,
+  val dateStarted: Instant? = null,
+  val dateCompleted: Instant? = null,
 )

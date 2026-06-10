@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OASysA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskManagementPlan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService.SuitabilityStrategy
@@ -92,6 +93,16 @@ class OASysService(
   ): CasResult<HealthDetails> = handleResponse(
     crn = crn,
     response = apAndOASysClient.getHealth(crn),
+    suitabilityStrategy = suitabilityStrategy,
+    toAssessmentDates = { it.toAssessmentDates(crn) },
+  )
+
+  fun getRoshRatings(
+    crn: String,
+    suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
+  ): CasResult<RoshRatings> = handleResponse(
+    crn = crn,
+    response = apAndOASysClient.getRoshRatings(crn),
     suitabilityStrategy = suitabilityStrategy,
     toAssessmentDates = { it.toAssessmentDates(crn) },
   )

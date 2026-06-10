@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OASysAssessmentMetadataDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OAsysRiskToSelfDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OAsysRoshRatingsDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OAsysRoshSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2OASysTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -51,5 +52,17 @@ class Cas2V2OASysController(
     }
 
     return ResponseEntity.ok(cas2v2OASysTransformer.toOASysRoshSummaryDto(roshSummary))
+  }
+
+  @GetMapping("/people/{crn}/oasys/rosh-ratings")
+  fun getRoshRatings(
+    @PathVariable crn: String,
+  ): ResponseEntity<Cas2v2OAsysRoshRatingsDto> {
+    val roshRatings = when (val result = oasysService.getRoshRatings(crn)) {
+      is CasResult.NotFound -> null
+      else -> extractEntityFromCasResult(result)
+    }
+
+    return ResponseEntity.ok(cas2v2OASysTransformer.toOASysRoshRatingsDto(roshRatings))
   }
 }

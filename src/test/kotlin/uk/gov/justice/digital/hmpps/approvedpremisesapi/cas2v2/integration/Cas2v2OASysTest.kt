@@ -7,15 +7,19 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OASysAssessmentMetadataDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OAsysRiskToSelfDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OAsysRoshRatingsDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2OAsysRoshSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockAssessmentSummaryNotFound
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRiskToTheIndividual404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRoSHSummary404Call
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockRoshRating404Call
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoSHSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOAsysMockAssessmentSummaryResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 
@@ -196,6 +200,66 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .expectStatus()
         .isOk
         .bodyAsObject<Cas2v2OAsysRoshSummaryDto>()
+
+      assertThat(result.metadata.hasApplicableAssessment).isTrue
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /cas2v2/people/{crn}/oasys/rosh-ratings")
+  inner class GetRoshRatings {
+
+    @Test
+    fun `Get without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas2v2/people/CRN123/oasys/rosh-ratings")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Cas2v2NonReferrerRoles
+    @ParameterizedTest
+    fun `Get without referrer role returns 403`(role: RoleAndAuthSource) {
+      webTestClient.get()
+        .uri("/cas2v2/people/CRN123/oasys/rosh-ratings")
+        .addJwtForRoleAndAuthSource(role)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Cas2v2ReferrerRoles
+    @ParameterizedTest
+    fun `Assessment not available`(role: RoleAndAuthSource) {
+      apAndOASysMockRoshRating404Call("CRN123")
+
+      val result = webTestClient.get()
+        .uri("/cas2v2/people/CRN123/oasys/rosh-ratings")
+        .addJwtForRoleAndAuthSource(role)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas2v2OAsysRoshRatingsDto>()
+
+      assertThat(result.metadata.hasApplicableAssessment).isFalse
+    }
+
+    @Cas2v2ReferrerRoles
+    @ParameterizedTest
+    fun `Assessment available`(role: RoleAndAuthSource) {
+      apAndOASysMockSuccessfulRoshRatingsCall(
+        crn = "CRN123",
+        response = RoshRatingsFactory().produce(),
+      )
+
+      val result = webTestClient.get()
+        .uri("/cas2v2/people/CRN123/oasys/rosh-ratings")
+        .addJwtForRoleAndAuthSource(role)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas2v2OAsysRoshRatingsDto>()
 
       assertThat(result.metadata.hasApplicableAssessment).isTrue
     }

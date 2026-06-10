@@ -8,6 +8,8 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -17,8 +19,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskManagementPlanFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService.OASysAssessmentDates
@@ -40,495 +44,302 @@ class OASysServiceTest {
 
   companion object {
     const val CRN = "CRN1122"
-    val INITIATION_DATE: OffsetDateTime = OffsetDateTime.parse("2007-12-03T10:15:30+01:00")
-    val COMPLETION_DATE: OffsetDateTime = OffsetDateTime.parse("2007-12-04T10:15:30+01:00")
-    val APPLICABILITY_INFO: OASysAssessmentDates = OASysAssessmentDates(CRN, INITIATION_DATE, COMPLETION_DATE)
-    val DEFAULT_SUITABILITY_STRATEGY = SuitabilityStrategy.CompletedInLastSixMonths
+
+    val INITIATION_DATE: OffsetDateTime =
+      OffsetDateTime.parse("2007-12-03T10:15:30+01:00")
+
+    val COMPLETION_DATE: OffsetDateTime =
+      OffsetDateTime.parse("2007-12-04T10:15:30+01:00")
+
+    val APPLICABILITY_INFO =
+      OASysAssessmentDates(CRN, INITIATION_DATE, COMPLETION_DATE)
+
+    val DEFAULT_SUITABILITY_STRATEGY =
+      SuitabilityStrategy.CompletedInLastSixMonths
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> ClientResult<*>.cast() = this as ClientResult<T>
+
+    @JvmStatic
+    fun failureCases() = listOf(
+      FailureCase(
+        name = "AssessmentSummary",
+        mockSetup = { client, res -> every { client.getLatestAssessmentSummary(CRN) } returns res.cast() },
+        invoke = { it.getAssessmentSummary(CRN) },
+        stubResponse = OASysAssessmentSummaryFactory().produce(),
+      ),
+
+      FailureCase(
+        name = "NeedsDetails",
+        mockSetup = { client, res -> every { client.getNeedsDetails(CRN) } returns res.cast() },
+        invoke = { it.getNeedsDetails(CRN) },
+        stubResponse = NeedsDetailsFactory().produce(),
+      ),
+
+      FailureCase(
+        name = "OffenceDetails",
+        mockSetup = { client, res -> every { client.getOffenceDetails(CRN) } returns res.cast() },
+        invoke = { it.getOffenceDetails(CRN) },
+        stubResponse = OffenceDetailsFactory().produce(),
+      ),
+
+      FailureCase(
+        name = "RiskManagementPlan",
+        mockSetup = { client, res -> every { client.getRiskManagementPlan(CRN) } returns res.cast() },
+        invoke = { it.getRiskManagementPlan(CRN) },
+        stubResponse = RiskManagementPlanFactory().produce(),
+      ),
+
+      FailureCase(
+        name = "RoshSummary",
+        mockSetup = { client, res -> every { client.getRoshSummary(CRN) } returns res.cast() },
+        invoke = { it.getRoshSummary(CRN) },
+        stubResponse = RoshSummaryFactory().produce(),
+      ),
+
+      FailureCase(
+        name = "RiskToTheIndividual",
+        mockSetup = { client, res -> every { client.getRiskToTheIndividual(CRN) } returns res.cast() },
+        invoke = { it.getRiskToTheIndividual(CRN) },
+        stubResponse = RisksToTheIndividualFactory().produce(),
+      ),
+
+      FailureCase(
+        name = "HealthDetails",
+        mockSetup = { client, res -> every { client.getHealth(CRN) } returns res.cast() },
+        invoke = { it.getHealthDetails(CRN) },
+        stubResponse = HealthDetailsFactory().produce(),
+      ),
+
+      FailureCase(
+        name = "RoshRatings",
+        mockSetup = { client, res -> every { client.getRoshRatings(CRN) } returns res.cast() },
+        invoke = { it.getRoshRatings(CRN) },
+        stubResponse = RoshRatingsFactory().produce(),
+      ),
+    )
   }
 
   @Nested
-  inner class AssessmentSummary {
+  inner class SharedFailureScenarios {
+
+    @ParameterizedTest(name = "{0} - 404 returns not found")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.OASysServiceTest#failureCases")
+    fun `404 returns not found`(case: FailureCase) {
+      case.mockSetup(apAndOASysClient, ClientResultFactory.notFound<Any>())
+
+      assertThatCasResult(case.invoke(service))
+        .isNotFound("OASysAssessment", CRN)
+    }
+
+    @ParameterizedTest(name = "{0} - unexpected status throws")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.OASysServiceTest#failureCases")
+    fun `unexpected status throws`(case: FailureCase) {
+      case.mockSetup(apAndOASysClient, ClientResultFactory.statusCode<Any>(HttpStatus.TEMPORARY_REDIRECT))
+
+      assertThatThrownBy {
+        case.invoke(service)
+      }.isInstanceOf(RuntimeException::class.java)
+    }
+
+    @ParameterizedTest(name = "{0} - failure throws")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.OASysServiceTest#failureCases")
+    fun `failure throws`(case: FailureCase) {
+      case.mockSetup(apAndOASysClient, ClientResultFactory.failureOther<Any>())
+
+      assertThatThrownBy {
+        case.invoke(service)
+      }.isInstanceOf(RuntimeException::class.java)
+    }
+
+    @ParameterizedTest(name = "{0} - not found if assessment exists but isnt usable")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.OASysServiceTest#failureCases")
+    fun `not found if assessment exists but isnt usable`(case: FailureCase) {
+      every { oasysApplicabilitySevice.isSuitable(any(), any()) } returns false
+      case.mockSetup(apAndOASysClient, ClientResult.Success(HttpStatus.OK, case.stubResponse))
+
+      val result = case.invoke(service)
+
+      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
+    }
+  }
+
+  @Nested
+  inner class SuccessScenarios {
 
     @Test
-    fun `success if assessment exists and is usable`() {
-      val upstreamResponse = OASysAssessmentSummaryFactory()
+    fun `AssessmentSummary success`() {
+      val response = OASysAssessmentSummaryFactory()
         .withInitiationDate(INITIATION_DATE)
         .withCompletedDate(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns true
+      every {
+        oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY)
+      } returns true
 
-      every { apAndOASysClient.getLatestAssessmentSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
-
-      val result = service.getAssessmentSummary(CRN)
-
-      assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
-    }
-
-    @Test
-    fun `not found if assessment exists but isnt usable`() {
-      val upstreamResponse = OASysAssessmentSummaryFactory()
-        .withInitiationDate(INITIATION_DATE)
-        .withCompletedDate(COMPLETION_DATE)
-        .produce()
-
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns false
-
-      every { apAndOASysClient.getLatestAssessmentSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+      every {
+        apAndOASysClient.getLatestAssessmentSummary(CRN)
+      } returns ClientResult.Success(HttpStatus.OK, response)
 
       val result = service.getAssessmentSummary(CRN)
 
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
+      assertSuccess(result, response)
     }
 
     @Test
-    fun `not found status code returns not found`() {
-      every { apAndOASysClient.getLatestAssessmentSummary(CRN) } returns ClientResultFactory.notFound()
-
-      val result = service.getAssessmentSummary(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `other status code throws exception`() {
-      every { apAndOASysClient.getLatestAssessmentSummary(CRN) } returns ClientResultFactory.statusCode(HttpStatus.TEMPORARY_REDIRECT)
-
-      assertThatThrownBy {
-        service.getAssessmentSummary(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `general error throws Exception`() {
-      every { apAndOASysClient.getLatestAssessmentSummary(CRN) } returns ClientResultFactory.failureOther()
-
-      assertThatThrownBy {
-        service.getAssessmentSummary(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-  }
-
-  @Nested
-  inner class NeedsDetails {
-
-    @Test
-    fun `success if assessment exists and is usable`() {
-      val upstreamResponse = NeedsDetailsFactory()
+    fun `NeedsDetails success`() {
+      val response = NeedsDetailsFactory()
         .withInitiationDate(INITIATION_DATE)
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns true
+      every {
+        oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY)
+      } returns true
 
-      every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+      every {
+        apAndOASysClient.getNeedsDetails(CRN)
+      } returns ClientResult.Success(HttpStatus.OK, response)
 
       val result = service.getNeedsDetails(CRN)
 
-      assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+      assertSuccess(result, response)
     }
 
     @Test
-    fun `not found if assessment exists but isnt usable`() {
-      val upstreamResponse = NeedsDetailsFactory()
+    fun `OffenceDetails success`() {
+      val response = OffenceDetailsFactory()
         .withInitiationDate(INITIATION_DATE)
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns false
+      every {
+        oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY)
+      } returns true
 
-      every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
-
-      val result = service.getNeedsDetails(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `not found status code returns not found`() {
-      every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResultFactory.notFound()
-
-      val result = service.getNeedsDetails(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `forbidden status code returns forbidden`() {
-      every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResultFactory.forbidden()
-
-      assertThatThrownBy {
-        service.getNeedsDetails(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `other status code throws exception`() {
-      every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResultFactory.statusCode(HttpStatus.TEMPORARY_REDIRECT)
-
-      assertThatThrownBy {
-        service.getNeedsDetails(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `general error throws exception`() {
-      every { apAndOASysClient.getNeedsDetails(CRN) } returns ClientResultFactory.failureOther()
-
-      assertThatThrownBy {
-        service.getNeedsDetails(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-  }
-
-  @Nested
-  inner class OffenceDetails {
-
-    @Test
-    fun `success if assessment exists and is usable`() {
-      val upstreamResponse = OffenceDetailsFactory()
-        .withInitiationDate(INITIATION_DATE)
-        .withDateCompleted(COMPLETION_DATE)
-        .produce()
-
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns true
-
-      every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+      every {
+        apAndOASysClient.getOffenceDetails(CRN)
+      } returns ClientResult.Success(HttpStatus.OK, response)
 
       val result = service.getOffenceDetails(CRN)
 
-      assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+      assertSuccess(result, response)
     }
 
     @Test
-    fun `not found if assessment exists but isnt usable`() {
-      val upstreamResponse = OffenceDetailsFactory()
+    fun `RiskManagementPlan success`() {
+      val response = RiskManagementPlanFactory()
         .withInitiationDate(INITIATION_DATE)
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns false
+      every {
+        oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY)
+      } returns true
 
-      every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
-
-      val result = service.getOffenceDetails(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `forbidden status code returns forbidden`() {
-      every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResultFactory.forbidden()
-
-      assertThatThrownBy {
-        service.getOffenceDetails(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `other status code throws exception`() {
-      every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResultFactory.statusCode(HttpStatus.TEMPORARY_REDIRECT)
-
-      assertThatThrownBy {
-        service.getOffenceDetails(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `general error throws exception`() {
-      every { apAndOASysClient.getOffenceDetails(CRN) } returns ClientResultFactory.failureOther()
-
-      assertThatThrownBy {
-        service.getOffenceDetails(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-  }
-
-  @Nested
-  inner class RiskManagementPlan {
-
-    @Test
-    fun `success if assessment exists and is usable`() {
-      val upstreamResponse = RiskManagementPlanFactory()
-        .withInitiationDate(INITIATION_DATE)
-        .withDateCompleted(COMPLETION_DATE)
-        .produce()
-
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns true
-
-      every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+      every {
+        apAndOASysClient.getRiskManagementPlan(CRN)
+      } returns ClientResult.Success(HttpStatus.OK, response)
 
       val result = service.getRiskManagementPlan(CRN)
 
-      assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+      assertSuccess(result, response)
     }
 
     @Test
-    fun `not found if assessment exists but isnt usable`() {
-      val upstreamResponse = RiskManagementPlanFactory()
+    fun `RoshSummary success`() {
+      val response = RoshSummaryFactory()
         .withInitiationDate(INITIATION_DATE)
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns false
+      every {
+        oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY)
+      } returns true
 
-      every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
-
-      val result = service.getRiskManagementPlan(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `not found status code returns not found`() {
-      every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResultFactory.notFound()
-
-      val result = service.getRiskManagementPlan(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `forbidden status code returns forbidden`() {
-      every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResultFactory.forbidden()
-
-      assertThatThrownBy {
-        service.getRiskManagementPlan(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `other status code throws exception`() {
-      every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResultFactory.statusCode(HttpStatus.TEMPORARY_REDIRECT)
-
-      assertThatThrownBy {
-        service.getRiskManagementPlan(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `general error throws exception`() {
-      every { apAndOASysClient.getRiskManagementPlan(CRN) } returns ClientResultFactory.failureOther()
-
-      assertThatThrownBy {
-        service.getRiskManagementPlan(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-  }
-
-  @Nested
-  inner class RoshSummary {
-
-    @Test
-    fun `success if assessment exists and is usable`() {
-      val upstreamResponse = RoshSummaryFactory()
-        .withInitiationDate(INITIATION_DATE)
-        .withDateCompleted(COMPLETION_DATE)
-        .produce()
-
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns true
-
-      every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+      every {
+        apAndOASysClient.getRoshSummary(CRN)
+      } returns ClientResult.Success(HttpStatus.OK, response)
 
       val result = service.getRoshSummary(CRN)
 
-      assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
+      assertSuccess(result, response)
     }
 
     @Test
-    fun `not found if assessment exists but isnt usable`() {
-      val upstreamResponse = RoshSummaryFactory()
+    fun `RiskToTheIndividual success`() {
+      val response = RisksToTheIndividualFactory()
         .withInitiationDate(INITIATION_DATE)
         .withDateCompleted(COMPLETION_DATE)
         .produce()
 
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns false
+      every {
+        oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY)
+      } returns true
 
-      every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
+      every {
+        apAndOASysClient.getRiskToTheIndividual(CRN)
+      } returns ClientResult.Success(HttpStatus.OK, response)
 
-      val result = service.getRoshSummary(CRN)
+      val result = service.getRiskToTheIndividual(CRN)
 
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
+      assertSuccess(result, response)
     }
 
     @Test
-    fun `not found status code returns not found`() {
-      every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResultFactory.notFound()
+    fun `HealthDetails success`() {
+      val response = HealthDetailsFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
 
-      val result = service.getRoshSummary(CRN)
+      every {
+        oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY)
+      } returns true
 
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
+      every {
+        apAndOASysClient.getHealth(CRN)
+      } returns ClientResult.Success(HttpStatus.OK, response)
+
+      val result = service.getHealthDetails(CRN)
+
+      assertSuccess(result, response)
     }
 
     @Test
-    fun `forbidden status code returns forbidden`() {
-      every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResultFactory.forbidden()
+    fun `RoshRatings success`() {
+      val response = RoshRatingsFactory()
+        .withInitiationDate(INITIATION_DATE)
+        .withDateCompleted(COMPLETION_DATE)
+        .produce()
 
-      assertThatThrownBy {
-        service.getRoshSummary(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
+      every {
+        oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY)
+      } returns true
 
-    @Test
-    fun `other status code throws exception`() {
-      every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResultFactory.statusCode(HttpStatus.TEMPORARY_REDIRECT)
+      every {
+        apAndOASysClient.getRoshRatings(CRN)
+      } returns ClientResult.Success(HttpStatus.OK, response)
 
-      assertThatThrownBy {
-        service.getRoshSummary(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
+      val result = service.getRoshRatings(CRN)
 
-    @Test
-    fun `general error throws exception`() {
-      every { apAndOASysClient.getRoshSummary(CRN) } returns ClientResultFactory.failureOther()
-
-      assertThatThrownBy {
-        service.getRoshSummary(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
+      assertSuccess(result, response)
     }
   }
 
-  @Nested
-  inner class RiskToTheIndividual {
-
-    @Test
-    fun `success if assessment exists and is usable`() {
-      val upstreamResponse = RisksToTheIndividualFactory()
-        .withInitiationDate(INITIATION_DATE)
-        .withDateCompleted(COMPLETION_DATE)
-        .produce()
-
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns true
-
-      every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
-
-      val result = service.getRiskToTheIndividual(CRN)
-
-      assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
-    }
-
-    @Test
-    fun `not found if assessment exists but isnt usable`() {
-      val upstreamResponse = RisksToTheIndividualFactory()
-        .withInitiationDate(INITIATION_DATE)
-        .withDateCompleted(COMPLETION_DATE)
-        .produce()
-
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns false
-
-      every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
-
-      val result = service.getRiskToTheIndividual(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `not found status code returns not found`() {
-      every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResultFactory.notFound()
-
-      val result = service.getRiskToTheIndividual(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `forbidden status code returns forbidden`() {
-      every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResultFactory.forbidden()
-
-      assertThatThrownBy {
-        service.getRiskToTheIndividual(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `other status code throws exception`() {
-      every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResultFactory.statusCode(HttpStatus.TEMPORARY_REDIRECT)
-
-      assertThatThrownBy {
-        service.getRiskToTheIndividual(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `general error throws exception`() {
-      every { apAndOASysClient.getRiskToTheIndividual(CRN) } returns ClientResultFactory.failureOther()
-
-      assertThatThrownBy {
-        service.getRiskToTheIndividual(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
+  data class FailureCase(
+    val name: String,
+    val mockSetup: (ApAndOASysClient, ClientResult<*>) -> Unit,
+    val invoke: (OASysService) -> CasResult<*>,
+    val stubResponse: Any,
+  ) {
+    override fun toString() = name
   }
 
-  @Nested
-  inner class GetHealthDetails {
-
-    @Test
-    fun `success if assessment exists and is usable`() {
-      val upstreamResponse = HealthDetailsFactory()
-        .withInitiationDate(INITIATION_DATE)
-        .withDateCompleted(COMPLETION_DATE)
-        .produce()
-
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns true
-
-      every { apAndOASysClient.getHealth(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
-
-      val result = service.getHealthDetails(CRN)
-
-      assertThatCasResult(result).isSuccess().withValueEqualTo(upstreamResponse)
-    }
-
-    @Test
-    fun `not found if assessment exists but isnt usable`() {
-      val upstreamResponse = HealthDetailsFactory()
-        .withInitiationDate(INITIATION_DATE)
-        .withDateCompleted(COMPLETION_DATE)
-        .produce()
-
-      every { oasysApplicabilitySevice.isSuitable(APPLICABILITY_INFO, DEFAULT_SUITABILITY_STRATEGY) } returns false
-
-      every { apAndOASysClient.getHealth(CRN) } returns ClientResult.Success(HttpStatus.OK, upstreamResponse)
-
-      val result = service.getHealthDetails(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `not found status code returns not found`() {
-      every { apAndOASysClient.getHealth(CRN) } returns ClientResultFactory.notFound()
-
-      val result = service.getHealthDetails(CRN)
-
-      assertThatCasResult(result).isNotFound("OASysAssessment", CRN)
-    }
-
-    @Test
-    fun `forbidden status code returns forbidden`() {
-      every { apAndOASysClient.getHealth(CRN) } returns ClientResultFactory.forbidden()
-
-      assertThatThrownBy {
-        service.getHealthDetails(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `other status code throws exception`() {
-      every { apAndOASysClient.getHealth(CRN) } returns ClientResultFactory.statusCode(HttpStatus.TEMPORARY_REDIRECT)
-
-      assertThatThrownBy {
-        service.getHealthDetails(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
-
-    @Test
-    fun `general error throws exception`() {
-      every { apAndOASysClient.getHealth(CRN) } returns ClientResultFactory.failureOther()
-
-      assertThatThrownBy {
-        service.getHealthDetails(CRN)
-      }.isInstanceOf(RuntimeException::class.java)
-    }
+  private fun <T : Any> assertSuccess(result: CasResult<T>, expected: T) {
+    assertThatCasResult(result)
+      .isSuccess()
+      .withValueEqualTo(expected)
   }
 }
