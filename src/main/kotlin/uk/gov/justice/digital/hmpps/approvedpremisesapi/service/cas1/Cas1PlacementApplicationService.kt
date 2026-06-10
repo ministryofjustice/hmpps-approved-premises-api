@@ -334,13 +334,13 @@ class Cas1PlacementApplicationService(
     id: UUID,
     submitPlacementApplication: SubmitPlacementApplication,
   ): CasResult<List<PlacementApplicationEntity>> {
-    if (submitPlacementApplication.placementDates.isNullOrEmpty() && submitPlacementApplication.requestedPlacementPeriods.isNullOrEmpty()) {
+    val requestedPlacementPeriods = submitPlacementApplication.requestedPlacementPeriods
+
+    if (requestedPlacementPeriods.isEmpty()) {
       return CasResult.GeneralValidationError("Please provide at least one of placement dates or requested placement periods.")
     }
 
     val translatedDocument = jsonMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
-
-    val cas1RequestedPlacementPeriod = deriveRequestedPlacementPeriods(submitPlacementApplication)!!
 
     val placementTypeValue = getPlacementTypeForApplication(submitPlacementApplication)
 
@@ -376,7 +376,7 @@ class Cas1PlacementApplicationService(
 
     val baselinePlacementApplication = placementApplicationRepository.save(submittedPlacementApplication)
 
-    val placementApplicationsWithDates = saveDatesOnSubmissionToAnAppPerDate(baselinePlacementApplication, cas1RequestedPlacementPeriod)
+    val placementApplicationsWithDates = saveDatesOnSubmissionToAnAppPerDate(baselinePlacementApplication, requestedPlacementPeriods)
 
     placementApplicationsWithDates.forEach { placementApplication ->
       cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(
@@ -394,18 +394,6 @@ class Cas1PlacementApplicationService(
     }
 
     return CasResult.Success(placementApplicationsWithDates)
-  }
-
-  private fun deriveRequestedPlacementPeriods(submitPlacementApplication: SubmitPlacementApplication): List<Cas1RequestedPlacementPeriod>? = if (!submitPlacementApplication.placementDates.isNullOrEmpty()) {
-    submitPlacementApplication.placementDates.map { placementDate ->
-      Cas1RequestedPlacementPeriod(
-        arrival = placementDate.expectedArrival,
-        arrivalFlexible = null,
-        duration = placementDate.duration,
-      )
-    }
-  } else {
-    submitPlacementApplication.requestedPlacementPeriods
   }
 
   private fun getPlacementTypeForApplication(submitPlacementApplication: SubmitPlacementApplication): PlacementType {

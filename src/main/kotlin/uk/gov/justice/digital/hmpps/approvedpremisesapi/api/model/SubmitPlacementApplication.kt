@@ -7,10 +7,7 @@ data class SubmitPlacementApplication(
 
   @Schema(required = true)
   val translatedDocument: Any,
-  @Schema(deprecated = true, description = "Please use requestedPlacementPeriods instead")
-  val placementDates: List<PlacementDates>?,
-
-  val requestedPlacementPeriods: List<Cas1RequestedPlacementPeriod>?,
+  val requestedPlacementPeriods: List<Cas1RequestedPlacementPeriod>,
 
   val releaseType: ReleaseTypeOption,
   val sentenceType: SentenceTypeOption?,

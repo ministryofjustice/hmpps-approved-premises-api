@@ -16,10 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
@@ -43,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -542,13 +538,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         .bodyValue(
           SubmitPlacementApplication(
             translatedDocument = mapOf("thingId" to 123),
-            placementDates = listOf(
-              PlacementDates(
-                expectedArrival = LocalDate.now(),
+            requestedPlacementPeriods = listOf(
+              Cas1RequestedPlacementPeriod(
+                arrival = LocalDate.now(),
+                arrivalFlexible = false,
                 duration = 12,
               ),
             ),
-            requestedPlacementPeriods = emptyList(),
             releaseType = ReleaseTypeOption.licence,
             sentenceType = null,
             situationType = null,
@@ -572,13 +568,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementDates = listOf(
-                  PlacementDates(
-                    expectedArrival = LocalDate.now(),
+                requestedPlacementPeriods = listOf(
+                  Cas1RequestedPlacementPeriod(
+                    arrival = LocalDate.now(),
+                    arrivalFlexible = false,
                     duration = 12,
                   ),
                 ),
-                requestedPlacementPeriods = emptyList(),
                 releaseType = ReleaseTypeOption.licence,
                 sentenceType = null,
                 situationType = null,
@@ -608,13 +604,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementDates = listOf(
-                  PlacementDates(
-                    expectedArrival = LocalDate.now(),
+                requestedPlacementPeriods = listOf(
+                  Cas1RequestedPlacementPeriod(
+                    arrival = LocalDate.now(),
+                    arrivalFlexible = false,
                     duration = 12,
                   ),
                 ),
-                requestedPlacementPeriods = emptyList(),
                 releaseType = ReleaseTypeOption.licence,
                 sentenceType = null,
                 situationType = null,
@@ -644,13 +640,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementDates = listOf(
-                  PlacementDates(
-                    expectedArrival = LocalDate.now(),
+                requestedPlacementPeriods = listOf(
+                  Cas1RequestedPlacementPeriod(
+                    arrival = LocalDate.now(),
+                    arrivalFlexible = false,
                     duration = 12,
                   ),
                 ),
-                requestedPlacementPeriods = emptyList(),
                 releaseType = ReleaseTypeOption.licence,
                 sentenceType = null,
                 situationType = null,
@@ -659,38 +655,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isForbidden
-        }
-      }
-    }
-
-    @Test
-    fun `submitting a placement request application with an outdated schema returns an error`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
-          createdByUser = user,
-          submittedAt = OffsetDateTime.now(),
-        ) { placementApplicationEntity ->
-          webTestClient.post()
-            .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              SubmitPlacementApplication(
-                translatedDocument = mapOf("thingId" to 123),
-                placementDates = listOf(
-                  PlacementDates(
-                    expectedArrival = LocalDate.now(),
-                    duration = 12,
-                  ),
-                ),
-                requestedPlacementPeriods = emptyList(),
-                releaseType = ReleaseTypeOption.licence,
-                sentenceType = null,
-                situationType = null,
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isBadRequest
         }
       }
     }
@@ -710,7 +674,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementDates = emptyList(),
                 requestedPlacementPeriods = emptyList(),
                 releaseType = ReleaseTypeOption.licence,
                 sentenceType = null,
@@ -752,7 +715,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .bodyValue(
                 SubmitPlacementApplication(
                   translatedDocument = mapOf("thingId" to 123),
-                  placementDates = emptyList(),
                   requestedPlacementPeriods = cas1RequestedPlacementPeriod,
                   releaseType = ReleaseTypeOption.licence,
                   sentenceType = null,
@@ -807,184 +769,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `submitting a placement application with a single placement date returns successfully, sends emails, raises domain event and updates the application`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
-          createdByUser = user,
-        ) { placementApplicationEntity ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCrn(placementApplicationEntity.application.crn)
-            },
-          ) { _, _ ->
-            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-            val placementDates = listOf(
-              PlacementDates(
-                expectedArrival = LocalDate.of(2025, 3, 10),
-                duration = 12,
-              ),
-            )
-            val rawResult = webTestClient.post()
-              .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                SubmitPlacementApplication(
-                  translatedDocument = mapOf("thingId" to 123),
-                  placementDates = placementDates,
-                  requestedPlacementPeriods = emptyList(),
-                  releaseType = ReleaseTypeOption.licence,
-                  sentenceType = SentenceTypeOption.communityOrder,
-                  situationType = SituationOption.bailSentence,
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
-            assertThat(body).hasSize(1)
-
-            val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
-              document = "{\"thingId\":123}",
-            )
-
-            assertThat(body[0]).matches {
-              expectedUpdatedPlacementApplication.id == it.id &&
-                expectedUpdatedPlacementApplication.application.id == it.applicationId &&
-                expectedUpdatedPlacementApplication.createdByUser.id == it.createdByUserId &&
-                expectedUpdatedPlacementApplication.createdAt.toInstant() == it.createdAt &&
-                serializableToJsonNode(expectedUpdatedPlacementApplication.document) == serializableToJsonNode(it.document)
-            }
-
-            val updatedPlacementApplication =
-              placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
-
-            assertThat(updatedPlacementApplication.document).isEqualTo(expectedUpdatedPlacementApplication.document)
-            assertThat(updatedPlacementApplication.submittedAt).isNotNull()
-            assertThat(updatedPlacementApplication.allocatedToUser).isNull()
-            assertThat(updatedPlacementApplication.requestedDuration).isEqualTo(placementDates[0].duration)
-            assertThat(updatedPlacementApplication.expectedArrival).isEqualTo(placementDates[0].expectedArrival)
-            assertThat(updatedPlacementApplication.releaseType).isEqualTo(Cas1ReleaseType.licence)
-            assertThat(updatedPlacementApplication.sentenceType).isEqualTo(SentenceTypeOption.communityOrder.toString())
-            assertThat(updatedPlacementApplication.situation).isEqualTo(SituationOption.bailSentence.toString())
-
-            domainEventAsserter.assertDomainEventOfTypeStored(
-              placementApplicationEntity.application.id,
-              DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-            )
-
-            val recipient = placementApplicationEntity.createdByUser.email!!
-            val templates = Cas1NotifyTemplates
-
-            emailAsserter.assertEmailsRequestedCount(1)
-            emailAsserter.assertEmailRequested(recipient, templates.PLACEMENT_REQUEST_SUBMITTED_V2, mapOf("startDate" to "2025-03-10"))
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `submitting a placement application with multiple placement dates returns successfully and produces multiple placement apps`() {
-      givenAUser { user, jwt ->
-        givenAPlacementApplication(
-          createdByUser = user,
-        ) { placementApplicationEntity ->
-          givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withCrn(placementApplicationEntity.application.crn)
-            },
-          ) { _, _ ->
-            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-            val arrival1 = LocalDate.of(2024, 1, 2)
-            val duration1 = 12
-            val arrival2 = LocalDate.of(2024, 2, 3)
-            val duration2 = 10
-            val arrival3 = LocalDate.of(2024, 3, 4)
-            val duration3 = 15
-
-            val placementDates = listOf(
-              PlacementDates(
-                expectedArrival = arrival1,
-                duration = duration1,
-              ),
-              PlacementDates(
-                expectedArrival = arrival2,
-                duration = duration2,
-              ),
-              PlacementDates(
-                expectedArrival = arrival3,
-                duration = duration3,
-              ),
-            )
-            val rawResult = webTestClient.post()
-              .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                SubmitPlacementApplication(
-                  translatedDocument = mapOf("thingId" to 123),
-                  placementDates = placementDates,
-                  requestedPlacementPeriods = emptyList(),
-                  releaseType = ReleaseTypeOption.licence,
-                  sentenceType = null,
-                  situationType = null,
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val body = jsonMapper.readValue<List<PlacementApplication>>(rawResult!!)
-            assertThat(body).hasSize(3)
-
-            val createdApp1Id = body[0].id
-            val updatedEntity1 = placementApplicationRepository.findByIdOrNull(createdApp1Id)!!
-            assertThat(updatedEntity1.expectedArrival).isEqualTo(arrival1)
-            assertThat(updatedEntity1.requestedDuration).isEqualTo(duration1)
-            assertThat(updatedEntity1.submittedAt).isNotNull()
-            assertThat(updatedEntity1.allocatedToUser).isNull()
-            assertThat(updatedEntity1.releaseType).isEqualTo(Cas1ReleaseType.licence)
-
-            val createdApp2Id = body[1].id
-            val updatedEntity2 = placementApplicationRepository.findByIdOrNull(createdApp2Id)!!
-            assertThat(updatedEntity2.expectedArrival).isEqualTo(arrival2)
-            assertThat(updatedEntity2.requestedDuration).isEqualTo(duration2)
-            assertThat(updatedEntity2.submittedAt).isNotNull()
-            assertThat(updatedEntity1.allocatedToUser).isNull()
-
-            val createdApp3Id = body[2].id
-            val updatedEntity3 = placementApplicationRepository.findByIdOrNull(createdApp3Id)!!
-            assertThat(updatedEntity3.expectedArrival).isEqualTo(arrival3)
-            assertThat(updatedEntity3.requestedDuration).isEqualTo(duration3)
-            assertThat(updatedEntity3.submittedAt).isNotNull()
-            assertThat(updatedEntity1.allocatedToUser).isNull()
-
-            val recipient = placementApplicationEntity.createdByUser.email!!
-            val templates = Cas1NotifyTemplates
-
-            domainEventAsserter.assertDomainEventsOfTypeStored(
-              applicationId = placementApplicationEntity.application.id,
-              eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-              expectedCount = 3,
-            )
-
-            emailAsserter.assertEmailsRequestedCount(3)
-            emailAsserter.assertEmailRequested(recipient, templates.PLACEMENT_REQUEST_SUBMITTED_V2, mapOf("startDate" to "2024-01-02"))
-            emailAsserter.assertEmailRequested(recipient, templates.PLACEMENT_REQUEST_SUBMITTED_V2, mapOf("startDate" to "2024-02-03"))
-            emailAsserter.assertEmailRequested(recipient, templates.PLACEMENT_REQUEST_SUBMITTED_V2, mapOf("startDate" to "2024-03-04"))
-          }
-        }
-      }
-    }
-
-    @Test
     fun `submitting a placement application with multiple requested placement periods returns successfully and produces multiple placement apps`() {
       givenAUser { user, jwt ->
         givenAPlacementApplication(
@@ -1027,7 +811,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .bodyValue(
                 SubmitPlacementApplication(
                   translatedDocument = mapOf("thingId" to 123),
-                  placementDates = null,
                   requestedPlacementPeriods = requestedPlacementPeriod,
                   releaseType = ReleaseTypeOption.licence,
                   sentenceType = null,
