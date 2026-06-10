@@ -35,7 +35,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 
 @Service
@@ -339,10 +338,6 @@ class Cas1PlacementApplicationService(
       return CasResult.GeneralValidationError("Please provide at least one of placement dates or requested placement periods.")
     }
 
-    if (submitPlacementApplication.placementType == null && submitPlacementApplication.releaseType == null) {
-      return CasResult.GeneralValidationError("Please provide at least one of placementType or releaseType.")
-    }
-
     val translatedDocument = jsonMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
 
     val cas1RequestedPlacementPeriod = deriveRequestedPlacementPeriods(submitPlacementApplication)!!
@@ -372,7 +367,7 @@ class Cas1PlacementApplicationService(
       allocatedAt = now
       placementType = placementTypeValue
       submissionGroupId = UUID.randomUUID()
-      releaseType = submitPlacementApplication.releaseType?.let { Cas1ReleaseType.fromApiType(it) }
+      releaseType = submitPlacementApplication.releaseType.let { Cas1ReleaseType.fromApiType(it) }
       sentenceType = submitPlacementApplication.sentenceType?.toString()
       situation = submitPlacementApplication.situationType?.toString()
     }
@@ -415,8 +410,6 @@ class Cas1PlacementApplicationService(
 
   private fun getPlacementTypeForApplication(submitPlacementApplication: SubmitPlacementApplication): PlacementType {
     val placementTypeValue = when {
-      submitPlacementApplication.placementType != null -> getPlacementType(submitPlacementApplication.placementType)
-
       submitPlacementApplication.releaseType == ReleaseTypeOption.paroleDirectedLicence -> PlacementType.RELEASE_FOLLOWING_DECISION
       submitPlacementApplication.releaseType == ReleaseTypeOption.rotl -> PlacementType.ROTL
       else -> PlacementType.ADDITIONAL_PLACEMENT
@@ -503,12 +496,6 @@ class Cas1PlacementApplicationService(
     )
 
     return CasResult.Success(savedApplication)
-  }
-
-  private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType = when (apiPlacementType) {
-    ApiPlacementType.additionalPlacement -> PlacementType.ADDITIONAL_PLACEMENT
-    ApiPlacementType.rotl -> PlacementType.ROTL
-    ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
   }
 
   private fun <T> getApplicationForUpdateOrSubmit(id: UUID): Either<CasResult<T>, PlacementApplicationEntity> {

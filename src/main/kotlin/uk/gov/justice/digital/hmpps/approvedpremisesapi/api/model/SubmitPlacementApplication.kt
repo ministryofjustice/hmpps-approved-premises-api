@@ -7,16 +7,12 @@ data class SubmitPlacementApplication(
 
   @Schema(required = true)
   val translatedDocument: Any,
-
-  @Schema(deprecated = true, description = "Please use release type instead")
-  val placementType: PlacementType?,
-
   @Schema(deprecated = true, description = "Please use requestedPlacementPeriods instead")
   val placementDates: List<PlacementDates>?,
 
   val requestedPlacementPeriods: List<Cas1RequestedPlacementPeriod>?,
 
-  val releaseType: ReleaseTypeOption?,
+  val releaseType: ReleaseTypeOption,
   val sentenceType: SentenceTypeOption?,
   val situationType: SituationOption?,
 )

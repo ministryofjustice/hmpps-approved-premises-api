@@ -19,7 +19,6 @@ import org.springframework.data.repository.findByIdOrNull
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
@@ -264,7 +263,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementType = PlacementType.releaseFollowingDecision,
         placementDates = emptyList(),
         requestedPlacementPeriods = null,
         releaseType = ReleaseTypeOption.licence,
@@ -280,36 +278,6 @@ class Cas1PlacementApplicationServiceTest {
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Please provide at least one of placement dates or requested placement periods.")
-    }
-
-    @Test
-    fun `Submitting an application returns validation error if no placement type or release type present`() {
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-
-      val submitPlacementApplication = SubmitPlacementApplication(
-        translatedDocument = "translatedDocument",
-        placementType = null,
-        placementDates = emptyList(),
-        requestedPlacementPeriods = listOf(
-          Cas1RequestedPlacementPeriod(
-            arrival = LocalDate.of(2024, 4, 1),
-            duration = 5,
-            arrivalFlexible = null,
-          ),
-        ),
-        releaseType = null,
-        sentenceType = null,
-        situationType = null,
-      )
-
-      val result = cas1PlacementApplicationService.submitApplication(
-        placementApplication.id,
-        submitPlacementApplication,
-
-      )
-
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Please provide at least one of placementType or releaseType.")
     }
 
     @ParameterizedTest
@@ -338,7 +306,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementType = null,
         placementDates = emptyList(),
         requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
@@ -387,7 +354,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementType = PlacementType.releaseFollowingDecision,
         placementDates = emptyList(),
         requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
@@ -427,7 +393,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementType = PlacementType.releaseFollowingDecision,
         placementDates = emptyList(),
         requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
@@ -479,7 +444,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementType = PlacementType.releaseFollowingDecision,
         placementDates = emptyList(),
         requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
