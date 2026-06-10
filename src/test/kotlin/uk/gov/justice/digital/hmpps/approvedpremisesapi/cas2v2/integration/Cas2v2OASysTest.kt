@@ -26,13 +26,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
 
   @Nested
-  @DisplayName("GET /cas2v2/people/{crn}/oasys/metadata")
+  @DisplayName("GET /cas2/people/{crn}/oasys/metadata")
   inner class GetAssessmentMetadata {
 
     @Test
     fun `Get without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/metadata")
+        .uri("/cas2/people/CRN123/oasys/metadata")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -42,7 +42,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
     @ParameterizedTest
     fun `Get without referrer role returns 403`(role: RoleAndAuthSource) {
       webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/metadata")
+        .uri("/cas2/people/CRN123/oasys/metadata")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -55,7 +55,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
       apAndOASysMockAssessmentSummaryNotFound("CRN123")
 
       val result = webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/metadata")
+        .uri("/cas2/people/CRN123/oasys/metadata")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -74,7 +74,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
       )
 
       val result = webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/metadata")
+        .uri("/cas2/people/CRN123/oasys/metadata")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -86,13 +86,13 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("GET /cas2v2/people/{crn}/oasys/risk-to-self")
+  @DisplayName("GET /cas2/people/{crn}/oasys/risk-to-self")
   inner class GetRiskToSelf {
 
     @Test
     fun `Get without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/risk-to-self")
+        .uri("/cas2/people/CRN123/oasys/risk-to-self")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -102,7 +102,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
     @ParameterizedTest
     fun `Get without referrer role returns 403`(role: RoleAndAuthSource) {
       webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/risk-to-self")
+        .uri("/cas2/people/CRN123/oasys/risk-to-self")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -115,7 +115,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
       apAndOASysMockRiskToTheIndividual404Call("CRN123")
 
       val result = webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/risk-to-self")
+        .uri("/cas2/people/CRN123/oasys/risk-to-self")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -134,7 +134,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
       )
 
       val result = webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/risk-to-self")
+        .uri("/cas2/people/CRN123/oasys/risk-to-self")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -146,13 +146,13 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("GET /cas2v2/people/{crn}/oasys/rosh-summary")
+  @DisplayName("GET /cas2/people/{crn}/oasys/rosh-summary")
   inner class GetRoshSummary {
 
     @Test
     fun `Get without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/rosh-summary")
+        .uri("/cas2/people/CRN123/oasys/rosh-summary")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -162,7 +162,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
     @ParameterizedTest
     fun `Get without referrer role returns 403`(role: RoleAndAuthSource) {
       webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/rosh-summary")
+        .uri("/cas2/people/CRN123/oasys/rosh-summary")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -175,7 +175,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
       apAndOASysMockRoSHSummary404Call("CRN123")
 
       val result = webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/rosh-summary")
+        .uri("/cas2/people/CRN123/oasys/rosh-summary")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -194,7 +194,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
       )
 
       val result = webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/rosh-summary")
+        .uri("/cas2/people/CRN123/oasys/rosh-summary")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -206,13 +206,13 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("GET /cas2v2/people/{crn}/oasys/rosh-ratings")
+  @DisplayName("GET /cas2/people/{crn}/oasys/rosh-ratings")
   inner class GetRoshRatings {
 
     @Test
     fun `Get without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/rosh-ratings")
+        .uri("/cas2/people/CRN123/oasys/rosh-ratings")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -222,7 +222,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
     @ParameterizedTest
     fun `Get without referrer role returns 403`(role: RoleAndAuthSource) {
       webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/rosh-ratings")
+        .uri("/cas2/people/CRN123/oasys/rosh-ratings")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -235,7 +235,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
       apAndOASysMockRoshRating404Call("CRN123")
 
       val result = webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/rosh-ratings")
+        .uri("/cas2/people/CRN123/oasys/rosh-ratings")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()
@@ -254,7 +254,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
       )
 
       val result = webTestClient.get()
-        .uri("/cas2v2/people/CRN123/oasys/rosh-ratings")
+        .uri("/cas2/people/CRN123/oasys/rosh-ratings")
         .addJwtForRoleAndAuthSource(role)
         .exchange()
         .expectStatus()

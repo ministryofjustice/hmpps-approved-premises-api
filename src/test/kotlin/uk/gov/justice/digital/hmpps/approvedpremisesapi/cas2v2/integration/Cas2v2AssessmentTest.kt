@@ -43,7 +43,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
       @Test
       fun `updating a cas2v2 assessment without JWT returns 401`() {
         webTestClient.put()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
+          .uri("/cas2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .exchange()
           .expectStatus()
           .isUnauthorized
@@ -61,7 +61,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
         )
 
         webTestClient.put()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
+          .uri("/cas2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -80,7 +80,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
         )
 
         webTestClient.put()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
+          .uri("/cas2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -108,7 +108,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
           val updatedAssessorName = "Anne Assessor"
 
           val rawResponseBody = webTestClient.put()
-            .uri("/cas2v2/assessments/${assessment.id}")
+            .uri("/cas2/assessments/${assessment.id}")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2v2.value)
             .bodyValue(
@@ -148,7 +148,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
       @Test
       fun `getting a cas2v2 assessment without JWT returns 401`() {
         webTestClient.get()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
+          .uri("/cas2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .exchange()
           .expectStatus()
           .isUnauthorized
@@ -166,7 +166,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
         )
 
         webTestClient.get()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
+          .uri("/cas2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -185,7 +185,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
         )
 
         webTestClient.get()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
+          .uri("/cas2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -210,7 +210,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
           }
 
           val rawResponseBody = webTestClient.get()
-            .uri("/cas2v2/assessments/${assessment.id}")
+            .uri("/cas2/assessments/${assessment.id}")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2v2.value)
             .exchange()
@@ -246,7 +246,7 @@ class Cas2v2AssessmentTest : IntegrationTestBase() {
           }
 
           val rawResponseBody = webTestClient.get()
-            .uri("/cas2v2/assessments/${assessment.id}")
+            .uri("/cas2/assessments/${assessment.id}")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2v2.value)
             .exchange()
