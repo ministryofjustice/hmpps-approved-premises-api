@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import org.postgresql.util.PGobject
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
@@ -306,7 +305,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     return toJsonString(result)
   }
 
-  protected fun toJsonString(result: Map<String, Any?>) = (result["json"] as PGobject?)?.value
+  protected fun toJsonString(result: Map<String, Any?>): String? = result["json"]?.toString()
   protected fun MapSqlParameterSource.addSarParameters(
     crn: String?,
     nomsNumber: String?,
