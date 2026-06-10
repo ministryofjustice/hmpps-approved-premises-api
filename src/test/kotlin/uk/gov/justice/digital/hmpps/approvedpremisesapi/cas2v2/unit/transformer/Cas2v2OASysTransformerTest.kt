@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.unit.transformer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2V2OASysRiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2OASysTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.client.apandoasys.OASysAssessmentSummaryFactory
 import java.time.Instant
@@ -96,6 +98,41 @@ class Cas2v2OASysTransformerTest {
 
       assertThat(result.whoIsAtRisk).isEqualTo("who at risk answer")
       assertThat(result.natureOfRisk).isEqualTo("nature of risk answer")
+    }
+
+    @Test
+    fun not_found() {
+      val result = transformer.toOASysRoshSummaryDto(null)
+
+      assertThat(result.metadata.hasApplicableAssessment).isFalse()
+      assertThat(result.metadata.dateStarted).isNull()
+      assertThat(result.metadata.dateCompleted).isNull()
+
+      assertThat(result.whoIsAtRisk).isNull()
+      assertThat(result.natureOfRisk).isNull()
+    }
+  }
+
+  @Nested
+  inner class ToCas2v2OAsysRoshRatingsDto {
+
+    fun found() {
+      val result = transformer.toOASysRoshRatingsDto(
+        RoshRatingsFactory()
+          .withInitiationDate(OffsetDateTime.parse("2007-12-03T10:15:30+01:00"))
+          .withDateCompleted(OffsetDateTime.parse("2008-12-03T10:15:30+01:00"))
+          .produce(),
+      )
+
+      assertThat(result.metadata.hasApplicableAssessment).isTrue()
+      assertThat(result.metadata.dateStarted).isEqualTo(Instant.parse("2007-12-03T10:15:30+01:00"))
+      assertThat(result.metadata.dateCompleted).isEqualTo(Instant.parse("2008-12-03T10:15:30+01:00"))
+
+      assertThat(result.riskToChildren).isEqualTo(Cas2V2OASysRiskLevel.LOW)
+      assertThat(result.riskToStaff).isEqualTo(Cas2V2OASysRiskLevel.LOW)
+      assertThat(result.riskToPublic).isEqualTo(Cas2V2OASysRiskLevel.LOW)
+      assertThat(result.riskToKnownAdult).isEqualTo(Cas2V2OASysRiskLevel.LOW)
+      assertThat(result.overallRisk).isEqualTo(Cas2V2OASysRiskLevel.LOW)
     }
 
     @Test

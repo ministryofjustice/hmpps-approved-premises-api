@@ -115,3 +115,9 @@ fun IntegrationTestBase.apAndOASysMockAssessmentSummaryNotFound(crn: String) = m
   url = "/latest-assessment/$crn",
   responseStatus = 404,
 )
+
+fun IntegrationTestBase.apAndOASysMockRoshRating404Call(crn: String) = mockUnsuccessfulGetCallWithDelayedResponse(
+  url = "/rosh/$crn",
+  responseStatus = 404,
+  delayMs = 0,
+)
