@@ -15,6 +15,7 @@ jobs:
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     with:
       gradle-command: './gradlew assemble testClasses'
+      upload-test-artifacts: false
     secrets: inherit
 
   helm-lint:
@@ -29,20 +30,24 @@ jobs:
 
   ktlint-check:
     name: KtLintCheck
+    needs: gradle_build
     permissions:
       contents: read
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     with:
       gradle-command: './gradlew ktlintCheck'
+      upload-test-artifacts: false
     secrets: inherit
 
   detekt:
     name: detekt
+    needs: gradle_build
     permissions:
       contents: read
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     with:
       gradle-command: './gradlew detekt'
+      upload-test-artifacts: false
     secrets: inherit
 
   unit_test:
@@ -54,7 +59,6 @@ jobs:
     with:
       gradle-command: './gradlew unitTest'
       artifact-name: 'unit-test-results'
-      upload-test-artifacts: true
     secrets: inherit
 
   integration_test:
