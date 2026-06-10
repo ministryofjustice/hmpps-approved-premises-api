@@ -93,6 +93,21 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize("/cas2v2/applications/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
         authorize("/cas2v2/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
 
+        authorize(HttpMethod.PUT, "/cas2/assessments/**", hasAuthority("ROLE_CAS2_ASSESSOR"))
+        authorize(HttpMethod.GET, "/cas2/assessments/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.POST, "/cas2/assessments/*/status-updates", hasAuthority("ROLE_CAS2_ASSESSOR"))
+        authorize(HttpMethod.POST, "/cas2/assessments/*/notes", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2/submissions/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN"))
+        authorize(HttpMethod.POST, "/cas2/submissions/*/status-updates", hasAnyAuthority("ROLE_CAS2_ASSESSOR"))
+        authorize(HttpMethod.GET, "/cas2/reference-data/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2/reports/**", hasAuthority("ROLE_CAS2_MI"))
+        authorize(HttpMethod.GET, "/cas2/people/*/oasys/**", hasAnyAuthority(Cas2v2Role.COURT_BAIL_REFERRER, Cas2v2Role.PRISON_BAIL_REFERRER))
+        authorize(HttpMethod.GET, "/cas2/people/search-by-crn/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2/people/search-by-noms/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2/external/**", hasRole("APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
+        authorize("/cas2/applications/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+        authorize("/cas2/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
         authorize(HttpMethod.GET, "/subject-access-request", hasAnyRole("SAR_DATA_ACCESS"))
 
