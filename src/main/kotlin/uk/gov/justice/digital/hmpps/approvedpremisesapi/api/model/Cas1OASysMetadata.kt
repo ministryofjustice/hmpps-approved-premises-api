@@ -1,10 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class Cas1OASysMetadata(
-
-  @get:JsonProperty("assessmentMetadata", required = true) val assessmentMetadata: Cas1OASysAssessmentMetadata,
-
-  @get:JsonProperty("supportingInformation", required = true) val supportingInformation: List<Cas1OASysSupportingInformationQuestionMetaData>,
+  val assessmentMetadata: Cas1OASysAssessmentMetadata,
+  @Schema(description = "Supporting information specifies which optional questions/answers are available for inclusion in an application")
+  val supportingInformation: List<Cas1OASysSupportingInformationQuestionMetaData>,
 )
