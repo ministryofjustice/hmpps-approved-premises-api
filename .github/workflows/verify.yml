@@ -10,21 +10,12 @@ concurrency:
 jobs:
   gradle_build:
     name: Gradle Build
-    runs-on: ubuntu-latest
-    env:
-      _JAVA_OPTIONS: "-Xmx3g"
-      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9
-        with:
-          distribution: 'temurin'
-          java-version: 25
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a
-      - name: Gradle Build
-        run: ./gradlew assemble testClasses --build-cache
+    permissions:
+      contents: read
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+    with:
+      gradle-command: './gradlew assemble testClasses'
+    secrets: inherit
 
   helm-lint:
     name: Helm lint
@@ -56,6 +47,7 @@ jobs:
 
   unit_test:
     name: Unit Tests
+    needs: gradle_build
     permissions:
       contents: read
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
