@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         environments: ['development', 'test', 'preprod', 'prod']
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@be0bda171344a1d3bd92fc8ce945a0204cbac33b # v2
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
       environment: ${{ matrix.environments }}
