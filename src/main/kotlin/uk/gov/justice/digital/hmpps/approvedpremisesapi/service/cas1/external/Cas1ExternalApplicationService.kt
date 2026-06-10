@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
@@ -43,7 +43,7 @@ class Cas1ExternalApplicationService(
         rfp.placements.map { placement ->
           val premises = cas1PremisesService.findPremisesById(placement.premises.id)
             ?.let {
-              Cas1SuitablePremisesDto(
+              Cas1ExternalPremisesDto(
                 startDate = placement.actualArrivalDate ?: placement.expectedArrivalDate,
                 endDate = placement.actualDepartureDate ?: placement.expectedDepartureDate,
                 postcode = it.postcode,
@@ -85,19 +85,10 @@ class Cas1ExternalApplicationService(
       )
     }
 
-  fun getArrivedPlacementByCrn(crn: String): Cas1SuitableApplication? = approvedPremisesApplicationRepository.findByCrn(crn)
+  fun getCurrentPremisesByCrn(crn: String): Cas1ExternalPremisesDto? = approvedPremisesApplicationRepository.findByCrn(crn)
     .sortedWith(mostSuitableApplication).firstNotNullOfOrNull { application ->
       getPlacementHistories(application.id)
-        .firstOrNull { it.placementStatus == Cas1SpaceBookingStatus.ARRIVED }
-        ?.let {
-          Cas1SuitableApplication(
-            id = application.id,
-            applicationStatus = application.status,
-            requestForPlacementStatus = it.requestForPlacementStatus,
-            placementStatus = it.placementStatus,
-            premises = it.premises,
-          )
-        }
+        .firstOrNull { it.placementStatus == Cas1SpaceBookingStatus.ARRIVED }?.premises
     }
 
   @SuppressWarnings("MagicNumber")
@@ -120,6 +111,6 @@ class Cas1ExternalApplicationService(
     val dateApplied: LocalDate,
     val requestForPlacementStatus: RequestForPlacementStatus,
     val placementStatus: Cas1SpaceBookingStatus?,
-    val premises: Cas1SuitablePremisesDto?,
+    val premises: Cas1ExternalPremisesDto?,
   )
 }

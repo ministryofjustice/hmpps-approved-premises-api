@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.external
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -98,7 +98,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
               requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
               placementStatus = Cas1SpaceBookingStatus.UPCOMING,
-              premises = Cas1SuitablePremisesDto(
+              premises = Cas1ExternalPremisesDto(
                 startDate = booking.expectedArrivalDate,
                 endDate = booking.expectedDepartureDate,
                 addressLine1 = premises.addressLine1,
@@ -142,7 +142,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
     @Test
     fun `Get arrived application without JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas1/external/cases/$crn/placements/arrived")
+        .uri("/cas1/external/cases/$crn/premises/current")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -152,7 +152,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
     fun `Get arrived application without correct JWT authority returns 403`() {
       givenAUser { _, jwt ->
         webTestClient.get()
-          .uri("/cas1/external/cases/$crn/placements/arrived")
+          .uri("/cas1/external/cases/$crn/premises/current")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -214,7 +214,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
               requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
               placementStatus = Cas1SpaceBookingStatus.ARRIVED,
-              premises = Cas1SuitablePremisesDto(
+              premises = Cas1ExternalPremisesDto(
                 startDate = booking.actualArrivalDate,
                 endDate = booking.expectedDepartureDate,
                 addressLine1 = premises.addressLine1,
@@ -225,7 +225,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             )
 
             val response = webTestClient.get()
-              .uri("/cas1/external/cases/${application.crn}/placements/arrived")
+              .uri("/cas1/external/cases/${application.crn}/premises/current")
               .header("Authorization", "Bearer $clientCredentialsJwt")
               .exchange()
               .expectStatus()
@@ -288,7 +288,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
             }
 
             webTestClient.get()
-              .uri("/cas1/external/cases/${application.crn}/placements/arrived")
+              .uri("/cas1/external/cases/${application.crn}/premises/current")
               .header("Authorization", "Bearer $clientCredentialsJwt")
               .exchange()
               .expectStatus()
@@ -302,7 +302,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
     fun `Get arrived application returns not found`() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         webTestClient.get()
-          .uri("/cas1/external/cases/$crn/placements/arrived")
+          .uri("/cas1/external/cases/$crn/premises/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()
