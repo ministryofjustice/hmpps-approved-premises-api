@@ -228,30 +228,28 @@ class LoggingInMemoryOAuth2AuthorizedClientService(clientRegistrationRepository:
   private val backingImplementation = InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository)
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun <T : OAuth2AuthorizedClient?> loadAuthorizedClient(
-    clientRegistrationId: String?,
-    principalName: String?,
-  ): T = backingImplementation.loadAuthorizedClient<T>(clientRegistrationId, principalName)
+  override fun <T : OAuth2AuthorizedClient> loadAuthorizedClient(
+    clientRegistrationId: String,
+    principalName: String,
+  ): T? = backingImplementation.loadAuthorizedClient(clientRegistrationId, principalName)
 
-  override fun saveAuthorizedClient(authorizedClient: OAuth2AuthorizedClient?, principal: Authentication?) {
-    val tokenValue = authorizedClient?.accessToken?.tokenValue
+  override fun saveAuthorizedClient(authorizedClient: OAuth2AuthorizedClient, principal: Authentication) {
+    val tokenValue = authorizedClient.accessToken.tokenValue
 
-    if (tokenValue != null) {
-      try {
-        val tokenBodyBase64 = tokenValue.split(".")[1]
-        val tokenBodyRaw = Base64.getDecoder().decode(tokenBodyBase64)
-        val info = jsonMapper.readValue(tokenBodyRaw, JwtLogInfo::class.java)
-        log.info("Retrieved a client_credentials JWT for service->service calls for client ${authorizedClient.clientRegistration.clientId} with authorities: ${info.authorities}, scopes: ${info.scope}, expiry: ${info.exp}")
-      } catch (exception: Exception) {
-        // Deliberately not logging exception message
-        log.error("Unable to get token info to log, exception of type: ${exception::class.java.name}")
-      }
+    try {
+      val tokenBodyBase64 = tokenValue.split(".")[1]
+      val tokenBodyRaw = Base64.getDecoder().decode(tokenBodyBase64)
+      val info = jsonMapper.readValue(tokenBodyRaw, JwtLogInfo::class.java)
+      log.info("Retrieved a client_credentials JWT for service->service calls for client ${authorizedClient.clientRegistration.clientId} with authorities: ${info.authorities}, scopes: ${info.scope}, expiry: ${info.exp}")
+    } catch (exception: Exception) {
+      // Deliberately not logging exception message
+      log.error("Unable to get token info to log, exception of type: ${exception::class.java.name}")
     }
 
     backingImplementation.saveAuthorizedClient(authorizedClient, principal)
   }
 
-  override fun removeAuthorizedClient(clientRegistrationId: String?, principalName: String?) = backingImplementation.removeAuthorizedClient(clientRegistrationId, principalName)
+  override fun removeAuthorizedClient(clientRegistrationId: String, principalName: String) = backingImplementation.removeAuthorizedClient(clientRegistrationId, principalName)
 }
 
 @Configuration
