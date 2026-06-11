@@ -240,7 +240,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Departure Reasons returns 200 with correct body`() {
-    departureReasonRepository.deleteAll()
+    departureReasonRepository.deleteAllRecursively()
 
     val departureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = jsonMapper.writeValueAsString(
@@ -261,7 +261,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Departure Reasons for only approved premises returns 200 with correct body`() {
-    departureReasonRepository.deleteAll()
+    departureReasonRepository.deleteAllRecursively()
 
     departureReasonEntityFactory.produceAndPersistMultiple(10)
 
@@ -316,7 +316,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Departure Reasons returns only active departure reasons by default`() {
-    departureReasonRepository.deleteAll()
+    departureReasonRepository.deleteAllRecursively()
 
     val departureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10) {
       withIsActive(true)
@@ -345,7 +345,7 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Departure Reasons returns both active and inactive departure reasons when 'includeInactive' query is true`() {
-    departureReasonRepository.deleteAll()
+    departureReasonRepository.deleteAllRecursively()
 
     val activeDepartureReasons = departureReasonEntityFactory.produceAndPersistMultiple(10) {
       withIsActive(true)
