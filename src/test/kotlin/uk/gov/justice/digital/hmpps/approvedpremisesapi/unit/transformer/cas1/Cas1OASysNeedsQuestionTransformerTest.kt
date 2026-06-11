@@ -231,10 +231,10 @@ class Cas1OASysNeedsQuestionTransformerTest {
 
     @Test
     fun `If no assessment is available, always return question`() {
-      val result = transformer.transformToOASysQuestion(
+      val result = transformer.transformToOASysQuestions(
         needsDetails = null,
-        includeOptionalSections = emptyList(),
-        health = null,
+        sectionsToInclude = emptyList(),
+        healthDetails = null,
       )
 
       assertThat(result).containsExactlyInAnyOrder(
@@ -299,7 +299,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = true, linkedToReoffending = null, thinkingBehaviouralIssuesDetails = "thinking behavioural answer")
         .produce()
 
-      val result = transformer.transformToOASysQuestion(needsDetails, null, includeOptionalSections = emptyList())
+      val result = transformer.transformToOASysQuestions(needsDetails, null, sectionsToInclude = emptyList())
 
       assertThat(result).containsExactlyInAnyOrder(
         OASysQuestion(
@@ -359,7 +359,7 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null)
         .produce()
 
-      val result = transformer.transformToOASysQuestion(needsDetails, null, includeOptionalSections = emptyList())
+      val result = transformer.transformToOASysQuestions(needsDetails, null, sectionsToInclude = emptyList())
 
       assertThat(result).containsExactlyInAnyOrder(
         OASysQuestion(
@@ -394,10 +394,10 @@ class Cas1OASysNeedsQuestionTransformerTest {
         .withThinkingBehaviouralIssuesDetails(linkedToHarm = linkToHarm, linkedToReoffending = null, thinkingBehaviouralIssuesDetails = "thinking behavioural answer")
         .produce()
 
-      val result = transformer.transformToOASysQuestion(
+      val result = transformer.transformToOASysQuestions(
         needsDetails,
-        includeOptionalSections = listOf(6, 7, 10, 11, 12, 13),
-        health = HealthDetailsFactory().withGeneralHealth(generalHealth = true, generalHealthSpecify = "health answer").produce(),
+        sectionsToInclude = listOf(6, 7, 10, 11, 12, 13),
+        healthDetails = HealthDetailsFactory().withGeneralHealth(generalHealth = true, generalHealthSpecify = "health answer").produce(),
       )
 
       assertThat(result).containsExactlyInAnyOrder(

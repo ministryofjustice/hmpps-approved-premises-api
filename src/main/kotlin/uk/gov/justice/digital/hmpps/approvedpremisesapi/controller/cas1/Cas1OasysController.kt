@@ -129,10 +129,10 @@ class Cas1OasysController(
         Cas1OASysGroup(
           group = group,
           assessmentMetadata = cas1OASysAssessmentInfoTransformer.toAssessmentMetadata(needsDetails),
-          answers = cas1OASysNeedsQuestionTransformer.transformToOASysQuestion(
+          answers = cas1OASysNeedsQuestionTransformer.transformToOASysQuestions(
             needsDetails = needsDetails,
-            includeOptionalSections = includeOptionalSections ?: emptyList(),
-            health = healthDetails,
+            sectionsToInclude = includeOptionalSections ?: emptyList(),
+            healthDetails = healthDetails,
           ),
         )
       }

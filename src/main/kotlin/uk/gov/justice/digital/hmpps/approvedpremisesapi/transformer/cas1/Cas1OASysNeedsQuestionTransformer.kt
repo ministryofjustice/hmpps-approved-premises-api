@@ -10,8 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysLabels
 @Service
 class Cas1OASysNeedsQuestionTransformer {
 
-  fun transformToSupportingInformationMetadata(needsDetails: NeedsDetails?) = needsDetails?.let {
-    toQuestionState(needsDetails, null).map {
+  fun transformToSupportingInformationMetadata(needsDetails: NeedsDetails?): List<Cas1OASysSupportingInformationQuestionMetaData> = needsDetails?.let {
+    toQuestionStates(
+      needsDetails = needsDetails,
+      healthDetails = null,
+    ).map {
       Cas1OASysSupportingInformationQuestionMetaData(
         section = it.sectionNumber,
         sectionLabel = it.sectionLabel,
@@ -22,8 +25,12 @@ class Cas1OASysNeedsQuestionTransformer {
     }
   } ?: emptyList()
 
-  fun transformToOASysQuestion(needsDetails: NeedsDetails?, health: HealthDetails?, includeOptionalSections: List<Int>) = toQuestionState(needsDetails, health)
-    .filter { !it.optional || includeOptionalSections.contains(it.sectionNumber) || needsDetails == null }
+  fun transformToOASysQuestions(
+    needsDetails: NeedsDetails?,
+    healthDetails: HealthDetails?,
+    sectionsToInclude: List<Int>,
+  ): List<OASysQuestion> = toQuestionStates(needsDetails, healthDetails)
+    .filter { !it.optional || sectionsToInclude.contains(it.sectionNumber) || needsDetails == null }
     .map {
       OASysQuestion(
         label = it.questionLabel,
@@ -43,7 +50,10 @@ class Cas1OASysNeedsQuestionTransformer {
     val linkedToReOffending: Boolean?,
   )
 
-  private fun toQuestionState(needsDetails: NeedsDetails?, healthDetails: HealthDetails?) = listOf(
+  private fun toQuestionStates(
+    needsDetails: NeedsDetails?,
+    healthDetails: HealthDetails?,
+  ): List<QuestionState> = listOf(
     QuestionState(
       sectionNumber = 3,
       sectionLabel = OASysLabels.sectionToLabel.getValue("3"),
@@ -130,6 +140,9 @@ class Cas1OASysNeedsQuestionTransformer {
       questionNumber = "13.1",
       questionLabel = OASysLabels.questionToLabel.getValue("13.1"),
       answer = if (healthDetails?.health?.generalHealth == true) healthDetails.health.generalHealthSpecify else null,
+      /*
+      'health' is always optional, allowing the user to elect to enter health information even if there is no health information in OASys
+       */
       optional = true,
       linkedToHarm = null,
       linkedToReOffending = null,
