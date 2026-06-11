@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
@@ -144,7 +144,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             applicationStatus = ApplicationStatus.submitted,
             assessmentStatus = null,
             bookingStatus = Cas3BookingStatus.confirmed,
-            premises = Cas3SuitablePremisesDto(
+            premises = Cas3ExternalPremisesDto(
               startDate = booking.arrivalDate,
               endDate = booking.departureDate,
               name = premises.name,
@@ -187,6 +187,118 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         webTestClient.get()
           .uri("/cas3/external/cases/$crn/applications/suitable")
+          .header("Authorization", "Bearer $clientCredentialsJwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
+  }
+
+  @Nested
+  inner class GetCurrentPremisesByCrn {
+    @Test
+    fun `Get current premises without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas3/external/cases/$crn/premises/current")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get current premises without correct JWT authority returns 403`() {
+      givenAUser { _, jwt ->
+        webTestClient.get()
+          .uri("/cas3/external/cases/$crn/premises/current")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get current premises returns not found when there is no current premises`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withCrn(crn)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          webTestClient.get()
+            .uri("/cas3/external/cases/$crn/premises/current")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus().isNotFound
+        }
+      }
+    }
+
+    @Test
+    fun `Get current premises returns booking status when current premises exists`() {
+      givenAUser { user, _ ->
+        givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+          val premises = cas3PremisesEntityFactory.produceAndPersist {
+            withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+            withProbationDeliveryUnit(probationDeliveryUnitFactory.produceAndPersist { withProbationRegion(user.probationRegion) })
+          }
+
+          val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+          }
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(user)
+            withProbationRegion(user.probationRegion)
+            withCrn(crn)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          val booking = cas3BookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBedspace(bedspace)
+            withApplication(application)
+            withCrn(crn)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.now())
+            withDepartureDate(LocalDate.now().plusDays(7))
+            withStatus(Cas3BookingStatus.arrived)
+          }
+
+          val currentPremises = Cas3ExternalPremisesDto(
+            startDate = booking.arrivalDate,
+            endDate = booking.departureDate,
+            name = premises.name,
+            addressLine1 = premises.addressLine1,
+            addressLine2 = premises.addressLine2,
+            town = premises.town,
+            postcode = premises.postcode,
+          )
+
+          val response = webTestClient.get()
+            .uri("/cas3/external/cases/$crn/premises/current")
+            .header("Authorization", "Bearer $clientCredentialsJwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody(Cas3ExternalPremisesDto::class.java)
+            .returnResult()
+            .responseBody
+
+          Assertions.assertThat(response).isEqualTo(currentPremises)
+        }
+      }
+    }
+
+    @Test
+    fun `Get current premises returns not found`() {
+      givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
+        webTestClient.get()
+          .uri("/cas3/external/cases/$crn/premises/current")
           .header("Authorization", "Bearer $clientCredentialsJwt")
           .exchange()
           .expectStatus()

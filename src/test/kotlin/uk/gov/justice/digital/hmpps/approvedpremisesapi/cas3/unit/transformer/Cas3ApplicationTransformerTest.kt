@@ -7,8 +7,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
@@ -73,6 +79,89 @@ class Cas3ApplicationTransformerTest {
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
     every { mockRisksTransformer.transformDomainToApi(any<PersonRisks>(), any<String>()) } returns mockk()
+  }
+
+  @Test
+  fun `transformToCas3SuitableApplication transforms correctly without a booking`() {
+    val application = temporaryAccommodationApplicationEntityFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withArrivalDate(null)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce(),
+          )
+          .produce()
+      }
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+
+    val expected = Cas3SuitableApplication(
+      id = application.id,
+      applicationStatus = ApplicationStatus.submitted,
+      assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+      bookingStatus = null,
+      premises = null,
+    )
+
+    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, null)
+
+    assertThat(result).isEqualTo(expected)
+  }
+
+  @Test
+  fun `transformToCas3SuitableApplication transforms correctly with a booking`() {
+    val application = temporaryAccommodationApplicationEntityFactory
+      .withSubmittedAt(OffsetDateTime.now())
+      .withArrivalDate(null)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withApArea(
+            ApAreaEntityFactory()
+              .produce(),
+          )
+          .produce()
+      }
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    application.assessments = mutableListOf(assessment)
+    val premises = Cas3PremisesEntityFactory().produce()
+    val booking = Cas3BookingEntityFactory()
+      .withApplication(application)
+      .withDefaults()
+      .withPremises(premises)
+      .withStatus(Cas3BookingStatus.arrived)
+      .produce()
+
+    val expected = Cas3SuitableApplication(
+      id = application.id,
+      applicationStatus = ApplicationStatus.submitted,
+      assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
+      bookingStatus = Cas3BookingStatus.arrived,
+      premises = Cas3ExternalPremisesDto(
+        startDate = booking.arrivalDate,
+        endDate = booking.departureDate,
+        name = premises.name,
+        addressLine1 = premises.addressLine1,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        postcode = premises.postcode,
+      ),
+    )
+
+    val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, booking)
+
+    assertThat(result).isEqualTo(expected)
   }
 
   @Test

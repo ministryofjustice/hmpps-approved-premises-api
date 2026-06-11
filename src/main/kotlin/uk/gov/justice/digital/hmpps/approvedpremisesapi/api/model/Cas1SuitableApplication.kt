@@ -9,10 +9,10 @@ data class Cas1SuitableApplication(
   val applicationStatus: ApprovedPremisesApplicationStatus,
   val requestForPlacementStatus: RequestForPlacementStatus?,
   val placementStatus: Cas1SpaceBookingStatus?,
-  val premises: Cas1SuitablePremisesDto?,
+  val premises: Cas1ExternalPremisesDto?,
 )
 
-data class Cas1SuitablePremisesDto(
+data class Cas1ExternalPremisesDto(
   val startDate: LocalDate?,
   val endDate: LocalDate?,
   val addressLine1: String,

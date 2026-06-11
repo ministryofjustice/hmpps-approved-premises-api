@@ -11,9 +11,9 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -254,7 +254,7 @@ class Cas1ExternalApplicationServiceTest {
             dateApplied = placement7.statusSetDate!!,
             requestForPlacementStatus = requestForPlacement3.status,
             placementStatus = placement7.status,
-            premises = Cas1SuitablePremisesDto(
+            premises = Cas1ExternalPremisesDto(
               startDate = placement7.expectedArrivalDate,
               endDate = placement7.expectedDepartureDate,
               addressLine1 = premisesEntity.addressLine1,
@@ -492,7 +492,7 @@ class Cas1ExternalApplicationServiceTest {
           applicationStatus = awaitingPlacementApplication.status,
           requestForPlacementStatus = requestForPlacement3.status,
           placementStatus = placement7.status,
-          premises = Cas1SuitablePremisesDto(
+          premises = Cas1ExternalPremisesDto(
             startDate = placement7.expectedArrivalDate,
             endDate = placement7.expectedDepartureDate,
             addressLine1 = premisesEntity.addressLine1,
@@ -564,7 +564,7 @@ class Cas1ExternalApplicationServiceTest {
       )
         .withStatus(RequestForPlacementStatus.placementBooked).produce()
 
-      val premises = Cas1SuitablePremisesDto(
+      val premises = Cas1ExternalPremisesDto(
         startDate = booking.expectedArrivalDate,
         endDate = booking.expectedDepartureDate,
         addressLine1 = premisesEntity.addressLine1,
@@ -715,14 +715,14 @@ class Cas1ExternalApplicationServiceTest {
   }
 
   @Nested
-  inner class GetArrivedPlacementByCrn {
+  inner class GetCurrentPremisesByCrn {
     private val crn = "ABC123"
 
     @Test
     fun `getArrivedApplicationByCrn returns null as no applications of that crn`() {
       every { approvedPremisesApplicationRepository.findByCrn(crn) } returns emptyList()
 
-      val result = service.getArrivedPlacementByCrn(crn)
+      val result = service.getCurrentPremisesByCrn(crn)
 
       assertThat(result).isNull()
     }
@@ -758,7 +758,7 @@ class Cas1ExternalApplicationServiceTest {
         ),
       )
 
-      val result = service.getArrivedPlacementByCrn(awaitingPlacementApplication.crn)
+      val result = service.getCurrentPremisesByCrn(awaitingPlacementApplication.crn)
 
       assertThat(result).isNull()
     }
@@ -891,22 +891,16 @@ class Cas1ExternalApplicationServiceTest {
       every {
         cas1PremisesService.findPremisesById(match { it != premisesEntity.id })
       } returns null
-      val result = service.getArrivedPlacementByCrn(awaitingPlacementApplication.crn)
+      val result = service.getCurrentPremisesByCrn(awaitingPlacementApplication.crn)
 
       assertThat(result).isEqualTo(
-        Cas1SuitableApplication(
-          id = awaitingPlacementApplication.id,
-          applicationStatus = awaitingPlacementApplication.status,
-          requestForPlacementStatus = requestForPlacement1.status,
-          placementStatus = placement3.status,
-          premises = Cas1SuitablePremisesDto(
-            startDate = placement3.expectedArrivalDate,
-            endDate = placement3.expectedDepartureDate,
-            addressLine1 = premisesEntity.addressLine1,
-            addressLine2 = premisesEntity.addressLine2,
-            town = premisesEntity.town,
-            postcode = premisesEntity.postcode,
-          ),
+        Cas1ExternalPremisesDto(
+          startDate = placement3.expectedArrivalDate,
+          endDate = placement3.expectedDepartureDate,
+          addressLine1 = premisesEntity.addressLine1,
+          addressLine2 = premisesEntity.addressLine2,
+          town = premisesEntity.town,
+          postcode = premisesEntity.postcode,
         ),
       )
     }
@@ -979,7 +973,7 @@ class Cas1ExternalApplicationServiceTest {
       )
       every { cas1PremisesService.findPremisesById(premisesEntity.id) } returns premisesEntity
 
-      val result = service.getArrivedPlacementByCrn(application.crn)
+      val result = service.getCurrentPremisesByCrn(application.crn)
 
       assertThat(result).isNull()
     }

@@ -285,7 +285,7 @@ interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremises
 
 @Repository
 interface TemporaryAccommodationApplicationRepository : JpaRepository<TemporaryAccommodationApplicationEntity, UUID> {
-  fun findByCrn(crn: String): List<TemporaryAccommodationApplicationEntity>
+  fun findByCrnOrderByCreatedAtDesc(crn: String): List<TemporaryAccommodationApplicationEntity>
 }
 
 @Repository

@@ -4,10 +4,11 @@ import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitablePremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -55,43 +56,30 @@ class Cas3ApplicationService(
   private val jsonMapper: JsonMapper,
   private val cas3v2BookingService: Cas3v2BookingService,
   private val clock: Clock,
+  private val transformer: Cas3ApplicationTransformer,
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
 
-  fun getSuitableApplicationByCrn(crn: String): Cas3SuitableApplication? = temporaryAccommodationApplicationRepository.findByCrn(crn)
-    .filter { application ->
+  fun getCurrentPremisesByCrn(crn: String): Cas3ExternalPremisesDto? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
+    .firstNotNullOfOrNull { application ->
+      cas3v2BookingService.getLatestArrivedBooking(application.id)
+        ?.let { transformer.transformToCas3PremisesSummary(it) }
+    }
+
+  fun getSuitableApplicationByCrn(crn: String): Cas3SuitableApplication? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
+    .firstOrNull {
       val now = OffsetDateTime.now(clock)
+      val draftExpiryLimit = 2L
       when {
-        application.arrivalDate != null -> application.arrivalDate!! >= now
-        application.personReleaseDate != null -> application.personReleaseDate!! >= now.toLocalDate()
-        else -> application.createdAt >= now.minusMonths(2)
+        it.arrivalDate != null -> it.arrivalDate!! >= now
+        it.personReleaseDate != null -> it.personReleaseDate!! >= now.toLocalDate()
+        else -> it.createdAt >= now.minusMonths(draftExpiryLimit)
       }
     }
-    .maxWithOrNull(
-      compareBy { it.createdAt },
-    )
-    ?.let { application ->
-
-      val booking = cas3v2BookingService.getLatestBooking(application.id)
-
-      val premises = booking?.premises?.let {
-        Cas3SuitablePremisesDto(
-          startDate = booking.arrivalDate,
-          endDate = booking.departureDate,
-          name = it.name,
-          addressLine1 = it.addressLine1,
-          addressLine2 = it.addressLine2,
-          town = it.town,
-          postcode = it.postcode,
-        )
-      }
-
-      Cas3SuitableApplication(
-        id = application.id,
-        applicationStatus = application.getStatus(),
-        assessmentStatus = application.getLatestAssessment()?.deriveAssessmentStatus(),
-        bookingStatus = booking?.status,
-        premises = premises,
+    ?.let {
+      transformer.transformToCas3SuitableApplication(
+        application = it,
+        booking = cas3v2BookingService.getLatestBooking(it.id),
       )
     }
 

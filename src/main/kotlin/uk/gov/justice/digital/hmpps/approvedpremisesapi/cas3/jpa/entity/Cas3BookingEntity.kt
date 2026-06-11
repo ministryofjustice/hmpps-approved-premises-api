@@ -294,6 +294,8 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
   ): List<Cas3v2OverlapBookingsSearchResult>
 
   fun findTopByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas3BookingEntity?
+
+  fun findTopByApplicationIdAndStatusOrderByCreatedAtDesc(applicationId: UUID, status: Cas3BookingStatus): Cas3BookingEntity?
 }
 
 @Suppress("TooManyFunctions")

@@ -566,5 +566,7 @@ class Cas3v2BookingService(
 
   fun Cas3BookingEntity.lastUnavailableDate() = workingDayService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
 
+  fun getLatestArrivedBooking(applicationId: UUID): Cas3BookingEntity? = cas3BookingRepository.findTopByApplicationIdAndStatusOrderByCreatedAtDesc(applicationId, Cas3BookingStatus.arrived)
+
   fun getLatestBooking(applicationId: UUID): Cas3BookingEntity? = cas3BookingRepository.findTopByApplicationIdOrderByCreatedAtDesc(applicationId)
 }
