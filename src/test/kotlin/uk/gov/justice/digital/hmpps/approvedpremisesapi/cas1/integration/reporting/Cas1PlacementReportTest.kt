@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -278,7 +277,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.additionalPlacement,
+        releaseType = ReleaseTypeOption.notApplicable,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 5),
@@ -351,7 +350,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        releaseType = ReleaseTypeOption.rotl,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
@@ -434,7 +433,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        releaseType = ReleaseTypeOption.rotl,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
@@ -507,7 +506,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        releaseType = ReleaseTypeOption.rotl,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
@@ -583,7 +582,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        releaseType = ReleaseTypeOption.rotl,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = outOfRangeArrivalDate,
@@ -607,7 +606,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
-    placementType: PlacementType,
+    releaseType: ReleaseTypeOption,
     placementDates: List<PlacementDates>,
   ) {
     val creatorJwt = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
@@ -635,10 +634,9 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       placementApplicationId = placementApplicationId,
       body = SubmitPlacementApplication(
         translatedDocument = mapOf("key" to "value"),
-        placementType = placementType,
         placementDates = placementDates,
         requestedPlacementPeriods = emptyList(),
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = releaseType,
         sentenceType = null,
         situationType = null,
       ),

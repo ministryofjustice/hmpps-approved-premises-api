@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -81,17 +80,17 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   val standardRFPSubmittedAfterReportingPeriod = StandardRFPSubmittedAfterReportingPeriod()
 
   val placementAppRotlAcceptedManager = PlacementAppAssessedManager(
-    type = PlacementType.rotl,
+    releaseType = ReleaseTypeOption.rotl,
     submittedAt = LocalDateTime.of(2021, 3, 22, 9, 49, 0),
     withdraw = false,
   )
   val placementAppAdditionalAcceptedManager = PlacementAppAssessedManager(
-    type = PlacementType.additionalPlacement,
+    releaseType = ReleaseTypeOption.notApplicable,
     submittedAt = LocalDateTime.of(2021, 3, 23, 9, 49, 0),
     withdraw = false,
   )
   val placementAppParoleAcceptedAndWithdrawnManager = PlacementAppAssessedManager(
-    type = PlacementType.releaseFollowingDecision,
+    releaseType = ReleaseTypeOption.paroleDirectedLicence,
     submittedAt = LocalDateTime.of(2021, 3, 24, 9, 49, 0),
     withdraw = true,
   )
@@ -448,7 +447,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   }
 
   inner class PlacementAppAssessedManager(
-    val type: PlacementType,
+    val releaseType: ReleaseTypeOption,
     val submittedAt: LocalDateTime,
     val withdraw: Boolean = false,
   ) {
@@ -457,7 +456,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun createRequestForPlacement() {
       application = createAndSubmitApplication(
-        crn = "${type}PlacementAppAssessed",
+        crn = "${releaseType}PlacementAppAssessed",
         submittedAt = LocalDateTime.of(2021, 2, 28, 23, 59, 59),
         arrivalDateOnApplication = null,
         durationOnApplication = 7,
@@ -475,7 +474,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = type,
+        releaseType = releaseType,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),
@@ -502,10 +501,10 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     fun assertRow(row: RequestForPlacementReportRow) {
       assertThat(row.request_for_placement_id).isEqualTo(placementApplicationId.toString())
       assertThat(row.request_for_placement_type).isEqualTo(
-        when (type) {
-          PlacementType.rotl -> "ROTL"
-          PlacementType.releaseFollowingDecision -> "RELEASE_FOLLOWING_DECISION"
-          PlacementType.additionalPlacement -> "ADDITIONAL_PLACEMENT"
+        when (releaseType) {
+          ReleaseTypeOption.rotl -> "ROTL"
+          ReleaseTypeOption.paroleDirectedLicence -> "RELEASE_FOLLOWING_DECISION"
+          else -> "ADDITIONAL_PLACEMENT"
         },
       )
       assertThat(row.requested_arrival_date).isEqualTo("2029-01-01")
@@ -521,8 +520,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(row.request_for_placement_withdrawal_date).isNull()
         assertThat(row.request_for_placement_withdrawal_reason).isNull()
       }
-      assertThat(row.crn).isEqualTo("${type}PlacementAppAssessed")
-      assertThat(row.release_type).isEqualTo("awaitingSentence")
+      assertThat(row.crn).isEqualTo("${releaseType}PlacementAppAssessed")
+      assertThat(row.release_type).isEqualTo(releaseType.name)
       assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
@@ -551,7 +550,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        releaseType = ReleaseTypeOption.rotl,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),
@@ -580,7 +579,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_withdrawal_date).isNull()
       assertThat(row.request_for_placement_withdrawal_reason).isNull()
       assertThat(row.crn).isEqualTo("PlacementAppRejected")
-      assertThat(row.release_type).isEqualTo("awaitingSentence")
+      assertThat(row.release_type).isEqualTo("rotl")
       assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
@@ -606,7 +605,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        releaseType = ReleaseTypeOption.rotl,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),
@@ -640,7 +639,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createPlacementApplication(
         application = application,
-        placementType = PlacementType.rotl,
+        releaseType = ReleaseTypeOption.rotl,
         placementDates = listOf(
           PlacementDates(
             expectedArrival = LocalDate.of(2029, 1, 1),
@@ -848,7 +847,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
-    placementType: PlacementType,
+    releaseType: ReleaseTypeOption,
     placementDates: List<PlacementDates>,
     paroleDecisionDate: LocalDate,
     submittedAt: LocalDateTime,
@@ -886,10 +885,9 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       placementApplicationId = placementApplicationId,
       body = SubmitPlacementApplication(
         translatedDocument = mapOf("key" to "value"),
-        placementType = placementType,
         placementDates = placementDates,
         requestedPlacementPeriods = emptyList(),
-        releaseType = ReleaseTypeOption.inCommunity,
+        releaseType = releaseType,
         sentenceType = SentenceTypeOption.bailPlacement,
         situationType = SituationOption.awaitingSentence,
       ),

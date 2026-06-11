@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
@@ -543,7 +542,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         .bodyValue(
           SubmitPlacementApplication(
             translatedDocument = mapOf("thingId" to 123),
-            placementType = PlacementType.additionalPlacement,
             placementDates = listOf(
               PlacementDates(
                 expectedArrival = LocalDate.now(),
@@ -574,7 +572,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -611,7 +608,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -648,7 +644,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -681,7 +676,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
                 placementDates = listOf(
                   PlacementDates(
                     expectedArrival = LocalDate.now(),
@@ -716,7 +710,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .bodyValue(
               SubmitPlacementApplication(
                 translatedDocument = mapOf("thingId" to 123),
-                placementType = PlacementType.additionalPlacement,
                 placementDates = emptyList(),
                 requestedPlacementPeriods = emptyList(),
                 releaseType = ReleaseTypeOption.licence,
@@ -759,7 +752,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .bodyValue(
                 SubmitPlacementApplication(
                   translatedDocument = mapOf("thingId" to 123),
-                  placementType = PlacementType.additionalPlacement,
                   placementDates = emptyList(),
                   requestedPlacementPeriods = cas1RequestedPlacementPeriod,
                   releaseType = ReleaseTypeOption.licence,
@@ -839,7 +831,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .bodyValue(
                 SubmitPlacementApplication(
                   translatedDocument = mapOf("thingId" to 123),
-                  placementType = PlacementType.additionalPlacement,
                   placementDates = placementDates,
                   requestedPlacementPeriods = emptyList(),
                   releaseType = ReleaseTypeOption.licence,
@@ -936,7 +927,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .bodyValue(
                 SubmitPlacementApplication(
                   translatedDocument = mapOf("thingId" to 123),
-                  placementType = PlacementType.additionalPlacement,
                   placementDates = placementDates,
                   requestedPlacementPeriods = emptyList(),
                   releaseType = ReleaseTypeOption.licence,
@@ -1037,7 +1027,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .bodyValue(
                 SubmitPlacementApplication(
                   translatedDocument = mapOf("thingId" to 123),
-                  placementType = PlacementType.additionalPlacement,
                   placementDates = null,
                   requestedPlacementPeriods = requestedPlacementPeriod,
                   releaseType = ReleaseTypeOption.licence,
