@@ -8,7 +8,7 @@ jobs:
   verify:
     permissions:
       contents: read
-    name: Test
+    name: Verify
     uses: ./.github/workflows/verify.yml
     secrets: inherit
 
