@@ -32,7 +32,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var abandonedAt: Yielded<OffsetDateTime?> = { null }
   private var statusUpdates: Yielded<MutableList<Cas2StatusUpdateEntity>> = { mutableListOf() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
-  private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
+  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var telephoneNumber: Yielded<String?> = { randomNumberChars(12) }
   private var notes: Yielded<MutableList<Cas2ApplicationNoteEntity>> = { mutableListOf() }
   private var assessment: Yielded<Cas2AssessmentEntity?> = { null }
@@ -54,7 +54,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.crn = { crn }
   }
 
-  fun withNomsNumber(nomsNumber: String) = apply {
+  fun withNomsNumber(nomsNumber: String?) = apply {
     this.nomsNumber = { nomsNumber }
   }
 

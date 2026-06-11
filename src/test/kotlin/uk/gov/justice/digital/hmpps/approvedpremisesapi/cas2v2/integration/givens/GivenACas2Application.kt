@@ -29,7 +29,7 @@ fun IntegrationTestBase.givenAnUnsubmittedCas2Application(
   applicationOrigin: ApplicationOrigin = ApplicationOrigin.prisonBail,
   cohort: Cas2Cohort = Cas2Cohort.PRISON_BAIL,
   crn: String = "CRN_1",
-  noms: String = "NOMS_1",
+  noms: String? = "NOMS_1",
   createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) = cas2ApplicationEntityFactory.produceAndPersist {
   withCreatedByUser(
