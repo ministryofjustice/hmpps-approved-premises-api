@@ -1,10 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service
 
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2DeliusUserInfoDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2UserDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2v2UserTypeDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.ProbationAreaDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiClient
@@ -47,6 +52,43 @@ class Cas2HdcUserService(
     val normalisedUsername = userStaffInformation.generalAccount.username.uppercase()
     val userDetail = getUserDetail(username = normalisedUsername)
     return findOrCreateNomisUser(username = normalisedUsername, userDetail, serviceOrigin)
+  }
+
+  fun getCas2v2UserDetails(userName: String): Cas2v2UserDto {
+    val existingUser =
+      cas2UserRepository.findByUsernameAndServiceOrigin(userName, Cas2ServiceOrigin.BAIL)
+        ?: throw NotFoundProblem(entityType = "Cas2v2User", id = userName)
+
+    val deliusUserInfo =
+      if (existingUser.userType == Cas2UserType.DELIUS) {
+        val deliusUser = getDeliusUser(existingUser.username)
+
+        Cas2v2DeliusUserInfoDto(
+          probationArea = ProbationAreaDto(
+            code = deliusUser.probationArea.code,
+            description = deliusUser.probationArea.description,
+          ),
+        )
+      } else {
+        null
+      }
+
+    return Cas2v2UserDto(
+      username = existingUser.username,
+      type = Cas2v2UserTypeDto.valueOf(existingUser.userType.name),
+      deliusUserInfo = deliusUserInfo,
+    )
+  }
+
+  private fun getDeliusUser(username: String): StaffDetail = when (
+    val staffDetailResponse = apDeliusContextApiClient.getStaffDetail(username)
+  ) {
+    is ClientResult.Success -> staffDetailResponse.body
+    is ClientResult.Failure.StatusCode -> when (staffDetailResponse.status) {
+      HttpStatus.NOT_FOUND -> throw NotFoundProblem(entityType = "DeliusUser", id = username)
+      else -> staffDetailResponse.throwException()
+    }
+    is ClientResult.Failure -> staffDetailResponse.throwException()
   }
 
   private fun getUserDetail(username: String): NomisUserDetail = when (
