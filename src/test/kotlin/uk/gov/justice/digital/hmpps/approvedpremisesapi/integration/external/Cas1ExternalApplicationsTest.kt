@@ -209,19 +209,13 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               withActualDepartureDate(null)
             }
 
-            val suitableApplication = Cas1SuitableApplication(
-              id = application.id,
-              applicationStatus = ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
-              requestForPlacementStatus = RequestForPlacementStatus.placementBooked,
-              placementStatus = Cas1SpaceBookingStatus.ARRIVED,
-              premises = Cas1ExternalPremisesDto(
-                startDate = booking.actualArrivalDate,
-                endDate = booking.expectedDepartureDate,
-                addressLine1 = premises.addressLine1,
-                addressLine2 = premises.addressLine2,
-                town = premises.town,
-                postcode = premises.postcode,
-              ),
+            val currentPremises = Cas1ExternalPremisesDto(
+              startDate = booking.actualArrivalDate,
+              endDate = booking.expectedDepartureDate,
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
             )
 
             val response = webTestClient.get()
@@ -230,11 +224,11 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
               .exchange()
               .expectStatus()
               .isOk
-              .expectBody(Cas1SuitableApplication::class.java)
+              .expectBody(Cas1ExternalPremisesDto::class.java)
               .returnResult()
               .responseBody
 
-            assertThat(response).isEqualTo(suitableApplication)
+            assertThat(response).isEqualTo(currentPremises)
           }
         }
       }
