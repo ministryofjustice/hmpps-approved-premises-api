@@ -58,7 +58,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas1Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS1Shared")
     .displayName("CAS1 & Shared")
-    .pathsToExclude("/**/cas2-hdc/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
+    .pathsToExclude("/**/cas2-hdc/**", "/**/cas2/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -92,7 +92,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas2v2(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2v2")
     .displayName("CAS2v2")
-    .pathsToMatch("/**/cas2v2/**")
+    .pathsToMatch("/**/cas2v2/**", "/**/cas2/**")
     .pathsToExclude("/**/events/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
@@ -101,7 +101,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas3Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS3Shared")
     .displayName("CAS3 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2-hdc/**", "/**/cas2v2/**", "/**/events/**", "/queue-admin/**")
+    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas2-hdc/**", "/**/cas2v2/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -131,6 +131,8 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
 
         val prefix = if (path.startsWith("/cas1/")) {
           "cas1-"
+        } else if (path.startsWith("/cas2/")) {
+          "cas2-"
         } else if (path.startsWith("/cas2v2/")) {
           "cas2v2-"
         } else if (path.startsWith("/cas3/")) {
@@ -148,27 +150,6 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
         if (pathItem.patch != null) pathItem.patch.operationId = prefix + pathItem.patch.operationId
         if (pathItem.delete != null) pathItem.delete.operationId = prefix + pathItem.delete.operationId
       }
-
-    addDeprecatedSchemaAlias(openApi, "Cas2Application", "Cas2HdcApplication")
-    addDeprecatedSchemaAlias(openApi, "Cas2ApplicationNote", "Cas2HdcApplicationNote")
-    addDeprecatedSchemaAlias(openApi, "Cas2ApplicationStatus", "Cas2HdcApplicationStatus")
-    addDeprecatedSchemaAlias(openApi, "Cas2ApplicationStatusDetail", "Cas2HdcApplicationStatusDetail")
-    addDeprecatedSchemaAlias(openApi, "ApplicationStatusUpdatesReportRow", "Cas2HdcApplicationStatusUpdatesReportRow")
-    addDeprecatedSchemaAlias(openApi, "Cas2ApplicationSummary", "Cas2HdcApplicationSummary")
-    addDeprecatedSchemaAlias(openApi, "Cas2Assessment", "Cas2HdcAssessment")
-    addDeprecatedSchemaAlias(openApi, "Cas2AssessmentStatusUpdate", "Cas2HdcAssessmentStatusUpdate")
-    addDeprecatedSchemaAlias(openApi, "LatestCas2StatusUpdate", "Cas2HdcLatestStatusUpdate")
-    addDeprecatedSchemaAlias(openApi, "NewCas2ApplicationNote", "Cas2HdcNewApplicationNote")
-    addDeprecatedSchemaAlias(openApi, "Cas2ReportName", "Cas2HdcReportName")
-    addDeprecatedSchemaAlias(openApi, "Cas2StatusUpdate", "Cas2HdcStatusUpdate")
-    addDeprecatedSchemaAlias(openApi, "Cas2StatusUpdateDetail", "Cas2HdcStatusUpdateDetail")
-    addDeprecatedSchemaAlias(openApi, "SubmitCas2Application", "Cas2HdcSubmitApplication")
-    addDeprecatedSchemaAlias(openApi, "Cas2SubmittedApplication", "Cas2HdcSubmittedApplication")
-    addDeprecatedSchemaAlias(openApi, "SubmittedApplicationReportRow", "Cas2HdcSubmittedApplicationReportRow")
-    addDeprecatedSchemaAlias(openApi, "Cas2SubmittedApplicationSummary", "Cas2HdcSubmittedApplicationSummary")
-    addDeprecatedSchemaAlias(openApi, "UnsubmittedApplicationsReportRow", "Cas2HdcUnsubmittedApplicationsReportRow")
-    addDeprecatedSchemaAlias(openApi, "UpdateCas2Application", "Cas2HdcUpdateApplication")
-    addDeprecatedSchemaAlias(openApi, "UpdateCas2Assessment", "Cas2HdcUpdateAssessment")
   }
 
   private fun createProblemSchema(): Schema<*> = ModelConverters.getInstance()

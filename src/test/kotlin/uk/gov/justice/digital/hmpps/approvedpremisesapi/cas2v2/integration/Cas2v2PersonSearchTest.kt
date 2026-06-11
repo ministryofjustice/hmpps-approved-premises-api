@@ -36,7 +36,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
         @Test
         fun `Searching by NOMIS ID without a JWT returns 401`() {
           webTestClient.get()
-            .uri("/cas2v2/people/search-by-noms/nomsNumber").exchange()
+            .uri("/cas2/people/search-by-noms/nomsNumber").exchange()
             .expectStatus()
             .isUnauthorized
         }
@@ -49,7 +49,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
           )
 
           webTestClient.get()
-            .uri("/cas2v2/people/search-by-noms/nomsNumber")
+            .uri("/cas2/people/search-by-noms/nomsNumber")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -65,7 +65,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
           )
 
           webTestClient.get()
-            .uri("/cas2v2/people/search-by-noms/nomsNumber")
+            .uri("/cas2/people/search-by-noms/nomsNumber")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -78,7 +78,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
             apDeliusContextMockUnsuccessfulCaseSummaryCall(403)
 
             webTestClient.get()
-              .uri("/cas2v2/people/search-by-noms/NOMS321")
+              .uri("/cas2/people/search-by-noms/NOMS321")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -92,7 +92,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
             apDeliusContextMockUnsuccessfulCaseSummaryCall(404)
 
             webTestClient.get()
-              .uri("/cas2v2/people/search-by-noms/NOMS321")
+              .uri("/cas2/people/search-by-noms/NOMS321")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -106,7 +106,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
             apDeliusContextMockUnsuccessfulCaseSummaryCall()
 
             webTestClient.get()
-              .uri("/cas2v2/people/search-by-noms/NOMS321")
+              .uri("/cas2/people/search-by-noms/NOMS321")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -148,7 +148,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
             prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
             webTestClient.get()
-              .uri("/cas2v2/people/search-by-noms/NOMS321")
+              .uri("/cas2/people/search-by-noms/NOMS321")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -181,7 +181,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
         @Test
         fun `Searching by CRN without a JWT returns 401`() {
           webTestClient.get()
-            .uri("/cas2v2/people/search-by-crn/CRN")
+            .uri("/cas2/people/search-by-crn/CRN")
             .exchange()
             .expectStatus()
             .isUnauthorized
@@ -195,7 +195,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
           )
 
           webTestClient.get()
-            .uri("/cas2v2/people/search?crn=CRN")
+            .uri("/cas2/people/search?crn=CRN")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -210,7 +210,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
           )
 
           webTestClient.get()
-            .uri("/cas2v2/people/search-by-crn/CRN")
+            .uri("/cas2/people/search-by-crn/CRN")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -226,7 +226,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
           )
 
           webTestClient.get()
-            .uri("/cas2v2/people/search-by-crn/CRN")
+            .uri("/cas2/people/search-by-crn/CRN")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -250,7 +250,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
             )
 
             webTestClient.get()
-              .uri("/cas2v2/people/search-by-crn/CRN")
+              .uri("/cas2/people/search-by-crn/CRN")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -292,7 +292,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
               },
             ) { _, _ ->
               webTestClient.get()
-                .uri("/cas2v2/people/search-by-crn/CRN")
+                .uri("/cas2/people/search-by-crn/CRN")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -337,7 +337,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
               },
             ) { _, _ ->
               webTestClient.get()
-                .uri("/cas2v2/people/search-by-crn/CRN")
+                .uri("/cas2/people/search-by-crn/CRN")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()

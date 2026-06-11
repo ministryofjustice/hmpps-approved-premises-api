@@ -28,7 +28,7 @@ class Cas2v2ReferenceDataTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt()
 
     webTestClient.get()
-      .uri("/cas2v2/reference-data/application-status")
+      .uri("/cas2/reference-data/application-status")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
@@ -46,7 +46,7 @@ class Cas2v2ReferenceDataTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt()
 
     webTestClient.get()
-      .uri("/cas2v2/reference-data/application-status")
+      .uri("/cas2/reference-data/application-status")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()

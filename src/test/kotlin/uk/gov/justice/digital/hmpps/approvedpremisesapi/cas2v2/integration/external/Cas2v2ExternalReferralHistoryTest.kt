@@ -25,7 +25,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
     fun `Get all referrals when user JWT returns 403 Forbidden`() {
       givenACas2v2PomUser { _, jwt ->
         webTestClient.get()
-          .uri("/cas2v2/external/referrals/$crn")
+          .uri("/cas2/external/referrals/$crn")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -36,7 +36,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
     @Test
     fun `Get all referrals when no JWT returns 401 Unauthorized`() {
       webTestClient.get()
-        .uri("/cas2v2/external/referrals/$crn")
+        .uri("/cas2/external/referrals/$crn")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -126,7 +126,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
           )
 
           val response = webTestClient.get()
-            .uri("/cas2v2/external/referrals/$crn")
+            .uri("/cas2/external/referrals/$crn")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -153,7 +153,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
           val withdrawnApplication = createApplication(user, "Referral withdrawn", preferredAreas = "South East", referringPrisonCode = omu.prisonCode)
 
           val response = webTestClient.get()
-            .uri("/cas2v2/external/referrals/$crn")
+            .uri("/cas2/external/referrals/$crn")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()
@@ -184,7 +184,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
           val applicationWithPrison = createApplication(user, "Active", referringPrisonCode = omu.prisonCode)
 
           val response = webTestClient.get()
-            .uri("/cas2v2/external/referrals/$crn")
+            .uri("/cas2/external/referrals/$crn")
             .header("Authorization", "Bearer $clientCredentialsJwt")
             .exchange()
             .expectStatus()

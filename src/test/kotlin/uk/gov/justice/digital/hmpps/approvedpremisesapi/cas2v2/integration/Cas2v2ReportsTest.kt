@@ -54,7 +54,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2v2/reports/${reportName.value}")
+        .uri("/cas2/reports/${reportName.value}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -74,7 +74,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
     )
     fun `Downloading cas2v2 report without JWT returns 401`(reportName: String) {
       webTestClient.get()
-        .uri("/cas2v2/reports/$reportName")
+        .uri("/cas2/reports/$reportName")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -93,7 +93,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2v2/reports/${reportName.value}")
+        .uri("/cas2/reports/${reportName.value}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -178,7 +178,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2v2/reports/submitted-applications")
+        .uri("/cas2/reports/submitted-applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -227,7 +227,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2v2/reports/submitted-applications")
+        .uri("/cas2/reports/submitted-applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -405,7 +405,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2v2/reports/application-status-updates")
+        .uri("/cas2/reports/application-status-updates")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -474,7 +474,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2v2/reports/application-status-updates")
+        .uri("/cas2/reports/application-status-updates")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -550,7 +550,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2v2/reports/unsubmitted-applications")
+        .uri("/cas2/reports/unsubmitted-applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -598,7 +598,7 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2v2/reports/unsubmitted-applications")
+        .uri("/cas2/reports/unsubmitted-applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
