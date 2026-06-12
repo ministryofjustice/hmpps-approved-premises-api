@@ -23,16 +23,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.services.OffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 

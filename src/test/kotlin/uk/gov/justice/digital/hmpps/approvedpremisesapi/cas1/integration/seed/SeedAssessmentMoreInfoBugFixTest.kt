@@ -6,11 +6,11 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1FurtherInfoBugFixSeedCsvRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {

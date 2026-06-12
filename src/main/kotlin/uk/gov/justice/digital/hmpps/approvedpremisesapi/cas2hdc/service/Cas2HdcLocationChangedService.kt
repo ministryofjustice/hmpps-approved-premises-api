@@ -7,9 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.categoriesChanged
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 
 @Service
 class Cas2HdcLocationChangedService(

@@ -23,8 +23,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.services.OffenderDetailsDataSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.services.OffenderRiskNoteParser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
@@ -39,9 +42,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess

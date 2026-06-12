@@ -19,11 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.services.OffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 
 class Cas2v2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()

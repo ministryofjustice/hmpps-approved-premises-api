@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.AbstractUsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersBasicSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.AbstractUsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.UsersBasicSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
 /**

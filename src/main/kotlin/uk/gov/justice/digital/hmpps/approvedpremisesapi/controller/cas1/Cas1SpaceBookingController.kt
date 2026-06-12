@@ -36,6 +36,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -45,8 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_TRANSFER_CREATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService

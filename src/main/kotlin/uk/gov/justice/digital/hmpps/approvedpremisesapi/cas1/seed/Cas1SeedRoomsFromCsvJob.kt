@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -10,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.time.OffsetDateTime
 import java.util.UUID
 

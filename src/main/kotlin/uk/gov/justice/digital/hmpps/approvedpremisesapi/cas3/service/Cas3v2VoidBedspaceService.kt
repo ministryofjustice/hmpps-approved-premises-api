@@ -10,10 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID

@@ -6,12 +6,12 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.UpdateNomsNumberSeedRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UpdateNomsNumberSeedRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)

@@ -12,12 +12,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAll
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.BookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HealthAndMedicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LicenceService

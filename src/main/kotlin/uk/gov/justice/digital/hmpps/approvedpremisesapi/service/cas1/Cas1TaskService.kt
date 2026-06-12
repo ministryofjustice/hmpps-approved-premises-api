@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotAllowedProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -19,8 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityTyp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService

@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.eve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import java.util.UUID
 
 @RestController

@@ -1,13 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_UNARCHIVED
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import java.time.OffsetDateTime
 import java.util.UUID
 

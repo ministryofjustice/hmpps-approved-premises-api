@@ -4,10 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1RemapBedCodesSeedCsvRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 
 class SeedCas1RemapBedCodesTest : SeedTestBase() {
 

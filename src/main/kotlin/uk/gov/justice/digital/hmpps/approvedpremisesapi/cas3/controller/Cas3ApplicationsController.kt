@@ -19,12 +19,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService

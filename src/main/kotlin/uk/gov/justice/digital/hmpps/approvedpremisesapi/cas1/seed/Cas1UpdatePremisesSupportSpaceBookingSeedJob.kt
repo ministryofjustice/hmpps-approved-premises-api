@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
 @Service

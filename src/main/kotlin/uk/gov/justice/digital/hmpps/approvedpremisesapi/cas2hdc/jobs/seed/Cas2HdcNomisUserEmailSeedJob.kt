@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.NomisUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 
 @Component
 class Cas2HdcNomisUserEmailSeedJob(

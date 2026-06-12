@@ -25,12 +25,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesForRequesterApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisGeneralAccountFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisStaffInformationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 
 @ExtendWith(MockKExtension::class)

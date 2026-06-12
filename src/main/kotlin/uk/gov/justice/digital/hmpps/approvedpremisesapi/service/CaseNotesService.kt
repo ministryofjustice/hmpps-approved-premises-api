@@ -7,10 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CaseNotesRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime

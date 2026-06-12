@@ -7,10 +7,10 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.CruManagementAreaSeedCsvRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)

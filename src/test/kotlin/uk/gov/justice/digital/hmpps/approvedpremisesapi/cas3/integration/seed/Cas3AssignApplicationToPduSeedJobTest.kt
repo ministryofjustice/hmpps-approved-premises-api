@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3AssignApplicationToPduSeedCsvRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import java.time.OffsetDateTime
 
 class Cas3AssignApplicationToPduSeedJobTest : SeedTestBase() {

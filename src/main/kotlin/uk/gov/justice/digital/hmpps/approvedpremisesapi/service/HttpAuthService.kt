@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 
 @Service
 class HttpAuthService {

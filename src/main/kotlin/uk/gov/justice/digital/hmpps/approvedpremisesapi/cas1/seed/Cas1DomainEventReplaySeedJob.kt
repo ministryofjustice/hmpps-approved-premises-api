@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import java.util.UUID
 

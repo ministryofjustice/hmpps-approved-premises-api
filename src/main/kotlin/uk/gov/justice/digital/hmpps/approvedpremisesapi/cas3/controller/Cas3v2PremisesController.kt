@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAcc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesSearchResultsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID

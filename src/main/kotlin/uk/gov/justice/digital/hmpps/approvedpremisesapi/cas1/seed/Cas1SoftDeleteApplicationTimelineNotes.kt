@@ -2,10 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import java.time.OffsetDateTime
 import java.util.UUID
 

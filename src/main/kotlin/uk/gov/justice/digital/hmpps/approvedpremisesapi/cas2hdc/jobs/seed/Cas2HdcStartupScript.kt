@@ -18,9 +18,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.insertHdcDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
 import java.io.IOException
 import java.io.InputStreamReader
 import java.time.LocalDate

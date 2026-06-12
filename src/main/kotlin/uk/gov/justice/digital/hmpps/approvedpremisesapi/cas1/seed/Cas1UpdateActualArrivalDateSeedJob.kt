@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import java.time.LocalDate

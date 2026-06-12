@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2Sta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.service.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.transformer.Cas2v2AssessmentsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID

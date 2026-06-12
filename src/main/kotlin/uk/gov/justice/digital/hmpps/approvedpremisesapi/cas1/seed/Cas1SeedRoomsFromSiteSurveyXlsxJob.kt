@@ -5,6 +5,7 @@ import org.javers.core.JaversBuilder
 import org.javers.core.diff.ListCompareAlgorithm
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.ExcelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -13,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
 import java.io.File
 import java.time.LocalDate
 import java.time.OffsetDateTime

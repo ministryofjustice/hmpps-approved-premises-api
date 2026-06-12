@@ -7,8 +7,8 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationInBatchesJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationInBatchesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationLogger
 import java.util.UUID
 
 @Component

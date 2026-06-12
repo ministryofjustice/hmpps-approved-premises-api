@@ -8,9 +8,9 @@ import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
 @Component

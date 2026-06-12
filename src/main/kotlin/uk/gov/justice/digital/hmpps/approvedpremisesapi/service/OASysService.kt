@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskMa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RisksToTheIndividual
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService.SuitabilityStrategy
 
 @Service

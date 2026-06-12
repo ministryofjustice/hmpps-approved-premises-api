@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID

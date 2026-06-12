@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 
 @SuppressWarnings("MagicNumber", "MaxLineLength", "TooGenericExceptionCaught")

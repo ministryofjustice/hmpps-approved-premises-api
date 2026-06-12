@@ -6,12 +6,12 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ReportsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.ReportDateRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService

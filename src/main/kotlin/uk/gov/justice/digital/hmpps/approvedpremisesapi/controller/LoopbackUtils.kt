@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.UnauthenticatedProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.UnauthenticatedProblem
 
 fun throwIfNotLoopbackRequest() {
   val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request

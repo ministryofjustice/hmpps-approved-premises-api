@@ -1,0 +1,94 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration
+
+import io.sentry.Sentry
+import org.springframework.context.ApplicationContext
+import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Service
+import org.springframework.transaction.support.TransactionTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillApplicationDuration
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillKeyWorkerUserAssignmentsJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillUserApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1CapacityPerformanceTestJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1TaskDueMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateApprovedPremisesApplicationWithOffenderJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateAssessmentReportPropertiesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1UpdateRoomCodesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.UpdateSentenceTypeAndSituationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcAssessmentMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcBackfillApplicationCohortJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcNoteMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcStatusUpdateMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.BookingStatusMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3AdjustPremisesDomainEventDatesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3FixWalesHptPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3MigrateNewBedspaceModelDataJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateApplicationOffenderNameJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateArchiveUnarchiveDomainEventDetailsJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateArchiveUnarchiveDomainEventTransactionJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBedspaceStartDateJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateBookingOffenderNameJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3VoidBedspaceJob
+import kotlin.reflect.KClass
+
+@Service
+class MigrationJobService(
+  private val applicationContext: ApplicationContext,
+  private val transactionTemplate: TransactionTemplate,
+  private val migrationLogger: MigrationLogger,
+) {
+  @Async
+  fun runMigrationJobAsync(migrationJobType: MigrationJobType) = runMigrationJob(migrationJobType, 50)
+
+  @SuppressWarnings("CyclomaticComplexMethod")
+  fun runMigrationJob(migrationJobType: MigrationJobType, pageSize: Int = 10) {
+    migrationLogger.info("Starting migration job request: $migrationJobType")
+
+    try {
+      val job: MigrationJob = when (migrationJobType) {
+        MigrationJobType.updateAllUsersFromCommunityApi -> getBean(UpdateAllUsersFromDeliusJob::class)
+        MigrationJobType.updateSentenceTypeAndSituation -> getBean(UpdateSentenceTypeAndSituationJob::class)
+        MigrationJobType.updateBookingStatus -> getBean(BookingStatusMigrationJob::class)
+        MigrationJobType.updateTaskDueDates -> getBean(Cas1TaskDueMigrationJob::class)
+        MigrationJobType.updateUsersPduByApi -> getBean(UpdateUsersPduJob::class)
+        MigrationJobType.updateCas2ApplicationsWithAssessments -> getBean(Cas2HdcAssessmentMigrationJob::class)
+        MigrationJobType.updateCas2StatusUpdatesWithAssessments -> getBean(Cas2HdcStatusUpdateMigrationJob::class)
+        MigrationJobType.updateCas2NotesWithAssessments -> getBean(Cas2HdcNoteMigrationJob::class)
+        MigrationJobType.updateCas1BackfillUserApArea -> getBean(Cas1BackfillUserApArea::class)
+        MigrationJobType.updateCas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
+        MigrationJobType.updateCas3BookingOffenderName -> getBean(Cas3UpdateBookingOffenderNameJob::class)
+        MigrationJobType.updateCas3DomainEventTypeForPersonDepartedUpdated -> getBean(Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob::class)
+        MigrationJobType.updateCas1ApprovedPremisesAssessmentReportProperties -> getBean(Cas1UpdateAssessmentReportPropertiesJob::class)
+        MigrationJobType.cas1UpdateRoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
+        MigrationJobType.updateCas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
+        MigrationJobType.updateCas3BedspaceModelData -> getBean(Cas3MigrateNewBedspaceModelDataJob::class)
+        MigrationJobType.updateCas3VoidBedspaceData -> getBean(Cas3VoidBedspaceJob::class)
+        MigrationJobType.cas3FixWalesHptPremises -> getBean(Cas3FixWalesHptPremises::class)
+        MigrationJobType.cas1BackfillApplicationDuration -> getBean(Cas1BackfillApplicationDuration::class)
+        MigrationJobType.cas1BackfillAutomaticPlacementApplications -> getBean(Cas1BackfillAutomaticPlacementApplicationsJob::class)
+        MigrationJobType.cas1BackfillKeyWorkerUserAssignments -> getBean(Cas1BackfillKeyWorkerUserAssignmentsJob::class)
+        MigrationJobType.cas1CapacityPerformanceTest -> getBean(Cas1CapacityPerformanceTestJob::class)
+        MigrationJobType.updateCas3DomainEventArchiveUnarchiveTransaction -> getBean(Cas3UpdateArchiveUnarchiveDomainEventTransactionJob::class)
+        MigrationJobType.updateCas3ArchiveUnarchiveDomainEventDetails -> getBean(Cas3UpdateArchiveUnarchiveDomainEventDetailsJob::class)
+        MigrationJobType.updateCas3BedspaceStartDate -> getBean(Cas3UpdateBedspaceStartDateJob::class)
+        MigrationJobType.updateCas3PremisesDomainEventDates -> getBean(Cas3AdjustPremisesDomainEventDatesJob::class)
+        MigrationJobType.cas2BackfillApplicationCohorts -> getBean(Cas2HdcBackfillApplicationCohortJob::class)
+      }
+
+      if (job.shouldRunInTransaction) {
+        transactionTemplate.executeWithoutResult { job.process(pageSize) }
+      } else {
+        job.process(pageSize)
+      }
+
+      migrationLogger.info("Finished migration job: $migrationJobType")
+    } catch (exception: Exception) {
+      Sentry.captureException(exception)
+      migrationLogger.error("Unable to complete Migration Job", exception)
+    }
+  }
+
+  private fun <T : Any> getBean(clazz: KClass<T>) = applicationContext.getBean(clazz.java)
+}

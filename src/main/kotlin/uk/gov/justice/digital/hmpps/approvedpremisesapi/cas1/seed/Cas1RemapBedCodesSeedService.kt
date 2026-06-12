@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 
 @Component
 class Cas1RemapBedCodesSeedService(

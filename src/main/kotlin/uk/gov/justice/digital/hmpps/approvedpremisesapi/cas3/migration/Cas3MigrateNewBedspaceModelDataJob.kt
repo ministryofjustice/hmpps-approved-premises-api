@@ -21,10 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Book
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationInBatchesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationInBatchesJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import java.util.UUID
 
 @Component

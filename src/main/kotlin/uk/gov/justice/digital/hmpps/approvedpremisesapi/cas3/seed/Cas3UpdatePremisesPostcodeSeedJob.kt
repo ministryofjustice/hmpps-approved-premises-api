@@ -4,12 +4,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import java.util.UUID
 
 @Component
 class Cas3UpdatePremisesPostcodeSeedJob(
   private val cas3PremisesRepository: Cas3PremisesRepository,
-) : uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob<Cas3UpdatePostcodeRow>(
+) : SeedJob<Cas3UpdatePostcodeRow>(
   requiredHeaders = setOf("cas3PremisesId", "postcode"),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
