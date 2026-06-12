@@ -46,7 +46,7 @@ class Cas1OasysController(
 ) {
 
   @Operation(
-    summary = "Returns metadata about supporting information questions for a given CRN,",
+    summary = "Returns metadata about the most recent OASys assessment for a given CRN (e.g. when it was completed, availability of supporting information questions)",
     operationId = "metadata",
     responses = [
       ApiResponse(responseCode = "200", description = "successful operation", content = [Content(schema = Schema(implementation = Cas1OASysMetadata::class))]),
