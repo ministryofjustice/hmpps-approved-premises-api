@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierEnvelopeDto
 
 data class PlacementApplicationTask(
@@ -42,7 +43,7 @@ data class PlacementApplicationTask(
   @Deprecated(message = "")
   @get:JsonProperty("placementDates") val placementDates: List<PlacementDates>? = null,
 
-  @get:JsonProperty("outcome") val outcome: PlacementApplicationDecision? = null,
+  @get:JsonProperty("outcome") val outcome: PlacementApplicationDecisionDto? = null,
 
   @get:JsonProperty("expectedArrivalDate") override val expectedArrivalDate: java.time.LocalDate? = null,
 

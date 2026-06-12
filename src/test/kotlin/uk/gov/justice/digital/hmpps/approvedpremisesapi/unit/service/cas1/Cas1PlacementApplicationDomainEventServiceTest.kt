@@ -42,7 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinu
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto as ApiDecision
 
 class Cas1PlacementApplicationDomainEventServiceTest {
 

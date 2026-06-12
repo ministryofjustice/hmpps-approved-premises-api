@@ -24,12 +24,12 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
 
 @Service
 @Suppress("FunctionNaming")
@@ -210,9 +210,9 @@ enum class PlacementType {
   AUTOMATIC,
 }
 
-enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDecision) {
-  ACCEPTED(ApiPlacementApplicationDecision.accepted),
-  REJECTED(ApiPlacementApplicationDecision.rejected),
+enum class PlacementApplicationDecision(val apiValue: PlacementApplicationDecisionDto) {
+  ACCEPTED(PlacementApplicationDecisionDto.accepted),
+  REJECTED(PlacementApplicationDecisionDto.rejected),
 
   /**
    * @deprecated isWithdrawn property supersedes the use of these two values.
@@ -230,14 +230,14 @@ enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDec
    * is a helpful indicator that the decision_made_at date should not be trusted
    */
   @Deprecated("Explicit isWithdrawn property supersedes this value")
-  WITHDRAW(ApiPlacementApplicationDecision.withdraw),
+  WITHDRAW(PlacementApplicationDecisionDto.withdraw),
 
   @Deprecated("Explicit isWithdrawn property supersedes this value")
-  WITHDRAWN_BY_PP(ApiPlacementApplicationDecision.withdrawnByPp),
+  WITHDRAWN_BY_PP(PlacementApplicationDecisionDto.withdrawnByPp),
   ;
 
   companion object {
-    fun valueOf(apiValue: ApiPlacementApplicationDecision): PlacementApplicationDecision? {
+    fun valueOf(apiValue: PlacementApplicationDecisionDto): PlacementApplicationDecision? {
       for (e in entries) {
         if (e.apiValue == apiValue) {
           return e

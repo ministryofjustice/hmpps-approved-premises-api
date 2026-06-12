@@ -34,7 +34,7 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto as ApiPlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 
 @Service
@@ -337,7 +337,7 @@ class Cas1PlacementApplicationService(
     val requestedPlacementPeriods = submitPlacementApplication.requestedPlacementPeriods
 
     if (requestedPlacementPeriods.isEmpty()) {
-      return CasResult.GeneralValidationError("Please provide at least one of placement dates or requested placement periods.")
+      return CasResult.GeneralValidationError("Please provide at least 1 requested placement periods.")
     }
 
     val translatedDocument = jsonMapper.writeValueAsString(submitPlacementApplication.translatedDocument)

@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -39,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -489,7 +489,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       placementApplicationId = decisionPlacementApplication(
         application = application,
         decisionMadeAt = LocalDateTime.of(2021, 3, 24, 15, 20, 0),
-        decision = PlacementApplicationDecision.accepted,
+        decision = PlacementApplicationDecisionDto.accepted,
       )
       if (withdraw) {
         withdrawPlacementApplication(
@@ -566,7 +566,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       placementApplicationId = decisionPlacementApplication(
         application = application,
         decisionMadeAt = LocalDateTime.of(2025, 12, 1, 15, 20, 0),
-        decision = PlacementApplicationDecision.rejected,
+        decision = PlacementApplicationDecisionDto.rejected,
       )
     }
 
@@ -901,7 +901,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   private fun decisionPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     decisionMadeAt: LocalDateTime,
-    decision: PlacementApplicationDecision,
+    decision: PlacementApplicationDecisionDto,
   ): UUID {
     clock.advanceOneMinute()
 

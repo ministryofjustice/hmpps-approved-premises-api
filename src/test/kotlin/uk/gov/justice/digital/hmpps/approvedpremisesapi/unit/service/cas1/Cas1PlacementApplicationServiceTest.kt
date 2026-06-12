@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -537,7 +538,7 @@ class Cas1PlacementApplicationServiceTest {
         .produce()
 
       val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
-        decision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted,
+        decision = PlacementApplicationDecisionDto.accepted,
         summaryOfChanges = "summaryOfChanges",
         decisionSummary = "decisionSummary accepted",
       )
@@ -577,11 +578,11 @@ class Cas1PlacementApplicationServiceTest {
 
     @ParameterizedTest
     @EnumSource(
-      value = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision::class,
+      value = PlacementApplicationDecisionDto::class,
       names = ["accepted"],
       mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `Rejecting sends a notification and returns successfully`(decision: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision) {
+    fun `Rejecting sends a notification and returns successfully`(decision: PlacementApplicationDecisionDto) {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .produce()
@@ -611,10 +612,10 @@ class Cas1PlacementApplicationServiceTest {
 
       assertThatCasResult(result).isSuccess().with {
         val expectedDecision = when (decision) {
-          uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted -> PlacementApplicationDecision.ACCEPTED
-          uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.rejected -> PlacementApplicationDecision.REJECTED
-          uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdraw -> PlacementApplicationDecision.WITHDRAW
-          uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdrawnByPp -> PlacementApplicationDecision.WITHDRAWN_BY_PP
+          PlacementApplicationDecisionDto.accepted -> PlacementApplicationDecision.ACCEPTED
+          PlacementApplicationDecisionDto.rejected -> PlacementApplicationDecision.REJECTED
+          PlacementApplicationDecisionDto.withdraw -> PlacementApplicationDecision.WITHDRAW
+          PlacementApplicationDecisionDto.withdrawnByPp -> PlacementApplicationDecision.WITHDRAWN_BY_PP
         }
 
         assertThat(it.decision).isEqualTo(expectedDecision)
