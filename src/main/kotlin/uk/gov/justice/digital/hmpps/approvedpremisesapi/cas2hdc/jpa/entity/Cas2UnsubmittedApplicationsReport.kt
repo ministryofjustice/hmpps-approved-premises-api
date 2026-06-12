@@ -34,7 +34,7 @@ interface Cas2UnsubmittedApplicationReportQueryRow {
   fun getApplicationId(): String
   fun getApplicationOrigin(): ApplicationOrigin
   fun getCohort(): Cas2Cohort?
-  fun getPersonNoms(): String
+  fun getPersonNoms(): String?
   fun getPersonCrn(): String
   fun getStartedBy(): String
   fun getStartedAt(): String

@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
@@ -519,7 +518,8 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       val newer = Instant.now().minusDays(100)
       val tooOld = Instant.now().minusDays(366)
 
-      val applicableApplication = givenAnUnsubmittedCas2Application(createdAt = newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+      val applicableApplicationNomsNotNull = givenAnUnsubmittedCas2Application(createdAt = newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+      val applicableApplicationNomsNull = givenAnUnsubmittedCas2Application(createdAt = newer.plusSeconds(1).atOffset(ZoneOffset.ofHoursMinutes(0, 0)), noms = null)
 
       // HDC application, which should not feature in report
       givenAnUnsubmittedCas2HdcApplication(createdAt = old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
@@ -530,39 +530,49 @@ class Cas2v2ReportsTest : IntegrationTestBase() {
       // submitted application, which should not feature in report
       givenASubmittedCas2Application(createdAt = Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
 
-      val expectedDataFrame = listOf(
-        UnsubmittedApplicationsReportRow(
-          applicationId = applicableApplication.id.toString(),
-          personCrn = applicableApplication.crn,
-          applicationOrigin = applicableApplication.applicationOrigin,
-          personNoms = applicableApplication.nomsNumber.toString(),
-          startedAt = applicableApplication.createdAt.toString().split(".").first(),
-          startedBy = applicableApplication.createdByUser.username,
-          cohort = "Prison Bail",
-        ),
-      )
-        .toDataFrame()
-
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
         roles = listOf("ROLE_CAS2_MI"),
       )
 
-      webTestClient.get()
+      val responseBody = webTestClient.get()
         .uri("/cas2/reports/unsubmitted-applications")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
         .isOk
         .expectBody()
-        .consumeWith {
-          val actual = DataFrame
-            .readExcel(it.responseBody!!.inputStream())
-            .convertTo<UnsubmittedApplicationsReportRow>(ExcessiveColumns.Remove)
+        .returnResult()
+        .responseBody!!
 
-          assertThat(actual).isEqualTo(expectedDataFrame)
-        }
+      val actual = DataFrame
+        .readExcel(responseBody.inputStream())
+        .convertTo<UnsubmittedApplicationsReportRow>(ExcessiveColumns.Remove)
+
+      assertThat(actual).isEqualTo(
+        listOf(
+          UnsubmittedApplicationsReportRow(
+            applicationId = applicableApplicationNomsNull.id.toString(),
+            personCrn = applicableApplicationNomsNull.crn,
+            applicationOrigin = applicableApplicationNomsNull.applicationOrigin,
+            personNoms = null,
+            startedAt = applicableApplicationNomsNull.createdAt.toString().split(".").first(),
+            startedBy = applicableApplicationNomsNull.createdByUser.username,
+            cohort = "Prison Bail",
+          ),
+          UnsubmittedApplicationsReportRow(
+            applicationId = applicableApplicationNomsNotNull.id.toString(),
+            personCrn = applicableApplicationNomsNotNull.crn,
+            applicationOrigin = applicableApplicationNomsNotNull.applicationOrigin,
+            personNoms = applicableApplicationNomsNotNull.nomsNumber,
+            startedAt = applicableApplicationNomsNotNull.createdAt.toString().split(".").first(),
+            startedBy = applicableApplicationNomsNotNull.createdByUser.username,
+            cohort = "Prison Bail",
+          ),
+        )
+          .toDataFrame(),
+      )
     }
 
     @Test
