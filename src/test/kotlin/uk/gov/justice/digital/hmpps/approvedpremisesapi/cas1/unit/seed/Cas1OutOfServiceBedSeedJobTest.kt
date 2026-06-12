@@ -14,11 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1OutOfServiceBedSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1OutOfServiceBedSeedCsvRowKey
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1OutOfServiceBedSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import java.time.LocalDate

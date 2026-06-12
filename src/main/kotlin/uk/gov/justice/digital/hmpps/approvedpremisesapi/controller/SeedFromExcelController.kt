@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.SeedFromExcelApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelDirectoryRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedXlsxService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedXlsxService
 
 @Service
 class SeedFromExcelController(private val seedXslxService: SeedXlsxService) : SeedFromExcelApiDelegate {

@@ -1,11 +1,11 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.unit.seed
 
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
-import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
@@ -32,7 +32,7 @@ class Cas1NonArrivalPlacementDataFixSeedJobTest {
 
     every { spaceBookingRepository.findByIdOrNull(placementId) } returns null
 
-    assertThatThrownBy {
+    Assertions.assertThatThrownBy {
       seedJob.processRow(row)
     }.isInstanceOf(RuntimeException::class.java)
       .hasMessageContaining("Placement with ID $placementId not found for id $placementId")
@@ -49,7 +49,7 @@ class Cas1NonArrivalPlacementDataFixSeedJobTest {
 
     every { spaceBookingRepository.findByIdOrNull(placementId) } returns placement
 
-    assertThatThrownBy {
+    Assertions.assertThatThrownBy {
       seedJob.processRow(row)
     }.isInstanceOf(RuntimeException::class.java)
       .hasMessageContaining("Placement with ID $placementId has incorrect CRN OTHERCRN")

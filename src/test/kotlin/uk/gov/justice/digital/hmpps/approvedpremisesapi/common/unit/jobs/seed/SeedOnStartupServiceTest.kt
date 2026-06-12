@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.unit.jobs.seed
 
 import io.mockk.Called
 import io.mockk.called
@@ -8,7 +8,7 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -20,6 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1SeedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcStartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.seed.Cas2v2StartupScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedOnStartupService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
@@ -28,10 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedOnStartupService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
@@ -111,7 +111,7 @@ class SeedOnStartupServiceTest {
 
     seedService.seedOnStartup()
 
-    assertThat(logEntries).anyMatch {
+    Assertions.assertThat(logEntries).anyMatch {
       it.level == "warn" &&
         it.message == "class path resource [does/not/exist/] cannot be resolved to URL because it does not exist"
     }
@@ -126,7 +126,7 @@ class SeedOnStartupServiceTest {
 
     seedService.seedOnStartup()
 
-    assertThat(logEntries).anyMatch {
+    Assertions.assertThat(logEntries).anyMatch {
       it.level == "warn" &&
         it.message.contains("/db/seed/unknown-job-type/unknown_seed_file.csv does not have a known job type; skipping.") ||
         it.message.contains("\\db\\seed\\unknown-job-type\\unknown_seed_file.csv does not have a known job type; skipping.")
@@ -160,14 +160,30 @@ class SeedOnStartupServiceTest {
     val approvedPremisesLambda = slot<SeedJob<*>.() -> String>()
     val approvedPremisesRoomLambda = slot<SeedJob<*>.() -> String>()
 
-    every { mockSeedService.seedData(SeedFileType.approvedPremises, "approved_premises", capture(approvedPremisesLambda)) } returns Unit
-    every { mockSeedService.seedData(SeedFileType.approvedPremisesRooms, "approved_premises_rooms", capture(approvedPremisesRoomLambda)) } returns Unit
+    every {
+      mockSeedService.seedData(
+        SeedFileType.approvedPremises,
+        "approved_premises",
+        capture(approvedPremisesLambda),
+      )
+    } returns Unit
+    every {
+      mockSeedService.seedData(
+        SeedFileType.approvedPremisesRooms,
+        "approved_premises_rooms",
+        capture(approvedPremisesRoomLambda),
+      )
+    } returns Unit
 
     spy.seedOnStartup()
 
     verifyOrder {
       mockSeedService.seedData(SeedFileType.approvedPremises, "approved_premises", any<SeedJob<*>.() -> String>())
-      mockSeedService.seedData(SeedFileType.approvedPremisesRooms, "approved_premises_rooms", any<SeedJob<*>.() -> String>())
+      mockSeedService.seedData(
+        SeedFileType.approvedPremisesRooms,
+        "approved_premises_rooms",
+        any<SeedJob<*>.() -> String>(),
+      )
     }
 
     val approvedPremisesFilename = approvedPremisesLambda.captured.invoke(
@@ -189,8 +205,8 @@ class SeedOnStartupServiceTest {
       ),
     ).split("/").last()
 
-    assertThat(approvedPremisesFilename).isEqualTo("1__approved_premises.csv")
-    assertThat(approvedPremisesRoomsFilename).isEqualTo("2__approved_premises_rooms.csv")
+    Assertions.assertThat(approvedPremisesFilename).isEqualTo("1__approved_premises.csv")
+    Assertions.assertThat(approvedPremisesRoomsFilename).isEqualTo("2__approved_premises_rooms.csv")
   }
 
   @Nested

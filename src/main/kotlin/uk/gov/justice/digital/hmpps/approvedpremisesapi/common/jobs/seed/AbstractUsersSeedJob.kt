@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed
 
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName

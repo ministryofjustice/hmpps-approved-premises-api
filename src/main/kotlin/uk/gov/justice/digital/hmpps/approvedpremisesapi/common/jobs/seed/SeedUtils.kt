@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed
 
 import org.json.JSONObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2ApplicationDataFormattedDate

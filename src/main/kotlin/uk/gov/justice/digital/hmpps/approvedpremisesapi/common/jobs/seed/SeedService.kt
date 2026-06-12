@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import kotlinx.coroutines.Dispatchers

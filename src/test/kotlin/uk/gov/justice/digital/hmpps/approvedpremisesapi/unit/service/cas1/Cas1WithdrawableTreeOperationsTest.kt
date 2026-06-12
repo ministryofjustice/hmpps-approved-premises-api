@@ -429,7 +429,7 @@ class Cas1WithdrawableTreeOperationsTest {
       logger.error(
         "Failed to automatically withdraw PlacementApplication ${placementApplication.id} " +
           "when withdrawing Application ${application.id} " +
-          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult\$Unauthorised",
+          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult\$Unauthorised",
       )
     }
 
@@ -437,7 +437,7 @@ class Cas1WithdrawableTreeOperationsTest {
       logger.error(
         "Failed to automatically withdraw PlacementRequest ${placementRequestWithdrawable.id} " +
           "when withdrawing Application ${application.id} " +
-          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult\$Unauthorised",
+          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult\$Unauthorised",
       )
     }
 

@@ -6,8 +6,8 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.seed.Cas3UpdatePostcodeRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import java.util.UUID
 
 class Cas3UpdatePremisesPostcodeSeedJobTest : SeedTestBase() {

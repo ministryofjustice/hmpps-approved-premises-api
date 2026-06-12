@@ -11,10 +11,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedXlsxService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedXlsxService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 import java.io.File
 import java.nio.file.Files

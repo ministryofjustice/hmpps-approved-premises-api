@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONObject
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.insertHdcDates
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
