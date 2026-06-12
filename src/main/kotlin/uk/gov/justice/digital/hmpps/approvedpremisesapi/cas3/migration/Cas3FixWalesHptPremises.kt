@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationInBatchesJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationInBatchesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationLogger
 import java.time.LocalDate
 import java.util.UUID
 

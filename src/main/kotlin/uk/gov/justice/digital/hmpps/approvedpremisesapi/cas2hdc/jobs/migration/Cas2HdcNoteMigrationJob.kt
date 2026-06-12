@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
 
 @Component
 class Cas2HdcNoteMigrationJob(

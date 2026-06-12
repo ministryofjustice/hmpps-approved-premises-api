@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration
 
 import io.sentry.Sentry
 import org.springframework.context.ApplicationContext

@@ -5,10 +5,10 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonDepartedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 
 @Component
 class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(

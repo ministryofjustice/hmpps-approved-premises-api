@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.UpdateAssessmentReportPropertiesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import java.time.OffsetDateTime
 
 class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {

@@ -5,10 +5,10 @@ import org.springframework.transaction.support.TransactionTemplate
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.databind.node.ObjectNode
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationInBatchesJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationInBatchesJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime

@@ -12,13 +12,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesUnarchiveEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_UNARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_ARCHIVED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_PREMISES_UNARCHIVED
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
