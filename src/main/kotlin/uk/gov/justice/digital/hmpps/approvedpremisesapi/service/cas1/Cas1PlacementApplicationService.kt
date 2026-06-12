@@ -337,7 +337,11 @@ class Cas1PlacementApplicationService(
     val requestedPlacementPeriods = submitPlacementApplication.requestedPlacementPeriods
 
     if (requestedPlacementPeriods.isEmpty()) {
-      return CasResult.GeneralValidationError("Please provide at least 1 requested placement periods.")
+      return CasResult.GeneralValidationError("At least 1 requested placement periods is required")
+    }
+
+    if (requestedPlacementPeriods.any { it.duration == 0 }) {
+      return CasResult.GeneralValidationError("1 or more requested placements have a duration of 0 days")
     }
 
     val translatedDocument = jsonMapper.writeValueAsString(submitPlacementApplication.translatedDocument)

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
@@ -18,12 +18,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedApplication
@@ -35,8 +35,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -45,10 +47,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinu
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
-class PlacementApplicationsTest : IntegrationTestBase() {
+class Cas1PlacementApplicationsTest : IntegrationTestBase() {
 
   @BeforeEach
   fun setupBankHolidays() {
@@ -684,7 +684,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .expectStatus()
             .isBadRequest
             .expectBody()
-            .jsonPath("$.detail").isEqualTo("Please provide at least one of placement dates or requested placement periods.")
+            .jsonPath("$.detail").isEqualTo("At least 1 requested placement periods is required")
         }
       }
     }
@@ -915,7 +915,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           `Given a submitted Placement Application`(
             allocatedToUser = user,
             offenderDetails = offenderDetails,
-            decision = JpaPlacementApplicationDecision.REJECTED,
+            decision = PlacementApplicationDecision.REJECTED,
           ) { placementApplicationEntity ->
             webTestClient.post()
               .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
@@ -943,7 +943,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             `Given a submitted Placement Application`(
               allocatedToUser = otherUser,
               offenderDetails = offenderDetails,
-              decision = JpaPlacementApplicationDecision.REJECTED,
+              decision = PlacementApplicationDecision.REJECTED,
             ) { placementApplicationEntity ->
               webTestClient.post()
                 .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
@@ -994,7 +994,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @CsvSource("ROTL,false", "ADDITIONAL_PLACEMENT,false", "RELEASE_FOLLOWING_DECISION,true")
-    fun `accepting a placement application decision records the decision, creates a placement request and sends an email`(placementType: JpaPlacementType, isParole: Boolean) {
+    fun `accepting a placement application decision records the decision, creates a placement request and sends an email`(placementType: PlacementType, isParole: Boolean) {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
@@ -1018,7 +1018,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 val updatedPlacementApplication =
                   placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
-                assertThat(updatedPlacementApplication.decision).isEqualTo(JpaPlacementApplicationDecision.ACCEPTED)
+                assertThat(updatedPlacementApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
                 assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
 
                 val createdPlacementRequests =
@@ -1045,7 +1045,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @CsvSource("ROTL", "ADDITIONAL_PLACEMENT", "RELEASE_FOLLOWING_DECISION")
-    fun `rejecting a placement application decision records the decision and sends an email`(placementType: JpaPlacementType) {
+    fun `rejecting a placement application decision records the decision and sends an email`(placementType: PlacementType) {
       givenAUser { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
@@ -1069,7 +1069,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 val updatedPlacementApplication =
                   placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
-                assertThat(updatedPlacementApplication.decision).isEqualTo(JpaPlacementApplicationDecision.REJECTED)
+                assertThat(updatedPlacementApplication.decision).isEqualTo(PlacementApplicationDecision.REJECTED)
                 assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
 
                 val createdPlacementRequests =
@@ -1088,8 +1088,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     private fun `Given a submitted Placement Application`(
       allocatedToUser: UserEntity,
       offenderDetails: OffenderDetailSummary,
-      decision: JpaPlacementApplicationDecision? = null,
-      placementType: JpaPlacementType? = JpaPlacementType.ADDITIONAL_PLACEMENT,
+      decision: PlacementApplicationDecision? = null,
+      placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
       block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
     ) {
       val placementApplication = givenAPlacementApplication(
@@ -1132,7 +1132,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
   }
 
   /**
-   * Note - Withdrawal cascading is tested in [uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1WithdrawalTest]
+   * Note - Withdrawal cascading is tested in [Cas1WithdrawalTest]
    */
   @Nested
   inner class WithdrawPlacementApplication {
@@ -1153,7 +1153,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           .uri("/cas1/placement-applications/${UUID.randomUUID()}/withdraw")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+            uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+              WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            ),
           )
           .exchange()
           .expectStatus()
@@ -1177,7 +1179,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+              uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+                WithdrawPlacementRequestReason.duplicatePlacementRequest,
+              ),
             )
             .exchange()
             .expectStatus()
@@ -1199,7 +1203,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+              uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+                WithdrawPlacementRequestReason.duplicatePlacementRequest,
+              ),
             )
             .exchange()
             .expectStatus()
@@ -1246,7 +1252,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+                uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+                  WithdrawPlacementRequestReason.duplicatePlacementRequest,
+                ),
               )
               .exchange()
               .expectStatus()
@@ -1305,7 +1313,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+                  uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+                    WithdrawPlacementRequestReason.duplicatePlacementRequest,
+                  ),
                 )
                 .exchange()
                 .expectStatus()

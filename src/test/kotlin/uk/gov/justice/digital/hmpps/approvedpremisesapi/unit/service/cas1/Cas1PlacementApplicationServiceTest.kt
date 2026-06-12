@@ -275,7 +275,44 @@ class Cas1PlacementApplicationServiceTest {
 
       )
 
-      assertThatCasResult(result).isGeneralValidationError("Please provide at least one of placement dates or requested placement periods.")
+      assertThatCasResult(result).isGeneralValidationError("At least 1 requested placement periods is required")
+    }
+
+    @Test
+    fun `Returns validation error if 1 or more duration periods have 0 day duration`() {
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 4, 1),
+            duration = 5,
+            arrivalFlexible = true,
+          ),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2025, 4, 1),
+            duration = 0,
+            arrivalFlexible = false,
+          ),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2026, 4, 1),
+            duration = 5,
+            arrivalFlexible = true,
+          ),
+        ),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
+      )
+
+      val result = cas1PlacementApplicationService.submitApplication(
+        placementApplication.id,
+        submitPlacementApplication,
+
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("1 or more requested placements have a duration of 0 days")
     }
 
     @ParameterizedTest
