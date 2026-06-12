@@ -443,6 +443,11 @@ class ApprovedPremisesApplicationEntity(
 
   fun getLatestPlacementRequest(): PlacementRequestEntity? = this.placementRequests.maxByOrNull { it.createdAt }
   fun isSubmitted() = submittedAt != null
+  val hasArrivalWithin28Days: Boolean
+    get() = arrivalDate?.toLocalDate()?.let { arrival ->
+      val today = LocalDate.now()
+      !arrival.isAfter(today.plusDays(28))
+    } ?: false
 
   @Deprecated(
 """

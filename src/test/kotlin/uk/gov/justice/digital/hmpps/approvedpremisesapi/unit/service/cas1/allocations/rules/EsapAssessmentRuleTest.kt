@@ -4,8 +4,6 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -18,12 +16,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations
 import java.time.OffsetDateTime
 
 class EsapAssessmentRuleTest {
-  val esapAssessmentRule = EsapAssessmentRule("SOME-USER")
+  val esapAssessmentRule = EsapAssessmentRule(
+    defaultUsername = "DEFAULT-USER",
+    arrivalWithin28DaysUsername = "28-DAYS-USER",
+  )
 
   @Nested
   inner class EvaluateAssessment {
     @Test
-    fun `Returns AllocateToUser with configured username when the application is for Approved Premises, is submitted, and the application is ESAP`() {
+    fun `Returns AllocateToUser with default username when the application is for Approved Premises, is submitted, the application is ESAP, and arrival date is null`() {
       val probationRegion = ProbationRegionEntityFactory()
         .withYieldedApArea {
           ApAreaEntityFactory()
@@ -39,6 +40,7 @@ class EsapAssessmentRuleTest {
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
         .withApType(ApprovedPremisesType.ESAP)
+        .withArrivalDate(null)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -47,11 +49,11 @@ class EsapAssessmentRuleTest {
 
       val result = esapAssessmentRule.evaluateAssessment(assessment)
 
-      assertThat(result).isEqualTo(UserAllocatorRuleOutcome.AllocateToUser("SOME-USER"))
+      assertThat(result).isEqualTo(UserAllocatorRuleOutcome.AllocateToUser("DEFAULT-USER"))
     }
 
     @Test
-    fun `Returns Skip if the application is not for Approved Premises`() {
+    fun `Returns AllocateToUser with default username when the application is for Approved Premises, is submitted, the application is ESAP, and arrival date is more than 28 days away`() {
       val probationRegion = ProbationRegionEntityFactory()
         .withYieldedApArea {
           ApAreaEntityFactory()
@@ -63,19 +65,78 @@ class EsapAssessmentRuleTest {
         .withProbationRegion(probationRegion)
         .produce()
 
-      val application = TemporaryAccommodationApplicationEntityFactory()
+      val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
-        .withProbationRegion(probationRegion)
         .withSubmittedAt(OffsetDateTime.now())
+        .withApType(ApprovedPremisesType.ESAP)
+        .withArrivalDate(OffsetDateTime.now().plusDays(29))
         .produce()
 
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withApplication(application)
         .produce()
 
       val result = esapAssessmentRule.evaluateAssessment(assessment)
 
-      assertThat(result).isEqualTo(UserAllocatorRuleOutcome.Skip)
+      assertThat(result).isEqualTo(UserAllocatorRuleOutcome.AllocateToUser("DEFAULT-USER"))
+    }
+
+    @Test
+    fun `Returns AllocateToUser with 28 days username when the application is for Approved Premises, is submitted, the application is ESAP, and arrival date is exactly 28 days away`() {
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea {
+          ApAreaEntityFactory()
+            .produce()
+        }
+        .produce()
+
+      val createdByUser = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(createdByUser)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withApType(ApprovedPremisesType.ESAP)
+        .withArrivalDate(OffsetDateTime.now().plusDays(28))
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      val result = esapAssessmentRule.evaluateAssessment(assessment)
+
+      assertThat(result).isEqualTo(UserAllocatorRuleOutcome.AllocateToUser("28-DAYS-USER"))
+    }
+
+    @Test
+    fun `Returns AllocateToUser with 28 days username when the application is for Approved Premises, is submitted, the application is ESAP, and arrival date is less than 28 days away`() {
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea {
+          ApAreaEntityFactory()
+            .produce()
+        }
+        .produce()
+
+      val createdByUser = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(createdByUser)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withApType(ApprovedPremisesType.ESAP)
+        .withArrivalDate(OffsetDateTime.now().plusDays(27))
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      val result = esapAssessmentRule.evaluateAssessment(assessment)
+
+      assertThat(result).isEqualTo(UserAllocatorRuleOutcome.AllocateToUser("28-DAYS-USER"))
     }
 
     @Test

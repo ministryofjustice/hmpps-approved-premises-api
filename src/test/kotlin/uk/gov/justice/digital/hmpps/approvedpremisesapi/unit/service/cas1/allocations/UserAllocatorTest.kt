@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -347,7 +347,7 @@ data class TestRule(
   private val evaluateAssessmentOutcome: UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip,
   private val evaluatePlacementApplicationOutcome: UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip,
 ) : UserAllocatorRule {
-  override fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome = evaluateAssessmentOutcome
+  override fun evaluateAssessment(assessmentEntity: ApprovedPremisesAssessmentEntity): UserAllocatorRuleOutcome = evaluateAssessmentOutcome
 
   override fun evaluatePlacementApplication(placementApplicationEntity: PlacementApplicationEntity): UserAllocatorRuleOutcome = evaluatePlacementApplicationOutcome
 
