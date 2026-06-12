@@ -278,7 +278,7 @@ interface ApprovedPremisesAssessmentRepository : JpaRepository<ApprovedPremisesA
 @SuppressWarnings("LongParameterList")
 class ApprovedPremisesAssessmentEntity(
   id: UUID,
-  application: ApplicationEntity,
+  application: ApprovedPremisesApplicationEntity,
   data: String?,
   document: String?,
   allocatedToUser: UserEntity?,
