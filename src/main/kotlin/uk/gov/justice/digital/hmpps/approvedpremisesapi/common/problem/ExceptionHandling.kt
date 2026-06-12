@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem
 
 import org.hibernate.exception.JDBCConnectionException
 import org.slf4j.LoggerFactory

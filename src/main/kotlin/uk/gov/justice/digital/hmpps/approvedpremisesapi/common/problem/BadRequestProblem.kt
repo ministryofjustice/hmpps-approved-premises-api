@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.problem
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import org.springframework.http.HttpStatus

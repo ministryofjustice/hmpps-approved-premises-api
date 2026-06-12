@@ -7,7 +7,7 @@ import tools.jackson.databind.node.JsonNodeType
 import tools.jackson.databind.node.NullNode
 import tools.jackson.databind.node.ObjectNode
 import tools.jackson.databind.node.StringNode
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ParamDetails
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate

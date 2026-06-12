@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.problem
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.unit.problem
 
 import io.mockk.every
 import io.mockk.mockk
@@ -24,14 +24,14 @@ import tools.jackson.databind.exc.MismatchedInputException
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.databind.node.ArrayNode
 import tools.jackson.databind.node.ObjectNode
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ExceptionHandling
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundResourceProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ParamDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ServiceUnavailableProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.UnauthenticatedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.UnhandledExceptionProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ExceptionHandling
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundResourceProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ParamDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ServiceUnavailableProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.UnauthenticatedProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.UnhandledExceptionProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeserializationValidationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.LoggerExtension
