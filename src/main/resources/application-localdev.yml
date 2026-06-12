@@ -52,10 +52,11 @@ spring:
 springdoc:
   pre-loading-enabled: false
 
-user-allocations:
-  rules:
-    esap-assessments:
-      allocate-to-user: JIMSNOWLDAP
+cas1:
+  allocations:
+    esap-assessment:
+      default-username: JIMSNOWLDAP
+      arrival-within-28-days-username: JIMSNOWLDAP
 
 # Logging
 

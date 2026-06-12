@@ -208,12 +208,14 @@ pagination:
   cas3:
     booking-search-page-size: 10
 
+cas1:
+  allocations:
+    esap-assessment:
+      default-username: ESAP_ASSESSOR
+      arrival-within-28-days-username: ESAP_ASSESSOR
+
 user-allocations:
   rules:
-    esap-assessments:
-      enabled: true
-      allocate-to-user: ESAP_ASSESSOR
-      priority: 3
     emergency-and-short-notice-assessments:
       enabled: true
       priority: 2

@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocation
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -25,7 +25,7 @@ class UserAllocator(
     userAllocatorRules.sortedBy { it.priority }
   }
 
-  fun getUserForAssessmentAllocation(assessmentEntity: AssessmentEntity): UserEntity? = getUserForAllocation(
+  fun getUserForAssessmentAllocation(assessmentEntity: ApprovedPremisesAssessmentEntity): UserEntity? = getUserForAllocation(
     evaluate = { userAllocatorRule -> userAllocatorRule.evaluateAssessment(assessmentEntity) },
     selectUser = { suitableUsers -> taskRepository.findUserWithLeastAssessmentsPendingOrCompletedInLastWeek(suitableUsers) },
   )

@@ -8,8 +8,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -92,36 +90,6 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
       val result = assessmentRule.evaluateAssessment(assessment)
 
       assertThat(result).isEqualTo(UserAllocatorRuleOutcome.AllocateToUser(expectedAllocation))
-    }
-
-    @Test
-    fun `Returns Skip if the application is not for CAS1`() {
-      val assessmentRule = EmergencyAndShortNoticeAssessmentRule(Clock.systemUTC())
-
-      val apArea = ApAreaEntityFactory()
-        .produce()
-
-      val probationRegion = ProbationRegionEntityFactory()
-        .withApArea(apArea)
-        .produce()
-
-      val createdByUser = UserEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withCreatedByUser(createdByUser)
-        .withProbationRegion(probationRegion)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val assessment = TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .produce()
-
-      val result = assessmentRule.evaluateAssessment(assessment)
-
-      assertThat(result).isEqualTo(UserAllocatorRuleOutcome.Skip)
     }
 
     @ParameterizedTest

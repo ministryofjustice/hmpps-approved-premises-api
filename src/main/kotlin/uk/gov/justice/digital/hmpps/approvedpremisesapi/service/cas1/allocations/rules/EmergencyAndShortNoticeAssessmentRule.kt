@@ -2,8 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocation
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRule
@@ -23,10 +22,9 @@ class EmergencyAndShortNoticeAssessmentRule(
   override val priority: Int
     get() = 2
 
-  override fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome {
-    val application = assessmentEntity.application
+  override fun evaluateAssessment(assessmentEntity: ApprovedPremisesAssessmentEntity): UserAllocatorRuleOutcome {
+    val application = assessmentEntity.cas1Application()
 
-    if (application !is ApprovedPremisesApplicationEntity) return UserAllocatorRuleOutcome.Skip
     if (application.submittedAt == null) return UserAllocatorRuleOutcome.Skip
 
     return when (
