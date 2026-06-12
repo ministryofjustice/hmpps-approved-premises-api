@@ -4,8 +4,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.LicenceApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.Licence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.licence.LicenceStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.toCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.toCasResult
 
 @Service
 class LicenceService(

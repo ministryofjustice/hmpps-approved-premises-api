@@ -4,7 +4,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.entity.Cas1FormDataEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.entity.Cas1FormDataRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 
 @Service
 class Cas1FormDataService(

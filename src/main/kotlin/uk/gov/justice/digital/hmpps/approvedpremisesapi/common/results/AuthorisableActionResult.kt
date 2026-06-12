@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.results
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results
 
 @Deprecated(
   "The ValidatableActionResult and AuthorisableActionResult have been replaced by CasResult, which effectively flattens these two classes into one",

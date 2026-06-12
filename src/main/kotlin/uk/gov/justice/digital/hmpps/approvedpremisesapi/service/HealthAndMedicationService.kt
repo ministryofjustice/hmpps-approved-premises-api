@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HealthAndMedicationApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 
 @Service
 class HealthAndMedicationService(

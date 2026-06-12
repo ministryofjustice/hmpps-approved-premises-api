@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.results
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import java.util.UUID

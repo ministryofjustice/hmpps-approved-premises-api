@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.results
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results
 
 sealed interface CasSimpleResult<SuccessType> {
   data class Success<SuccessType>(val value: SuccessType) : CasSimpleResult<SuccessType>

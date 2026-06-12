@@ -5,9 +5,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ParamDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidatableActionResult
 
 @Deprecated("Update calling code to use CasResult", ReplaceWith("extractEntityFromCasResult"))
 fun <EntityType> extractEntityFromAuthorisableActionResult(result: AuthorisableActionResult<EntityType>) = when (result) {
