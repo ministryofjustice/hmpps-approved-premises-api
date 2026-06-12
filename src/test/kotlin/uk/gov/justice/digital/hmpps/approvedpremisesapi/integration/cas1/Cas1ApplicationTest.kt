@@ -2769,7 +2769,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
     userEntity: UserEntity,
     managingTeamCode: String,
     submittedAt: OffsetDateTime? = null,
-  ): ApplicationEntity {
+  ): ApprovedPremisesApplicationEntity {
     val application =
       approvedPremisesApplicationEntityFactory.produceAndPersist {
         withCrn(crn)

@@ -2,23 +2,26 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessmentEntity> {
+class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommodationAssessmentEntity> {
 
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }
-  private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
+  private var application: Yielded<TemporaryAccommodationApplicationEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var allocatedAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
@@ -34,11 +37,16 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   private var agreeWithShortNoticeReason: Yielded<Boolean?> = { null }
   private var agreeWithShortNoticeReasonComments: Yielded<String?> = { null }
   private var reasonForLateApplication: Yielded<String?> = { null }
+  private var completedAt: Yielded<OffsetDateTime?> = { null }
+  private var summaryData: Yielded<String> = { "{}" }
+  private var referralRejectionReason: Yielded<ReferralRejectionReasonEntity?> = { null }
+  private var referralRejectionReasonDetail: Yielded<String?> = { null }
+  private var releaseDate: Yielded<LocalDate?> = { null }
+  private var accommodationRequiredFromDate: Yielded<LocalDate?> = { null }
 
   fun withDefaults() = apply {
-    this.application = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
+    this.application = { TemporaryAccommodationApplicationEntityFactory().withDefaults().produce() }
   }
-
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -51,11 +59,11 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.document = { document }
   }
 
-  fun withApplication(application: ApprovedPremisesApplicationEntity) = apply {
+  fun withApplication(application: TemporaryAccommodationApplicationEntity) = apply {
     this.application = { application }
   }
 
-  fun withYieldedApplication(application: Yielded<ApprovedPremisesApplicationEntity>) = apply {
+  fun withYieldedApplication(application: Yielded<TemporaryAccommodationApplicationEntity>) = apply {
     this.application = application
   }
 
@@ -118,7 +126,31 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.reasonForLateApplication = { reasonForLateApplication }
   }
 
-  override fun produce(): ApprovedPremisesAssessmentEntity = ApprovedPremisesAssessmentEntity(
+  fun withCompletedAt(completedAt: OffsetDateTime?) = apply {
+    this.completedAt = { completedAt }
+  }
+
+  fun withSummaryData(summaryData: String) = apply {
+    this.summaryData = { summaryData }
+  }
+
+  fun withReferralRejectionReason(referralRejectionReason: ReferralRejectionReasonEntity?) = apply {
+    this.referralRejectionReason = { referralRejectionReason }
+  }
+
+  fun withReferralRejectionReasonDetail(referralRejectionReasonDetail: String?) = apply {
+    this.referralRejectionReasonDetail = { referralRejectionReasonDetail }
+  }
+
+  fun withReleaseDate(releaseDate: LocalDate?) = apply {
+    this.releaseDate = { releaseDate }
+  }
+
+  fun withAccommodationRequiredFromDate(accommodationRequiredFromDate: LocalDate?) = apply {
+    this.accommodationRequiredFromDate = { accommodationRequiredFromDate }
+  }
+
+  override fun produce(): TemporaryAccommodationAssessmentEntity = TemporaryAccommodationAssessmentEntity(
     id = this.id(),
     data = this.data(),
     document = this.document(),
@@ -133,10 +165,12 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     clarificationNotes = this.clarificationNotes(),
     referralHistoryNotes = this.referralHistoryNotes(),
     isWithdrawn = this.isWithdrawn(),
-    createdFromAppeal = this.createdFromAppeal(),
     dueAt = this.dueAt(),
-    agreeWithShortNoticeReason = this.agreeWithShortNoticeReason(),
-    agreeWithShortNoticeReasonComments = this.agreeWithShortNoticeReasonComments(),
-    reasonForLateApplication = this.reasonForLateApplication(),
+    completedAt = this.completedAt(),
+    summaryData = this.summaryData(),
+    referralRejectionReason = this.referralRejectionReason(),
+    referralRejectionReasonDetail = this.referralRejectionReasonDetail(),
+    releaseDate = this.releaseDate(),
+    accommodationRequiredFromDate = this.accommodationRequiredFromDate(),
   )
 }
