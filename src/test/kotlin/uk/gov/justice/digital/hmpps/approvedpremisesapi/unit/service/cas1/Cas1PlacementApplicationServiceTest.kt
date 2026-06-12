@@ -258,7 +258,7 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Submitting an application returns validation error if no dates defined`() {
+    fun `Returns validation error if no dates defined`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
       val submitPlacementApplication = SubmitPlacementApplication(
@@ -292,7 +292,7 @@ class Cas1PlacementApplicationServiceTest {
       "reReleasedPostRecall, reReleasedPostRecall,ADDITIONAL_PLACEMENT",
       "reReleasedFollowingFixedTermRecall, reReleasedFollowingFixedTermRecall,ADDITIONAL_PLACEMENT",
     )
-    fun `Submitting an application and inferring placement type from release type`(releaseTypeOption: ReleaseTypeOption, cas1ReleaseType: Cas1ReleaseType, jpaPlacementType: String) {
+    fun `Inferring placement type from release type`(releaseTypeOption: ReleaseTypeOption, cas1ReleaseType: Cas1ReleaseType, jpaPlacementType: String) {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -339,7 +339,7 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Submitting an application triggers allocation and sets a due date`() {
+    fun `Triggers allocation and sets a due date`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -377,7 +377,7 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Submitting an application saves a single date to a placement application, triggers emails and domain event`() {
+    fun `Saves a single date to a placement application, triggers emails and domain event`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -428,7 +428,7 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Submitting an application saves multiple dates to individual placement applications and triggers emails and domain event per resultant placement application`() {
+    fun `Saves multiple dates to individual placement applications and triggers emails and domain event per resultant placement application`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
