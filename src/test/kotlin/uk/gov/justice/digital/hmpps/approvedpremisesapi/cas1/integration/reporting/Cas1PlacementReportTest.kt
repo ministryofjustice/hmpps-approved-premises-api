@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
@@ -278,9 +279,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       createPlacementApplication(
         application = application,
         releaseType = ReleaseTypeOption.notApplicable,
-        placementDates = listOf(
-          PlacementDates(
-            expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 5),
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 5),
+            arrivalFlexible = true,
             duration = 5,
           ),
         ),
@@ -351,9 +353,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       createPlacementApplication(
         application = application,
         releaseType = ReleaseTypeOption.rotl,
-        placementDates = listOf(
-          PlacementDates(
-            expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
+            arrivalFlexible = true,
             duration = 5,
           ),
         ),
@@ -434,9 +437,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       createPlacementApplication(
         application = application,
         releaseType = ReleaseTypeOption.rotl,
-        placementDates = listOf(
-          PlacementDates(
-            expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
+            arrivalFlexible = true,
             duration = 5,
           ),
         ),
@@ -507,9 +511,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       createPlacementApplication(
         application = application,
         releaseType = ReleaseTypeOption.rotl,
-        placementDates = listOf(
-          PlacementDates(
-            expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 15),
+            arrivalFlexible = true,
             duration = 5,
           ),
         ),
@@ -583,9 +588,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       createPlacementApplication(
         application = application,
         releaseType = ReleaseTypeOption.rotl,
-        placementDates = listOf(
-          PlacementDates(
-            expectedArrival = outOfRangeArrivalDate,
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = outOfRangeArrivalDate,
+            arrivalFlexible = false,
             duration = 5,
           ),
         ),
@@ -607,7 +613,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     releaseType: ReleaseTypeOption,
-    placementDates: List<PlacementDates>,
+    requestedPlacementPeriods: List<Cas1RequestedPlacementPeriod>,
   ) {
     val creatorJwt = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
@@ -634,8 +640,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       placementApplicationId = placementApplicationId,
       body = SubmitPlacementApplication(
         translatedDocument = mapOf("key" to "value"),
-        placementDates = placementDates,
-        requestedPlacementPeriods = emptyList(),
+        requestedPlacementPeriods = requestedPlacementPeriods,
         releaseType = releaseType,
         sentenceType = null,
         situationType = null,

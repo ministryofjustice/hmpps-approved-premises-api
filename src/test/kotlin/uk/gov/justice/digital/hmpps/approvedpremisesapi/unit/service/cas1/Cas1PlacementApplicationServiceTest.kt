@@ -263,8 +263,7 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementDates = emptyList(),
-        requestedPlacementPeriods = null,
+        requestedPlacementPeriods = emptyList(),
         releaseType = ReleaseTypeOption.licence,
         sentenceType = null,
         situationType = null,
@@ -306,7 +305,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementDates = emptyList(),
         requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
             arrival = LocalDate.of(2024, 4, 1),
@@ -354,7 +352,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementDates = emptyList(),
         requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
             arrival = LocalDate.of(2024, 4, 1),
@@ -393,7 +390,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementDates = emptyList(),
         requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
             arrival = LocalDate.of(2024, 4, 1),
@@ -444,7 +440,6 @@ class Cas1PlacementApplicationServiceTest {
 
       val submitPlacementApplication = SubmitPlacementApplication(
         translatedDocument = "translatedDocument",
-        placementDates = emptyList(),
         requestedPlacementPeriods = listOf(
           Cas1RequestedPlacementPeriod(
             arrival = LocalDate.of(2024, 4, 1),

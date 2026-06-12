@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
@@ -487,9 +488,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       placementApplicationId = createPlacementApplication(
         application = application,
         releaseType = ReleaseTypeOption.rotl,
-        placementDates = listOf(
-          PlacementDates(
-            expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 6),
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 6),
+            arrivalFlexible = false,
             duration = 5,
           ),
         ),
@@ -537,9 +539,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       createPlacementApplication(
         application = application,
         releaseType = ReleaseTypeOption.rotl,
-        placementDates = listOf(
-          PlacementDates(
-            expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH - 1, 31),
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH - 1, 31),
+            arrivalFlexible = false,
             duration = 5,
           ),
         ),
@@ -565,9 +568,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       createPlacementApplication(
         application = application,
         releaseType = ReleaseTypeOption.rotl,
-        placementDates = listOf(
-          PlacementDates(
-            expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH + 1, 2),
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH + 1, 2),
+            arrivalFlexible = true,
             duration = 5,
           ),
         ),
@@ -739,7 +743,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     releaseType: ReleaseTypeOption,
-    placementDates: List<PlacementDates>,
+    requestedPlacementPeriods: List<Cas1RequestedPlacementPeriod>,
   ): UUID {
     val creatorJwt = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)).second
 
@@ -766,8 +770,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       placementApplicationId = placementApplicationId,
       body = SubmitPlacementApplication(
         translatedDocument = mapOf("key" to "value"),
-        placementDates = placementDates,
-        requestedPlacementPeriods = emptyList(),
+        requestedPlacementPeriods = requestedPlacementPeriods,
         releaseType = releaseType,
         sentenceType = null,
         situationType = null,
