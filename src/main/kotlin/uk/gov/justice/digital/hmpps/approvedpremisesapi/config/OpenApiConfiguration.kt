@@ -58,7 +58,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas1Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS1Shared")
     .displayName("CAS1 & Shared")
-    .pathsToExclude("/**/cas2-hdc/**", "/**/cas2/**", "/**/cas2v2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
+    .pathsToExclude("/**/cas2-hdc/**", "/**/cas2/**", "/**/cas3/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -92,7 +92,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas2v2(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS2v2")
     .displayName("CAS2v2")
-    .pathsToMatch("/**/cas2v2/**", "/**/cas2/**")
+    .pathsToMatch("/**/cas2/**")
     .pathsToExclude("/**/events/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
@@ -101,7 +101,7 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
   fun cas3Shared(): GroupedOpenApi = GroupedOpenApi.builder()
     .group("CAS3Shared")
     .displayName("CAS3 & Shared")
-    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas2-hdc/**", "/**/cas2v2/**", "/**/events/**", "/queue-admin/**")
+    .pathsToExclude("/**/cas1/**", "/**/cas2/**", "/**/cas2-hdc/**", "/**/events/**", "/queue-admin/**")
     .addOpenApiCustomizer(openApiCustomizer())
     .build()
 
@@ -133,8 +133,6 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
           "cas1-"
         } else if (path.startsWith("/cas2/")) {
           "cas2-"
-        } else if (path.startsWith("/cas2v2/")) {
-          "cas2v2-"
         } else if (path.startsWith("/cas3/")) {
           "cas3-"
         } else if (path.startsWith("/cas2-hdc/")) {
