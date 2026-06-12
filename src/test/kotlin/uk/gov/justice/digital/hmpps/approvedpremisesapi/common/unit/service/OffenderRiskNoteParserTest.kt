@@ -1,8 +1,8 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.unit.services
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.unit.service
 
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.services.OffenderRiskNoteParser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import java.time.LocalDate

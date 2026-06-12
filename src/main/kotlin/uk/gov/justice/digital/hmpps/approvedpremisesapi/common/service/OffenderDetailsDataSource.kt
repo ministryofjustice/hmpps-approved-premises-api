@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.services
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service
 
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
