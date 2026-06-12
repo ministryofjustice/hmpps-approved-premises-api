@@ -45,12 +45,12 @@ class Cas2v2IntegrationTestBase : IntegrationTestBase() {
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-@MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase#cas2v2NonReferrerRoles")
+@MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.Cas2v2IntegrationTestBase#cas2v2NonReferrerRoles")
 annotation class Cas2v2NonReferrerRoles
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-@MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.integration.Cas2v2IntegrationTestBase#cas2v2ReferrerRoles")
+@MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.Cas2v2IntegrationTestBase#cas2v2ReferrerRoles")
 annotation class Cas2v2ReferrerRoles
 
 data class RoleAndAuthSource(
