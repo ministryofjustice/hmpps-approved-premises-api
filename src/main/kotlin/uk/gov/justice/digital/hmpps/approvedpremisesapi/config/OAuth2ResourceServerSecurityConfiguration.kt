@@ -31,7 +31,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2v2.Cas2v2Constants.Cas2v2Role
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.Cas2v2Constants.Cas2v2Role
 import java.time.Duration
 import java.util.Base64
 
