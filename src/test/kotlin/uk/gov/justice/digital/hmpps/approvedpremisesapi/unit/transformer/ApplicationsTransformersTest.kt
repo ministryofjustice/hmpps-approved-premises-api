@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
@@ -94,7 +93,7 @@ class ApplicationsTransformersTest {
   private val temporaryAccommodationApplicationEntityFactory = TemporaryAccommodationApplicationEntityFactory()
     .withCreatedByUser(user)
 
-  private val assessmentFactory = ApprovedPremisesAssessmentEntityFactory()
+  private val temporaryAccommodationAssessmentEntityFactory = TemporaryAccommodationAssessmentEntityFactory()
     .withAllocatedToUser(allocatedToUser)
 
   private val completedClarificationNoteFactory = AssessmentClarificationNoteEntityFactory()
@@ -330,7 +329,7 @@ class ApplicationsTransformersTest {
           .produce()
       }
       .produce()
-    val assessment = assessmentFactory.withApplication(application).produce()
+    val assessment = temporaryAccommodationAssessmentEntityFactory.withApplication(application).produce()
 
     assessment.clarificationNotes = mutableListOf(
       completedClarificationNoteFactory
@@ -357,10 +356,10 @@ class ApplicationsTransformersTest {
           .produce()
       }
       .produce()
-    val oldAssessment = assessmentFactory.withApplication(application)
+    val oldAssessment = temporaryAccommodationAssessmentEntityFactory.withApplication(application)
       .withCreatedAt(OffsetDateTime.parse("2022-09-01T12:34:56.789Z"))
       .produce()
-    val latestAssessment = assessmentFactory.withApplication(application)
+    val latestAssessment = temporaryAccommodationAssessmentEntityFactory.withApplication(application)
       .withCreatedAt(OffsetDateTime.now())
       .produce()
 
