@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -55,7 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Clock
 import java.time.LocalDate
@@ -258,7 +258,7 @@ class Cas1PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Submitting an application returns validation error if no dates defined`() {
+    fun `Returns validation error if no dates defined`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
       val submitPlacementApplication = SubmitPlacementApplication(
@@ -275,8 +275,44 @@ class Cas1PlacementApplicationServiceTest {
 
       )
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Please provide at least one of placement dates or requested placement periods.")
+      assertThatCasResult(result).isGeneralValidationError("At least 1 requested placement periods is required")
+    }
+
+    @Test
+    fun `Returns validation error if 1 or more duration periods have 0 day duration`() {
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+
+      val submitPlacementApplication = SubmitPlacementApplication(
+        translatedDocument = "translatedDocument",
+        requestedPlacementPeriods = listOf(
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2024, 4, 1),
+            duration = 5,
+            arrivalFlexible = true,
+          ),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2025, 4, 1),
+            duration = 0,
+            arrivalFlexible = false,
+          ),
+          Cas1RequestedPlacementPeriod(
+            arrival = LocalDate.of(2026, 4, 1),
+            duration = 5,
+            arrivalFlexible = true,
+          ),
+        ),
+        releaseType = ReleaseTypeOption.licence,
+        sentenceType = null,
+        situationType = null,
+      )
+
+      val result = cas1PlacementApplicationService.submitApplication(
+        placementApplication.id,
+        submitPlacementApplication,
+
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("1 or more requested placements have a duration of 0 days")
     }
 
     @ParameterizedTest
@@ -292,7 +328,7 @@ class Cas1PlacementApplicationServiceTest {
       "reReleasedPostRecall, reReleasedPostRecall,ADDITIONAL_PLACEMENT",
       "reReleasedFollowingFixedTermRecall, reReleasedFollowingFixedTermRecall,ADDITIONAL_PLACEMENT",
     )
-    fun `Submitting an application and inferring placement type from release type`(releaseTypeOption: ReleaseTypeOption, cas1ReleaseType: Cas1ReleaseType, jpaPlacementType: String) {
+    fun `Inferring placement type from release type`(releaseTypeOption: ReleaseTypeOption, cas1ReleaseType: Cas1ReleaseType, jpaPlacementType: String) {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -322,24 +358,23 @@ class Cas1PlacementApplicationServiceTest {
         submitPlacementApplication,
       )
 
-      assertThat(result is CasResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromCasResult(result)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).hasSize(1)
 
-      assertThat(updatedPlacementApplications).hasSize(1)
+        val updatedPlacementApp = it[0]
 
-      val updatedPlacementApp = updatedPlacementApplications[0]
+        assertThat(updatedPlacementApp.releaseType).isEqualTo(cas1ReleaseType)
+        assertThat(updatedPlacementApp.placementType.toString()).isEqualTo(jpaPlacementType)
 
-      assertThat(updatedPlacementApp.releaseType).isEqualTo(cas1ReleaseType)
-      assertThat(updatedPlacementApp.placementType.toString()).isEqualTo(jpaPlacementType)
-
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
-      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp, null) }
-      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
+        verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp, null) }
+        verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
+      }
     }
 
     @Test
-    fun `Submitting an application triggers allocation and sets a due date`() {
+    fun `Triggers allocation and sets a due date`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -369,15 +404,13 @@ class Cas1PlacementApplicationServiceTest {
         submitPlacementApplication,
       )
 
-      assertThat(result is CasResult.Success).isTrue
-
-      val updatedApplication = (result as CasResult.Success).value
-
-      assertThat(updatedApplication[0].dueAt).isEqualTo(dueAt)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it[0].dueAt).isEqualTo(dueAt)
+      }
     }
 
     @Test
-    fun `Submitting an application saves a single date to a placement application, triggers emails and domain event`() {
+    fun `Saves a single date to a placement application, triggers emails and domain event`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -408,27 +441,28 @@ class Cas1PlacementApplicationServiceTest {
       )
 
       assertThat(result is CasResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromCasResult(result)
 
-      assertThat(updatedPlacementApplications).hasSize(1)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).hasSize(1)
 
-      val updatedPlacementApp = updatedPlacementApplications[0]
-      assertThat(updatedPlacementApp.submissionGroupId).isNotNull()
+        val updatedPlacementApp = it[0]
+        assertThat(updatedPlacementApp.submissionGroupId).isNotNull()
 
-      assertThat(updatedPlacementApp.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
-      assertThat(updatedPlacementApp.requestedDuration).isEqualTo(5)
-      assertThat(updatedPlacementApp.expectedArrivalFlexible).isTrue
-      assertThat(updatedPlacementApp.authorisedDuration).isNull()
-      assertThat(updatedPlacementApp.releaseType).isEqualTo(Cas1ReleaseType.licence)
+        assertThat(updatedPlacementApp.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
+        assertThat(updatedPlacementApp.requestedDuration).isEqualTo(5)
+        assertThat(updatedPlacementApp.expectedArrivalFlexible).isTrue
+        assertThat(updatedPlacementApp.authorisedDuration).isNull()
+        assertThat(updatedPlacementApp.releaseType).isEqualTo(Cas1ReleaseType.licence)
 
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
-      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp, null) }
-      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
+        verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp, null) }
+        verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
+      }
     }
 
     @Test
-    fun `Submitting an application saves multiple dates to individual placement applications and triggers emails and domain event per resultant placement application`() {
+    fun `Saves multiple dates to individual placement applications and triggers emails and domain event per resultant placement application`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -467,45 +501,44 @@ class Cas1PlacementApplicationServiceTest {
         submitPlacementApplication,
       )
 
-      assertThat(result is CasResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromCasResult(result)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).hasSize(3)
 
-      assertThat(updatedPlacementApplications).hasSize(3)
+        val firstSubmissionGroupId = it[0].submissionGroupId
 
-      val firstSubmissionGroupId = updatedPlacementApplications[0].submissionGroupId
+        val updatedPlacementApp1 = it[0]
+        assertThat(updatedPlacementApp1.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
+        assertThat(updatedPlacementApp1.requestedDuration).isEqualTo(5)
+        assertThat(updatedPlacementApp1.expectedArrivalFlexible).isFalse
+        assertThat(updatedPlacementApp1.authorisedDuration).isNull()
+        assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp1, "theUsername") }
+        verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp1) }
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp1, null) }
+        verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp1) }
 
-      val updatedPlacementApp1 = updatedPlacementApplications[0]
-      assertThat(updatedPlacementApp1.expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
-      assertThat(updatedPlacementApp1.requestedDuration).isEqualTo(5)
-      assertThat(updatedPlacementApp1.expectedArrivalFlexible).isFalse
-      assertThat(updatedPlacementApp1.authorisedDuration).isNull()
-      assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp1, "theUsername") }
-      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp1) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp1, null) }
-      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp1) }
+        val updatedPlacementApp2 = it[1]
+        assertThat(updatedPlacementApp2.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
+        assertThat(updatedPlacementApp2.requestedDuration).isEqualTo(10)
+        assertThat(updatedPlacementApp2.expectedArrivalFlexible).isNull()
+        assertThat(updatedPlacementApp2.authorisedDuration).isNull()
+        assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp2, "theUsername") }
+        verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp2) }
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp2, null) }
+        verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp2) }
 
-      val updatedPlacementApp2 = updatedPlacementApplications[1]
-      assertThat(updatedPlacementApp2.expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
-      assertThat(updatedPlacementApp2.requestedDuration).isEqualTo(10)
-      assertThat(updatedPlacementApp2.expectedArrivalFlexible).isNull()
-      assertThat(updatedPlacementApp2.authorisedDuration).isNull()
-      assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp2, "theUsername") }
-      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp2) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp2, null) }
-      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp2) }
-
-      val updatedPlacementApp3 = updatedPlacementApplications[2]
-      assertThat(updatedPlacementApp3.expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
-      assertThat(updatedPlacementApp3.requestedDuration).isEqualTo(15)
-      assertThat(updatedPlacementApp3.expectedArrivalFlexible).isTrue
-      assertThat(updatedPlacementApp3.authorisedDuration).isNull()
-      assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp3, "theUsername") }
-      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp3) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp3, null) }
-      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp3) }
+        val updatedPlacementApp3 = it[2]
+        assertThat(updatedPlacementApp3.expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
+        assertThat(updatedPlacementApp3.requestedDuration).isEqualTo(15)
+        assertThat(updatedPlacementApp3.expectedArrivalFlexible).isTrue
+        assertThat(updatedPlacementApp3.authorisedDuration).isNull()
+        assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp3, "theUsername") }
+        verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp3) }
+        verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp3, null) }
+        verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp3) }
+      }
     }
   }
 
@@ -542,7 +575,7 @@ class Cas1PlacementApplicationServiceTest {
         .produce()
 
       val placementApplicationDecisionEnvelope = PlacementApplicationDecisionEnvelope(
-        decision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted,
+        decision = PlacementApplicationDecisionDto.accepted,
         summaryOfChanges = "summaryOfChanges",
         decisionSummary = "decisionSummary accepted",
       )
@@ -563,31 +596,30 @@ class Cas1PlacementApplicationServiceTest {
         placementApplicationDecisionEnvelope,
       )
 
-      assertThat(result is CasResult.Success).isTrue
-      val updatedApplication = (result as CasResult.Success).value
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
+        assertThat(it.decisionMadeAt).isWithinTheLastMinute()
+        assertThat(it.authorisedDuration).isEqualTo(7)
 
-      assertThat(updatedApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
-      assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
-      assertThat(updatedApplication.authorisedDuration).isEqualTo(7)
-
-      verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary accepted") }
-      verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }
-      verify {
-        cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
-          match { it.id == placementApplication.id },
-          user,
-          placementApplicationDecisionEnvelope,
-        )
+        verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary accepted") }
+        verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }
+        verify {
+          cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
+            match { it.id == placementApplication.id },
+            user,
+            placementApplicationDecisionEnvelope,
+          )
+        }
       }
     }
 
     @ParameterizedTest
     @EnumSource(
-      value = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision::class,
+      value = PlacementApplicationDecisionDto::class,
       names = ["accepted"],
       mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `Rejecting sends a notification and returns successfully`(decision: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision) {
+    fun `Rejecting sends a notification and returns successfully`(decision: PlacementApplicationDecisionDto) {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .produce()
@@ -615,27 +647,26 @@ class Cas1PlacementApplicationServiceTest {
         placementApplicationDecisionEnvelope,
       )
 
-      assertThat(result is CasResult.Success).isTrue
-      val updatedApplication = (result as CasResult.Success).value
+      assertThatCasResult(result).isSuccess().with {
+        val expectedDecision = when (decision) {
+          PlacementApplicationDecisionDto.accepted -> PlacementApplicationDecision.ACCEPTED
+          PlacementApplicationDecisionDto.rejected -> PlacementApplicationDecision.REJECTED
+          PlacementApplicationDecisionDto.withdraw -> PlacementApplicationDecision.WITHDRAW
+          PlacementApplicationDecisionDto.withdrawnByPp -> PlacementApplicationDecision.WITHDRAWN_BY_PP
+        }
 
-      val expectedDecision = when (decision) {
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted -> PlacementApplicationDecision.ACCEPTED
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.rejected -> PlacementApplicationDecision.REJECTED
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdraw -> PlacementApplicationDecision.WITHDRAW
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdrawnByPp -> PlacementApplicationDecision.WITHDRAWN_BY_PP
-      }
+        assertThat(it.decision).isEqualTo(expectedDecision)
+        assertThat(it.decisionMadeAt).isWithinTheLastMinute()
 
-      assertThat(updatedApplication.decision).isEqualTo(expectedDecision)
-      assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
-
-      verify { placementRequestService wasNot Called }
-      verify { cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplication) }
-      verify {
-        cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
-          match { it.id == placementApplication.id },
-          user,
-          placementApplicationDecisionEnvelope,
-        )
+        verify { placementRequestService wasNot Called }
+        verify { cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplication) }
+        verify {
+          cas1PlacementApplicationDomainEventService.placementApplicationAssessed(
+            match { it.id == placementApplication.id },
+            user,
+            placementApplicationDecisionEnvelope,
+          )
+        }
       }
     }
   }
@@ -690,7 +721,6 @@ class Cas1PlacementApplicationServiceTest {
       val result = cas1PlacementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThatCasResult(result).isSuccess().with { newPlacementApplication ->
-
         assertThat(previousPlacementApplication.reallocatedAt).isNotNull
 
         verify { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) }

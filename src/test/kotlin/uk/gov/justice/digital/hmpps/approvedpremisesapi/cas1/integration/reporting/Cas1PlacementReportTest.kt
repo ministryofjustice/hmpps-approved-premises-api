@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -32,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementReportTest.Constants.REPORT_MONTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementReportTest.Constants.REPORT_YEAR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
@@ -658,7 +658,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       placementApplicationId = getNonAutomaticPlacementApplication(application).id,
       assessorJwt = assessorJwt,
       body = PlacementApplicationDecisionEnvelope(
-        decision = PlacementApplicationDecision.accepted,
+        decision = PlacementApplicationDecisionDto.accepted,
         summaryOfChanges = "summary",
         decisionSummary = "decisionSummary",
       ),
