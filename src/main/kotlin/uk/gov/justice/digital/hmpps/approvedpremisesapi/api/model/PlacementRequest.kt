@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
+@Deprecated("This isn't used by any API. Update [PlacementRequestTransformer] and remove")
 data class PlacementRequest(
 
   val type: ApType,
@@ -21,6 +22,7 @@ data class PlacementRequest(
 
   val person: Person,
 
+  @Schema(description = "Contains ROSH Risks, Tier, Risk Flags and MAPPA captured when the application was created")
   val risks: PersonRisks,
 
   val applicationId: java.util.UUID,

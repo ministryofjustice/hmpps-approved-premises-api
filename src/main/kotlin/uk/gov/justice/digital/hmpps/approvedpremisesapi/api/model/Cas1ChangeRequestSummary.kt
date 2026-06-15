@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class Cas1ChangeRequestSummary(
 
@@ -16,6 +17,7 @@ data class Cas1ChangeRequestSummary(
 
   @get:JsonProperty("placementRequestId", required = true) val placementRequestId: java.util.UUID,
 
+  @Schema(description = "Tier when the application was created")
   @get:JsonProperty("tier") val tier: String? = null,
 
   @get:JsonProperty("actualArrivalDate") val actualArrivalDate: java.time.LocalDate? = null,

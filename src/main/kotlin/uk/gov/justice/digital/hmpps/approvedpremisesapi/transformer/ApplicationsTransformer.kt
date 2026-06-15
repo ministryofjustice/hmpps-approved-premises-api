@@ -80,6 +80,7 @@ class ApplicationsTransformer(
     }
   }
 
+  @Deprecated("Use [transformJpaToCas1Application] which returns [Cas1Application]")
   fun transformCas1JpaToApi(
     applicationEntity: ApprovedPremisesApplicationEntity,
     personInfo: PersonInfoResult,
