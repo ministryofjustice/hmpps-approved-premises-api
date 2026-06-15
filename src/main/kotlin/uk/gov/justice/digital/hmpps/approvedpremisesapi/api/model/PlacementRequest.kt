@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
+@Deprecated("This isn't used by any API. Update [PlacementRequestTransformer] and remove")
 data class PlacementRequest(
 
   val type: ApType,

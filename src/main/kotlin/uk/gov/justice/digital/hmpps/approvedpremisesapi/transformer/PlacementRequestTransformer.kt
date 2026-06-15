@@ -29,6 +29,7 @@ class PlacementRequestTransformer(
     bookingSummaryTransformer,
   )
 
+  @Deprecated("This is only used by [PlacementRequestDetailTransformer]. Pull this required logic up into PlacementRequestDetailTransformer and remove this class and [PlacementRequest]")
   fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): PlacementRequest = PlacementRequest(
     id = jpa.id,
     type = jpa.placementRequirements.apType.apiType,
