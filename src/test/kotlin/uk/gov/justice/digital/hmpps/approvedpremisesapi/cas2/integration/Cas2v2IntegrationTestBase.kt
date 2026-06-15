@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.Cas2v2Constants.Cas2v2Role
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.Cas2Constants.Cas2Role
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
@@ -24,7 +24,7 @@ class Cas2v2IntegrationTestBase : IntegrationTestBase() {
   companion object {
 
     @JvmStatic
-    fun cas2v2NonReferrerRoles(): List<Arguments> = listOf(Cas2v2Role.ADMIN, Cas2v2Role.ASSESSOR, Cas2v2Role.MI)
+    fun cas2v2NonReferrerRoles(): List<Arguments> = listOf(Cas2Role.ADMIN, Cas2Role.ASSESSOR, Cas2Role.MI)
       .flatMap {
         listOf(
           Arguments.of(RoleAndAuthSource(it, AuthSource.DELIUS)),
@@ -33,7 +33,7 @@ class Cas2v2IntegrationTestBase : IntegrationTestBase() {
       }
 
     @JvmStatic
-    fun cas2v2ReferrerRoles(): List<Arguments> = listOf(Cas2v2Role.COURT_BAIL_REFERRER, Cas2v2Role.PRISON_BAIL_REFERRER)
+    fun cas2v2ReferrerRoles(): List<Arguments> = listOf(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER)
       .flatMap {
         listOf(
           Arguments.of(RoleAndAuthSource(it, AuthSource.DELIUS)),
