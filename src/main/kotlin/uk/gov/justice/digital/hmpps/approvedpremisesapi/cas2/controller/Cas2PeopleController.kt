@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadReques
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 
-@Cas2v2Controller
-class Cas2v2PeopleController(
+@Cas2Controller
+class Cas2PeopleController(
   private val cas2v2OffenderService: Cas2v2OffenderService,
 ) {
 

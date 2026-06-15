@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
-@Cas2v2Controller
-class Cas2V2OASysController(
+@Cas2Controller
+class Cas2OASysController(
   val oasysService: OASysService,
   val cas2v2OASysTransformer: Cas2v2OASysTransformer,
 ) {

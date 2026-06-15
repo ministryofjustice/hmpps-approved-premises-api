@@ -11,4 +11,4 @@ import org.springframework.web.bind.annotation.RestController
   value = [ "\${api.base-path:}/cas2"],
   produces = [MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_PROBLEM_JSON_VALUE],
 )
-internal annotation class Cas2v2Controller
+internal annotation class Cas2Controller

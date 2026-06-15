@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Referral
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2ApplicationsTransformer
 
-@Cas2v2ExternalController
-class Cas2v2ExternalReferralController(
+@Cas2ExternalController
+class Cas2ExternalReferralController(
   private val cas2v2ApplicationService: Cas2v2ApplicationService,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
 

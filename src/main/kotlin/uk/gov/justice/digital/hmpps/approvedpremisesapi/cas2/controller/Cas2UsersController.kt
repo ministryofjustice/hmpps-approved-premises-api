@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.PathVariable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2UserDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserService
 
-@Cas2v2Controller
-class Cas2v2UsersController(
+@Cas2Controller
+class Cas2UsersController(
   private val cas2HdcUserService: Cas2HdcUserService,
 ) {
 
