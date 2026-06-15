@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constants.CAS2_PRISON_BAIL_APPLICATION_TYPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Constants.HDC_APPLICATION_TYPE
 
-class Cas2v2ApplicationUtils {
+class Cas2ApplicationUtils {
 
   fun getApplicationTypeFromApplicationOrigin(applicationOrigin: ApplicationOrigin): String {
     val applicationType = when (applicationOrigin) {

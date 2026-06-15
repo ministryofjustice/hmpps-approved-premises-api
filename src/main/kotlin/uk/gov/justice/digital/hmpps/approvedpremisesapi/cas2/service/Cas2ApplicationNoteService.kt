@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.util.Cas2v2ApplicationUtils
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.util.Cas2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteRepository
@@ -81,7 +81,7 @@ class Cas2ApplicationNoteService(
   ) {
     if (application.createdByUser.email != null) {
       val applicationOrigin = application.applicationOrigin
-      val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
+      val applicationType = Cas2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
       val templateId = when (applicationOrigin) {
         ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_REFERRER_COURT_BAIL
@@ -112,7 +112,7 @@ class Cas2ApplicationNoteService(
     savedNote: Cas2ApplicationNoteEntity,
   ) {
     val applicationOrigin = application.applicationOrigin
-    val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
+    val applicationType = Cas2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
     val templateId = when (applicationOrigin) {
       ApplicationOrigin.courtBail -> Cas2NotifyTemplates.CAS2_V2_NOTE_ADDED_FOR_ASSESSOR_COURT_BAIL
