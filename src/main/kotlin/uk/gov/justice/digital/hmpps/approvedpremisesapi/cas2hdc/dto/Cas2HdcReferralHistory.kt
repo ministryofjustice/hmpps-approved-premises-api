@@ -13,7 +13,7 @@ data class Cas2HdcReferralHistory(
   val referralRejectionReason: String?,
   val localAuthorityArea: String?,
   val pdu: String?,
-  val referredBy: String,
+  val referredBy: Cas2HdcStaffDto,
   val placementAddress: String?,
   val placementStatus: String?,
 )
