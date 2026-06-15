@@ -42,7 +42,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-@Service("Cas2v2ApplicationService")
+@Service
 class Cas2ApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
   private val cas2LockableApplicationRepository: Cas2LockableApplicationRepository,

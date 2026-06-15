@@ -35,7 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHo
 import java.time.OffsetDateTime
 import java.util.UUID
 
-@Service("Cas2v2StatusUpdateService")
+@Service
 class Cas2StatusUpdateService(
   private val cas2AssessmentRepository: Cas2AssessmentRepository,
   private val cas2StatusUpdateRepository: Cas2StatusUpdateRepository,
