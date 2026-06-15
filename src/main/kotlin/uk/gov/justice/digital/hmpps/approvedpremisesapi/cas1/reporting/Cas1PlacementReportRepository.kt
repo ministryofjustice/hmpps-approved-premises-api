@@ -32,6 +32,7 @@ class Cas1PlacementReportRepository(
                 THEN dr_parent.name || ' - ' || dr.name
                 ELSE dr.name
             END AS departure_reason,
+            csb.departure_notes AS departure_notes,
             moc.name AS departure_move_on_category,
             to_char(CAST(csb.non_arrival_confirmed_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS non_arrival_recorded_date_time,
             nar.name AS non_arrival_reason,

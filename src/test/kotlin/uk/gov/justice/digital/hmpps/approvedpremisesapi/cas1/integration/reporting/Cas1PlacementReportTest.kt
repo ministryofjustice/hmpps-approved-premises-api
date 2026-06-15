@@ -204,6 +204,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
           assertThat(headers).doesNotContain("initial_assessor_username")
           assertThat(headers).doesNotContain("initial_assessor_name")
           assertThat(headers).doesNotContain("last_appealed_assessor_username")
+          assertThat(headers).doesNotContain("departure_notes")
 
           val actual = DataFrame
             .readCSV(completeCsvString.byteInputStream())
@@ -212,7 +213,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
           assertThat(actual.size).isEqualTo(5)
 
-          bookingWithCanonicalDepartureDateWithinRange.assertRow(actual[0])
+          bookingWithCanonicalDepartureDateWithinRange.assertRow(actual[0], includePii = false)
           bookingWithNonArrivalConfirmedDateWithinRange.assertRow(actual[1])
           bookingWithCanonicalArrivalDateWithinRange.assertRow(actual[2])
           bookingWithCanonicalArrivalDateWithinRange.assertRow(actual[3])
@@ -249,6 +250,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
           assertThat(headers).contains("initial_assessor_username")
           assertThat(headers).contains("initial_assessor_name")
           assertThat(headers).contains("last_appealed_assessor_username")
+          assertThat(headers).contains("departure_notes")
 
           val actual = DataFrame
             .readCSV(completeCsvString.byteInputStream())
@@ -257,7 +259,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
           assertThat(actual.size).isEqualTo(5)
 
-          bookingWithCanonicalDepartureDateWithinRange.assertRow(actual[0])
+          bookingWithCanonicalDepartureDateWithinRange.assertRow(actual[0], includePii = true)
           bookingWithNonArrivalConfirmedDateWithinRange.assertRow(actual[1])
           bookingWithCanonicalArrivalDateWithinRange.assertRow(actual[2])
           bookingWithCanonicalArrivalDateWithinRange.assertRow(actual[3])
@@ -328,6 +330,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.criteria?.split(", ")).containsExactlyInAnyOrder("isCatered", "isStepFreeDesignated")
       assertThat(row.departure_move_on_category).isNull()
       assertThat(row.departure_reason).isNull()
+      assertThat(row.departure_notes).isNull()
       assertThat(row.non_arrival_reason).isNull()
       assertThat(row.non_arrival_recorded_date_time).isNull()
       assertThat(row.placement_withdrawn_date).isNull()
@@ -390,7 +393,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         withExpectedArrivalDate(LocalDate.of(2024, 1, 7))
         withExpectedDepartureDate(LocalDate.of(2024, 2, 1))
         withDepartureReason(departureReason)
-        withDepartureNotes(null)
+        withDepartureNotes("some departure notes")
         withMoveOnCategory(moveOnCategory)
         withCriteria(criteria)
         withNonArrivalReason(null)
@@ -398,7 +401,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    fun assertRow(row: PlacementReportRow) {
+    fun assertRow(row: PlacementReportRow, includePii: Boolean) {
       assertThat(row.placement_id).isEqualTo(booking.id.toString())
       assertThat(row.expected_arrival_date).isEqualTo("2024-01-07")
       assertThat(row.expected_departure_date).isEqualTo("2024-02-01")
@@ -413,6 +416,13 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.criteria?.split(", ")).containsExactlyInAnyOrder("isCatered", "isStepFreeDesignated")
       assertThat(row.departure_reason).isEqualTo("Parent Reason - Departed")
       assertThat(row.departure_move_on_category).isEqualTo("Move on category")
+
+      if (includePii) {
+        assertThat(row.departure_notes).isEqualTo("some departure notes")
+      } else {
+        assertThat(row.departure_notes).isNull()
+      }
+
       assertThat(row.non_arrival_reason).isNull()
       assertThat(row.non_arrival_recorded_date_time).isNull()
       assertThat(row.placement_withdrawn_date).isNull()
@@ -487,6 +497,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.criteria?.split(", ")).containsExactlyInAnyOrder("isCatered", "isStepFreeDesignated")
       assertThat(row.departure_move_on_category).isNull()
       assertThat(row.departure_reason).isNull()
+      assertThat(row.departure_notes).isNull()
       assertThat(row.non_arrival_reason).isEqualTo(nonArrivalReason.name)
       assertThat(row.non_arrival_recorded_date_time).isEqualTo("2024-02-02T00:00:00Z")
       assertThat(row.placement_withdrawn_date).isNull()
@@ -566,6 +577,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.criteria?.split(", ")).containsExactlyInAnyOrder("isCatered", "isStepFreeDesignated")
       assertThat(row.departure_move_on_category).isNull()
       assertThat(row.departure_reason).isNull()
+      assertThat(row.departure_notes).isNull()
       assertThat(row.non_arrival_reason).isNull()
       assertThat(row.non_arrival_recorded_date_time).isNull()
       assertThat(row.placement_withdrawn_date).isEqualTo("2024-02-05")
@@ -797,6 +809,7 @@ data class PlacementReportRow(
   val actual_departure_time: String?,
   val actual_duration_nights: String?,
   val departure_reason: String?,
+  val departure_notes: String?,
   val departure_move_on_category: String?,
   val non_arrival_recorded_date_time: String?,
   val non_arrival_reason: String?,
