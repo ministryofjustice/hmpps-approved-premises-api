@@ -142,7 +142,7 @@ class Cas2v2ApplicationController(
     }
 
     return ResponseEntity
-      .created(URI.create("/cas2v2/applications/${application.id}"))
+      .created(URI.create("/cas2/applications/${application.id}"))
       .body(cas2v2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, personInfo))
   }
 

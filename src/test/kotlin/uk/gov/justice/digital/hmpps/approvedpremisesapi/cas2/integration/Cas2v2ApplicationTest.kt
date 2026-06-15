@@ -857,7 +857,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
     @Test
     fun `returns submitted cas2v2 applications for user when isSubmitted is true and page specified`() {
       val rawResponseBody = webTestClient.get()
-        .uri("/cas2v2/applications?isSubmitted=true&page=1")
+        .uri("/cas2/applications?isSubmitted=true&page=1")
         .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
@@ -880,7 +880,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
     @Test
     fun `returns unsubmitted cas2v2 applications for user when isSubmitted is false`() {
       val rawResponseBody = webTestClient.get()
-        .uri("/cas2v2/applications?isSubmitted=false")
+        .uri("/cas2/applications?isSubmitted=false")
         .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
@@ -947,127 +947,127 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `get my submitted applications for prison referrals`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=prisonBail")
+      val uuids1 = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=prisonBail")
       Assertions.assertThat(uuids1).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
 
-      val uuids2 = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser")
+      val uuids2 = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser")
       Assertions.assertThat(uuids2).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get my unsubmitted applications for prison referrals`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=prisonBail")
+      val uuids1 = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=prisonBail")
       Assertions.assertThat(uuids1).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id).toSet())
 
-      val uuids2 = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=prisonBail&limitByUser=true")
+      val uuids2 = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=prisonBail&limitByUser=true")
       Assertions.assertThat(uuids2).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get my submitted applications for court referrals`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=courtBail")
+      val uuids1 = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=courtBail")
       Assertions.assertThat(uuids1).isEqualTo(listOf(primaryCourtBailSubmitted.id).toSet())
 
-      val uuids2 = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=courtBail&limitByUser=true")
+      val uuids2 = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=courtBail&limitByUser=true")
       Assertions.assertThat(uuids2).isEqualTo(listOf(primaryCourtBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get my unsubmitted applications for court referrals`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=courtBail")
+      val uuids1 = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=courtBail")
       Assertions.assertThat(uuids1).isEqualTo(listOf(primaryCourtBailUnsubmitted.id).toSet())
 
-      val uuids2 = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=courtBail&limitByUser=true")
+      val uuids2 = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=courtBail&limitByUser=true")
       Assertions.assertThat(uuids2).isEqualTo(listOf(primaryCourtBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get all submitted applications for prison referrals`() {
-      val uuids = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser=false")
+      val uuids = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser=false")
       Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id, secondaryPrisonBailSubmitted.id, deliusPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get all unsubmitted applications for prison referrals`() {
-      val uuids = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=prisonBail&limitByUser=false")
+      val uuids = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=prisonBail&limitByUser=false")
       Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailUnsubmitted.id, secondaryPrisonBailUnsubmitted.id, deliusPrisonBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get all submitted applications for court referrals`() {
-      val uuids = fetchApplications("/cas2v2/applications?isSubmitted=true&applicationOrigin=courtBail&limitByUser=false")
+      val uuids = fetchApplications("/cas2/applications?isSubmitted=true&applicationOrigin=courtBail&limitByUser=false")
       Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailSubmitted.id, secondaryCourtBailSubmitted.id, deliusCourtBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get all unsubmitted applications for court referrals`() {
-      val uuids = fetchApplications("/cas2v2/applications?isSubmitted=false&applicationOrigin=courtBail&limitByUser=false")
+      val uuids = fetchApplications("/cas2/applications?isSubmitted=false&applicationOrigin=courtBail&limitByUser=false")
       Assertions.assertThat(uuids).isEqualTo(listOf(primaryCourtBailUnsubmitted.id, secondaryCourtBailUnsubmitted.id, deliusCourtBailUnsubmitted.id).toSet())
     }
 
     @Test
     fun `get application by crn`() {
-      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.crn}")
+      val uuids = fetchApplications("/cas2/applications?limitByUser=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.crn}")
       Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `get application by offender noms number`() {
-      val uuids = fetchApplications("/cas2v2/applications?limitByUser=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
+      val uuids = fetchApplications("/cas2/applications?limitByUser=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids).isEqualTo(listOf(primaryPrisonBailSubmitted.id).toSet())
     }
 
     @Test
     fun `fail to get application by offender noms number when created by other user and limit by user`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?crnOrNomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
+      val uuids1 = fetchApplications("/cas2/applications?crnOrNomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
 
-      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&crnOrNomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
+      val uuids2 = fetchApplications("/cas2/applications?limitByUser=true&crnOrNomsNumber=${secondaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids2.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by offender noms number when app origin is other source`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
+      val uuids1 = fetchApplications("/cas2/applications?applicationOrigin=courtBail&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by offender noms number when app is submitted and isSubmitted is false`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
+      val uuids1 = fetchApplications("/cas2/applications?isSubmitted=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by offender noms number when app is unsubmitted and isSubmitted is true`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
+      val uuids1 = fetchApplications("/cas2/applications?isSubmitted=true&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.nomsNumber}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when created by other user and limit by user`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?crnOrNomsNumber=${secondaryPrisonBailSubmitted.crn}")
+      val uuids1 = fetchApplications("/cas2/applications?crnOrNomsNumber=${secondaryPrisonBailSubmitted.crn}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
 
-      val uuids2 = fetchApplications("/cas2v2/applications?limitByUser=true&crnOrNomsNumber=${secondaryPrisonBailSubmitted.crn}")
+      val uuids2 = fetchApplications("/cas2/applications?limitByUser=true&crnOrNomsNumber=${secondaryPrisonBailSubmitted.crn}")
       Assertions.assertThat(uuids2.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when app origin is other source`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?applicationOrigin=courtBail&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.crn}")
+      val uuids1 = fetchApplications("/cas2/applications?applicationOrigin=courtBail&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.crn}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when app is submitted and isSubmitted is false`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.crn}")
+      val uuids1 = fetchApplications("/cas2/applications?isSubmitted=false&crnOrNomsNumber=${primaryPrisonBailSubmitted.crn}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
     @Test
     fun `fail to get application by crn when app is unsubmitted and isSubmitted is true`() {
-      val uuids1 = fetchApplications("/cas2v2/applications?isSubmitted=true&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.crn}")
+      val uuids1 = fetchApplications("/cas2/applications?isSubmitted=true&crnOrNomsNumber=${primaryPrisonBailUnsubmitted.crn}")
       Assertions.assertThat(uuids1.size).isEqualTo(0)
     }
 
@@ -1147,7 +1147,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             }
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2v2/applications/${applicationEntity.id}")
+              .uri("/cas2/applications/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -1203,7 +1203,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             }
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2v2/applications/${applicationEntity.id}")
+              .uri("/cas2/applications/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -1253,7 +1253,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/cas2v2/applications/${applicationEntity.id}")
+                .uri("/cas2/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1305,7 +1305,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
               }
 
               val rawResponseBody = webTestClient.get()
-                .uri("/cas2v2/applications/${applicationEntity.id}")
+                .uri("/cas2/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1346,7 +1346,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/cas2v2/applications/${applicationEntity.id}")
+                .uri("/cas2/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1378,7 +1378,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/cas2v2/applications/${applicationEntity.id}")
+                .uri("/cas2/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1404,7 +1404,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/cas2v2/applications/${applicationEntity.id}")
+                .uri("/cas2/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1432,7 +1432,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/cas2v2/applications/${applicationEntity.id}")
+                .uri("/cas2/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1493,7 +1493,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
       ) { offenderDetails, _ ->
 
         val result = webTestClient.post()
-          .uri("/cas2v2/applications")
+          .uri("/cas2/applications")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.cas2v2.value)
           .bodyValue(
@@ -1507,7 +1507,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .returnResult(Cas2v2Application::class.java)
 
         Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/cas2v2/applications/.+"))
+          it.matches(Regex("/cas2/applications/.+"))
         }
 
         assertThat(result.responseBody.blockFirst()!!).matches {
@@ -1520,7 +1520,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
       val crn = "X1234"
 
       webTestClient.post()
-        .uri("/cas2v2/applications")
+        .uri("/cas2/applications")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewApplication(
@@ -1580,7 +1580,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         }
 
         val resultBody = webTestClient.put()
-          .uri("/cas2v2/applications/$applicationId")
+          .uri("/cas2/applications/$applicationId")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             UpdateCas2v2Application(
@@ -1676,7 +1676,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
       @Test
       fun `View a list of all submitted prisonBail applications`() {
         val rawResponseBody = webTestClient.get()
-          .uri("/cas2v2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser=false")
+          .uri("/cas2/applications?isSubmitted=true&applicationOrigin=prisonBail&limitByUser=false")
           .header("Authorization", "Bearer $jwtForNorwichUser")
           .exchange()
           .expectStatus()
@@ -1699,7 +1699,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
       fun `View detail all submitted prisonBail applications`() {
         submittedPrisonBailApplications.forEach { application ->
           val rawResponseBody = webTestClient.get()
-            .uri("/cas2v2/application/${application.id}")
+            .uri("/cas2/application/${application.id}")
             .header("Authorization", "Bearer $jwtForNorwichUser")
             .exchange()
             .expectStatus()
@@ -1727,7 +1727,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
       fun `Add a note to any application that is of origin prisonBail`() {
         submittedPrisonBailApplications.forEach { application ->
           val rawResponseBody = webTestClient.put()
-            .uri("/cas2v2/application/${application.id}")
+            .uri("/cas2/application/${application.id}")
             .header("Authorization", "Bearer $jwtForNorwichUser")
             .bodyValue(
               UpdateCas2v2Application(
