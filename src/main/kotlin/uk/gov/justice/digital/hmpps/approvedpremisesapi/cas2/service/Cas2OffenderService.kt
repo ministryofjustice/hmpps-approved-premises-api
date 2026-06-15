@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Authorisa
 @Suppress(
   "ReturnCount",
 )
-class Cas2v2OffenderService(
+class Cas2OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val cas2v2PersonTransformer: Cas2v2PersonTransformer,

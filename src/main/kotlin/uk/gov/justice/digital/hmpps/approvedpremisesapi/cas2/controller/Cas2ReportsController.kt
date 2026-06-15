@@ -5,11 +5,11 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ReportName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2ReportsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ReportsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
 
 @Cas2Controller
-class Cas2ReportsController(private val cas2v2ReportService: Cas2v2ReportsService) {
+class Cas2ReportsController(private val cas2v2ReportService: Cas2ReportsService) {
 
   @GetMapping("/reports/{reportName}")
   fun reportsReportNameGet(

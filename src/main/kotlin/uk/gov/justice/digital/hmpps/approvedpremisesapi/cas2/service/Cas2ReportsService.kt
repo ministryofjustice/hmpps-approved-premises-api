@@ -14,7 +14,7 @@ import java.io.OutputStream
 import java.time.LocalDate
 
 @Service
-class Cas2v2ReportsService(
+class Cas2ReportsService(
   private val submittedApplicationReportRepository: Cas2SubmittedApplicationReportRepository,
   private val applicationStatusUpdatesReportRepository: Cas2ApplicationStatusUpdatesReportRepository,
   private val unsubmittedApplicationsReportRepository: Cas2UnsubmittedApplicationsReportRepository,

@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -53,7 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
  *
  * We _could_ tighten this up for Delius users
  *
- * Implemented in [Cas2v2OffenderService]
+ * Implemented in [Cas2OffenderService]
  *
  * # CAS3
  *

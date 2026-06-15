@@ -25,12 +25,12 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class Cas2v2ApplicationNoteService(
+class Cas2ApplicationNoteService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
   private val cas2AssessmentRepository: Cas2AssessmentRepository,
   private val cas2ApplicationNoteRepository: Cas2ApplicationNoteRepository,
-  private val userService: Cas2v2UserService,
-  private val userAccessService: Cas2v2UserAccessService,
+  private val userService: Cas2UserService,
+  private val userAccessService: Cas2UserAccessService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,

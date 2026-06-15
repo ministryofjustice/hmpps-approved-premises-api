@@ -4,13 +4,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
 
 @Cas2Controller
 class Cas2ReferenceDataController(
   private val statusTransformer: Cas2HdcApplicationStatusTransformer,
-  private val statusFinder: Cas2v2PersistedApplicationStatusFinder,
+  private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) {
   @GetMapping("/reference-data/application-status")
   fun referenceDataApplicationStatusGet(): ResponseEntity<List<Cas2v2ApplicationStatus>> = ResponseEntity.ok(transformToApi(statusFinder.active()))

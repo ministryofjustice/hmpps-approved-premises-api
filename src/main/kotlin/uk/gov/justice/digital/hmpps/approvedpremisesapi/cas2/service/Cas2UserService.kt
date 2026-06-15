@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import java.util.UUID
 
 @Service
-class Cas2v2UserService(
+class Cas2UserService(
   private val httpAuthService: HttpAuthService,
   private val cas2UserRepository: Cas2UserRepository,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,

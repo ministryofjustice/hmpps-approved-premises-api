@@ -36,13 +36,13 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service("Cas2v2StatusUpdateService")
-class Cas2v2StatusUpdateService(
+class Cas2StatusUpdateService(
   private val cas2AssessmentRepository: Cas2AssessmentRepository,
   private val cas2StatusUpdateRepository: Cas2StatusUpdateRepository,
   private val cas2StatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
-  private val cas2v2PersistedApplicationStatusFinder: Cas2v2PersistedApplicationStatusFinder,
+  private val cas2PersistedApplicationStatusFinder: Cas2PersistedApplicationStatusFinder,
   private val statusTransformer: Cas2HdcApplicationStatusTransformer,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
@@ -108,7 +108,7 @@ class Cas2v2StatusUpdateService(
     return CasResult.Success(createdStatusUpdate)
   }
 
-  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = cas2v2PersistedApplicationStatusFinder.active()
+  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = cas2PersistedApplicationStatusFinder.active()
     .find { status -> status.name == statusName }
 
   fun createStatusUpdatedDomainEvent(

@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 
 @Component
-class Cas2v2PersistedApplicationStatusFinder(
+class Cas2PersistedApplicationStatusFinder(
   private val statusList: List<Cas2PersistedApplicationStatus> = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2),
 ) {
   fun active(): List<Cas2PersistedApplicationStatus> = statusList.filter { it.isActive }

@@ -20,9 +20,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenASubmittedCas2HdcApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.integration.givens.givenAnUnsubmittedCas2HdcApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2ReportsService.ApplicationStatusUpdatesReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2ReportsService.SubmittedApplicationReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2ReportsService.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ReportsService.ApplicationStatusUpdatesReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ReportsService.SubmittedApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ReportsService.UnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.events.Cas2ApplicationSubmittedEventDetailsFactory

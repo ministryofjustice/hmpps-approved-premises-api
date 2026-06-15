@@ -43,15 +43,15 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service("Cas2v2ApplicationService")
-class Cas2v2ApplicationService(
+class Cas2ApplicationService(
   private val cas2ApplicationRepository: Cas2ApplicationRepository,
   private val cas2LockableApplicationRepository: Cas2LockableApplicationRepository,
   private val cas2ApplicationSummaryRepository: Cas2ApplicationSummaryRepository,
-  private val cas2v2OffenderService: Cas2v2OffenderService,
-  private val cas2v2UserAccessService: Cas2v2UserAccessService,
+  private val cas2OffenderService: Cas2OffenderService,
+  private val cas2UserAccessService: Cas2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
-  private val cas2v2AssessmentService: Cas2v2AssessmentService,
+  private val cas2AssessmentService: Cas2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val jsonMapper: JsonMapper,
   private val sentryService: SentryService,
@@ -59,7 +59,7 @@ class Cas2v2ApplicationService(
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
-  fun getCas2v2Applications(
+  fun getCas2Applications(
     prisonCode: String?,
     isSubmitted: Boolean?,
     applicationOrigin: ApplicationOrigin?,
@@ -99,7 +99,7 @@ class Cas2v2ApplicationService(
     return Pair(response.content, metadata)
   }
 
-  fun getAllSubmittedCas2v2ApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+  fun getAllSubmittedCas2ApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 
     val response = cas2ApplicationSummaryRepository.findByServiceOriginAndSubmittedAtIsNotNull(Cas2ServiceOrigin.BAIL.toString(), pageable)
@@ -109,7 +109,7 @@ class Cas2v2ApplicationService(
     return Pair(response.content, metadata)
   }
 
-  fun getSubmittedCas2v2ApplicationForAssessor(applicationId: UUID): CasResult<Cas2ApplicationEntity> {
+  fun getSubmittedCas2ApplicationForAssessor(applicationId: UUID): CasResult<Cas2ApplicationEntity> {
     val applicationEntity = cas2ApplicationRepository.findByIdAndServiceOriginAndSubmittedAtIsNotNull(applicationId, Cas2ServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
@@ -118,7 +118,7 @@ class Cas2v2ApplicationService(
     )
   }
 
-  fun getCas2v2ApplicationForUser(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
+  fun getCas2ApplicationForUser(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
     val applicationEntity = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
@@ -126,7 +126,7 @@ class Cas2v2ApplicationService(
       return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
     }
 
-    val canAccess = cas2v2UserAccessService.userCanViewCas2v2Application(user, applicationEntity)
+    val canAccess = cas2UserAccessService.userCanViewCas2Application(user, applicationEntity)
 
     return if (canAccess) {
       CasResult.Success(applicationEntity)
@@ -138,13 +138,13 @@ class Cas2v2ApplicationService(
   fun getSubmittedApplicationsByCrn(crn: String): List<Cas2ApplicationEntity> = cas2ApplicationRepository.findAllByCrnAndSubmittedAtIsNotNullAndAssessmentIdIsNotNull(crn)
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun createCas2v2Application(
+  fun createCas2Application(
     crn: String,
     user: Cas2UserEntity,
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
   ) = validated {
-    val offenderDetails = when (val offenderDetailsResult = cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)) {
+    val offenderDetails = when (val offenderDetailsResult = cas2OffenderService.getPersonByNomisIdOrCrn(crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
       is Cas2v2OffenderSearchResult.Forbidden -> return "$.crn" hasSingleValidationError "userPermission"
       is Cas2v2OffenderSearchResult.Unknown -> return "$.crn" hasSingleValidationError "unknown"
@@ -180,7 +180,7 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun updateCas2v2Application(
+  fun updateCas2Application(
     applicationId: UUID,
     data: String?,
     user: Cas2UserEntity,
@@ -215,7 +215,7 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonCas2v2Application(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
+  fun abandonCas2Application(applicationId: UUID, user: Cas2UserEntity): CasResult<Cas2ApplicationEntity> {
     val application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
@@ -243,7 +243,7 @@ class Cas2v2ApplicationService(
 
   @SuppressWarnings("ReturnCount", "TooGenericExceptionThrown")
   @Transactional
-  fun submitCas2v2Application(
+  fun submitCas2Application(
     submitCas2v2Application: SubmitCas2v2Application,
     user: Cas2UserEntity,
   ): CasResult<Cas2ApplicationEntity> {
@@ -360,12 +360,12 @@ class Cas2v2ApplicationService(
   }
 
   fun createAssessment(application: Cas2ApplicationEntity) {
-    cas2v2AssessmentService.createCas2v2Assessment(application)
+    cas2AssessmentService.createCas2Assessment(application)
   }
 
   @SuppressWarnings("ThrowsCount")
   private fun retrievePrisonCode(application: Cas2ApplicationEntity): String {
-    val inmateDetailResult = cas2v2OffenderService.getInmateDetailByNomsNumber(
+    val inmateDetailResult = cas2OffenderService.getInmateDetailByNomsNumber(
       crn = application.crn,
       nomsNumber = application.nomsNumber.toString(),
     )

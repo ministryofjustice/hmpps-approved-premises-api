@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusFinder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer.Cas2HdcApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 
@@ -14,7 +14,7 @@ class Cas2v2ReferenceDataTest : IntegrationTestBase() {
   lateinit var statusTransformer: Cas2HdcApplicationStatusTransformer
 
   @Autowired
-  lateinit var cas2v2statusFinder: Cas2v2PersistedApplicationStatusFinder
+  lateinit var cas2v2statusFinder: uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2PersistedApplicationStatusFinder
 
   @Autowired
   lateinit var cas2statusFinder: Cas2PersistedApplicationStatusFinder
