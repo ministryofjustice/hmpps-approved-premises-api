@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
+import io.swagger.v3.oas.annotations.media.Schema
+
 data class Cas1SpaceBooking(
   val id: java.util.UUID,
   val applicationId: java.util.UUID,
@@ -16,6 +18,7 @@ data class Cas1SpaceBooking(
   val allowedActions: List<Cas1SpaceBookingAction>,
   val openChangeRequests: List<Cas1ChangeRequestSummary>,
   val assessmentId: java.util.UUID? = null,
+  @Schema(description = "Tier when the application was created")
   val tier: String? = null,
   val bookedBy: User? = null,
   @Deprecated(message = "Use placementRequestId")

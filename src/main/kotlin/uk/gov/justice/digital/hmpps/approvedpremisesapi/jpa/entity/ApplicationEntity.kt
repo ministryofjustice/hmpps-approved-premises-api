@@ -359,6 +359,9 @@ class ApprovedPremisesApplicationEntity(
   val eventNumber: String,
   val offenceId: String,
   nomsNumber: String?,
+  /**
+   * Contains ROSH Risks, Tier, Risk Flags and MAPPA captured when the application was created
+   */
   @Type(JsonType::class)
   @Convert(disableConversion = true)
   val riskRatings: PersonRisks?,

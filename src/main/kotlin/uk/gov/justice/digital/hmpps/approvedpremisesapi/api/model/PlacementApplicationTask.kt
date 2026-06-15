@@ -7,7 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierEnvel
 
 data class PlacementApplicationTask(
 
-  @get:JsonProperty("tier", required = true) val tier: RiskTierEnvelopeDto,
+  @Schema(description = "Tier when the application was created")
+  val tier: RiskTierEnvelopeDto,
 
   @get:JsonProperty("releaseType", required = true) val releaseType: ReleaseTypeOption,
 

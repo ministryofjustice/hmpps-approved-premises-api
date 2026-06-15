@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
+import io.swagger.v3.oas.annotations.media.Schema
+
 data class Cas1Application(
 
   val id: java.util.UUID,
@@ -28,6 +30,7 @@ data class Cas1Application(
 
   val arrivalDate: java.time.Instant? = null,
 
+  @Schema(description = "Contains ROSH Risks, Tier, Risk Flags and MAPPA captured when the application was created")
   val risks: PersonRisks? = null,
 
   val `data`: Any? = null,
