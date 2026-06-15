@@ -13,9 +13,9 @@ import java.util.UUID
 import kotlin.random.Random
 
 @Component
-class Cas2v2UsersSeedJob(
+class Cas2UsersSeedJob(
   private val cas2UserRepository: Cas2UserRepository,
-) : SeedJob<Cas2v2UserSeedCsvRow>(
+) : SeedJob<Cas2UserSeedCsvRow>(
   requiredHeaders = setOf(
     "username",
     "email",
@@ -33,7 +33,7 @@ class Cas2v2UsersSeedJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun deserializeRow(columns: Map<String, String>) = Cas2v2UserSeedCsvRow(
+  override fun deserializeRow(columns: Map<String, String>) = Cas2UserSeedCsvRow(
     username = columns["username"]!!.trim().uppercase(),
     email = columns["email"]!!.trim(),
     name = columns["name"]!!.trim(),
@@ -50,7 +50,7 @@ class Cas2v2UsersSeedJob(
   )
 
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  override fun processRow(row: Cas2v2UserSeedCsvRow) {
+  override fun processRow(row: Cas2UserSeedCsvRow) {
     log.info("Setting up ${row.username}")
 
     val users = cas2UserRepository.findAll()
@@ -69,7 +69,7 @@ class Cas2v2UsersSeedJob(
   }
 
   @SuppressWarnings("MagicNumber")
-  private fun createCas2User(row: Cas2v2UserSeedCsvRow) {
+  private fun createCas2User(row: Cas2UserSeedCsvRow) {
     cas2UserRepository.save(
       Cas2UserEntity(
         id = UUID.randomUUID(),
@@ -99,7 +99,7 @@ class Cas2v2UsersSeedJob(
   }
 }
 
-data class Cas2v2UserSeedCsvRow(
+data class Cas2UserSeedCsvRow(
   val username: String,
   val email: String,
   val name: String,
