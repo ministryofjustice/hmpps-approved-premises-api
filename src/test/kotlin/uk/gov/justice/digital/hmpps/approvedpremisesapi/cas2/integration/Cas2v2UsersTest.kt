@@ -19,7 +19,7 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
     @Test
     fun `Getting a user without a JWT returns 401`() {
       webTestClient.get()
-        .uri("/cas2v2/users/JIMIDELIUS")
+        .uri("/cas2/users/JIMIDELIUS")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -32,7 +32,7 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
         staffDetail = staffDetail,
       ) { userEntity, jwt ->
         val response = webTestClient.get()
-          .uri("/cas2v2/users/${userEntity.username}")
+          .uri("/cas2/users/${userEntity.username}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -54,7 +54,7 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
   fun `Getting a NOMIS user does not include region information`() {
     givenACas2v2NomisUser { userEntity, jwt ->
       val response = webTestClient.get()
-        .uri("/cas2v2/users/${userEntity.username}")
+        .uri("/cas2/users/${userEntity.username}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()

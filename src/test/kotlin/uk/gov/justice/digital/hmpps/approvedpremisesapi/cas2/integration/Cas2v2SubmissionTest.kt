@@ -928,7 +928,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
           Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(0)
 
           webTestClient.post()
-            .uri("/cas2v2/submissions")
+            .uri("/cas2/submissions")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
