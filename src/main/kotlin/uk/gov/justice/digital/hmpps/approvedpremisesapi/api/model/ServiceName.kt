@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
+@Deprecated("This is legacy functionality and we should look to remove it - see FM-740.")
 enum class ServiceName(@get:JsonValue val value: String) {
 
   approvedPremises("approved-premises"),
