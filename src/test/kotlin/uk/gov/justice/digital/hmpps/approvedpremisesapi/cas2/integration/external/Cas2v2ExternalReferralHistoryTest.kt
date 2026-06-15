@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
@@ -67,7 +68,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referralRejectionReason = "Referral cancelled",
               localAuthorityArea = omu.prisonName,
               pdu = application1.preferredAreas,
-              referredBy = application1.createdByUser.name,
+              referredBy = createStaffDto(application1.createdByUser),
               placementAddress = omu.prisonName,
               placementStatus = application1.statusUpdates!!.first().label,
             ),
@@ -80,7 +81,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referralRejectionReason = "Referral cancelled",
               localAuthorityArea = omu.prisonName,
               pdu = application2.preferredAreas,
-              referredBy = application2.createdByUser.name,
+              referredBy = createStaffDto(application2.createdByUser),
               placementAddress = omu.prisonName,
               placementStatus = application2.statusUpdates!!.first().label,
             ),
@@ -93,7 +94,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referralRejectionReason = "Referral cancelled",
               localAuthorityArea = omu.prisonName,
               pdu = application3.preferredAreas,
-              referredBy = application3.createdByUser.name,
+              referredBy = createStaffDto(application3.createdByUser),
               placementAddress = omu.prisonName,
               placementStatus = application3.statusUpdates!!.first().label,
             ),
@@ -106,7 +107,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referralRejectionReason = "Referral withdrawn",
               localAuthorityArea = omu.prisonName,
               pdu = application4.preferredAreas,
-              referredBy = application4.createdByUser.name,
+              referredBy = createStaffDto(application4.createdByUser),
               placementAddress = omu.prisonName,
               placementStatus = application4.statusUpdates!!.first().label,
             ),
@@ -119,7 +120,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referralRejectionReason = "Referral withdrawn",
               localAuthorityArea = omu.prisonName,
               pdu = application5.preferredAreas,
-              referredBy = application5.createdByUser.name,
+              referredBy = createStaffDto(application5.createdByUser),
               placementAddress = omu.prisonName,
               placementStatus = application5.statusUpdates!!.first().label,
             ),
@@ -199,6 +200,8 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
       }
     }
   }
+
+  private fun createStaffDto(user: Cas2UserEntity) = Cas2v2StaffDto(user.name, user.deliusStaffCode!!, user.deliusStaffCode!!)
 
   private fun createApplication(
     user: Cas2UserEntity,

@@ -7,12 +7,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateNonAssignable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -109,7 +111,7 @@ class Cas2v2ApplicationsTransformer(
       referralRejectionReason = rejectionReason,
       localAuthorityArea = placementAddress,
       pdu = jpa.preferredAreas,
-      referredBy = jpa.createdByUser.name,
+      referredBy = transformToStaffDto(jpa.createdByUser),
       placementAddress = placementAddress,
       placementStatus = latestStatusUpdate?.label,
     )
@@ -127,4 +129,6 @@ class Cas2v2ApplicationsTransformer(
     summary.submittedAt != null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
   }
+
+  fun transformToStaffDto(user: Cas2UserEntity) = Cas2v2StaffDto(user.name, user.deliusStaffCode!!, user.deliusStaffCode!!)
 }
