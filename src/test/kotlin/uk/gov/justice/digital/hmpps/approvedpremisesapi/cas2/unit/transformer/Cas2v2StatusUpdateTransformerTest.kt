@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2StatusUpdateTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2StatusUpdateTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateDetailEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -32,12 +32,12 @@ class Cas2v2StatusUpdateTransformerTest {
     .produce()
 
   private val mockCas2v2UserApi = mockk<Cas2v2User>()
-  private val mockCas2v2UserTransformer = mockk<Cas2v2UserTransformer>()
-  private val cas2v2StatusUpdateTransformer = Cas2v2StatusUpdateTransformer(mockCas2v2UserTransformer)
+  private val mockCas2UserTransformer = mockk<Cas2UserTransformer>()
+  private val cas2StatusUpdateTransformer = Cas2StatusUpdateTransformer(mockCas2UserTransformer)
 
   @BeforeEach
   fun setup() {
-    every { mockCas2v2UserTransformer.transformJpaToApi(any()) } returns mockCas2v2UserApi
+    every { mockCas2UserTransformer.transformJpaToApi(any()) } returns mockCas2v2UserApi
   }
 
   @Test
@@ -62,7 +62,7 @@ class Cas2v2StatusUpdateTransformerTest {
       statusUpdateDetails = null,
     )
 
-    val transformation = cas2v2StatusUpdateTransformer.transformJpaToApi(jpaEntity)
+    val transformation = cas2StatusUpdateTransformer.transformJpaToApi(jpaEntity)
 
     Assertions.assertThat(transformation).isEqualTo(expectedRepresentation)
   }
@@ -86,7 +86,7 @@ class Cas2v2StatusUpdateTransformerTest {
       .withStatusDetailId(UUID.fromString("3df29b1b-e2fc-4df7-b4b8-0527cd9e3a6f"))
       .withStatusUpdate(mockStatusUpdate)
       .produce()
-    val transformation = cas2v2StatusUpdateTransformer.transformStatusUpdateDetailsJpaToApi(updateDetail)
+    val transformation = cas2StatusUpdateTransformer.transformStatusUpdateDetailsJpaToApi(updateDetail)
 
     Assertions.assertThat(transformation).isEqualTo(cas2v2StatusUpdateDetail)
   }

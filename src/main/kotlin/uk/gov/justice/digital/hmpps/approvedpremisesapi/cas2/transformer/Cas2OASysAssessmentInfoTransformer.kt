@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OASysAs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.AssessmentInfo
 
 @Service
-class Cas2v2OASysAssessmentInfoTransformer {
+class Cas2OASysAssessmentInfoTransformer {
 
   fun toAssessmentMetadata(assessmentInfo: AssessmentInfo?) = assessmentInfo?.let {
     Cas2v2OASysAssessmentMetadataDto(

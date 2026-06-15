@@ -10,7 +10,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
@@ -30,12 +30,12 @@ class Cas2v2OffenderServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
 
-  private val cas2v2PersonTransformer = Cas2v2PersonTransformer()
+  private val cas2PersonTransformer = Cas2PersonTransformer()
 
   private val cas2OffenderService = Cas2OffenderService(
     mockPrisonsApiClient,
     mockApDeliusContextApiClient,
-    cas2v2PersonTransformer,
+    cas2PersonTransformer,
   )
 
   @Nested

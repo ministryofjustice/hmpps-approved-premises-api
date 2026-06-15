@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 
 @Component
-class Cas2v2TimelineEventsTransformer {
+class Cas2TimelineEventsTransformer {
 
   fun transformApplicationToTimelineEvents(jpa: Cas2ApplicationEntity): List<Cas2TimelineEvent> {
     val timelineEvents: MutableList<Cas2TimelineEvent> = mutableListOf()

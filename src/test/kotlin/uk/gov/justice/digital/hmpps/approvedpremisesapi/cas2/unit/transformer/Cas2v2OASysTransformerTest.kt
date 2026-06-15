@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2V2OASysRiskLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2OASysTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OASysTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
@@ -14,7 +14,7 @@ import java.time.OffsetDateTime
 
 class Cas2v2OASysTransformerTest {
 
-  private val transformer = Cas2v2OASysTransformer()
+  private val transformer = Cas2OASysTransformer()
 
   @Nested
   inner class ToOASysMetadataDto {

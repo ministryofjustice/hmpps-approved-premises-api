@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -36,7 +36,7 @@ class Cas2ApplicationsSeedJob(
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
-  private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
+  private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
 ) : SeedJob<Cas2ApplicationSeedCsvRow>(
   requiredHeaders = setOf("id", "nomsNumber", "crn", "state", "createdBy", "createdAt", "applicationOrigin", "bailHearingDate", "submittedAt", "statusUpdates", "location"),
 ) {
@@ -49,7 +49,7 @@ class Cas2ApplicationsSeedJob(
     state = columns["state"]!!.trim(),
     createdBy = columns["createdBy"]!!.trim(),
     createdAt = OffsetDateTime.parse(columns["createdAt"]),
-    applicationOrigin = cas2v2ApplicationsTransformer.applicationOriginFromText(columns["applicationOrigin"]!!.trim()),
+    applicationOrigin = cas2ApplicationsTransformer.applicationOriginFromText(columns["applicationOrigin"]!!.trim()),
     bailHearingDate = OffsetDateTime.parse(columns["bailHearingDate"]),
     submittedAt = parseDateIfNotNull(emptyToNull(columns["submittedAt"])),
     statusUpdates = columns["statusUpdates"]!!.trim(),

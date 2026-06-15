@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 
 @Component
-class Cas2v2UserTransformer {
+class Cas2UserTransformer {
 
   fun transformJpaToApi(userEntity: Cas2UserEntity): Cas2v2User = Cas2v2User(
     id = userEntity.id,

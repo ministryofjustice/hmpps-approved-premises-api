@@ -19,13 +19,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import java.util.UUID
 
 @Component
-class Cas2v2ApplicationsTransformer(
+class Cas2ApplicationsTransformer(
   private val jsonMapper: JsonMapper,
   private val personTransformer: PersonTransformer,
-  private val cas2v2UserTransformer: Cas2v2UserTransformer,
-  private val statusUpdateTransformer: Cas2v2StatusUpdateTransformer,
-  private val timelineEventsTransformer: Cas2v2TimelineEventsTransformer,
-  private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
+  private val cas2UserTransformer: Cas2UserTransformer,
+  private val statusUpdateTransformer: Cas2StatusUpdateTransformer,
+  private val timelineEventsTransformer: Cas2TimelineEventsTransformer,
+  private val cas2AssessmentsTransformer: Cas2AssessmentsTransformer,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
 ) {
 
@@ -34,7 +34,7 @@ class Cas2v2ApplicationsTransformer(
   fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person) = Cas2v2Application(
     id = jpa.id,
     person = fullPerson,
-    createdBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),
+    createdBy = cas2UserTransformer.transformJpaToApi(jpa.createdByUser),
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),
     data = if (jpa.data != null) jsonMapper.readTree(jpa.data) else null,
@@ -42,7 +42,7 @@ class Cas2v2ApplicationsTransformer(
     status = getStatus(jpa),
     type = "CAS2V2",
     telephoneNumber = jpa.telephoneNumber,
-    assessment = if (jpa.assessment != null) cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
+    assessment = if (jpa.assessment != null) cas2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
     timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
     applicationOrigin = jpa.applicationOrigin,
     cohort = jpa.cohort?.apiType,
@@ -51,12 +51,12 @@ class Cas2v2ApplicationsTransformer(
   fun transformJpaAndFullPersonToApiSubmitted(jpa: Cas2ApplicationEntity, fullPerson: Person): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
     id = jpa.id,
     person = fullPerson,
-    submittedBy = Cas2v2UserTransformer().transformJpaToApi(jpa.createdByUser),
+    submittedBy = Cas2UserTransformer().transformJpaToApi(jpa.createdByUser),
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),
     document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
     telephoneNumber = jpa.telephoneNumber,
-    assessment = cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
+    assessment = cas2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
     timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
     applicationOrigin = jpa.applicationOrigin,
   )
@@ -89,7 +89,7 @@ class Cas2v2ApplicationsTransformer(
     else -> ApplicationOrigin.homeDetentionCurfew
   }
 
-  fun transformJpaToCas2v2ReferralHistory(
+  fun transformJpaToCas2ReferralHistory(
     jpa: Cas2ApplicationEntity,
   ): Cas2v2ReferralHistory {
     val latestStatusUpdate = jpa.statusUpdates?.firstOrNull()

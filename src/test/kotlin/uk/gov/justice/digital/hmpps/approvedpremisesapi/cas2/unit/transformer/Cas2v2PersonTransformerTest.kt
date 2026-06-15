@@ -5,14 +5,14 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 
 class Cas2v2PersonTransformerTest {
 
-  private val cas2v2PersonTransformer = Cas2v2PersonTransformer()
+  private val cas2PersonTransformer = Cas2PersonTransformer()
 
   private val crn = "crn123"
   private val nomsNumber = "noms123"
@@ -29,7 +29,7 @@ class Cas2v2PersonTransformerTest {
       )
       .produce()
 
-    val fullPerson: FullPerson = cas2v2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary)
+    val fullPerson: FullPerson = cas2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary)
     assertThat(fullPerson.crn).isEqualTo(caseSummary.crn)
     assertThat(fullPerson.nomsNumber).isEqualTo(caseSummary.nomsId)
     assertThat(fullPerson.status).isEqualTo(PersonStatus.unknown)

@@ -17,8 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2ApplicationNotesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2AssessmentsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationNotesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
@@ -28,8 +28,8 @@ import java.util.UUID
 class Cas2AssessmentsController(
   private val cas2AssessmentService: Cas2AssessmentService,
   private val cas2ApplicationNoteService: Cas2ApplicationNoteService,
-  private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
-  private val cas2v2ApplicationNotesTransformer: Cas2v2ApplicationNotesTransformer,
+  private val cas2AssessmentsTransformer: Cas2AssessmentsTransformer,
+  private val cas2ApplicationNotesTransformer: Cas2ApplicationNotesTransformer,
   private val cas2StatusUpdateService: Cas2StatusUpdateService,
   private val cas2UserService: Cas2UserService,
 ) {
@@ -41,7 +41,7 @@ class Cas2AssessmentsController(
   ): ResponseEntity<Cas2v2Assessment> {
     val assessmentResult = cas2AssessmentService.getAssessment(assessmentId)
     val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
-    return ResponseEntity.ok(cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity))
+    return ResponseEntity.ok(cas2AssessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity))
   }
 
   @Operation(description = "Update an assessment. There are no constraints on who can access this endpoint")
@@ -54,7 +54,7 @@ class Cas2AssessmentsController(
 
     val cas2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(
-      cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity),
+      cas2AssessmentsTransformer.transformJpaToApiRepresentation(cas2AssessmentEntity),
     )
   }
 
@@ -84,7 +84,7 @@ class Cas2AssessmentsController(
     val note = extractEntityFromCasResult(noteResult)
     return ResponseEntity.created(URI.create("/cas2v2/assessments/$assessmentId/notes/${note.id}"))
       .body(
-        cas2v2ApplicationNotesTransformer.transformJpaToApi(note),
+        cas2ApplicationNotesTransformer.transformJpaToApi(note),
       )
   }
 

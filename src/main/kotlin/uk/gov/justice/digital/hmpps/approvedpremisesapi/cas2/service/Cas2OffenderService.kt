@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Authorisa
 class Cas2OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val cas2v2PersonTransformer: Cas2v2PersonTransformer,
+  private val cas2PersonTransformer: Cas2PersonTransformer,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -53,7 +53,7 @@ class Cas2OffenderService(
     return when (caseSummary.currentRestriction) {
       false -> Cas2v2OffenderSearchResult.Success.Full(
         nomisIdOrCrn = nomisIdOrCrn,
-        person = cas2v2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary),
+        person = cas2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary),
       )
 
       else -> Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn)

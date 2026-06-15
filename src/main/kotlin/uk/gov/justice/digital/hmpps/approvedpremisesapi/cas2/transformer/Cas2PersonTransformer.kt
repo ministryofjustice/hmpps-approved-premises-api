@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 
 @Component
-class Cas2v2PersonTransformer {
+class Cas2PersonTransformer {
 
   fun transformCaseSummaryToFullPerson(caseSummary: CaseSummary): FullPerson = FullPerson(
     name = "${caseSummary.name.forename} ${caseSummary.name.surname}",

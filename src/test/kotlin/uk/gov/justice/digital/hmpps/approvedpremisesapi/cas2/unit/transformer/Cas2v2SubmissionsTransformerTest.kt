@@ -13,10 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2AssessmentsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2SubmissionsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2TimelineEventsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2AssessmentsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2SubmissionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2TimelineEventsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
@@ -31,18 +31,18 @@ import java.util.UUID
 class Cas2v2SubmissionsTransformerTest {
 
   private val mockPersonTransformer = mockk<PersonTransformer>()
-  private val mockCas2v2UserTransformer = mockk<Cas2v2UserTransformer>()
-  private val mockCas2v2TimelineEventsTransformer = mockk<Cas2v2TimelineEventsTransformer>()
-  private val mockCas2v2AssessmentsTransformer = mockk<Cas2v2AssessmentsTransformer>()
+  private val mockCas2UserTransformer = mockk<Cas2UserTransformer>()
+  private val mockCas2TimelineEventsTransformer = mockk<Cas2TimelineEventsTransformer>()
+  private val mockCas2AssessmentsTransformer = mockk<Cas2AssessmentsTransformer>()
 
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()
 
-  private val applicationTransformer = Cas2v2SubmissionsTransformer(
+  private val applicationTransformer = Cas2SubmissionsTransformer(
     jsonMapper,
     mockPersonTransformer,
-    mockCas2v2UserTransformer,
-    mockCas2v2TimelineEventsTransformer,
-    mockCas2v2AssessmentsTransformer,
+    mockCas2UserTransformer,
+    mockCas2TimelineEventsTransformer,
+    mockCas2AssessmentsTransformer,
   )
 
   private val user = Cas2UserEntityFactory()
@@ -71,9 +71,9 @@ class Cas2v2SubmissionsTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockCas2v2UserTransformer.transformJpaToApi(any()) } returns mockCas2v2User
-    every { mockCas2v2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
-    every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
+    every { mockCas2UserTransformer.transformJpaToApi(any()) } returns mockCas2v2User
+    every { mockCas2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
+    every { mockCas2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
   }
 
   @Nested
@@ -89,7 +89,7 @@ class Cas2v2SubmissionsTransformerTest {
 
       val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
 
-      every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
+      every { mockCas2AssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
 
       val transformation = applicationTransformer.transformJpaToApiRepresentation(jpaEntity, mockk())
 

@@ -11,12 +11,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import java.util.UUID
 
 @Component
-class Cas2v2SubmissionsTransformer(
+class Cas2SubmissionsTransformer(
   private val jsonMapper: JsonMapper,
   private val personTransformer: PersonTransformer,
-  private val cas2v2UserTransformer: Cas2v2UserTransformer,
-  private val cas2v2TimelineEventsTransformer: Cas2v2TimelineEventsTransformer,
-  private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
+  private val cas2UserTransformer: Cas2UserTransformer,
+  private val cas2TimelineEventsTransformer: Cas2TimelineEventsTransformer,
+  private val cas2AssessmentsTransformer: Cas2AssessmentsTransformer,
 ) {
 
   fun transformJpaToApiRepresentation(
@@ -26,14 +26,14 @@ class Cas2v2SubmissionsTransformer(
   ): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
     id = jpa.id,
     person = personTransformer.transformModelToPersonApi(personInfo),
-    submittedBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),
+    submittedBy = cas2UserTransformer.transformJpaToApi(jpa.createdByUser),
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),
     document = if (jpa.document != null) jsonMapper.readTree(jpa.document) else null,
     telephoneNumber = jpa.telephoneNumber,
     applicationOrigin = jpa.applicationOrigin,
-    timelineEvents = cas2v2TimelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
-    assessment = cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
+    timelineEvents = cas2TimelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
+    assessment = cas2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
   )
 
   fun transformJpaSummaryToApiRepresentation(

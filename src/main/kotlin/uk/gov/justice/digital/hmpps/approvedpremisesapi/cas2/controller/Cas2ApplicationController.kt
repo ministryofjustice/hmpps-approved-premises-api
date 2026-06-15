@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
@@ -41,7 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Applicat
 @Cas2Controller
 class Cas2ApplicationController(
   private val cas2ApplicationService: Cas2ApplicationService,
-  private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
+  private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
   private val jsonMapper: JsonMapper,
   private val cas2OffenderService: Cas2OffenderService,
   private val cas2HdcOffenderService: Cas2HdcOffenderService,
@@ -143,7 +143,7 @@ class Cas2ApplicationController(
 
     return ResponseEntity
       .created(URI.create("/cas2/applications/${application.id}"))
-      .body(cas2v2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, personInfo))
+      .body(cas2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, personInfo))
   }
 
   @Operation(description = "Update a non submitted application. An application can only be updated if it's created by the calling user, unsubmitted and not abandoned")
@@ -191,7 +191,7 @@ class Cas2ApplicationController(
     val personNamesMap = cas2HdcOffenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
-      cas2v2ApplicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)
+      cas2ApplicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.crn]!!)
     }
   }
 
@@ -206,6 +206,6 @@ class Cas2ApplicationController(
       is Cas2v2OffenderSearchResult.Success.Full -> cas2v2OffenderSearchResult.person
     }
 
-    return cas2v2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, personInfo)
+    return cas2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, personInfo)
   }
 }

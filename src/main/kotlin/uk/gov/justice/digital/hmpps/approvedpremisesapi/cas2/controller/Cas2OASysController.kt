@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OASysAs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OAsysRiskToSelfDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OAsysRoshRatingsDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OAsysRoshSummaryDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2OASysTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OASysTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 @Cas2Controller
 class Cas2OASysController(
   val oasysService: OASysService,
-  val cas2v2OASysTransformer: Cas2v2OASysTransformer,
+  val cas2OASysTransformer: Cas2OASysTransformer,
 ) {
 
   @GetMapping("/people/{crn}/oasys/metadata")
@@ -27,7 +27,7 @@ class Cas2OASysController(
       else -> extractEntityFromCasResult(result)
     }
 
-    return ResponseEntity.ok(cas2v2OASysTransformer.toOASysAssessmentMetadataDto(assessment))
+    return ResponseEntity.ok(cas2OASysTransformer.toOASysAssessmentMetadataDto(assessment))
   }
 
   @GetMapping("/people/{crn}/oasys/risk-to-self")
@@ -39,7 +39,7 @@ class Cas2OASysController(
       else -> extractEntityFromCasResult(result)
     }
 
-    return ResponseEntity.ok(cas2v2OASysTransformer.toOASysRiskToSelfDto(risksToTheIndividual))
+    return ResponseEntity.ok(cas2OASysTransformer.toOASysRiskToSelfDto(risksToTheIndividual))
   }
 
   @GetMapping("/people/{crn}/oasys/rosh-summary")
@@ -51,7 +51,7 @@ class Cas2OASysController(
       else -> extractEntityFromCasResult(result)
     }
 
-    return ResponseEntity.ok(cas2v2OASysTransformer.toOASysRoshSummaryDto(roshSummary))
+    return ResponseEntity.ok(cas2OASysTransformer.toOASysRoshSummaryDto(roshSummary))
   }
 
   @GetMapping("/people/{crn}/oasys/rosh-ratings")
@@ -63,6 +63,6 @@ class Cas2OASysController(
       else -> extractEntityFromCasResult(result)
     }
 
-    return ResponseEntity.ok(cas2v2OASysTransformer.toOASysRoshRatingsDto(roshRatings))
+    return ResponseEntity.ok(cas2OASysTransformer.toOASysRoshRatingsDto(roshRatings))
   }
 }

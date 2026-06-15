@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Applicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 
 @Component
-class Cas2v2ApplicationNotesTransformer {
+class Cas2ApplicationNotesTransformer {
 
   fun transformJpaToApi(
     jpa: Cas2ApplicationNoteEntity,

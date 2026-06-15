@@ -17,8 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2SubmissionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcOffenderService
@@ -33,8 +33,8 @@ import java.util.UUID
 @Cas2Controller
 class Cas2SubmissionsController(
   private val cas2ApplicationService: Cas2ApplicationService,
-  private val cas2v2SubmissionsTransformer: Cas2v2SubmissionsTransformer,
-  private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
+  private val cas2SubmissionsTransformer: Cas2SubmissionsTransformer,
+  private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
   private val cas2OffenderService: Cas2OffenderService,
   private val offenderService: Cas2HdcOffenderService,
   private val userService: Cas2UserService,
@@ -91,7 +91,7 @@ class Cas2SubmissionsController(
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
-      cas2v2SubmissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.crn]!!)
+      cas2SubmissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.crn]!!)
     }
   }
 
@@ -106,6 +106,6 @@ class Cas2SubmissionsController(
       is Cas2v2OffenderSearchResult.Success.Full -> cas2v2OffenderSearchResult.person
     }
 
-    return cas2v2ApplicationsTransformer.transformJpaAndFullPersonToApiSubmitted(application, personInfo)
+    return cas2ApplicationsTransformer.transformJpaAndFullPersonToApiSubmitted(application, personInfo)
   }
 }
