@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.OffsetDateTime
@@ -9,6 +11,8 @@ class OASysSuitabilityService(
   private val clock: Clock,
   private val sentryService: SentryService,
 ) {
+  var logger: Logger = LoggerFactory.getLogger(this::class.java)
+
   fun isSuitable(
     assessmentDates: OASysAssessmentDates,
     strategy: SuitabilityStrategy,
@@ -26,15 +30,13 @@ class OASysSuitabilityService(
     val initiationDate = assessmentDates.initiationDate
     val dateCompleted = assessmentDates.dateCompleted
 
-    val suitable = (dateCompleted ?: initiationDate).isAfter(sixMonthThreshold)
+    logger.info("Retrieved an assessment with date completed of ${dateCompleted?.toLocalDate()} for CRN $crn")
 
     if (dateCompleted == null) {
       sentryService.captureErrorMessage("No completion date defined on assessment for $crn. Using initiation date/time of $initiationDate")
-    } else if (!suitable) {
-      sentryService.captureErrorMessage("Have received an assessment with a completion date/time more than 6 months ago for $crn and date/time $dateCompleted")
     }
 
-    return suitable
+    return (dateCompleted ?: initiationDate).isAfter(sixMonthThreshold)
   }
 
   data class OASysAssessmentDates(
