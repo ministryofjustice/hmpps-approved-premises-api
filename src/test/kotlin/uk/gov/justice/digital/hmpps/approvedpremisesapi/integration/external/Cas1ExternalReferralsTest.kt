@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -80,7 +81,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referralRejectionReason = "Not suitable",
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
-              referredBy = assessment1.application.createdByUser.name,
+              referredBy = createStaffDto(assessment1.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
             ),
@@ -93,7 +94,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referralRejectionReason = "Not suitable",
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
-              referredBy = assessment2.application.createdByUser.name,
+              referredBy = createStaffDto(assessment2.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
             ),
@@ -106,7 +107,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referralRejectionReason = "Not suitable",
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
-              referredBy = assessment3.application.createdByUser.name,
+              referredBy = createStaffDto(assessment3.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
             ),
@@ -119,7 +120,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referralRejectionReason = "Not suitable",
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
-              referredBy = assessment4.application.createdByUser.name,
+              referredBy = createStaffDto(assessment4.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
             ),
@@ -132,7 +133,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referralRejectionReason = "Not suitable",
               localAuthorityArea = apArea.name,
               pdu = cruManagementArea.name,
-              referredBy = assessment5.application.createdByUser.name,
+              referredBy = createStaffDto(assessment5.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
             ),
@@ -153,6 +154,8 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
       }
     }
   }
+
+  private fun createStaffDto(user: UserEntity) = Cas1StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
 
   @Suppress("LongParameterList")
   private fun createCas1Assessment(

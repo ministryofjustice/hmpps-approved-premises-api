@@ -101,7 +101,7 @@ class Cas3AssessmentTransformer(
       referralRejectionReasonDetail = a.referralRejectionReasonDetail,
       localAuthorityArea = application.dutyToReferLocalAuthorityAreaName,
       pdu = application.probationDeliveryUnit?.name,
-      referredBy = transformToCas3StaffDto(application.createdByUser),
+      referredBy = transformToStaffDto(application.createdByUser),
       placementAddress = placementAddress,
       placementStatus = latestBooking?.status?.value,
     )
@@ -140,5 +140,5 @@ class Cas3AssessmentTransformer(
     null -> null
   }
 
-  fun transformToCas3StaffDto(user: UserEntity) = Cas3StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
+  private fun transformToStaffDto(user: UserEntity) = Cas3StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
 }

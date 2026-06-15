@@ -81,7 +81,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referralRejectionReasonDetail = null,
               localAuthorityArea = (assessment1.application as TemporaryAccommodationApplicationEntity).dutyToReferLocalAuthorityAreaName,
               pdu = (assessment1.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
-              referredBy = createCas3StaffDto(user),
+              referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
             ),
@@ -95,7 +95,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referralRejectionReasonDetail = "Some random rejection detail",
               localAuthorityArea = (assessment2.application as TemporaryAccommodationApplicationEntity).dutyToReferLocalAuthorityAreaName,
               pdu = (assessment2.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
-              referredBy = createCas3StaffDto(user),
+              referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
             ),
@@ -109,7 +109,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referralRejectionReasonDetail = null,
               localAuthorityArea = (assessment3.application as TemporaryAccommodationApplicationEntity).dutyToReferLocalAuthorityAreaName,
               pdu = (assessment3.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
-              referredBy = createCas3StaffDto(user),
+              referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
             ),
@@ -123,7 +123,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referralRejectionReasonDetail = null,
               localAuthorityArea = (assessment4.application as TemporaryAccommodationApplicationEntity).dutyToReferLocalAuthorityAreaName,
               pdu = (assessment4.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
-              referredBy = createCas3StaffDto(user),
+              referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
             ),
@@ -137,7 +137,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referralRejectionReasonDetail = null,
               localAuthorityArea = (assessment5.application as TemporaryAccommodationApplicationEntity).dutyToReferLocalAuthorityAreaName,
               pdu = (assessment5.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
-              referredBy = createCas3StaffDto(user),
+              referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
             ),
@@ -161,7 +161,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
     }
   }
 
-  private fun createCas3StaffDto(user: UserEntity) = Cas3StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
+  private fun createStaffDto(user: UserEntity) = Cas3StaffDto(user.name, user.deliusUsername, user.deliusStaffCode)
 
   private fun createAssessment(
     user: UserEntity,
