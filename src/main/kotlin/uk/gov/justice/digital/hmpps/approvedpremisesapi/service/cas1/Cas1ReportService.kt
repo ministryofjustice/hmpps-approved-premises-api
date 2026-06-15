@@ -46,6 +46,7 @@ class Cas1ReportService(
       "has_physical_disability",
       "has_learning_social_communication_difficulty",
       "has_mental_health_condition",
+      "departure_notes",
     )
   }
 
