@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2StatusUpdateService
@@ -48,7 +48,7 @@ class Cas2StartupScript(
   private val cas2assessmentRepository: Cas2AssessmentRepository,
   private val cas2ApplicationService: Cas2ApplicationService,
   private val cas2StatusUpdateService: Cas2StatusUpdateService,
-  private val statusFinder: Cas2PersistedApplicationStatusFinder,
+  private val statusFinder: Cas2HdcPersistedApplicationStatusFinder,
 ) {
   fun script() {
     seedLogger.info("Running Start up Script for CAS2v2")

@@ -1,12 +1,14 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import java.util.UUID
 
 @Component
-class Cas2PersistedApplicationStatusFinder(
-  private val statusList: List<Cas2PersistedApplicationStatus> = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2),
+class Cas2HdcPersistedApplicationStatusFinder(
+    private val statusList: List<Cas2PersistedApplicationStatus> = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2),
 ) {
   fun all(): List<Cas2PersistedApplicationStatus> = statusList
 
