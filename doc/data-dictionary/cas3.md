@@ -19,10 +19,12 @@ erDiagram
     cas3_premises ||--o{ cas3_bedspaces : has
     cas3_premises ||--o{ bookings : has
     cas3_premises ||--o{ cas3_void_bedspaces : has
-    cas3_premises }o--o{ cas3_premises_characteristics : "tagged with"
+    cas3_premises ||--o{ cas3_premises_characteristic_assignments : "tagged with"
+    cas3_premises_characteristics ||--o{ cas3_premises_characteristic_assignments : "applies to"
     cas3_bedspaces ||--o{ bookings : "booked in"
     cas3_bedspaces ||--o{ cas3_void_bedspaces : "voided in"
-    cas3_bedspaces }o--o{ cas3_bedspace_characteristics : "tagged with"
+    cas3_bedspaces ||--o{ cas3_bedspace_characteristic_assignments : "tagged with"
+    cas3_bedspace_characteristics ||--o{ cas3_bedspace_characteristic_assignments : "applies to"
 
     bookings ||--o{ arrivals : has
     bookings ||--o{ departures : has
@@ -101,6 +103,15 @@ Entity: `Cas3BedspaceCharacteristicEntity`
 | `name` | text | String? | yes |  |  |  |  |
 | `description` | text | String | no |  |  |  |  |
 | `is_active` | boolean | Boolean | no |  |  |  |  |
+
+### cas3_bedspace_characteristic_assignments
+
+Entity: `Cas3BedspacesEntity` (join table for `characteristics`)
+
+| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
+|--------|-----------|--------|----------|-----|-------------|--------------|-------|
+| `bedspace_id` | uuid | UUID | no | PK,FK |  | ManyToMany join table (characteristics) → cas3_bedspaces | @JoinTable on Cas3BedspacesEntity.characteristics |
+| `bedspace_characteristics_id` | uuid | UUID | no | PK,FK |  | ManyToMany join table (characteristics) → cas3_bedspace_characteristics |  |
 
 ### cas3_bedspaces
 
@@ -182,6 +193,15 @@ Entity: `Cas3PremisesCharacteristicEntity`
 | `name` | text | String | no |  |  |  |  |
 | `description` | text | String | no |  |  |  |  |
 | `is_active` | boolean | Boolean | no |  |  |  |  |
+
+### cas3_premises_characteristic_assignments
+
+Entity: `Cas3PremisesEntity` (join table for `characteristics`)
+
+| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
+|--------|-----------|--------|----------|-----|-------------|--------------|-------|
+| `premises_id` | uuid | UUID | no | PK,FK |  | ManyToMany join table (characteristics) → cas3_premises | @JoinTable on Cas3PremisesEntity.characteristics |
+| `premises_characteristics_id` | uuid | UUID | no | PK,FK |  | ManyToMany join table (characteristics) → cas3_premises_characteristics |  |
 
 ### cas3_turnarounds
 

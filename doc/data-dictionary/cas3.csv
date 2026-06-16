@@ -32,6 +32,8 @@ cas3,cas3_premises_characteristics,Cas3PremisesCharacteristicEntity,id,uuid,UUID
 cas3,cas3_premises_characteristics,Cas3PremisesCharacteristicEntity,name,text,String,no,,,,
 cas3,cas3_premises_characteristics,Cas3PremisesCharacteristicEntity,description,text,String,no,,,,
 cas3,cas3_premises_characteristics,Cas3PremisesCharacteristicEntity,is_active,boolean,Boolean,no,,,,
+cas3,cas3_premises_characteristic_assignments,Cas3PremisesEntity,premises_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (characteristics) -> cas3_premises,@JoinTable on Cas3PremisesEntity.characteristics
+cas3,cas3_premises_characteristic_assignments,Cas3PremisesEntity,premises_characteristics_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (characteristics) -> cas3_premises_characteristics,
 cas3,cas3_confirmations,Cas3ConfirmationEntity,id,uuid,UUID,no,PK,,,v1 entity; physical table shared with v2 entity Cas3v2ConfirmationEntity
 cas3,cas3_confirmations,Cas3ConfirmationEntity,date_time,timestamptz,OffsetDateTime,no,,,,
 cas3,cas3_confirmations,Cas3ConfirmationEntity,notes,text,String?,yes,,,,
@@ -61,6 +63,8 @@ cas3,cas3_bedspace_characteristics,Cas3BedspaceCharacteristicEntity,id,uuid,UUID
 cas3,cas3_bedspace_characteristics,Cas3BedspaceCharacteristicEntity,name,text,String?,yes,,,,
 cas3,cas3_bedspace_characteristics,Cas3BedspaceCharacteristicEntity,description,text,String,no,,,,
 cas3,cas3_bedspace_characteristics,Cas3BedspaceCharacteristicEntity,is_active,boolean,Boolean,no,,,,
+cas3,cas3_bedspace_characteristic_assignments,Cas3BedspacesEntity,bedspace_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (characteristics) -> cas3_bedspaces,@JoinTable on Cas3BedspacesEntity.characteristics
+cas3,cas3_bedspace_characteristic_assignments,Cas3BedspacesEntity,bedspace_characteristics_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (characteristics) -> cas3_bedspace_characteristics,
 cas3,cas3_premises,Cas3PremisesEntity,id,uuid,UUID,no,PK,,,
 cas3,cas3_premises,Cas3PremisesEntity,name,text,String,no,,,,
 cas3,cas3_premises,Cas3PremisesEntity,postcode,text,String,no,,,,
