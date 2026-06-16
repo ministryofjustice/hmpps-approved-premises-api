@@ -76,7 +76,7 @@ Entity: `Cas3BookingEntity`
 | `version` | bigint | Long | no |  |  |  | @Version optimistic lock |
 | `offender_name` | text | String? | yes |  |  |  |  |
 | `premises_id` | uuid | UUID | no | FK |  | ManyToOne → cas3_premises |  |
-| `bed_id` | uuid | UUID | yes | FK |  | ManyToOne → cas3_bedspaces | nullable in DB (migration 20221115123112 adds bed_id without NOT NULL); JPA association is non-null |
+| `bed_id` | uuid | UUID | yes |  |  | ManyToOne → cas3_bedspaces | No FK constraint in DB (bookings_bed_id_fkey dropped in migration 20250618140659); nullable column; JPA association is non-null |
 | `application_id` | uuid | UUID? | yes | FK |  | OneToOne → applications |  |
 
 ### cancellations
