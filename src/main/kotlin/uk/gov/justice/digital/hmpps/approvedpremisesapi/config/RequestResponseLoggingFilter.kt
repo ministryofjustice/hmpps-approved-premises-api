@@ -105,7 +105,7 @@ class RequestResponseLoggingFilter(
   ) {
     log.info("Response Headers {}", responseWrapper.headerNames.map { "$it:  ${responseWrapper.getHeaders(it)}" })
     val contentType = responseWrapper.contentType
-    if (contentType == "application/json") {
+    if (contentType == "application/json" || contentType == "application/problem+json") {
       log.info("Response Body {}", String(responseWrapper.contentAsByteArray))
     } else {
       log.info("Response Body not logged as content type is $contentType")
