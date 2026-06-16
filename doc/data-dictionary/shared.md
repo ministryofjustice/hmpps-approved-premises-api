@@ -116,7 +116,7 @@ Entity: `ApplicationTimelineNoteEntity`
 | `id` | uuid | UUID | no | PK |  |  |  |
 | `application_id` | uuid | UUID | no |  |  |  |  |
 | `created_by_user_id` | uuid | UUID? | yes | FK |  | ManyToOne → users |  |
-| `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
+| `created_at` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `body` | text | String | no |  |  |  |  |
 | `cas1_space_booking_id` | uuid | UUID? | yes |  |  |  |  |
 | `deleted_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
@@ -317,7 +317,7 @@ Entity: `BookingNotMadeEntity`
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
 | `id` | uuid | UUID | no | PK |  |  |  |
 | `placement_request_id` | uuid | UUID | no | FK |  | ManyToOne → placement_requests |  |
-| `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
+| `created_at` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `notes` | text | String? | yes |  |  |  |  |
 
 ### bookings
@@ -597,8 +597,8 @@ Entity: `PlacementApplicationPlaceholderEntity`
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
 | `id` | uuid | UUID | no | PK |  |  |  |
 | `application_id` | uuid | UUID | no | FK |  | ManyToOne → applications |  |
-| `submitted_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
-| `expected_arrival_date` | timestamptz | OffsetDateTime | no |  |  |  |  |
+| `submitted_at` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
+| `expected_arrival_date` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `archived` | boolean | Boolean | no |  |  |  |  |
 
 ### placement_requests
@@ -629,6 +629,7 @@ Entity: `PlacementRequirementsEntity`
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
 | `id` | uuid | UUID | no | PK |  |  |  |
+| `gender` | text | String? | yes |  |  |  | DB column exists but is not mapped in PlacementRequirementsEntity |
 | `ap_type` | text | JpaApType | no |  | NORMAL / PIPE / ESAP / RFAP / MHAP_ST_JOSEPHS / MHAP_ELLIOT_HOUSE |  |  |
 | `postcode_district_id` | uuid | UUID | no | FK |  | ManyToOne → postcode_districts |  |
 | `radius` | integer | Int | no |  |  |  |  |
@@ -855,8 +856,8 @@ Entity: `UserEntity`
 | `cas1_cru_management_area_id` | uuid | UUID? | yes | FK |  | ManyToOne → cas1_cru_management_areas | FetchType.LAZY |
 | `cas1_cru_management_area_override_id` | uuid | UUID? | yes | FK |  | ManyToOne → cas1_cru_management_areas | FetchType.LAZY |
 | `team_codes` | text | List<String>? | yes |  |  |  | StringListConverter |
-| `created_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
-| `updated_at` | timestamptz | OffsetDateTime? | yes |  |  |  | @UpdateTimestamp |
+| `created_at` | timestamp | OffsetDateTime? | yes |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
+| `updated_at` | timestamp | OffsetDateTime? | yes |  |  |  | @UpdateTimestamp; migration uses timestamp (no time zone); entity is OffsetDateTime |
 
 ## Sources
 
