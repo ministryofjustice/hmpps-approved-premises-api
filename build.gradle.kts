@@ -1,8 +1,8 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.3.1"
-  kotlin("plugin.spring") version "2.3.21"
-  kotlin("plugin.jpa") version "2.3.21"
-  id("dev.detekt") version "2.0.0-alpha.3"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.0"
+  kotlin("plugin.spring") version "2.4.0"
+  kotlin("plugin.jpa") version "2.4.0"
+  id("dev.detekt") version "2.0.0-alpha.4"
 }
 
 kotlin {
@@ -34,7 +34,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-cache")
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:33.6.0-jre")
-  implementation("org.javers:javers-core:7.11.1")
+  implementation("org.javers:javers-core:7.11.4")
 
   val springDocOpenApiStarterVersion = "3.0.2"
   // https://github.com/springdoc/springdoc-openapi/pull/3256 significantly changed our
@@ -49,7 +49,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("io.sentry:sentry-spring-boot-4:8.43.1")
+  implementation("io.sentry:sentry-spring-boot-4:8.43.2")
 
   runtimeOnly("org.postgresql:postgresql:42.7.11")
   runtimeOnly("org.ehcache:ehcache")
@@ -77,10 +77,10 @@ dependencies {
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
 
   val appinsightsCore = "core:2.6.4"
-  implementation("io.micrometer:micrometer-registry-azure-monitor:1.16.5")
+  implementation("io.micrometer:micrometer-registry-azure-monitor:1.17.0")
   implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.3.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.0")
   implementation("uk.gov.service.notify:notifications-java-client:6.0.0-RELEASE")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
@@ -93,7 +93,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-webtestclient")
   testImplementation("org.zalando:logbook-spring-boot-starter:4.0.4")
 
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.43") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.44") {
     exclude(group = "io.swagger.core.v3")
   }
 }
