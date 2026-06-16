@@ -287,13 +287,13 @@ shared,placement_applications,PlacementApplicationEntity,application_id,uuid,UUI
 shared,placement_applications,PlacementApplicationEntity,created_by_user_id,uuid,UUID,no,FK,,ManyToOne -> users,
 shared,placement_applications,PlacementApplicationEntity,data,jsonb,String?,yes,,,,@Type(JsonType)
 shared,placement_applications,PlacementApplicationEntity,document,jsonb,String?,yes,,,,@Type(JsonType)
-shared,placement_applications,PlacementApplicationEntity,created_at,timestamptz,OffsetDateTime,no,,,,
-shared,placement_applications,PlacementApplicationEntity,submitted_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,created_at,timestamp,OffsetDateTime,no,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
+shared,placement_applications,PlacementApplicationEntity,submitted_at,timestamp,OffsetDateTime?,yes,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
 shared,placement_applications,PlacementApplicationEntity,allocated_to_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,
-shared,placement_applications,PlacementApplicationEntity,allocated_at,timestamptz,OffsetDateTime?,yes,,,,
-shared,placement_applications,PlacementApplicationEntity,reallocated_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,allocated_at,timestamp,OffsetDateTime?,yes,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
+shared,placement_applications,PlacementApplicationEntity,reallocated_at,timestamp,OffsetDateTime?,yes,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
 shared,placement_applications,PlacementApplicationEntity,decision,text,PlacementApplicationDecision?,yes,,ACCEPTED|REJECTED|WITHDRAW|WITHDRAWN_BY_PP,,
-shared,placement_applications,PlacementApplicationEntity,decision_made_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,decision_made_at,timestamp,OffsetDateTime?,yes,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
 shared,placement_applications,PlacementApplicationEntity,placement_type,text,PlacementType?,yes,,ROTL|RELEASE_FOLLOWING_DECISION|ADDITIONAL_PLACEMENT|AUTOMATIC,,
 shared,placement_applications,PlacementApplicationEntity,automatic,boolean,Boolean,no,,,,
 shared,placement_applications,PlacementApplicationEntity,placement_application_id,uuid,UUID?,yes,FK,,OneToOne -> placement_requests,FetchType.LAZY
