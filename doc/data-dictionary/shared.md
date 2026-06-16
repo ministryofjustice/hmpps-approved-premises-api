@@ -571,7 +571,6 @@ Entity: `PlacementApplicationEntity`
 | `decision_made_at` | timestamp | OffsetDateTime? | yes |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `placement_type` | text | PlacementType? | yes |  | ROTL / RELEASE_FOLLOWING_DECISION / ADDITIONAL_PLACEMENT / AUTOMATIC |  |  |
 | `automatic` | boolean | Boolean | no |  |  |  |  |
-| `placement_application_id` | uuid | UUID? | yes | FK |  | OneToOne → placement_requests | FetchType.LAZY |
 | `withdrawal_reason` | text | PlacementApplicationWithdrawalReason? | yes |  | see PlacementApplicationWithdrawalReason enum |  |  |
 | `due_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
 | `placement_application_submission_group_id` | uuid | UUID? | yes |  |  |  |  |
