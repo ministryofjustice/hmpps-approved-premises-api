@@ -102,7 +102,7 @@ shared,bookings,BookingEntity,key_worker_staff_code,text,String?,yes,,,,@Depreca
 shared,bookings,BookingEntity,application_id,uuid,UUID?,yes,FK,,OneToOne -> applications,
 shared,bookings,BookingEntity,offline_application_id,uuid,UUID?,yes,FK,,OneToOne -> offline_applications,
 shared,bookings,BookingEntity,premises_id,uuid,UUID,no,FK,,ManyToOne -> premises,
-shared,bookings,BookingEntity,bed_id,uuid,UUID?,yes,FK,,ManyToOne -> beds,
+shared,bookings,BookingEntity,bed_id,uuid,UUID?,yes,,,ManyToOne -> beds,No FK constraint in DB (bookings_bed_id_fkey dropped in migration 20250618140659)
 shared,bookings,BookingEntity,service,text,String,no,,,,
 shared,bookings,BookingEntity,original_arrival_date,date,LocalDate,no,,,,
 shared,bookings,BookingEntity,original_departure_date,date,LocalDate,no,,,,
