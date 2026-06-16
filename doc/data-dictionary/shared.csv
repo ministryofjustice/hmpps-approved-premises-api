@@ -39,8 +39,10 @@ shared,placement_requirements,PlacementRequirementsEntity,radius,integer,Int,no,
 shared,placement_requirements,PlacementRequirementsEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_applications,FetchType.LAZY
 shared,placement_requirements,PlacementRequirementsEntity,assessment_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_assessments,FetchType.LAZY
 shared,placement_requirements,PlacementRequirementsEntity,created_at,timestamptz,OffsetDateTime,no,,,,
-shared,placement_requirements,PlacementRequirementsEntity,essential_criteria,,,,,,ManyToMany -> characteristics,via join table placement_requirements_essential_criteria
-shared,placement_requirements,PlacementRequirementsEntity,desirable_criteria,,,,,,ManyToMany -> characteristics,via join table placement_requirements_desirable_criteria
+shared,placement_requirements_essential_criteria,PlacementRequirementsEntity,placement_requirement_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (essentialCriteria) -> placement_requirements,@JoinTable on PlacementRequirementsEntity.essentialCriteria
+shared,placement_requirements_essential_criteria,PlacementRequirementsEntity,characteristic_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (essentialCriteria) -> characteristics,
+shared,placement_requirements_desirable_criteria,PlacementRequirementsEntity,placement_requirement_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (desirableCriteria) -> placement_requirements,@JoinTable on PlacementRequirementsEntity.desirableCriteria
+shared,placement_requirements_desirable_criteria,PlacementRequirementsEntity,characteristic_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (desirableCriteria) -> characteristics,
 shared,users,UserEntity,id,uuid,UUID,no,PK,,,
 shared,users,UserEntity,name,text,String,no,,,,
 shared,users,UserEntity,delius_username,text,String,no,,,,
