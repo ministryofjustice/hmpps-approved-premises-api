@@ -98,6 +98,8 @@ When `index = on` (default), also maintain `doc/data-dictionary/README.md` as an
    - a `## Sources` table with workspace-relative links to entity and migration sources (always).
    See the [markdown template](./references/template.md#markdown-tables-wiki--confluence) and [diagram template](./references/template.md#mermaid-er-diagram).
 
+   **Link paths:** the files live in `doc/data-dictionary/`, so links to repo sources are relative to that folder — prefix entity/migration paths with `../../` (e.g. `../../src/main/kotlin/...`), other `doc/` pages with `../` (e.g. `../how-to/...`), and sibling CSV/README files with `./`. Keep each link's display text matching its target. See [Link paths](./references/template.md#link-paths-important).
+
 8. **Update the index** `doc/data-dictionary/README.md` (when `index = on`) to link the new/updated artefact(s) for each domain.
 
 9. **Validate.** Confirm every in-scope entity is represented in the produced artefact(s). For the CSV: table names match migrations, relationships are bidirectionally consistent, enum value lists are complete. For the markdown: every table appears in the Mermaid diagram (if `diagram = on`) and has a table section (if `tables = on`), and the markdown tables contain the same rows as the CSV (when `format = both`). Report counts (entities, tables, columns, relationships), the resolved options, and any unresolved flags.
@@ -112,6 +114,7 @@ Apply the checks relevant to the produced artefact(s):
 - Enum columns list all values in `enum_values`, not just the type name.
 - When the markdown is produced: every table appears as a node in the Mermaid diagram (if `diagram = on`) **and** has a markdown table section (if `tables = on`).
 - When `format = both`: the markdown tables and the CSV describe the same columns (same count and order per table).
+- All source links in `<domain>.md` resolve: entity/migration links use `../../`, other `doc/` links use `../`, sibling files use `./`, and each link's display text matches its target.
 - No entity in scope is silently skipped; note any entity intentionally excluded.
 
 ## Notes

@@ -281,8 +281,8 @@ Entity: `Cas3NonArrivalEntity`
 
 | Area | Location |
 |------|----------|
-| Entity packages | [cas3/jpa/entity/](src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas3/jpa/entity), [cas3/jpa/entity/v2/](src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas3/jpa/entity/v2) |
-| Migrations | [db/migration/all/](src/main/resources/db/migration/all) |
+| Entity packages | [cas3/jpa/entity/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas3/jpa/entity), [cas3/jpa/entity/v2/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas3/jpa/entity/v2) |
+| Migrations | [db/migration/all/](../../src/main/resources/db/migration/all) |
 
 > Verified against `@Table` annotations: the CAS3 entities `Cas3BookingEntity`,
 > `Cas3ArrivalEntity`, `Cas3DepartureEntity`, `Cas3CancellationEntity`, `Cas3ExtensionEntity`

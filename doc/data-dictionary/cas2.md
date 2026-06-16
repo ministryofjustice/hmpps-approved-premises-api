@@ -205,7 +205,7 @@ Entity: `NomisUserEntity`
 
 | Area | Location |
 |------|----------|
-| Entity packages | [cas2hdc/jpa/entity/](src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas2hdc/jpa/entity), [cas2/jpa/entity/](src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas2/jpa/entity) |
-| Migrations | [db/migration/all/](src/main/resources/db/migration/all) |
+| Entity packages | [cas2hdc/jpa/entity/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas2hdc/jpa/entity), [cas2/jpa/entity/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas2/jpa/entity) |
+| Migrations | [db/migration/all/](../../src/main/resources/db/migration/all) |
 
 > `nomis_users` and `external_users` are legacy and superseded by `cas_2_users`.

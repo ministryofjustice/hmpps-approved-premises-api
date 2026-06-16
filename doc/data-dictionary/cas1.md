@@ -262,7 +262,7 @@ Entity: `Cas1ApplicationUserDetailsEntity`
 
 | Area | Location |
 |------|----------|
-| Entity packages | [jpa/entity/cas1/](src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/jpa/entity/cas1), [cas1/entity/](src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas1/entity) and `Cas1*` files in [jpa/entity/](src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/jpa/entity) |
-| Migrations | [db/migration/all/](src/main/resources/db/migration/all) |
+| Entity packages | [jpa/entity/cas1/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/jpa/entity/cas1), [cas1/entity/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas1/entity) and `Cas1*` files in [jpa/entity/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/jpa/entity) |
+| Migrations | [db/migration/all/](../../src/main/resources/db/migration/all) |
 
 > `cas1_change_requests` is present in the schema but flagged DEPRECATED (developed but never used).
