@@ -319,6 +319,7 @@ shared,placement_requests,PlacementRequestEntity,application_id,uuid,UUID,no,FK,
 shared,placement_requests,PlacementRequestEntity,assessment_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_assessments,FetchType.LAZY
 shared,placement_requests,PlacementRequestEntity,placement_application_id,uuid,UUID?,yes,FK,,OneToOne -> placement_applications,
 shared,placement_requests,PlacementRequestEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,placement_requests,PlacementRequestEntity,due_at,timestamptz,OffsetDateTime?,yes,,,,DB column exists but is not mapped in PlacementRequestEntity
 shared,placement_requests,PlacementRequestEntity,notes,text,String?,yes,,,,
 shared,placement_requests,PlacementRequestEntity,placement_requirements_id,uuid,UUID,no,FK,,ManyToOne -> placement_requirements,FetchType.LAZY
 shared,placement_requests,PlacementRequestEntity,is_parole,boolean,Boolean,no,,,,
