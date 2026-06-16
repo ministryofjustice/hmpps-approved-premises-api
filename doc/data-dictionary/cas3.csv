@@ -20,7 +20,7 @@ cas3,bookings,Cas3BookingEntity,status,text,Cas3BookingStatus?,yes,,Cas3BookingS
 cas3,bookings,Cas3BookingEntity,version,bigint,Long,no,,,,@Version optimistic lock
 cas3,bookings,Cas3BookingEntity,offender_name,text,String?,yes,,,,
 cas3,bookings,Cas3BookingEntity,premises_id,uuid,UUID,no,FK,,ManyToOne -> cas3_premises,
-cas3,bookings,Cas3BookingEntity,bed_id,uuid,UUID,no,FK,,ManyToOne -> cas3_bedspaces,
+cas3,bookings,Cas3BookingEntity,bed_id,uuid,UUID,yes,FK,,ManyToOne -> cas3_bedspaces,nullable in DB (migration 20221115123112 adds bed_id without NOT NULL); JPA association is non-null
 cas3,bookings,Cas3BookingEntity,application_id,uuid,UUID?,yes,FK,,OneToOne -> applications,
 cas3,non_arrivals,Cas3NonArrivalEntity,id,uuid,UUID,no,PK,,,
 cas3,non_arrivals,Cas3NonArrivalEntity,date,date,LocalDate,no,,,,
