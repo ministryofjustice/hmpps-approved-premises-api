@@ -118,7 +118,7 @@ Entity: `ApplicationTimelineNoteEntity`
 | `created_by_user_id` | uuid | UUID? | yes | FK |  | ManyToOne → users |  |
 | `created_at` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `body` | text | String | no |  |  |  |  |
-| `cas1_space_booking_id` | uuid | UUID? | yes |  |  |  |  |
+| `cas1_space_booking_id` | uuid | UUID? | yes | FK |  | ManyToOne → cas1_space_bookings | FK in migration 20241205110116; entity stores UUID not an association |
 | `deleted_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
 
 ### applications
