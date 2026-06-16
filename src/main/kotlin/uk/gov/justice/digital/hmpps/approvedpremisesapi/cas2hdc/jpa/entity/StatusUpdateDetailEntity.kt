@@ -32,9 +32,13 @@ data class Cas2StatusUpdateDetailEntity(
 
   var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
+  companion object {
+    private val statusFinder = Cas2HdcPersistedApplicationStatusFinder()
+  }
+
   override fun toString() = "Cas2StatusDetailEntity: $id"
 
-  fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail = Cas2HdcPersistedApplicationStatusFinder().getById(statusId).statusDetails
+  fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail = statusFinder.getById(statusId).statusDetails
     ?.find { detail -> detail.id == detailId }
     ?: error("Status detail with id $detailId not found")
 }

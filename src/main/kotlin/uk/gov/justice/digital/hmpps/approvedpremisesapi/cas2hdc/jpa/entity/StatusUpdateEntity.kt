@@ -59,7 +59,11 @@ data class Cas2StatusUpdateEntity(
   val statusUpdateDetails: List<Cas2StatusUpdateDetailEntity>? = null,
   var createdAt: OffsetDateTime = OffsetDateTime.now(),
 ) {
+  companion object {
+    private val statusFinder = Cas2HdcPersistedApplicationStatusFinder()
+  }
+
   override fun toString() = "Cas2StatusEntity: $id"
 
-  fun status(): Cas2PersistedApplicationStatus = Cas2HdcPersistedApplicationStatusFinder().getById(statusId)
+  fun status(): Cas2PersistedApplicationStatus = statusFinder.getById(statusId)
 }
