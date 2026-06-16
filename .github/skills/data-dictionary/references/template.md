@@ -104,6 +104,18 @@ In `<domain>.md`, include the diagram and source links. Structure:
 - A `## Tables` section with the full per-table markdown tables (see [Markdown tables](#markdown-tables-wiki--confluence)).
 - A `## Sources` table mapping each table to its entity and migration source links.
 
+### Link paths (important)
+
+The generated files live in `doc/data-dictionary/`, so **all links to repository sources must be
+relative to that folder**. Two directories up reaches the repo root:
+
+- Entities/migrations: prefix with `../../` — e.g. `../../src/main/kotlin/.../Cas3BookingEntity.kt`, `../../src/main/resources/db/migration/all`.
+- Other docs (e.g. `doc/how-to/...`): prefix with `../` — e.g. `../how-to/best-practice-jpa-entities.md`.
+- Sibling artefacts in the same folder (the CSV, README): use `./` — e.g. `./cas3.csv`.
+- Make the link **display text** match the path it points at (don't show `doc/how-to/x.md` while linking to `../how-to/x.md`); use the short repo-relative form as the label, e.g. `[src/.../Cas3BookingEntity.kt](../../src/.../Cas3BookingEntity.kt)`.
+
+Verify every link target resolves to an existing file/dir before finishing.
+
 Within the `erDiagram`:
 
 - Declare relationships as `tableA <relation> tableB : "label"`.

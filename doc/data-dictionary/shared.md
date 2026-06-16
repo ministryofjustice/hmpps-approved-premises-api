@@ -842,6 +842,6 @@ Entity: `UserEntity`
 
 | Area | Location |
 |------|----------|
-| Entity package | [jpa/entity/](src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/jpa/entity) |
-| Migrations | [db/migration/all/](src/main/resources/db/migration/all) |
-| Entity conventions | [doc/how-to/best-practice-jpa-entities.md](doc/how-to/best-practice-jpa-entities.md) |
+| Entity package | [jpa/entity/](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/jpa/entity) |
+| Migrations | [db/migration/all/](../../src/main/resources/db/migration/all) |
+| Entity conventions | [doc/how-to/best-practice-jpa-entities.md](../how-to/best-practice-jpa-entities.md) |
