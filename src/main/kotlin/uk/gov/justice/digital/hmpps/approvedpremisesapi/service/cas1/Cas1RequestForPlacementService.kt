@@ -42,7 +42,13 @@ class Cas1RequestForPlacementService(
   private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity?) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
     placementApplication,
     user?.let { cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user) } ?: false,
-  )
+  ).apply {
+    placementApplication.placementRequest?.let { placementRequest ->
+      placements = cas1SpaceBookingRepository
+        .findByPlacementRequestId(placementRequest.id)
+        .map { cas1SpaceBookingTransformer.transformToCas1SpaceBookingShortSummary(it) }
+    }
+  }
 
   private fun toRequestForPlacement(placementRequest: PlacementRequestEntity, user: UserEntity?): RequestForPlacement = requestForPlacementTransformer
     .transformPlacementRequestEntityToApi(

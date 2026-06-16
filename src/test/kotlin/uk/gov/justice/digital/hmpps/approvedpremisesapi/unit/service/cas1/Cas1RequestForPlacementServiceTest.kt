@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
@@ -135,6 +137,67 @@ class Cas1RequestForPlacementServiceTest {
       placementApplications.forEach {
         verify(exactly = 1) { requestForPlacementTransformer.transformPlacementApplicationEntityToApi(it, true) }
       }
+    }
+
+    @Test
+    fun `Populates placements for a placement application from its linked placement request bookings`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val linkedPlacementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withPlacementRequirements(placementRequirements)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withPlacementRequest(linkedPlacementRequest)
+        .produce()
+
+      val spaceBooking = mockk<Cas1SpaceBookingEntity>()
+      val shortSummary = mockk<Cas1SpaceBookingShortSummary>()
+
+      every { applicationService.getApplication(application.id) } returns application
+
+      every {
+        cas1PlacementApplicationService.getAllSubmittedNonReallocatedApplications(application.id)
+      } returns listOf(placementApplication)
+
+      every {
+        placementRequestService.getPlacementRequestForInitialApplicationDates(application.id)
+      } returns listOf()
+
+      every { cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user) } returns true
+
+      every {
+        cas1SpaceBookingRepository.findByPlacementRequestId(linkedPlacementRequest.id)
+      } returns listOf(spaceBooking)
+
+      every {
+        cas1SpaceBookingTransformer.transformToCas1SpaceBookingShortSummary(spaceBooking)
+      } returns shortSummary
+
+      val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).hasSize(1)
+        assertThat(it.single().placements).containsExactly(shortSummary)
+      }
+
+      verify(exactly = 1) { cas1SpaceBookingRepository.findByPlacementRequestId(linkedPlacementRequest.id) }
     }
 
     @Test
