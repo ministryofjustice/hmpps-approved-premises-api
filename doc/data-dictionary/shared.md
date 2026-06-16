@@ -118,7 +118,7 @@ Entity: `ApplicationTimelineNoteEntity`
 | `created_by_user_id` | uuid | UUID? | yes | FK |  | ManyToOne → users |  |
 | `created_at` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `body` | text | String | no |  |  |  |  |
-| `cas1_space_booking_id` | uuid | UUID? | yes | FK |  | ManyToOne → cas1_space_bookings | FK in migration 20241205110116; entity stores UUID not an association |
+| `cas1_space_booking_id` | uuid | UUID? | yes | FK |  |  | FK in migration 20241205110116; entity stores UUID not an association |
 | `deleted_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
 
 ### applications
@@ -334,7 +334,7 @@ Entity: `BookingEntity`
 | `application_id` | uuid | UUID? | yes | FK |  | OneToOne → applications |  |
 | `offline_application_id` | uuid | UUID? | yes | FK |  | OneToOne → offline_applications |  |
 | `premises_id` | uuid | UUID | no | FK |  | ManyToOne → premises |  |
-| `bed_id` | uuid | UUID? | yes | FK |  | ManyToOne → beds |  |
+| `bed_id` | uuid | UUID? | yes |  |  | ManyToOne → beds | No FK constraint in DB (bookings_bed_id_fkey dropped in migration 20250618140659) |
 | `service` | text | String | no |  |  |  |  |
 | `original_arrival_date` | date | LocalDate | no |  |  |  |  |
 | `original_departure_date` | date | LocalDate | no |  |  |  |  |
@@ -744,20 +744,6 @@ Entity: `RoomEntity`
 | `notes` | text | String? | yes |  |  |  |  |
 | `premises_id` | uuid | UUID | no | FK |  | ManyToOne → premises |  |
 
-### tasks
-
-Entity: `Task`
-
-| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
-|--------|-----------|--------|----------|-----|-------------|--------------|-------|
-| `id` | uuid | UUID | no | PK |  |  | projection/view entity |
-| `created_at` | timestamp | LocalDateTime | no |  |  |  |  |
-| `type` | text | TaskEntityType | no |  | ASSESSMENT / PLACEMENT_APPLICATION |  |  |
-| `person` | text | String | no |  |  |  |  |
-| `allocated_to` | text | String? | yes |  |  |  |  |
-| `completed_at` | timestamp | LocalDateTime? | yes |  |  |  |  |
-| `decision` | text | String? | yes |  |  |  |  |
-
 ### temporary_accommodation_applications
 
 Entity: `TemporaryAccommodationApplicationEntity`
@@ -858,6 +844,26 @@ Entity: `UserEntity`
 | `team_codes` | text | List<String>? | yes |  |  |  | StringListConverter |
 | `created_at` | timestamp | OffsetDateTime? | yes |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `updated_at` | timestamp | OffsetDateTime? | yes |  |  |  | @UpdateTimestamp; migration uses timestamp (no time zone); entity is OffsetDateTime |
+
+## Query-backed projections (not physical tables)
+
+These entities have no `@Table` annotation and no `CREATE TABLE`/`CREATE VIEW` migration. They are read-only projections hydrated by native queries and are listed here for reference only — they do not exist as physical tables in the database.
+
+### tasks
+
+Entity: `Task`
+
+Not a physical table or view. Populated by `TaskRepository.getAll(...)` as a native `UNION ALL` over `assessments` and `placement_applications`. The columns below describe the projection's result shape, not stored columns.
+
+| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
+|--------|-----------|--------|----------|-----|-------------|--------------|-------|
+| `id` | uuid | UUID | no | PK |  |  | projection; native UNION ALL over assessments + placement_applications; no physical table |
+| `created_at` | timestamp | LocalDateTime | no |  |  |  |  |
+| `type` | text | TaskEntityType | no |  | ASSESSMENT / PLACEMENT_APPLICATION |  |  |
+| `person` | text | String | no |  |  |  |  |
+| `allocated_to` | text | String? | yes |  |  |  |  |
+| `completed_at` | timestamp | LocalDateTime? | yes |  |  |  |  |
+| `decision` | text | String? | yes |  |  |  |  |
 
 ## Sources
 

@@ -78,6 +78,7 @@ When `index = on` (default), also maintain `doc/data-dictionary/README.md` as an
    - **Table name** from `@Table(name = "...")` (fall back to the class name if absent).
    - **Entity class name** and source file path.
    - **Domain** (CAS1 / CAS2 / CAS3 / shared) based on the package.
+   - **Whether it is a physical table.** An `@Entity` is a *physical table* only if it has a `@Table` (or default-named table) backed by a `CREATE TABLE` migration. Treat as a **query-backed projection** (not a physical table) any `@Entity` that has no backing `CREATE TABLE`/`CREATE VIEW` and is hydrated by a native query — e.g. `@Subselect`, a `nativeQuery = true` repository method, or a `UNION ALL` over other tables (e.g. `Task`). Treat as a **view-backed** entity any whose backing object is a `CREATE VIEW` (e.g. cas2 `cas_2_application_live_summary`). Record which kind each entity is; these do not go in the physical `## Tables` section (see step 7).
 
 3. **Extract columns.** For each entity property, capture:
    - Column name (`@Column(name = ...)` / `@JoinColumn(name = ...)`, else the Kotlin property name).
@@ -88,13 +89,14 @@ When `index = on` (default), also maintain `doc/data-dictionary/README.md` as an
 
 4. **Extract relationships.** Record each `@OneToMany`, `@ManyToOne`, `@ManyToMany`, `@OneToOne` with its target entity, join column / join table, and cardinality. Note inheritance hierarchies (`@Inheritance`, `@DiscriminatorColumn`, `@DiscriminatorValue`).
 
-5. **Cross-check against migrations.** For ambiguous types, precise SQL types, defaults, indexes, or constraints not visible in the entity, search `src/main/resources/db/migration/` for the table's `CREATE TABLE` / `ALTER TABLE` statements and reconcile. Flag any mismatch between entity and migration.
+5. **Cross-check against migrations.** For ambiguous types, precise SQL types, defaults, indexes, or constraints not visible in the entity, search `src/main/resources/db/migration/` for the table's `CREATE TABLE` / `ALTER TABLE` statements and reconcile. Flag any mismatch between entity and migration. If an entity has **no** `CREATE TABLE`/`CREATE VIEW` at all, do not flag it as a missing table — classify it as a query-backed projection (see step 2). Beware renamed tables (e.g. `confirmations` → `cas3_confirmations`) which can look like missing migrations.
 
 6. **Write the CSV** (when `format` is `csv` or `both`). Emit one row per column following the [CSV template](./references/template.md). Sort by `table`, then by column order in the entity. Quote any field containing commas.
 
 7. **Write the markdown document** `<domain>.md` (when `format` is `markdown` or `both`). Generate, per the resolved options:
    - a Mermaid `erDiagram` showing each table and its relationships (cardinality from the JPA annotations) — only when `diagram = on`;
    - the **full dictionary as markdown tables** — one `### <table>` section per database table, each with a markdown table of its columns (mirroring the CSV rows for that table) — only when `tables = on`;
+   - a separate `## Query-backed projections (not physical tables)` section for any projection/view-backed entities identified in step 2, so they are not mistaken for physical tables (see the [projections template](./references/template.md#query-backed-projections-not-physical-tables)); keep these out of the physical `## Tables` section and out of the ER diagram;
    - a `## Sources` table with workspace-relative links to entity and migration sources (always).
    See the [markdown template](./references/template.md#markdown-tables-wiki--confluence) and [diagram template](./references/template.md#mermaid-er-diagram).
 
@@ -108,7 +110,7 @@ When `index = on` (default), also maintain `doc/data-dictionary/README.md` as an
 
 Apply the checks relevant to the produced artefact(s):
 
-- Table name in the CSV matches the `@Table` annotation **and** the migration `CREATE TABLE`.
+- Table name in the CSV matches the `@Table` annotation **and** the migration `CREATE TABLE` — unless the entity is a query-backed projection or view-backed entity, which by definition has no `CREATE TABLE` and belongs under `## Query-backed projections`, not `## Tables`.
 - Nullability and types reflect the Kotlin source; `sql_type` reflects the migration.
 - Every relationship names a concrete target entity and join mechanism.
 - Enum columns list all values in `enum_values`, not just the type name.
@@ -120,5 +122,6 @@ Apply the checks relevant to the produced artefact(s):
 ## Notes
 
 - Entities are the authoritative object model; migrations are authoritative for physical column types, defaults, and indexes. When they disagree, document both and flag it.
+- Not every `@Entity` is a physical table. Query-backed projections (no `@Table`/`CREATE TABLE`, hydrated by native queries, `@Subselect`, or `UNION ALL` — e.g. `Task`) and view-backed entities (`CREATE VIEW`, e.g. cas2 `cas_2_application_live_summary`) describe a derived result shape, not stored columns. Document them under `## Query-backed projections (not physical tables)` and label each clearly so readers and tooling don't treat them as real tables.
 - CAS2 is partly deprecated/migrating to v2 and CAS3 has `v2/` entities — note version when documenting these.
 - Keep the dictionary regenerable: re-running this skill should reproduce the same structure so diffs reflect real schema changes.
