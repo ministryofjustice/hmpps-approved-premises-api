@@ -58,6 +58,10 @@ erDiagram
     placement_requirements ||--o{ placement_requests : constrains
     placement_requests ||--o{ booking_not_mades : has
     postcode_districts ||--o{ placement_requirements : locates
+    placement_requirements ||--o{ placement_requirements_essential_criteria : "essential"
+    placement_requirements ||--o{ placement_requirements_desirable_criteria : "desirable"
+    characteristics ||--o{ placement_requirements_essential_criteria : "essential"
+    characteristics ||--o{ placement_requirements_desirable_criteria : "desirable"
 
     departure_reasons ||--o{ departures : categorises
     move_on_categories ||--o{ departures : categorises
@@ -631,8 +635,24 @@ Entity: `PlacementRequirementsEntity`
 | `application_id` | uuid | UUID | no | FK |  | ManyToOne → approved_premises_applications | FetchType.LAZY |
 | `assessment_id` | uuid | UUID | no | FK |  | ManyToOne → approved_premises_assessments | FetchType.LAZY |
 | `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
-| `essential_criteria` |  |  |  |  |  | ManyToMany → characteristics | via join table placement_requirements_essential_criteria |
-| `desirable_criteria` |  |  |  |  |  | ManyToMany → characteristics | via join table placement_requirements_desirable_criteria |
+
+### placement_requirements_desirable_criteria
+
+Entity: `PlacementRequirementsEntity` (join table for `desirableCriteria`)
+
+| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
+|--------|-----------|--------|----------|-----|-------------|--------------|-------|
+| `placement_requirement_id` | uuid | UUID | no | PK,FK |  | ManyToMany join table (desirableCriteria) → placement_requirements | @JoinTable on PlacementRequirementsEntity.desirableCriteria |
+| `characteristic_id` | uuid | UUID | no | PK,FK |  | ManyToMany join table (desirableCriteria) → characteristics |  |
+
+### placement_requirements_essential_criteria
+
+Entity: `PlacementRequirementsEntity` (join table for `essentialCriteria`)
+
+| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
+|--------|-----------|--------|----------|-----|-------------|--------------|-------|
+| `placement_requirement_id` | uuid | UUID | no | PK,FK |  | ManyToMany join table (essentialCriteria) → placement_requirements | @JoinTable on PlacementRequirementsEntity.essentialCriteria |
+| `characteristic_id` | uuid | UUID | no | PK,FK |  | ManyToMany join table (essentialCriteria) → characteristics |  |
 
 ### postcode_districts
 
