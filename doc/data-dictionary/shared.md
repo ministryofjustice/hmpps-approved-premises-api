@@ -562,13 +562,13 @@ Entity: `PlacementApplicationEntity`
 | `created_by_user_id` | uuid | UUID | no | FK |  | ManyToOne → users |  |
 | `data` | jsonb | String? | yes |  |  |  | @Type(JsonType) |
 | `document` | jsonb | String? | yes |  |  |  | @Type(JsonType) |
-| `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
-| `submitted_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
+| `created_at` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
+| `submitted_at` | timestamp | OffsetDateTime? | yes |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `allocated_to_user_id` | uuid | UUID? | yes | FK |  | ManyToOne → users |  |
-| `allocated_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
-| `reallocated_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
+| `allocated_at` | timestamp | OffsetDateTime? | yes |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
+| `reallocated_at` | timestamp | OffsetDateTime? | yes |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `decision` | text | PlacementApplicationDecision? | yes |  | ACCEPTED / REJECTED / WITHDRAW / WITHDRAWN_BY_PP |  |  |
-| `decision_made_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
+| `decision_made_at` | timestamp | OffsetDateTime? | yes |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `placement_type` | text | PlacementType? | yes |  | ROTL / RELEASE_FOLLOWING_DECISION / ADDITIONAL_PLACEMENT / AUTOMATIC |  |  |
 | `automatic` | boolean | Boolean | no |  |  |  |  |
 | `placement_application_id` | uuid | UUID? | yes | FK |  | OneToOne → placement_requests | FetchType.LAZY |
