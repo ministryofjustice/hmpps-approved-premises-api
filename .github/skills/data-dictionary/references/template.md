@@ -1,0 +1,136 @@
+# Data Dictionary Output Templates
+
+Two artefacts per domain, written to `doc/data-dictionary/`:
+
+1. `<domain>.csv` — the machine-readable dictionary (one row per column).
+2. `<domain>.md` — a wiki-ready (Confluence-friendly) document with a Mermaid ER diagram,
+   the full dictionary as markdown tables, and source links.
+
+Plus `doc/data-dictionary/README.md` as an index.
+
+---
+
+## CSV format
+
+Header row (exact column order):
+
+```
+domain,table,entity,column,sql_type,kotlin_type,nullable,key,enum_values,relationship,notes
+```
+
+Field rules:
+
+- `domain` — `cas1` | `cas2` | `cas3` | `shared`.
+- `table` — value from `@Table(name = ...)`, else the class name.
+- `entity` — Kotlin entity class name.
+- `column` — `@Column`/`@JoinColumn` name, else the Kotlin property name.
+- `sql_type` — physical type from the migration (e.g. `uuid`, `varchar`, `timestamptz`, `date`). Leave blank if not found and add a note.
+- `kotlin_type` — the property type (e.g. `UUID`, `String`, `OffsetDateTime`).
+- `nullable` — `yes` / `no` (Kotlin `?` = yes).
+- `key` — `PK`, `FK`, `UNIQUE`, or blank. For FKs put the target in `relationship`.
+- `enum_values` — for `@Enumerated` columns, pipe-separated allowed values, e.g. `provisional|confirmed|arrived`.
+- `relationship` — for FK / association columns: `<Type> -> <TargetTable>` e.g. `ManyToOne -> cas3_premises`.
+- `notes` — anything else (audit timestamp, default, discriminator, entity/migration mismatch flag).
+
+Quoting: wrap any field containing a comma, quote, or newline in double quotes and escape inner quotes by doubling them. Sort rows by `table`, then by the column order within the entity.
+
+### Example rows
+
+```
+domain,table,entity,column,sql_type,kotlin_type,nullable,key,enum_values,relationship,notes
+cas3,cas3_bookings,Cas3BookingEntity,id,uuid,UUID,no,PK,,,
+cas3,cas3_bookings,Cas3BookingEntity,arrival_date,date,LocalDate,no,,,,
+cas3,cas3_bookings,Cas3BookingEntity,status,varchar,BookingStatus,no,,provisional|confirmed|arrived|departed|cancelled,,"@Enumerated(STRING)"
+cas3,cas3_bookings,Cas3BookingEntity,premises_id,uuid,UUID,no,FK,,ManyToOne -> cas3_premises,
+cas3,cas3_bookings,Cas3BookingEntity,created_at,timestamptz,OffsetDateTime,no,,,,@CreationTimestamp
+```
+
+---
+
+## Markdown tables (wiki / Confluence)
+
+The `<domain>.md` document must include the **full dictionary as markdown tables** so it can be
+pasted or imported into a wiki (e.g. Confluence) without the CSV. Structure:
+
+- A `## Tables` section.
+- One `### <table>` subsection per database table (sorted by table name).
+  - A one-line caption: the entity class name and a link to its source file.
+  - A markdown table with one row per column, mirroring the CSV rows for that table.
+
+Use this column order (same data as the CSV, minus the redundant `domain`/`table`/`entity` columns
+which are implied by the section heading):
+
+| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
+|--------|-----------|--------|----------|-----|-------------|--------------|-------|
+| `id` | uuid | UUID | no | PK | | | |
+| `arrival_date` | date | LocalDate | no | | | | |
+| `status` | varchar | BookingStatus | no | | provisional / confirmed / arrived / departed / cancelled | | `@Enumerated(STRING)` |
+| `premises_id` | uuid | UUID | no | FK | | ManyToOne → cas3_premises | |
+| `created_at` | timestamptz | OffsetDateTime | no | | | | `@CreationTimestamp` |
+
+Formatting rules for wiki compatibility:
+
+- Wrap `column` names in backticks.
+- In `enum_values`, separate values with ` / ` (slash) rather than `|`, because `|` breaks markdown table cells.
+- Use `→` for relationship arrows (renders cleanly in Confluence).
+- Escape or avoid literal `|` inside any cell; replace with `\|` or a slash.
+- Keep one table per database table so wiki pages stay navigable; add a `### <table>` anchor for each.
+
+### Example section
+
+```markdown
+### cas3_bookings
+
+Entity: `Cas3BookingEntity` — [source](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas3/jpa/entity/Cas3BookingEntity.kt)
+
+| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
+|--------|-----------|--------|----------|-----|-------------|--------------|-------|
+| `id` | uuid | UUID | no | PK | | | |
+| `arrival_date` | date | LocalDate | no | | | | |
+| `status` | varchar | BookingStatus | no | | provisional / confirmed / arrived / departed / cancelled | | `@Enumerated(STRING)` |
+| `premises_id` | uuid | UUID | no | FK | | ManyToOne → cas3_premises | |
+| `created_at` | timestamptz | OffsetDateTime | no | | | | `@CreationTimestamp` |
+```
+
+---
+
+## Mermaid ER diagram
+
+In `<domain>.md`, include the diagram and source links. Structure:
+
+- An `# Data Dictionary — <Domain>` heading.
+- A link to the domain CSV.
+- A `## Entity–Relationship Diagram` section containing a fenced `mermaid` block using `erDiagram`.
+- A `## Tables` section with the full per-table markdown tables (see [Markdown tables](#markdown-tables-wiki--confluence)).
+- A `## Sources` table mapping each table to its entity and migration source links.
+
+Within the `erDiagram`:
+
+- Declare relationships as `tableA <relation> tableB : "label"`.
+- Optionally include key columns inside each table block (`uuid id PK`, `uuid premises_id FK`). You need not list every column — the CSV is the full reference.
+
+Cardinality mapping from JPA annotations:
+
+| Annotation | Mermaid relation |
+|------------|------------------|
+| `@OneToMany` | `\|\|--o{` |
+| `@ManyToOne` | `}o--\|\|` |
+| `@OneToOne` | `\|\|--\|\|` |
+| `@ManyToMany` | `}o--o{` |
+
+---
+
+## Index (`README.md`)
+
+A table linking each domain to its CSV and markdown document:
+
+| Domain | Dictionary (CSV) | Document (Markdown) |
+|--------|------------------|---------------------|
+| CAS1 — Approved Premises | `cas1.csv` | `cas1.md` |
+| CAS2 — Transitional Accommodation | `cas2.csv` | `cas2.md` |
+| CAS3 — Temporary Accommodation | `cas3.csv` | `cas3.md` |
+| Shared | `shared.csv` | `shared.md` |
+
+Each `<domain>.md` is wiki-ready: it contains the Mermaid ER diagram and the full dictionary as markdown tables for pasting into Confluence.
+
+Add a note: "Generated with the `data-dictionary` skill. Re-run to refresh after schema changes."
