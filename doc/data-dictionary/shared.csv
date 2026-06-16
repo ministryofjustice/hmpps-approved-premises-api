@@ -321,6 +321,7 @@ shared,placement_requests,PlacementRequestEntity,placement_requirements_id,uuid,
 shared,placement_requests,PlacementRequestEntity,is_parole,boolean,Boolean,no,,,,
 shared,placement_requests,PlacementRequestEntity,is_withdrawn,boolean,Boolean,no,,,,
 shared,placement_requests,PlacementRequestEntity,withdrawal_reason,text,PlacementRequestWithdrawalReason?,yes,,see PlacementRequestWithdrawalReason enum,,
+shared,placement_requests,PlacementRequestEntity,due_at,timestamptz,,yes,,,,"physical column (migration 20240226130325); not mapped in PlacementRequestEntity"
 shared,placement_requests,PlacementRequestEntity,version,bigint,Long,no,,,,@Version
 shared,probation_area_probation_region_mappings,ProbationAreaProbationRegionMappingEntity,id,uuid,UUID,no,PK,,,
 shared,probation_area_probation_region_mappings,ProbationAreaProbationRegionMappingEntity,probation_area_delius_code,text,String,no,,,,

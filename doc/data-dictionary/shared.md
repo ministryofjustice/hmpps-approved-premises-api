@@ -615,6 +615,7 @@ Entity: `PlacementRequestEntity`
 | `is_parole` | boolean | Boolean | no |  |  |  |  |
 | `is_withdrawn` | boolean | Boolean | no |  |  |  |  |
 | `withdrawal_reason` | text | PlacementRequestWithdrawalReason? | yes |  | see PlacementRequestWithdrawalReason enum |  |  |
+| `due_at` | timestamptz |  | yes |  |  |  | physical column (migration 20240226130325); not mapped in PlacementRequestEntity |
 | `version` | bigint | Long | no |  |  |  | @Version |
 
 ### placement_requirements
