@@ -84,7 +84,7 @@ Entity: `ApAreaEntity`
 | `id` | uuid | UUID | no | PK |  |  |  |
 | `name` | text | String | no |  |  |  |  |
 | `identifier` | text | String | no |  |  |  |  |
-| `default_cru1_management_area_id` | uuid | UUID | no | FK |  | ManyToOne → cas1_cru_management_areas | FetchType.LAZY |
+| `default_cru1_management_area_id` | uuid | UUID | yes | FK |  | ManyToOne → cas1_cru_management_areas | nullable in DB (migration 20240919134254 DROP NOT NULL); JPA association is non-null |
 
 ### appeals
 
