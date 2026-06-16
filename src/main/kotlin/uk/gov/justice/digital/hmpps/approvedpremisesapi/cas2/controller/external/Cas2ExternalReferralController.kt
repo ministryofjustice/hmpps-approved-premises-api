@@ -13,7 +13,7 @@ class Cas2ExternalReferralController(
   private val cas2ApplicationService: Cas2ApplicationService,
   private val cas2ApplicationsTransformer: Cas2ApplicationsTransformer,
 
-  ) {
+) {
 
   @PreAuthorize("hasRole('APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE')")
   @GetMapping("/referrals/{crn}")

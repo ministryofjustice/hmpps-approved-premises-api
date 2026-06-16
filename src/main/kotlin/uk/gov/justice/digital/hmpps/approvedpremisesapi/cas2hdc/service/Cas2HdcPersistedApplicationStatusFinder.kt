@@ -8,7 +8,7 @@ import java.util.UUID
 
 @Component
 class Cas2HdcPersistedApplicationStatusFinder(
-    private val statusList: List<Cas2PersistedApplicationStatus> = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2),
+  private val statusList: List<Cas2PersistedApplicationStatus> = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2),
 ) {
   fun all(): List<Cas2PersistedApplicationStatus> = statusList
 
