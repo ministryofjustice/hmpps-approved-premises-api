@@ -33,6 +33,7 @@ shared,non_arrivals,NonArrivalEntity,notes,text,String?,yes,,,,@Deprecated
 shared,non_arrivals,NonArrivalEntity,created_at,timestamptz,OffsetDateTime,no,,,,@Deprecated
 shared,non_arrivals,NonArrivalEntity,booking_id,uuid,UUID,no,FK,,OneToOne -> bookings,@Deprecated
 shared,placement_requirements,PlacementRequirementsEntity,id,uuid,UUID,no,PK,,,
+shared,placement_requirements,PlacementRequirementsEntity,gender,text,String?,yes,,,,DB column exists but is not mapped in PlacementRequirementsEntity
 shared,placement_requirements,PlacementRequirementsEntity,ap_type,text,JpaApType,no,,NORMAL|PIPE|ESAP|RFAP|MHAP_ST_JOSEPHS|MHAP_ELLIOT_HOUSE,,
 shared,placement_requirements,PlacementRequirementsEntity,postcode_district_id,uuid,UUID,no,FK,,ManyToOne -> postcode_districts,
 shared,placement_requirements,PlacementRequirementsEntity,radius,integer,Int,no,,,,
