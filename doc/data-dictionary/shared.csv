@@ -272,7 +272,7 @@ shared,domain_events,DomainEventEntity,triggered_by_user_id,uuid,UUID?,yes,,,,
 shared,domain_events,DomainEventEntity,noms_number,text,String?,yes,,,,
 shared,domain_events,DomainEventEntity,schema_version,integer,Int?,yes,,,,
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,id,uuid,UUID,no,PK,,,
-shared,application_timeline_notes,ApplicationTimelineNoteEntity,application_id,uuid,UUID,no,,,,
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_applications,"FK in migration 20231102094837; entity stores UUID not an association"
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,created_by_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,created_at,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,body,text,String,no,,,,
