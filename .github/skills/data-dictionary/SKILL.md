@@ -1,7 +1,7 @@
 ---
 name: data-dictionary
 description: 'Generate or update a data dictionary documenting the database schema for this repository (hmpps-approved-premises-api). USE FOR: building a reference of JPA entities, database tables, columns, data types, relationships, and enums; documenting the schema for CAS1 (Approved Premises), CAS2 (Transitional Accommodation), CAS3 (Temporary Accommodation), and shared domains; producing table-to-entity mappings; onboarding docs for the data model. Trigger words: data dictionary, schema documentation, entity reference, table catalog, document the database, ERD, column reference.'
-argument-hint: '[domain: cas1 | cas2 | cas3 | shared | all] [format: csv | markdown | both] [diagram: on | off]]'
+argument-hint: '[domain: cas1 | cas2 | cas3 | shared | all] [format: csv | markdown | both] [diagram: on | off]'
 ---
 
 # Data Dictionary Generator
