@@ -242,7 +242,7 @@ Entity: `Cas1SpaceBookingEntity`
 | `migrated_management_info_from` | text | ManagementInfoSource? | yes |  | DELIUS / LEGACY_CAS_1 |  |  |
 | `delius_id` | text | String? | yes |  |  |  | delius referral id for support |
 | `transferred_from` | uuid | UUID? | yes | FK |  | OneToOne → cas1_space_bookings | deprecated; use transfer_type |
-| `transfer_type` | text | TransferType? | yes |  | PLANNED / EMERGENCY | deprecated |  |
+| `transfer_type` | text | TransferType? | yes |  | PLANNED / EMERGENCY |  | deprecated |
 | `transfer_reason` | text | TransferReason? | yes |  | TransferReason |  |  |
 | `additional_information` | text | String? | yes |  |  |  |  |
 | `version` | bigint | Long | no |  |  |  | @Version optimistic lock |

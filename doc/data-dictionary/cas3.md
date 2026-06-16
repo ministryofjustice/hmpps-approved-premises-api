@@ -121,14 +121,16 @@ Entity: `Cas3BedspacesEntity`
 
 Entity: `Cas3ConfirmationEntity`, `Cas3v2ConfirmationEntity`
 
+> Note: this physical table is mapped by two JPA entities — `Cas3ConfirmationEntity` (v1) and `Cas3v2ConfirmationEntity` (v2). Both map to the same `cas3_confirmations` table, so the columns are listed once per entity below.
+
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
-| `id` | uuid | UUID | no | PK |  |  | v1 |
+| `id` | uuid | UUID | no | PK |  |  | v1 entity; physical table shared with v2 entity Cas3v2ConfirmationEntity |
 | `date_time` | timestamptz | OffsetDateTime | no |  |  |  |  |
 | `notes` | text | String? | yes |  |  |  |  |
 | `created_at` | timestamptz | OffsetDateTime | no |  |  |  | audit timestamp |
 | `booking_id` | uuid | UUID | no | FK |  | OneToOne → bookings |  |
-| `id` | uuid | UUID | no | PK |  |  | v2 variant (maps to cas3_confirmations) |
+| `id` | uuid | UUID | no | PK |  |  | v2 entity; physical table shared with v1 entity Cas3ConfirmationEntity |
 | `date_time` | timestamptz | OffsetDateTime | no |  |  |  |  |
 | `notes` | text | String? | yes |  |  |  |  |
 | `created_at` | timestamptz | OffsetDateTime | no |  |  |  | audit timestamp |
@@ -185,13 +187,15 @@ Entity: `Cas3PremisesCharacteristicEntity`
 
 Entity: `Cas3TurnaroundEntity`, `Cas3v2TurnaroundEntity`
 
+> Note: this physical table is mapped by two JPA entities — `Cas3TurnaroundEntity` (v1) and `Cas3v2TurnaroundEntity` (v2). Both map to the same `cas3_turnarounds` table, so the columns are listed once per entity below.
+
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
-| `id` | uuid | UUID | no | PK |  |  | v1 |
+| `id` | uuid | UUID | no | PK |  |  | v1 entity; physical table shared with v2 entity Cas3v2TurnaroundEntity |
 | `working_day_count` | integer | Int | no |  |  |  |  |
 | `created_at` | timestamptz | OffsetDateTime | no |  |  |  | audit timestamp |
 | `booking_id` | uuid | UUID | no | FK |  | ManyToOne → bookings |  |
-| `id` | uuid | UUID | no | PK |  |  | v2 variant (maps to cas3_turnarounds) |
+| `id` | uuid | UUID | no | PK |  |  | v2 entity; physical table shared with v1 entity Cas3TurnaroundEntity |
 | `working_day_count` | integer | Int | no |  |  |  |  |
 | `created_at` | timestamptz | OffsetDateTime | no |  |  |  | audit timestamp |
 | `booking_id` | uuid | UUID | no | FK |  | ManyToOne → bookings |  |
