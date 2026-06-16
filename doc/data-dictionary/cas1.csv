@@ -57,7 +57,7 @@ cas1,cas1_space_bookings,Cas1SpaceBookingEntity,delius_event_number,text,String?
 cas1,cas1_space_bookings,Cas1SpaceBookingEntity,migrated_management_info_from,text,ManagementInfoSource?,yes,,DELIUS|LEGACY_CAS_1,,
 cas1,cas1_space_bookings,Cas1SpaceBookingEntity,delius_id,text,String?,yes,,,,delius referral id for support
 cas1,cas1_space_bookings,Cas1SpaceBookingEntity,transferred_from,uuid,UUID?,yes,FK,,OneToOne -> cas1_space_bookings,deprecated; use transfer_type
-cas1,cas1_space_bookings,Cas1SpaceBookingEntity,transfer_type,text,TransferType?,yes,,PLANNED|EMERGENCY,deprecated
+cas1,cas1_space_bookings,Cas1SpaceBookingEntity,transfer_type,text,TransferType?,yes,,PLANNED|EMERGENCY,,deprecated
 cas1,cas1_space_bookings,Cas1SpaceBookingEntity,transfer_reason,text,TransferReason?,yes,,TransferReason,,
 cas1,cas1_space_bookings,Cas1SpaceBookingEntity,additional_information,text,String?,yes,,,,
 cas1,cas1_space_bookings,Cas1SpaceBookingEntity,version,bigint,Long,no,,,,@Version optimistic lock

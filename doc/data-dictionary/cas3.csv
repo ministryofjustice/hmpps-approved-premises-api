@@ -32,7 +32,7 @@ cas3,cas3_premises_characteristics,Cas3PremisesCharacteristicEntity,id,uuid,UUID
 cas3,cas3_premises_characteristics,Cas3PremisesCharacteristicEntity,name,text,String,no,,,,
 cas3,cas3_premises_characteristics,Cas3PremisesCharacteristicEntity,description,text,String,no,,,,
 cas3,cas3_premises_characteristics,Cas3PremisesCharacteristicEntity,is_active,boolean,Boolean,no,,,,
-cas3,cas3_confirmations,Cas3ConfirmationEntity,id,uuid,UUID,no,PK,,,v1
+cas3,cas3_confirmations,Cas3ConfirmationEntity,id,uuid,UUID,no,PK,,,v1 entity; physical table shared with v2 entity Cas3v2ConfirmationEntity
 cas3,cas3_confirmations,Cas3ConfirmationEntity,date_time,timestamptz,OffsetDateTime,no,,,,
 cas3,cas3_confirmations,Cas3ConfirmationEntity,notes,text,String?,yes,,,,
 cas3,cas3_confirmations,Cas3ConfirmationEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
@@ -49,7 +49,7 @@ cas3,cas3_void_bedspaces,Cas3VoidBedspaceEntity,bedspace_id,uuid,UUID?,yes,FK,,M
 cas3,cas3_void_bedspaces,Cas3VoidBedspaceEntity,cancellation_date,timestamptz,OffsetDateTime?,yes,,,,
 cas3,cas3_void_bedspaces,Cas3VoidBedspaceEntity,cancellation_notes,text,String?,yes,,,,
 cas3,cas3_void_bedspaces,Cas3VoidBedspaceEntity,cost_centre,text,Cas3CostCentre?,yes,,Cas3CostCentre,,
-cas3,cas3_turnarounds,Cas3TurnaroundEntity,id,uuid,UUID,no,PK,,,v1
+cas3,cas3_turnarounds,Cas3TurnaroundEntity,id,uuid,UUID,no,PK,,,v1 entity; physical table shared with v2 entity Cas3v2TurnaroundEntity
 cas3,cas3_turnarounds,Cas3TurnaroundEntity,working_day_count,integer,Int,no,,,,
 cas3,cas3_turnarounds,Cas3TurnaroundEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
 cas3,cas3_turnarounds,Cas3TurnaroundEntity,booking_id,uuid,UUID,no,FK,,ManyToOne -> bookings,
@@ -114,12 +114,12 @@ cas3,cancellations,Cas3CancellationEntity,notes,text,String?,yes,,,,
 cas3,cancellations,Cas3CancellationEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
 cas3,cancellations,Cas3CancellationEntity,booking_id,uuid,UUID,no,FK,,ManyToOne -> bookings,
 cas3,cancellations,Cas3CancellationEntity,other_reason,text,String?,yes,,,,
-cas3,cas3_confirmations,Cas3v2ConfirmationEntity,id,uuid,UUID,no,PK,,,v2 variant (maps to cas3_confirmations)
+cas3,cas3_confirmations,Cas3v2ConfirmationEntity,id,uuid,UUID,no,PK,,,v2 entity; physical table shared with v1 entity Cas3ConfirmationEntity
 cas3,cas3_confirmations,Cas3v2ConfirmationEntity,date_time,timestamptz,OffsetDateTime,no,,,,
 cas3,cas3_confirmations,Cas3v2ConfirmationEntity,notes,text,String?,yes,,,,
 cas3,cas3_confirmations,Cas3v2ConfirmationEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
 cas3,cas3_confirmations,Cas3v2ConfirmationEntity,booking_id,uuid,UUID,no,FK,,OneToOne -> bookings,
-cas3,cas3_turnarounds,Cas3v2TurnaroundEntity,id,uuid,UUID,no,PK,,,v2 variant (maps to cas3_turnarounds)
+cas3,cas3_turnarounds,Cas3v2TurnaroundEntity,id,uuid,UUID,no,PK,,,v2 entity; physical table shared with v1 entity Cas3TurnaroundEntity
 cas3,cas3_turnarounds,Cas3v2TurnaroundEntity,working_day_count,integer,Int,no,,,,
 cas3,cas3_turnarounds,Cas3v2TurnaroundEntity,created_at,timestamptz,OffsetDateTime,no,,,,audit timestamp
 cas3,cas3_turnarounds,Cas3v2TurnaroundEntity,booking_id,uuid,UUID,no,FK,,ManyToOne -> bookings,
