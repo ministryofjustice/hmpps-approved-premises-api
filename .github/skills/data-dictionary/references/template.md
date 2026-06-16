@@ -94,6 +94,49 @@ Entity: `Cas3BookingEntity` — [source](../../src/main/kotlin/uk/gov/justice/di
 
 ---
 
+## Query-backed projections (not physical tables)
+
+Some `@Entity` classes are **not** physical tables: they have no `@Table`/`CREATE TABLE` and are
+hydrated by a native query (`@Subselect`, a `nativeQuery = true` repository method, or a `UNION ALL`
+over other tables \u2014 e.g. `Task`), or they are backed by a database `CREATE VIEW` (e.g. cas2
+`cas_2_application_live_summary`). Their columns describe a derived result shape, not stored columns.
+
+Document these in a dedicated section **after** `## Tables`, and keep them **out** of the physical
+`## Tables` section and the ER diagram, so they are not mistaken for real tables:
+
+- Add a `## Query-backed projections (not physical tables)` heading with a one-line explanation.
+- One `### <name>` subsection per projection, with the entity name and a short prose note stating it
+  is not a physical table/view and how it is populated.
+- A markdown column table in the same format as physical tables.
+- In the CSV, still emit one row per column (so `format = both` stays in sync), but make the
+  non-physical status explicit \u2014 e.g. a `notes` value like
+  `projection; native UNION ALL over assessments + placement_applications; no physical table`.
+
+### Example section
+
+```markdown
+## Query-backed projections (not physical tables)
+
+These entities have no `@Table` annotation and no `CREATE TABLE`/`CREATE VIEW` migration. They are
+read-only projections hydrated by native queries and are listed here for reference only — they do
+not exist as physical tables in the database.
+
+### tasks
+
+Entity: `Task`
+
+Not a physical table or view. Populated by `TaskRepository.getAll(...)` as a native `UNION ALL` over
+`assessments` and `placement_applications`. The columns below describe the projection's result
+shape, not stored columns.
+
+| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
+|--------|-----------|--------|----------|-----|-------------|--------------|-------|
+| `id` | uuid | UUID | no | PK | | | projection; native UNION ALL over assessments + placement_applications; no physical table |
+| `type` | text | TaskEntityType | no | | ASSESSMENT / PLACEMENT_APPLICATION | | |
+```
+
+---
+
 ## Mermaid ER diagram
 
 In `<domain>.md`, include the diagram and source links. Structure:

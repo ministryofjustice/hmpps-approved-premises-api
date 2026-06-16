@@ -245,13 +245,6 @@ shared,rooms,RoomEntity,name,text,String,no,,,,
 shared,rooms,RoomEntity,code,text,String?,yes,,,,
 shared,rooms,RoomEntity,notes,text,String?,yes,,,,
 shared,rooms,RoomEntity,premises_id,uuid,UUID,no,FK,,ManyToOne -> premises,
-shared,tasks,Task,id,uuid,UUID,no,PK,,,projection/view entity
-shared,tasks,Task,created_at,timestamp,LocalDateTime,no,,,,
-shared,tasks,Task,type,text,TaskEntityType,no,,ASSESSMENT|PLACEMENT_APPLICATION,,
-shared,tasks,Task,person,text,String,no,,,,
-shared,tasks,Task,allocated_to,text,String?,yes,,,,
-shared,tasks,Task,completed_at,timestamp,LocalDateTime?,yes,,,,
-shared,tasks,Task,decision,text,String?,yes,,,,
 shared,domain_events,DomainEventEntity,id,uuid,UUID,no,PK,,,
 shared,domain_events,DomainEventEntity,application_id,uuid,UUID?,yes,,,,
 shared,domain_events,DomainEventEntity,assessment_id,uuid,UUID?,yes,,,,
@@ -276,7 +269,7 @@ shared,application_timeline_notes,ApplicationTimelineNoteEntity,application_id,u
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,created_by_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,created_at,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,body,text,String,no,,,,
-shared,application_timeline_notes,ApplicationTimelineNoteEntity,cas1_space_booking_id,uuid,UUID?,yes,,,,
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,cas1_space_booking_id,uuid,UUID?,yes,FK,,,FK in migration 20241205110116; entity stores UUID not an association
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,deleted_at,timestamptz,OffsetDateTime?,yes,,,,
 shared,move_on_categories,MoveOnCategoryEntity,id,uuid,UUID,no,PK,,,
 shared,move_on_categories,MoveOnCategoryEntity,name,text,String,no,,,,
@@ -408,3 +401,10 @@ shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEnt
 shared,destination_providers,DestinationProviderEntity,id,uuid,UUID,no,PK,,,
 shared,destination_providers,DestinationProviderEntity,name,text,String,no,,,,
 shared,destination_providers,DestinationProviderEntity,is_active,boolean,Boolean,no,,,,
+shared,tasks,Task,id,uuid,UUID,no,PK,,,projection; native UNION ALL over assessments + placement_applications; no physical table
+shared,tasks,Task,created_at,timestamp,LocalDateTime,no,,,,
+shared,tasks,Task,type,text,TaskEntityType,no,,ASSESSMENT|PLACEMENT_APPLICATION,,
+shared,tasks,Task,person,text,String,no,,,,
+shared,tasks,Task,allocated_to,text,String?,yes,,,,
+shared,tasks,Task,completed_at,timestamp,LocalDateTime?,yes,,,,
+shared,tasks,Task,decision,text,String?,yes,,,,
