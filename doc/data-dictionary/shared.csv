@@ -1,7 +1,7 @@
 domain,table,entity,column,sql_type,kotlin_type,nullable,key,enum_values,relationship,notes
 shared,booking_not_mades,BookingNotMadeEntity,id,uuid,UUID,no,PK,,,
 shared,booking_not_mades,BookingNotMadeEntity,placement_request_id,uuid,UUID,no,FK,,ManyToOne -> placement_requests,
-shared,booking_not_mades,BookingNotMadeEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,booking_not_mades,BookingNotMadeEntity,created_at,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
 shared,booking_not_mades,BookingNotMadeEntity,notes,text,String?,yes,,,,
 shared,postcode_districts,PostCodeDistrictEntity,id,uuid,UUID,no,PK,,,
 shared,postcode_districts,PostCodeDistrictEntity,outcode,text,String,no,,,,
@@ -57,8 +57,8 @@ shared,users,UserEntity,ap_area_id,uuid,UUID?,yes,FK,,ManyToOne -> ap_areas,Fetc
 shared,users,UserEntity,cas1_cru_management_area_id,uuid,UUID?,yes,FK,,ManyToOne -> cas1_cru_management_areas,FetchType.LAZY
 shared,users,UserEntity,cas1_cru_management_area_override_id,uuid,UUID?,yes,FK,,ManyToOne -> cas1_cru_management_areas,FetchType.LAZY
 shared,users,UserEntity,team_codes,text,List<String>?,yes,,,,StringListConverter
-shared,users,UserEntity,created_at,timestamptz,OffsetDateTime?,yes,,,,
-shared,users,UserEntity,updated_at,timestamptz,OffsetDateTime?,yes,,,,@UpdateTimestamp
+shared,users,UserEntity,created_at,timestamp,OffsetDateTime?,yes,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
+shared,users,UserEntity,updated_at,timestamp,OffsetDateTime?,yes,,,,@UpdateTimestamp; migration uses timestamp (no time zone); entity is OffsetDateTime
 shared,user_role_assignments,UserRoleAssignmentEntity,id,uuid,UUID,no,PK,,,
 shared,user_role_assignments,UserRoleAssignmentEntity,user_id,uuid,UUID,no,FK,,ManyToOne -> users,
 shared,user_role_assignments,UserRoleAssignmentEntity,role,text,UserRole,no,,UserRole,,
@@ -194,8 +194,8 @@ shared,assessment_referral_history_system_notes,AssessmentReferralHistorySystemN
 shared,assessment_referral_history_system_notes,AssessmentReferralHistorySystemNoteEntity,type,text,ReferralHistorySystemNoteType,no,,SUBMITTED|UNALLOCATED|IN_REVIEW|READY_TO_PLACE|REJECTED|COMPLETED,,
 shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,id,uuid,UUID,no,PK,,,
 shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> applications,
-shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,submitted_at,timestamptz,OffsetDateTime,no,,,,
-shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,expected_arrival_date,timestamptz,OffsetDateTime,no,,,,
+shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,submitted_at,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
+shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,expected_arrival_date,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
 shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,archived,boolean,Boolean,no,,,,
 shared,extensions,ExtensionEntity,id,uuid,UUID,no,PK,,,@Deprecated
 shared,extensions,ExtensionEntity,previous_departure_date,date,LocalDate,no,,,,@Deprecated
@@ -274,7 +274,7 @@ shared,domain_events,DomainEventEntity,schema_version,integer,Int?,yes,,,,
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,id,uuid,UUID,no,PK,,,
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,application_id,uuid,UUID,no,,,,
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,created_by_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,
-shared,application_timeline_notes,ApplicationTimelineNoteEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,created_at,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,body,text,String,no,,,,
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,cas1_space_booking_id,uuid,UUID?,yes,,,,
 shared,application_timeline_notes,ApplicationTimelineNoteEntity,deleted_at,timestamptz,OffsetDateTime?,yes,,,,
@@ -319,7 +319,6 @@ shared,placement_requests,PlacementRequestEntity,application_id,uuid,UUID,no,FK,
 shared,placement_requests,PlacementRequestEntity,assessment_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_assessments,FetchType.LAZY
 shared,placement_requests,PlacementRequestEntity,placement_application_id,uuid,UUID?,yes,FK,,OneToOne -> placement_applications,
 shared,placement_requests,PlacementRequestEntity,created_at,timestamptz,OffsetDateTime,no,,,,
-shared,placement_requests,PlacementRequestEntity,due_at,timestamptz,OffsetDateTime?,yes,,,,DB column exists but is not mapped in PlacementRequestEntity
 shared,placement_requests,PlacementRequestEntity,notes,text,String?,yes,,,,
 shared,placement_requests,PlacementRequestEntity,placement_requirements_id,uuid,UUID,no,FK,,ManyToOne -> placement_requirements,FetchType.LAZY
 shared,placement_requests,PlacementRequestEntity,is_parole,boolean,Boolean,no,,,,
