@@ -114,7 +114,7 @@ Entity: `ApplicationTimelineNoteEntity`
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
 | `id` | uuid | UUID | no | PK |  |  |  |
-| `application_id` | uuid | UUID | no |  |  |  |  |
+| `application_id` | uuid | UUID | no | FK |  | ManyToOne → approved_premises_applications | FK in migration 20231102094837; entity stores UUID not an association |
 | `created_by_user_id` | uuid | UUID? | yes | FK |  | ManyToOne → users |  |
 | `created_at` | timestamp | OffsetDateTime | no |  |  |  | migration uses timestamp (no time zone); entity is OffsetDateTime |
 | `body` | text | String | no |  |  |  |  |
