@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -740,7 +740,7 @@ class Cas2v2ApplicationServiceTest {
     val hdcEligibilityDate = LocalDate.parse("2023-03-30")
     val conditionalReleaseDate = LocalDate.parse("2023-04-29")
 
-    private val submitCas2v2Application = SubmitCas2v2Application(
+    private val submitCas2Application = SubmitCas2Application(
       translatedDocument = {},
       applicationId = applicationId,
       preferredAreas = "Leeds | Bradford",
@@ -752,7 +752,7 @@ class Cas2v2ApplicationServiceTest {
     @BeforeEach
     fun setup() {
       every { mockCas2LockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(UUID.randomUUID())
-      every { mockJsonMapper.writeValueAsString(submitCas2v2Application.translatedDocument) } returns "{}"
+      every { mockJsonMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
     }
 
@@ -762,7 +762,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns null
 
-      assertThat(cas2ApplicationService.submitCas2Application(submitCas2v2Application, user) is CasResult.NotFound).isTrue
+      assertThat(cas2ApplicationService.submitCas2Application(submitCas2Application, user) is CasResult.NotFound).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -782,7 +782,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns cas2v2Application
 
-      assertThat(cas2ApplicationService.submitCas2Application(submitCas2v2Application, user) is CasResult.Unauthorised).isTrue
+      assertThat(cas2ApplicationService.submitCas2Application(submitCas2Application, user) is CasResult.Unauthorised).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -801,7 +801,7 @@ class Cas2v2ApplicationServiceTest {
         mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       } returns cas2v2Application
 
-      val result = cas2ApplicationService.submitCas2Application(submitCas2v2Application, user)
+      val result = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
       val validatableActionResult = result as CasResult.GeneralValidationError
@@ -825,7 +825,7 @@ class Cas2v2ApplicationServiceTest {
         mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       } returns cas2v2Application
 
-      val result = cas2ApplicationService.submitCas2Application(submitCas2v2Application, user)
+      val result = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
       val validatableActionResult = result as CasResult.GeneralValidationError
@@ -896,7 +896,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2AssessmentService.createCas2Assessment(any()) } returns any()
 
-      val result = cas2ApplicationService.submitCas2Application(submitCas2v2Application, user)
+      val result = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
 
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success

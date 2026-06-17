@@ -32,7 +32,7 @@ data class Cas2ApplicationSummary(
 
   @get:JsonProperty("createdByUserName") val createdByUserName: String? = null,
 
-  @get:JsonProperty("latestStatusUpdate") val latestStatusUpdate: LatestCas2v2StatusUpdate? = null,
+  @get:JsonProperty("latestStatusUpdate") val latestStatusUpdate: LatestCas2StatusUpdate? = null,
 
   @get:JsonProperty("hdcEligibilityDate") val hdcEligibilityDate: LocalDate? = null,
 

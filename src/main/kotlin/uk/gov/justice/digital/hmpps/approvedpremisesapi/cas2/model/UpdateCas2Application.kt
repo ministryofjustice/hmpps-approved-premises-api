@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import java.time.LocalDate
 
-data class UpdateCas2v2Application(
+data class UpdateCas2Application(
 
     @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
 

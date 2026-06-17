@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -74,10 +74,10 @@ class Cas2SubmissionsController(
   @Transactional
   @PostMapping("/submissions")
   fun submissionsPost(
-    @RequestBody submitCas2v2Application: SubmitCas2v2Application,
+    @RequestBody submitCas2Application: SubmitCas2Application,
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
-    val submitResult = cas2ApplicationService.submitCas2Application(submitCas2v2Application, user)
+    val submitResult = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
     ensureEntityFromCasResultIsSuccess(submitResult)
 
     return ResponseEntity(HttpStatus.OK)

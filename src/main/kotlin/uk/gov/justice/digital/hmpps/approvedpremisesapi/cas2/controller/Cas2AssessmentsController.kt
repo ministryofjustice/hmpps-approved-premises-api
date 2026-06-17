@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2v2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2v2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2AssessmentStatusUpdate
@@ -48,7 +48,7 @@ class Cas2AssessmentsController(
   @PutMapping("/assessments/{assessmentId}")
   fun assessmentsAssessmentIdPut(
     @PathVariable assessmentId: UUID,
-    @RequestBody updateCas2Assessment: UpdateCas2v2Assessment,
+    @RequestBody updateCas2Assessment: UpdateCas2Assessment,
   ): ResponseEntity<Cas2Assessment> {
     val assessmentResult = cas2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment)
 
@@ -77,7 +77,7 @@ class Cas2AssessmentsController(
   @PostMapping("/assessments/{assessmentId}/notes")
   fun assessmentsAssessmentIdNotesPost(
     @PathVariable assessmentId: UUID,
-    @RequestBody body: NewCas2v2ApplicationNote,
+    @RequestBody body: NewCas2ApplicationNote,
   ): ResponseEntity<Cas2ApplicationNote> {
     val noteResult = cas2ApplicationNoteService.createAssessmentNote(assessmentId, body)
 

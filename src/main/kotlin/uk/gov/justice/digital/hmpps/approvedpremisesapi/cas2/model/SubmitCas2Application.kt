@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import java.time.LocalDate
 import java.util.UUID
 
-data class SubmitCas2v2Application(
+data class SubmitCas2Application(
 
     @get:JsonProperty("translatedDocument", required = true) val translatedDocument: Any,
 

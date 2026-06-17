@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
@@ -115,7 +115,7 @@ class Cas2ApplicationController(
   @Suppress("ThrowsCount")
   @PostMapping("/applications")
   fun applicationsPost(
-    @RequestBody body: NewCas2v2Application,
+    @RequestBody body: NewCas2Application,
   ): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
 
@@ -152,7 +152,7 @@ class Cas2ApplicationController(
   @PutMapping("/applications/{applicationId}")
   fun applicationsApplicationIdPut(
     @PathVariable applicationId: UUID,
-    @RequestBody body: UpdateCas2v2Application,
+    @RequestBody body: UpdateCas2Application,
   ): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
 

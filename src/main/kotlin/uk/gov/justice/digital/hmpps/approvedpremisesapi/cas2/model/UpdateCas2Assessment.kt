@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class UpdateCas2v2Assessment(
+data class UpdateCas2Assessment(
 
   @get:JsonProperty("nacroReferralId") val nacroReferralId: String? = null,
 

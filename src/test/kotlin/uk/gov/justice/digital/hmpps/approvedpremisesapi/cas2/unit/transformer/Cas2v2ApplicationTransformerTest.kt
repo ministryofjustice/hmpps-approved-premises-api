@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.LatestCas2v2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.LatestCas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
@@ -74,7 +74,7 @@ class Cas2v2ApplicationTransformerTest {
       isActive = user.isActive,
     )
     every { mockCas2StatusUpdateTransformer.transformJpaToApi(any()) } returns mockk<Cas2StatusUpdate>()
-    every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns mockk<LatestCas2v2StatusUpdate>()
+    every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns mockk<LatestCas2StatusUpdate>()
     every { mockCas2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf()
   }
 
@@ -225,7 +225,7 @@ class Cas2v2ApplicationTransformerTest {
         assignmentDate = null,
       )
 
-      every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2v2StatusUpdate(
+      every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
         statusId = UUID.fromString(application.latestStatusUpdateStatusId),
         label = application.latestStatusUpdateLabel!!,
       )

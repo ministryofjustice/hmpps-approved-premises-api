@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2v2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
@@ -28,7 +28,7 @@ class Cas2AssessmentService(
 
   fun updateAssessment(
     assessmentId: UUID,
-    newAssessment: UpdateCas2v2Assessment,
+    newAssessment: UpdateCas2Assessment,
   ): CasResult<Cas2AssessmentEntity> {
     val assessmentEntity = cas2AssessmentRepository.findByIdAndServiceOrigin(assessmentId, Cas2ServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2AssessmentEntity", assessmentId.toString())

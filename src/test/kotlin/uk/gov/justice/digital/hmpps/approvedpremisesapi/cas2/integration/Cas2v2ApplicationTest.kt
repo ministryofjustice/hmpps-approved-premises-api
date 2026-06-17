@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
@@ -1583,7 +1583,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .uri("/cas2/applications/$applicationId")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            UpdateCas2v2Application(
+            UpdateCas2Application(
               data = mapOf("thingId" to 123),
               type = UpdateApplicationType.CAS2V2,
               cohort = Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW,
@@ -1730,7 +1730,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             .uri("/cas2/application/${application.id}")
             .header("Authorization", "Bearer $jwtForNorwichUser")
             .bodyValue(
-              UpdateCas2v2Application(
+              UpdateCas2Application(
                 data = mapOf("thingId" to 123),
                 type = UpdateApplicationType.CAS2V2,
               ),
