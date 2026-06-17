@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 
 @Component
@@ -9,10 +9,10 @@ class Cas2ApplicationNotesTransformer {
 
   fun transformJpaToApi(
     jpa: Cas2ApplicationNoteEntity,
-  ): Cas2v2ApplicationNote {
+  ): Cas2ApplicationNote {
     val name = jpa.createdByUser.name
     val email = jpa.createdByUser.email ?: "Not found"
-    return Cas2v2ApplicationNote(
+    return Cas2ApplicationNote(
       id = jpa.id,
       name = name,
       email = email,

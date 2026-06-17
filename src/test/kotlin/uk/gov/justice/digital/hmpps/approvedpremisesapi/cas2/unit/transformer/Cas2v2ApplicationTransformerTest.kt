@@ -13,9 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2StatusUpdateTransformer
@@ -66,14 +66,14 @@ class Cas2v2ApplicationTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockCas2UserTransformer.transformJpaToApi(any()) } returns Cas2v2User(
+    every { mockCas2UserTransformer.transformJpaToApi(any()) } returns Cas2User(
       id = user.id,
       name = user.name,
       username = user.username,
-      authSource = Cas2v2User.AuthSource.nomis,
+      authSource = Cas2User.AuthSource.nomis,
       isActive = user.isActive,
     )
-    every { mockCas2StatusUpdateTransformer.transformJpaToApi(any()) } returns mockk<Cas2v2StatusUpdate>()
+    every { mockCas2StatusUpdateTransformer.transformJpaToApi(any()) } returns mockk<Cas2StatusUpdate>()
     every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns mockk<LatestCas2v2StatusUpdate>()
     every { mockCas2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf()
   }
@@ -120,7 +120,7 @@ class Cas2v2ApplicationTransformerTest {
 
     @Test
     fun `transformJpaToApi transforms a submitted CAS2v2 application correctly without status updates`() {
-      val assessment = Cas2v2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
+      val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
       every { mockCas2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
 
       val application = submittedCas2ApplicationFactory
@@ -140,13 +140,13 @@ class Cas2v2ApplicationTransformerTest {
 
     @Test
     fun `transformJpaToApi transforms a submitted CAS2v2 application correctly with status updates`() {
-      val mockStatusUpdate = Cas2v2StatusUpdate(
+      val mockStatusUpdate = Cas2StatusUpdate(
         id = UUID.fromString("c426c63a-be35-421f-a1a0-fc286b60da41"),
         description = "On Waiting List",
         label = "On Waiting List",
         name = "onWaitingList",
       )
-      val mockAssessment = Cas2v2Assessment(
+      val mockAssessment = Cas2Assessment(
         id = UUID.fromString("6e631a8c-a013-4bb4-812c-886c8fc25354"),
         statusUpdates = listOf(mockStatusUpdate),
       )

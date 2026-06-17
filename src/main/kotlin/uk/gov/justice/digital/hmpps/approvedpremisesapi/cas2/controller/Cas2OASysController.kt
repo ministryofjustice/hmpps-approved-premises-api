@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.controller
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OASysAssessmentMetadataDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OAsysRiskToSelfDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OAsysRoshRatingsDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OAsysRoshSummaryDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OASysAssessmentMetadataDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRiskToSelfDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshRatingsDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OASysTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
@@ -21,7 +21,7 @@ class Cas2OASysController(
   @GetMapping("/people/{crn}/oasys/metadata")
   fun getOASysMetadataByCrn(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas2v2OASysAssessmentMetadataDto> {
+  ): ResponseEntity<Cas2OASysAssessmentMetadataDto> {
     val assessment = when (val result = oasysService.getAssessmentSummary(crn)) {
       is CasResult.NotFound -> null
       else -> extractEntityFromCasResult(result)
@@ -33,7 +33,7 @@ class Cas2OASysController(
   @GetMapping("/people/{crn}/oasys/risk-to-self")
   fun getRiskToSelf(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas2v2OAsysRiskToSelfDto> {
+  ): ResponseEntity<Cas2OAsysRiskToSelfDto> {
     val risksToTheIndividual = when (val result = oasysService.getRiskToTheIndividual(crn)) {
       is CasResult.NotFound -> null
       else -> extractEntityFromCasResult(result)
@@ -45,7 +45,7 @@ class Cas2OASysController(
   @GetMapping("/people/{crn}/oasys/rosh-summary")
   fun getRoshSummary(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas2v2OAsysRoshSummaryDto> {
+  ): ResponseEntity<Cas2OAsysRoshSummaryDto> {
     val roshSummary = when (val result = oasysService.getRoshSummary(crn)) {
       is CasResult.NotFound -> null
       else -> extractEntityFromCasResult(result)
@@ -57,7 +57,7 @@ class Cas2OASysController(
   @GetMapping("/people/{crn}/oasys/rosh-ratings")
   fun getRoshRatings(
     @PathVariable crn: String,
-  ): ResponseEntity<Cas2v2OAsysRoshRatingsDto> {
+  ): ResponseEntity<Cas2OAsysRoshRatingsDto> {
     val roshRatings = when (val result = oasysService.getRoshRatings(crn)) {
       is CasResult.NotFound -> null
       else -> extractEntityFromCasResult(result)

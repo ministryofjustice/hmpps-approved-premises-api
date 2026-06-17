@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
-enum class Cas2v2ReportName(@get:JsonValue val value: String) {
+enum class Cas2ReportName(@get:JsonValue val value: String) {
 
   submittedMinusApplications("submitted-applications"),
   applicationMinusStatusMinusUpdates("application-status-updates"),
@@ -14,6 +14,6 @@ enum class Cas2v2ReportName(@get:JsonValue val value: String) {
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): Cas2v2ReportName = values().first { it.value == value }
+    fun forValue(value: String): Cas2ReportName = values().first { it.value == value }
   }
 }

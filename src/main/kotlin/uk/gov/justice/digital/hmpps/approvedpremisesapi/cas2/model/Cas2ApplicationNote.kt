@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 import java.util.UUID
 
-data class Cas2v2ApplicationNote(
+data class Cas2ApplicationNote(
 
   @Schema(example = "roger@example.com", required = true, description = "")
   @get:JsonProperty("email", required = true) val email: String,

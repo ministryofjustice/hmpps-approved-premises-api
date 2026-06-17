@@ -4,8 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2UserDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2UserTypeDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
@@ -37,13 +37,13 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody<Cas2v2UserDto>()
+          .expectBody<Cas2UserDto>()
           .returnResult()
           .responseBody
 
         assertThat(response).isNotNull
         assertThat(response?.username).isEqualTo(userEntity.username)
-        assertThat(response?.type).isEqualTo(Cas2v2UserTypeDto.DELIUS)
+        assertThat(response?.type).isEqualTo(Cas2UserTypeDto.DELIUS)
         assertThat(response?.deliusUserInfo!!.probationArea.code).isEqualTo(staffDetail.probationArea.code)
         assertThat(response.deliusUserInfo.probationArea.description).isEqualTo(staffDetail.probationArea.description)
       }
@@ -59,13 +59,13 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .expectBody<Cas2v2UserDto>()
+        .expectBody<Cas2UserDto>()
         .returnResult()
         .responseBody
 
       assertThat(response).isNotNull
       assertThat(response?.username).isEqualTo(userEntity.username)
-      assertThat(response?.type).isEqualTo(Cas2v2UserTypeDto.NOMIS)
+      assertThat(response?.type).isEqualTo(Cas2UserTypeDto.NOMIS)
       assertThat(response?.deliusUserInfo).isNull()
     }
   }

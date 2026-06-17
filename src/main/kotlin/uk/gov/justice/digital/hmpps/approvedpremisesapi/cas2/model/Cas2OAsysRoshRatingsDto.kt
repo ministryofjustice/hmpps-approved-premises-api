@@ -3,16 +3,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-data class Cas2v2OAsysRoshRatingsDto(
-  val metadata: Cas2v2OASysAssessmentMetadataDto,
-  val overallRisk: Cas2V2OASysRiskLevel?,
-  val riskToChildren: Cas2V2OASysRiskLevel?,
-  val riskToPublic: Cas2V2OASysRiskLevel?,
-  val riskToKnownAdult: Cas2V2OASysRiskLevel?,
-  val riskToStaff: Cas2V2OASysRiskLevel?,
+data class Cas2OAsysRoshRatingsDto(
+  val metadata: Cas2OASysAssessmentMetadataDto,
+  val overallRisk: Cas2OASysRiskLevel?,
+  val riskToChildren: Cas2OASysRiskLevel?,
+  val riskToPublic: Cas2OASysRiskLevel?,
+  val riskToKnownAdult: Cas2OASysRiskLevel?,
+  val riskToStaff: Cas2OASysRiskLevel?,
 )
 
-enum class Cas2V2OASysRiskLevel(@get:JsonValue val value: String) {
+enum class Cas2OASysRiskLevel(@get:JsonValue val value: String) {
   VERY_HIGH("very_high"),
   HIGH("high"),
   MEDIUM("medium"),

@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
@@ -47,7 +47,7 @@ class Cas2v2ApplicationNotesTransformerTest {
           .produce(),
       )
 
-      val expectedRepresentation = Cas2v2ApplicationNote(
+      val expectedRepresentation = Cas2ApplicationNote(
         id = jpaEntity.id,
         createdAt = createdAt.toInstant(),
         email = jpaEntity.createdByUser.email!!,
@@ -80,7 +80,7 @@ class Cas2v2ApplicationNotesTransformerTest {
           .produce(),
       )
 
-      val expectedRepresentation = Cas2v2ApplicationNote(
+      val expectedRepresentation = Cas2ApplicationNote(
         id = jpaEntity.id,
         createdAt = createdAt.toInstant(),
         email = jpaEntity.createdByUser.email!!,

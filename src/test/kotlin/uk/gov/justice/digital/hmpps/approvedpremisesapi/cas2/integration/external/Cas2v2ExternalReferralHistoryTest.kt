@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
@@ -58,7 +58,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
           val application5 = createApplication(user, "Referral withdrawn", referringPrisonCode = omu.prisonCode)
 
           val expectedReferrals = listOf(
-            Cas2v2ReferralHistory(
+            Cas2ReferralHistory(
               id = application1.assessment!!.id,
               applicationId = application1.id,
               createdAt = application1.submittedAt!!.toInstant(),
@@ -71,7 +71,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               placementAddress = omu.prisonName,
               placementStatus = application1.statusUpdates!!.first().label,
             ),
-            Cas2v2ReferralHistory(
+            Cas2ReferralHistory(
               id = application2.assessment!!.id,
               applicationId = application2.id,
               createdAt = application2.submittedAt!!.toInstant(),
@@ -84,7 +84,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               placementAddress = omu.prisonName,
               placementStatus = application2.statusUpdates!!.first().label,
             ),
-            Cas2v2ReferralHistory(
+            Cas2ReferralHistory(
               id = application3.assessment!!.id,
               applicationId = application3.id,
               createdAt = application3.submittedAt!!.toInstant(),
@@ -97,7 +97,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               placementAddress = omu.prisonName,
               placementStatus = application3.statusUpdates!!.first().label,
             ),
-            Cas2v2ReferralHistory(
+            Cas2ReferralHistory(
               id = application4.assessment!!.id,
               applicationId = application4.id,
               createdAt = application4.submittedAt!!.toInstant(),
@@ -110,7 +110,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               placementAddress = omu.prisonName,
               placementStatus = application4.statusUpdates!!.first().label,
             ),
-            Cas2v2ReferralHistory(
+            Cas2ReferralHistory(
               id = application5.assessment!!.id,
               applicationId = application5.id,
               createdAt = application5.submittedAt!!.toInstant(),
@@ -158,7 +158,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBodyList(Cas2v2ReferralHistory::class.java)
+            .expectBodyList(Cas2ReferralHistory::class.java)
             .returnResult()
             .responseBody
 
@@ -189,7 +189,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBodyList(Cas2v2ReferralHistory::class.java)
+            .expectBodyList(Cas2ReferralHistory::class.java)
             .returnResult()
             .responseBody
 

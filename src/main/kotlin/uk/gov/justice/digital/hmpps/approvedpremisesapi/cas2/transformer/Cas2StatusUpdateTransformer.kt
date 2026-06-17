@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2v2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2StatusUpdateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
@@ -16,7 +16,7 @@ class Cas2StatusUpdateTransformer(
 
   fun transformJpaToApi(
     jpa: Cas2StatusUpdateEntity,
-  ): Cas2v2StatusUpdate = Cas2v2StatusUpdate(
+  ): Cas2StatusUpdate = Cas2StatusUpdate(
     id = jpa.id,
     name = jpa.status().name,
     label = jpa.label,
@@ -26,7 +26,7 @@ class Cas2StatusUpdateTransformer(
     statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
   )
 
-  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2StatusUpdateDetailEntity): Cas2v2StatusUpdateDetail = Cas2v2StatusUpdateDetail(
+  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2StatusUpdateDetailEntity): Cas2StatusUpdateDetail = Cas2StatusUpdateDetail(
     id = jpa.id,
     name = jpa.statusDetail(jpa.statusUpdate.statusId, jpa.statusDetailId).name,
     label = jpa.label,
