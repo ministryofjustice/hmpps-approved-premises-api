@@ -6,16 +6,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HealthAndMedicationApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 
 @Service
 class HealthAndMedicationService(
   private val healthAndMedicationApiClient: HealthAndMedicationApiClient,
-  private val cas1OffenderRepository: Cas1OffenderRepository,
+  private val caseService: CaseService,
 ) {
 
   fun getDietAndAllergyDetails(crn: String): CasResult<DietAndAllergyResponse> {
-    val prisonerNumber = cas1OffenderRepository.findByCrn(crn)?.nomsNumber ?: return CasResult.NotFound("DietAndAllergy", crn)
+    val prisonerNumber = caseService.getCase(crn)?.nomsNumber ?: return CasResult.NotFound("DietAndAllergy", crn)
 
     val dietAndAllergyData = when (val dietAndAllergyDetails = healthAndMedicationApiClient.getDietAndAllergyDetails(prisonerNumber)) {
       is ClientResult.Success -> dietAndAllergyDetails.body

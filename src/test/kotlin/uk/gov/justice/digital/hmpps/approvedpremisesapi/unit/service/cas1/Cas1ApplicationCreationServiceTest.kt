@@ -27,7 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -51,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -66,7 +67,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
 import java.time.LocalDate
@@ -91,7 +91,7 @@ class Cas1ApplicationCreationServiceTest {
   private val mockCas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
-  private val mockCas1OffenderService = mockk<Cas1OffenderService>()
+  private val mockCaseService = mockk<CaseService>()
   private val mockOffenderDetailService = mockk<OffenderDetailService>()
 
   private val applicationService = Cas1ApplicationCreationService(
@@ -111,7 +111,7 @@ class Cas1ApplicationCreationServiceTest {
     Clock.systemDefaultZone(),
     mockLockableApplicationRepository,
     mockCas1CruManagementAreaRepository,
-    mockCas1OffenderService,
+    mockCaseService,
     mockOffenderDetailService,
   )
 
@@ -164,7 +164,7 @@ class Cas1ApplicationCreationServiceTest {
 
       val cas1OffenderEntityId = UUID.randomUUID()
 
-      val cas1OffenderEntity = Cas1OffenderEntity(
+      val caseEntity = CaseEntity(
         crn = "CRN345",
         name = "name",
         nomsNumber = "nomsNo",
@@ -176,7 +176,7 @@ class Cas1ApplicationCreationServiceTest {
 
       every { mockApplicationRepository.saveAndFlush(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockApplicationTeamCodeRepository.save(any()) } answers { it.invocation.args[0] as ApplicationTeamCodeEntity }
-      every { mockCas1OffenderService.getOrCreateOffender(any(), any()) } returns cas1OffenderEntity
+      every { mockCaseService.ensureCaseExists(any(), any()) } returns caseEntity
 
       val riskRatings = PersonRisksFactory()
         .withRoshRisks(
@@ -217,7 +217,6 @@ class Cas1ApplicationCreationServiceTest {
         val approvedPremisesApplication = it
         assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
         assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
-        assertThat(approvedPremisesApplication.cas1OffenderEntity).isEqualTo(cas1OffenderEntity)
       }
     }
   }

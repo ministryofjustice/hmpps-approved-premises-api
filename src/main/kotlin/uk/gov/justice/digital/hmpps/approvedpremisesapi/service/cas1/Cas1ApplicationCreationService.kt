@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
@@ -29,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationPlaceholderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -64,7 +64,7 @@ class Cas1ApplicationCreationService(
   private val clock: Clock,
   private val lockableApplicationRepository: LockableApplicationRepository,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
-  private val cas1OffenderService: Cas1OffenderService,
+  private val caseService: CaseService,
   private val offenderDetailService: OffenderDetailService,
 ) {
 
@@ -74,7 +74,7 @@ class Cas1ApplicationCreationService(
     convictionId: Long?,
     deliusEventNumber: String?,
     offenceId: String?,
-  ) = validatedCasResult<ApprovedPremisesApplicationEntity> {
+  ) = validatedCasResult {
     val crn = offenderDetails.otherIds.crn
 
     val managingTeamCodes = when (val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn)) {
@@ -108,10 +108,11 @@ class Cas1ApplicationCreationService(
         deliusEventNumber,
         offenceId,
         riskRatings,
-        cas1OffenderEntity = cas1OffenderService.getOrCreateOffender(offenderDetails.asCaseSummary(), riskRatings),
         offenderDetails,
       ),
     )
+
+    caseService.ensureCaseExists(offenderDetails.asCaseSummary(), riskRatings)
 
     managingTeamCodes.forEach {
       createdApplication.teamCodes += applicationTeamCodeRepository.save(
@@ -133,7 +134,6 @@ class Cas1ApplicationCreationService(
     deliusEventNumber: String?,
     offenceId: String?,
     riskRatings: PersonRisks,
-    cas1OffenderEntity: Cas1OffenderEntity,
     offenderDetails: OffenderDetailSummary,
   ): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = UUID.randomUUID(),
@@ -175,7 +175,6 @@ class Cas1ApplicationCreationService(
     caseManagerUserDetails = null,
     noticeType = null,
     licenceExpiryDate = null,
-    cas1OffenderEntity = cas1OffenderEntity,
     expiredReason = null,
   )
 

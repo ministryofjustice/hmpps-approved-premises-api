@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingDetailsFa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailOffenceFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietAndAllergyDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietAndAllergyResponseFactory
@@ -40,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.SentenceFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -761,8 +761,8 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       val nomsNumber = "NOMS01"
       val bookingId = 12345L
 
-      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
-      cas1OffenderRepository.saveAndFlush(existingOffender)
+      val existingCase = CaseEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      caseRepository.saveAndFlush(existingCase)
 
       val inmateDetail = InmateDetailFactory()
         .withOffenderNo(nomsNumber)
@@ -804,11 +804,11 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
     fun `Getting booking details for a CRN where Prison API returns 404 returns 404`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val (offenderDetails, _) = givenAnOffender()
-      val existingOffender = Cas1OffenderEntityFactory().withCrn(offenderDetails.otherIds.crn).withNomsNumber(offenderDetails.otherIds.nomsNumber).withName("name").produce()
-      cas1OffenderRepository.saveAndFlush(existingOffender)
+      val existingCase = CaseEntityFactory().withCrn(offenderDetails.otherIds.crn).withNomsNumber(offenderDetails.otherIds.nomsNumber).withName("name").produce()
+      caseRepository.saveAndFlush(existingCase)
 
-      val crn = existingOffender.crn
-      val nomsNumber = existingOffender.nomsNumber!!
+      val crn = existingCase.crn
+      val nomsNumber = existingCase.nomsNumber!!
       val bookingId = 12345L
 
       val inmateDetail = InmateDetailFactory()
@@ -1054,8 +1054,8 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       val crn = "CRN99"
       val nomsNumber = "NOMS99"
 
-      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
-      cas1OffenderRepository.saveAndFlush(existingOffender)
+      val existingCase = CaseEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      caseRepository.saveAndFlush(existingCase)
 
       val response = DietAndAllergyResponseFactory()
         .withDietAndAllergy(
@@ -1131,8 +1131,8 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       val crn = "CRN99"
       val nomsNumber = "NOMS99"
 
-      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
-      cas1OffenderRepository.saveAndFlush(existingOffender)
+      val existingCase = CaseEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      caseRepository.saveAndFlush(existingCase)
 
       val response = DietAndAllergyResponseFactory()
         .withDietAndAllergy(
@@ -1206,8 +1206,8 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       val crn = "CRN404"
       val nomsNumber = "NOMS404"
 
-      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
-      cas1OffenderRepository.saveAndFlush(existingOffender)
+      val existingCase = CaseEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      caseRepository.saveAndFlush(existingCase)
 
       healthAndMedicationMockNotFoundDietAndAllergyCall(nomsNumber)
 
@@ -1225,8 +1225,8 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       val crn = "CRN403"
       val nomsNumber = "NOMS403"
 
-      val existingOffender = Cas1OffenderEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
-      cas1OffenderRepository.saveAndFlush(existingOffender)
+      val existingCase = CaseEntityFactory().withCrn(crn).withNomsNumber(nomsNumber).withName("name").produce()
+      caseRepository.saveAndFlush(existingCase)
 
       healthAndMedicationMockForbiddenDietAndAllergyCall(nomsNumber)
 

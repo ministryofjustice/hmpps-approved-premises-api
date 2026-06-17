@@ -8,24 +8,24 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
-class Cas1OffenderServiceTest {
-  private val cas1OffenderRepository = mockk<Cas1OffenderRepository>()
+class CaseServiceTest {
+  private val caseRepository = mockk<CaseRepository>()
 
-  private val service = Cas1OffenderService(cas1OffenderRepository)
+  private val service = CaseService(caseRepository)
 
   @Test
   fun `should return existing offender when exist`() {
-    val cas1OffenderEntity = Cas1OffenderEntityFactory()
+    val caseEntity = CaseEntityFactory()
       .withCrn("CRN123")
       .withName("NAME")
       .withNomsNumber("NOMS123")
@@ -60,17 +60,17 @@ class Cas1OffenderServiceTest {
       )
       .produce()
 
-    every { cas1OffenderRepository.findByCrn("CRN123") } returns cas1OffenderEntity
-    every { cas1OffenderRepository.saveAndFlush(any()) } returns cas1OffenderEntity
+    every { caseRepository.findByCrn("CRN123") } returns caseEntity
+    every { caseRepository.saveAndFlush(any()) } returns caseEntity
 
-    val result = service.getOrCreateOffender(caseSummary, risk)
+    val result = service.ensureCaseExists(caseSummary, risk)
 
-    assertThat(result).isEqualTo(cas1OffenderEntity)
+    assertThat(result).isEqualTo(caseEntity)
   }
 
   @Test
   fun `should create new offender when not exist`() {
-    val cas1OffenderEntity = Cas1OffenderEntityFactory()
+    val caseEntity = CaseEntityFactory()
       .withCrn("CRN123")
       .withName("NAME")
       .withNomsNumber("NOMS123")
@@ -105,11 +105,11 @@ class Cas1OffenderServiceTest {
       )
       .produce()
 
-    every { cas1OffenderRepository.findByCrn("CRN123") } returns null
-    every { cas1OffenderRepository.saveAndFlush(any()) } returns cas1OffenderEntity
+    every { caseRepository.findByCrn("CRN123") } returns null
+    every { caseRepository.saveAndFlush(any()) } returns caseEntity
 
-    val result = service.getOrCreateOffender(caseSummary, risk)
+    val result = service.ensureCaseExists(caseSummary, risk)
 
-    assertThat(result).isEqualTo(cas1OffenderEntity)
+    assertThat(result).isEqualTo(caseEntity)
   }
 }

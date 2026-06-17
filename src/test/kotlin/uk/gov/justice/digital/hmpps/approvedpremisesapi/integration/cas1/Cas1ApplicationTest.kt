@@ -1633,7 +1633,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
           assertThat(result.responseBody.blockFirst()!!).matches {
             it.person.crn == offenderDetails.otherIds.crn &&
-              cas1OffenderRepository.findByCrn(it.person.crn) != null
+              caseService.getCase(it.person.crn) != null
           }
         }
       }
@@ -1673,8 +1673,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           assertThat(result.responseBody.blockFirst()!!).matches {
-            it.person.crn == offenderDetails.otherIds.crn
-            cas1OffenderRepository.findByCrn(it.person.crn) != null
+            it.person.crn == offenderDetails.otherIds.crn &&
+              caseService.getCase(it.person.crn) != null
           }
         }
       }
@@ -1716,8 +1716,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
 
           assertThat(result.responseBody.blockFirst()!!).matches {
-            it.person.crn == offenderDetails.otherIds.crn
-            cas1OffenderRepository.findByCrn(it.person.crn) != null
+            it.person.crn == offenderDetails.otherIds.crn &&
+              caseService.getCase(it.person.crn) != null
           }
         }
       }
@@ -1762,7 +1762,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
           assertThat(result.responseBody.blockFirst()!!).matches {
             it.person.crn == offenderDetails.otherIds.crn &&
-              cas1OffenderRepository.findByCrn(it.person.crn) != null
+              caseService.getCase(it.person.crn) != null
           }
         }
       }

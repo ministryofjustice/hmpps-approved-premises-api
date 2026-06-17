@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -11,13 +11,13 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
-interface Cas1OffenderRepository : JpaRepository<Cas1OffenderEntity, UUID> {
-  fun findByCrn(crn: String): Cas1OffenderEntity?
+interface CaseRepository : JpaRepository<CaseEntity, UUID> {
+  fun findByCrn(crn: String): CaseEntity?
 }
 
 @Entity
-@Table(name = "cas1_offenders")
-data class Cas1OffenderEntity(
+@Table(name = "cases")
+data class CaseEntity(
 
   @Id
   val id: UUID,
