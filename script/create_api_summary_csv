@@ -61,7 +61,7 @@ do
     fi
     baseUrl="/"
 
-    if [[ $url =~ ^\"(/cas(1|2|3|2v2))(/.*)\"$ ]]
+    if [[ $url =~ ^\"(/cas(1|2|3|2-hdc))(/.*)\"$ ]]
     then
       baseUrl="${BASH_REMATCH[1]}"
       strippedUrl="${BASH_REMATCH[3]}"
@@ -159,13 +159,13 @@ do
           then
             action="${action} Change status code from 204 as body is returned."
           fi
-          if [[ $strippedUrl =~ /(cas(1|2|2v2|3)) ]]
+          if [[ $strippedUrl =~ /(cas(1|2|2-hdc|3)) ]]
           then
             action="${action} Unnecessary ${BASH_REMATCH[1]} in url - use base-url to differentiate between cas's."
           fi
           if ! [[ $response =~ application/ ]]
           then
-            if [[ $response =~ (array\ of\ )?(Cas(1|2|2v2|3))?(.+) ]]
+            if [[ $response =~ (array\ of\ )?(Cas(1|2|2-hdc|3))?(.+) ]]
             then
               strippedResponseType="${BASH_REMATCH[4]}"
               if [[ $strippedResponseType =~ (.*)(Summary|Detail|Envelope|Event) ]]
