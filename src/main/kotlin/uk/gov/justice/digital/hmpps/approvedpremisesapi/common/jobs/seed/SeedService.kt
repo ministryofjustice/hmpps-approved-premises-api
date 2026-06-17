@@ -34,8 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdatePrem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UpdateSpaceBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1WithdrawPlacementRequestSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2v2ApplicationsSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2v2UsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2ApplicationsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.seed.Cas2UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.seed.Cas2HdcNomisUserEmailSeedJob
@@ -86,8 +86,8 @@ class SeedService(
         SeedFileType.nomisUsers -> getBean(Cas2HdcNomisUsersSeedJob::class)
         SeedFileType.externalUsers -> getBean(Cas2HdcExternalUsersSeedJob::class)
         SeedFileType.cas2Applications -> getBean(Cas2HdcApplicationsSeedJob::class)
-        SeedFileType.cas2v2Applications -> getBean(Cas2v2ApplicationsSeedJob::class)
-        SeedFileType.cas2v2Users -> getBean(Cas2v2UsersSeedJob::class)
+        SeedFileType.cas2v2Applications -> getBean(Cas2ApplicationsSeedJob::class)
+        SeedFileType.cas2v2Users -> getBean(Cas2UsersSeedJob::class)
         SeedFileType.cas2Users -> getBean(Cas2HdcUsersSeedJob::class)
         SeedFileType.approvedPremisesUsers -> getBean(Cas1UsersSeedJob::class)
         SeedFileType.temporaryAccommodationUsers -> getBean(Cas3UsersSeedJob::class)

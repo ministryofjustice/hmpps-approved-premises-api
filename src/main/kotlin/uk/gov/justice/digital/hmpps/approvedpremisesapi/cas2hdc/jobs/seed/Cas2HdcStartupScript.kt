@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
@@ -17,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2U
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcPersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcStatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.insertHdcDates
@@ -47,7 +47,7 @@ class Cas2HdcStartupScript(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationService: Cas2HdcApplicationService,
   private val cas2HdcStatusUpdateService: Cas2HdcStatusUpdateService,
-  private val statusFinder: Cas2PersistedApplicationStatusFinder,
+  private val statusFinder: Cas2HdcPersistedApplicationStatusFinder,
 ) {
   fun script() {
     seedLogger.info("Running Start up Script for CAS2")

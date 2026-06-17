@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2TimelineEventsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2StatusUpdateEntityFactory
@@ -31,7 +31,7 @@ class Cas2v2TimelineEventsTransformerTest {
     .withServiceOrigin(Cas2ServiceOrigin.BAIL)
     .withSubmittedAt(OffsetDateTime.now())
 
-  private val timelineEventTransformer = Cas2v2TimelineEventsTransformer()
+  private val timelineEventTransformer = Cas2TimelineEventsTransformer()
 
   @Nested
   inner class WhenThereAreTimelineEvents {

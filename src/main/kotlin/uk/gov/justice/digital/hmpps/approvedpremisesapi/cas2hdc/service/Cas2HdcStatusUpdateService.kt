@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
@@ -50,7 +49,7 @@ class Cas2HdcStatusUpdateService(
   private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
-  private val statusFinder: Cas2PersistedApplicationStatusFinder,
+  private val statusFinder: Cas2HdcPersistedApplicationStatusFinder,
   private val statusTransformer: Cas2HdcApplicationStatusTransformer,
   private val cas2HdcEmailService: Cas2HdcEmailService,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,

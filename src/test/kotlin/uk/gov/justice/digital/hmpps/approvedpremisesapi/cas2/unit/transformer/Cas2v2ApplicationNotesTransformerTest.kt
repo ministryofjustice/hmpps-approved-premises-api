@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2ApplicationNotesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
@@ -24,7 +24,7 @@ class Cas2v2ApplicationNotesTransformerTest {
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
 
-  private val cas2v2ApplicationNotesTransformer = Cas2v2ApplicationNotesTransformer()
+  private val cas2ApplicationNotesTransformer = Cas2ApplicationNotesTransformer()
 
   @Nested
   inner class WithExternalUser {
@@ -55,7 +55,7 @@ class Cas2v2ApplicationNotesTransformerTest {
         body = jpaEntity.body,
       )
 
-      val transformation = cas2v2ApplicationNotesTransformer.transformJpaToApi(jpaEntity)
+      val transformation = cas2ApplicationNotesTransformer.transformJpaToApi(jpaEntity)
 
       Assertions.assertThat(transformation).isEqualTo(expectedRepresentation)
     }
@@ -88,7 +88,7 @@ class Cas2v2ApplicationNotesTransformerTest {
         body = jpaEntity.body,
       )
 
-      val transformation = cas2v2ApplicationNotesTransformer.transformJpaToApi(jpaEntity)
+      val transformation = cas2ApplicationNotesTransformer.transformJpaToApi(jpaEntity)
 
       Assertions.assertThat(transformation).isEqualTo(expectedRepresentation)
     }

@@ -16,11 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2v2St
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2AssessmentsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2StatusUpdateTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2TimelineEventsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2v2UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2AssessmentsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2StatusUpdateTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2TimelineEventsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
@@ -35,20 +35,20 @@ import java.util.UUID
 
 class Cas2v2ApplicationTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
-  private val mockCas2v2UserTransformer = mockk<Cas2v2UserTransformer>()
-  private val mockCas2v2StatusUpdateTransformer = mockk<Cas2v2StatusUpdateTransformer>()
-  private val mockCas2v2TimelineEventsTransformer = mockk<Cas2v2TimelineEventsTransformer>()
-  private val mockCas2v2AssessmentsTransformer = mockk<Cas2v2AssessmentsTransformer>()
+  private val mockCas2UserTransformer = mockk<Cas2UserTransformer>()
+  private val mockCas2StatusUpdateTransformer = mockk<Cas2StatusUpdateTransformer>()
+  private val mockCas2TimelineEventsTransformer = mockk<Cas2TimelineEventsTransformer>()
+  private val mockCas2AssessmentsTransformer = mockk<Cas2AssessmentsTransformer>()
   private val mockOffenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
   private val objectMapper = JsonMapperFactory.createJackson3JsonMapper()
 
-  private val cas2v2ApplicationsTransformer = Cas2v2ApplicationsTransformer(
+  private val cas2ApplicationsTransformer = Cas2ApplicationsTransformer(
     objectMapper,
     mockPersonTransformer,
-    mockCas2v2UserTransformer,
-    mockCas2v2StatusUpdateTransformer,
-    mockCas2v2TimelineEventsTransformer,
-    mockCas2v2AssessmentsTransformer,
+    mockCas2UserTransformer,
+    mockCas2StatusUpdateTransformer,
+    mockCas2TimelineEventsTransformer,
+    mockCas2AssessmentsTransformer,
     mockOffenderManagementUnitRepository,
   )
 
@@ -66,16 +66,16 @@ class Cas2v2ApplicationTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockCas2v2UserTransformer.transformJpaToApi(any()) } returns Cas2v2User(
+    every { mockCas2UserTransformer.transformJpaToApi(any()) } returns Cas2v2User(
       id = user.id,
       name = user.name,
       username = user.username,
       authSource = Cas2v2User.AuthSource.nomis,
       isActive = user.isActive,
     )
-    every { mockCas2v2StatusUpdateTransformer.transformJpaToApi(any()) } returns mockk<Cas2v2StatusUpdate>()
-    every { mockCas2v2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns mockk<LatestCas2v2StatusUpdate>()
-    every { mockCas2v2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf()
+    every { mockCas2StatusUpdateTransformer.transformJpaToApi(any()) } returns mockk<Cas2v2StatusUpdate>()
+    every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns mockk<LatestCas2v2StatusUpdate>()
+    every { mockCas2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf()
   }
 
   @Nested
@@ -90,7 +90,7 @@ class Cas2v2ApplicationTransformerTest {
         .withCohort(Cas2Cohort.PRISON_BAIL)
         .produce()
 
-      val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result).hasOnlyFields(
         "id",
@@ -121,7 +121,7 @@ class Cas2v2ApplicationTransformerTest {
     @Test
     fun `transformJpaToApi transforms a submitted CAS2v2 application correctly without status updates`() {
       val assessment = Cas2v2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
-      every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
+      every { mockCas2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
 
       val application = submittedCas2ApplicationFactory
         .withAssessment(
@@ -130,7 +130,7 @@ class Cas2v2ApplicationTransformerTest {
             .produce(),
         ).produce()
 
-      val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
@@ -150,7 +150,7 @@ class Cas2v2ApplicationTransformerTest {
         id = UUID.fromString("6e631a8c-a013-4bb4-812c-886c8fc25354"),
         statusUpdates = listOf(mockStatusUpdate),
       )
-      every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
+      every { mockCas2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
 
       val application = submittedCas2ApplicationFactory.withAssessment(
         Cas2AssessmentEntityFactory()
@@ -158,7 +158,7 @@ class Cas2v2ApplicationTransformerTest {
           .produce(),
       ).produce()
 
-      val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
+      val result = cas2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.assessment!!.statusUpdates).hasSize(1).containsExactly(mockStatusUpdate)
@@ -188,9 +188,9 @@ class Cas2v2ApplicationTransformerTest {
         assignmentDate = null,
       )
 
-      every { mockCas2v2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
+      every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
 
-      val result = cas2v2ApplicationsTransformer.transformJpaSummaryToSummary(
+      val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
         application,
         "firstName surname",
       )
@@ -225,12 +225,12 @@ class Cas2v2ApplicationTransformerTest {
         assignmentDate = null,
       )
 
-      every { mockCas2v2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2v2StatusUpdate(
+      every { mockCas2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2v2StatusUpdate(
         statusId = UUID.fromString(application.latestStatusUpdateStatusId),
         label = application.latestStatusUpdateLabel!!,
       )
 
-      val result = cas2v2ApplicationsTransformer.transformJpaSummaryToSummary(
+      val result = cas2ApplicationsTransformer.transformJpaSummaryToSummary(
         application,
         "firstName surname",
       )
