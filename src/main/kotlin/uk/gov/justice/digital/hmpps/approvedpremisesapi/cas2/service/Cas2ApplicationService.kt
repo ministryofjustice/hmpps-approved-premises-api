@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2L
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -143,7 +144,7 @@ class Cas2ApplicationService(
     user: Cas2UserEntity,
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
-  ) = validated {
+  ): ValidatableActionResult<Cas2ApplicationEntity> = validated {
     val offenderDetails = when (val offenderDetailsResult = cas2OffenderService.getPersonByNomisIdOrCrn(crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
       is Cas2v2OffenderSearchResult.Forbidden -> return "$.crn" hasSingleValidationError "userPermission"
