@@ -12,18 +12,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HealthAndMedicationApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.health.DietAndAllergyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DietAndAllergyResponseFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HealthAndMedicationService
 
 class HealthAndMedicationServiceTest {
   private val mockMedicationApiClient = mockk<HealthAndMedicationApiClient>()
-  private val mockCas1OffenderRepository = mockk<Cas1OffenderRepository>()
+  private val mockCaseService = mockk<CaseService>()
 
   private val healthAndMedicationService = HealthAndMedicationService(
     mockMedicationApiClient,
-    mockCas1OffenderRepository,
+    mockCaseService,
   )
 
   @Nested
@@ -32,7 +32,7 @@ class HealthAndMedicationServiceTest {
     fun `returns NotFound when no offender found for CRN`() {
       val crn = "CRN123"
 
-      every { mockCas1OffenderRepository.findByCrn(crn) } returns null
+      every { mockCaseService.getCase(crn) } returns null
 
       val result = healthAndMedicationService.getDietAndAllergyDetails(crn)
 
@@ -44,7 +44,7 @@ class HealthAndMedicationServiceTest {
       val crn = "CRN123"
       val nomsNumber = "NOMS123"
 
-      every { mockCas1OffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()
@@ -66,7 +66,7 @@ class HealthAndMedicationServiceTest {
       val crn = "CRN123"
       val nomsNumber = "NOMS123"
 
-      every { mockCas1OffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()
@@ -88,7 +88,7 @@ class HealthAndMedicationServiceTest {
       val crn = "CRN123"
       val nomsNumber = "NOMS123"
 
-      every { mockCas1OffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()
@@ -111,7 +111,7 @@ class HealthAndMedicationServiceTest {
       val nomsNumber = "NOMS123"
       val response = DietAndAllergyResponseFactory().produce()
 
-      every { mockCas1OffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()

@@ -123,6 +123,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Sta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AppealEntityFactory
@@ -255,7 +257,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
@@ -594,7 +595,10 @@ abstract class IntegrationTestBase {
   lateinit var cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository
 
   @Autowired
-  lateinit var cas1OffenderRepository: Cas1OffenderRepository
+  lateinit var caseRepository: CaseRepository
+
+  @Autowired
+  lateinit var caseService: CaseService
 
   @Autowired
   lateinit var cas1ChangeRequestReasonRepository: Cas1ChangeRequestReasonRepository

@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
@@ -35,12 +36,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1OffenderEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -57,8 +57,8 @@ class OffenderServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
-  private val mockOffenderRepository = mockk<Cas1OffenderRepository>()
   private val mockOffenderRiskNoteParser = mockk<OffenderRiskNoteParser>()
+  private val mockCaseService = mockk<CaseService>()
 
   private val adjudicationsConfigBindingModel = PrisonAdjudicationsConfigBindingModel().apply {
     prisonApiPageSize = 2
@@ -71,8 +71,8 @@ class OffenderServiceTest {
     mockOffenderDetailsDataSource,
     adjudicationsConfigBindingModel,
     mockFeatureFlagService,
-    mockOffenderRepository,
     mockOffenderRiskNoteParser,
+    mockCaseService,
   )
 
   @Test
@@ -1051,7 +1051,7 @@ class OffenderServiceTest {
         ),
       )
 
-      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()
@@ -1098,7 +1098,7 @@ class OffenderServiceTest {
         ),
       )
 
-      every { mockOffenderRepository.findByCrn(crn) } returns null
+      every { mockCaseService.getCase(crn) } returns null
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -1127,7 +1127,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns Unauthorised when getPersonSummaryInfoResult returns restricted due to LAO restrictions`() {
-      every { mockOffenderRepository.findByCrn(crn) } returns null
+      every { mockCaseService.getCase(crn) } returns null
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -1165,7 +1165,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound when getPersonSummaryInfoResult fails because Person is not found`() {
-      every { mockOffenderRepository.findByCrn(crn) } returns null
+      every { mockCaseService.getCase(crn) } returns null
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -1184,7 +1184,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound when getPersonSummaryInfoResult fails because NOMS number is null`() {
-      every { mockOffenderRepository.findByCrn(crn) } returns null
+      every { mockCaseService.getCase(crn) } returns null
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -1207,7 +1207,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound when Prisons API returns 404`() {
-      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()
@@ -1240,7 +1240,7 @@ class OffenderServiceTest {
 
     @Test
     fun `throws exception when Prisons API returns 500`() {
-      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()
@@ -1283,7 +1283,7 @@ class OffenderServiceTest {
     fun `returns Success when offender is found and Prisons API returns success`() {
       val bookingDetails = BookingDetailsFactory().withOffenderNo(nomsNumber).withBookingId(bookingId).produce()
 
-      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()
@@ -1306,7 +1306,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound when offender is not in repository`() {
-      every { mockOffenderRepository.findByCrn(crn) } returns null
+      every { mockCaseService.getCase(crn) } returns null
 
       val result = offenderService.getOffenderBookingDetails(crn)
 
@@ -1318,7 +1318,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound when Inmate Details returns 404`() {
-      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()
@@ -1337,7 +1337,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound when Booking Details returns 404`() {
-      every { mockOffenderRepository.findByCrn(crn) } returns Cas1OffenderEntityFactory()
+      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
         .withCrn(crn)
         .withNomsNumber(nomsNumber)
         .produce()

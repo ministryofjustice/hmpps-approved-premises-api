@@ -22,11 +22,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.toCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderRiskNoteParser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import java.util.stream.Collectors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisoneralertsapi.Alert as PrisionerAlert
@@ -39,8 +39,8 @@ class OffenderService(
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
   private val featureFlagService: FeatureFlagService,
-  private val cas1OffenderRepository: Cas1OffenderRepository,
   private val offenderRiskNoteParser: OffenderRiskNoteParser,
+  private val caseService: CaseService,
 ) {
   companion object {
     const val MAX_OFFENDER_REQUEST_COUNT = 500
@@ -371,7 +371,7 @@ class OffenderService(
     laoStrategy: LaoStrategy,
   ): CasResult<List<CsraSummary>> = when (laoStrategy) {
     is LaoStrategy.NeverRestricted -> {
-      cas1OffenderRepository.findByCrn(crn)?.nomsNumber?.let { nomsNumber ->
+      caseService.getCase(crn)?.nomsNumber?.let { nomsNumber ->
         prisonsApiClient.getCsraSummariesForOffender(nomsNumber)
           .toCasResult(entityType = "CsraSummary", id = crn)
       } ?: getPersonSummaryInfoResult(crn, laoStrategy).toCsraSummaries(crn)
@@ -396,7 +396,7 @@ class OffenderService(
   }
 
   fun getOffenderBookingDetails(crn: String): CasResult<BookingDetails> {
-    val nomsNumber = cas1OffenderRepository.findByCrn(crn)?.nomsNumber
+    val nomsNumber = caseService.getCase(crn)?.nomsNumber
       ?: return CasResult.NotFound("Offender", crn)
 
     return when (val inmateDetailResult = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)) {

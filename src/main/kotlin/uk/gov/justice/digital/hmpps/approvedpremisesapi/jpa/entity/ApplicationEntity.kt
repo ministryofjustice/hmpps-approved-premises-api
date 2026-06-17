@@ -32,7 +32,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -257,15 +256,6 @@ WHERE a.created_by_user_id = :userId and a.deleted_at IS NULL
 interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremisesApplicationEntity, UUID> {
   fun existsApprovedPremisesApplicationEntityByCrn(crn: String): Boolean
 
-  @Query(
-    """
-      SELECT e.id FROM ApprovedPremisesApplicationEntity e WHERE e.cas1OffenderEntity IS NULL order by e.createdAt desc
-    """,
-  )
-  fun findAllIdsByCas1OffenderEntityIsNull(): List<UUID>
-
-  fun findByIdIn(applicationIds: List<UUID>): List<ApprovedPremisesApplicationEntity>
-
   fun findByCrn(crn: String): List<ApprovedPremisesApplicationEntity>
 
   fun findByCrnAndSubmittedAtIsNotNull(crn: String, limit: Limit): List<ApprovedPremisesApplicationEntity>
@@ -395,7 +385,7 @@ class ApprovedPremisesApplicationEntity(
    * If returning the offender name to the user, use the [OffenderService], which
    * will also consider any LAO restrictions
    */
-  @Deprecated("To be replaced by [Cas1OffenderEntity]")
+  @Deprecated("To be replaced by [CaseEntity]")
   var name: String,
   var targetLocation: String?,
   @Enumerated(value = EnumType.STRING)
@@ -423,9 +413,6 @@ class ApprovedPremisesApplicationEntity(
   @Enumerated(value = EnumType.STRING)
   var noticeType: Cas1ApplicationTimelinessCategory?,
   var licenceExpiryDate: LocalDate?,
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "cas1_offender_id", referencedColumnName = "id")
-  var cas1OffenderEntity: Cas1OffenderEntity?,
   var expiredReason: String?,
 ) : ApplicationEntity(
   id,

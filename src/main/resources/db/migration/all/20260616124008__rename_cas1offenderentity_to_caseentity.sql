@@ -1,0 +1,1 @@
+ALTER TABLE cas1_offenders rename to cases;
