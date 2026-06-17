@@ -1,10 +1,11 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.Instant
 import java.util.UUID
 
-data class Cas2v2ApplicationStatus(
+data class Cas2v2StatusUpdate(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 
@@ -14,8 +15,12 @@ data class Cas2v2ApplicationStatus(
   @Schema(example = "More information requested", required = true, description = "")
   @get:JsonProperty("label", required = true) val label: String,
 
-  @Schema(example = "More information about the application has been requested from the POM (Prison Offender Manager).", required = true, description = "")
+  @Schema(example = "More information about the application has been requested from the HMPPS user.", required = true, description = "")
   @get:JsonProperty("description", required = true) val description: String,
 
-  @get:JsonProperty("statusDetails", required = true) val statusDetails: List<Cas2v2ApplicationStatusDetail>,
+  @get:JsonProperty("updatedBy") val updatedBy: Cas2v2User? = null,
+
+  @get:JsonProperty("updatedAt") val updatedAt: Instant? = null,
+
+  @get:JsonProperty("statusUpdateDetails") val statusUpdateDetails: List<Cas2v2StatusUpdateDetail>? = null,
 )

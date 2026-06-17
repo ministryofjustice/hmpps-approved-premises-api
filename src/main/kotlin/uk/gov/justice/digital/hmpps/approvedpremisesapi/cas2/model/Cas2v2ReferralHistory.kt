@@ -1,5 +1,6 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import java.time.Instant
 import java.util.UUID
 
