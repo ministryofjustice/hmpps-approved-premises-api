@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Schema
@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1ReportsController.Companion.TIMESTAMP_FORMAT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
@@ -82,7 +81,7 @@ class Cas1PremisesController(
   fun getOccupancyReport(): ResponseEntity<StreamingResponseBody> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_CAPACITY_REPORT_VIEW)
 
-    val timestamp = LocalDateTime.now(clock).format(TIMESTAMP_FORMAT)
+    val timestamp = LocalDateTime.now(clock).format(Cas1ReportsController.Companion.TIMESTAMP_FORMAT)
 
     return generateStreamingResponse(
       contentType = ContentType.CSV,

@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.TasksApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1TasksController
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1TasksController
 import java.util.UUID
 
 @Service

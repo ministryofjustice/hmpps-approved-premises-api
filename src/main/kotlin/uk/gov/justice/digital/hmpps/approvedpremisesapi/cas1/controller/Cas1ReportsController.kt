@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service

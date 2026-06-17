@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1NationalOccupancyPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremiseCapacitySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1NationalOccupancy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1NationalOccupancyPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1PremiseCapacitySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacityForDay

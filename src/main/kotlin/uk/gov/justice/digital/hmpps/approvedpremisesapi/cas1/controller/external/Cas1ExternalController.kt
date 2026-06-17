@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.external
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.external
 
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.RequestMapping
