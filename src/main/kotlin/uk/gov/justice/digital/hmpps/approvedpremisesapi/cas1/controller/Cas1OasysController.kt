@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OASysAssessmentSuitabilityStrategyDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OASysGroup
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OASysGroupName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetailsInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskToTheIndividualInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem

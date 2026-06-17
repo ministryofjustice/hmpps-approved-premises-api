@@ -1,0 +1,12 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
+
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class Cas1OASysAssessmentMetadata(
+
+  @get:JsonProperty("hasApplicableAssessment", required = true) val hasApplicableAssessment: Boolean,
+
+  @get:JsonProperty("dateStarted") val dateStarted: java.time.Instant? = null,
+
+  @get:JsonProperty("dateCompleted") val dateCompleted: java.time.Instant? = null,
+)

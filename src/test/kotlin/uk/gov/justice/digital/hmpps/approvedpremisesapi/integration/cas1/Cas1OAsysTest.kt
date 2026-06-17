@@ -4,10 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroup
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysGroupName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysQuestion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OASysGroup
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OASysGroupName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OASysMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetailsInner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthIssue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory

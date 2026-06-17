@@ -8,11 +8,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -22,6 +17,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1Nati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1PremisesController.Cas1CurrentKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1PremisesNewLocalRestriction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PremiseCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PremisesBasicSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PremisesDaySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase

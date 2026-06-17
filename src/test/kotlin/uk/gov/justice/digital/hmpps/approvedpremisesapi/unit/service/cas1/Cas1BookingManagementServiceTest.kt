@@ -16,8 +16,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssignKeyWorker
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
