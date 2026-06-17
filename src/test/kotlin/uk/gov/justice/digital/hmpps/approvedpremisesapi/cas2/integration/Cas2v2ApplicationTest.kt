@@ -20,12 +20,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity

@@ -7,12 +7,12 @@ import java.time.LocalDate
 
 data class UpdateCas2Application(
 
-    @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
+  @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
 
-    @get:JsonProperty("data", required = true) override val `data`: Map<String, Any>,
+  @get:JsonProperty("data", required = true) override val `data`: Map<String, Any>,
 
-    @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
+  @get:JsonProperty("bailHearingDate") val bailHearingDate: LocalDate? = null,
 
-    @get:JsonProperty("cohort") val cohort: Cas2CohortDto? = null,
+  @get:JsonProperty("cohort") val cohort: Cas2CohortDto? = null,
 
-    ) : UpdateApplication
+) : UpdateApplication

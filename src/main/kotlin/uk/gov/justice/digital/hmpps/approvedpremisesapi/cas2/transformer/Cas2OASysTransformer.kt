@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OASysRiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OASysAssessmentMetadataDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OASysRiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRiskToSelfDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshRatingsDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshSummaryDto

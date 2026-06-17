@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service
 
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2DeliusUserInfoDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.ProbationAreaDto
