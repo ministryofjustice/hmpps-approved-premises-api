@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller
 
 import org.springframework.stereotype.Controller
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.DocumentsApiDelegate

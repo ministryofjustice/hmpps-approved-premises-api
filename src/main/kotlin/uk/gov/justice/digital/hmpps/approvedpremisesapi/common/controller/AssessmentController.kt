@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.transaction.Transactional

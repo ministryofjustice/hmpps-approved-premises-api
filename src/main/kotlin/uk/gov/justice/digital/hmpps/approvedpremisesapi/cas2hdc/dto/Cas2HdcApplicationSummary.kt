@@ -9,6 +9,7 @@ import java.util.UUID
 
 data class Cas2HdcApplicationSummary(
 
+  @Deprecated("This is redundant as it's no longer used as a subtype (it'll always be CAS2)")
   @get:JsonProperty("type", required = true) val type: String,
 
   @get:JsonProperty("id", required = true) val id: UUID,

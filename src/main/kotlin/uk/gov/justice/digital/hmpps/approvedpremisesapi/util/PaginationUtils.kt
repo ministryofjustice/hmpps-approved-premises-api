@@ -11,7 +11,7 @@ import org.springframework.data.domain.Sort.Direction.DESC
 import org.springframework.data.jpa.domain.JpaSort
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.PaginationMetadata
 
 @Suppress("TooManyFunctions")
 private lateinit var config: PaginationConfig

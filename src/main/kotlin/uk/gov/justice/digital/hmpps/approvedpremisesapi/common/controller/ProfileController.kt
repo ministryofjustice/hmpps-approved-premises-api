@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller
 
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus

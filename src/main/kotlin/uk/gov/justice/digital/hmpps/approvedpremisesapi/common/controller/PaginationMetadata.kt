@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller
 
 import org.springframework.http.HttpHeaders
 

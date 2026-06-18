@@ -13,7 +13,6 @@ import org.junit.jupiter.params.provider.NullSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -23,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1CruManageme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
@@ -51,7 +49,6 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
 
 class ApplicationsTransformersTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
@@ -380,142 +377,6 @@ class ApplicationsTransformersTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
-  }
-
-  @ParameterizedTest
-  @MethodSource("applicationStatusArgs")
-  fun `transformJpaToApiSummary transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
-    val (apiStatus, jpaStatus) = args
-    val mockPersonInfoResult = mockk<PersonInfoResult>()
-    val mockPerson = mockk<Person>()
-
-    val application = object : DomainApprovedPremisesApplicationSummary {
-      override fun getIsWomensApplication() = false
-      override fun getIsEmergencyApplication() = true
-      override fun getIsEsapApplication() = true
-      override fun getIsPipeApplication() = true
-      override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
-      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
-      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
-      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-      override fun getCreatedByUserName() = "Test User"
-      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
-      override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
-      override fun getTier(): String? = null
-      override fun getStatus(): String = jpaStatus.toString()
-      override fun getIsWithdrawn(): Boolean = true
-      override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
-      override fun getHasRequestsForPlacement(): Boolean = true
-    }
-    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
-
-    val result = applicationsTransformer.transformDomainToApiSummary(
-      application,
-      mockPersonInfoResult,
-    ) as ApprovedPremisesApplicationSummary
-
-    assertThat(result.id).isEqualTo(application.getId())
-    assertThat(result.person).isEqualTo(mockPerson)
-    assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
-    assertThat(result.createdAt).isEqualTo(application.getCreatedAt())
-    assertThat(result.submittedAt).isEqualTo(application.getSubmittedAt())
-    assertThat(result.isWomensApplication).isEqualTo(application.getIsWomensApplication())
-    assertThat(result.arrivalDate).isEqualTo(application.getArrivalDate())
-    assertThat(result.status).isEqualTo(apiStatus)
-    assertThat(result.type).isEqualTo("CAS1")
-    assertThat(result.tier).isEqualTo(application.getTier())
-    assertThat(result.isWithdrawn).isEqualTo(true)
-    assertThat(result.hasRequestsForPlacement).isEqualTo(true)
-  }
-
-  @ParameterizedTest
-  @EnumSource(ReleaseTypeOption::class)
-  @NullSource
-  fun `transformJpaToApiSummary transforms an Approved Premises application's release type correctly`(releaseTypeOption: ReleaseTypeOption?) {
-    val mockPersonInfoResult = mockk<PersonInfoResult>()
-    val mockPerson = mockk<Person>()
-
-    val application = object : DomainApprovedPremisesApplicationSummary {
-      override fun getIsWomensApplication() = false
-      override fun getIsEmergencyApplication() = true
-      override fun getIsEsapApplication() = true
-      override fun getIsPipeApplication() = true
-      override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
-      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
-      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
-      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-      override fun getCreatedByUserName() = "Test User"
-      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
-      override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
-      override fun getTier(): String? = null
-      override fun getStatus(): String = ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT.toString()
-      override fun getIsWithdrawn(): Boolean = true
-      override fun getReleaseType(): String? = releaseTypeOption?.let { releaseTypeOption.toString() }
-      override fun getHasRequestsForPlacement(): Boolean = true
-    }
-
-    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
-
-    val result = applicationsTransformer.transformDomainToApiSummary(
-      application,
-      mockPersonInfoResult,
-    ) as ApprovedPremisesApplicationSummary
-
-    assertThat(result.releaseType).isEqualTo(releaseTypeOption)
-  }
-
-  @Test
-  fun `transformJpaToApiSummary transforms an in progress Temporary Accommodation application correctly`() {
-    val application = object : DomainTemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
-      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
-      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
-      override fun getSubmittedAt() = null
-      override fun getLatestAssessmentSubmittedAt() = null
-      override fun getLatestAssessmentDecision() = null
-      override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
-      override fun getHasBooking() = false
-    }
-
-    val result = applicationsTransformer.transformDomainToApiSummary(
-      application,
-      mockk(),
-    ) as TemporaryAccommodationApplicationSummary
-
-    assertThat(result.id).isEqualTo(application.getId())
-    assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
-    assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
-    assertThat(result.risks).isNotNull
-  }
-
-  @Test
-  fun `transformJpaToApiSummary transforms a submitted Temporary Accommodation application correctly`() {
-    val application = object : DomainTemporaryAccommodationApplicationSummary {
-      override fun getRiskRatings() = jsonMapper.writeValueAsString(PersonRisksFactory().produce())
-      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
-      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
-      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
-      override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:30+01:00")
-      override fun getLatestAssessmentSubmittedAt() = null
-      override fun getLatestAssessmentDecision() = null
-      override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
-      override fun getHasBooking() = false
-    }
-
-    val result = applicationsTransformer.transformDomainToApiSummary(
-      application,
-      mockk(),
-    ) as TemporaryAccommodationApplicationSummary
-
-    assertThat(result.id).isEqualTo(application.getId())
-    assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
-    assertThat(result.risks).isNotNull
   }
 
   @ParameterizedTest
