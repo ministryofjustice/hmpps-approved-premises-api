@@ -12,31 +12,9 @@ shared across services, or are the JOINED-inheritance base tables (`applications
 
 ## Entity–Relationship Diagram
 
-```mermaid
-erDiagram
-    users ||--o{ applications : creates
-    users ||--o{ user_role_assignments : has
-    users ||--o{ user_qualification_assignments : has
-    probation_regions ||--o{ users : contains
-    probation_delivery_units ||--o{ users : contains
-    ap_areas ||--o{ users : contains
-    cas1_cru_management_areas ||--o{ users : manages
-    ap_areas ||--o{ probation_regions : contains
-    probation_regions ||--o{ probation_delivery_units : contains
-    probation_regions ||--o{ premises : owns
+![Entity Relationship Diagram](./erd-shared.mermaid)
 
-    applications ||--|| approved_premises_applications : "subtype (joined)"
-    applications ||--|| temporary_accommodation_applications : "subtype (joined)"
-    applications ||--o{ assessments : has
-    applications ||--o{ appeals : has
-    assessments ||--|| approved_premises_assessments : "subtype (joined)"
-    assessments ||--|| temporary_accommodation_assessments : "subtype (joined)"
-    assessments ||--o{ assessment_clarification_notes : has
-    assessments ||--o{ assessment_referral_history_notes : has
-    assessment_referral_history_notes ||--|| assessment_referral_history_user_notes : "subtype"
-    assessment_referral_history_notes ||--|| assessment_referral_history_system_notes : "subtype"
-
-    premises ||--|| approved_premises : "subtype (joined)"
+_See also: [erd-shared.mermaid](./erd-shared.mermaid) (Mermaid source)_
     premises ||--|| temporary_accommodation_premises : "subtype (joined)"
     premises ||--o{ bookings : has
     premises ||--o{ rooms : has
@@ -81,7 +59,7 @@ Full column reference (same data as the CSV). One table per database table.
 
 ### ap_areas
 
-Entity: `ApAreaEntity`
+Table: `ap_areas` | Entity: `ApAreaEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -92,7 +70,7 @@ Entity: `ApAreaEntity`
 
 ### appeals
 
-Entity: `AppealEntity`
+Table: `appeals` | Entity: `AppealEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -109,7 +87,7 @@ Entity: `AppealEntity`
 
 ### application_timeline_notes
 
-Entity: `ApplicationTimelineNoteEntity`
+Table: `application_timeline_notes` | Entity: `ApplicationTimelineNoteEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -123,7 +101,7 @@ Entity: `ApplicationTimelineNoteEntity`
 
 ### applications
 
-Entity: `ApplicationEntity`
+Table: `applications` | Entity: `ApplicationEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -141,7 +119,7 @@ Entity: `ApplicationEntity`
 
 ### approved_premises
 
-Entity: `ApprovedPremisesEntity`
+Table: `approved_premises` | Entity: `ApprovedPremisesEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -158,7 +136,7 @@ Entity: `ApprovedPremisesEntity`
 
 ### approved_premises_application_team_codes
 
-Entity: `ApplicationTeamCodeEntity`
+Table: `approved_premises_application_team_codes` | Entity: `ApplicationTeamCodeEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -168,7 +146,7 @@ Entity: `ApplicationTeamCodeEntity`
 
 ### approved_premises_applications
 
-Entity: `ApprovedPremisesApplicationEntity`
+Table: `approved_premises_applications` | Entity: `ApprovedPremisesApplicationEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -205,7 +183,7 @@ Entity: `ApprovedPremisesApplicationEntity`
 
 ### approved_premises_assessments
 
-Entity: `ApprovedPremisesAssessmentEntity`
+Table: `approved_premises_assessments` | Entity: `ApprovedPremisesAssessmentEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -217,7 +195,7 @@ Entity: `ApprovedPremisesAssessmentEntity`
 
 ### arrivals
 
-Entity: `ArrivalEntity`
+Table: `arrivals` | Entity: `ArrivalEntity` (⚠️ **deprecated** — see [doc/deprecations/deprecations-bookings.md](../deprecations/deprecations-bookings.md))
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -231,7 +209,7 @@ Entity: `ArrivalEntity`
 
 ### assessment_clarification_notes
 
-Entity: `AssessmentClarificationNoteEntity`
+Table: `assessment_clarification_notes` | Entity: `AssessmentClarificationNoteEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -245,7 +223,7 @@ Entity: `AssessmentClarificationNoteEntity`
 
 ### assessment_referral_history_notes
 
-Entity: `AssessmentReferralHistoryNoteEntity`
+Table: `assessment_referral_history_notes` | Entity: `AssessmentReferralHistoryNoteEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -257,7 +235,7 @@ Entity: `AssessmentReferralHistoryNoteEntity`
 
 ### assessment_referral_history_system_notes
 
-Entity: `AssessmentReferralHistorySystemNoteEntity`
+Table: `assessment_referral_history_system_notes` | Entity: `AssessmentReferralHistorySystemNoteEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -266,7 +244,7 @@ Entity: `AssessmentReferralHistorySystemNoteEntity`
 
 ### assessment_referral_history_user_notes
 
-Entity: `AssessmentReferralHistoryUserNoteEntity`
+Table: `assessment_referral_history_user_notes` | Entity: `AssessmentReferralHistoryUserNoteEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -274,7 +252,7 @@ Entity: `AssessmentReferralHistoryUserNoteEntity`
 
 ### assessments
 
-Entity: `AssessmentEntity`
+Table: `assessments` | Entity: `AssessmentEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -296,7 +274,7 @@ Entity: `AssessmentEntity`
 
 ### beds
 
-Entity: `BedEntity`
+Table: `beds` | Entity: `BedEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -311,7 +289,7 @@ Entity: `BedEntity`
 
 ### booking_not_mades
 
-Entity: `BookingNotMadeEntity`
+Table: `booking_not_mades` | Entity: `BookingNotMadeEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -322,7 +300,7 @@ Entity: `BookingNotMadeEntity`
 
 ### bookings
 
-Entity: `BookingEntity`
+Table: `bookings` | Entity: `BookingEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -347,7 +325,7 @@ Entity: `BookingEntity`
 
 ### cache_refresh_exclusions_inmate_details
 
-Entity: `CacheRefreshExclusionsInmateDetailsEntity`
+Table: `cache_refresh_exclusions_inmate_details` | Entity: `CacheRefreshExclusionsInmateDetailsEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -356,7 +334,7 @@ Entity: `CacheRefreshExclusionsInmateDetailsEntity`
 
 ### cancellation_reasons
 
-Entity: `CancellationReasonEntity`
+Table: `cancellation_reasons` | Entity: `CancellationReasonEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -368,7 +346,7 @@ Entity: `CancellationReasonEntity`
 
 ### cancellations
 
-Entity: `CancellationEntity`
+Table: `cancellations` | Entity: `CancellationEntity` (⚠️ **deprecated** — see [doc/deprecations/deprecations-bookings.md](../deprecations/deprecations-bookings.md))
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -382,7 +360,7 @@ Entity: `CancellationEntity`
 
 ### characteristics
 
-Entity: `CharacteristicEntity`
+Table: `characteristics` | Entity: `CharacteristicEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -395,7 +373,7 @@ Entity: `CharacteristicEntity`
 
 ### date_changes
 
-Entity: `DateChangeEntity`
+Table: `date_changes` | Entity: `DateChangeEntity` (⚠️ **deprecated** — see [doc/deprecations/deprecations-bookings.md](../deprecations/deprecations-bookings.md))
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -410,7 +388,7 @@ Entity: `DateChangeEntity`
 
 ### departure_reasons
 
-Entity: `DepartureReasonEntity`
+Table: `departure_reasons` | Entity: `DepartureReasonEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -423,7 +401,7 @@ Entity: `DepartureReasonEntity`
 
 ### departures
 
-Entity: `DepartureEntity`
+Table: `departures` | Entity: `DepartureEntity` (⚠️ **deprecated** — see [doc/deprecations/deprecations-bookings.md](../deprecations/deprecations-bookings.md))
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -438,7 +416,7 @@ Entity: `DepartureEntity`
 
 ### destination_providers
 
-Entity: `DestinationProviderEntity`
+Table: `destination_providers` | Entity: `DestinationProviderEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -448,7 +426,7 @@ Entity: `DestinationProviderEntity`
 
 ### domain_events
 
-Entity: `DomainEventEntity`
+Table: `domain_events` | Entity: `DomainEventEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -474,7 +452,7 @@ Entity: `DomainEventEntity`
 
 ### extensions
 
-Entity: `ExtensionEntity`
+Table: `extensions` | Entity: `ExtensionEntity` (⚠️ **deprecated** — see [doc/deprecations/deprecations-bookings.md](../deprecations/deprecations-bookings.md))
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -487,7 +465,7 @@ Entity: `ExtensionEntity`
 
 ### local_authority_areas
 
-Entity: `LocalAuthorityAreaEntity`
+Table: `local_authority_areas` | Entity: `LocalAuthorityAreaEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -497,7 +475,7 @@ Entity: `LocalAuthorityAreaEntity`
 
 ### move_on_categories
 
-Entity: `MoveOnCategoryEntity`
+Table: `move_on_categories` | Entity: `MoveOnCategoryEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -509,7 +487,7 @@ Entity: `MoveOnCategoryEntity`
 
 ### non_arrival_reasons
 
-Entity: `NonArrivalReasonEntity`
+Table: `non_arrival_reasons` | Entity: `NonArrivalReasonEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -520,7 +498,7 @@ Entity: `NonArrivalReasonEntity`
 
 ### non_arrivals
 
-Entity: `NonArrivalEntity`
+Table: `non_arrivals` | Entity: `NonArrivalEntity` (⚠️ **deprecated** — see [doc/deprecations/deprecations-bookings.md](../deprecations/deprecations-bookings.md))
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -533,7 +511,7 @@ Entity: `NonArrivalEntity`
 
 ### offender_management_units
 
-Entity: `OffenderManagementUnitEntity`
+Table: `offender_management_units` | Entity: `OffenderManagementUnitEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -544,7 +522,7 @@ Entity: `OffenderManagementUnitEntity`
 
 ### offline_applications
 
-Entity: `OfflineApplicationEntity`
+Table: `offline_applications` | Entity: `OfflineApplicationEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -557,7 +535,7 @@ Entity: `OfflineApplicationEntity`
 
 ### placement_applications
 
-Entity: `PlacementApplicationEntity`
+Table: `placement_applications` | Entity: `PlacementApplicationEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -591,7 +569,7 @@ Entity: `PlacementApplicationEntity`
 
 ### placement_applications_placeholder
 
-Entity: `PlacementApplicationPlaceholderEntity`
+Table: `placement_applications_placeholder` | Entity: `PlacementApplicationPlaceholderEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -603,7 +581,7 @@ Entity: `PlacementApplicationPlaceholderEntity`
 
 ### placement_requests
 
-Entity: `PlacementRequestEntity`
+Table: `placement_requests` | Entity: `PlacementRequestEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -624,7 +602,7 @@ Entity: `PlacementRequestEntity`
 
 ### placement_requirements
 
-Entity: `PlacementRequirementsEntity`
+Table: `placement_requirements` | Entity: `PlacementRequirementsEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -639,7 +617,7 @@ Entity: `PlacementRequirementsEntity`
 
 ### placement_requirements_desirable_criteria
 
-Entity: `PlacementRequirementsEntity` (join table for `desirableCriteria`)
+Table: `placement_requirements_desirable_criteria` | Entity: `PlacementRequirementsEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -648,7 +626,7 @@ Entity: `PlacementRequirementsEntity` (join table for `desirableCriteria`)
 
 ### placement_requirements_essential_criteria
 
-Entity: `PlacementRequirementsEntity` (join table for `essentialCriteria`)
+Table: `placement_requirements_essential_criteria` | Entity: `PlacementRequirementsEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -657,7 +635,7 @@ Entity: `PlacementRequirementsEntity` (join table for `essentialCriteria`)
 
 ### postcode_districts
 
-Entity: `PostCodeDistrictEntity`
+Table: `postcode_districts` | Entity: `PostCodeDistrictEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -669,7 +647,7 @@ Entity: `PostCodeDistrictEntity`
 
 ### premises
 
-Entity: `PremisesEntity`
+Table: `premises` | Entity: `PremisesEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -691,7 +669,7 @@ Entity: `PremisesEntity`
 
 ### probation_area_probation_region_mappings
 
-Entity: `ProbationAreaProbationRegionMappingEntity`
+Table: `probation_area_probation_region_mappings` | Entity: `ProbationAreaProbationRegionMappingEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -701,7 +679,7 @@ Entity: `ProbationAreaProbationRegionMappingEntity`
 
 ### probation_delivery_units
 
-Entity: `ProbationDeliveryUnitEntity`
+Table: `probation_delivery_units` | Entity: `ProbationDeliveryUnitEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -712,7 +690,7 @@ Entity: `ProbationDeliveryUnitEntity`
 
 ### probation_regions
 
-Entity: `ProbationRegionEntity`
+Table: `probation_regions` | Entity: `ProbationRegionEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -724,7 +702,7 @@ Entity: `ProbationRegionEntity`
 
 ### referral_rejection_reasons
 
-Entity: `ReferralRejectionReasonEntity`
+Table: `referral_rejection_reasons` | Entity: `ReferralRejectionReasonEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -734,7 +712,7 @@ Entity: `ReferralRejectionReasonEntity`
 
 ### rooms
 
-Entity: `RoomEntity`
+Table: `rooms` | Entity: `RoomEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -746,7 +724,7 @@ Entity: `RoomEntity`
 
 ### temporary_accommodation_applications
 
-Entity: `TemporaryAccommodationApplicationEntity`
+Table: `temporary_accommodation_applications` | Entity: `TemporaryAccommodationApplicationEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -779,7 +757,7 @@ Entity: `TemporaryAccommodationApplicationEntity`
 
 ### temporary_accommodation_assessments
 
-Entity: `TemporaryAccommodationAssessmentEntity`
+Table: `temporary_accommodation_assessments` | Entity: `TemporaryAccommodationAssessmentEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -793,7 +771,7 @@ Entity: `TemporaryAccommodationAssessmentEntity`
 
 ### temporary_accommodation_premises
 
-Entity: `TemporaryAccommodationPremisesEntity`
+Table: `temporary_accommodation_premises` | Entity: `TemporaryAccommodationPremisesEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -805,7 +783,7 @@ Entity: `TemporaryAccommodationPremisesEntity`
 
 ### user_qualification_assignments
 
-Entity: `UserQualificationAssignmentEntity`
+Table: `user_qualification_assignments` | Entity: `UserQualificationAssignmentEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -815,7 +793,7 @@ Entity: `UserQualificationAssignmentEntity`
 
 ### user_role_assignments
 
-Entity: `UserRoleAssignmentEntity`
+Table: `user_role_assignments` | Entity: `UserRoleAssignmentEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -825,7 +803,7 @@ Entity: `UserRoleAssignmentEntity`
 
 ### users
 
-Entity: `UserEntity`
+Table: `users` | Entity: `UserEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -851,9 +829,15 @@ These entities have no `@Table` annotation and no `CREATE TABLE`/`CREATE VIEW` m
 
 ### tasks
 
-Entity: `Task`
+Table: `tasks` (projection) | Entity: `Task` — [source](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/jpa/entity/TaskEntity.kt)
 
 Not a physical table or view. Populated by `TaskRepository.getAll(...)` as a native `UNION ALL` over `assessments` and `placement_applications`. The columns below describe the projection's result shape, not stored columns.
+
+**Backing query:** Native `UNION ALL` combining:
+- Assessment rows: `SELECT assessment.id, ... FROM assessments assessment WHERE assessment.allocated_to_user_id IS NOT NULL ...`
+- Placement application rows: `SELECT placement_application.id, ... FROM placement_applications placement_application WHERE placement_application.allocated_to_user_id IS NOT NULL ...`
+
+See [TaskEntity.kt](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/jpa/entity/TaskEntity.kt) for complete query.
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|

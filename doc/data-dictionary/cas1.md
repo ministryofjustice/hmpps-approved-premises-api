@@ -14,36 +14,9 @@ data is held in the shared `applications`/`assessments` base tables plus the
 
 ## Entity–Relationship Diagram
 
-```mermaid
-erDiagram
-    premises ||--o{ cas1_out_of_service_beds : has
-    beds ||--o{ cas1_out_of_service_beds : "out of service"
-    cas1_out_of_service_beds ||--o{ cas1_out_of_service_bed_revisions : has
-    cas1_out_of_service_beds ||--|| cas1_out_of_service_bed_cancellations : "cancelled by"
-    cas1_out_of_service_bed_reasons ||--o{ cas1_out_of_service_bed_revisions : categorises
-    users ||--o{ cas1_out_of_service_bed_revisions : creates
+![Entity Relationship Diagram](./erd-cas1.mermaid)
 
-    premises ||--o{ cas1_space_bookings : has
-    approved_premises_applications ||--o{ cas1_space_bookings : has
-    placement_requests ||--o{ cas1_space_bookings : fulfils
-    offline_applications ||--o| cas1_space_bookings : has
-    users ||--o{ cas1_space_bookings : "key worker"
-    departure_reasons ||--o{ cas1_space_bookings : categorises
-    move_on_categories ||--o{ cas1_space_bookings : categorises
-    cancellation_reasons ||--o{ cas1_space_bookings : categorises
-    non_arrival_reasons ||--o{ cas1_space_bookings : categorises
-    cas1_space_bookings ||--o| cas1_space_bookings : "transferred from"
-
-    placement_requests ||--o{ cas1_change_requests : has
-    cas1_space_bookings ||--o{ cas1_change_requests : has
-    cas1_change_request_reasons ||--o{ cas1_change_requests : categorises
-    cas1_change_request_rejection_reasons ||--o{ cas1_change_requests : "rejected by"
-    users ||--o{ cas1_change_requests : decides
-
-    approved_premises_applications ||--o{ cas1_offenders : references
-    approved_premises_applications ||--o| cas_1_application_user_details : applicant
-    cas1_cru_management_areas ||--o{ approved_premises : manages
-```
+_See also: [erd-cas1.mermaid](./erd-cas1.mermaid) (Mermaid source)_
 
 ## Tables
 
@@ -51,7 +24,7 @@ Full column reference (same data as the CSV). One table per database table.
 
 ### cas1_change_request_reasons
 
-Entity: `Cas1ChangeRequestReasonEntity`
+Table: `cas1_change_request_reasons` | Entity: `Cas1ChangeRequestReasonEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -62,7 +35,7 @@ Entity: `Cas1ChangeRequestReasonEntity`
 
 ### cas1_change_request_rejection_reasons
 
-Entity: `Cas1ChangeRequestRejectionReasonEntity`
+Table: `cas1_change_request_rejection_reasons` | Entity: `Cas1ChangeRequestRejectionReasonEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -73,7 +46,7 @@ Entity: `Cas1ChangeRequestRejectionReasonEntity`
 
 ### cas1_change_requests
 
-Entity: `Cas1ChangeRequestEntity`
+Table: `cas1_change_requests` | Entity: `Cas1ChangeRequestEntity` (⚠️ **deprecated** — see [doc/deprecations/deprecations-bookings.md](../deprecations/deprecations-bookings.md))
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -95,7 +68,7 @@ Entity: `Cas1ChangeRequestEntity`
 
 ### cas1_cru_management_areas
 
-Entity: `Cas1CruManagementAreaEntity`
+Table: `cas1_cru_management_areas` | Entity: `Cas1CruManagementAreaEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -106,7 +79,7 @@ Entity: `Cas1CruManagementAreaEntity`
 
 ### cas1_form_data
 
-Entity: `Cas1FormDataEntity`
+Table: `cas1_form_data` | Entity: `Cas1FormDataEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -115,7 +88,7 @@ Entity: `Cas1FormDataEntity`
 
 ### cas1_key_worker_staff_code_lookup
 
-Entity: `Cas1KeyWorkerStaffCodeLookupEntity`
+Table: `cas1_key_worker_staff_code_lookup` | Entity: `Cas1KeyWorkerStaffCodeLookupEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -124,7 +97,7 @@ Entity: `Cas1KeyWorkerStaffCodeLookupEntity`
 
 ### cas1_offenders
 
-Entity: `Cas1OffenderEntity`
+Table: `cas1_offenders` | Entity: `Cas1OffenderEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -139,7 +112,7 @@ Entity: `Cas1OffenderEntity`
 
 ### cas1_out_of_service_bed_cancellations
 
-Entity: `Cas1OutOfServiceBedCancellationEntity`
+Table: `cas1_out_of_service_bed_cancellations` | Entity: `Cas1OutOfServiceBedCancellationEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -150,7 +123,7 @@ Entity: `Cas1OutOfServiceBedCancellationEntity`
 
 ### cas1_out_of_service_bed_reasons
 
-Entity: `Cas1OutOfServiceBedReasonEntity`
+Table: `cas1_out_of_service_bed_reasons` | Entity: `Cas1OutOfServiceBedReasonEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -162,7 +135,7 @@ Entity: `Cas1OutOfServiceBedReasonEntity`
 
 ### cas1_out_of_service_bed_revisions
 
-Entity: `Cas1OutOfServiceBedRevisionEntity`
+Table: `cas1_out_of_service_bed_revisions` | Entity: `Cas1OutOfServiceBedRevisionEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -180,7 +153,7 @@ Entity: `Cas1OutOfServiceBedRevisionEntity`
 
 ### cas1_out_of_service_beds
 
-Entity: `Cas1OutOfServiceBedEntity`
+Table: `cas1_out_of_service_beds` | Entity: `Cas1OutOfServiceBedEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -191,7 +164,7 @@ Entity: `Cas1OutOfServiceBedEntity`
 
 ### cas1_premises_local_restrictions
 
-Entity: `Cas1PremisesLocalRestrictionEntity`
+Table: `cas1_premises_local_restrictions` | Entity: `Cas1PremisesLocalRestrictionEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -204,7 +177,7 @@ Entity: `Cas1PremisesLocalRestrictionEntity`
 
 ### cas1_space_bookings
 
-Entity: `Cas1SpaceBookingEntity`
+Table: `cas1_space_bookings` | Entity: `Cas1SpaceBookingEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -249,7 +222,7 @@ Entity: `Cas1SpaceBookingEntity`
 
 ### cas_1_application_user_details
 
-Entity: `Cas1ApplicationUserDetailsEntity`
+Table: `cas_1_application_user_details` | Entity: `Cas1ApplicationUserDetailsEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
