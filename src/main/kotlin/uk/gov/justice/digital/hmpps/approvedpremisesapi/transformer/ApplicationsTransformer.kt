@@ -26,14 +26,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
 import java.time.LocalDate
 import java.time.ZoneOffset
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationApplicationSummary as ApiTemporaryAccommodationApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as DomainApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity as DomainTemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
 
 @Component
 class ApplicationsTransformer(
@@ -139,51 +134,6 @@ class ApplicationsTransformer(
     )
   }
 
-  fun transformDomainToApiSummary(
-    domain: DomainApplicationSummary,
-    personInfo: PersonInfoResult,
-  ): ApiApplicationSummary = when (domain) {
-    is DomainApprovedPremisesApplicationSummary -> {
-      val riskRatings =
-        if (domain.getRiskRatings() != null) jsonMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
-
-      ApiApprovedPremisesApplicationSummary(
-        id = domain.getId(),
-        person = personTransformer.transformModelToPersonApi(personInfo),
-        createdByUserId = domain.getCreatedByUserId(),
-        createdAt = domain.getCreatedAt(),
-        submittedAt = domain.getSubmittedAt(),
-        isWomensApplication = domain.getIsWomensApplication(),
-        arrivalDate = domain.getArrivalDate(),
-        risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
-        status = getStatusFromSummary(domain),
-        type = "CAS1",
-        tier = domain.getTier(),
-        isWithdrawn = domain.getIsWithdrawn(),
-        releaseType = domain.getReleaseType()?.let { ReleaseTypeOption.valueOf(it) },
-        hasRequestsForPlacement = domain.getHasRequestsForPlacement(),
-      )
-    }
-
-    is DomainTemporaryAccommodationApplicationSummary -> {
-      val riskRatings =
-        if (domain.getRiskRatings() != null) jsonMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
-
-      ApiTemporaryAccommodationApplicationSummary(
-        id = domain.getId(),
-        person = personTransformer.transformModelToPersonApi(personInfo),
-        createdByUserId = domain.getCreatedByUserId(),
-        createdAt = domain.getCreatedAt(),
-        submittedAt = domain.getSubmittedAt(),
-        risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
-        status = getStatusFromSummary(domain),
-        type = "CAS3",
-      )
-    }
-
-    else -> throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")
-  }
-
   fun transformDomainToCas1ApplicationSummary(
     domain: DomainApprovedPremisesApplicationSummary,
     personInfo: PersonInfoResult,
@@ -261,12 +211,6 @@ class ApplicationsTransformer(
   private fun getStatus(entity: ApplicationEntity, latestAssessment: AssessmentEntity?): ApplicationStatus = when {
     latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
     entity.submittedAt !== null -> ApplicationStatus.submitted
-    else -> ApplicationStatus.inProgress
-  }
-
-  private fun getStatusFromSummary(entity: DomainTemporaryAccommodationApplicationSummary): ApplicationStatus = when {
-    entity.getLatestAssessmentHasClarificationNotesWithoutResponse() -> ApplicationStatus.requestedFurtherInformation
-    entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
     else -> ApplicationStatus.inProgress
   }
 
