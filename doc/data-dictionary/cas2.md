@@ -12,20 +12,9 @@ read-only view-backed entity.
 
 ## Entity–Relationship Diagram
 
-```mermaid
-erDiagram
-    cas_2_users ||--o{ cas_2_applications : creates
-    cas_2_applications ||--|| cas_2_assessments : has
-    cas_2_applications ||--o{ cas_2_application_notes : has
-    cas_2_assessments ||--o{ cas_2_application_notes : has
-    cas_2_users ||--o{ cas_2_application_notes : writes
-    cas_2_applications ||--o{ cas_2_status_updates : has
-    cas_2_assessments ||--o{ cas_2_status_updates : has
-    cas_2_users ||--o{ cas_2_status_updates : "assessor"
-    cas_2_status_updates ||--o{ cas_2_status_update_details : has
-    cas_2_applications ||--o{ cas_2_application_assignments : has
-    cas_2_users ||--o{ cas_2_application_assignments : "allocated POM"
-```
+![Entity Relationship Diagram](./erd-cas2.mermaid)
+
+_See also: [erd-cas2.mermaid](./erd-cas2.mermaid) (Mermaid source)_
 
 ## Tables
 
@@ -33,7 +22,7 @@ Full column reference (same data as the CSV). One table per database table.
 
 ### cas_2_application_assignments
 
-Entity: `Cas2ApplicationAssignmentEntity`
+Table: `cas_2_application_assignments` | Entity: `Cas2ApplicationAssignmentEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -43,36 +32,9 @@ Entity: `Cas2ApplicationAssignmentEntity`
 | `allocated_pom_cas_2_user_id` | uuid | UUID? | yes | FK |  | ManyToOne → cas_2_users |  |
 | `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
 
-### cas_2_application_live_summary
-
-Entity: `Cas2ApplicationSummaryEntity`
-
-| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
-|--------|-----------|--------|----------|-----|-------------|--------------|-------|
-| `id` | uuid | UUID | no | PK |  |  | View-mapped entity (cas_2_application_summary / _live) |
-| `crn` | text | String | no |  |  |  |  |
-| `noms_number` | text | String | no |  |  |  |  |
-| `created_by_cas2_user_id` | text | String | no |  |  |  |  |
-| `created_by_cas2_user_name` | text | String | no |  |  |  |  |
-| `allocated_pom_cas_2_user_id` | uuid | UUID? | yes |  |  |  |  |
-| `allocated_pom_cas_2_name` | text | String? | yes |  |  |  |  |
-| `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
-| `submitted_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
-| `abandoned_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
-| `hdc_eligibility_date` | date | LocalDate? | yes |  |  |  |  |
-| `label` | text | String? | yes |  |  |  |  |
-| `status_id` | text | String? | yes |  |  |  |  |
-| `referring_prison_code` | text | String | no |  |  |  |  |
-| `current_prison_code` | text | String? | yes |  |  |  |  |
-| `assignment_date` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
-| `bail_hearing_date` | date | LocalDate? | yes |  |  |  |  |
-| `application_origin` | text | String? | yes |  |  |  |  |
-| `service_origin` | text | String? | yes |  |  |  |  |
-| `cohort` | text | Cas2Cohort? | yes |  | HDC / PRISON_BAIL / COURT_BAIL / ATCR / HCRD / HEFR / ISC / RARR / FROM_AP |  |  |
-
 ### cas_2_application_notes
 
-Entity: `Cas2ApplicationNoteEntity`
+Table: `cas_2_application_notes` | Entity: `Cas2ApplicationNoteEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -85,7 +47,7 @@ Entity: `Cas2ApplicationNoteEntity`
 
 ### cas_2_applications
 
-Entity: `Cas2ApplicationEntity`
+Table: `cas_2_applications` | Entity: `Cas2ApplicationEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -110,7 +72,7 @@ Entity: `Cas2ApplicationEntity`
 
 ### cas_2_assessments
 
-Entity: `Cas2AssessmentEntity`
+Table: `cas_2_assessments` | Entity: `Cas2AssessmentEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -123,7 +85,7 @@ Entity: `Cas2AssessmentEntity`
 
 ### cas_2_status_update_details
 
-Entity: `Cas2StatusUpdateDetailEntity`
+Table: `cas_2_status_update_details` | Entity: `Cas2StatusUpdateDetailEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -135,7 +97,7 @@ Entity: `Cas2StatusUpdateDetailEntity`
 
 ### cas_2_status_updates
 
-Entity: `Cas2StatusUpdateEntity`
+Table: `cas_2_status_updates` | Entity: `Cas2StatusUpdateEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -150,7 +112,7 @@ Entity: `Cas2StatusUpdateEntity`
 
 ### cas_2_users
 
-Entity: `Cas2UserEntity`
+Table: `cas_2_users` | Entity: `Cas2UserEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -172,7 +134,7 @@ Entity: `Cas2UserEntity`
 
 ### external_users
 
-Entity: `ExternalUserEntity`
+Table: `external_users` | Entity: `ExternalUserEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -186,7 +148,7 @@ Entity: `ExternalUserEntity`
 
 ### nomis_users
 
-Entity: `NomisUserEntity`
+Table: `nomis_users` | Entity: `NomisUserEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -200,6 +162,41 @@ Entity: `NomisUserEntity`
 | `email` | text | String? | yes |  |  |  |  |
 | `active_caseload_id` | text | String? | yes |  |  |  |  |
 | `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
+
+## Query-backed projections (not physical tables)
+
+These entities are backed by database views or native queries; they are read-only and not physical tables.
+
+### cas_2_application_live_summary
+
+Table: `cas_2_application_live_summary` (view) | Entity: `Cas2ApplicationSummaryEntity` — [source](../../src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/cas2/jpa/entity/Cas2ApplicationSummaryEntity.kt)
+
+View-backed entity created by `CREATE VIEW` migration. Read-only projection providing a summary of the current state of CAS2 applications (combining data from `cas_2_applications`, `cas_2_assessments`, `cas_2_status_updates`, and user data). Supports efficient querying of application lists with status and assignment details.
+
+See [db/migration/all/](../../src/main/resources/db/migration/all) for the view creation migration (e.g. `20240515100000__create_cas_2_summary_views.sql`).
+
+| Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
+|--------|-----------|--------|----------|-----|-------------|--------------|-------|
+| `id` | uuid | UUID | no | PK |  |  | View-mapped entity (cas_2_application_summary / _live) |
+| `crn` | text | String | no |  |  |  |  |
+| `noms_number` | text | String | no |  |  |  |  |
+| `created_by_cas2_user_id` | text | String | no |  |  |  |  |
+| `created_by_cas2_user_name` | text | String | no |  |  |  |  |
+| `allocated_pom_cas_2_user_id` | uuid | UUID? | yes |  |  |  |  |
+| `allocated_pom_cas_2_name` | text | String? | yes |  |  |  |  |
+| `created_at` | timestamptz | OffsetDateTime | no |  |  |  |  |
+| `submitted_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
+| `abandoned_at` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
+| `hdc_eligibility_date` | date | LocalDate? | yes |  |  |  |  |
+| `label` | text | String? | yes |  |  |  |  |
+| `status_id` | text | String? | yes |  |  |  |  |
+| `referring_prison_code` | text | String | no |  |  |  |  |
+| `current_prison_code` | text | String? | yes |  |  |  |  |
+| `assignment_date` | timestamptz | OffsetDateTime? | yes |  |  |  |  |
+| `bail_hearing_date` | date | LocalDate? | yes |  |  |  |  |
+| `application_origin` | text | String? | yes |  |  |  |  |
+| `service_origin` | text | String? | yes |  |  |  |  |
+| `cohort` | text | Cas2Cohort? | yes |  | HDC / PRISON_BAIL / COURT_BAIL / ATCR / HCRD / HEFR / ISC / RARR / FROM_AP |  |  |
 
 ## Sources
 

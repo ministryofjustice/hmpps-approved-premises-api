@@ -1,0 +1,29 @@
+%%{init: {'flowchart': {'direction': 'LR'}}}%%
+erDiagram
+    premises ||--o{ cas1_out_of_service_beds : has
+    beds ||--o{ cas1_out_of_service_beds : "out of service"
+    cas1_out_of_service_beds ||--o{ cas1_out_of_service_bed_revisions : has
+    cas1_out_of_service_beds ||--|| cas1_out_of_service_bed_cancellations : "cancelled by"
+    cas1_out_of_service_bed_reasons ||--o{ cas1_out_of_service_bed_revisions : categorises
+    users ||--o{ cas1_out_of_service_bed_revisions : creates
+
+    premises ||--o{ cas1_space_bookings : has
+    approved_premises_applications ||--o{ cas1_space_bookings : has
+    placement_requests ||--o{ cas1_space_bookings : fulfils
+    offline_applications ||--o| cas1_space_bookings : has
+    users ||--o{ cas1_space_bookings : "key worker"
+    departure_reasons ||--o{ cas1_space_bookings : categorises
+    move_on_categories ||--o{ cas1_space_bookings : categorises
+    cancellation_reasons ||--o{ cas1_space_bookings : categorises
+    non_arrival_reasons ||--o{ cas1_space_bookings : categorises
+    cas1_space_bookings ||--o| cas1_space_bookings : "transferred from"
+
+    placement_requests ||--o{ cas1_change_requests : has
+    cas1_space_bookings ||--o{ cas1_change_requests : has
+    cas1_change_request_reasons ||--o{ cas1_change_requests : categorises
+    cas1_change_request_rejection_reasons ||--o{ cas1_change_requests : "rejected by"
+    users ||--o{ cas1_change_requests : decides
+
+    approved_premises_applications ||--o{ cas1_offenders : references
+    approved_premises_applications ||--o| cas_1_application_user_details : applicant
+    cas1_cru_management_areas ||--o{ approved_premises : manages

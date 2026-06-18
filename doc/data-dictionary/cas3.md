@@ -14,29 +14,9 @@ iteration, not separate tables. CAS3 still references some shared reference tabl
 
 ## Entity–Relationship Diagram
 
-```mermaid
-erDiagram
-    cas3_premises ||--o{ cas3_bedspaces : has
-    cas3_premises ||--o{ bookings : has
-    cas3_premises ||--o{ cas3_void_bedspaces : has
-    cas3_premises ||--o{ cas3_premises_characteristic_assignments : "tagged with"
-    cas3_premises_characteristics ||--o{ cas3_premises_characteristic_assignments : "applies to"
-    cas3_bedspaces ||--o{ bookings : "booked in"
-    cas3_bedspaces ||--o{ cas3_void_bedspaces : "voided in"
-    cas3_bedspaces ||--o{ cas3_bedspace_characteristic_assignments : "tagged with"
-    cas3_bedspace_characteristics ||--o{ cas3_bedspace_characteristic_assignments : "applies to"
+![Entity Relationship Diagram](./erd-cas3.mermaid)
 
-    bookings ||--o{ arrivals : has
-    bookings ||--o{ departures : has
-    bookings ||--o| non_arrivals : has
-    bookings ||--o{ cancellations : has
-    bookings ||--o| cas3_confirmations : has
-    bookings ||--o{ extensions : has
-    bookings ||--o{ cas3_overstays : has
-    bookings ||--o{ cas3_turnarounds : has
-
-    cas3_void_bedspace_reasons ||--o{ cas3_void_bedspaces : categorises
-    cas3_void_bedspaces ||--|| cas3_void_bedspace_cancellations : "cancelled by"
+_See also: [erd-cas3.mermaid](./erd-cas3.mermaid) (Mermaid source)_
 ```
 
 ## Tables
@@ -45,7 +25,7 @@ Full column reference (same data as the CSV). One table per database table.
 
 ### arrivals
 
-Entity: `Cas3ArrivalEntity`
+Table: `arrivals` | Entity: `Cas3ArrivalEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -59,7 +39,7 @@ Entity: `Cas3ArrivalEntity`
 
 ### bookings
 
-Entity: `Cas3BookingEntity`
+Table: `bookings` | Entity: `Cas3BookingEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -81,7 +61,7 @@ Entity: `Cas3BookingEntity`
 
 ### cancellations
 
-Entity: `Cas3CancellationEntity`
+Table: `cancellations` | Entity: `Cas3CancellationEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -95,7 +75,7 @@ Entity: `Cas3CancellationEntity`
 
 ### cas3_bedspace_characteristics
 
-Entity: `Cas3BedspaceCharacteristicEntity`
+Table: `cas3_bedspace_characteristics` | Entity: `Cas3BedspaceCharacteristicEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -106,7 +86,7 @@ Entity: `Cas3BedspaceCharacteristicEntity`
 
 ### cas3_bedspace_characteristic_assignments
 
-Entity: `Cas3BedspacesEntity` (join table for `characteristics`)
+Table: `cas3_bedspace_characteristic_assignments` | Entity: `Cas3BedspacesEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -115,7 +95,7 @@ Entity: `Cas3BedspacesEntity` (join table for `characteristics`)
 
 ### cas3_bedspaces
 
-Entity: `Cas3BedspacesEntity`
+Table: `cas3_bedspaces` | Entity: `Cas3BedspacesEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -130,7 +110,7 @@ Entity: `Cas3BedspacesEntity`
 
 ### cas3_confirmations
 
-Entity: `Cas3ConfirmationEntity`, `Cas3v2ConfirmationEntity`
+Table: `cas3_confirmations` | Entity: `Cas3ConfirmationEntity`
 
 > Note: this single physical `cas3_confirmations` table is mapped by two JPA entities — `Cas3ConfirmationEntity` (v1) and `Cas3v2ConfirmationEntity` (v2). The columns are listed once below; both entities map to the same columns.
 
@@ -144,7 +124,7 @@ Entity: `Cas3ConfirmationEntity`, `Cas3v2ConfirmationEntity`
 
 ### cas3_overstays
 
-Entity: `Cas3OverstayEntity`
+Table: `cas3_overstays` | Entity: `Cas3OverstayEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -158,7 +138,7 @@ Entity: `Cas3OverstayEntity`
 
 ### cas3_premises
 
-Entity: `Cas3PremisesEntity`
+Table: `cas3_premises` | Entity: `Cas3PremisesEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -180,7 +160,7 @@ Entity: `Cas3PremisesEntity`
 
 ### cas3_premises_characteristics
 
-Entity: `Cas3PremisesCharacteristicEntity`
+Table: `cas3_premises_characteristics` | Entity: `Cas3PremisesCharacteristicEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -191,7 +171,7 @@ Entity: `Cas3PremisesCharacteristicEntity`
 
 ### cas3_premises_characteristic_assignments
 
-Entity: `Cas3PremisesEntity` (join table for `characteristics`)
+Table: `cas3_premises_characteristic_assignments` | Entity: `Cas3PremisesEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -200,7 +180,7 @@ Entity: `Cas3PremisesEntity` (join table for `characteristics`)
 
 ### cas3_turnarounds
 
-Entity: `Cas3TurnaroundEntity`, `Cas3v2TurnaroundEntity`
+Table: `cas3_turnarounds` | Entity: `Cas3TurnaroundEntity`
 
 > Note: this single physical `cas3_turnarounds` table is mapped by two JPA entities — `Cas3TurnaroundEntity` (v1) and `Cas3v2TurnaroundEntity` (v2). The columns are listed once below; both entities map to the same columns.
 
@@ -213,7 +193,7 @@ Entity: `Cas3TurnaroundEntity`, `Cas3v2TurnaroundEntity`
 
 ### cas3_void_bedspace_cancellations
 
-Entity: `Cas3VoidBedspaceCancellationEntity`
+Table: `cas3_void_bedspace_cancellations` | Entity: `Cas3VoidBedspaceCancellationEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -224,7 +204,7 @@ Entity: `Cas3VoidBedspaceCancellationEntity`
 
 ### cas3_void_bedspace_reasons
 
-Entity: `Cas3VoidBedspaceReasonEntity`
+Table: `cas3_void_bedspace_reasons` | Entity: `Cas3VoidBedspaceReasonEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -234,7 +214,7 @@ Entity: `Cas3VoidBedspaceReasonEntity`
 
 ### cas3_void_bedspaces
 
-Entity: `Cas3VoidBedspaceEntity`
+Table: `cas3_void_bedspaces` | Entity: `Cas3VoidBedspaceEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -253,7 +233,7 @@ Entity: `Cas3VoidBedspaceEntity`
 
 ### departures
 
-Entity: `Cas3DepartureEntity`
+Table: `departures` | Entity: `Cas3DepartureEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -268,7 +248,7 @@ Entity: `Cas3DepartureEntity`
 
 ### extensions
 
-Entity: `Cas3ExtensionEntity`
+Table: `extensions` | Entity: `Cas3ExtensionEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
@@ -281,7 +261,7 @@ Entity: `Cas3ExtensionEntity`
 
 ### non_arrivals
 
-Entity: `Cas3NonArrivalEntity`
+Table: `non_arrivals` | Entity: `Cas3NonArrivalEntity`
 
 | Column | Type (SQL) | Kotlin | Nullable | Key | Enum values | Relationship | Notes |
 |--------|-----------|--------|----------|-----|-------------|--------------|-------|
