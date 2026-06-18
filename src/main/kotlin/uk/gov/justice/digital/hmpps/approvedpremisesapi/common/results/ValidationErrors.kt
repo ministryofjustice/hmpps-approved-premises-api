@@ -1,7 +1,5 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidatableActionResult
 import java.util.UUID
 
 @JvmInline

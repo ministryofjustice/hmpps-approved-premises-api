@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import java.util.UUID
 
 @Deprecated("The ValidatableActionResult and AuthorisableActionResult have been replaced by CasResult, which effectively flattens these two classes into one")
