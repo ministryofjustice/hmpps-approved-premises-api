@@ -661,6 +661,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isNotNull()
         assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isEqualTo(agencyName)
       }
+      assertThat(caseService.getCase(crn)).isNotNull()
     }
 
     private fun callApplicationsApi(jwt: String, crn: String, offenceId: String) = webTestClient.post()

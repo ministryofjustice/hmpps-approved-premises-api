@@ -38,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalTime
@@ -112,7 +111,7 @@ class Cas1ApplicationCreationService(
       ),
     )
 
-    caseService.ensureCaseExists(offenderDetails.asCaseSummary(), riskRatings)
+    caseService.ensureCaseExists(crn)
 
     managingTeamCodes.forEach {
       createdApplication.teamCodes += applicationTeamCodeRepository.save(

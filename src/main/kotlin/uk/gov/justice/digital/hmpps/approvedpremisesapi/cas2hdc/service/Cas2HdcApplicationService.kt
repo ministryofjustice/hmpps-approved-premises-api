@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.Pagina
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidationErrors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -51,6 +52,7 @@ class Cas2HdcApplicationService(
   private val assessmentService: Cas2HdcAssessmentService,
   private val notifyConfig: NotifyConfig,
   private val jsonMapper: JsonMapper,
+  private val caseService: CaseService,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -165,6 +167,7 @@ class Cas2HdcApplicationService(
         cohort = Cas2Cohort.HDC,
       ),
     )
+    caseService.ensureCaseExists(personInfoResult.crn)
 
     return CasResult.Success(createdApplication)
   }

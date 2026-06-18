@@ -34,7 +34,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Inmate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -89,6 +91,7 @@ class Cas3ApplicationServiceTest {
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
   private val mockCas3v2BookingService = mockk<Cas3v2BookingService>()
   private val mockCas3ApplicationTransformer = mockk<Cas3ApplicationTransformer>()
+  private val mockCaseService = mockk<CaseService>()
 
   private val cas3ApplicationService = Cas3ApplicationService(
     mockApplicationRepository,
@@ -107,6 +110,7 @@ class Cas3ApplicationServiceTest {
     mockCas3v2BookingService,
     Clock.systemDefaultZone(),
     mockCas3ApplicationTransformer,
+    mockCaseService,
   )
 
   val user = UserEntityFactory()
@@ -1116,6 +1120,7 @@ class Cas3ApplicationServiceTest {
       )
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockCaseService.ensureCaseExists(any()) } returns CaseEntityFactory().produce()
 
       val riskRatings = PersonRisksFactory()
         .withRoshRisks(
@@ -1192,6 +1197,7 @@ class Cas3ApplicationServiceTest {
       )
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockCaseService.ensureCaseExists(any()) } returns CaseEntityFactory().produce()
 
       val riskRatings = PersonRisksFactory()
         .withRoshRisks(
@@ -1267,6 +1273,7 @@ class Cas3ApplicationServiceTest {
       )
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockCaseService.ensureCaseExists(any()) } returns CaseEntityFactory().produce()
 
       val riskRatings = PersonRisksFactory()
         .withRoshRisks(
@@ -1343,6 +1350,7 @@ class Cas3ApplicationServiceTest {
       )
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockCaseService.ensureCaseExists(any()) } returns CaseEntityFactory().produce()
 
       val riskRatings = PersonRisksFactory()
         .withRoshRisks(

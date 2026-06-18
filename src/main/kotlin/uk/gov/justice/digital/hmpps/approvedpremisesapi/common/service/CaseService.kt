@@ -1,29 +1,36 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
 class CaseService(
   private val caseRepository: CaseRepository,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val hmppsTierApiClient: HMPPSTierApiClient,
 ) {
 
-  fun ensureCaseExists(caseSummary: CaseSummary, riskRatings: PersonRisks?): CaseEntity {
+  fun ensureCaseExists(crn: String): CaseEntity {
+    val caseSummary = getCaseSummary(crn)
+    val riskTier = getRiskTier(crn)
     val caseEntity = caseRepository.findByCrn(caseSummary.crn)?.apply {
       name = "${caseSummary.name.forename.uppercase()} ${caseSummary.name.surname.uppercase()}".trim()
-      tier = riskRatings?.tier?.value?.level
+      tier = riskTier
       nomsNumber = caseSummary.nomsId
     } ?: CaseEntity(
       id = UUID.randomUUID(),
       crn = caseSummary.crn,
       name = "${caseSummary.name.forename.uppercase()} ${caseSummary.name.surname.uppercase()}".trim(),
-      tier = riskRatings?.tier?.value?.level,
+      tier = riskTier,
       nomsNumber = caseSummary.nomsId,
       createdAt = OffsetDateTime.now(),
       lastUpdatedAt = OffsetDateTime.now(),
@@ -40,5 +47,19 @@ class CaseService(
       createdAt = it.createdAt,
       lastUpdatedAt = it.lastUpdatedAt,
     )
+  }
+
+  private fun getRiskTier(crn: String): String? = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
+    is ClientResult.Success -> tierResponse.body.tierScore
+    is ClientResult.Failure -> null
+  }
+
+  private fun getCaseSummary(crn: String): CaseSummary = when (
+    val caseSummariesResponse = apDeliusContextApiClient.getCaseSummaries(listOf(crn))
+  ) {
+    is ClientResult.Success ->
+      caseSummariesResponse.body.cases.firstOrNull() ?: throw NotFoundProblem(crn, "Offender")
+
+    is ClientResult.Failure -> caseSummariesResponse.throwException()
   }
 }
