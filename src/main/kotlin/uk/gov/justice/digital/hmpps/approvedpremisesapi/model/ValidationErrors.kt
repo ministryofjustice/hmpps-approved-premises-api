@@ -13,16 +13,15 @@ value class ValidationErrors(private val errorMap: MutableMap<String, String>) :
 
 private fun singleValidationErrorOf(propertyNameToMessage: Pair<String, String>) = ValidationErrors().apply { this[propertyNameToMessage.first] = propertyNameToMessage.second }
 
+@Deprecated("Use ValidatedScope is deprecated. Callers should use CasResult and validatedCasResult", ReplaceWith("validatedCasResult"))
 class ValidatedScope<EntityType> {
   val validationErrors = ValidationErrors()
 
   val fieldValidationError: ValidatableActionResult.FieldValidationError<EntityType> = ValidatableActionResult.FieldValidationError(validationErrors)
 
   infix fun success(entity: EntityType) = ValidatableActionResult.Success(entity)
-  infix fun generalError(message: String) = ValidatableActionResult.GeneralValidationError<EntityType>(message)
   infix fun String.hasValidationError(message: String) = validationErrors.put(this, message)
   infix fun String.hasSingleValidationError(message: String) = ValidatableActionResult.FieldValidationError<EntityType>(singleValidationErrorOf(this to message))
-  infix fun UUID.hasConflictError(message: String) = ValidatableActionResult.ConflictError<EntityType>(this, message)
 }
 
 @Deprecated("Use of ValidatableActionResult is deprecated. Callers should use CasResult and validatedCasResult", ReplaceWith("validatedCasResult"))
