@@ -176,7 +176,7 @@ class Cas1ApplicationCreationServiceTest {
 
       every { mockApplicationRepository.saveAndFlush(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockApplicationTeamCodeRepository.save(any()) } answers { it.invocation.args[0] as ApplicationTeamCodeEntity }
-      every { mockCaseService.ensureCaseExists(any(), any()) } returns caseEntity
+      every { mockCaseService.ensureCaseExists(any()) } returns caseEntity
 
       val riskRatings = PersonRisksFactory()
         .withRoshRisks(

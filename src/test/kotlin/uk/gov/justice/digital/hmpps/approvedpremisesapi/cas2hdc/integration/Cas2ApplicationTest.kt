@@ -1561,7 +1561,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             assertThat(result.responseBody.blockFirst()!!).matches {
               it.person.crn == offenderDetails.otherIds.crn &&
                 it.applicationOrigin == ApplicationOrigin.homeDetentionCurfew &&
-                it.bailHearingDate == null
+                it.bailHearingDate == null &&
+                caseService.getCase(it.person.crn) != null
             }
           }
         }
@@ -1600,6 +1601,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
             val savedApplication = realApplicationRepository.findById(returnedApplication.id).get()
             assertThat(savedApplication.cohort).isEqualTo(Cas2Cohort.HDC)
+
+            assertThat(caseService.getCase(offenderDetails.otherIds.crn)).isNotNull()
           }
         }
       }
@@ -1687,6 +1690,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             assertThat(result.responseBody.blockFirst()!!).matches {
               it.person.crn == offenderDetails.otherIds.crn
             }
+            assertThat(caseService.getCase(offenderDetails.otherIds.crn)).isNotNull()
           }
         }
       }

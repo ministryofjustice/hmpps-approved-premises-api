@@ -46,8 +46,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcO
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service.Cas2HdcUserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
@@ -91,6 +93,9 @@ class Cas2ApplicationServiceTest {
   @MockK
   lateinit var mockNotifyConfig: NotifyConfig
 
+  @MockK
+  lateinit var mockCaseService: CaseService
+
   lateinit var applicationService: Cas2HdcApplicationService
 
   @BeforeEach
@@ -106,6 +111,7 @@ class Cas2ApplicationServiceTest {
       mockAssessmentService,
       mockNotifyConfig,
       mockJsonMapper,
+      mockCaseService,
       "http://frontend/applications/#id",
       "http://frontend/assess/applications/#applicationId/overview",
     )
@@ -412,6 +418,7 @@ class Cas2ApplicationServiceTest {
         it.invocation.args[0] as
           Cas2ApplicationEntity
       }
+      every { mockCaseService.ensureCaseExists(any()) } returns CaseEntityFactory().produce()
 
       val result = applicationService.createApplication(personInfoResult, user)
 

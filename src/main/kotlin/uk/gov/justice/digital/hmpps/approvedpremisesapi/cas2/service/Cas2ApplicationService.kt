@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -56,6 +57,7 @@ class Cas2ApplicationService(
   private val notifyConfig: NotifyConfig,
   private val jsonMapper: JsonMapper,
   private val sentryService: SentryService,
+  private val caseService: CaseService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -176,6 +178,8 @@ class Cas2ApplicationService(
     val createdApplication = cas2ApplicationRepository.save(
       entityToSave,
     )
+
+    caseService.ensureCaseExists(crn)
 
     return success(createdApplication)
   }

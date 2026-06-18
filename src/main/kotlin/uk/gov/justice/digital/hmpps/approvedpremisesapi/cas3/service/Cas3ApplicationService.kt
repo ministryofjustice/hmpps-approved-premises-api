@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Authorisa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
@@ -57,6 +58,7 @@ class Cas3ApplicationService(
   private val cas3v2BookingService: Cas3v2BookingService,
   private val clock: Clock,
   private val transformer: Cas3ApplicationTransformer,
+  private val caseService: CaseService,
 ) {
   fun getApplicationSummariesForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
 
@@ -168,6 +170,8 @@ class Cas3ApplicationService(
           prisonName,
         ),
       )
+
+      caseService.ensureCaseExists(crn)
 
       success(createdApplication)
     }
