@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity

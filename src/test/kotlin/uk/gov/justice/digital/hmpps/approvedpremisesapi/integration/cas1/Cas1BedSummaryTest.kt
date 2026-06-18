@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBedSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PremisesBedSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises

@@ -11,11 +11,11 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ExternalPremisesDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory

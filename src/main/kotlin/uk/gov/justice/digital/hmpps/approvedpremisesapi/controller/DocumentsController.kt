@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import org.springframework.stereotype.Controller
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.DocumentsApiDelegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1DocumentsController
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1DocumentsController
 import java.util.UUID
 
 @Controller

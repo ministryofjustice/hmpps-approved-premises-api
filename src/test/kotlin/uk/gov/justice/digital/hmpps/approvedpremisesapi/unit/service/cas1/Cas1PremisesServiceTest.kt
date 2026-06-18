@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1OccupancyReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesJdbcRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository

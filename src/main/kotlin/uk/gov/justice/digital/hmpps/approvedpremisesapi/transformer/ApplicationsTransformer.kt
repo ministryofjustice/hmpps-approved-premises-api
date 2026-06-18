@@ -6,11 +6,11 @@ import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity

@@ -4,9 +4,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1BookingChangedContentPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventDescriber.EventDescriptionAndPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService

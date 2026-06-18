@@ -7,9 +7,6 @@ import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -17,6 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity

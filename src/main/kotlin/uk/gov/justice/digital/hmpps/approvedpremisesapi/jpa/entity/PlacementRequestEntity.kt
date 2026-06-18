@@ -21,8 +21,8 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import java.time.LocalDate

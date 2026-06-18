@@ -8,12 +8,12 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceSearchParameters
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication

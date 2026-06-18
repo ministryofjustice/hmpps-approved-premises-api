@@ -6,8 +6,8 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReasonReferenceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedReasonReferenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory

@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReasonReferenceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedReasonReferenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntityReferenceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer

@@ -12,11 +12,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingAction
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
@@ -24,6 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingAction
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory

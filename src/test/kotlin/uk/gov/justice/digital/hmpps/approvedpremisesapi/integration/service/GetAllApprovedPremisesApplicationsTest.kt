@@ -7,9 +7,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser

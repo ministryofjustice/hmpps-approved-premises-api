@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEventContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary

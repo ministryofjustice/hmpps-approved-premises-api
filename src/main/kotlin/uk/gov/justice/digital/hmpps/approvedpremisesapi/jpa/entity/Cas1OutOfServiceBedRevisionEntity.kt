@@ -15,7 +15,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.EnumSet
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType as ApiRevisionType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedRevisionType as ApiRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType as DomainRevisionType
 
 @Repository

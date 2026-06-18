@@ -22,11 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ExpireApplicationReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -45,6 +40,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExpireApplicationReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates

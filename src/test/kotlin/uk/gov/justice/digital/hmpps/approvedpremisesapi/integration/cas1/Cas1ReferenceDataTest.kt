@@ -6,8 +6,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser

@@ -11,8 +11,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser

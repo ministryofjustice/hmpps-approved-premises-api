@@ -1,0 +1,14 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
+
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class Cas1BookingCancelledContentPayload(
+
+  @get:JsonProperty("booking", required = true) val booking: Cas1TimelineEventPayloadBookingSummary,
+
+  @get:JsonProperty("cancellationReason", required = true) val cancellationReason: String,
+
+  @get:JsonProperty("type", required = true) override val type: Cas1TimelineEventType,
+
+  @get:JsonProperty("appealChangeRequestId") val appealChangeRequestId: java.util.UUID? = null,
+) : Cas1TimelineEventContentPayload

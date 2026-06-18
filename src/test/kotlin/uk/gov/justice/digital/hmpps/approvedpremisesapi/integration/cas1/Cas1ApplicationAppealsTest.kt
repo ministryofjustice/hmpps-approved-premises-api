@@ -10,12 +10,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventAssociatedUrl
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEventAssociatedUrl
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser

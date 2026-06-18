@@ -13,11 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentAcceptance
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -34,6 +29,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_MONTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.reporting.Cas1PlacementMatchingOutcomesV2ReportTest.Constants.REPORT_YEAR

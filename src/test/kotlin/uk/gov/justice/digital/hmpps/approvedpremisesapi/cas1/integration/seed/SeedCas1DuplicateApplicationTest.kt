@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.integration.seed
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1DuplicateApplicationSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder

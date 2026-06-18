@@ -6,9 +6,9 @@ import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistorySystemNoteEntity

@@ -15,10 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentAcceptance
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
@@ -38,6 +34,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory

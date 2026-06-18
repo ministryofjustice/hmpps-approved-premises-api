@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.service.Cas1FormDataService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1Controller
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Cas1Controller

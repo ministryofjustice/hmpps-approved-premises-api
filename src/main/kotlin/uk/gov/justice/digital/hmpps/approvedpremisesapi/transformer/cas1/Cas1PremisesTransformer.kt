@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PremisesBasicSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService

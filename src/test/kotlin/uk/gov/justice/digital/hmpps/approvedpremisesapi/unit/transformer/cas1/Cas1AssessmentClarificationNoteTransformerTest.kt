@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory

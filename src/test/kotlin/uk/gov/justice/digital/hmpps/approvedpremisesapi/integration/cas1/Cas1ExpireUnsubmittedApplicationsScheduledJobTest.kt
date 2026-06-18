@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser

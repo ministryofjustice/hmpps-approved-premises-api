@@ -4,10 +4,10 @@ import jakarta.transaction.Transactional
 import org.springframework.context.event.EventListener
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult.GeneralValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult.Success

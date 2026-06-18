@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 
 data class PlacementRequestBookingSummary(
 

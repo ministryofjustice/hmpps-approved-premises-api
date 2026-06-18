@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ExternalPremisesDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository

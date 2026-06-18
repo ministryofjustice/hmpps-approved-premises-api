@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.external
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ExternalPremisesDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall

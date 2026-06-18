@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import java.time.LocalDate
 
 data class RequestForPlacement(

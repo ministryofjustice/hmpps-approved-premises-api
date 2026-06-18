@@ -15,17 +15,17 @@ import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PaginationHeaders
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentAcceptance
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentRejection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewClarificationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateAssessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdatedClarificationNote
 
 @RestController
 interface AssessmentsCas1 {

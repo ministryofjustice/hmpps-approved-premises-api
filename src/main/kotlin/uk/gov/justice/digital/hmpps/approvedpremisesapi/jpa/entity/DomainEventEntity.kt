@@ -41,7 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementChangeRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import java.time.OffsetDateTime
 import java.util.UUID

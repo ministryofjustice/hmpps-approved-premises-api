@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
@@ -22,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory

@@ -14,12 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication

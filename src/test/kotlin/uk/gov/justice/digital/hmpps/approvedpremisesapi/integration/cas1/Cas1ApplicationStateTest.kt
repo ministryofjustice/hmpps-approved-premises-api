@@ -9,10 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -28,6 +24,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBookingCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory

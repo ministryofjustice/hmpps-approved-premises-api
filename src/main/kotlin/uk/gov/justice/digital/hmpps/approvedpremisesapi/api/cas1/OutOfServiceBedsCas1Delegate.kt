@@ -4,14 +4,14 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.context.request.NativeWebRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewOutOfServiceBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewOutOfServiceBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewOutOfServiceBedCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedCancellation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedSortField
 import java.util.Optional
 
 @jakarta.annotation.Generated(value = ["org.openapitools.codegen.languages.KotlinSpringServerCodegen"], comments = "Generator version: 7.13.0")

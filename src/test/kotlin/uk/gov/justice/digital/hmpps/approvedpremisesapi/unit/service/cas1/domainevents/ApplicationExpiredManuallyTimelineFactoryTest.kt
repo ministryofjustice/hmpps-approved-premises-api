@@ -8,7 +8,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredManually
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationExpiredManuallyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.ApplicationExpiredManuallyTimelineFactory

@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RejectChangeRequest
 
 @RestController
 interface ChangeRequestsCas1 {

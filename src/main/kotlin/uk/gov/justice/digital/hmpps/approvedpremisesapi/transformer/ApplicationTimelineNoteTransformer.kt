@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 
 @Component

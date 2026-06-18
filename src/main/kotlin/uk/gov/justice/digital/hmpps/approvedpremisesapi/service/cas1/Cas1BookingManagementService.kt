@@ -6,8 +6,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssignKeyWorker
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository

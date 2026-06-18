@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity

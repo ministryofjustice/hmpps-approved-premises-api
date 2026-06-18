@@ -8,14 +8,14 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory

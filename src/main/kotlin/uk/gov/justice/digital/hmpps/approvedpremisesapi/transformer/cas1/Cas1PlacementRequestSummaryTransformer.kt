@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
