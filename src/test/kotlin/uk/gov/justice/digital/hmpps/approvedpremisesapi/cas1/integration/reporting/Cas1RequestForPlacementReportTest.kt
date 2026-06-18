@@ -197,7 +197,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(headers).contains("initial_assessor_name")
         assertThat(headers).contains("last_appealed_assessor_username")
         assertThat(headers).contains("sentence_type")
-        assertThat(headers).contains("release_type")
+        assertThat(headers).contains("placement_release_type")
 
         val actual = DataFrame
           .readCSV(completeCsvString.byteInputStream())
@@ -373,7 +373,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_withdrawal_date).isEqualTo("2022-01-12T10:15:00Z")
       assertThat(row.request_for_placement_withdrawal_reason).isEqualTo("duplicate_application")
       assertThat(row.crn).isEqualTo("StandardRFPNotAssessed")
-      assertThat(row.release_type).isEqualTo("notApplicable")
+      assertThat(row.placement_release_type).isEqualTo("notApplicable")
       assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
@@ -420,7 +420,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2020-12-01T09:15:45Z")
       assertThat(row.request_for_placement_withdrawal_date).isEqualTo("2021-03-15T00:10:00Z")
       assertThat(row.request_for_placement_withdrawal_reason).isEqualTo("DUPLICATE_PLACEMENT_REQUEST")
-      assertThat(row.release_type).isEqualTo("notApplicable")
+      assertThat(row.placement_release_type).isEqualTo("notApplicable")
       assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
@@ -523,7 +523,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(row.request_for_placement_withdrawal_reason).isNull()
       }
       assertThat(row.crn).isEqualTo("${releaseType}PlacementAppAssessed")
-      assertThat(row.release_type).isEqualTo(releaseType.name)
+      assertThat(row.placement_release_type).isEqualTo(releaseType.name)
       assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
@@ -582,7 +582,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.request_for_placement_withdrawal_date).isNull()
       assertThat(row.request_for_placement_withdrawal_reason).isNull()
       assertThat(row.crn).isEqualTo("PlacementAppRejected")
-      assertThat(row.release_type).isEqualTo("rotl")
+      assertThat(row.placement_release_type).isEqualTo("rotl")
       assertThat(row.sentence_type).isEqualTo("bailPlacement")
     }
   }
@@ -673,7 +673,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     val request_for_placement_withdrawal_reason: String?,
     val crn: String?,
     val sentence_type: String?,
-    val release_type: String?,
+    val placement_release_type: String?,
   )
 
   private fun createAndSubmitApplication(

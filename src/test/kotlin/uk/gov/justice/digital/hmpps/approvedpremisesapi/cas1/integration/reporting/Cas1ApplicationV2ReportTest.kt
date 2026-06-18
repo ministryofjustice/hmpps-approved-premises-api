@@ -337,7 +337,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.offence_id).isEqualTo("offenceId1")
       assertThat(row.premises_type).isEqualTo("NORMAL")
       assertThat(row.sentence_type).isEqualTo("nonStatutory")
-      assertThat(row.release_type).isEqualTo("licence")
+      assertThat(row.application_release_type).isEqualTo("licence")
       assertThat(row.application_origin_cru).isEqualTo("apArea1")
       assertThat(row.referral_ldu).isEqualTo("ldu1")
       assertThat(row.referral_region).isEqualTo("refRegion1")
@@ -507,7 +507,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.offence_id).isEqualTo("offenceId3")
       assertThat(row.premises_type).isEqualTo("PIPE")
       assertThat(row.sentence_type).isEqualTo("bailPlacement")
-      assertThat(row.release_type).isEqualTo("bailAssessment")
+      assertThat(row.application_release_type).isEqualTo("bailAssessment")
       assertThat(row.application_origin_cru).isEqualTo("apArea3")
       assertThat(row.referral_ldu).isEqualTo("ldu3")
       assertThat(row.referral_region).isEqualTo("refRegion3")
@@ -616,7 +616,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.offence_id).isEqualTo("offenceId2")
       assertThat(row.premises_type).isEqualTo("ESAP")
       assertThat(row.sentence_type).isEqualTo("ipp")
-      assertThat(row.release_type).isEqualTo("notApplicable")
+      assertThat(row.application_release_type).isEqualTo("notApplicable")
       assertThat(row.application_origin_cru).isEqualTo("apArea2")
       assertThat(row.referral_ldu).isEqualTo("ldu2")
       assertThat(row.referral_region).isEqualTo("refRegion2")
@@ -780,7 +780,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     val offence_id: String?,
     val premises_type: String?,
     val sentence_type: String?,
-    val release_type: String?,
+    val application_release_type: String?,
     val application_origin_cru: String?,
     val referral_ldu: String?,
     val referral_region: String?,
