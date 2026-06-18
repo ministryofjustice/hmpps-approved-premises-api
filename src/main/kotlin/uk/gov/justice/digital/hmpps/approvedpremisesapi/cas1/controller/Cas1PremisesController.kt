@@ -26,9 +26,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PremisesSea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingDaySummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.ContentType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
