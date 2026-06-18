@@ -54,7 +54,7 @@ class Cas1RequestForPlacementReportRepository(
     CASE 
       WHEN apa.release_type = 'inCommunity' THEN apa.situation
       ELSE apa.release_type
-    END AS release_type,
+    END AS placement_release_type,
     raw_applications_report.*
     
   FROM placement_applications_placeholder pap
@@ -112,7 +112,7 @@ UNION ALL
     CASE
       WHEN pa.release_type = 'inCommunity' THEN pa.situation
       ELSE pa.release_type
-    END AS release_type,
+    END AS placement_release_type,
     raw_applications_report.*
     
   FROM

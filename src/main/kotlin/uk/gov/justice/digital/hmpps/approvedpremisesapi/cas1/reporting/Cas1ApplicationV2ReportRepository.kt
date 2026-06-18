@@ -31,7 +31,7 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   CASE 
     WHEN submission_event.data -> 'eventDetails' ->> 'releaseType' = 'inCommunity' THEN apa.situation
     ELSE submission_event.data -> 'eventDetails' ->> 'releaseType'
-  END AS release_type,
+  END AS application_release_type,
   ap_area.name AS application_origin_cru,
   submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'ldu' ->> 'name' AS referral_ldu,
   submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'region' ->> 'name' AS referral_region,
