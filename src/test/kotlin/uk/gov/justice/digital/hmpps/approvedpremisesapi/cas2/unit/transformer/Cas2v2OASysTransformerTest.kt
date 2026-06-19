@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.unit.transformer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2V2OASysRiskLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OASysRiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2OASysTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
@@ -128,11 +128,11 @@ class Cas2v2OASysTransformerTest {
       assertThat(result.metadata.dateStarted).isEqualTo(Instant.parse("2007-12-03T10:15:30+01:00"))
       assertThat(result.metadata.dateCompleted).isEqualTo(Instant.parse("2008-12-03T10:15:30+01:00"))
 
-      assertThat(result.riskToChildren).isEqualTo(Cas2V2OASysRiskLevel.LOW)
-      assertThat(result.riskToStaff).isEqualTo(Cas2V2OASysRiskLevel.LOW)
-      assertThat(result.riskToPublic).isEqualTo(Cas2V2OASysRiskLevel.LOW)
-      assertThat(result.riskToKnownAdult).isEqualTo(Cas2V2OASysRiskLevel.LOW)
-      assertThat(result.overallRisk).isEqualTo(Cas2V2OASysRiskLevel.LOW)
+      assertThat(result.riskToChildren).isEqualTo(Cas2OASysRiskLevel.LOW)
+      assertThat(result.riskToStaff).isEqualTo(Cas2OASysRiskLevel.LOW)
+      assertThat(result.riskToPublic).isEqualTo(Cas2OASysRiskLevel.LOW)
+      assertThat(result.riskToKnownAdult).isEqualTo(Cas2OASysRiskLevel.LOW)
+      assertThat(result.overallRisk).isEqualTo(Cas2OASysRiskLevel.LOW)
     }
 
     @Test

@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2SubmittedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2SubmittedApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
@@ -44,7 +44,7 @@ class Cas2SubmissionsController(
   @GetMapping("/submissions")
   fun submissionsGet(
     @RequestParam page: Int?,
-  ): ResponseEntity<List<Cas2v2SubmittedApplicationSummary>> {
+  ): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
     userService.ensureUserPersisted()
 
     val sortDirection = SortDirection.asc
@@ -61,7 +61,7 @@ class Cas2SubmissionsController(
   @GetMapping("/submissions/{applicationId}")
   fun submissionsApplicationIdGet(
     @PathVariable applicationId: UUID,
-  ): ResponseEntity<Cas2v2SubmittedApplication> {
+  ): ResponseEntity<Cas2SubmittedApplication> {
     userService.getUserForRequest()
 
     val applicationResult = cas2ApplicationService.getSubmittedCas2ApplicationForAssessor(applicationId)
@@ -74,10 +74,10 @@ class Cas2SubmissionsController(
   @Transactional
   @PostMapping("/submissions")
   fun submissionsPost(
-    @RequestBody submitCas2v2Application: SubmitCas2v2Application,
+    @RequestBody submitCas2Application: SubmitCas2Application,
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
-    val submitResult = cas2ApplicationService.submitCas2Application(submitCas2v2Application, user)
+    val submitResult = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
     ensureEntityFromCasResultIsSuccess(submitResult)
 
     return ResponseEntity(HttpStatus.OK)
@@ -85,7 +85,7 @@ class Cas2SubmissionsController(
 
   private fun getPersonNamesAndTransformToSummaries(
     applicationSummaries: List<Cas2ApplicationSummaryEntity>,
-  ): List<Cas2v2SubmittedApplicationSummary> {
+  ): List<Cas2SubmittedApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
@@ -98,7 +98,7 @@ class Cas2SubmissionsController(
   @SuppressWarnings("ThrowsCount")
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
-  ): Cas2v2SubmittedApplication {
+  ): Cas2SubmittedApplication {
     val personInfo = when (val cas2v2OffenderSearchResult = cas2OffenderService.getPersonByNomisIdOrCrn(application.crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()

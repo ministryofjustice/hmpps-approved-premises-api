@@ -9,9 +9,9 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-data class Cas2v2Application(
+data class Cas2Application(
 
-  @get:JsonProperty("createdBy", required = true) val createdBy: Cas2v2User,
+  @get:JsonProperty("createdBy", required = true) val createdBy: Cas2User,
 
   @get:JsonProperty("status", required = true) val status: ApplicationStatus,
 
@@ -33,7 +33,7 @@ data class Cas2v2Application(
 
   @get:JsonProperty("telephoneNumber") val telephoneNumber: String? = null,
 
-  @get:JsonProperty("assessment") val assessment: Cas2v2Assessment? = null,
+  @get:JsonProperty("assessment") val assessment: Cas2Assessment? = null,
 
   @get:JsonProperty("timelineEvents") val timelineEvents: List<Cas2TimelineEvent>? = null,
 

@@ -12,9 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
@@ -249,17 +249,17 @@ class Cas2ApplicationService(
   @SuppressWarnings("ReturnCount", "TooGenericExceptionThrown")
   @Transactional
   fun submitCas2Application(
-    submitCas2v2Application: SubmitCas2v2Application,
+    submitCas2Application: SubmitCas2Application,
     user: Cas2UserEntity,
   ): CasResult<Cas2ApplicationEntity> {
-    val applicationId = submitCas2v2Application.applicationId
+    val applicationId = submitCas2Application.applicationId
 
     cas2LockableApplicationRepository.acquirePessimisticLock(applicationId)
 
     var application = cas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       ?: return CasResult.NotFound("Cas2ApplicationEntity", applicationId.toString())
 
-    val serializedTranslatedDocument = jsonMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
+    val serializedTranslatedDocument = jsonMapper.writeValueAsString(submitCas2Application.translatedDocument)
 
     if (application.createdByUser != user) {
       return CasResult.Unauthorised()
@@ -298,12 +298,12 @@ class Cas2ApplicationService(
         submittedAt = OffsetDateTime.now()
         document = serializedTranslatedDocument
         referringPrisonCode = prisonCode
-        preferredAreas = submitCas2v2Application.preferredAreas
-        hdcEligibilityDate = submitCas2v2Application.hdcEligibilityDate
-        conditionalReleaseDate = submitCas2v2Application.conditionalReleaseDate
-        telephoneNumber = submitCas2v2Application.telephoneNumber
-        bailHearingDate = submitCas2v2Application.bailHearingDate
-        applicationOrigin = submitCas2v2Application.applicationOrigin
+        preferredAreas = submitCas2Application.preferredAreas
+        hdcEligibilityDate = submitCas2Application.hdcEligibilityDate
+        conditionalReleaseDate = submitCas2Application.conditionalReleaseDate
+        telephoneNumber = submitCas2Application.telephoneNumber
+        bailHearingDate = submitCas2Application.bailHearingDate
+        applicationOrigin = submitCas2Application.applicationOrigin
       }
     } catch (error: UpstreamApiException) {
       return CasResult.GeneralValidationError(error.message.toString())

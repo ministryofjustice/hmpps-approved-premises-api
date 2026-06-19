@@ -6,10 +6,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2ReferralHistory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2SubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateNonAssignable
@@ -29,9 +29,9 @@ class Cas2ApplicationsTransformer(
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
 ) {
 
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2v2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.transformModelToPersonApi(personInfo))
+  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.transformModelToPersonApi(personInfo))
 
-  fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person) = Cas2v2Application(
+  fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person) = Cas2Application(
     id = jpa.id,
     person = fullPerson,
     createdBy = cas2UserTransformer.transformJpaToApi(jpa.createdByUser),
@@ -48,7 +48,7 @@ class Cas2ApplicationsTransformer(
     cohort = jpa.cohort?.apiType,
   )
 
-  fun transformJpaAndFullPersonToApiSubmitted(jpa: Cas2ApplicationEntity, fullPerson: Person): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
+  fun transformJpaAndFullPersonToApiSubmitted(jpa: Cas2ApplicationEntity, fullPerson: Person): Cas2SubmittedApplication = Cas2SubmittedApplication(
     id = jpa.id,
     person = fullPerson,
     submittedBy = Cas2UserTransformer().transformJpaToApi(jpa.createdByUser),
@@ -64,7 +64,7 @@ class Cas2ApplicationsTransformer(
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
-  ): Cas2v2ApplicationSummary = Cas2v2ApplicationSummary(
+  ): Cas2ApplicationSummary = Cas2ApplicationSummary(
     id = jpaSummary.id,
     createdByUserId = UUID.fromString(jpaSummary.userId),
     createdByUserName = jpaSummary.userName,
@@ -91,7 +91,7 @@ class Cas2ApplicationsTransformer(
 
   fun transformJpaToCas2ReferralHistory(
     jpa: Cas2ApplicationEntity,
-  ): Cas2v2ReferralHistory {
+  ): Cas2ReferralHistory {
     val latestStatusUpdate = jpa.statusUpdates?.firstOrNull()
     val rejectionReason = latestStatusUpdate
       ?.takeIf { it.label in listOf(Cas2StatusUpdateNonAssignable.REFERRAL_CANCELLED.label, Cas2StatusUpdateNonAssignable.REFERRAL_WITHDRAWN.label) }
@@ -100,7 +100,7 @@ class Cas2ApplicationsTransformer(
     val omu = jpa.referringPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     val placementAddress = omu?.prisonName ?: jpa.referringPrisonCode ?: throw IllegalStateException("Missing placement address for CAS2v2 application ${jpa.id}")
 
-    return Cas2v2ReferralHistory(
+    return Cas2ReferralHistory(
       id = jpa.assessment!!.id,
       applicationId = jpa.id,
       type = ServiceType.CAS2v2,

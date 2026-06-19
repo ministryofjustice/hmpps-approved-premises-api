@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
-data class Cas2v2ApplicationStatusDetail(
+data class Cas2ApplicationStatusDetail(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 

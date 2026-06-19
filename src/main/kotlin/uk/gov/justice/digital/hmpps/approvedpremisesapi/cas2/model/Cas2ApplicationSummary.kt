@@ -3,12 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2v2StatusUpdate
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-data class Cas2v2ApplicationSummary(
+data class Cas2ApplicationSummary(
 
   @get:JsonProperty("type", required = true) val type: String,
 
@@ -33,7 +32,7 @@ data class Cas2v2ApplicationSummary(
 
   @get:JsonProperty("createdByUserName") val createdByUserName: String? = null,
 
-  @get:JsonProperty("latestStatusUpdate") val latestStatusUpdate: LatestCas2v2StatusUpdate? = null,
+  @get:JsonProperty("latestStatusUpdate") val latestStatusUpdate: LatestCas2StatusUpdate? = null,
 
   @get:JsonProperty("hdcEligibilityDate") val hdcEligibilityDate: LocalDate? = null,
 

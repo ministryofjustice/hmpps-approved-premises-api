@@ -15,10 +15,10 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2SubmittedApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2SubmittedApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2SubmittedApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
@@ -253,7 +253,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
             val responseBody =
               jsonMapper.readValue(
                 rawResponseBody,
-                object : TypeReference<List<Cas2v2SubmittedApplicationSummary>>() {},
+                object : TypeReference<List<Cas2SubmittedApplicationSummary>>() {},
               )
 
             assertApplicationResponseMatchesExpected(
@@ -283,7 +283,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
     }
 
     private fun assertApplicationResponseMatchesExpected(
-      response: Cas2v2SubmittedApplicationSummary,
+      response: Cas2SubmittedApplicationSummary,
       expectedSubmittedApplication: Cas2ApplicationEntity,
       offenderDetails: OffenderDetailSummary,
     ) {
@@ -447,7 +447,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
 
             val responseBody = jsonMapper.readValue(
               rawResponseBody,
-              Cas2v2SubmittedApplication::class.java,
+              Cas2SubmittedApplication::class.java,
             )
 
             val applicant = userTransformer.transformJpaToApi(
@@ -628,7 +628,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
 
             val responseBody = jsonMapper.readValue(
               rawResponseBody,
-              Cas2v2SubmittedApplication::class.java,
+              Cas2SubmittedApplication::class.java,
             )
 
             val applicant = userTransformer.transformJpaToApi(
@@ -774,7 +774,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
 
                 val responseBody = jsonMapper.readValue(
                   rawResponseBody,
-                  Cas2v2SubmittedApplication::class.java,
+                  Cas2SubmittedApplication::class.java,
                 )
 
                 val applicant = userTransformer.transformJpaToApi(
@@ -874,7 +874,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
                 .uri("/cas2/submissions")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  SubmitCas2v2Application(
+                  SubmitCas2Application(
                     applicationId = applicationId,
                     translatedDocument = {},
                     telephoneNumber = "123 456 7891",
@@ -932,7 +932,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
-              SubmitCas2v2Application(
+              SubmitCas2Application(
                 applicationId = applicationId,
                 translatedDocument = {},
                 preferredAreas = "Leeds | Bradford",

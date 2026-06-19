@@ -6,8 +6,8 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
@@ -82,7 +82,7 @@ class Cas2v2AssessmentServiceTest {
         serviceOrigin = cas2v2Application.serviceOrigin,
       )
 
-      val newAssessmentData = UpdateCas2v2Assessment(
+      val newAssessmentData = UpdateCas2Assessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )
@@ -121,7 +121,7 @@ class Cas2v2AssessmentServiceTest {
     @Test
     fun `returns NotFound if entity is not found`() {
       val assessmentId = UUID.randomUUID()
-      val newAssessmentData = UpdateCas2v2Assessment(
+      val newAssessmentData = UpdateCas2Assessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )

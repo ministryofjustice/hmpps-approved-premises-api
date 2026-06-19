@@ -1,10 +1,11 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import java.time.LocalDate
 
-data class NewCas2v2Application(
+data class NewCas2Application(
 
   @get:JsonProperty("crn", required = true) val crn: String,
 

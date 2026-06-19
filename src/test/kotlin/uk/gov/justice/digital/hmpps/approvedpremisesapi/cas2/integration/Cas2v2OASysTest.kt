@@ -5,10 +5,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OASysAssessmentMetadataDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OAsysRiskToSelfDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OAsysRoshRatingsDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2OAsysRoshSummaryDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OASysAssessmentMetadataDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRiskToSelfDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshRatingsDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2OAsysRoshSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RisksToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
@@ -60,7 +60,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .bodyAsObject<Cas2v2OASysAssessmentMetadataDto>()
+        .bodyAsObject<Cas2OASysAssessmentMetadataDto>()
 
       assertThat(result.hasApplicableAssessment).isFalse
     }
@@ -79,7 +79,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .bodyAsObject<Cas2v2OASysAssessmentMetadataDto>()
+        .bodyAsObject<Cas2OASysAssessmentMetadataDto>()
 
       assertThat(result.hasApplicableAssessment).isTrue
     }
@@ -120,7 +120,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .bodyAsObject<Cas2v2OAsysRiskToSelfDto>()
+        .bodyAsObject<Cas2OAsysRiskToSelfDto>()
 
       assertThat(result.metadata.hasApplicableAssessment).isFalse
     }
@@ -139,7 +139,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .bodyAsObject<Cas2v2OAsysRiskToSelfDto>()
+        .bodyAsObject<Cas2OAsysRiskToSelfDto>()
 
       assertThat(result.metadata.hasApplicableAssessment).isTrue
     }
@@ -180,7 +180,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .bodyAsObject<Cas2v2OAsysRoshSummaryDto>()
+        .bodyAsObject<Cas2OAsysRoshSummaryDto>()
 
       assertThat(result.metadata.hasApplicableAssessment).isFalse
     }
@@ -199,7 +199,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .bodyAsObject<Cas2v2OAsysRoshSummaryDto>()
+        .bodyAsObject<Cas2OAsysRoshSummaryDto>()
 
       assertThat(result.metadata.hasApplicableAssessment).isTrue
     }
@@ -240,7 +240,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .bodyAsObject<Cas2v2OAsysRoshRatingsDto>()
+        .bodyAsObject<Cas2OAsysRoshRatingsDto>()
 
       assertThat(result.metadata.hasApplicableAssessment).isFalse
     }
@@ -259,7 +259,7 @@ class Cas2v2OASysTest : Cas2v2IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .bodyAsObject<Cas2v2OAsysRoshRatingsDto>()
+        .bodyAsObject<Cas2OAsysRoshRatingsDto>()
 
       assertThat(result.metadata.hasApplicableAssessment).isTrue
     }

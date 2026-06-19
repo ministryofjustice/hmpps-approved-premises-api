@@ -1,10 +1,11 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import java.time.LocalDate
 
-data class UpdateCas2v2Application(
+data class UpdateCas2Application(
 
   @get:JsonProperty("type", required = true) override val type: UpdateApplicationType,
 

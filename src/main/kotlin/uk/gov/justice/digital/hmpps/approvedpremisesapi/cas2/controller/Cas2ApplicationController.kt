@@ -13,10 +13,11 @@ import org.springframework.web.bind.annotation.RequestParam
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserService
@@ -36,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2ApplicationSummary as ModelCas2v2ApplicationSummary
 
 @Cas2Controller
 class Cas2ApplicationController(
@@ -63,7 +63,7 @@ class Cas2ApplicationController(
     )
     @RequestParam limitByUser: Boolean?,
     @RequestParam crnOrNomsNumber: String?,
-  ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
+  ): ResponseEntity<List<Cas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
     val effectiveLimitByUser = limitByUser ?: true
@@ -97,7 +97,7 @@ class Cas2ApplicationController(
   @GetMapping("/applications/{applicationId}")
   fun applicationsApplicationIdGet(
     @PathVariable applicationId: UUID,
-  ): ResponseEntity<Cas2v2Application> {
+  ): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
 
     val applicationResult = cas2ApplicationService
@@ -115,8 +115,8 @@ class Cas2ApplicationController(
   @Suppress("ThrowsCount")
   @PostMapping("/applications")
   fun applicationsPost(
-    @RequestBody body: NewCas2v2Application,
-  ): ResponseEntity<Cas2v2Application> {
+    @RequestBody body: NewCas2Application,
+  ): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
 
     val personInfo = when (val cas2v2OffenderSearchResult = cas2OffenderService.getPersonByNomisIdOrCrn(body.crn)) {
@@ -152,8 +152,8 @@ class Cas2ApplicationController(
   @PutMapping("/applications/{applicationId}")
   fun applicationsApplicationIdPut(
     @PathVariable applicationId: UUID,
-    @RequestBody body: UpdateCas2v2Application,
-  ): ResponseEntity<Cas2v2Application> {
+    @RequestBody body: UpdateCas2Application,
+  ): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
 
     val serializedData = jsonMapper.writeValueAsString(body.data)
@@ -185,7 +185,7 @@ class Cas2ApplicationController(
 
   private fun getPersonNamesAndTransformToSummaries(
     applicationSummaries: List<Cas2ApplicationSummaryEntity>,
-  ): List<ModelCas2v2ApplicationSummary> {
+  ): List<Cas2ApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = cas2HdcOffenderService.getMapOfPersonNamesAndCrns(crns)
@@ -198,7 +198,7 @@ class Cas2ApplicationController(
   @SuppressWarnings("ThrowsCount")
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
-  ): Cas2v2Application {
+  ): Cas2Application {
     val personInfo = when (val cas2v2OffenderSearchResult = cas2OffenderService.getPersonByNomisIdOrCrn(application.crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()

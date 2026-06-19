@@ -20,12 +20,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateEntity
@@ -294,7 +294,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
         val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
@@ -413,7 +413,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
         // check transformers were able to return all fields
         Assertions.assertThat(responseBody).anyMatch {
@@ -496,7 +496,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBody =
-              jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+              jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             Assertions.assertThat(responseBody.count()).isEqualTo(2)
             Assertions.assertThat(responseBody).anyMatch {
@@ -554,7 +554,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBodyPage1 =
-          jsonMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
         Assertions.assertThat(responseBodyPage1).size().isEqualTo(10)
 
@@ -576,7 +576,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBodyPage2 =
-          jsonMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
         Assertions.assertThat(responseBodyPage2).size().isEqualTo(2)
       }
@@ -657,7 +657,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
      *
      * If all dates are ascending the multiple will also be 0 ( = 1 x 0 x 0 etc.).
      */
-    private fun isOrderedByCreatedAtDescending(responseBody: List<Cas2v2ApplicationSummary>): Boolean {
+    private fun isOrderedByCreatedAtDescending(responseBody: List<Cas2ApplicationSummary>): Boolean {
       var allDescending = 1
       for (i in 1..<responseBody.size) {
         val isDescending = (responseBody[i - 1].createdAt.epochSecond - responseBody[i].createdAt.epochSecond).sign
@@ -807,7 +807,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
       Assertions.assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
@@ -841,7 +841,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
       Assertions.assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
@@ -868,7 +868,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds)
@@ -891,7 +891,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(unSubmittedIds)
@@ -1084,7 +1084,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+        jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
       val uuids = responseBody.map { it.id }.toSet()
       return uuids
     }
@@ -1158,7 +1158,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
             val responseBody = jsonMapper.readValue(
               rawResponseBody,
-              Cas2v2Application::class.java,
+              Cas2Application::class.java,
             )
 
             assertThat(responseBody.id).isEqualTo(applicationEntity.id)
@@ -1214,10 +1214,10 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
             val responseBody = jsonMapper.readValue(
               rawResponseBody,
-              Cas2v2Application::class.java,
+              Cas2Application::class.java,
             )
 
-            Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2v2StatusUpdate>())
+            Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
 
             Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
               .isEqualTo(listOf("Application submitted"))
@@ -1316,10 +1316,10 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
               val responseBody = jsonMapper.readValue(
                 rawResponseBody,
-                Cas2v2Application::class.java,
+                Cas2Application::class.java,
               )
 
-              Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2v2StatusUpdate>())
+              Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
 
               Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
                 .isEqualTo(listOf("Application submitted"))
@@ -1504,7 +1504,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isCreated
-          .returnResult(Cas2v2Application::class.java)
+          .returnResult(Cas2Application::class.java)
 
         Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
           it.matches(Regex("/cas2/applications/.+"))
@@ -1583,7 +1583,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .uri("/cas2/applications/$applicationId")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            UpdateCas2v2Application(
+            UpdateCas2Application(
               data = mapOf("thingId" to 123),
               type = UpdateApplicationType.CAS2V2,
               cohort = Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW,
@@ -1596,7 +1596,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .responseBody
           .blockFirst()
 
-        val result = jsonMapper.readValue(resultBody, Cas2v2Application::class.java)
+        val result = jsonMapper.readValue(resultBody, Cas2Application::class.java)
 
         Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
         Assertions.assertThat(result.cohort).isEqualTo(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW)
@@ -1686,7 +1686,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
           .blockFirst()
 
         val responseBody =
-          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+          jsonMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
         Assertions.assertThat(responseBody.size).isEqualTo(6)
         Assertions.assertThat(
@@ -1710,7 +1710,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
           val responseBody = jsonMapper.readValue(
             rawResponseBody,
-            Cas2v2Application::class.java,
+            Cas2Application::class.java,
           )
 
           assertThat(responseBody).matches {
@@ -1730,7 +1730,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             .uri("/cas2/application/${application.id}")
             .header("Authorization", "Bearer $jwtForNorwichUser")
             .bodyValue(
-              UpdateCas2v2Application(
+              UpdateCas2Application(
                 data = mapOf("thingId" to 123),
                 type = UpdateApplicationType.CAS2V2,
               ),

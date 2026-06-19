@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2StatusUpdateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2StatusUpdateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
@@ -31,13 +31,13 @@ class Cas2v2StatusUpdateTransformerTest {
     .withSubmittedAt(OffsetDateTime.now())
     .produce()
 
-  private val mockCas2v2UserApi = mockk<Cas2v2User>()
+  private val mockCas2UserApi = mockk<Cas2User>()
   private val mockCas2UserTransformer = mockk<Cas2UserTransformer>()
   private val cas2StatusUpdateTransformer = Cas2StatusUpdateTransformer(mockCas2UserTransformer)
 
   @BeforeEach
   fun setup() {
-    every { mockCas2UserTransformer.transformJpaToApi(any()) } returns mockCas2v2UserApi
+    every { mockCas2UserTransformer.transformJpaToApi(any()) } returns mockCas2UserApi
   }
 
   @Test
@@ -52,12 +52,12 @@ class Cas2v2StatusUpdateTransformerTest {
       .withAssessor(assessor)
       .produce()
 
-    val expectedRepresentation = Cas2v2StatusUpdate(
+    val expectedRepresentation = Cas2StatusUpdate(
       id = jpaEntity.id,
       name = status.name,
       label = jpaEntity.label,
       description = jpaEntity.description,
-      updatedBy = mockCas2v2UserApi,
+      updatedBy = mockCas2UserApi,
       updatedAt = jpaEntity.createdAt.toInstant(),
       statusUpdateDetails = null,
     )
@@ -74,7 +74,7 @@ class Cas2v2StatusUpdateTransformerTest {
     val statusId = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")
     every { mockStatusUpdate.statusId } returns statusId
 
-    val cas2v2StatusUpdateDetail = Cas2v2StatusUpdateDetail(
+    val cas2StatusUpdateDetail = Cas2StatusUpdateDetail(
       id = UUID.fromString("3df29b1b-e2fc-4df7-b4b8-0527cd9e3a6f"),
       name = "applicantDetails",
       label = "Applicant details",
@@ -88,6 +88,6 @@ class Cas2v2StatusUpdateTransformerTest {
       .produce()
     val transformation = cas2StatusUpdateTransformer.transformStatusUpdateDetailsJpaToApi(updateDetail)
 
-    Assertions.assertThat(transformation).isEqualTo(cas2v2StatusUpdateDetail)
+    Assertions.assertThat(transformation).isEqualTo(cas2StatusUpdateDetail)
   }
 }

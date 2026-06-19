@@ -2,10 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service
 
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2DeliusUserInfoDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2DeliusUserInfoDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2UserDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2v2UserTypeDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.ProbationAreaDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
@@ -54,7 +54,7 @@ class Cas2HdcUserService(
     return findOrCreateNomisUser(username = normalisedUsername, userDetail, serviceOrigin)
   }
 
-  fun getCas2v2UserDetails(userName: String): Cas2v2UserDto {
+  fun getCas2v2UserDetails(userName: String): Cas2UserDto {
     val existingUser =
       cas2UserRepository.findByUsernameAndServiceOrigin(userName, Cas2ServiceOrigin.BAIL)
         ?: throw NotFoundProblem(entityType = "Cas2v2User", id = userName)
@@ -63,7 +63,7 @@ class Cas2HdcUserService(
       if (existingUser.userType == Cas2UserType.DELIUS) {
         val deliusUser = getDeliusUser(existingUser.username)
 
-        Cas2v2DeliusUserInfoDto(
+        Cas2DeliusUserInfoDto(
           probationArea = ProbationAreaDto(
             code = deliusUser.probationArea.code,
             description = deliusUser.probationArea.description,
@@ -73,9 +73,9 @@ class Cas2HdcUserService(
         null
       }
 
-    return Cas2v2UserDto(
+    return Cas2UserDto(
       username = existingUser.username,
-      type = Cas2v2UserTypeDto.valueOf(existingUser.userType.name),
+      type = Cas2UserTypeDto.valueOf(existingUser.userType.name),
       deliusUserInfo = deliusUserInfo,
     )
   }

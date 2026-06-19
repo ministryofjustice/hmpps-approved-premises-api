@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class Cas2v2AssessmentStatusUpdate(
+data class Cas2AssessmentStatusUpdate(
 
   @Schema(example = "moreInfoRequired", required = true, description = "The \"name\" of the new status to be applied")
   @get:JsonProperty("newStatus", required = true) val newStatus: String,

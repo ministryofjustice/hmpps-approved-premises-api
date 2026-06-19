@@ -6,7 +6,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-data class Cas2v2SubmittedApplicationSummary(
+data class Cas2SubmittedApplicationSummary(
 
   @get:JsonProperty("id", required = true) val id: UUID,
 

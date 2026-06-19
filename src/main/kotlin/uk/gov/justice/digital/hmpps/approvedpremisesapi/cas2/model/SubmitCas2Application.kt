@@ -1,11 +1,12 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import java.time.LocalDate
 import java.util.UUID
 
-data class SubmitCas2v2Application(
+data class SubmitCas2Application(
 
   @get:JsonProperty("translatedDocument", required = true) val translatedDocument: Any,
 
