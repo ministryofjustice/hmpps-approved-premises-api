@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -36,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary as ModelCas2v2ApplicationSummary
 
 @Cas2Controller
 class Cas2ApplicationController(
@@ -63,7 +63,7 @@ class Cas2ApplicationController(
     )
     @RequestParam limitByUser: Boolean?,
     @RequestParam crnOrNomsNumber: String?,
-  ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
+  ): ResponseEntity<List<Cas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
     val effectiveLimitByUser = limitByUser ?: true
@@ -185,7 +185,7 @@ class Cas2ApplicationController(
 
   private fun getPersonNamesAndTransformToSummaries(
     applicationSummaries: List<Cas2ApplicationSummaryEntity>,
-  ): List<ModelCas2v2ApplicationSummary> {
+  ): List<Cas2ApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = cas2HdcOffenderService.getMapOfPersonNamesAndCrns(crns)
