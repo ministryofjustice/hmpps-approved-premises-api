@@ -148,35 +148,6 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
         if (pathItem.patch != null) pathItem.patch.operationId = prefix + pathItem.patch.operationId
         if (pathItem.delete != null) pathItem.delete.operationId = prefix + pathItem.delete.operationId
       }
-
-    addDeprecatedSchemaAlias(openApi, "Cas2V2OASysRiskLevel", "Cas2OASysRiskLevel")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2Application", "Cas2Application")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2ApplicationNote", "Cas2ApplicationNote")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2ApplicationStatus", "Cas2ApplicationStatus")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2ApplicationStatusDetail", "Cas2ApplicationStatusDetail")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2ApplicationSummary", "Cas2ApplicationSummary")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2Assessment", "Cas2Assessment")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2AssessmentStatusUpdate", "Cas2AssessmentStatusUpdate")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2DeliusUserInfoDto", "Cas2DeliusUserInfoDto")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2OASysAssessmentMetadataDto", "Cas2OASysAssessmentMetadataDto")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2OAsysRiskToSelfDto", "Cas2OAsysRiskToSelfDto")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2OAsysRoshRatingsDto", "Cas2OAsysRoshRatingsDto")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2OAsysRoshSummaryDto", "Cas2OAsysRoshSummaryDto")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2ReferralHistory", "Cas2ReferralHistory")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2ReportName", "Cas2ReportName")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2StatusUpdate", "Cas2StatusUpdate")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2StatusUpdateDetail", "Cas2StatusUpdateDetail")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2SubmittedApplication", "Cas2SubmittedApplication")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2SubmittedApplicationSummary", "Cas2SubmittedApplicationSummary")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2User", "Cas2User")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2UserDto", "Cas2UserDto")
-    addDeprecatedSchemaAlias(openApi, "Cas2v2UserTypeDto", "Cas2UserTypeDto")
-    addDeprecatedSchemaAlias(openApi, "LatestCas2v2StatusUpdate", "LatestCas2StatusUpdate")
-    addDeprecatedSchemaAlias(openApi, "NewCas2v2Application", "NewCas2Application")
-    addDeprecatedSchemaAlias(openApi, "NewCas2v2ApplicationNote", "NewCas2ApplicationNote")
-    addDeprecatedSchemaAlias(openApi, "SubmitCas2v2Application", "SubmitCas2Application")
-    addDeprecatedSchemaAlias(openApi, "UpdateCas2v2Application", "UpdateCas2Application")
-    addDeprecatedSchemaAlias(openApi, "UpdateCas2v2Assessment", "UpdateCas2Assessment")
   }
 
   private fun createProblemSchema(): Schema<*> = ModelConverters.getInstance()
@@ -198,20 +169,5 @@ class OpenApiConfiguration(buildProperties: BuildProperties) {
           ),
         )
     }
-  }
-
-  private fun addDeprecatedSchemaAlias(
-    openApi: OpenAPI,
-    alias: String,
-    target: String,
-  ) {
-    val schemas = openApi.components?.schemas ?: return
-    if (!schemas.containsKey(target) || schemas.containsKey(alias)) return
-
-    val aliasSchema = Schema<Any>().`$ref`("#/components/schemas/$target")
-    aliasSchema.deprecated = true
-    aliasSchema.description = "Deprecated alias of $target"
-
-    schemas[alias] = aliasSchema
   }
 }
