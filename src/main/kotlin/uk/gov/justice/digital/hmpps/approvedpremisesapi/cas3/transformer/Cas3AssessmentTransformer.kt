@@ -82,29 +82,32 @@ class Cas3AssessmentTransformer(
     probationDeliveryUnitName = ase.probationDeliveryUnitName,
   )
 
-  fun transformAssessmentToCas3ReferralHistory(a: TemporaryAccommodationAssessmentEntity): Cas3ReferralHistory {
+  fun transformAssessmentToCas3ReferralHistory(a: TemporaryAccommodationAssessmentEntity): List<Cas3ReferralHistory> {
     val application = a.typedApplication<TemporaryAccommodationApplicationEntity>()
 
-    val latestBooking = bookingRepository.findLatestCas3BookingEntity(application.id, ServiceName.temporaryAccommodation.value)
+    val bookings = bookingRepository.findAllCas3BookingEntity(application.id, ServiceName.temporaryAccommodation.value)
 
-    val placementAddress = latestBooking?.let {
-      listOfNotNull(it.premises.addressLine1, it.premises.town, it.premises.postcode).joinToString(", ")
-    }
-
-    return Cas3ReferralHistory(
+    val referralHistory = Cas3ReferralHistory(
       id = a.id,
       applicationId = application.id,
       createdAt = a.createdAt.toInstant(),
-      status = a.deriveAssessmentStatus(),
+      applicationStatus = application.getStatus(),
       type = ServiceType.CAS3,
       referralRejectionReason = a.referralRejectionReason?.name ?: a.rejectionRationale,
       referralRejectionReasonDetail = a.referralRejectionReasonDetail,
       localAuthorityArea = application.dutyToReferLocalAuthorityAreaName,
       pdu = application.probationDeliveryUnit?.name,
       referredBy = transformToStaffDto(application.createdByUser),
-      placementAddress = placementAddress,
-      placementStatus = latestBooking?.status?.value,
+      placementAddress = null,
+      bookingStatus = null,
     )
+
+    return bookings.map {
+      referralHistory.copy(
+        placementAddress = listOfNotNull(it.premises.addressLine1, it.premises.town, it.premises.postcode).joinToString(", "),
+        bookingStatus = it.status,
+      )
+    }.ifEmpty { listOf(referralHistory) }
   }
 
   fun transformApiStatusToDomainSummaryState(status: AssessmentStatus) = when (status) {

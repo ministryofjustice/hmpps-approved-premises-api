@@ -36,13 +36,13 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
 
   @Query(
-    "SELECT * FROM bookings WHERE application_id = :applicationId AND service = :service ORDER BY created_at DESC LIMIT 1",
+    "SELECT * FROM bookings WHERE application_id = :applicationId AND service = :service ORDER BY created_at DESC",
     nativeQuery = true,
   )
-  fun findLatestCas3BookingEntity(
+  fun findAllCas3BookingEntity(
     applicationId: UUID,
     service: String,
-  ): Cas3BookingEntity?
+  ): List<Cas3BookingEntity>
 }
 
 @NamedNativeQuery(

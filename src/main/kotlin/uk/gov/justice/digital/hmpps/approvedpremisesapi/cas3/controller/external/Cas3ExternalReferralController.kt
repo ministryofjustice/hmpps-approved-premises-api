@@ -19,7 +19,7 @@ class Cas3ExternalReferralController(
   fun getReferralsByCrn(
     @PathVariable crn: String,
   ): ResponseEntity<List<Cas3ReferralHistory>> = ResponseEntity.ok(
-    cas3AssessmentService.getAssessmentsByCrn(crn).map {
+    cas3AssessmentService.getAssessmentsByCrn(crn).flatMap {
       cas3AssessmentTransformer.transformAssessmentToCas3ReferralHistory(it)
     },
   )
