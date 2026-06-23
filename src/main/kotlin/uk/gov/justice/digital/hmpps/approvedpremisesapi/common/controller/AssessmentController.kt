@@ -63,21 +63,6 @@ class AssessmentController(
 
   @Operation(
     tags = ["Assessment data"],
-    summary = "Closes an Assessment",
-  )
-  @RequestMapping(
-    method = [RequestMethod.POST],
-    value = ["/assessments/{assessmentId}/closure"],
-  )
-  fun assessmentsAssessmentIdClosurePost(@PathVariable assessmentId: UUID): ResponseEntity<Unit> {
-    val user = userService.getUserForRequest()
-    val assessmentAuthResult = cas3AssessmentService.closeAssessment(user, assessmentId)
-    extractEntityFromCasResult(assessmentAuthResult)
-    return ResponseEntity(HttpStatus.OK)
-  }
-
-  @Operation(
-    tags = ["Assessment data"],
     summary = "Adds a user-written note to an assessment",
   )
   @RequestMapping(
