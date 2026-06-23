@@ -73,6 +73,7 @@ class MigrationJobService(
         MigrationJobType.updateCas3BedspaceStartDate -> getBean(Cas3UpdateBedspaceStartDateJob::class)
         MigrationJobType.updateCas3PremisesDomainEventDates -> getBean(Cas3AdjustPremisesDomainEventDatesJob::class)
         MigrationJobType.cas2BackfillApplicationCohorts -> getBean(Cas2HdcBackfillApplicationCohortJob::class)
+        MigrationJobType.backfillCases -> getBean(BackfillCasesJob::class)
       }
 
       if (job.shouldRunInTransaction) {
