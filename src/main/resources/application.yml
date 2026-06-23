@@ -350,3 +350,14 @@ scheduling:
 
 feature-flags:
   cas2-sqs-listener-enabled: false
+
+domain-events:
+  inbox:
+    dispatcher:
+      # - means disabled
+      cron: '-'
+      max-events-per-batch: 10
+      max-concurrent-events: 4
+      shedlock:
+        lock-at-most-for: PT2M
+        lock-at-least-for: PT1S

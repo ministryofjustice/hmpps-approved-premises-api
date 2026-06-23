@@ -89,6 +89,8 @@ hmpps.sqs:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}
       subscribeTopicId: domainevents
+
+
 domain-events:
   cas1:
     emit-enabled: true
@@ -96,6 +98,10 @@ domain-events:
     emit-enabled: true
   cas3:
     emit-enabled: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,personDepartureUpdated,bookingCancelledUpdated,personArrivedUpdated
+  inbox:
+    dispatcher:
+      # - means disabled
+      cron: '-'
 
 hmpps:
   auth:
