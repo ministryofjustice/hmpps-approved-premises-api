@@ -54,14 +54,10 @@ class Cas2HdcUserService(
     return findOrCreateNomisUser(username = normalisedUsername, userDetail, serviceOrigin)
   }
 
-  fun getCas2v2UserDetails(userName: String): Cas2UserDto {
-    val existingUser =
-      cas2UserRepository.findByUsernameAndServiceOrigin(userName, Cas2ServiceOrigin.BAIL)
-        ?: throw NotFoundProblem(entityType = "Cas2v2User", id = userName)
-
+  fun getUserDetails(user: Cas2UserEntity): Cas2UserDto {
     val deliusUserInfo =
-      if (existingUser.userType == Cas2UserType.DELIUS) {
-        val deliusUser = getDeliusUser(existingUser.username)
+      if (user.userType == Cas2UserType.DELIUS) {
+        val deliusUser = getDeliusUser(user.username)
 
         Cas2DeliusUserInfoDto(
           probationArea = ProbationAreaDto(
@@ -74,8 +70,8 @@ class Cas2HdcUserService(
       }
 
     return Cas2UserDto(
-      username = existingUser.username,
-      type = Cas2UserTypeDto.valueOf(existingUser.userType.name),
+      username = user.username,
+      type = Cas2UserTypeDto.valueOf(user.userType.name),
       deliusUserInfo = deliusUserInfo,
     )
   }

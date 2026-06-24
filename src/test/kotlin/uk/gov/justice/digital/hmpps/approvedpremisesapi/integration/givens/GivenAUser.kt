@@ -200,8 +200,8 @@ fun IntegrationTestBase.givenACas2v2PomUser(
 fun IntegrationTestBase.givenACas2v2NomisUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
-  block: (userEntity: Cas2UserEntity, jwt: String) -> Unit,
-) {
+  block: ((userEntity: Cas2UserEntity, jwt: String) -> Unit)? = null,
+): Cas2UserEntity {
   val nomisUserDetailsFactory = NomisUserDetailFactory()
 
   if (nomisUserDetailsConfigBlock != null) {
@@ -223,7 +223,11 @@ fun IntegrationTestBase.givenACas2v2NomisUser(
 
   nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
 
-  block(user, jwt)
+  if (block != null) {
+    block(user, jwt)
+  }
+
+  return user
 }
 
 fun IntegrationTestBase.givenACas2LicenceCaseAdminUser(

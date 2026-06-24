@@ -332,9 +332,7 @@ class Cas2UserServiceTest {
         .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .produce()
 
-      every { mockCas2UserRepository.findByUsernameAndServiceOrigin(username, Cas2ServiceOrigin.BAIL) } returns user
-
-      val result = cas2HdcUserService.getCas2v2UserDetails(username)
+      val result = cas2HdcUserService.getUserDetails(user)
 
       assertThat(result.username).isEqualTo(username)
       assertThat(result.type.name).isEqualTo("NOMIS")
@@ -355,29 +353,18 @@ class Cas2UserServiceTest {
         probationArea = StaffDetailFactory.probationArea().copy(code = "P1", description = "Probation Area 1"),
       )
 
-      every { mockCas2UserRepository.findByUsernameAndServiceOrigin(username, Cas2ServiceOrigin.BAIL) } returns user
       every { mockApDeliusContextApiClient.getStaffDetail(username) } returns ClientResult.Success(
         HttpStatus.OK,
         staffDetail,
       )
 
-      val result = cas2HdcUserService.getCas2v2UserDetails(username)
+      val result = cas2HdcUserService.getUserDetails(user)
 
       assertThat(result.username).isEqualTo(username)
       assertThat(result.type.name).isEqualTo("DELIUS")
       assertThat(result.deliusUserInfo).isNotNull
       assertThat(result.deliusUserInfo!!.probationArea.code).isEqualTo("P1")
       assertThat(result.deliusUserInfo.probationArea.description).isEqualTo("Probation Area 1")
-    }
-
-    @Test
-    fun `throws NotFoundProblem when user is not found`() {
-      val username = "NON_EXISTENT_USER"
-      every { mockCas2UserRepository.findByUsernameAndServiceOrigin(username, Cas2ServiceOrigin.BAIL) } returns null
-
-      assertThrows<NotFoundProblem> {
-        cas2HdcUserService.getCas2v2UserDetails(username)
-      }
     }
 
     @Test
@@ -389,7 +376,6 @@ class Cas2UserServiceTest {
         .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .produce()
 
-      every { mockCas2UserRepository.findByUsernameAndServiceOrigin(username, Cas2ServiceOrigin.BAIL) } returns user
       every { mockApDeliusContextApiClient.getStaffDetail(username) } returns ClientResult.Failure.StatusCode(
         method = org.springframework.http.HttpMethod.GET,
         path = "/",
@@ -398,7 +384,7 @@ class Cas2UserServiceTest {
       )
 
       assertThrows<NotFoundProblem> {
-        cas2HdcUserService.getCas2v2UserDetails(username)
+        cas2HdcUserService.getUserDetails(user)
       }
     }
 
@@ -411,7 +397,6 @@ class Cas2UserServiceTest {
         .withServiceOrigin(Cas2ServiceOrigin.BAIL)
         .produce()
 
-      every { mockCas2UserRepository.findByUsernameAndServiceOrigin(username, Cas2ServiceOrigin.BAIL) } returns user
       every { mockApDeliusContextApiClient.getStaffDetail(username) } returns ClientResult.Failure.StatusCode(
         method = org.springframework.http.HttpMethod.GET,
         path = "/",
@@ -420,7 +405,7 @@ class Cas2UserServiceTest {
       )
 
       assertThrows<RuntimeException> {
-        cas2HdcUserService.getCas2v2UserDetails(username)
+        cas2HdcUserService.getUserDetails(user)
       }
     }
   }
