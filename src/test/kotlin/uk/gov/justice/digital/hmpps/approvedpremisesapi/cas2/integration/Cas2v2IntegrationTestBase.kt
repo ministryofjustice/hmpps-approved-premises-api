@@ -33,7 +33,7 @@ class Cas2v2IntegrationTestBase : IntegrationTestBase() {
       }
 
     @JvmStatic
-    fun cas2v2ReferrerRoles(): List<Arguments> = listOf(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER)
+    fun cas2v2ReferrerRoles(): List<Arguments> = listOf(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION)
       .flatMap {
         listOf(
           Arguments.of(RoleAndAuthSource(it, AuthSource.DELIUS)),
