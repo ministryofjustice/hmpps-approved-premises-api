@@ -352,10 +352,12 @@ feature-flags:
   cas2-sqs-listener-enabled: false
 
 domain-events:
+  listener:
+    enabled: true
   inbox:
     dispatcher:
-      # - means disabled
-      cron: '-'
+      # every 10 seconds
+      cron: '*/10 * * * * *'
       max-events-per-batch: 10
       max-concurrent-events: 4
       shedlock:

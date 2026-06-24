@@ -60,8 +60,6 @@ class InboxEventDispatcher(
   fun processScheduled() = process()
 
   fun process() = runBlocking {
-    log.info("processing again")
-
     val progressTracker = ProgressTracker()
     val batchSize = dispatcherConfig.maxEventsPerBatch
 
@@ -76,7 +74,7 @@ class InboxEventDispatcher(
 
     val (partitions, eventsWithoutHandlers) = partitionByKey(inboxEvents)
     eventsWithoutHandlers.forEach {
-      log.error("No handler registered for event type [inboxEventId={}, eventType={}]", it.id, it.eventType)
+      sentryService.captureErrorMessage("No handler registered for event type [inboxEventId=${it.id}, eventType=${it.eventType}]")
       progressTracker.eventSkipped()
     }
     log.debug("Partitioned into {} groups", partitions.size)

@@ -17,6 +17,11 @@ feature-flags:
 hmpps.sqs:
   provider: localstack
   queues:
+    cas-domain-events-listener-queue:
+      queueName: cas-domain-events-listener-queue
+      dlqName: cas-domain-events-listener-dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: '{"eventType":["tier.calculation.complete"]}'
     castwodomaineventslistenerqueue:
       queueName: cas-2-domain-events-listener-queue
       dlqName: cas-2-domain-events-listener-dlq

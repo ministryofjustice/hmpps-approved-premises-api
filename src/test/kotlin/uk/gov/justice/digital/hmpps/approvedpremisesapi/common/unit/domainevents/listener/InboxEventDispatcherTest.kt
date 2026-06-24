@@ -46,7 +46,7 @@ class InboxEventDispatcherTest {
   }
 
   @Test
-  fun `single event, no handler, skip`() {
+  fun `single event, no handler, skip and alert`() {
     val event = buildPendingInboxEventEntity(eventType = "test.event")
 
     every { inboxEventService.findPendingOldestFirst(10) } returns listOf(event)
@@ -62,6 +62,7 @@ class InboxEventDispatcherTest {
     assertThat(stats.failedCount).isEqualTo(0)
 
     verifyNoEventUpdatesMade()
+    verify { sentryService.captureErrorMessage("No handler registered for event type [inboxEventId=${event.id}, eventType=test.event]") }
   }
 
   @Test
