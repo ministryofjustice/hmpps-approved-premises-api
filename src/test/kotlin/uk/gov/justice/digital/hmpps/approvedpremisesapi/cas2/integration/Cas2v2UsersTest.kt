@@ -26,13 +26,14 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Getting a user returns region information for a Delius user`() {
+    fun `Getting a user returns region information for the logged in Delius user`() {
       val staffDetail = StaffDetailFactory.staffDetail()
+
       givenACas2v2DeliusUser(
         staffDetail = staffDetail,
       ) { userEntity, jwt ->
         val response = webTestClient.get()
-          .uri("/cas2/users/${userEntity.username}")
+          .uri("/cas2/users/DOESNTMATTER")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -51,10 +52,10 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Getting a NOMIS user does not include region information`() {
+  fun `Getting a user returns region information for the logged in Nomis user does not include region information`() {
     givenACas2v2NomisUser { userEntity, jwt ->
       val response = webTestClient.get()
-        .uri("/cas2/users/${userEntity.username}")
+        .uri("/cas2/users/DOESNTMATTER")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -67,6 +68,35 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
       assertThat(response?.username).isEqualTo(userEntity.username)
       assertThat(response?.type).isEqualTo(Cas2UserTypeDto.NOMIS)
       assertThat(response?.deliusUserInfo).isNull()
+    }
+  }
+
+  @Test
+  fun `Does not fail if there are multiple users with the same username`() {
+    val nomisUser = givenACas2v2NomisUser()
+
+    val staffDetail = StaffDetailFactory.staffDetail(
+      deliusUsername = nomisUser.username,
+    )
+
+    givenACas2v2DeliusUser(
+      staffDetail = staffDetail,
+    ) { userEntity, jwt ->
+      val response = webTestClient.get()
+        .uri("/cas2/users/DOESNTMATTER")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody<Cas2UserDto>()
+        .returnResult()
+        .responseBody
+
+      assertThat(response).isNotNull
+      assertThat(response?.username).isEqualTo(userEntity.username)
+      assertThat(response?.type).isEqualTo(Cas2UserTypeDto.DELIUS)
+      assertThat(response?.deliusUserInfo!!.probationArea.code).isEqualTo(staffDetail.probationArea.code)
+      assertThat(response.deliusUserInfo.probationArea.description).isEqualTo(staffDetail.probationArea.description)
     }
   }
 }
