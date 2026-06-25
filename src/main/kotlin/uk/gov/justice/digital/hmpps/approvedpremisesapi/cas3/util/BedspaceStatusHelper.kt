@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import java.time.LocalDate
