@@ -52,11 +52,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Authorisa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -82,6 +82,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockSentryService = mockk<SentryService>()
   private val mockCaseService = mockk<CaseService>()
   private val mockCas2ApplicationEmailService = mockk<Cas2ApplicationEmailService>()
+  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
   private val cas2ApplicationService = Cas2ApplicationService(
     mockCas2ApplicationRepository,
@@ -97,6 +98,7 @@ class Cas2v2ApplicationServiceTest {
     mockSentryService,
     mockCaseService,
     mockCas2ApplicationEmailService,
+    mockFeatureFlagService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -901,6 +903,8 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationEmailService.applicationSubmitted(any()) } just Runs
 
+      every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns true
+
       val result = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
 
       assertThat(result is CasResult.Success).isTrue
@@ -934,20 +938,7 @@ class Cas2v2ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          "exampleAssessorInbox@example.com",
-          Cas2NotifyTemplates.CAS2_APPLICATION_SUBMITTED,
-          match {
-            it["name"] == user.name &&
-              it["email"] == user.email &&
-              it["prisonNumber"] == cas2v2Application.nomsNumber &&
-              it["telephoneNumber"] == cas2v2Application.telephoneNumber &&
-              it["applicationUrl"] == "http://frontend/assess/applications/$applicationId/overview"
-          },
-          "def456",
-        )
-      }
+      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) }
 
       verify(exactly = 1) { mockCas2AssessmentService.createCas2Assessment(persistedApplication) }
       verify(exactly = 1) { mockCas2ApplicationEmailService.applicationSubmitted(persistedApplication) }

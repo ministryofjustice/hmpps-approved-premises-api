@@ -79,6 +79,7 @@ object Cas2NotifyTemplates {
   const val CAS2_TO_NACRO_APPLICATION_TRANSFERRED_TO_ANOTHER_PRISON = "e292b246-0d4e-4636-81f0-933bcf4dadd0"
 
   const val CAS2_BAIL_APPLICATION_SUBMITTED = "5fc14c45-8efa-49e1-81b9-e7fec0d22a0c"
+  const val CAS2_BAIL_APPLICATION_TO_ASSESS = "cd4b3c2b-6ab4-47ca-a134-df55846d02fa"
 }
 
 enum class NotifyMode {
