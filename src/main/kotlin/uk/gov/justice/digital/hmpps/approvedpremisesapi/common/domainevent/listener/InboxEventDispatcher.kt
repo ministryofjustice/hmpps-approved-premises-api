@@ -132,11 +132,6 @@ class InboxEventDispatcher(
           inboxEventService.updateInboxEventStatusAndSave(inboxEvent, ProcessedStatus.IGNORED)
           progressTracker.eventIgnored()
         }
-        InboxEventHandler.Result.FAILED -> {
-          sentryService.captureErrorMessage("Unexpected error dispatching to handler [inboxEventId=${inboxEvent.id}, eventType=${inboxEvent.eventType}]")
-          inboxEventService.updateInboxEventStatusAndSave(inboxEvent, ProcessedStatus.FAILED)
-          progressTracker.eventFailed()
-        }
       }
     } catch (e: Throwable) {
       sentryService.captureException(

@@ -30,17 +30,14 @@ interface InboxEventHandler {
    * Process the inbox event. Should run in its own transaction to make success or failure isolated per
    * event. This function should be idempotent.
    *
-   * If [Result.FAILED] is returned an alert will be raised by the caller
-   *
-   * Exceptions can be rethrown to the caller, in which case an alert will be raised and the event will
-   * be treated as if [Result.FAILED] has been returned
+   * Exceptions should be thrown to indicate failures that require manual intervention (in this case
+   * the event will be marked as `FAILED` and an alert will be raised)
    */
   fun handle(inboxEvent: InboxEvent): Result
 
   enum class Result {
     PROCESSED,
     IGNORED,
-    FAILED,
   }
 
   data class InboxEvent(

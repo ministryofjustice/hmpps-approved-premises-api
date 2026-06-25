@@ -118,34 +118,7 @@ class InboxEventDispatcherTest {
   }
 
   @Test
-  fun `handler returns FAILED, update event processed state to FAILED and raise alert`() {
-    val event = buildPendingInboxEventEntity(eventType = "test.event")
-
-    every { inboxEventService.findPendingOldestFirst(10) } returns listOf(event)
-
-    val handler = MockEventHandler(
-      supportedEventType = "test.event",
-      result = InboxEventHandler.Result.FAILED,
-    )
-
-    val stats = inboxEventDispatcher(
-      handlers = listOf(handler),
-      maxEventsPerBatch = 10,
-    ).process()
-
-    handler.assertThatHasProcessedEvent(event)
-
-    assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.ignoredCount).isEqualTo(0)
-    assertThat(stats.skippedCount).isEqualTo(0)
-    assertThat(stats.failedCount).isEqualTo(1)
-
-    verify { inboxEventService.updateInboxEventStatusAndSave(event, ProcessedStatus.FAILED) }
-    verify { sentryService.captureErrorMessage("Unexpected error dispatching to handler [inboxEventId=${event.id}, eventType=${event.eventType}]") }
-  }
-
-  @Test
-  fun `handler throws Exception, ,update event processed state to FAILED and raise alert`() {
+  fun `handler throws Exception, update event processed state to FAILED and raise alert`() {
     val event = buildPendingInboxEventEntity(eventType = "test.event")
 
     every { inboxEventService.findPendingOldestFirst(10) } returns listOf(event)
@@ -155,7 +128,6 @@ class InboxEventDispatcherTest {
     val handler = MockEventHandler(
       supportedEventType = "test.event",
       responseException = exception,
-      result = InboxEventHandler.Result.FAILED,
     )
 
     val stats = inboxEventDispatcher(
@@ -192,7 +164,7 @@ class InboxEventDispatcherTest {
 
   private data class MockEventHandler(
     val supportedEventType: String,
-    val result: InboxEventHandler.Result,
+    val result: InboxEventHandler.Result? = null,
     val responseException: Throwable? = null,
     val processedEvents: MutableList<InboxEventHandler.InboxEvent> = mutableListOf(),
   ) : InboxEventHandler {
@@ -204,7 +176,7 @@ class InboxEventDispatcherTest {
         throw responseException
       }
 
-      return result
+      return result!!
     }
 
     fun assertThatHasProcessedEvent(event: InboxEventEntity) {
