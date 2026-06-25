@@ -38,7 +38,7 @@ class InboxEventDispatcherTest {
     ).process()
 
     assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
+    assertThat(stats.ignoredCount).isEqualTo(0)
     assertThat(stats.skippedCount).isEqualTo(0)
     assertThat(stats.failedCount).isEqualTo(0)
 
@@ -57,7 +57,7 @@ class InboxEventDispatcherTest {
     ).process()
 
     assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
+    assertThat(stats.ignoredCount).isEqualTo(0)
     assertThat(stats.skippedCount).isEqualTo(1)
     assertThat(stats.failedCount).isEqualTo(0)
 
@@ -84,7 +84,7 @@ class InboxEventDispatcherTest {
     handler.assertThatHasProcessedEvent(event)
 
     assertThat(stats.processedCount).isEqualTo(1)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
+    assertThat(stats.ignoredCount).isEqualTo(0)
     assertThat(stats.skippedCount).isEqualTo(0)
     assertThat(stats.failedCount).isEqualTo(0)
 
@@ -92,14 +92,14 @@ class InboxEventDispatcherTest {
   }
 
   @Test
-  fun `handler returns NOT PROCESSED, update event processed state to NOT_PROCESSED`() {
+  fun `handler returns IGNORED, update event processed state to IGNORED`() {
     val event = buildPendingInboxEventEntity(eventType = "test.event")
 
     every { inboxEventService.findPendingOldestFirst(10) } returns listOf(event)
 
     val handler = MockEventHandler(
       supportedEventType = "test.event",
-      result = InboxEventHandler.Result.NOT_PROCESSED,
+      result = InboxEventHandler.Result.IGNORED,
     )
 
     val stats = inboxEventDispatcher(
@@ -110,11 +110,11 @@ class InboxEventDispatcherTest {
     handler.assertThatHasProcessedEvent(event)
 
     assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(1)
+    assertThat(stats.ignoredCount).isEqualTo(1)
     assertThat(stats.skippedCount).isEqualTo(0)
     assertThat(stats.failedCount).isEqualTo(0)
 
-    verify { inboxEventService.updateInboxEventStatusAndSave(event, ProcessedStatus.NOT_PROCESSED) }
+    verify { inboxEventService.updateInboxEventStatusAndSave(event, ProcessedStatus.IGNORED) }
   }
 
   @Test
@@ -136,7 +136,7 @@ class InboxEventDispatcherTest {
     handler.assertThatHasProcessedEvent(event)
 
     assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
+    assertThat(stats.ignoredCount).isEqualTo(0)
     assertThat(stats.skippedCount).isEqualTo(0)
     assertThat(stats.failedCount).isEqualTo(1)
 
@@ -166,7 +166,7 @@ class InboxEventDispatcherTest {
     handler.assertThatHasProcessedEvent(event)
 
     assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
+    assertThat(stats.ignoredCount).isEqualTo(0)
     assertThat(stats.skippedCount).isEqualTo(0)
     assertThat(stats.failedCount).isEqualTo(1)
 

@@ -76,7 +76,7 @@ class TierCalculationChangedTest : IntegrationTestBase() {
 
     inboxEventDispatcher.process()
 
-    inboxAsserter.assertNotProcessedCount(1)
+    inboxAsserter.assertIgnoredCount(1)
   }
 
   @Test

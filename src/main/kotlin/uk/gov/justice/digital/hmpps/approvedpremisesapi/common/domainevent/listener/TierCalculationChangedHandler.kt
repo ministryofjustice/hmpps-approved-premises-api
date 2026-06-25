@@ -25,7 +25,7 @@ class TierCalculationChangedHandler(
 
     return when (caseService.reviseTier(crn!!)) {
       true -> InboxEventHandler.Result.PROCESSED
-      false -> InboxEventHandler.Result.NOT_PROCESSED
+      false -> InboxEventHandler.Result.IGNORED
     }
   }
 

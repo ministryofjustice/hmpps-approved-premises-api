@@ -39,7 +39,7 @@ interface InboxEventHandler {
 
   enum class Result {
     PROCESSED,
-    NOT_PROCESSED,
+    IGNORED,
     FAILED,
   }
 
