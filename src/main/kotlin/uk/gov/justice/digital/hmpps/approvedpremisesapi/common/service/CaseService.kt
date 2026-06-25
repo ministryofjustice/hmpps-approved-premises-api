@@ -55,7 +55,6 @@ class CaseService(
     val case = caseRepository.findByCrn(crn)
 
     if (case == null) {
-      log.debug("Not updating tier for $crn because have no case")
       return false
     }
 
