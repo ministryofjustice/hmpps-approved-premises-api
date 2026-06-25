@@ -124,6 +124,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Sta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.InboxEventEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.InboxEventEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.InboxEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -642,6 +645,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var cas3BedspacesRepository: Cas3BedspacesRepository
 
+  @Autowired
+  lateinit var inboxEventRepository: InboxEventRepository
+
   lateinit var offenderManagementUnitEntityFactory: PersistedFactory<OffenderManagementUnitEntity, UUID, OffenderManagementUnitEntityFactory>
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
@@ -725,6 +731,7 @@ abstract class IntegrationTestBase {
   lateinit var placementApplicationEntityFactory: PersistedFactory<PlacementApplicationEntity, UUID, PlacementApplicationEntityFactory>
   lateinit var placementRequestEntityFactory: PersistedFactory<PlacementRequestEntity, UUID, PlacementRequestEntityFactory>
   lateinit var cas1PremisesLocalRestrictionEntityFactory: PersistedFactory<Cas1PremisesLocalRestrictionEntity, UUID, Cas1PremisesLocalRestrictionEntityFactory>
+  lateinit var inboxEventEntityFactory: PersistedFactory<InboxEventEntity, UUID, InboxEventEntityFactory>
   private var clientCredentialsCallMocked = false
 
   @BeforeEach
@@ -848,6 +855,7 @@ abstract class IntegrationTestBase {
     cas1ChangeRequestRejectionReasonEntityFactory = PersistedFactory({ Cas1ChangeRequestRejectionReasonEntityFactory() }, cas1ChangeRequestRejectionReasonRepository)
     cas1ChangeRequestEntityFactory = PersistedFactory({ Cas1ChangeRequestEntityFactory() }, cas1ChangeRequestRepository)
     cas1PremisesLocalRestrictionEntityFactory = PersistedFactory({ Cas1PremisesLocalRestrictionEntityFactory() }, cas1PremisesLocalRestrictionRepository)
+    inboxEventEntityFactory = PersistedFactory({ InboxEventEntityFactory() }, inboxEventRepository)
   }
 
   fun mockClientCredentialsJwtRequest(

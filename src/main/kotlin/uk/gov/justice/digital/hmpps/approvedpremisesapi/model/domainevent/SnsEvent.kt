@@ -15,7 +15,10 @@ data class SnsEvent(
 
 data class SnsEventPersonReferenceCollection(
   val identifiers: List<SnsEventPersonReference>,
-)
+) {
+  fun findCrn() = get("CRN")
+  fun get(key: String) = identifiers.find { it.type == key }?.value
+}
 
 data class SnsEventPersonReference(
   val type: String,

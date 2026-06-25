@@ -6,6 +6,9 @@
 
 set -e
 
+cd "$(dirname "$0")"
+script_dir="$(pwd)"
+
 if [ $1 == "dev+test" ]; then
     dir="dev+test"
 elif [ $1 == "all" ]; then
@@ -19,4 +22,4 @@ timestamp=`date "+%Y%m%d%H%M%S"`
 migration_name=`echo "$2" | awk '{print tolower($0)}' | tr ' ' '_'`
 filename="$(echo ${timestamp}__${migration_name}).sql"
 echo "Creating migration: $filename"
-touch "src/main/resources/db/migration/$dir/$filename"
+touch "${script_dir}/../src/main/resources/db/migration/$dir/$filename"
