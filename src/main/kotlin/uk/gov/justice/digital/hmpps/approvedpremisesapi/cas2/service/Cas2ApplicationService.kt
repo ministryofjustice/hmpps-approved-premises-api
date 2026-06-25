@@ -58,6 +58,7 @@ class Cas2ApplicationService(
   private val jsonMapper: JsonMapper,
   private val sentryService: SentryService,
   private val caseService: CaseService,
+  private val cas2ApplicationEmailService: Cas2ApplicationEmailService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -315,7 +316,9 @@ class Cas2ApplicationService(
 
     createAssessment(application)
 
-    sendEmailApplicationSubmitted(user, application)
+    sendAssessorEmailApplicationSubmitted(user, application)
+
+    cas2ApplicationEmailService.applicationSubmitted(application)
 
     return CasResult.Success(application)
   }
@@ -383,7 +386,7 @@ class Cas2ApplicationService(
     return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
   }
 
-  private fun sendEmailApplicationSubmitted(user: Cas2UserEntity, application: Cas2ApplicationEntity) {
+  private fun sendAssessorEmailApplicationSubmitted(user: Cas2UserEntity, application: Cas2ApplicationEntity) {
     val applicationOrigin = application.applicationOrigin.toString()
 
     val templateId = when (applicationOrigin) {
