@@ -3,7 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2DeliusUserInfoDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.ProbationAreaDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
@@ -13,6 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesForRequesterApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.nomisuserroles.NomisUserDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.toCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import java.util.UUID
 
@@ -37,6 +43,37 @@ class Cas2UserService(
     return getUserForUsername(username, jwt, userType)
   }
 
+  fun getUserDtoForRequest(): CasResult<Cas2UserDto> {
+    val user = getUserForRequest()
+
+    val deliusUserInfo =
+      if (user.userType == Cas2UserType.DELIUS) {
+        val deliusUser = when (val deliusUserResult = getDeliusUser(user.username)) {
+          is CasResult.Success -> deliusUserResult.value
+          is CasResult.Error -> return deliusUserResult.reviseType()
+        }
+
+        Cas2DeliusUserInfoDto(
+          probationArea = ProbationAreaDto(
+            code = deliusUser.probationArea.code,
+            description = deliusUser.probationArea.description,
+          ),
+        )
+      } else {
+        null
+      }
+
+    return CasResult.Success(
+      Cas2UserDto(
+        username = user.username,
+        type = Cas2UserTypeDto.valueOf(user.userType.name),
+        deliusUserInfo = deliusUserInfo,
+      ),
+    )
+  }
+
+  private fun getDeliusUser(username: String): CasResult<StaffDetail> = apDeliusContextApiClient.getStaffDetail(username).toCasResult(entityType = "DeliusUser", id = username)
+
   private fun getUserForUsername(username: String, jwt: String, userType: Cas2UserType): Cas2UserEntity {
     val normalisedUsername = username.uppercase()
 
@@ -58,7 +95,7 @@ class Cas2UserService(
 
   fun userForRequestHasRole(grantedAuthorities: List<GrantedAuthority>): Boolean {
     val roles = getRolesForUserForRequest()
-    return roles?.any { it in grantedAuthorities } ?: false
+    return roles.any { it in grantedAuthorities }
   }
 
   private fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority> = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
