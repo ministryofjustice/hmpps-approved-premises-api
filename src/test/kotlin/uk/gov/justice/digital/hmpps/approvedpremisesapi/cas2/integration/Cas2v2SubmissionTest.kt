@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2Use
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
@@ -852,6 +853,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
             withCreatedByUser(submittingUser)
             withApplicationOrigin(ApplicationOrigin.courtBail)
             withServiceOrigin(Cas2ServiceOrigin.BAIL)
+              .withCohort(Cas2Cohort.COURT_BAIL)
             withData(
               """
             {
@@ -898,6 +900,8 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
 
           Assertions.assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
           Assertions.assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
+
+          Assertions.assertThat(emailAsserter.assertEmailsRequestedCount(2))
         }
       }
     }
@@ -915,6 +919,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
             withCreatedByUser(submittingUser)
             withApplicationOrigin(ApplicationOrigin.courtBail)
             withServiceOrigin(Cas2ServiceOrigin.BAIL)
+              .withCohort(Cas2Cohort.COURT_BAIL)
             withData(
               """
             {
@@ -950,6 +955,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
           Assertions.assertThat(domainEventRepository.count()).isEqualTo(1)
           Assertions.assertThat(cas2RealAssessmentRepository.count()).isEqualTo(1)
           Assertions.assertThat(cas2RealApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)!!.submittedAt).isNotNull()
+          Assertions.assertThat(emailAsserter.assertEmailsRequestedCount(2))
         }
       }
     }

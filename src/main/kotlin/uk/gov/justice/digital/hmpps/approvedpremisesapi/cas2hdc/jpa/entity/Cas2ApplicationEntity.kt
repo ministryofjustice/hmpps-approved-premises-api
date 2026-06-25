@@ -90,16 +90,16 @@ interface Cas2LockableApplicationRepository : JpaRepository<Cas2LockableApplicat
   fun acquirePessimisticLock(id: UUID): Cas2LockableApplicationEntity?
 }
 
-enum class Cas2Cohort(val apiType: Cas2CohortDto) {
-  HDC(Cas2CohortDto.HOME_DETENTION_CURFEW),
-  PRISON_BAIL(Cas2CohortDto.PRISON_BAIL),
-  COURT_BAIL(Cas2CohortDto.COURT_BAIL),
-  ATCR(Cas2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL),
-  HCRD(Cas2CohortDto.HOMELESS_AT_CONDITIONAL_RELEASE_DATE),
-  HEFR(Cas2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL),
-  ISC(Cas2CohortDto.INTENSIVE_SUPERVISION_COURTS),
-  RARR(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW),
-  FROM_AP(Cas2CohortDto.REFERRAL_FROM_APPROVED_PREMISES),
+enum class Cas2Cohort(val apiType: Cas2CohortDto, val displayName: String) {
+  HDC(Cas2CohortDto.HOME_DETENTION_CURFEW, "HDC"),
+  PRISON_BAIL(Cas2CohortDto.PRISON_BAIL, "Prison Bail"),
+  COURT_BAIL(Cas2CohortDto.COURT_BAIL, "Court Bail"),
+  ATCR(Cas2CohortDto.ALTERNATIVE_TO_CUSTODIAL_RECALL, "ATCR"),
+  HCRD(Cas2CohortDto.HOMELESS_AT_CONDITIONAL_RELEASE_DATE, "HCRD"),
+  HEFR(Cas2CohortDto.HOMELESS_AT_END_OF_FIXED_TERM_RECALL, "HEFR"),
+  ISC(Cas2CohortDto.INTENSIVE_SUPERVISION_COURTS, "ISC"),
+  RARR(Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW, "RARR"),
+  FROM_AP(Cas2CohortDto.REFERRAL_FROM_APPROVED_PREMISES, "From AP"),
   ;
 
   companion object {

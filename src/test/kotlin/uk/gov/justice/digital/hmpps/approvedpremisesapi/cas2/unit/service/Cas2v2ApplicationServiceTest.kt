@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2CohortDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainEventService
@@ -80,6 +81,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockNotifyConfig = mockk<NotifyConfig>()
   private val mockSentryService = mockk<SentryService>()
   private val mockCaseService = mockk<CaseService>()
+  private val mockCas2ApplicationEmailService = mockk<Cas2ApplicationEmailService>()
 
   private val cas2ApplicationService = Cas2ApplicationService(
     mockCas2ApplicationRepository,
@@ -94,6 +96,7 @@ class Cas2v2ApplicationServiceTest {
     mockJsonMapper,
     mockSentryService,
     mockCaseService,
+    mockCas2ApplicationEmailService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -896,6 +899,8 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2AssessmentService.createCas2Assessment(any()) } returns any()
 
+      every { mockCas2ApplicationEmailService.applicationSubmitted(any()) } just Runs
+
       val result = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
 
       assertThat(result is CasResult.Success).isTrue
@@ -945,6 +950,7 @@ class Cas2v2ApplicationServiceTest {
       }
 
       verify(exactly = 1) { mockCas2AssessmentService.createCas2Assessment(persistedApplication) }
+      verify(exactly = 1) { mockCas2ApplicationEmailService.applicationSubmitted(persistedApplication) }
     }
   }
 
