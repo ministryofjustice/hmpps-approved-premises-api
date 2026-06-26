@@ -49,6 +49,7 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
         assertThat(response.deliusUserInfo.probationArea.description).isEqualTo(staffDetail.probationArea.description)
       }
     }
+
     @Test
     fun `Getting a user returns region information for the logged in Nomis user does not include region information`() {
       givenACas2v2NomisUser { userEntity, jwt ->
@@ -95,6 +96,63 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
         assertThat(response?.type).isEqualTo(Cas2UserTypeDto.DELIUS)
         assertThat(response?.deliusUserInfo!!.probationArea.code).isEqualTo(staffDetail.probationArea.code)
         assertThat(response.deliusUserInfo.probationArea.description).isEqualTo(staffDetail.probationArea.description)
+      }
+    }
+  }
+
+  @Nested
+  inner class GetCurrentUserDetailsTest {
+    @Test
+    fun `Getting the current user without a JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas2/users/me")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Returns user details (including region) when user is a Delius user`() {
+      val staffDetail = StaffDetailFactory.staffDetail()
+
+      givenACas2v2DeliusUser(
+        staffDetail = staffDetail,
+      ) { userEntity, jwt ->
+        val response = webTestClient.get()
+          .uri("/cas2/users/me")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody<Cas2UserDto>()
+          .returnResult()
+          .responseBody
+
+        assertThat(response).isNotNull
+        assertThat(response?.username).isEqualTo(userEntity.username)
+        assertThat(response?.type).isEqualTo(Cas2UserTypeDto.DELIUS)
+        assertThat(response?.deliusUserInfo!!.probationArea.code).isEqualTo(staffDetail.probationArea.code)
+        assertThat(response.deliusUserInfo.probationArea.description).isEqualTo(staffDetail.probationArea.description)
+      }
+    }
+
+    @Test
+    fun `Returns user details (excluding region) when user is a Nomis user`() {
+      givenACas2v2NomisUser { userEntity, jwt ->
+        val response = webTestClient.get()
+          .uri("/cas2/users/me")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody<Cas2UserDto>()
+          .returnResult()
+          .responseBody
+
+        assertThat(response).isNotNull
+        assertThat(response?.username).isEqualTo(userEntity.username)
+        assertThat(response?.type).isEqualTo(Cas2UserTypeDto.NOMIS)
+        assertThat(response?.deliusUserInfo).isNull()
       }
     }
   }

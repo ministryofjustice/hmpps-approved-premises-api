@@ -3,16 +3,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TypedUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 
 @Service
 class Cas2UserAccessService(
   private val cas2UserService: Cas2UserService,
 ) {
   fun userCanViewCas2Application(
-    user: Cas2UserEntity,
+    user: Cas2TypedUser,
     application: Cas2ApplicationEntity,
   ): Boolean {
     val isPrisonBailReferral = application.applicationOrigin == ApplicationOrigin.prisonBail &&
@@ -27,14 +26,14 @@ class Cas2UserAccessService(
 
     if (application.submittedAt == null) return false
 
-    return if (user.userType == Cas2UserType.NOMIS) {
+    return if (user is Cas2TypedUser.Nomis) {
       offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeNomisCaseloadId)
     } else {
       false
     }
   }
 
-  fun userCanAddNote(user: Cas2UserEntity, application: Cas2ApplicationEntity): Boolean {
+  fun userCanAddNote(user: Cas2TypedUser, application: Cas2ApplicationEntity): Boolean {
     if (
       application.applicationOrigin == ApplicationOrigin.prisonBail &&
       cas2UserService.userForRequestHasRole(
@@ -46,15 +45,15 @@ class Cas2UserAccessService(
       return true
     }
 
-    return when (user.userType) {
-      Cas2UserType.NOMIS ->
+    return when (user) {
+      is Cas2TypedUser.Nomis ->
         user.id == application.createdByUser.id ||
           offenderIsFromSamePrisonAsUser(
             application.referringPrisonCode,
             user.activeNomisCaseloadId,
           )
-      Cas2UserType.DELIUS -> user.id == application.createdByUser.id
-      Cas2UserType.EXTERNAL -> true
+      is Cas2TypedUser.Delius -> user.id == application.createdByUser.id
+      is Cas2TypedUser.External -> true
     }
   }
 

@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TypedUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2ApplicationService
@@ -68,7 +69,7 @@ class Cas2ApplicationController(
 
     val effectiveLimitByUser = limitByUser ?: true
     if (effectiveLimitByUser && userService.requiresCaseLoadIdCheck()) {
-      prisonCode?.let { if (prisonCode != user.activeNomisCaseloadId) throw ForbiddenProblem() }
+      prisonCode?.let { if (prisonCode != (user as Cas2TypedUser.Nomis).activeNomisCaseloadId) throw ForbiddenProblem() }
     }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)

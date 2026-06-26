@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2DomainE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service.Cas2v2OffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -46,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
@@ -66,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Optional
 import java.util.UUID
 
 class Cas2v2ApplicationServiceTest {
@@ -83,6 +86,8 @@ class Cas2v2ApplicationServiceTest {
   private val mockCaseService = mockk<CaseService>()
   private val mockCas2ApplicationEmailService = mockk<Cas2ApplicationEmailService>()
   private val mockFeatureFlagService = mockk<FeatureFlagService>()
+  private val mockCas2UserRepository = mockk<Cas2UserRepository>()
+  private val cas2UserTransformer = Cas2UserTransformer()
 
   private val cas2ApplicationService = Cas2ApplicationService(
     mockCas2ApplicationRepository,
@@ -101,6 +106,7 @@ class Cas2v2ApplicationServiceTest {
     mockFeatureFlagService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
+    mockCas2UserRepository,
   )
 
   @Nested
@@ -195,7 +201,7 @@ class Cas2v2ApplicationServiceTest {
         null,
         false,
         null,
-        user,
+        cas2UserTransformer.transformJpaToTypedNomisUser(user),
         pageCriteria,
       )
 
@@ -249,7 +255,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns null
 
-      assertThat(cas2ApplicationService.getCas2ApplicationForUser(applicationId, user) is CasResult.NotFound).isTrue
+      assertThat(cas2ApplicationService.getCas2ApplicationForUser(applicationId, cas2UserTransformer.transformJpaToTypedNomisUser(user)) is CasResult.NotFound).isTrue
     }
 
     @Test
@@ -270,7 +276,7 @@ class Cas2v2ApplicationServiceTest {
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
-      assertThat(cas2ApplicationService.getCas2ApplicationForUser(applicationId, user) is CasResult.NotFound).isTrue
+      assertThat(cas2ApplicationService.getCas2ApplicationForUser(applicationId, cas2UserTransformer.transformJpaToTypedNomisUser(user)) is CasResult.NotFound).isTrue
     }
 
     @Test
@@ -292,7 +298,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2UserAccessService.userCanViewCas2Application(any(), any()) } returns false
 
-      assertThat(cas2ApplicationService.getCas2ApplicationForUser(applicationId, user) is CasResult.Unauthorised).isTrue
+      assertThat(cas2ApplicationService.getCas2ApplicationForUser(applicationId, cas2UserTransformer.transformJpaToTypedNomisUser(user)) is CasResult.Unauthorised).isTrue
     }
 
     @Test
@@ -315,7 +321,7 @@ class Cas2v2ApplicationServiceTest {
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(any(), Cas2ServiceOrigin.BAIL) } returns cas2ApplicationEntity
       every { mockCas2UserAccessService.userCanViewCas2Application(any(), any()) } returns true
 
-      val result = cas2ApplicationService.getCas2ApplicationForUser(applicationId, userEntity)
+      val result = cas2ApplicationService.getCas2ApplicationForUser(applicationId, cas2UserTransformer.transformJpaToTypedNomisUser(userEntity))
 
       assertThat(result is CasResult.Success).isTrue
       val entity = extractEntityFromCasResult(result)
@@ -341,7 +347,12 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = cas2ApplicationService.createCas2Application(crn, user)
+      val result = cas2ApplicationService.createCas2Application(
+        crn,
+        cas2UserTransformer.transformJpaToTypedDeliusUser(
+          user,
+        ),
+      )
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -357,7 +368,12 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = cas2ApplicationService.createCas2Application(crn, user)
+      val result = cas2ApplicationService.createCas2Application(
+        crn,
+        cas2UserTransformer.transformJpaToTypedDeliusUser(
+          user,
+        ),
+      )
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -393,7 +409,16 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCaseService.ensureCaseExists(any()) } returns CaseEntityFactory().produce()
 
-      val result = cas2ApplicationService.createCas2Application(crn, user, ApplicationOrigin.prisonBail, bailHearingDate)
+      every { mockCas2UserRepository.findById(any()) } returns Optional.of(user)
+
+      val result = cas2ApplicationService.createCas2Application(
+        crn,
+        cas2UserTransformer.transformJpaToTypedDeliusUser(
+          user,
+        ),
+        ApplicationOrigin.prisonBail,
+        bailHearingDate,
+      )
 
       assertThat(result is ValidatableActionResult.Success).isTrue
       result as ValidatableActionResult.Success
@@ -420,7 +445,7 @@ class Cas2v2ApplicationServiceTest {
         cas2ApplicationService.updateCas2Application(
           applicationId = applicationId,
           data = "{}",
-          user = user,
+          user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
           null,
           null,
         ) is CasResult.NotFound,
@@ -448,7 +473,7 @@ class Cas2v2ApplicationServiceTest {
         cas2ApplicationService.updateCas2Application(
           applicationId = applicationId,
           data = "{}",
-          user = user,
+          user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
           null,
           null,
         ) is CasResult.Unauthorised,
@@ -472,7 +497,7 @@ class Cas2v2ApplicationServiceTest {
       val result = cas2ApplicationService.updateCas2Application(
         applicationId = applicationId,
         data = "{}",
-        user = user,
+        user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
         null,
         null,
       )
@@ -498,7 +523,7 @@ class Cas2v2ApplicationServiceTest {
       val result = cas2ApplicationService.updateCas2Application(
         applicationId = applicationId,
         data = "{}",
-        user = user,
+        user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
         null,
         null,
       )
@@ -536,7 +561,7 @@ class Cas2v2ApplicationServiceTest {
       val result = cas2ApplicationService.updateCas2Application(
         applicationId = applicationId,
         data = updatedData,
-        user = user,
+        user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
         null,
         null,
       )
@@ -588,7 +613,7 @@ class Cas2v2ApplicationServiceTest {
       val result = cas2ApplicationService.updateCas2Application(
         applicationId = applicationId,
         data = updatedData,
-        user = user,
+        user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
         bailHearingDate,
         Cas2CohortDto.RISK_ASSESSED_RECALL_REVIEW,
       )
@@ -620,7 +645,7 @@ class Cas2v2ApplicationServiceTest {
       assertThat(
         cas2ApplicationService.abandonCas2Application(
           applicationId = applicationId,
-          user = user,
+          user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
         ) is CasResult.NotFound,
       ).isTrue
     }
@@ -645,7 +670,7 @@ class Cas2v2ApplicationServiceTest {
       assertThat(
         cas2ApplicationService.abandonCas2Application(
           applicationId = applicationId,
-          user = user,
+          user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
         ) is CasResult.Unauthorised,
       ).isTrue
     }
@@ -666,7 +691,7 @@ class Cas2v2ApplicationServiceTest {
 
       val result = cas2ApplicationService.abandonCas2Application(
         applicationId = applicationId,
-        user = user,
+        user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
       )
 
       result as CasResult.ConflictError
@@ -690,7 +715,7 @@ class Cas2v2ApplicationServiceTest {
 
       val result = cas2ApplicationService.abandonCas2Application(
         applicationId = applicationId,
-        user = user,
+        user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
       )
 
       result as CasResult.Success
@@ -723,7 +748,7 @@ class Cas2v2ApplicationServiceTest {
 
       val result = cas2ApplicationService.abandonCas2Application(
         applicationId = applicationId,
-        user = user,
+        user = cas2UserTransformer.transformJpaToTypedDeliusUser(user),
       )
 
       result as CasResult.Success
@@ -767,7 +792,14 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns null
 
-      assertThat(cas2ApplicationService.submitCas2Application(submitCas2Application, user) is CasResult.NotFound).isTrue
+      assertThat(
+        cas2ApplicationService.submitCas2Application(
+          submitCas2Application,
+          cas2UserTransformer.transformJpaToTypedDeliusUser(
+            user,
+          ),
+        ) is CasResult.NotFound,
+      ).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -787,7 +819,14 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL) } returns cas2v2Application
 
-      assertThat(cas2ApplicationService.submitCas2Application(submitCas2Application, user) is CasResult.Unauthorised).isTrue
+      assertThat(
+        cas2ApplicationService.submitCas2Application(
+          submitCas2Application,
+          cas2UserTransformer.transformJpaToTypedDeliusUser(
+            user,
+          ),
+        ) is CasResult.Unauthorised,
+      ).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -806,7 +845,12 @@ class Cas2v2ApplicationServiceTest {
         mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       } returns cas2v2Application
 
-      val result = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
+      val result = cas2ApplicationService.submitCas2Application(
+        submitCas2Application,
+        cas2UserTransformer.transformJpaToTypedDeliusUser(
+          user,
+        ),
+      )
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
       val validatableActionResult = result as CasResult.GeneralValidationError
@@ -830,7 +874,12 @@ class Cas2v2ApplicationServiceTest {
         mockCas2ApplicationRepository.findByIdAndServiceOrigin(applicationId, Cas2ServiceOrigin.BAIL)
       } returns cas2v2Application
 
-      val result = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
+      val result = cas2ApplicationService.submitCas2Application(
+        submitCas2Application,
+        cas2UserTransformer.transformJpaToTypedDeliusUser(
+          user,
+        ),
+      )
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
       val validatableActionResult = result as CasResult.GeneralValidationError
@@ -905,7 +954,12 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockFeatureFlagService.getBooleanFlag("isr-email-changes-enabled") } returns true
 
-      val result = cas2ApplicationService.submitCas2Application(submitCas2Application, user)
+      val result = cas2ApplicationService.submitCas2Application(
+        submitCas2Application,
+        cas2UserTransformer.transformJpaToTypedDeliusUser(
+          user,
+        ),
+      )
 
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success

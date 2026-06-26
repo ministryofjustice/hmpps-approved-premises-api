@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.service
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TypedUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.util.Cas2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
@@ -14,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2A
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -35,6 +37,7 @@ class Cas2ApplicationNoteService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val assessmentUrlTemplate: String,
+  private val cas2UserRepository: Cas2UserRepository,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -57,8 +60,11 @@ class Cas2ApplicationNoteService(
       return CasResult.Unauthorised()
     }
 
-    val savedNote = saveNote(application, assessment, note.note, user)
-    sendEmail(user.isExternal(), application, savedNote)
+    val savedNote = when (val savedNoteResult = saveNote(application, assessment, note.note, user)) {
+      is CasResult.Success -> savedNoteResult.value
+      is CasResult.Error -> return savedNoteResult.reviseType()
+    }
+    sendEmail((user is Cas2TypedUser.External), application, savedNote)
 
     return CasResult.Success(savedNote)
   }
@@ -160,16 +166,19 @@ class Cas2ApplicationNoteService(
     return "Unknown. " + "The assessor has not added their name to the application yet."
   }
 
-  private fun saveNote(application: Cas2ApplicationEntity, assessment: Cas2AssessmentEntity, body: String, user: Cas2UserEntity): Cas2ApplicationNoteEntity {
+  private fun saveNote(application: Cas2ApplicationEntity, assessment: Cas2AssessmentEntity, body: String, user: Cas2TypedUser): CasResult<Cas2ApplicationNoteEntity> {
+    val createdByUser = cas2UserRepository.findByIdOrNull(user.id)
+      ?: return CasResult.NotFound("Cas2UserEntity", user.id.toString())
+
     val newNote = Cas2ApplicationNoteEntity(
       id = UUID.randomUUID(),
       application = application,
       body = body,
       createdAt = OffsetDateTime.now(),
-      createdByUser = user,
+      createdByUser = createdByUser,
       assessment = assessment,
     )
 
-    return cas2ApplicationNoteRepository.save(newNote)
+    return CasResult.Success(cas2ApplicationNoteRepository.save(newNote))
   }
 }

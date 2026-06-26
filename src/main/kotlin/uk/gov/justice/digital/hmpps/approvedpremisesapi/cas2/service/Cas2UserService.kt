@@ -4,6 +4,10 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2TypedUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.transformer.Cas2UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
@@ -13,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesForRequesterApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.nomisuserroles.NomisUserDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import java.util.UUID
 
@@ -23,12 +28,13 @@ class Cas2UserService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val nomisUserRolesApiClient: NomisUserRolesForRequesterApiClient,
   private val manageUsersApiClient: ManageUsersApiClient,
+  private val cas2UserTransformer: Cas2UserTransformer,
 ) {
   fun ensureUserPersisted() {
     getUserForRequest()
   }
 
-  fun getUserForRequest(): Cas2UserEntity {
+  fun getUserForRequest(): Cas2TypedUser {
     val authenticatedPrincipal = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow()
     val jwt = authenticatedPrincipal.token.tokenValue
     val username = authenticatedPrincipal.name
@@ -37,13 +43,25 @@ class Cas2UserService(
     return getUserForUsername(username, jwt, userType)
   }
 
-  private fun getUserForUsername(username: String, jwt: String, userType: Cas2UserType): Cas2UserEntity {
+  fun getUserDtoForRequest(): CasResult<Cas2UserDto> {
+    val user = getUserForRequest()
+
+    return CasResult.Success(
+      Cas2UserDto(
+        username = user.username,
+        type = Cas2UserTypeDto.valueOf(user.userType.name),
+        deliusUserInfo = if (user is Cas2TypedUser.Delius) user.deliusUserInfo else null,
+      ),
+    )
+  }
+
+  private fun getUserForUsername(username: String, jwt: String, userType: Cas2UserType): Cas2TypedUser {
     val normalisedUsername = username.uppercase()
 
     val userEntity = when (userType) {
-      Cas2UserType.NOMIS -> getEntityForNomisUser(normalisedUsername, jwt)
-      Cas2UserType.DELIUS -> getEntityForDeliusUser(normalisedUsername)
-      Cas2UserType.EXTERNAL -> getEntityForExternalUser(normalisedUsername, jwt)
+      Cas2UserType.NOMIS -> getTypedNomisUser(normalisedUsername, jwt)
+      Cas2UserType.DELIUS -> getTypedDeliusUser(normalisedUsername)
+      Cas2UserType.EXTERNAL -> getTypedExternalUser(normalisedUsername, jwt)
     }
 
     return userEntity
@@ -58,14 +76,14 @@ class Cas2UserService(
 
   fun userForRequestHasRole(grantedAuthorities: List<GrantedAuthority>): Boolean {
     val roles = getRolesForUserForRequest()
-    return roles?.any { it in grantedAuthorities } ?: false
+    return roles.any { it in grantedAuthorities }
   }
 
   private fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority> = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
 
   private fun getExistingUser(username: String, userType: Cas2UserType): Cas2UserEntity? = cas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(username, userType, Cas2ServiceOrigin.BAIL)
 
-  private fun getEntityForNomisUser(username: String, jwt: String): Cas2UserEntity {
+  private fun getTypedNomisUser(username: String, jwt: String): Cas2TypedUser.Nomis {
     val nomisUserDetails: NomisUserDetail = when (
       val nomisUserDetailResponse = nomisUserRolesApiClient.getUserDetailsForMe(jwt)
     ) {
@@ -79,10 +97,10 @@ class Cas2UserService(
         existingUser.email = nomisUserDetails.primaryEmail
         existingUser.activeNomisCaseloadId = nomisUserDetails.activeCaseloadId
 
-        return cas2UserRepository.save(existingUser)
+        return cas2UserTransformer.transformJpaToTypedNomisUser(cas2UserRepository.save(existingUser))
       }
 
-      return existingUser
+      return cas2UserTransformer.transformJpaToTypedNomisUser(existingUser)
     }
 
     cas2UserRepository.createCas2User(
@@ -102,10 +120,10 @@ class Cas2UserService(
         nomisAccountType = nomisUserDetails.accountType,
       ),
     )
-    return getExistingUser(username, Cas2UserType.NOMIS)!!
+    return cas2UserTransformer.transformJpaToTypedNomisUser(getExistingUser(username, Cas2UserType.NOMIS)!!)
   }
 
-  private fun getEntityForDeliusUser(username: String): Cas2UserEntity {
+  private fun getTypedDeliusUser(username: String): Cas2TypedUser.Delius {
     val deliusUser: StaffDetail =
       when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(username)) {
         is ClientResult.Success<*> -> staffUserDetailsResponse.body as StaffDetail
@@ -118,10 +136,13 @@ class Cas2UserService(
       if (deliusUser.email != existingUser.email || teamsDiffer) {
         existingUser.email = deliusUser.email
         existingUser.deliusTeamCodes = deliusUser.teamCodes()
-        return cas2UserRepository.save(existingUser)
+        return cas2UserTransformer.transformJpaToTypedDeliusUser(
+          cas2UserRepository.save(existingUser),
+          deliusUser,
+        )
       }
 
-      return existingUser
+      return cas2UserTransformer.transformJpaToTypedDeliusUser(existingUser, deliusUser)
     }
 
     cas2UserRepository.createCas2User(
@@ -140,12 +161,15 @@ class Cas2UserService(
         serviceOrigin = Cas2ServiceOrigin.BAIL,
       ),
     )
-    return getExistingUser(username, Cas2UserType.DELIUS)!!
+    return cas2UserTransformer.transformJpaToTypedDeliusUser(
+      getExistingUser(username, Cas2UserType.DELIUS)!!,
+      deliusUser,
+    )
   }
 
-  private fun getEntityForExternalUser(username: String, jwt: String): Cas2UserEntity {
+  private fun getTypedExternalUser(username: String, jwt: String): Cas2TypedUser.External {
     val existingUser = getExistingUser(username, Cas2UserType.EXTERNAL)
-    if (existingUser != null) return existingUser
+    if (existingUser != null) return cas2UserTransformer.transformJpaToTypedExternalUser(existingUser)
 
     val externalUserDetailsResponse = manageUsersApiClient.getExternalUserDetails(username, jwt)
 
@@ -171,6 +195,6 @@ class Cas2UserService(
         externalType = "NACRO",
       ),
     )
-    return getExistingUser(username, Cas2UserType.EXTERNAL)!!
+    return cas2UserTransformer.transformJpaToTypedExternalUser(getExistingUser(username, Cas2UserType.EXTERNAL)!!)
   }
 }
