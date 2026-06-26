@@ -107,7 +107,7 @@ class Cas2UserServiceTest {
     @Test
     fun `returns error when Nomis user look up fails`() {
       val username = "NOMISUSER"
-      val nomisUser = Cas2UserEntityFactory()
+      Cas2UserEntityFactory()
         .withUsername(username)
         .withUserType(Cas2UserType.NOMIS)
         .produce()

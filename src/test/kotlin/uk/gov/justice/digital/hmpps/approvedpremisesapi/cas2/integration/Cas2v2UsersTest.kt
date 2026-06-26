@@ -51,7 +51,7 @@ class Cas2v2UsersTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Getting a user returns region information for the logged in Nomis user does not include region information`() {
+    fun `Getting a user as a Nomis user does not include deliusUserInfo`() {
       givenACas2v2NomisUser { userEntity, jwt ->
         val response = webTestClient.get()
           .uri("/cas2/users/DOESNTMATTER")
