@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -59,6 +60,7 @@ class Cas2ApplicationService(
   private val sentryService: SentryService,
   private val caseService: CaseService,
   private val cas2ApplicationEmailService: Cas2ApplicationEmailService,
+  private val featureFlagService: FeatureFlagService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -316,9 +318,11 @@ class Cas2ApplicationService(
 
     createAssessment(application)
 
-    sendAssessorEmailApplicationSubmitted(user, application)
-
-    cas2ApplicationEmailService.applicationSubmitted(application)
+    if (featureFlagService.getBooleanFlag("isr-email-changes-enabled")) {
+      cas2ApplicationEmailService.applicationSubmitted(application)
+    } else {
+      sendAssessorEmailApplicationSubmitted(user, application)
+    }
 
     return CasResult.Success(application)
   }
