@@ -10,6 +10,14 @@
         "org.springdoc:springdoc-openapi-starter-common"
       ],
       "allowedVersions": "!/3.0.3/"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchFileNames": ["**/.github/workflows/**/*.ya?ml"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "enabled": false
     }
-  ]
+  ],
+  "platformCommit": "enabled",
+  "dependencyDashboard": true
 }
