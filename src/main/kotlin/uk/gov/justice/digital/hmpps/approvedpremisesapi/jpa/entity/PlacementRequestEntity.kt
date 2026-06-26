@@ -219,6 +219,12 @@ data class PlacementRequestEntity(
    * exists
    */
   fun isForLegacyInitialRequestForPlacement() = placementApplication == null
+
+  /**
+   * Ideally this would always be resolved from `placementApplication.releaseType` only, but this
+   * currently nullable for legacy requests
+   */
+  fun resolveReleaseType() = placementApplication?.releaseType ?: application.releaseType!!
 }
 
 @Repository

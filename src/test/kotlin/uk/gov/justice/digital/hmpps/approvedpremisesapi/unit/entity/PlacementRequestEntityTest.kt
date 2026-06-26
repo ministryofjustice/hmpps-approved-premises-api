@@ -1,10 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.entity
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
 
 class PlacementRequestEntityTest {
 
@@ -46,5 +52,46 @@ class PlacementRequestEntityTest {
   )
   fun `PlacementRequestWithdrawalReason#valueOf gets the enum value from the API value`(withdrawalReason: PlacementRequestWithdrawalReason, apiReason: WithdrawPlacementRequestReason) {
     assertThat(PlacementRequestWithdrawalReason.valueOf(apiReason)).isEqualTo(withdrawalReason)
+  }
+
+  @Nested
+  inner class ResolveReleaseType {
+
+    @Test
+    fun `if placement application defined, use release type from it`() {
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withPlacementApplication(
+          PlacementApplicationEntityFactory()
+            .withDefaults()
+            .withReleaseType(Cas1ReleaseType.reReleasedPostRecall)
+            .produce(),
+        )
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withDefaults()
+            .withReleaseType(Cas1ReleaseType.paroleDirectedLicence)
+            .produce(),
+        )
+        .produce()
+
+      assertThat(placementRequest.resolveReleaseType()).isEqualTo(Cas1ReleaseType.reReleasedPostRecall)
+    }
+
+    @Test
+    fun `if placement application not defined, use release type from application`() {
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withPlacementApplication(null)
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withDefaults()
+            .withReleaseType(Cas1ReleaseType.paroleDirectedLicence)
+            .produce(),
+        )
+        .produce()
+
+      assertThat(placementRequest.resolveReleaseType()).isEqualTo(Cas1ReleaseType.paroleDirectedLicence)
+    }
   }
 }
