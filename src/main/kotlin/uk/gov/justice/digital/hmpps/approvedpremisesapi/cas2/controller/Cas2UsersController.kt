@@ -16,6 +16,7 @@ class Cas2UsersController(
 
   @SuppressWarnings("UnusedParameter")
   @GetMapping("/users/{userName}")
+  @Deprecated("This endpoint is deprecated and will be removed in a future release. Use /users/me instead.")
   fun getUserDetails(@PathVariable userName: String): Cas2UserDto = cas2HdcUserService.getUserDetails(
     // This is a quick fix to unblock an issue in production. It will be replaced by an
     // endpoint that explicitly returns information for the current user

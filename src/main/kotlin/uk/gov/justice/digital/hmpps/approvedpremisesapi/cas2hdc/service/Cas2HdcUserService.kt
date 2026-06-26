@@ -54,6 +54,7 @@ class Cas2HdcUserService(
     return findOrCreateNomisUser(username = normalisedUsername, userDetail, serviceOrigin)
   }
 
+  @Deprecated("This endpoint is deprecated and will be removed in a future release. Use Cas2UserService.getUserDtoForRequest() instead.")
   fun getUserDetails(user: Cas2UserEntity): Cas2UserDto {
     val deliusUserInfo =
       if (user.userType == Cas2UserType.DELIUS) {
