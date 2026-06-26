@@ -17,14 +17,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.dto.Cas2HdcAssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2Cohort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates.CAS2_BAIL_APPLICATION_STATUS_UPDATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class Cas2v2StatusUpdateTest(
@@ -91,6 +94,7 @@ class Cas2v2StatusUpdateTest(
             withSubmittedAt(OffsetDateTime.now())
             withApplicationOrigin(ApplicationOrigin.courtBail)
             withServiceOrigin(Cas2ServiceOrigin.BAIL)
+            withCohort(Cas2Cohort.COURT_BAIL)
           }
 
           cas2AssessmentEntityFactory.produceAndPersist {
@@ -189,6 +193,7 @@ class Cas2v2StatusUpdateTest(
       fun `Create cas2v2 status update returns 201 and creates StatusUpdate when given status and detail are valid, and sends an email to the referrer`() {
         val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
         val submittedAt = OffsetDateTime.now()
+        mockFeatureFlagService.setFlag("isr-email-changes-enabled", false)
 
         try {
           givenACas2v2Assessor { _, jwt ->
@@ -276,6 +281,94 @@ class Cas2v2StatusUpdateTest(
               // verify that the persisted domain event contains the expected status details
               val expected = listOf(Cas2StatusDetail("changeOfCircumstances", "Change of circumstances"))
               assertThat(domainEventFromJson.eventDetails.newStatus.statusDetails).isEqualTo(expected)
+            }
+          }
+        } finally {
+          unmockkAll()
+        }
+      }
+
+      @Test
+      fun `Create cas2v2 status update returns 201 and sends the new email when the flag is true`() {
+        val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+        val submittedAt = OffsetDateTime.now()
+        mockFeatureFlagService.setFlag("isr-email-changes-enabled", true)
+
+        try {
+          givenACas2v2Assessor { _, jwt ->
+            givenACas2v2PomUser { applicant, _ ->
+              val application = cas2ApplicationEntityFactory.produceAndPersist {
+                withCreatedByUser(applicant)
+                withSubmittedAt(submittedAt)
+                withNomsNumber("123NOMS")
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
+                withCohort(Cas2Cohort.COURT_BAIL)
+              }
+
+              cas2AssessmentEntityFactory.produceAndPersist {
+                withId(assessmentId)
+                withApplication(application)
+                withServiceOrigin(Cas2ServiceOrigin.BAIL)
+              }
+
+              assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(0)
+
+              val now = OffsetDateTime.now()
+              mockkStatic(OffsetDateTime::class)
+              every { OffsetDateTime.now() } returns now
+
+              webTestClient.post()
+                .uri("/cas2/assessments/$assessmentId/status-updates")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  Cas2HdcAssessmentStatusUpdate(
+                    newStatus = "offerDeclined",
+                    newStatusDetails = listOf("changeOfCircumstances"),
+                  ),
+                )
+                .exchange()
+                .expectStatus()
+                .isCreated
+
+              assertThat(realCas2StatusUpdateRepository.count()).isEqualTo(1)
+              assertThat(realCas2StatusUpdateDetailRepository.count()).isEqualTo(1)
+
+              val persistedStatusUpdate =
+                realCas2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
+              assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
+
+              val persistedStatusDetailUpdate =
+                realCas2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate.id)
+              assertThat(persistedStatusDetailUpdate).isNotNull
+
+              val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
+                .find { status ->
+                  status.id == persistedStatusUpdate.statusId
+                }
+
+              assertThat(appliedStatus!!.name).isEqualTo("offerDeclined")
+              assertThat(appliedStatus.statusDetails?.find { detail -> detail.id == persistedStatusDetailUpdate?.statusDetailId })
+                .isNotNull()
+
+              emailAsserter.assertEmailsRequestedCount(1)
+
+              emailAsserter.assertEmailRequested(
+                toEmailAddress = applicant.email!!,
+                templateId = CAS2_BAIL_APPLICATION_STATUS_UPDATE,
+                personalisation = mapOf(
+                  "applicationStatusChange" to "Offer declined or withdrawn",
+                  "dateStatusChanged" to now.toLocalDate().toCas2UiFormat(),
+                  "timeStatusChanged" to now.toCas2UiFormattedHourOfDay(),
+                  "cohort" to application.cohort!!.displayName,
+                  "crn" to application.crn,
+                  "timeApplicationReceived" to application.submittedAt!!.format(DateTimeFormatter.ofPattern("HH:mm")),
+                  "dateApplicationReceived" to application.submittedAt!!.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                  "nacroReferenceId" to application.id.toString(),
+                  "viewSubmittedApplicationUrl" to applicationOverviewUrlTemplate
+                    .replace("applicationId", application.id.toString()),
+                ),
+                replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
+              )
             }
           }
         } finally {
