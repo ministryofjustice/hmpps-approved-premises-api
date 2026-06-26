@@ -94,4 +94,86 @@ class PlacementRequestEntityTest {
       assertThat(placementRequest.resolveReleaseType()).isEqualTo(Cas1ReleaseType.paroleDirectedLicence)
     }
   }
+
+  @Nested
+  inner class ResolveSentenceType {
+
+    @Test
+    fun `if placement application defined, use sentence type from it`() {
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withPlacementApplication(
+          PlacementApplicationEntityFactory()
+            .withDefaults()
+            .withSentenceType("placementAppSentenceType")
+            .produce(),
+        )
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withDefaults()
+            .withSentenceType("appSentenceType")
+            .produce(),
+        )
+        .produce()
+
+      assertThat(placementRequest.resolveSentenceType()).isEqualTo("placementAppSentenceType")
+    }
+
+    @Test
+    fun `if placement application not defined, use sentence type from application`() {
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withPlacementApplication(null)
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withDefaults()
+            .withSentenceType("appSentenceType")
+            .produce(),
+        )
+        .produce()
+
+      assertThat(placementRequest.resolveSentenceType()).isEqualTo("appSentenceType")
+    }
+  }
+
+  @Nested
+  inner class ResolveSituation {
+
+    @Test
+    fun `if placement application defined, use situation type from it`() {
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withPlacementApplication(
+          PlacementApplicationEntityFactory()
+            .withDefaults()
+            .withSituation("placementAppSituation")
+            .produce(),
+        )
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withDefaults()
+            .withSituation("appSituation")
+            .produce(),
+        )
+        .produce()
+
+      assertThat(placementRequest.resolveSituation()).isEqualTo("placementAppSituation")
+    }
+
+    @Test
+    fun `if placement application not defined, use sentence type from application`() {
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withPlacementApplication(null)
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withDefaults()
+            .withSituation("appSituation")
+            .produce(),
+        )
+        .produce()
+
+      assertThat(placementRequest.resolveSituation()).isEqualTo("appSituation")
+    }
+  }
 }
