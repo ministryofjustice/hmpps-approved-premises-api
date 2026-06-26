@@ -1,0 +1,1 @@
+ALTER TABLE inbox_events ALTER COLUMN event_detail_url DROP NOT NULL;

@@ -118,6 +118,8 @@ generic-prometheus-alerts:
   # Max expected connections for 4 x pods = 80 + additional 10 (buffer for direct connections)
   rdsAlertsConnectionThreshold: 90
   sqsAlertsQueueNames:
+    - "hmpps-community-accommodation-prod-cas-domain-events-listener-dlq"
+    - "hmpps-community-accommodation-prod-cas-domain-events-listener-queue"
     - "hmpps-community-accommodation-prod-cas-2-domain-events-listener-dlq"
     - "hmpps-community-accommodation-prod-cas-2-domain-events-listener-queue"
   sqsAlertsOldestThreshold: 30
