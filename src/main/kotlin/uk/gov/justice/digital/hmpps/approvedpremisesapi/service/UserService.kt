@@ -36,10 +36,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 
 @Service
 class UserService(
@@ -59,8 +59,6 @@ class UserService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun findByIdOrNull(id: UUID) = userRepository.findByIdOrNull(id)
-
-  fun findByDeliusStaffCode(staffCode: String) = userRepository.findByDeliusStaffCode(staffCode)
 
   fun getUsersByPartialName(name: String): List<UserEntity> = userRepository.findByNameContainingIgnoreCase(name)
   fun getDeliusUserNameForRequest() = httpAuthService.getDeliusPrincipalOrThrow().name
@@ -487,5 +485,14 @@ class UserService(
      */
     data class StaffProbationRegionNotSupported(val unsupportedRegionId: String) : GetUserResponse
     data class Success(val user: UserEntity, val createdOnGet: Boolean = false) : GetUserResponse
+  }
+
+  private fun transformQualifications(qualification: ApiUserQualification): UserQualification = when (qualification) {
+    ApiUserQualification.emergency -> UserQualification.EMERGENCY
+    ApiUserQualification.esap -> UserQualification.ESAP
+    ApiUserQualification.lao -> UserQualification.LAO
+    ApiUserQualification.pipe -> UserQualification.PIPE
+    ApiUserQualification.mentalHealthSpecialist -> UserQualification.MENTAL_HEALTH_SPECIALIST
+    ApiUserQualification.recoveryFocused -> UserQualification.RECOVERY_FOCUSED
   }
 }
