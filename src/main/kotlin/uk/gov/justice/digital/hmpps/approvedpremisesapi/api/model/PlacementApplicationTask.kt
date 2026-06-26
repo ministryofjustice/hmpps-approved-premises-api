@@ -10,8 +10,6 @@ data class PlacementApplicationTask(
   @Schema(description = "Tier when the application was created")
   val tier: RiskTierEnvelopeDto,
 
-  @get:JsonProperty("releaseType", required = true) val releaseType: ReleaseTypeOption,
-
   @get:JsonProperty("placementType", required = true) val placementType: PlacementType,
 
   @get:JsonProperty("dates", required = true) val dates: PlacementDates,
