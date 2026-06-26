@@ -38,7 +38,7 @@ class InboxEventDispatcherTest {
     ).process()
 
     assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
+    assertThat(stats.ignoredCount).isEqualTo(0)
     assertThat(stats.skippedCount).isEqualTo(0)
     assertThat(stats.failedCount).isEqualTo(0)
 
@@ -46,7 +46,7 @@ class InboxEventDispatcherTest {
   }
 
   @Test
-  fun `single event, no handler, skip`() {
+  fun `single event, no handler, skip and alert`() {
     val event = buildPendingInboxEventEntity(eventType = "test.event")
 
     every { inboxEventService.findPendingOldestFirst(10) } returns listOf(event)
@@ -57,11 +57,12 @@ class InboxEventDispatcherTest {
     ).process()
 
     assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
+    assertThat(stats.ignoredCount).isEqualTo(0)
     assertThat(stats.skippedCount).isEqualTo(1)
     assertThat(stats.failedCount).isEqualTo(0)
 
     verifyNoEventUpdatesMade()
+    verify { sentryService.captureErrorMessage("No handler registered for event type [inboxEventId=${event.id}, eventType=test.event]") }
   }
 
   @Test
@@ -83,7 +84,7 @@ class InboxEventDispatcherTest {
     handler.assertThatHasProcessedEvent(event)
 
     assertThat(stats.processedCount).isEqualTo(1)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
+    assertThat(stats.ignoredCount).isEqualTo(0)
     assertThat(stats.skippedCount).isEqualTo(0)
     assertThat(stats.failedCount).isEqualTo(0)
 
@@ -91,14 +92,14 @@ class InboxEventDispatcherTest {
   }
 
   @Test
-  fun `handler returns NOT PROCESSED, update event processed state to NOT_PROCESSED`() {
+  fun `handler returns IGNORED, update event processed state to IGNORED`() {
     val event = buildPendingInboxEventEntity(eventType = "test.event")
 
     every { inboxEventService.findPendingOldestFirst(10) } returns listOf(event)
 
     val handler = MockEventHandler(
       supportedEventType = "test.event",
-      result = InboxEventHandler.Result.NOT_PROCESSED,
+      result = InboxEventHandler.Result.IGNORED,
     )
 
     val stats = inboxEventDispatcher(
@@ -109,42 +110,15 @@ class InboxEventDispatcherTest {
     handler.assertThatHasProcessedEvent(event)
 
     assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(1)
+    assertThat(stats.ignoredCount).isEqualTo(1)
     assertThat(stats.skippedCount).isEqualTo(0)
     assertThat(stats.failedCount).isEqualTo(0)
 
-    verify { inboxEventService.updateInboxEventStatusAndSave(event, ProcessedStatus.NOT_PROCESSED) }
+    verify { inboxEventService.updateInboxEventStatusAndSave(event, ProcessedStatus.IGNORED) }
   }
 
   @Test
-  fun `handler returns FAILED, update event processed state to FAILED and raise alert`() {
-    val event = buildPendingInboxEventEntity(eventType = "test.event")
-
-    every { inboxEventService.findPendingOldestFirst(10) } returns listOf(event)
-
-    val handler = MockEventHandler(
-      supportedEventType = "test.event",
-      result = InboxEventHandler.Result.FAILED,
-    )
-
-    val stats = inboxEventDispatcher(
-      handlers = listOf(handler),
-      maxEventsPerBatch = 10,
-    ).process()
-
-    handler.assertThatHasProcessedEvent(event)
-
-    assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
-    assertThat(stats.skippedCount).isEqualTo(0)
-    assertThat(stats.failedCount).isEqualTo(1)
-
-    verify { inboxEventService.updateInboxEventStatusAndSave(event, ProcessedStatus.FAILED) }
-    verify { sentryService.captureErrorMessage("Unexpected error dispatching to handler [inboxEventId=${event.id}, eventType=${event.eventType}]") }
-  }
-
-  @Test
-  fun `handler throws Exception, ,update event processed state to FAILED and raise alert`() {
+  fun `handler throws Exception, update event processed state to FAILED and raise alert`() {
     val event = buildPendingInboxEventEntity(eventType = "test.event")
 
     every { inboxEventService.findPendingOldestFirst(10) } returns listOf(event)
@@ -154,7 +128,6 @@ class InboxEventDispatcherTest {
     val handler = MockEventHandler(
       supportedEventType = "test.event",
       responseException = exception,
-      result = InboxEventHandler.Result.FAILED,
     )
 
     val stats = inboxEventDispatcher(
@@ -165,7 +138,7 @@ class InboxEventDispatcherTest {
     handler.assertThatHasProcessedEvent(event)
 
     assertThat(stats.processedCount).isEqualTo(0)
-    assertThat(stats.notProcessedCount).isEqualTo(0)
+    assertThat(stats.ignoredCount).isEqualTo(0)
     assertThat(stats.skippedCount).isEqualTo(0)
     assertThat(stats.failedCount).isEqualTo(1)
 
@@ -191,7 +164,7 @@ class InboxEventDispatcherTest {
 
   private data class MockEventHandler(
     val supportedEventType: String,
-    val result: InboxEventHandler.Result,
+    val result: InboxEventHandler.Result? = null,
     val responseException: Throwable? = null,
     val processedEvents: MutableList<InboxEventHandler.InboxEvent> = mutableListOf(),
   ) : InboxEventHandler {
@@ -203,7 +176,7 @@ class InboxEventDispatcherTest {
         throw responseException
       }
 
-      return result
+      return result!!
     }
 
     fun assertThatHasProcessedEvent(event: InboxEventEntity) {

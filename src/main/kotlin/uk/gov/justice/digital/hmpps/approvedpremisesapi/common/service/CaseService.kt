@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -18,10 +19,11 @@ class CaseService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
 
   fun ensureCaseExists(crn: String): CaseEntity {
     val caseSummary = getCaseSummary(crn)
-    val riskTier = getRiskTier(crn)
+    val riskTier = getRiskTierOrNull(crn)
     val caseEntity = caseRepository.findByCrn(caseSummary.crn)?.apply {
       name = "${caseSummary.name.forename.uppercase()} ${caseSummary.name.surname.uppercase()}".trim()
       tier = riskTier
@@ -49,7 +51,26 @@ class CaseService(
     )
   }
 
-  private fun getRiskTier(crn: String): String? = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
+  fun reviseTier(crn: String): Boolean {
+    val case = caseRepository.findByCrn(crn)
+
+    if (case == null) {
+      return false
+    }
+
+    val tier = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
+      is ClientResult.Success -> tierResponse.body.tierScore
+      is ClientResult.Failure -> throw tierResponse.toException()
+    }
+
+    case.tier = tier
+    caseRepository.save(case)
+
+    log.info("Have updated tier for $crn to $tier")
+    return true
+  }
+
+  private fun getRiskTierOrNull(crn: String): String? = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
     is ClientResult.Success -> tierResponse.body.tierScore
     is ClientResult.Failure -> null
   }

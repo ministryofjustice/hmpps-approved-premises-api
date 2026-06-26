@@ -96,6 +96,8 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.44") {
     exclude(group = "io.swagger.core.v3")
   }
+
+  testImplementation("org.awaitility:awaitility:4.3.0")
 }
 
 springBoot {

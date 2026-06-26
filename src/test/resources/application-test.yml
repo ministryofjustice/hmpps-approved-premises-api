@@ -78,6 +78,11 @@ hmpps.sqs:
     domainevents:
       arn: "dynamically set per test"
   queues:
+    cas-domain-events-listener-queue:
+      queueName: ${random.uuid}
+      dlqName: ${random.uuid}
+      subscribeTopicId: domainevents
+      subscribeFilter: '{"eventType":["tier.calculation.changed"]}'
     castwodomaineventslistenerqueue:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}

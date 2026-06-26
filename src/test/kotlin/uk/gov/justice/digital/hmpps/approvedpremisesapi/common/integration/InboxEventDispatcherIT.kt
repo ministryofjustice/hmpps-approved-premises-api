@@ -9,10 +9,10 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.domainevent.listener.DispatcherConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.domainevent.listener.InboxEventDispatcher
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.HmppsDomainEventFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.InboxEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.ProcessedStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
 import java.time.OffsetDateTime
@@ -35,6 +35,9 @@ class InboxEventDispatcherIT : IntegrationTestBase() {
 
   @Autowired
   lateinit var mockEventHandler: MockInboxEventHandler
+
+  @Autowired
+  lateinit var inboxAsserter: InboxAsserter
 
   private val crn = UUID.randomUUID().toString()
 
@@ -135,12 +138,7 @@ class InboxEventDispatcherIT : IntegrationTestBase() {
 
     inboxEventDispatcher.process()
 
-    val processed =
-      inboxEventRepository.findAllByProcessedStatus(
-        ProcessedStatus.PROCESSED,
-        PageRequest.of(0, 10, Sort.by("eventOccurredAt").ascending()),
-      )
-    assertThat(processed).hasSize(5)
+    inboxAsserter.assertProcessedCount(5)
 
     assertThat(mockEventHandler.maxConcurrent.get()).isEqualTo(4)
   }
@@ -164,7 +162,8 @@ class InboxEventDispatcherIT : IntegrationTestBase() {
         ProcessedStatus.PROCESSED,
         PageRequest.of(0, 10, Sort.by("eventOccurredAt").ascending()),
       )
-    assertThat(processed).hasSize(4)
+
+    inboxAsserter.assertProcessedCount(4)
 
     // With 4 events and semaphore(4), parallel execution: ~delayMs. Sequential would be
     // 4*delayMs.
@@ -176,17 +175,16 @@ class InboxEventDispatcherIT : IntegrationTestBase() {
     crn: String = this.crn,
   ): InboxEventEntity {
     val payload =
-      HmppsDomainEvent(
-        eventType = MockInboxEventHandler.EVENT_TYPE,
-        version = 1,
-        description = "Integration test event",
-        detailUrl = "localhost",
-        occurredAt = eventOccurredAt.toZonedDateTime(),
-        personReference =
-        PersonReference(
-          identifiers = listOf(PersonIdentifier("CRN", crn)),
-        ),
-      )
+      HmppsDomainEventFactory()
+        .withEventType(MockInboxEventHandler.EVENT_TYPE)
+        .withPersonReference(
+          PersonReference(
+            listOf(
+              PersonIdentifier("CRN", crn),
+            ),
+          ),
+        ).produce()
+
     return buildPendingInboxEventEntity(
       eventType = MockInboxEventHandler.EVENT_TYPE,
       eventOccurredAt = eventOccurredAt,

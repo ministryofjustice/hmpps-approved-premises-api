@@ -41,6 +41,6 @@ fun InboxEventEntity.uri(): URI = URI.create(requireNotNull(eventDetailUrl) { "M
 enum class ProcessedStatus {
   PENDING,
   PROCESSED,
-  NOT_PROCESSED,
+  IGNORED,
   FAILED,
 }

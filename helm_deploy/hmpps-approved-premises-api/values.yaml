@@ -41,6 +41,8 @@ generic-service:
   #     [name of environment variable as seen by app]: [key of kubernetes secret to load]
 
   namespace_secrets:
+    cas-domain-events-listener-queue:
+      HMPPS_SQS_QUEUES_CAS-DOMAIN-EVENTS-LISTENER-QUEUE_QUEUENAME: "QUEUE_NAME"
     cas-2-domain-events-listener-queue:
       HMPPS_SQS_QUEUES_CASTWODOMAINEVENTSLISTENERQUEUE_QUEUENAME: "QUEUE_NAME"
     cas-2-domain-events-listener-dlq:

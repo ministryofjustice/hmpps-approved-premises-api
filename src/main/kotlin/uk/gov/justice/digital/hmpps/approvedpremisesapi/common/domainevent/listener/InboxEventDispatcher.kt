@@ -60,8 +60,6 @@ class InboxEventDispatcher(
   fun processScheduled() = process()
 
   fun process() = runBlocking {
-    log.info("processing again")
-
     val progressTracker = ProgressTracker()
     val batchSize = dispatcherConfig.maxEventsPerBatch
 
@@ -76,7 +74,7 @@ class InboxEventDispatcher(
 
     val (partitions, eventsWithoutHandlers) = partitionByKey(inboxEvents)
     eventsWithoutHandlers.forEach {
-      log.error("No handler registered for event type [inboxEventId={}, eventType={}]", it.id, it.eventType)
+      sentryService.captureErrorMessage("No handler registered for event type [inboxEventId=${it.id}, eventType=${it.eventType}]")
       progressTracker.eventSkipped()
     }
     log.debug("Partitioned into {} groups", partitions.size)
@@ -92,10 +90,10 @@ class InboxEventDispatcher(
     }
 
     log.info(
-      "Inbox batch complete [total={}, processed={}, notProcessed={}, failed={}, skipped={}]",
+      "Inbox batch complete [total={}, processed={}, ignored={}, failed={}, skipped={}]",
       inboxEvents.size,
       progressTracker.processedCount.get(),
-      progressTracker.notProcessedCount.get(),
+      progressTracker.ignoredCount.get(),
       progressTracker.failedCount.get(),
       progressTracker.skippedCount.get(),
     )
@@ -130,14 +128,9 @@ class InboxEventDispatcher(
           inboxEventService.updateInboxEventStatusAndSave(inboxEvent, ProcessedStatus.PROCESSED)
           progressTracker.eventProcessed()
         }
-        InboxEventHandler.Result.NOT_PROCESSED -> {
-          inboxEventService.updateInboxEventStatusAndSave(inboxEvent, ProcessedStatus.NOT_PROCESSED)
-          progressTracker.eventNotProcessed()
-        }
-        InboxEventHandler.Result.FAILED -> {
-          sentryService.captureErrorMessage("Unexpected error dispatching to handler [inboxEventId=${inboxEvent.id}, eventType=${inboxEvent.eventType}]")
-          inboxEventService.updateInboxEventStatusAndSave(inboxEvent, ProcessedStatus.FAILED)
-          progressTracker.eventFailed()
+        InboxEventHandler.Result.IGNORED -> {
+          inboxEventService.updateInboxEventStatusAndSave(inboxEvent, ProcessedStatus.IGNORED)
+          progressTracker.eventIgnored()
         }
       }
     } catch (e: Throwable) {
@@ -156,20 +149,20 @@ class InboxEventDispatcher(
 
   private data class ProgressTracker(
     val processedCount: AtomicInteger = AtomicInteger(0),
-    val notProcessedCount: AtomicInteger = AtomicInteger(0),
+    val ignoredCount: AtomicInteger = AtomicInteger(0),
     val failedCount: AtomicInteger = AtomicInteger(0),
     val skippedCount: AtomicInteger = AtomicInteger(0),
   ) {
     fun eventSkipped() = skippedCount.incrementAndGet()
     fun eventFailed() = failedCount.incrementAndGet()
     fun eventProcessed() = processedCount.incrementAndGet()
-    fun eventNotProcessed() = notProcessedCount.incrementAndGet()
-    fun toStats() = EventDispatcherStats(processedCount.get(), notProcessedCount.get(), failedCount.get(), skippedCount.get())
+    fun eventIgnored() = ignoredCount.incrementAndGet()
+    fun toStats() = EventDispatcherStats(processedCount.get(), ignoredCount.get(), failedCount.get(), skippedCount.get())
   }
 
   data class EventDispatcherStats(
     val processedCount: Int,
-    val notProcessedCount: Int,
+    val ignoredCount: Int,
     val failedCount: Int,
     val skippedCount: Int,
   )

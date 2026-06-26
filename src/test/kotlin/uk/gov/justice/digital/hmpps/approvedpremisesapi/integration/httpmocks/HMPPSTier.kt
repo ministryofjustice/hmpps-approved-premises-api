@@ -7,3 +7,15 @@ fun IntegrationTestBase.hmppsTierMockSuccessfulTierCall(crn: String, response: T
   url = "/crn/$crn/tier",
   responseBody = response,
 )
+
+fun IntegrationTestBase.hmppsTierMock404TierCall(crn: String) = mockSuccessfulGetCallWithJsonResponse(
+  url = "/crn/$crn/tier",
+  responseStatus = 404,
+  responseBody = "",
+)
+
+fun IntegrationTestBase.hmppsTierMock500TierCall(crn: String) = mockSuccessfulGetCallWithJsonResponse(
+  url = "/crn/$crn/tier",
+  responseStatus = 500,
+  responseBody = "",
+)
