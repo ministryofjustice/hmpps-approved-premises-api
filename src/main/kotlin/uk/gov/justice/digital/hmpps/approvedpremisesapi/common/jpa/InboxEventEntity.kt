@@ -10,6 +10,8 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.asHibernateProxy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getHibernateClass
 import java.net.URI
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -21,7 +23,7 @@ interface InboxEventRepository : JpaRepository<InboxEventEntity, UUID> {
 
 @Entity
 @Table(name = "inbox_events")
-class InboxEventEntity(
+data class InboxEventEntity(
   @Id
   val id: UUID,
   val eventType: String,
@@ -34,7 +36,20 @@ class InboxEventEntity(
   @Column(columnDefinition = "jsonb")
   @JdbcTypeCode(SqlTypes.JSON)
   var payload: String,
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null) return false
+    if (this.getHibernateClass() != other.getHibernateClass()) return false
+    other as InboxEventEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = this.asHibernateProxy()?.hibernateLazyInitializer?.persistentClass?.hashCode() ?: javaClass.hashCode()
+
+  override fun toString(): String = "InboxEventEntity(id=$id)"
+}
 
 fun InboxEventEntity.uri(): URI = URI.create(requireNotNull(eventDetailUrl) { "Missing detail url" })
 
