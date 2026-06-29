@@ -75,7 +75,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas2-hdc/submissions/**", hasAnyAuthority(Cas2Role.ASSESSOR, Cas2Role.ADMIN))
         authorize(HttpMethod.POST, "/cas2-hdc/submissions/*/status-updates", hasAuthority(Cas2Role.ASSESSOR))
         authorize(HttpMethod.GET, "/cas2-hdc/reference-data/**", hasAnyAuthority(Cas2Role.ASSESSOR, "ROLE_POM", Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER))
-        authorize(HttpMethod.GET, "/cas2-hdc/reports/**", hasAuthority("ROLE_CAS2_MI"))
+        authorize(HttpMethod.GET, "/cas2-hdc/reports/**", hasAuthority(Cas2Role.MI))
         authorize("/cas2-hdc/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER))
 
         authorize(HttpMethod.PUT, "/cas2/assessments/**", hasAuthority(Cas2Role.ASSESSOR))
@@ -85,7 +85,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas2/submissions/**", hasAnyAuthority(Cas2Role.ASSESSOR, Cas2Role.ADMIN))
         authorize(HttpMethod.POST, "/cas2/submissions/*/status-updates", hasAnyAuthority(Cas2Role.ASSESSOR))
         authorize(HttpMethod.GET, "/cas2/reference-data/**", hasAnyAuthority(Cas2Role.ASSESSOR, Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
-        authorize(HttpMethod.GET, "/cas2/reports/**", hasAuthority("ROLE_CAS2_MI"))
+        authorize(HttpMethod.GET, "/cas2/reports/**", hasAuthority(Cas2Role.MI))
         authorize(HttpMethod.GET, "/cas2/people/*/oasys/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
         authorize(HttpMethod.GET, "/cas2/people/search-by-crn/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
         authorize(HttpMethod.GET, "/cas2/people/search-by-noms/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
