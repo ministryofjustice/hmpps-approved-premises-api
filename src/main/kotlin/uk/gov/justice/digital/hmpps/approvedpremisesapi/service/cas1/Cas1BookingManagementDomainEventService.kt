@@ -77,7 +77,6 @@ class Cas1SpaceBookingManagementDomainEventService(
         nomsNumber = offenderDetails?.nomsId,
         occurredAt = OffsetDateTime.now().toInstant(),
         cas1SpaceBookingId = updatedCas1SpaceBooking.id,
-        bookingId = null,
         schemaVersion = 2,
         data = PersonArrivedEnvelope(
           id = domainEventId,
@@ -127,7 +126,6 @@ class Cas1SpaceBookingManagementDomainEventService(
         nomsNumber = offenderDetails?.nomsId,
         occurredAt = eventOccurredAt,
         cas1SpaceBookingId = updatedCas1SpaceBooking.id,
-        bookingId = null,
         data = PersonNotArrivedEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt,
@@ -185,7 +183,6 @@ class Cas1SpaceBookingManagementDomainEventService(
         nomsNumber = offenderDetails?.nomsId,
         occurredAt = OffsetDateTime.now().toInstant(),
         cas1SpaceBookingId = departedCas1SpaceBooking.id,
-        bookingId = null,
         schemaVersion = 2,
         data = PersonDepartedEnvelope(
           id = domainEventId,
@@ -240,7 +237,6 @@ class Cas1SpaceBookingManagementDomainEventService(
         nomsNumber = offenderDetails?.nomsId,
         occurredAt = eventOccurredAt,
         cas1SpaceBookingId = updatedCas1SpaceBooking.id,
-        bookingId = null,
         data = BookingKeyWorkerAssignedEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt,

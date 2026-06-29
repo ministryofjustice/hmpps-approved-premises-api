@@ -154,7 +154,6 @@ class Cas1BookingDomainEventServiceTest {
 
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
-      assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
@@ -328,7 +327,6 @@ class Cas1BookingDomainEventServiceTest {
       val domainEvent = domainEventArgument.captured
 
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
-      assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(application.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo("THENOMS")
@@ -413,7 +411,6 @@ class Cas1BookingDomainEventServiceTest {
       val domainEvent = domainEventArgument.captured
 
       assertThat(domainEvent.applicationId).isEqualTo(offlineApplication.id)
-      assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(offlineApplication.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo("THENOMS")
@@ -519,7 +516,6 @@ class Cas1BookingDomainEventServiceTest {
 
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
-      assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(booking.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingChanged)
@@ -602,7 +598,6 @@ class Cas1BookingDomainEventServiceTest {
 
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
-      assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(booking.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingChanged)

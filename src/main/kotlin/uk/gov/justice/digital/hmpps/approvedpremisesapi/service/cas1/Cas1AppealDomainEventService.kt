@@ -36,7 +36,6 @@ class Cas1AppealDomainEventService(
         id = id,
         applicationId = appeal.application.id,
         assessmentId = null,
-        bookingId = null,
         crn = appeal.application.crn,
         nomsNumber = appeal.application.nomsNumber,
         occurredAt = timestamp,
