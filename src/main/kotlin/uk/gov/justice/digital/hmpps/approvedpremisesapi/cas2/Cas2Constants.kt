@@ -9,5 +9,6 @@ object Cas2Constants {
     const val COURT_BAIL_REFERRER = "ROLE_CAS2_COURT_BAIL_REFERRER"
     const val PROBATION = "ROLE_PROBATION"
     const val POM = "ROLE_POM"
+    const val LICENCE_CA = "ROLE_LICENCE_CA"
   }
 }
