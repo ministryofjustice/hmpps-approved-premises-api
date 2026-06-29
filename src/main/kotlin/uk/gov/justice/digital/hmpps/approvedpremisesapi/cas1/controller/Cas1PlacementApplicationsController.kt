@@ -1,14 +1,23 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PlacementApplicationsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
@@ -24,7 +33,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
-@Service
+@Cas1Controller
+@Tag(name = "CAS1 Placement Applications")
 class Cas1PlacementApplicationsController(
   private val userService: UserService,
   private val cas1ApplicationService: Cas1ApplicationService,
@@ -33,10 +43,24 @@ class Cas1PlacementApplicationsController(
   private val placementApplicationTransformer: PlacementApplicationTransformer,
   private val jsonMapper: JsonMapper,
   private val withdrawalService: Cas1WithdrawableService,
-) : PlacementApplicationsCas1Delegate {
+) {
 
+  @Operation(
+    summary = "Creates an application for a placement",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully recorded that a placement application has been made", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-applications"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
   @SuppressWarnings("TooGenericExceptionThrown")
-  override fun placementApplicationsPost(newPlacementApplication: NewPlacementApplication): ResponseEntity<PlacementApplication> {
+  fun create(
+    @RequestBody newPlacementApplication: NewPlacementApplication,
+  ): ResponseEntity<PlacementApplication> {
     val user = userService.getUserForRequest()
 
     val application = extractEntityFromCasResult(
@@ -50,7 +74,20 @@ class Cas1PlacementApplicationsController(
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
 
-  override fun placementApplicationsIdGet(id: UUID): ResponseEntity<PlacementApplication> {
+  @Operation(
+    summary = "Retrieves an application for a placement request",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved placement request application", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/placement-applications/{id}"],
+    produces = ["application/json"],
+  )
+  fun get(
+    @PathVariable id: UUID,
+  ): ResponseEntity<PlacementApplication> {
     val user = userService.getUserForRequest()
 
     val result = cas1PlacementApplicationService.getApplication(id)
@@ -63,9 +100,21 @@ class Cas1PlacementApplicationsController(
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
 
-  override fun placementApplicationsIdPut(
-    id: UUID,
-    updatePlacementApplication: UpdatePlacementApplication,
+  @Operation(
+    summary = "Updates an application for a placement request",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved placement request application", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/placement-applications/{id}"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun update(
+    @PathVariable id: UUID,
+    @RequestBody updatePlacementApplication: UpdatePlacementApplication,
   ): ResponseEntity<PlacementApplication> {
     val serializedData = jsonMapper.writeValueAsString(updatePlacementApplication.data)
 
@@ -76,9 +125,22 @@ class Cas1PlacementApplicationsController(
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
 
-  override fun placementApplicationsIdSubmissionPost(
-    id: UUID,
-    submitPlacementApplication: SubmitPlacementApplication,
+  @Operation(
+    summary = "Submits an application for a placement request",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully submitted the placement application", content = [Content(array = ArraySchema(schema = Schema(implementation = PlacementApplication::class)))]),
+      ApiResponse(responseCode = "400", description = "placement application has already been submitted", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-applications/{id}/submission"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun submit(
+    @PathVariable id: UUID,
+    @RequestBody submitPlacementApplication: SubmitPlacementApplication,
   ): ResponseEntity<List<PlacementApplication>> {
     val result = cas1PlacementApplicationService.submitApplication(id, submitPlacementApplication)
 
@@ -87,9 +149,22 @@ class Cas1PlacementApplicationsController(
     return ResponseEntity.ok(placementApplications.map { placementApplicationTransformer.transformJpaToApi(it) })
   }
 
-  override fun placementApplicationsIdDecisionPost(
-    id: UUID,
-    placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
+  @Operation(
+    summary = "Submits a decision for a placement application",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully made a decision on the placement application", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+      ApiResponse(responseCode = "400", description = "placement application already has a decision made", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-applications/{id}/decision"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  fun submitDecision(
+    @PathVariable id: UUID,
+    @RequestBody placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
   ): ResponseEntity<PlacementApplication> {
     val result = cas1PlacementApplicationService.recordDecision(id, placementApplicationDecisionEnvelope)
 
@@ -98,9 +173,23 @@ class Cas1PlacementApplicationsController(
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
 
-  override fun placementApplicationsIdWithdrawPost(
-    id: UUID,
-    withdrawPlacementApplication: WithdrawPlacementApplication?,
+  @Operation(
+    summary = "Withdraw a placement application",
+    responses = [
+      ApiResponse(responseCode = "200", description = "Placement application withdrawn", content = [Content(schema = Schema(implementation = PlacementApplication::class))]),
+      ApiResponse(responseCode = "400", description = "placement application already has a decision made", content = [Content(schema = Schema(implementation = ValidationError::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-applications/{id}/withdraw"],
+    produces = ["application/json", "application/problem+json"],
+    consumes = ["application/json"],
+  )
+  @SuppressWarnings("ThrowsCount")
+  fun withdraw(
+    @PathVariable id: UUID,
+    @RequestBody withdrawPlacementApplication: WithdrawPlacementApplication?,
   ): ResponseEntity<PlacementApplication> {
     val withdrawalReason = when (withdrawPlacementApplication?.reason) {
       WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
