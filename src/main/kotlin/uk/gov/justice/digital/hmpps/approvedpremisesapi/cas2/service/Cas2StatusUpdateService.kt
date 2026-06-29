@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Validatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -44,6 +45,8 @@ class Cas2StatusUpdateService(
   private val emailNotificationService: EmailNotificationService,
   private val cas2PersistedApplicationStatusFinder: Cas2PersistedApplicationStatusFinder,
   private val statusTransformer: Cas2HdcApplicationStatusTransformer,
+  private val cas2ApplicationStatusUpdateEmailService: Cas2ApplicationStatusUpdateEmailService,
+  private val featureFlagService: FeatureFlagService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
@@ -67,7 +70,7 @@ class Cas2StatusUpdateService(
     val statusDetails = if (newDetails) {
       emptyList()
     } else {
-      statusUpdate.newStatusDetails?.map { detail ->
+      statusUpdate.newStatusDetails.map { detail ->
         status.findStatusDetailOnStatus(detail)
           ?: return CasResult.GeneralValidationError("The status detail $detail is not valid")
       }
@@ -90,7 +93,7 @@ class Cas2StatusUpdateService(
       ),
     )
 
-    statusDetails?.forEach { detail ->
+    statusDetails.forEach { detail ->
       cas2StatusUpdateDetailRepository.save(
         Cas2StatusUpdateDetailEntity(
           id = UUID.randomUUID(),
@@ -101,7 +104,11 @@ class Cas2StatusUpdateService(
       )
     }
 
-    sendEmailStatusUpdated(assessment.application.createdByUser, assessment.application, createdStatusUpdate)
+    if (featureFlagService.getBooleanFlag("isr-email-changes-enabled")) {
+      cas2ApplicationStatusUpdateEmailService.statusUpdate(assessment.application, createdStatusUpdate)
+    } else {
+      sendEmailStatusUpdated(assessment.application.createdByUser, assessment.application, createdStatusUpdate)
+    }
 
     createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
