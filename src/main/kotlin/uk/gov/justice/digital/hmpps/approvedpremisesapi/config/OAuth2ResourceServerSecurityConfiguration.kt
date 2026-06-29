@@ -64,7 +64,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.POST, "/seedFromExcel/*", permitAll)
         authorize(HttpMethod.DELETE, "/cache/*", permitAll)
         authorize(HttpMethod.POST, "/migration-job", permitAll)
-        authorize(HttpMethod.GET, "/events/cas2/**", hasAuthority("ROLE_CAS2_EVENTS"))
+        authorize(HttpMethod.GET, "/events/cas2/**", hasAuthority(Cas2Role.CAS2_EVENTS))
         authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))
 
         authorize(HttpMethod.GET, "/cas2-hdc/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))

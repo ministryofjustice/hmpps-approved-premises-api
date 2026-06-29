@@ -10,5 +10,6 @@ object Cas2Constants {
     const val PROBATION = "ROLE_PROBATION"
     const val POM = "ROLE_POM"
     const val LICENCE_CA = "ROLE_LICENCE_CA"
+    const val CAS2_EVENTS = "ROLE_CAS2_EVENTS"
   }
 }
