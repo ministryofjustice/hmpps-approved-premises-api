@@ -31,7 +31,7 @@ class Cas3UpdateBookingOffenderNameJob(
     try {
       while (hasNext) {
         migrationLogger.info("Getting page $page for max page size $pageSize")
-        slice = cas3BookingRepository.findAllBookings(Cas3BookingEntity::class.java, PageRequest.of(page - 1, pageSize))
+        slice = cas3BookingRepository.findAllOrderByCrn(PageRequest.of(page - 1, pageSize))
 
         offendersCrn = slice.map { it.crn }.toSet()
 
