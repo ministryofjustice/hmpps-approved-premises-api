@@ -79,19 +79,19 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize("/cas2-hdc/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER))
 
         authorize(HttpMethod.PUT, "/cas2/assessments/**", hasAuthority("ROLE_CAS2_ASSESSOR"))
-        authorize(HttpMethod.GET, "/cas2/assessments/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN", Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, "ROLE_PROBATION"))
+        authorize(HttpMethod.GET, "/cas2/assessments/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN", Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
         authorize(HttpMethod.POST, "/cas2/assessments/*/status-updates", hasAuthority("ROLE_CAS2_ASSESSOR"))
-        authorize(HttpMethod.POST, "/cas2/assessments/*/notes", hasAnyAuthority("ROLE_CAS2_ASSESSOR", Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, "ROLE_PROBATION"))
+        authorize(HttpMethod.POST, "/cas2/assessments/*/notes", hasAnyAuthority("ROLE_CAS2_ASSESSOR", Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
         authorize(HttpMethod.GET, "/cas2/submissions/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN"))
         authorize(HttpMethod.POST, "/cas2/submissions/*/status-updates", hasAnyAuthority("ROLE_CAS2_ASSESSOR"))
-        authorize(HttpMethod.GET, "/cas2/reference-data/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, "ROLE_PROBATION"))
+        authorize(HttpMethod.GET, "/cas2/reference-data/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
         authorize(HttpMethod.GET, "/cas2/reports/**", hasAuthority("ROLE_CAS2_MI"))
-        authorize(HttpMethod.GET, "/cas2/people/*/oasys/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, "ROLE_PROBATION"))
-        authorize(HttpMethod.GET, "/cas2/people/search-by-crn/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, "ROLE_PROBATION"))
-        authorize(HttpMethod.GET, "/cas2/people/search-by-noms/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, "ROLE_PROBATION"))
+        authorize(HttpMethod.GET, "/cas2/people/*/oasys/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
+        authorize(HttpMethod.GET, "/cas2/people/search-by-crn/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
+        authorize(HttpMethod.GET, "/cas2/people/search-by-noms/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
         authorize(HttpMethod.GET, "/cas2/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
-        authorize("/cas2/applications/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, "ROLE_PROBATION"))
-        authorize("/cas2/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, "ROLE_PROBATION"))
+        authorize("/cas2/applications/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
+        authorize("/cas2/**", hasAnyAuthority(Cas2Role.COURT_BAIL_REFERRER, Cas2Role.PRISON_BAIL_REFERRER, Cas2Role.PROBATION))
 
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
         authorize(HttpMethod.GET, "/subject-access-request", hasAnyAuthority("ROLE_SAR_DATA_ACCESS"))
@@ -99,7 +99,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas1/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
         authorize(HttpMethod.GET, "/cas3/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
 
-        authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
+        authorize(anyRequest, hasAuthority(Cas2Role.PROBATION))
       }
 
       anonymous { disable() }
