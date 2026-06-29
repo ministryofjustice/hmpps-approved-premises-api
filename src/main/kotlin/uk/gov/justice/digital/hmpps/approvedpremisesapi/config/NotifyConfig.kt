@@ -80,6 +80,7 @@ object Cas2NotifyTemplates {
 
   const val CAS2_BAIL_APPLICATION_SUBMITTED = "5fc14c45-8efa-49e1-81b9-e7fec0d22a0c"
   const val CAS2_BAIL_APPLICATION_TO_ASSESS = "cd4b3c2b-6ab4-47ca-a134-df55846d02fa"
+  const val CAS2_BAIL_APPLICATION_STATUS_UPDATE = "7f5f44f8-d3ff-4934-a558-c5d50bf0e010"
 }
 
 enum class NotifyMode {
