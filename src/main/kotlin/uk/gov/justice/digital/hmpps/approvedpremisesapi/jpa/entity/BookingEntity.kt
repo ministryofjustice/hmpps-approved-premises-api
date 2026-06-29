@@ -16,7 +16,6 @@ import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.NamedNativeQuery
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
@@ -29,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Conf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingRecord
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.Objects
@@ -37,47 +35,6 @@ import java.util.UUID
 
 @Repository
 interface BookingRepository : JpaRepository<BookingEntity, UUID> {
-  @Query(
-    """
-    SELECT
-      b.arrival_date as arrivalDate,
-      b.departure_date as departureDate,
-      (
-        SELECT
-          count(1)
-        from
-          arrivals
-        where
-          booking_id = b.id
-      ) > 0 as arrived,
-      (
-        SELECT
-          count(1)
-        from
-          non_arrivals
-        where
-          booking_id = b.id
-      ) > 0 as isNotArrived,
-      (
-        SELECT
-          count(1)
-        from
-          cancellations
-        where
-          booking_id = b.id
-      ) > 0 as cancelled
-    from
-      bookings b
-    WHERE b.premises_id = :premisesId AND b.arrival_date <= :endDate AND b.departure_date >= :startDate
-  """,
-    nativeQuery = true,
-  )
-  fun findAllByPremisesIdAndOverlappingDate(
-    premisesId: UUID,
-    startDate: LocalDate,
-    endDate: LocalDate,
-  ): List<BookingSummaryForAvailability>
-
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed ORDER BY b.createdAt")
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
 
@@ -139,134 +96,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     "SELECT b FROM BookingEntity b WHERE b.bed.id = :bedId ORDER BY b.arrivalDate ASC limit 1",
   )
   fun findFirstBookingByBedId(bedId: UUID): BookingEntity?
-}
-
-@Repository
-interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
-  @Query(
-    """
-    SELECT
-        bk.id as bookingId,
-        bk.crn as crn,
-        bk.arrival_date as arrivalDate,
-        bk.departure_date as departureDate,
-        bk.premises_id as premisesId,
-        r.id as roomId,
-        a.id as assessmentId, 
-        CASE 
-            WHEN ap.is_registered_sex_offender = TRUE 
-            OR ap.is_concerning_sexual_behaviour = TRUE
-            OR ap.is_history_of_sexual_offence = TRUE 
-         THEN TRUE 
-        ELSE FALSE 
-        END as sexualRisk
-    FROM bookings bk
-             INNER JOIN premises p ON bk.premises_id = p.id
-             INNER JOIN beds b ON bk.bed_id = b.id
-             INNER JOIN rooms r ON b.room_id = r.id
-             LEFT JOIN temporary_accommodation_applications ap ON bk.application_id = ap.id
-             LEFT JOIN assessments a ON ap.id = a.application_id
-             LEFT JOIN cancellations c ON bk.id = c.booking_id
-    WHERE bk.premises_id IN (:premisesIds) AND bk.arrival_date <= :endDate AND bk.departure_date >= :startDate AND c.id IS NULL
-    """,
-    nativeQuery = true,
-  )
-  fun findAllNotCancelledByPremisesIdsAndOverlappingDate(
-    premisesIds: List<UUID>,
-    startDate: LocalDate,
-    endDate: LocalDate,
-  ): List<Cas3OverlapBookingsSearchResult>
-
-  /*
-  This query is to find the closest booking to the start date for the current bedspace search
-  The ClosestBooking is to get the closest booking to the bedspace search start date that is not cancelled
-   */
-  @Query(
-    """
-      WITH ClosestBooking AS
-         (SELECT b.bed_id, MAX(b.departure_date) departure_date
-          FROM bookings b
-          LEFT JOIN cancellations c ON b.id = c.booking_id
-          WHERE b.departure_date <= :date
-            AND b.bed_id IN :bedIds
-            AND c.id IS NULL
-          GROUP BY b.bed_id)
-          
-      SELECT b.*,
-      beds.name as bed_name,
-      beds.room_id as bed_room_id,
-      beds.code as bed_code,
-      beds.created_at as bed_created_at,
-      beds.end_date as bed_end_date
-      FROM bookings b
-      LEFT JOIN beds ON  b.bed_id = beds.id  
-      INNER JOIN ClosestBooking  cb ON b.bed_id = cb.bed_id AND b.departure_date = cb.departure_date
-      """,
-    nativeQuery = true,
-  )
-  fun findClosestBookingBeforeDateForBeds(date: LocalDate, bedIds: List<UUID>): List<BookingEntity>
-
-  @Query(
-    """      
-      SELECT
-        b.crn AS personCrn,
-        b.offender_name AS personName,
-        Cast(b.id as varchar) bookingId,
-        COALESCE(b.status, 'provisional') as bookingStatus,
-        b.arrival_date AS bookingStartDate,
-        b.departure_date AS bookingEndDate,
-        b.created_at AS bookingCreatedAt,
-        Cast(p.id as varchar) premisesId,
-        p.name AS premisesName,
-        p.address_line1 AS premisesAddressLine1,
-        p.address_line2 AS premisesAddressLine2,
-        p.town AS premisesTown,
-        p.postcode AS premisesPostcode,
-        Cast(r.id as varchar) roomId,
-        r.name AS roomName,
-        Cast(b2.id as varchar) bedId,
-        b2.name AS bedName
-      FROM bookings b
-      LEFT JOIN beds b2 ON b.bed_id = b2.id
-      LEFT JOIN rooms r ON b2.room_id = r.id
-      LEFT JOIN premises p ON r.premises_id = p.id
-      WHERE b.service = 'temporary-accommodation'
-      AND (:status is null or b.status = :status)
-      AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(b.offender_name) LIKE CONCAT('%', lower(:crnOrName),'%'))
-    """,
-    countQuery = """      
-      SELECT count(1)
-      FROM bookings b
-      LEFT JOIN beds b2 ON b.bed_id = b2.id
-      LEFT JOIN rooms r ON b2.room_id = r.id
-      LEFT JOIN premises p ON r.premises_id = p.id
-      WHERE b.service = 'temporary-accommodation'
-      AND (:status is null or b.status = :status)
-      AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-      AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(b.offender_name) LIKE CONCAT('%', lower(:crnOrName),'%'))
-    """,
-    nativeQuery = true,
-  )
-  fun findTemporaryAccommodationBookings(
-    status: String?,
-    probationRegionId: UUID?,
-    crnOrName: String?,
-    pageable: Pageable?,
-  ): Page<Cas3BookingSearchResult>
-
-  @Query(
-    """
-      SELECT * FROM  bookings b 
-      WHERE b.service='temporary-accommodation'
-      ORDER BY b.crn
-      """,
-    nativeQuery = true,
-  )
-  fun <T : BookingEntity> findAllTemporaryAccommodationBookings(
-    type: Class<T>,
-    pageable: Pageable?,
-  ): Slice<BookingEntity>
 }
 
 @NamedNativeQuery(
@@ -413,38 +242,6 @@ data class BookingEntity(
   )
 
   override fun toString() = "BookingEntity:$id"
-}
-
-@Suppress("TooManyFunctions")
-interface Cas3BookingSearchResult {
-  fun getPersonName(): String?
-  fun getPersonCrn(): String
-  fun getBookingStatus(): String
-  fun getBookingId(): UUID
-  fun getBookingStartDate(): LocalDate
-  fun getBookingEndDate(): LocalDate
-  fun getBookingCreatedAt(): Instant
-  fun getPremisesId(): UUID
-  fun getPremisesName(): String
-  fun getPremisesAddressLine1(): String
-  fun getPremisesAddressLine2(): String?
-  fun getPremisesTown(): String?
-  fun getPremisesPostcode(): String
-  fun getRoomId(): UUID
-  fun getRoomName(): String
-  fun getBedId(): UUID
-  fun getBedName(): String
-}
-
-interface Cas3OverlapBookingsSearchResult {
-  val bookingId: UUID
-  val crn: String
-  val arrivalDate: LocalDate
-  val departureDate: LocalDate
-  val premisesId: UUID
-  val roomId: UUID
-  val assessmentId: UUID?
-  val sexualRisk: Boolean
 }
 
 interface BookingSummaryForAvailability {
