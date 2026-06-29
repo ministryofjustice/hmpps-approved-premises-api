@@ -4,22 +4,20 @@ import jakarta.persistence.EntityManager
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationLogger
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
 @Component
 class Cas3UpdateBookingOffenderNameJob(
-  private val cas3BookingRepository: Cas3BookingRepository,
   private val offenderService: OffenderService,
   private val entityManager: EntityManager,
   private val migrationLogger: MigrationLogger,
-  private val bookingRepository: BookingRepository,
+  private val cas3BookingRepository: Cas3v2BookingRepository,
 ) : MigrationJob() {
   override val shouldRunInTransaction = false
 
@@ -27,13 +25,13 @@ class Cas3UpdateBookingOffenderNameJob(
   override fun process(pageSize: Int) {
     var page = 1
     var hasNext = true
-    var slice: Slice<BookingEntity>
+    var slice: Slice<Cas3BookingEntity>
     var offendersCrn = setOf<String>()
 
     try {
       while (hasNext) {
         migrationLogger.info("Getting page $page for max page size $pageSize")
-        slice = cas3BookingRepository.findAllTemporaryAccommodationBookings(BookingEntity::class.java, PageRequest.of(page - 1, pageSize))
+        slice = cas3BookingRepository.findAllBookings(Cas3BookingEntity::class.java, PageRequest.of(page - 1, pageSize))
 
         offendersCrn = slice.map { it.crn }.toSet()
 
@@ -56,7 +54,7 @@ class Cas3UpdateBookingOffenderNameJob(
   }
 
   @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught", "TooGenericExceptionThrown")
-  private fun updateBooking(personInfo: PersonSummaryInfoResult, it: BookingEntity) {
+  private fun updateBooking(personInfo: PersonSummaryInfoResult, it: Cas3BookingEntity) {
     try {
       val offenderName = when (personInfo) {
         is PersonSummaryInfoResult.Success.Full -> "${personInfo.summary.name.forename} ${personInfo.summary.name.surname}"
@@ -65,7 +63,7 @@ class Cas3UpdateBookingOffenderNameJob(
       }
 
       it.offenderName = offenderName
-      bookingRepository.save(it)
+      cas3BookingRepository.save(it)
     } catch (exception: Exception) {
       migrationLogger.error("Unable to update offender name with crn ${it.crn} for the booking ${it.id}", exception)
     }
