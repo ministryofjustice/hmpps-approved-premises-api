@@ -13,13 +13,13 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.SubmitPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -1153,7 +1153,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
           .uri("/cas1/placement-applications/${UUID.randomUUID()}/withdraw")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+            uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.WithdrawPlacementApplication(
               WithdrawPlacementRequestReason.duplicatePlacementRequest,
             ),
           )
@@ -1179,7 +1179,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+              uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.WithdrawPlacementApplication(
                 WithdrawPlacementRequestReason.duplicatePlacementRequest,
               ),
             )
@@ -1203,7 +1203,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+              uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.WithdrawPlacementApplication(
                 WithdrawPlacementRequestReason.duplicatePlacementRequest,
               ),
             )
@@ -1252,7 +1252,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
               .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+                uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.WithdrawPlacementApplication(
                   WithdrawPlacementRequestReason.duplicatePlacementRequest,
                 ),
               )
@@ -1313,7 +1313,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
                 .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication(
+                  uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.WithdrawPlacementApplication(
                     WithdrawPlacementRequestReason.duplicatePlacementRequest,
                   ),
                 )
