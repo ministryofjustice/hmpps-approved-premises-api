@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1WithdrawPlacementRequest
@@ -34,8 +36,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PlacementRequestSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -53,6 +57,8 @@ class Cas1PlacementRequestsController(
   private val offenderDetailService: OffenderDetailService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
+  private val bookingNotMadeTransformer: BookingNotMadeTransformer,
+  private val userAccessService: Cas1UserAccessService,
 ) {
 
   @Operation(
@@ -189,6 +195,37 @@ class Cas1PlacementRequestsController(
     )
 
     return ResponseEntity.ok(toCas1PlacementRequestDetail(user, placementRequest))
+  }
+
+  @Operation(
+    summary = "Records that an attempt to match was made but no suitable Beds could be found",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully recorded that a Booking could not be made", content = [Content(schema = Schema(implementation = BookingNotMade::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/placement-requests/{id}/booking-not-made"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
+  fun bookingNotMade(
+    @Parameter(description = "ID of the placement request", required = true) @PathVariable id: UUID,
+    @Parameter(description = "Details about the failure to match", required = true) @RequestBody body: Cas1NewBookingNotMade,
+  ): ResponseEntity<BookingNotMade> {
+    val user = getUserForRequest()
+
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_REQUEST_RECORD_UNABLE_TO_MATCH)
+
+    val result = placementRequestService.createBookingNotMade(
+      user = user,
+      placementRequestId = id,
+      notes = body.notes,
+    )
+
+    val bookingNotMade = extractEntityFromCasResult(result)
+
+    return ResponseEntity.ok(bookingNotMadeTransformer.transformJpaToApi(bookingNotMade))
   }
 
   private fun getUserForRequest(): UserEntity = userService.getUserForRequest()
