@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.SubmitPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.UpdatePlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -58,7 +58,7 @@ class Cas1PlacementApplicationsController(
     consumes = ["application/json"],
   )
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun create(
+  fun createPlacementApp(
     @RequestBody newPlacementApplication: NewPlacementApplication,
   ): ResponseEntity<PlacementApplication> {
     val user = userService.getUserForRequest()
@@ -85,7 +85,7 @@ class Cas1PlacementApplicationsController(
     value = ["/placement-applications/{id}"],
     produces = ["application/json"],
   )
-  fun get(
+  fun getPlacementApp(
     @PathVariable id: UUID,
   ): ResponseEntity<PlacementApplication> {
     val user = userService.getUserForRequest()
@@ -112,7 +112,7 @@ class Cas1PlacementApplicationsController(
     produces = ["application/json"],
     consumes = ["application/json"],
   )
-  fun update(
+  fun updatePlacementApp(
     @PathVariable id: UUID,
     @RequestBody updatePlacementApplication: UpdatePlacementApplication,
   ): ResponseEntity<PlacementApplication> {
@@ -138,7 +138,7 @@ class Cas1PlacementApplicationsController(
     produces = ["application/json", "application/problem+json"],
     consumes = ["application/json"],
   )
-  fun submit(
+  fun submitPlacementApp(
     @PathVariable id: UUID,
     @RequestBody submitPlacementApplication: SubmitPlacementApplication,
   ): ResponseEntity<List<PlacementApplication>> {
@@ -162,7 +162,7 @@ class Cas1PlacementApplicationsController(
     produces = ["application/json", "application/problem+json"],
     consumes = ["application/json"],
   )
-  fun submitDecision(
+  fun submitPlacementAppDecision(
     @PathVariable id: UUID,
     @RequestBody placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
   ): ResponseEntity<PlacementApplication> {
@@ -187,7 +187,7 @@ class Cas1PlacementApplicationsController(
     consumes = ["application/json"],
   )
   @SuppressWarnings("ThrowsCount")
-  fun withdraw(
+  fun withdrawPlacementApp(
     @PathVariable id: UUID,
     @RequestBody withdrawPlacementApplication: WithdrawPlacementApplication?,
   ): ResponseEntity<PlacementApplication> {
