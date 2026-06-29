@@ -69,12 +69,12 @@ class OAuth2ResourceServerSecurityConfiguration {
 
         authorize(HttpMethod.GET, "/cas2-hdc/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
         authorize(HttpMethod.PUT, "/cas2-hdc/assessments/**", hasAuthority("ROLE_CAS2_ASSESSOR"))
-        authorize(HttpMethod.GET, "/cas2-hdc/assessments/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2-hdc/assessments/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
         authorize(HttpMethod.POST, "/cas2-hdc/assessments/*/status-updates", hasAuthority("ROLE_CAS2_ASSESSOR"))
-        authorize(HttpMethod.POST, "/cas2-hdc/assessments/*/notes", hasAnyRole("LICENCE_CA", "POM", "CAS2_ASSESSOR", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER"))
-        authorize(HttpMethod.GET, "/cas2-hdc/submissions/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN"))
+        authorize(HttpMethod.POST, "/cas2-hdc/assessments/*/notes", hasAnyAuthority("ROLE_LICENCE_CA", "ROLE_POM", "ROLE_CAS2_ASSESSOR", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2-hdc/submissions/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN"))
         authorize(HttpMethod.POST, "/cas2-hdc/submissions/*/status-updates", hasAuthority("ROLE_CAS2_ASSESSOR"))
-        authorize(HttpMethod.GET, "/cas2-hdc/reference-data/**", hasAnyRole("CAS2_ASSESSOR", "POM", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER"))
+        authorize(HttpMethod.GET, "/cas2-hdc/reference-data/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_POM", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
         authorize(HttpMethod.GET, "/cas2-hdc/reports/**", hasAuthority("ROLE_CAS2_MI"))
         authorize("/cas2-hdc/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER"))
 
@@ -94,7 +94,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize("/cas2/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_PROBATION"))
 
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
-        authorize(HttpMethod.GET, "/subject-access-request", hasAnyRole("SAR_DATA_ACCESS"))
+        authorize(HttpMethod.GET, "/subject-access-request", hasAnyAuthority("ROLE_SAR_DATA_ACCESS"))
 
         authorize(HttpMethod.GET, "/cas1/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
         authorize(HttpMethod.GET, "/cas3/external/**", hasAuthority("ROLE_APPROVED_PREMISES__SINGLE_ACCOMMODATION_SERVICE"))
