@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -33,6 +34,8 @@ class Cas2ApplicationNoteService(
   private val userAccessService: Cas2UserAccessService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
+  private val cas2ApplicationNoteEmailService: Cas2ApplicationNoteEmailService,
+  private val futureFlagService: FeatureFlagService,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) {
@@ -68,10 +71,20 @@ class Cas2ApplicationNoteService(
     application: Cas2ApplicationEntity,
     savedNote: Cas2ApplicationNoteEntity,
   ) {
-    if (isExternalUser) {
-      sendEmailToReferrer(application, savedNote)
-    } else {
-      sendEmailToAssessors(application, savedNote)
+    val emailChangesEnabled = futureFlagService.getBooleanFlag("isr-email-changes-enabled")
+
+    when {
+      emailChangesEnabled && isExternalUser ->
+        cas2ApplicationNoteEmailService.refererNoteAdded(application, savedNote)
+
+      emailChangesEnabled ->
+        cas2ApplicationNoteEmailService.assessorNoteAdded(application, savedNote)
+
+      isExternalUser ->
+        sendEmailToReferrer(application, savedNote)
+
+      else ->
+        sendEmailToAssessors(application, savedNote)
     }
   }
 

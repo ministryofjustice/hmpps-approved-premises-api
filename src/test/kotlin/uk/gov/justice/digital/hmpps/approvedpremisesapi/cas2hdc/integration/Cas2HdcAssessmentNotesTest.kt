@@ -23,7 +23,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class Cas2AssessmentNotesTest(
+class Cas2HdcAssessmentNotesTest(
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) : IntegrationTestBase() {
