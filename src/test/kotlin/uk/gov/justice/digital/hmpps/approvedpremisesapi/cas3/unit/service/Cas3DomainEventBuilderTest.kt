@@ -4,9 +4,16 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.assertThrows
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3DepartureEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3AssessmentUpdatedField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.CAS3PersonArrivedUpdatedEvent
@@ -15,27 +22,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.eve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -135,8 +133,9 @@ class Cas3DomainEventBuilderTest {
     val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
     val booking =
-      BookingEntityFactory()
+      Cas3BookingEntityFactory()
         .withPremises(premises)
+        .withBedspace(Cas3BedspaceEntityFactory().withPremises(premises).produce())
         .withApplication(application)
         .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
         .produce()
@@ -178,8 +177,9 @@ class Cas3DomainEventBuilderTest {
     val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
     val booking =
-      BookingEntityFactory()
+      Cas3BookingEntityFactory()
         .withPremises(premises)
+        .withBedspace(Cas3BedspaceEntityFactory().withPremises(premises).produce())
         .withApplication(application)
         .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
         .produce()
@@ -242,7 +242,7 @@ class Cas3DomainEventBuilderTest {
       assertThat(data.premises.addressLine2).isEqualTo(premises.addressLine2)
       assertThat(data.premises.postcode).isEqualTo(premises.postcode)
       assertThat(data.premises.town).isEqualTo(premises.town)
-      assertThat(data.premises.region).isEqualTo(premises.probationRegion.name)
+      assertThat(data.premises.region).isEqualTo(premises.probationDeliveryUnit.probationRegion.name)
       assertThat(data.arrivedAt).isEqualTo(arrivalDateTime)
       assertThat(data.expectedDepartureOn).isEqualTo(expectedDepartureDate)
       assertThat(data.notes).isEqualTo(notes)
@@ -335,7 +335,7 @@ class Cas3DomainEventBuilderTest {
       assertThat(data.premises.addressLine2).isEqualTo(premises.addressLine2)
       assertThat(data.premises.postcode).isEqualTo(premises.postcode)
       assertThat(data.premises.town).isEqualTo(premises.town)
-      assertThat(data.premises.region).isEqualTo(premises.probationRegion.name)
+      assertThat(data.premises.region).isEqualTo(premises.probationDeliveryUnit.probationRegion.name)
       assertThat(data.departedAt).isEqualTo(departureDateTime.toInstant())
       assertThat(data.reason).isEqualTo(reasonName)
       assertThat(data.notes).isEqualTo(notes)
@@ -545,12 +545,11 @@ class Cas3DomainEventBuilderTest {
     val probationRegion = probationRegionEntity()
     val premises = createCas3PremisesEntity(probationRegion)
     val user = userEntity(probationRegion)
-    val room = RoomEntityFactory().withPremises(premises).produce()
-    val bedspace = BedEntityFactory()
+    val bedspace = Cas3BedspaceEntityFactory()
       .withId(bedspaceId)
       .withEndDate(null)
       .withStartDate(newStartDate)
-      .withRoom(room)
+      .withPremises(premises)
       .produce()
     val transactionId = UUID.randomUUID()
 
@@ -634,13 +633,10 @@ class Cas3DomainEventBuilderTest {
     val probationRegion = probationRegionEntity()
     val user = userEntity(probationRegion)
     val premises = createCas3PremisesEntity(probationRegion)
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
-    val bedspace = BedEntityFactory()
+    val bedspace = Cas3BedspaceEntityFactory()
       .withId(bedspaceId)
       .withEndDate(endDate)
-      .withRoom(room)
+      .withPremises(premises)
       .produce()
     val transactionId = UUID.randomUUID()
 
@@ -668,12 +664,9 @@ class Cas3DomainEventBuilderTest {
     val probationRegion = probationRegionEntity()
     val user = userEntity(probationRegion)
     val premises = createCas3PremisesEntity(probationRegion)
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
-    val bedspace = BedEntityFactory()
+    val bedspace = Cas3BedspaceEntityFactory()
       .withId(bedspaceId)
-      .withRoom(room)
+      .withPremises(premises)
       .withEndDate(null)
       .produce()
     val transactionId = UUID.randomUUID()
@@ -727,12 +720,12 @@ class Cas3DomainEventBuilderTest {
   }
 
   private fun departureEntity(
-    booking: BookingEntity,
+    booking: Cas3BookingEntity,
     departureDateTime: OffsetDateTime,
     reason: DepartureReasonEntity,
     moveOnCategory: MoveOnCategoryEntity,
     notes: String,
-  ) = DepartureEntityFactory()
+  ) = Cas3DepartureEntityFactory()
     .withBooking(booking)
     .withDateTime(departureDateTime)
     .withReason(reason)
@@ -753,11 +746,11 @@ class Cas3DomainEventBuilderTest {
     .produce()
 
   private fun arrivalEntity(
-    booking: BookingEntity,
+    booking: Cas3BookingEntity,
     arrivalDateTime: Instant,
     expectedDepartureDate: LocalDate,
     notes: String,
-  ) = ArrivalEntityFactory()
+  ) = Cas3ArrivalEntityFactory()
     .withBooking(booking)
     .withArrivalDateTime(arrivalDateTime)
     .withExpectedDepartureDate(expectedDepartureDate)
@@ -765,10 +758,11 @@ class Cas3DomainEventBuilderTest {
     .produce()
 
   private fun bookingEntity(
-    premises: TemporaryAccommodationPremisesEntity,
+    premises: Cas3PremisesEntity,
     application: TemporaryAccommodationApplicationEntity,
-  ) = BookingEntityFactory()
+  ) = Cas3BookingEntityFactory()
     .withPremises(premises)
+    .withBedspace(Cas3BedspaceEntityFactory().withPremises(premises).produce())
     .withApplication(application)
     .produce()
 
@@ -784,14 +778,14 @@ class Cas3DomainEventBuilderTest {
     .withProbationRegion(probationRegion)
     .produce()
 
-  private fun createCas3PremisesEntity(probationRegion: ProbationRegionEntity): TemporaryAccommodationPremisesEntity {
+  private fun createCas3PremisesEntity(probationRegion: ProbationRegionEntity): Cas3PremisesEntity {
     val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
       .withProbationRegion(probationRegion).produce()
     val localAuthorityArea = LocalAuthorityAreaEntityFactory().produce()
-    return TemporaryAccommodationPremisesEntityFactory()
+    return Cas3PremisesEntityFactory()
+      .withDefaults()
       .withLocalAuthorityArea(localAuthorityArea)
       .withProbationDeliveryUnit(probationDeliveryUnit)
-      .withProbationRegion(probationRegion)
       .produce()
   }
 
@@ -805,10 +799,10 @@ class Cas3DomainEventBuilderTest {
     .produce()
 
   private fun cancellationEntity(
-    booking: BookingEntity,
+    booking: Cas3BookingEntity,
     cancellationReason: CancellationReasonEntity,
     cancellationNotes: String,
-  ) = CancellationEntityFactory()
+  ) = Cas3CancellationEntityFactory()
     .withBooking(booking)
     .withReason(cancellationReason)
     .withNotes(cancellationNotes)
@@ -816,14 +810,14 @@ class Cas3DomainEventBuilderTest {
 
   private fun assertCAS3PersonArrivedUpdatedEventPremisesEventData(
     eventData: DomainEvent<CAS3PersonArrivedUpdatedEvent>,
-    premises: PremisesEntity,
+    premises: Cas3PremisesEntity,
   ): Boolean {
     val data = eventData.data.eventDetails
     return data.premises.addressLine1 == premises.addressLine1 &&
       data.premises.addressLine2 == premises.addressLine2 &&
       data.premises.postcode == premises.postcode &&
       data.premises.town == premises.town &&
-      data.premises.region == premises.probationRegion.name
+      data.premises.region == premises.probationDeliveryUnit.probationRegion.name
   }
 
   private fun assertStaffDetails(
@@ -835,7 +829,7 @@ class Cas3DomainEventBuilderTest {
 
   private fun assertBookingEventData(
     eventData: DomainEvent<CAS3PersonDepartureUpdatedEvent>,
-    booking: BookingEntity,
+    booking: Cas3BookingEntity,
     premisesId: UUID,
   ): Boolean {
     val data = eventData.data.eventDetails
@@ -851,14 +845,14 @@ class Cas3DomainEventBuilderTest {
 
   private fun assertPremisesEventData(
     eventData: DomainEvent<CAS3PersonDepartureUpdatedEvent>,
-    premises: PremisesEntity,
+    premises: Cas3PremisesEntity,
   ): Boolean {
     val data = eventData.data.eventDetails
     return data.premises.addressLine1 == premises.addressLine1 &&
       data.premises.addressLine2 == premises.addressLine2 &&
       data.premises.postcode == premises.postcode &&
       data.premises.town == premises.town &&
-      data.premises.region == premises.probationRegion.name
+      data.premises.region == premises.probationDeliveryUnit.probationRegion.name
   }
 
   private fun assertTemporaryAccommodationApplicationEventData(
