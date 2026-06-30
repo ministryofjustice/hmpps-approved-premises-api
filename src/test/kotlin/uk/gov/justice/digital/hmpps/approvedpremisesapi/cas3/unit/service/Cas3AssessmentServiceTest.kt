@@ -120,7 +120,7 @@ class Cas3AssessmentServiceTest {
         )
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(user, assessment) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every {
@@ -174,7 +174,7 @@ class Cas3AssessmentServiceTest {
           )
           .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns false
+      every { userAccessServiceMock.userCanViewCas3Assessment(user, assessment) } returns false
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -388,7 +388,7 @@ class Cas3AssessmentServiceTest {
       val assessment = assessmentEntity(user)
 
       every { assessmentRepositoryMock.findById(assessmentId) } returns Optional.of(assessment)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns false
 
       val result =
         assessmentService.updateAssessment(
@@ -415,7 +415,7 @@ class Cas3AssessmentServiceTest {
       val assessment = assessmentEntity(user)
 
       every { assessmentRepositoryMock.findById(assessmentId) } returns Optional.of(assessment)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       val result = assessmentService.updateAssessment(
         user,
@@ -441,7 +441,7 @@ class Cas3AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findById(assessmentId) } returns Optional.of(assessment)
       every { assessmentRepositoryMock.save(any()) } returnsArgument 0
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       val result = assessmentService.updateAssessment(
         user,
@@ -465,7 +465,7 @@ class Cas3AssessmentServiceTest {
         )
 
       every { assessmentRepositoryMock.findById(any()) } returns Optional.of(assessment)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       val result = assessmentService.updateAssessment(
         user,
@@ -503,7 +503,7 @@ class Cas3AssessmentServiceTest {
       assessment.accommodationRequiredFromDate = existingDate
 
       every { assessmentRepositoryMock.findById(assessmentId) } returns Optional.of(assessment)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
       every { assessmentRepositoryMock.save(any()) } returnsArgument 0
       every { cas3DomainEventBuilderMock.buildAssessmentUpdatedDomainEvent(any(), any()) } answers { callOriginal() }
       every { cas3DomainEventServiceMock.saveAssessmentUpdatedEvent(any()) } just Runs
@@ -565,7 +565,7 @@ class Cas3AssessmentServiceTest {
         .withAllocatedToUser(user)
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -605,7 +605,7 @@ class Cas3AssessmentServiceTest {
         .withAllocatedToUser(user)
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns false
 
       val result = assessmentService.acceptAssessment(user, assessmentId, "{}")
 
@@ -619,7 +619,7 @@ class Cas3AssessmentServiceTest {
         .withReallocatedAt(OffsetDateTime.now())
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -642,7 +642,7 @@ class Cas3AssessmentServiceTest {
         .withApplication(application)
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -704,7 +704,7 @@ class Cas3AssessmentServiceTest {
         )
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns false
 
       val result = assessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
 
@@ -721,7 +721,7 @@ class Cas3AssessmentServiceTest {
         .withReallocatedAt(OffsetDateTime.now())
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -757,7 +757,7 @@ class Cas3AssessmentServiceTest {
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -804,7 +804,7 @@ class Cas3AssessmentServiceTest {
         .withId(referralRejectionReasonId)
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -883,7 +883,7 @@ class Cas3AssessmentServiceTest {
         )
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns false
 
       val result = assessmentService.closeAssessment(user, assessmentId)
 
@@ -917,7 +917,7 @@ class Cas3AssessmentServiceTest {
         .withCompletedAt(OffsetDateTime.now())
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -962,7 +962,7 @@ class Cas3AssessmentServiceTest {
         .withData("{\"test\": \"data\"}")
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewCas3Assessment(any(), any()) } returns true
 
       every { temporaryAccommodationAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 

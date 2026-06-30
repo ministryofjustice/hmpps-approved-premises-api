@@ -100,7 +100,7 @@ class Cas3ApplicationService(
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: throw RuntimeException("Could not get user")
 
-    val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
+    val canAccess = userAccessService.userCanViewCas3Application(userEntity, applicationEntity)
 
     return if (canAccess) {
       CasResult.Success(applicationEntity)

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -90,7 +91,7 @@ class Cas3AssessmentService(
     val assessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
 
-    val isAuthorised = userAccessService.userCanViewAssessment(user, assessment) || (forTimeline && userAccessService.userCanViewApplication(user, assessment.application))
+    val isAuthorised = userAccessService.userCanViewCas3Assessment(user, assessment) || (forTimeline && userAccessService.userCanViewCas3Application(user, assessment.application as TemporaryAccommodationApplicationEntity))
 
     if (!isAuthorised) {
       return CasResult.Unauthorised("Not authorised to view the assessment")
@@ -117,7 +118,7 @@ class Cas3AssessmentService(
         ?: return CasResult.NotFound("TemporaryAccommodationAssessmentEntity", assessmentId.toString())
       )
 
-    if (!userAccessService.userCanViewAssessment(user, assessment)) {
+    if (!userAccessService.userCanViewCas3Assessment(user, assessment)) {
       return CasResult.Unauthorised()
     }
 
