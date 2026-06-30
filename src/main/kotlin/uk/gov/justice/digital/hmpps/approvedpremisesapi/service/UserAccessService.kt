@@ -103,7 +103,7 @@ class UserAccessService(
     user: UserEntity,
     application: TemporaryAccommodationApplicationEntity,
   ): Boolean = userCanAccessRegion(user, ServiceName.temporaryAccommodation, application.probationRegion.id) &&
-    user.hasRole(UserRole.CAS3_ASSESSOR) &&
+    user.hasAnyRole(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REFERRER) &&
     application.submittedAt != null
 
   fun userCanReallocateTask(user: UserEntity): Boolean = when (requestContextService.getServiceForRequest()) {

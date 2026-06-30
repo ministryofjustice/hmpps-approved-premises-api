@@ -239,6 +239,115 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
+    fun `Get single application returns 200 with correct body when a user with the CAS3_REFERRER role requests a submitted application in their region created by someone else`() {
+      givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { userEntity, jwt ->
+        givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            apDeliusContextAddResponseToUserAccessCall(
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
+              userEntity.deliusUsername,
+            )
+
+            callCas3ApiAndAssertApiResponse(jwt, applicationEntity)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single application returns 403 Forbidden when a user with the CAS3_REFERRER role requests an application not in their region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { userEntity, jwt ->
+        givenAUser { createdByUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.now())
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            apDeliusContextAddResponseToUserAccessCall(
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
+              userEntity.deliusUsername,
+            )
+
+            callCas3Api(jwt, applicationEntity.id)
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single application returns 403 Forbidden when a user with the CAS3_REFERRER role requests a draft application created by someone else`() {
+      givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { userEntity, jwt ->
+        givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(null)
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            apDeliusContextAddResponseToUserAccessCall(
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
+              userEntity.deliusUsername,
+            )
+
+            callCas3Api(jwt, applicationEntity.id)
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Get single LAO application for application creator with LAO access returns 200`() {
       givenAUser { createdByUser, jwt ->
         givenAnOffender(
