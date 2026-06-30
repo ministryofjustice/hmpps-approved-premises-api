@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -137,7 +136,6 @@ class Cas1BookingDomainEventService(
       changedBy = bookingChanged.changedBy,
       previousArrivalDateIfChanged = bookingChanged.previousArrivalDateIfChanged,
       previousDepartureDateIfChanged = bookingChanged.previousDepartureDateIfChanged,
-      isSpaceBooking = true,
       characteristics = bookingChanged.booking.criteria.toSpaceCharacteristics(),
       previousCharacteristics = bookingChanged.previousCharacteristicsIfChanged?.toSpaceCharacteristics(),
       transferredTo = bookingChanged.transferredTo,
@@ -173,16 +171,7 @@ class Cas1BookingDomainEventService(
         nomsNumber = nomsNumber,
         occurredAt = changedAt.toInstant(),
         schemaVersion = 2,
-        bookingId = if (bookingChangedInfo.isSpaceBooking) {
-          null
-        } else {
-          bookingId
-        },
-        cas1SpaceBookingId = if (bookingChangedInfo.isSpaceBooking) {
-          bookingId
-        } else {
-          null
-        },
+        cas1SpaceBookingId = bookingId,
         data = BookingChangedEnvelope(
           id = domainEventId,
           timestamp = changedAt.toInstant(),
@@ -222,14 +211,13 @@ class Cas1BookingDomainEventService(
     CancellationInfo(
       bookingId = bookingCancelled.booking.id,
       applicationFacade = bookingCancelled.booking.applicationFacade,
-      cancellationId = null,
       crn = bookingCancelled.booking.crn,
       cancelledAt = bookingCancelled.booking.cancellationOccurredAt!!,
       reason = bookingCancelled.reason,
       cancelledBy = bookingCancelled.user,
       premises = bookingCancelled.booking.premises,
-      isSpaceBooking = true,
       appealChangeRequestId = bookingCancelled.appealChangeRequestId,
+      cancellationId = null,
     ),
   )
 
@@ -254,7 +242,6 @@ class Cas1BookingDomainEventService(
 
     val approvedPremises = bookingInfo.premises
     val bookingCreatedAt = bookingInfo.createdAt
-    val isSpaceBooking = bookingInfo.isSpaceBooking
 
     domainEventService.saveBookingMadeDomainEvent(
       SaveCas1DomainEvent(
@@ -263,16 +250,7 @@ class Cas1BookingDomainEventService(
         crn = crn,
         nomsNumber = nomsNumber,
         occurredAt = bookingCreatedAt.toInstant(),
-        bookingId = if (isSpaceBooking) {
-          null
-        } else {
-          bookingInfo.id
-        },
-        cas1SpaceBookingId = if (isSpaceBooking) {
-          bookingInfo.id
-        } else {
-          null
-        },
+        cas1SpaceBookingId = bookingInfo.id,
         schemaVersion = 2,
         data = BookingMadeEnvelope(
           id = domainEventId,
@@ -337,7 +315,6 @@ class Cas1BookingDomainEventService(
     val user = cancellationInfo.cancelledBy
     val crn = cancellationInfo.crn
     val premises = cancellationInfo.premises
-    val isSpaceBooking = cancellationInfo.isSpaceBooking
 
     val domainEventId = UUID.randomUUID()
 
@@ -355,16 +332,7 @@ class Cas1BookingDomainEventService(
         crn = crn,
         nomsNumber = nomsNumber,
         occurredAt = now.toInstant(),
-        bookingId = if (isSpaceBooking) {
-          null
-        } else {
-          bookingId
-        },
-        cas1SpaceBookingId = if (isSpaceBooking) {
-          bookingId
-        } else {
-          null
-        },
+        cas1SpaceBookingId = bookingId,
         schemaVersion = 2,
         data = BookingCancelledEnvelope(
           id = domainEventId,
@@ -413,20 +381,9 @@ class Cas1BookingDomainEventService(
     val premises: ApprovedPremisesEntity,
     val arrivalDate: LocalDate,
     val departureDate: LocalDate,
-    val isSpaceBooking: Boolean,
     val characteristics: List<SpaceCharacteristic>? = null,
     val transferReason: TransferReason? = null,
     val additionalInformation: String? = null,
-  )
-
-  private fun BookingEntity.toBookingInfo() = BookingInfo(
-    id = id,
-    createdAt = createdAt,
-    crn = crn,
-    premises = premises as ApprovedPremisesEntity,
-    arrivalDate = arrivalDate,
-    departureDate = departureDate,
-    isSpaceBooking = false,
   )
 
   private fun Cas1SpaceBookingEntity.toBookingInfo() = BookingInfo(
@@ -436,7 +393,6 @@ class Cas1BookingDomainEventService(
     premises = premises,
     arrivalDate = canonicalArrivalDate,
     departureDate = canonicalDepartureDate,
-    isSpaceBooking = true,
     characteristics = criteria.toSpaceCharacteristics(),
     transferReason = transferReason,
     additionalInformation = additionalInformation,
@@ -456,7 +412,6 @@ class Cas1BookingDomainEventService(
     val cancelledBy: UserEntity,
     val cancelledAt: LocalDate,
     val reason: CancellationReasonEntity,
-    val isSpaceBooking: Boolean,
     val appealChangeRequestId: UUID? = null,
   )
 
@@ -471,7 +426,6 @@ class Cas1BookingDomainEventService(
     val changedAt: OffsetDateTime,
     val previousArrivalDateIfChanged: LocalDate?,
     val previousDepartureDateIfChanged: LocalDate?,
-    val isSpaceBooking: Boolean,
     val characteristics: List<SpaceCharacteristic>? = null,
     val previousCharacteristics: List<SpaceCharacteristic>? = null,
     val transferredTo: TransferInfo? = null,

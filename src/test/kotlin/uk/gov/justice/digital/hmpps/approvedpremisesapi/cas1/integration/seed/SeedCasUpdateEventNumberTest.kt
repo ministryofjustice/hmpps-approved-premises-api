@@ -210,7 +210,6 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
         crn = application.crn,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         occurredAt = Instant.now(),
-        bookingId = UUID.randomUUID(),
         data = BookingMadeEnvelope(
           id = UUID.randomUUID(),
           timestamp = Instant.now(),

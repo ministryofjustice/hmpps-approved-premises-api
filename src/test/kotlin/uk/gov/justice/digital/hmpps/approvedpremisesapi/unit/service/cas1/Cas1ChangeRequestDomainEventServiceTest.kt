@@ -82,7 +82,6 @@ class Cas1ChangeRequestDomainEventServiceTest {
       val domainEvent = domainEventArgument.captured
 
       assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
-      assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(changeRequest.spaceBooking.id)
       assertThat(domainEvent.schemaVersion).isNull()
       assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)
@@ -139,7 +138,6 @@ class Cas1ChangeRequestDomainEventServiceTest {
       val domainEvent = domainEventArgument.captured
 
       assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
-      assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(changeRequest.spaceBooking.id)
       assertThat(domainEvent.schemaVersion).isNull()
       assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)
@@ -187,7 +185,6 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       assertThat(domainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_CREATED)
       assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
-      assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(changeRequest.spaceBooking.id)
       assertThat(domainEvent.schemaVersion).isNull()
       assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)
@@ -239,7 +236,6 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       assertThat(domainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_PLACEMENT_CHANGE_REQUEST_REJECTED)
       assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
-      assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(changeRequest.spaceBooking.id)
       assertThat(domainEvent.schemaVersion).isNull()
       assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)

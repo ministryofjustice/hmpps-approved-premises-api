@@ -133,7 +133,6 @@ class Cas1AppealCas1DomainEventServiceTest {
   private fun assertCommonFields(domainEvent: SaveCas1DomainEvent<AssessmentAppealedEnvelope>) {
     assertThat(domainEvent.applicationId).isEqualTo(application.id)
     assertThat(domainEvent.assessmentId).isNull()
-    assertThat(domainEvent.bookingId).isNull()
     assertThat(domainEvent.crn).isEqualTo(application.crn)
     assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
 

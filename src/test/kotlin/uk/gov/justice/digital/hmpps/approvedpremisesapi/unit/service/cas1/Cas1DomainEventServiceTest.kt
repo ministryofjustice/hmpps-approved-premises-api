@@ -233,7 +233,6 @@ class Cas1DomainEventServiceTest {
     fun `persists event and emits event to SNS if emittable`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
-      val bookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "theNomsNumber"
       val occurredAt = Instant.now()
@@ -249,7 +248,6 @@ class Cas1DomainEventServiceTest {
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope.eventDetails,
-        bookingId = bookingId,
         metadata = metadata,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
         triggerSource = TriggerSourceType.USER,
@@ -270,7 +268,7 @@ class Cas1DomainEventServiceTest {
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
             assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
-            assertThat(it.bookingId).isEqualTo(bookingId)
+            assertThat(it.bookingId).isNull()
             assertThat(it.metadata).isEqualTo(metadata)
             assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
           },
@@ -303,7 +301,6 @@ class Cas1DomainEventServiceTest {
     fun `saveAndEmit persists event and does not emit event if emit on domain event is false`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
-      val bookingId = UUID.randomUUID()
       val cas1SpaceBookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
@@ -320,7 +317,6 @@ class Cas1DomainEventServiceTest {
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope.eventDetails,
-        bookingId = bookingId,
         cas1SpaceBookingId = cas1SpaceBookingId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
         emit = false,
@@ -338,7 +334,7 @@ class Cas1DomainEventServiceTest {
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
             assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
-            assertThat(it.bookingId).isEqualTo(bookingId)
+            assertThat(it.bookingId).isNull()
             assertThat(it.cas1SpaceBookingId).isEqualTo(cas1SpaceBookingId)
           },
         )
@@ -354,7 +350,6 @@ class Cas1DomainEventServiceTest {
     fun `saveAndEmit does not emit event to SNS if event type not emittable`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
-      val bookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
@@ -370,7 +365,6 @@ class Cas1DomainEventServiceTest {
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope.eventDetails,
-        bookingId = bookingId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
       )
 
@@ -386,7 +380,7 @@ class Cas1DomainEventServiceTest {
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
             assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
-            assertThat(it.bookingId).isEqualTo(bookingId)
+            assertThat(it.bookingId).isNull()
           },
         )
       }
@@ -401,7 +395,6 @@ class Cas1DomainEventServiceTest {
     fun `saveAndEmit does not emit event to SNS if event fails to persist to database`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
-      val bookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
@@ -417,7 +410,6 @@ class Cas1DomainEventServiceTest {
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope.eventDetails,
-        bookingId = bookingId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
       )
 
@@ -436,7 +428,7 @@ class Cas1DomainEventServiceTest {
               it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
               it.data == domainEventAndJson.persistedJson &&
               it.triggeredByUserId == user.id &&
-              it.bookingId == bookingId
+              it.bookingId == null
           },
         )
       }
@@ -455,7 +447,6 @@ class Cas1DomainEventServiceTest {
     fun `saveAndEmit persists event and emits event to SNS if emittable`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
-      val bookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "theNomsNumber"
       val occurredAt = Instant.now()
@@ -471,7 +462,6 @@ class Cas1DomainEventServiceTest {
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope,
-        bookingId = bookingId,
         metadata = metadata,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
         triggerSource = TriggerSourceType.USER,
@@ -491,7 +481,7 @@ class Cas1DomainEventServiceTest {
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
             assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
-            assertThat(it.bookingId).isEqualTo(bookingId)
+            assertThat(it.bookingId).isNull()
             assertThat(it.metadata).isEqualTo(metadata)
             assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
           },
@@ -524,7 +514,6 @@ class Cas1DomainEventServiceTest {
     fun `saveAndEmit persists event and does not emit event if emit on domain event is false`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
-      val bookingId = UUID.randomUUID()
       val cas1SpaceBookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
@@ -540,7 +529,6 @@ class Cas1DomainEventServiceTest {
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope,
-        bookingId = bookingId,
         cas1SpaceBookingId = cas1SpaceBookingId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
         emit = false,
@@ -558,7 +546,7 @@ class Cas1DomainEventServiceTest {
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
             assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
-            assertThat(it.bookingId).isEqualTo(bookingId)
+            assertThat(it.bookingId).isNull()
             assertThat(it.cas1SpaceBookingId).isEqualTo(cas1SpaceBookingId)
           },
         )
@@ -574,7 +562,6 @@ class Cas1DomainEventServiceTest {
     fun `saveAndEmit does not emit event to SNS if event type not emittable`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
-      val bookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
@@ -589,7 +576,6 @@ class Cas1DomainEventServiceTest {
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope,
-        bookingId = bookingId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
       )
 
@@ -605,7 +591,7 @@ class Cas1DomainEventServiceTest {
             assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
             assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
-            assertThat(it.bookingId).isEqualTo(bookingId)
+            assertThat(it.bookingId).isNull()
           },
         )
       }
@@ -620,7 +606,6 @@ class Cas1DomainEventServiceTest {
     fun `saveAndEmit does not emit event to SNS if event fails to persist to database`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
-      val bookingId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
@@ -635,7 +620,6 @@ class Cas1DomainEventServiceTest {
         nomsNumber = nomsNumber,
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope,
-        bookingId = bookingId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
       )
 
@@ -654,7 +638,7 @@ class Cas1DomainEventServiceTest {
               it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
               it.data == domainEventAndJson.persistedJson &&
               it.triggeredByUserId == user.id &&
-              it.bookingId == bookingId
+              it.bookingId == null
           },
         )
       }

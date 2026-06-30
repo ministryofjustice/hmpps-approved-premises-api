@@ -75,7 +75,6 @@ class Cas1ExpiredApplicationsScheduledJob(
         schemaVersion = 2,
         type = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
         assessmentId = null,
-        bookingId = null,
         cas1SpaceBookingId = null,
         metadata = emptyMap(),
         emit = true,
