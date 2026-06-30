@@ -154,6 +154,7 @@ class Cas2UserServiceTest {
       val userDto = extractEntityFromCasResult(cas2UserService.getUserDtoForRequest())
       assertThat(userDto.username).isEqualTo("NOMISUSER")
       assertThat(userDto.type).isEqualTo(Cas2UserTypeDto.NOMIS)
+      assertThat(userDto.deliusUserInfo).isNull()
     }
   }
 }
