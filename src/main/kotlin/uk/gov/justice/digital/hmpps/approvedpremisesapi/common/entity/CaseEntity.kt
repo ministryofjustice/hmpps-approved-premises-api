@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.BackfillCaseSummaryMigrationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.asHibernateProxy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getHibernateClass
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -80,4 +82,17 @@ data class CaseEntity(
   fun preUpdate() {
     lastUpdatedAt = OffsetDateTime.now()
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null) return false
+    if (this.getHibernateClass() != other.getHibernateClass()) return false
+    other as CaseEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = this.asHibernateProxy()?.hibernateLazyInitializer?.persistentClass?.hashCode() ?: javaClass.hashCode()
+
+  override fun toString(): String = "CaseEntity(id=$id,crn=$crn)"
 }
