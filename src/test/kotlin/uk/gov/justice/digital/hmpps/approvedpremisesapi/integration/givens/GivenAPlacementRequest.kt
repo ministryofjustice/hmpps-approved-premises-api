@@ -87,6 +87,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
     withCreatedByUser(createdByUser)
     withSubmittedAt(applicationSubmittedAt)
     withReleaseType(Cas1ReleaseType.licence)
+    withSentenceType("sentenceType1")
     withRiskRatings(
       risksFactory.produce(),
     )

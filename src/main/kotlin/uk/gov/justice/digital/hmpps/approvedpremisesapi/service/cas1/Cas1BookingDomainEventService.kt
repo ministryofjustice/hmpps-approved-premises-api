@@ -65,9 +65,9 @@ class Cas1BookingDomainEventService(
       bookingInfo = booking.toBookingInfo(),
       user = user,
       applicationSubmittedOn = application.submittedAt,
-      releaseType = application.releaseType?.name,
-      sentenceType = application.sentenceType,
-      situation = application.situation,
+      releaseType = placementRequest.resolveReleaseType().name,
+      sentenceType = placementRequest.resolveSentenceType(),
+      situation = placementRequest.resolveSituation(),
       placementRequestId = placementRequest.id,
       transferredFrom = cas1BookingCreatedEvent.transferredFrom,
     )

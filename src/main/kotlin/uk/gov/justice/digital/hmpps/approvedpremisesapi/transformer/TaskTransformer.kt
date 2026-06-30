@@ -75,7 +75,6 @@ class TaskTransformer(
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
     dates = placementApplication.placementDates()!!.toApiType(),
     placementDates = listOf(placementApplication.placementDates()!!.toApiType()),
-    releaseType = placementApplication.application.releaseType!!.apiType,
     placementType = getPlacementType(placementApplication.placementType!!),
     apArea = getApArea(placementApplication.application),
     outcomeRecordedAt = placementApplication.decisionMadeAt?.toInstant(),

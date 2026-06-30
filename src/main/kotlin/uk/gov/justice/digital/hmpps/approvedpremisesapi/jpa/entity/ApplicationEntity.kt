@@ -359,9 +359,18 @@ class ApprovedPremisesApplicationEntity(
   val teamCodes: MutableList<ApplicationTeamCodeEntity>,
   @OneToMany(mappedBy = "application")
   var placementRequests: MutableList<PlacementRequestEntity>,
+  /**
+   * Will never be null once application is submitted
+   */
   @Enumerated(value = EnumType.STRING)
   var releaseType: Cas1ReleaseType?,
+  /**
+   * Will never be null once application is submitted
+   */
   var sentenceType: String?,
+  /**
+   * Can be null for submitted applications
+   */
   var situation: String?,
   /**
    * If a request for placement was made in the original application, this value
