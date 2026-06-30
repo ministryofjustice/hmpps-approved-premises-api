@@ -118,7 +118,7 @@ class UserAccessService(
     else -> false
   }
 
-  fun userCanViewAssessment(user: UserEntity, assessment: AssessmentEntity): Boolean = assessment is ApprovedPremisesAssessmentEntity
+  fun userCanViewAssessment(assessment: AssessmentEntity): Boolean = assessment is ApprovedPremisesAssessmentEntity
 
   fun userCanViewCas3Assessment(user: UserEntity, assessment: TemporaryAccommodationAssessmentEntity): Boolean = user.hasRole(UserRole.CAS3_ASSESSOR) &&
     userCanAccessRegion(user, ServiceName.temporaryAccommodation, (assessment.application as TemporaryAccommodationApplicationEntity).probationRegion.id)

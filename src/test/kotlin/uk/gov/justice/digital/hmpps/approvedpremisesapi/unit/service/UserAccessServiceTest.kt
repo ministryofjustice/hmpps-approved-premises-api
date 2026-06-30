@@ -788,7 +788,7 @@ class UserAccessServiceTest {
       .withAllocatedToUser(anotherUserNotInRegion)
       .produce()
 
-    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
+    assertThat(userAccessService.userCanViewAssessment(assessment)).isTrue
   }
 
   @ParameterizedTest
@@ -806,7 +806,7 @@ class UserAccessServiceTest {
       .withAllocatedToUser(user)
       .produce()
 
-    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
+    assertThat(userAccessService.userCanViewAssessment(assessment)).isTrue
   }
 
   @Test

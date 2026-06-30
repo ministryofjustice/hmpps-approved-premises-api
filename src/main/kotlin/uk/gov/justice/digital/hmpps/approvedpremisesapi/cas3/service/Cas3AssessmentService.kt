@@ -91,7 +91,8 @@ class Cas3AssessmentService(
     val assessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
 
-    val isAuthorised = userAccessService.userCanViewCas3Assessment(user, assessment) || (forTimeline && userAccessService.userCanViewCas3Application(user, assessment.application as TemporaryAccommodationApplicationEntity))
+    val isAuthorised = userAccessService.userCanViewCas3Assessment(user, assessment) ||
+      (forTimeline && userAccessService.userCanViewCas3Application(user, assessment.application as TemporaryAccommodationApplicationEntity))
 
     if (!isAuthorised) {
       return CasResult.Unauthorised("Not authorised to view the assessment")

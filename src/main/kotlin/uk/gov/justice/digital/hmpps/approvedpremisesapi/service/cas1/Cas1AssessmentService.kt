@@ -151,7 +151,7 @@ class Cas1AssessmentService(
     val assessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
 
-    if (!userAccessService.userCanViewAssessment(user, assessment)) {
+    if (!userAccessService.userCanViewAssessment(assessment)) {
       return CasResult.Unauthorised("Not authorised to view the assessment")
     }
 
