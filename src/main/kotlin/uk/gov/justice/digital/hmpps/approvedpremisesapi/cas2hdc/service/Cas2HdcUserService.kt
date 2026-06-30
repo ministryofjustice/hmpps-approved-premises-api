@@ -1,12 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.service
 
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2DeliusUserInfoDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2UserTypeDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.ProbationAreaDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserType
@@ -52,40 +47,6 @@ class Cas2HdcUserService(
     val normalisedUsername = userStaffInformation.generalAccount.username.uppercase()
     val userDetail = getUserDetail(username = normalisedUsername)
     return findOrCreateNomisUser(username = normalisedUsername, userDetail, serviceOrigin)
-  }
-
-  @Deprecated("This endpoint is deprecated and will be removed in a future release. Use Cas2UserService.getUserDtoForRequest() instead.")
-  fun getUserDetails(user: Cas2UserEntity): Cas2UserDto {
-    val deliusUserInfo =
-      if (user.userType == Cas2UserType.DELIUS) {
-        val deliusUser = getDeliusUser(user.username)
-
-        Cas2DeliusUserInfoDto(
-          probationArea = ProbationAreaDto(
-            code = deliusUser.probationArea.code,
-            description = deliusUser.probationArea.description,
-          ),
-        )
-      } else {
-        null
-      }
-
-    return Cas2UserDto(
-      username = user.username,
-      type = Cas2UserTypeDto.valueOf(user.userType.name),
-      deliusUserInfo = deliusUserInfo,
-    )
-  }
-
-  private fun getDeliusUser(username: String): StaffDetail = when (
-    val staffDetailResponse = apDeliusContextApiClient.getStaffDetail(username)
-  ) {
-    is ClientResult.Success -> staffDetailResponse.body
-    is ClientResult.Failure.StatusCode -> when (staffDetailResponse.status) {
-      HttpStatus.NOT_FOUND -> throw NotFoundProblem(entityType = "DeliusUser", id = username)
-      else -> staffDetailResponse.throwException()
-    }
-    is ClientResult.Failure -> staffDetailResponse.throwException()
   }
 
   private fun getUserDetail(username: String): NomisUserDetail = when (
