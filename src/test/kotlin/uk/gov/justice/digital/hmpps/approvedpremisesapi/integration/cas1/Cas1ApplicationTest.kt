@@ -19,7 +19,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -1772,7 +1771,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
   @Nested
   inner class UpdateApplication {
     @Test
-    fun `Update existing AP application returns 200 with correct body`() {
+    fun `Update existing AP application returns 200`() {
       givenAUser { submittingUser, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_ASSESSOR),
@@ -1787,7 +1786,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               withCreatedByUser(submittingUser)
             }
 
-            val resultBody = webTestClient.put()
+            webTestClient.put()
               .uri("/cas1/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
@@ -1801,13 +1800,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
               .exchange()
               .expectStatus()
               .isOk
-              .returnResult(String::class.java)
-              .responseBody
-              .blockFirst()
-
-            val result = jsonMapper.readValue(resultBody, Application::class.java)
-
-            assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+              .expectBody()
+              .isEmpty
           }
         }
       }
