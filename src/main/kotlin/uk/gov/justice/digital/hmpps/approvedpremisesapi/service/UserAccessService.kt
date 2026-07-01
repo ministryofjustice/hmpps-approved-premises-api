@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -43,11 +42,6 @@ class UserAccessService(
 
   fun currentUserCanManageCas3PremisesBookings(premises: PremisesEntity) = userCanManageCas3PremisesBookings(userService.getUserForRequest(), premises)
 
-  fun userCanViewBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
-    is TemporaryAccommodationPremisesEntity -> userCanManageCas3PremisesBookings(user, booking.premises)
-    else -> false
-  }
-
   fun userCanManageCas3PremisesBookings(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
@@ -55,16 +49,6 @@ class UserAccessService(
 
   fun userCanManagePremisesBookings(user: UserEntity, premises: Cas3PremisesEntity) = userCanAccessRegion(user, ServiceName.temporaryAccommodation, premises.probationDeliveryUnit.probationRegion.id) &&
     user.hasRole(UserRole.CAS3_ASSESSOR)
-
-  /**
-   * This function only checks if the user has the correct permissions to cancel the given booking.
-   *
-   * It doesn't consider if the booking is in a cancellable state
-   */
-  fun userMayCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
-    is TemporaryAccommodationPremisesEntity -> userCanManageCas3PremisesBookings(user, booking.premises)
-    else -> false
-  }
 
   @Deprecated("Use CAS3UserAccessService.canViewVoidBedspaces")
   fun currentUserCanManagePremisesVoidBedspaces(premises: PremisesEntity) = userCanManagePremisesVoidBedspaces(userService.getUserForRequest(), premises)
