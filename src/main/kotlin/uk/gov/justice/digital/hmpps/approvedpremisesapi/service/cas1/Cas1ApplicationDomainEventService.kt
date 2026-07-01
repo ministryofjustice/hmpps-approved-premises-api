@@ -67,10 +67,6 @@ class Cas1ApplicationDomainEventService(
           )
       }
 
-    val risks = offenderRisksService.getPersonRisks(application.crn)
-
-    val mappaLevel = risks.mappa.value?.level
-
     val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(username)) {
       is ClientResult.Success -> staffDetailsResult.body
       is ClientResult.Failure -> staffDetailsResult.throwException()
@@ -80,6 +76,8 @@ class Cas1ApplicationDomainEventService(
       is ClientResult.Success -> caseDetailResult.body
       is ClientResult.Failure -> caseDetailResult.throwException()
     }
+
+    val mappaLevel = offenderRisksService.run { caseDetail.toMappa() }.value ?.level
 
     domainEventService.saveApplicationSubmittedDomainEvent(
       SaveCas1DomainEvent(
