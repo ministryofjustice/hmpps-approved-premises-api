@@ -594,7 +594,7 @@ class Cas3ApplicationServiceTest {
         .withProbationRegion(probationRegion)
         .produce()
 
-      every { mockUserAccessService.userCanViewApplication(any(), any()) } returns false
+      every { mockUserAccessService.userCanViewCas3Application(any(), any()) } returns false
 
       assertThat(
         cas3ApplicationService.getApplicationForUsername(
@@ -626,7 +626,7 @@ class Cas3ApplicationServiceTest {
 
       every { mockTemporaryAccommodationApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
       every { mockUserRepository.findByDeliusUsername(any()) } returns userEntity
-      every { mockUserAccessService.userCanViewApplication(any(), any()) } returns true
+      every { mockUserAccessService.userCanViewCas3Application(any(), any()) } returns true
 
       val result = cas3ApplicationService.getApplicationForUsername(applicationId, distinguishedName)
 

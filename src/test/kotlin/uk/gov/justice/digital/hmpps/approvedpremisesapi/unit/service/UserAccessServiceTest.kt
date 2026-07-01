@@ -499,18 +499,18 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanViewApplication returns true if the user created the application for Temporary Accommodation`() {
+  fun `userCanViewCas3Application returns true if the user created the application for Temporary Accommodation`() {
     val application = TemporaryAccommodationApplicationEntityFactory()
       .withCreatedByUser(user)
       .withProbationRegion(probationRegion)
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
-    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+    assertThat(userAccessService.userCanViewCas3Application(user, application)).isTrue
   }
 
   @Test
-  fun `userCanViewApplication returns false if the user has the CAS3_ASSESSOR role but the application is not in their region for Temporary Accommodation`() {
+  fun `userCanViewCas3Application returns false if the user has the CAS3_ASSESSOR role but the application is not in their region for Temporary Accommodation`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
@@ -521,11 +521,11 @@ class UserAccessServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
-    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+    assertThat(userAccessService.userCanViewCas3Application(user, application)).isFalse
   }
 
   @Test
-  fun `userCanViewApplication returns false if the user has the CAS3_ASSESSOR role and the application is in their region but it has not been submitted for Temporary Accommodation`() {
+  fun `userCanViewCas3Application returns false if the user has the CAS3_ASSESSOR role and the application is in their region but it has not been submitted for Temporary Accommodation`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
@@ -536,11 +536,11 @@ class UserAccessServiceTest {
       .withSubmittedAt(null)
       .produce()
 
-    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+    assertThat(userAccessService.userCanViewCas3Application(user, application)).isFalse
   }
 
   @Test
-  fun `userCanViewApplication returns true if the application has been submitted, is in the user's region, and the user has the CAS3_ASSESSOR role for Temporary Accommodation`() {
+  fun `userCanViewCas3Application returns true if the application has been submitted, is in the user's region, and the user has the CAS3_ASSESSOR role for Temporary Accommodation`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
@@ -551,11 +551,56 @@ class UserAccessServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
-    assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+    assertThat(userAccessService.userCanViewCas3Application(user, application)).isTrue
   }
 
   @Test
-  fun `userCanViewApplication returns false otherwise for Temporary Accommodation`() {
+  fun `userCanViewCas3Application returns false if the user has the CAS3_REFERRER role but the application is not in their region for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(CAS3_REFERRER)
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserNotInRegion)
+      .withProbationRegion(anotherProbationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    assertThat(userAccessService.userCanViewCas3Application(user, application)).isFalse
+  }
+
+  @Test
+  fun `userCanViewCas3Application returns false if the user has the CAS3_REFERRER role and the application is in their region but it has not been submitted for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(CAS3_REFERRER)
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(null)
+      .produce()
+
+    assertThat(userAccessService.userCanViewCas3Application(user, application)).isFalse
+  }
+
+  @Test
+  fun `userCanViewCas3Application returns true if the application has been submitted, is in the user's region, and the user has the CAS3_REFERRER role for Temporary Accommodation`() {
+    currentRequestIsFor(ServiceName.temporaryAccommodation)
+
+    user.addRoleForUnitTest(CAS3_REFERRER)
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(anotherUserInRegion)
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    assertThat(userAccessService.userCanViewCas3Application(user, application)).isTrue
+  }
+
+  @Test
+  fun `userCanViewCas3Application returns false otherwise for Temporary Accommodation`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
     val application = TemporaryAccommodationApplicationEntityFactory()
@@ -564,7 +609,7 @@ class UserAccessServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .produce()
 
-    assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+    assertThat(userAccessService.userCanViewCas3Application(user, application)).isFalse
   }
 
   @Test
@@ -679,7 +724,7 @@ class UserAccessServiceTest {
   }
 
   @Test
-  fun `userCanViewAssessment returns true for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role and the assessment is in the same region`() {
+  fun `userCanViewCas3Assessment returns true for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role and the assessment is in the same region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
     val application = TemporaryAccommodationApplicationEntityFactory()
@@ -693,11 +738,11 @@ class UserAccessServiceTest {
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
+    assertThat(userAccessService.userCanViewCas3Assessment(user, assessment)).isTrue
   }
 
   @Test
-  fun `userCanViewAssessment returns false for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role but the assessment is not in the same region`() {
+  fun `userCanViewCas3Assessment returns false for a Temporary Accommodation assessment if the user has the CAS3_ASSESSOR role but the assessment is not in the same region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
     val application = TemporaryAccommodationApplicationEntityFactory()
@@ -711,11 +756,11 @@ class UserAccessServiceTest {
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isFalse
+    assertThat(userAccessService.userCanViewCas3Assessment(user, assessment)).isFalse
   }
 
   @Test
-  fun `userCanViewAssessment returns false for a Temporary Accommodation assessment if the user does not have the CAS3_ASSESSOR role`() {
+  fun `userCanViewCas3Assessment returns false for a Temporary Accommodation assessment if the user does not have the CAS3_ASSESSOR role`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
     val application = TemporaryAccommodationApplicationEntityFactory()
@@ -727,7 +772,7 @@ class UserAccessServiceTest {
       .withApplication(application)
       .produce()
 
-    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isFalse
+    assertThat(userAccessService.userCanViewCas3Assessment(user, assessment)).isFalse
   }
 
   @Test
@@ -743,7 +788,7 @@ class UserAccessServiceTest {
       .withAllocatedToUser(anotherUserNotInRegion)
       .produce()
 
-    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
+    assertThat(userAccessService.userCanViewAssessment(assessment)).isTrue
   }
 
   @ParameterizedTest
@@ -761,7 +806,7 @@ class UserAccessServiceTest {
       .withAllocatedToUser(user)
       .produce()
 
-    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
+    assertThat(userAccessService.userCanViewAssessment(assessment)).isTrue
   }
 
   @Test

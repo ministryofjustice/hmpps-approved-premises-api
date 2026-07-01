@@ -198,7 +198,7 @@ class Cas1AssessmentServiceTest {
       )
       .produce()
 
-    every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns true
+    every { userAccessServiceMock.userCanViewAssessment(assessment) } returns true
 
     every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -251,7 +251,7 @@ class Cas1AssessmentServiceTest {
         )
         .produce()
 
-    every { userAccessServiceMock.userCanViewAssessment(user, assessment) } returns false
+    every { userAccessServiceMock.userCanViewAssessment(assessment) } returns false
 
     every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -492,7 +492,7 @@ class Cas1AssessmentServiceTest {
         )
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns false
 
       val result = cas1AssessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
@@ -534,7 +534,7 @@ class Cas1AssessmentServiceTest {
         )
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -602,7 +602,7 @@ class Cas1AssessmentServiceTest {
         .withAllocatedToUser(user)
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -662,7 +662,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -689,7 +689,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -719,7 +719,7 @@ class Cas1AssessmentServiceTest {
         .withAllocatedToUser(user)
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns false
 
       val result = cas1AssessmentService.updateAssessment(user, assessmentId, "{}")
 
@@ -737,7 +737,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -764,7 +764,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -792,7 +792,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -817,7 +817,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -843,7 +843,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -917,7 +917,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessmentId) } returns LockableAssessmentEntity(assessmentId)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -954,7 +954,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessmentId) } returns LockableAssessmentEntity(assessmentId)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -999,7 +999,7 @@ class Cas1AssessmentServiceTest {
         )
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns false
 
       val result =
         cas1AssessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
@@ -1015,7 +1015,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessmentId) } returns LockableAssessmentEntity(assessmentId)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -1043,7 +1043,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessmentId) } returns LockableAssessmentEntity(assessmentId)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -1069,7 +1069,7 @@ class Cas1AssessmentServiceTest {
       val assessment = assessmentFactory.produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessmentId) } returns LockableAssessmentEntity(assessmentId)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -1106,7 +1106,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessmentId) } returns LockableAssessmentEntity(assessmentId)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -1195,7 +1195,7 @@ class Cas1AssessmentServiceTest {
       val notes = "Some Notes"
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessmentId) } returns LockableAssessmentEntity(assessmentId)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -1352,7 +1352,7 @@ class Cas1AssessmentServiceTest {
         )
         .produce()
 
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns false
 
       val result = cas1AssessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
 
@@ -1369,7 +1369,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -1399,7 +1399,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -1429,7 +1429,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -1462,7 +1462,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessment.id) } returns LockableAssessmentEntity(assessment.id)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
@@ -1496,7 +1496,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessmentId) } returns LockableAssessmentEntity(assessmentId)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
@@ -1525,7 +1525,7 @@ class Cas1AssessmentServiceTest {
         .produce()
 
       every { lockableAssessmentRepositoryMock.acquirePessimisticLock(assessmentId) } returns LockableAssessmentEntity(assessmentId)
-      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+      every { userAccessServiceMock.userCanViewAssessment(any()) } returns true
 
       every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 

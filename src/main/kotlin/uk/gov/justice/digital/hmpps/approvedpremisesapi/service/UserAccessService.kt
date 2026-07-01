@@ -89,7 +89,6 @@ class UserAccessService(
 
     return when (application) {
       is ApprovedPremisesApplicationEntity -> userCanViewApprovedPremisesApplicationCreatedBySomeoneElse(user, application)
-      is TemporaryAccommodationApplicationEntity -> userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(user, application)
       else -> false
     }
   }
@@ -99,12 +98,15 @@ class UserAccessService(
     application: ApprovedPremisesApplicationEntity,
   ) = offenderService.canAccessOffender(application.crn, user.cas1LaoStrategy())
 
-  private fun userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(
-    user: UserEntity,
-    application: TemporaryAccommodationApplicationEntity,
-  ): Boolean = userCanAccessRegion(user, ServiceName.temporaryAccommodation, application.probationRegion.id) &&
-    user.hasRole(UserRole.CAS3_ASSESSOR) &&
-    application.submittedAt != null
+  fun userCanViewCas3Application(user: UserEntity, application: TemporaryAccommodationApplicationEntity): Boolean {
+    if (user.id == application.createdByUser.id) {
+      return true
+    }
+
+    return userCanAccessRegion(user, ServiceName.temporaryAccommodation, application.probationRegion.id) &&
+      user.hasAnyRole(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REFERRER) &&
+      application.submittedAt != null
+  }
 
   fun userCanReallocateTask(user: UserEntity): Boolean = when (requestContextService.getServiceForRequest()) {
     ServiceName.temporaryAccommodation -> user.hasRole(UserRole.CAS3_ASSESSOR)
@@ -116,16 +118,10 @@ class UserAccessService(
     else -> false
   }
 
-  fun userCanViewAssessment(user: UserEntity, assessment: AssessmentEntity): Boolean = when (assessment) {
-    is ApprovedPremisesAssessmentEntity ->
-      true
+  fun userCanViewAssessment(assessment: AssessmentEntity): Boolean = assessment is ApprovedPremisesAssessmentEntity
 
-    is TemporaryAccommodationAssessmentEntity ->
-      user.hasRole(UserRole.CAS3_ASSESSOR) &&
-        userCanAccessRegion(user, ServiceName.temporaryAccommodation, (assessment.application as TemporaryAccommodationApplicationEntity).probationRegion.id)
-
-    else -> false
-  }
+  fun userCanViewCas3Assessment(user: UserEntity, assessment: TemporaryAccommodationAssessmentEntity): Boolean = user.hasRole(UserRole.CAS3_ASSESSOR) &&
+    userCanAccessRegion(user, ServiceName.temporaryAccommodation, (assessment.application as TemporaryAccommodationApplicationEntity).probationRegion.id)
 
   fun userCanAccessTemporaryAccommodationApplication(user: UserEntity, application: ApplicationEntity): Boolean = (user == application.createdByUser) &&
     userCanAccessRegion(user, ServiceName.temporaryAccommodation, (application as TemporaryAccommodationApplicationEntity).probationRegion.id) &&
