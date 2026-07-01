@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MappaDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -36,10 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Withdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
@@ -56,15 +53,21 @@ import java.util.UUID
 
 class Cas1ApplicationCas1DomainEventServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
-  private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockDomainEventService = mockk<Cas1DomainEventService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
 
+  private val offenderRisksService = OffenderRisksService(
+    apDeliusContextApiClient = mockApDeliusContextApiClient,
+    apAndOASysClient = mockk(),
+    hmppsTierApiClient = mockk(),
+    sentryService = mockk(),
+  )
+
   private val service = Cas1ApplicationDomainEventService(
     mockDomainEventService,
     mockOffenderService,
-    mockOffenderRisksService,
+    offenderRisksService,
     mockApDeliusContextApiClient,
     mockDomainEventTransformer,
     UrlTemplate("http://frontend/applications/#id"),
@@ -86,7 +89,14 @@ class Cas1ApplicationCas1DomainEventServiceTest {
   inner class ApplicationSubmitted {
 
     private lateinit var application: ApprovedPremisesApplicationEntity
-    private val caseDetails = CaseDetailFactory().produce()
+    private val caseDetails = CaseDetailFactory()
+      .withMappaDetail(
+        MappaDetailFactory()
+          .withLevelDescription("L1")
+          .withCategoryDescription("C1")
+          .produce(),
+      )
+      .produce()
     private val domainEventProbationArea = ProbationAreaFactory().produce()
 
     private val staffUserDetails = StaffDetailFactory.staffDetail()
@@ -115,22 +125,6 @@ class Cas1ApplicationCas1DomainEventServiceTest {
           .withDateOfBirth(LocalDate.of(1982, 3, 11))
           .produce(),
       )
-
-      val risks = PersonRisksFactory()
-        .withMappa(
-          RiskWithStatus(
-            status = RiskStatus.Retrieved,
-            value = Mappa(
-              level = "CAT C1/LEVEL L1",
-              lastUpdated = LocalDate.now(),
-            ),
-          ),
-        )
-        .produce()
-
-      every {
-        mockOffenderRisksService.getPersonRisks(application.crn)
-      } returns risks
 
       every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
