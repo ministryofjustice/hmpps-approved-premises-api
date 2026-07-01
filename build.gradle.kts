@@ -51,7 +51,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("io.sentry:sentry-spring-boot-4:8.43.2")
 
-  runtimeOnly("org.postgresql:postgresql:42.7.11")
+  runtimeOnly("org.postgresql:postgresql:42.7.12")
   runtimeOnly("org.ehcache:ehcache")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
