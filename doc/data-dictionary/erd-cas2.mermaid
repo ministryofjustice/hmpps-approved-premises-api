@@ -1,0 +1,13 @@
+%%{init: {'flowchart': {'direction': 'LR'}}}%%
+erDiagram
+    cas_2_users ||--o{ cas_2_applications : creates
+    cas_2_applications ||--|| cas_2_assessments : has
+    cas_2_applications ||--o{ cas_2_application_notes : has
+    cas_2_assessments ||--o{ cas_2_application_notes : has
+    cas_2_users ||--o{ cas_2_application_notes : writes
+    cas_2_applications ||--o{ cas_2_status_updates : has
+    cas_2_assessments ||--o{ cas_2_status_updates : has
+    cas_2_users ||--o{ cas_2_status_updates : "assessor"
+    cas_2_status_updates ||--o{ cas_2_status_update_details : has
+    cas_2_applications ||--o{ cas_2_application_assignments : has
+    cas_2_users ||--o{ cas_2_application_assignments : "allocated POM"

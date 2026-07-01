@@ -1,0 +1,23 @@
+%%{init: {'flowchart': {'direction': 'LR'}}}%%
+erDiagram
+    cas3_premises ||--o{ cas3_bedspaces : has
+    cas3_premises ||--o{ bookings : has
+    cas3_premises ||--o{ cas3_void_bedspaces : has
+    cas3_premises ||--o{ cas3_premises_characteristic_assignments : "tagged with"
+    cas3_premises_characteristics ||--o{ cas3_premises_characteristic_assignments : "applies to"
+    cas3_bedspaces ||--o{ bookings : "booked in"
+    cas3_bedspaces ||--o{ cas3_void_bedspaces : "voided in"
+    cas3_bedspaces ||--o{ cas3_bedspace_characteristic_assignments : "tagged with"
+    cas3_bedspace_characteristics ||--o{ cas3_bedspace_characteristic_assignments : "applies to"
+
+    bookings ||--o{ arrivals : has
+    bookings ||--o{ departures : has
+    bookings ||--o| non_arrivals : has
+    bookings ||--o{ cancellations : has
+    bookings ||--o| cas3_confirmations : has
+    bookings ||--o{ extensions : has
+    bookings ||--o{ cas3_overstays : has
+    bookings ||--o{ cas3_turnarounds : has
+
+    cas3_void_bedspace_reasons ||--o{ cas3_void_bedspaces : categorises
+    cas3_void_bedspaces ||--|| cas3_void_bedspace_cancellations : "cancelled by"

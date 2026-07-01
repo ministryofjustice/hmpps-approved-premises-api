@@ -1,0 +1,410 @@
+domain,table,entity,column,sql_type,kotlin_type,nullable,key,enum_values,relationship,notes
+shared,booking_not_mades,BookingNotMadeEntity,id,uuid,UUID,no,PK,,,
+shared,booking_not_mades,BookingNotMadeEntity,placement_request_id,uuid,UUID,no,FK,,ManyToOne -> placement_requests,
+shared,booking_not_mades,BookingNotMadeEntity,created_at,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
+shared,booking_not_mades,BookingNotMadeEntity,notes,text,String?,yes,,,,
+shared,postcode_districts,PostCodeDistrictEntity,id,uuid,UUID,no,PK,,,
+shared,postcode_districts,PostCodeDistrictEntity,outcode,text,String,no,,,,
+shared,postcode_districts,PostCodeDistrictEntity,latitude,numeric,Double,no,,,,
+shared,postcode_districts,PostCodeDistrictEntity,longitude,numeric,Double,no,,,,
+shared,postcode_districts,PostCodeDistrictEntity,point,geometry,Point,no,,,,PostGIS geometry
+shared,departure_reasons,DepartureReasonEntity,id,uuid,UUID,no,PK,,,
+shared,departure_reasons,DepartureReasonEntity,name,text,String,no,,,,
+shared,departure_reasons,DepartureReasonEntity,is_active,boolean,Boolean,no,,,,
+shared,departure_reasons,DepartureReasonEntity,service_scope,text,String,no,,,,
+shared,departure_reasons,DepartureReasonEntity,legacy_delius_reason_code,text,String?,yes,,,,
+shared,departure_reasons,DepartureReasonEntity,parent_reason_id,uuid,UUID?,yes,FK,,ManyToOne -> departure_reasons,FetchType.LAZY self-reference
+shared,offender_management_units,OffenderManagementUnitEntity,id,uuid,UUID,no,PK,,,
+shared,offender_management_units,OffenderManagementUnitEntity,prison_code,text,String,no,,,,
+shared,offender_management_units,OffenderManagementUnitEntity,prison_name,text,String,no,,,,
+shared,offender_management_units,OffenderManagementUnitEntity,email,text,String,no,,,,
+shared,departures,DepartureEntity,id,uuid,UUID,no,PK,,,@Deprecated
+shared,departures,DepartureEntity,date_time,timestamptz,OffsetDateTime,no,,,,@Deprecated
+shared,departures,DepartureEntity,departure_reason_id,uuid,UUID,no,FK,,ManyToOne -> departure_reasons,@Deprecated
+shared,departures,DepartureEntity,move_on_category_id,uuid,UUID,no,FK,,ManyToOne -> move_on_categories,@Deprecated
+shared,departures,DepartureEntity,destination_provider_id,uuid,UUID?,yes,FK,,ManyToOne -> destination_providers,@Deprecated
+shared,departures,DepartureEntity,notes,text,String?,yes,,,,@Deprecated
+shared,departures,DepartureEntity,created_at,timestamptz,OffsetDateTime,no,,,,@Deprecated
+shared,departures,DepartureEntity,booking_id,uuid,UUID,no,FK,,ManyToOne -> bookings,@Deprecated
+shared,non_arrivals,NonArrivalEntity,id,uuid,UUID,no,PK,,,@Deprecated
+shared,non_arrivals,NonArrivalEntity,date,date,LocalDate,no,,,,@Deprecated
+shared,non_arrivals,NonArrivalEntity,non_arrival_reason_id,uuid,UUID,no,FK,,ManyToOne -> non_arrival_reasons,@Deprecated
+shared,non_arrivals,NonArrivalEntity,notes,text,String?,yes,,,,@Deprecated
+shared,non_arrivals,NonArrivalEntity,created_at,timestamptz,OffsetDateTime,no,,,,@Deprecated
+shared,non_arrivals,NonArrivalEntity,booking_id,uuid,UUID,no,FK,,OneToOne -> bookings,@Deprecated
+shared,placement_requirements,PlacementRequirementsEntity,id,uuid,UUID,no,PK,,,
+shared,placement_requirements,PlacementRequirementsEntity,gender,text,String?,yes,,,,DB column exists but is not mapped in PlacementRequirementsEntity
+shared,placement_requirements,PlacementRequirementsEntity,ap_type,text,JpaApType,no,,NORMAL|PIPE|ESAP|RFAP|MHAP_ST_JOSEPHS|MHAP_ELLIOT_HOUSE,,
+shared,placement_requirements,PlacementRequirementsEntity,postcode_district_id,uuid,UUID,no,FK,,ManyToOne -> postcode_districts,
+shared,placement_requirements,PlacementRequirementsEntity,radius,integer,Int,no,,,,
+shared,placement_requirements,PlacementRequirementsEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_applications,FetchType.LAZY
+shared,placement_requirements,PlacementRequirementsEntity,assessment_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_assessments,FetchType.LAZY
+shared,placement_requirements,PlacementRequirementsEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,placement_requirements_essential_criteria,PlacementRequirementsEntity,placement_requirement_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (essentialCriteria) -> placement_requirements,@JoinTable on PlacementRequirementsEntity.essentialCriteria
+shared,placement_requirements_essential_criteria,PlacementRequirementsEntity,characteristic_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (essentialCriteria) -> characteristics,
+shared,placement_requirements_desirable_criteria,PlacementRequirementsEntity,placement_requirement_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (desirableCriteria) -> placement_requirements,@JoinTable on PlacementRequirementsEntity.desirableCriteria
+shared,placement_requirements_desirable_criteria,PlacementRequirementsEntity,characteristic_id,uuid,UUID,no,"PK,FK",,ManyToMany join table (desirableCriteria) -> characteristics,
+shared,users,UserEntity,id,uuid,UUID,no,PK,,,
+shared,users,UserEntity,name,text,String,no,,,,
+shared,users,UserEntity,delius_username,text,String,no,,,,
+shared,users,UserEntity,delius_staff_code,text,String,no,,,,
+shared,users,UserEntity,email,text,String?,yes,,,,
+shared,users,UserEntity,telephone_number,text,String?,yes,,,,
+shared,users,UserEntity,is_active,boolean,Boolean,no,,,,
+shared,users,UserEntity,probation_region_id,uuid,UUID,no,FK,,ManyToOne -> probation_regions,FetchType.LAZY
+shared,users,UserEntity,probation_delivery_unit_id,uuid,UUID?,yes,FK,,ManyToOne -> probation_delivery_units,
+shared,users,UserEntity,ap_area_id,uuid,UUID?,yes,FK,,ManyToOne -> ap_areas,FetchType.LAZY
+shared,users,UserEntity,cas1_cru_management_area_id,uuid,UUID?,yes,FK,,ManyToOne -> cas1_cru_management_areas,FetchType.LAZY
+shared,users,UserEntity,cas1_cru_management_area_override_id,uuid,UUID?,yes,FK,,ManyToOne -> cas1_cru_management_areas,FetchType.LAZY
+shared,users,UserEntity,team_codes,text,List<String>?,yes,,,,StringListConverter
+shared,users,UserEntity,created_at,timestamp,OffsetDateTime?,yes,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
+shared,users,UserEntity,updated_at,timestamp,OffsetDateTime?,yes,,,,@UpdateTimestamp; migration uses timestamp (no time zone); entity is OffsetDateTime
+shared,user_role_assignments,UserRoleAssignmentEntity,id,uuid,UUID,no,PK,,,
+shared,user_role_assignments,UserRoleAssignmentEntity,user_id,uuid,UUID,no,FK,,ManyToOne -> users,
+shared,user_role_assignments,UserRoleAssignmentEntity,role,text,UserRole,no,,UserRole,,
+shared,user_qualification_assignments,UserQualificationAssignmentEntity,id,uuid,UUID,no,PK,,,
+shared,user_qualification_assignments,UserQualificationAssignmentEntity,user_id,uuid,UUID,no,FK,,ManyToOne -> users,
+shared,user_qualification_assignments,UserQualificationAssignmentEntity,qualification,text,UserQualification,no,,UserQualification,,
+shared,ap_areas,ApAreaEntity,id,uuid,UUID,no,PK,,,
+shared,ap_areas,ApAreaEntity,name,text,String,no,,,,
+shared,ap_areas,ApAreaEntity,identifier,text,String,no,,,,
+shared,ap_areas,ApAreaEntity,default_cru1_management_area_id,uuid,UUID,yes,FK,,ManyToOne -> cas1_cru_management_areas,"nullable in DB (migration 20240919134254 DROP NOT NULL); JPA association is non-null"
+shared,non_arrival_reasons,NonArrivalReasonEntity,id,uuid,UUID,no,PK,,,
+shared,non_arrival_reasons,NonArrivalReasonEntity,name,text,String,no,,,,
+shared,non_arrival_reasons,NonArrivalReasonEntity,is_active,boolean,Boolean,no,,,,
+shared,non_arrival_reasons,NonArrivalReasonEntity,legacy_delius_reason_code,text,String?,yes,,,,
+shared,beds,BedEntity,id,uuid,UUID,no,PK,,,
+shared,beds,BedEntity,name,text,String,no,,,,
+shared,beds,BedEntity,code,text,String?,yes,,,,
+shared,beds,BedEntity,room_id,uuid,UUID,no,FK,,ManyToOne -> rooms,
+shared,beds,BedEntity,created_date,date,LocalDate?,yes,,,,
+shared,beds,BedEntity,start_date,date,LocalDate?,yes,,,,
+shared,beds,BedEntity,end_date,date,LocalDate?,yes,,,,
+shared,beds,BedEntity,created_at,timestamptz,OffsetDateTime,no,,,,@CreationTimestamp
+shared,cancellation_reasons,CancellationReasonEntity,id,uuid,UUID,no,PK,,,
+shared,cancellation_reasons,CancellationReasonEntity,name,text,String,no,,,,
+shared,cancellation_reasons,CancellationReasonEntity,is_active,boolean,Boolean,no,,,,
+shared,cancellation_reasons,CancellationReasonEntity,service_scope,text,String,no,,,,
+shared,cancellation_reasons,CancellationReasonEntity,sort_order,integer,Int,no,,,,
+shared,local_authority_areas,LocalAuthorityAreaEntity,id,uuid,UUID,no,PK,,,
+shared,local_authority_areas,LocalAuthorityAreaEntity,identifier,text,String,no,,,,
+shared,local_authority_areas,LocalAuthorityAreaEntity,name,text,String,no,,,,
+shared,probation_regions,ProbationRegionEntity,id,uuid,UUID,no,PK,,,
+shared,probation_regions,ProbationRegionEntity,name,text,String,no,,,,
+shared,probation_regions,ProbationRegionEntity,ap_area_id,uuid,UUID?,yes,FK,,ManyToOne -> ap_areas,
+shared,probation_regions,ProbationRegionEntity,delius_code,text,String,no,,,,@Deprecated
+shared,probation_regions,ProbationRegionEntity,hpt_email,text,String?,yes,,,,
+shared,bookings,BookingEntity,id,uuid,UUID,no,PK,,,
+shared,bookings,BookingEntity,crn,text,String,no,,,,
+shared,bookings,BookingEntity,arrival_date,date,LocalDate,no,,,,
+shared,bookings,BookingEntity,departure_date,date,LocalDate,no,,,,
+shared,bookings,BookingEntity,key_worker_staff_code,text,String?,yes,,,,@Deprecated
+shared,bookings,BookingEntity,application_id,uuid,UUID?,yes,FK,,OneToOne -> applications,
+shared,bookings,BookingEntity,offline_application_id,uuid,UUID?,yes,FK,,OneToOne -> offline_applications,
+shared,bookings,BookingEntity,premises_id,uuid,UUID,no,FK,,ManyToOne -> premises,
+shared,bookings,BookingEntity,bed_id,uuid,UUID?,yes,,,ManyToOne -> beds,No FK constraint in DB (bookings_bed_id_fkey dropped in migration 20250618140659)
+shared,bookings,BookingEntity,service,text,String,no,,,,
+shared,bookings,BookingEntity,original_arrival_date,date,LocalDate,no,,,,
+shared,bookings,BookingEntity,original_departure_date,date,LocalDate,no,,,,
+shared,bookings,BookingEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,bookings,BookingEntity,noms_number,text,String?,yes,,,,
+shared,bookings,BookingEntity,status,text,BookingStatus?,yes,,BookingStatus,,
+shared,bookings,BookingEntity,adhoc,boolean,Boolean?,yes,,,,
+shared,bookings,BookingEntity,version,bigint,Long,no,,,,@Version
+shared,bookings,BookingEntity,offender_name,text,String?,yes,,,,
+shared,referral_rejection_reasons,ReferralRejectionReasonEntity,id,uuid,UUID,no,PK,,,
+shared,referral_rejection_reasons,ReferralRejectionReasonEntity,name,text,String,no,,,,
+shared,referral_rejection_reasons,ReferralRejectionReasonEntity,is_active,boolean,Boolean,no,,,,
+shared,cancellations,CancellationEntity,id,uuid,UUID,no,PK,,,@Deprecated
+shared,cancellations,CancellationEntity,date,date,LocalDate,no,,,,@Deprecated
+shared,cancellations,CancellationEntity,cancellation_reason_id,uuid,UUID,no,FK,,ManyToOne -> cancellation_reasons,@Deprecated
+shared,cancellations,CancellationEntity,notes,text,String?,yes,,,,@Deprecated
+shared,cancellations,CancellationEntity,created_at,timestamptz,OffsetDateTime,no,,,,@Deprecated
+shared,cancellations,CancellationEntity,booking_id,uuid,UUID,no,FK,,ManyToOne -> bookings,@Deprecated
+shared,cancellations,CancellationEntity,other_reason,text,String?,yes,,,,@Deprecated
+shared,characteristics,CharacteristicEntity,id,uuid,UUID,no,PK,,,
+shared,characteristics,CharacteristicEntity,property_name,text,String?,yes,,,,
+shared,characteristics,CharacteristicEntity,name,text,String,no,,,,
+shared,characteristics,CharacteristicEntity,service_scope,text,String,no,,,,
+shared,characteristics,CharacteristicEntity,model_scope,text,String,no,,,,
+shared,characteristics,CharacteristicEntity,is_active,boolean,Boolean,no,,,,
+shared,date_changes,DateChangeEntity,id,uuid,UUID,no,PK,,,@Deprecated
+shared,date_changes,DateChangeEntity,changed_at,timestamptz,OffsetDateTime,no,,,,@Deprecated
+shared,date_changes,DateChangeEntity,previous_arrival_date,date,LocalDate,no,,,,@Deprecated
+shared,date_changes,DateChangeEntity,previous_departure_date,date,LocalDate,no,,,,@Deprecated
+shared,date_changes,DateChangeEntity,new_arrival_date,date,LocalDate,no,,,,@Deprecated
+shared,date_changes,DateChangeEntity,new_departure_date,date,LocalDate,no,,,,@Deprecated
+shared,date_changes,DateChangeEntity,booking_id,uuid,UUID,no,FK,,ManyToOne -> bookings,@Deprecated
+shared,date_changes,DateChangeEntity,changed_by_user_id,uuid,UUID,no,FK,,ManyToOne -> users,@Deprecated
+shared,probation_delivery_units,ProbationDeliveryUnitEntity,id,uuid,UUID,no,PK,,,
+shared,probation_delivery_units,ProbationDeliveryUnitEntity,name,text,String,no,,,,
+shared,probation_delivery_units,ProbationDeliveryUnitEntity,delius_code,text,String?,yes,,,,
+shared,probation_delivery_units,ProbationDeliveryUnitEntity,probation_region_id,uuid,UUID,no,FK,,ManyToOne -> probation_regions,
+shared,appeals,AppealEntity,id,uuid,UUID,no,PK,,,
+shared,appeals,AppealEntity,appeal_date,date,LocalDate,no,,,,
+shared,appeals,AppealEntity,appeal_detail,text,String,no,,,,
+shared,appeals,AppealEntity,decision,text,String,no,,,,
+shared,appeals,AppealEntity,decision_detail,text,String,no,,,,
+shared,appeals,AppealEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,appeals,AppealEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> applications,
+shared,appeals,AppealEntity,assessment_id,uuid,UUID,no,FK,,ManyToOne -> assessments,
+shared,appeals,AppealEntity,created_by_user_id,uuid,UUID,no,FK,,ManyToOne -> users,
+shared,appeals,AppealEntity,version,bigint,Long,no,,,,@Version
+shared,assessments,AssessmentEntity,id,uuid,UUID,no,PK,,,Base class (JOINED inheritance); discriminator service
+shared,assessments,AssessmentEntity,service,text,String,no,,approved-premises|temporary-accommodation,,@DiscriminatorColumn(name=service)
+shared,assessments,AssessmentEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> applications,
+shared,assessments,AssessmentEntity,data,jsonb,String?,yes,,,,@Type(JsonType)
+shared,assessments,AssessmentEntity,document,jsonb,String?,yes,,,,@Type(JsonType)
+shared,assessments,AssessmentEntity,allocated_to_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,
+shared,assessments,AssessmentEntity,allocated_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,assessments,AssessmentEntity,reallocated_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,assessments,AssessmentEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,assessments,AssessmentEntity,submitted_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,assessments,AssessmentEntity,decision,text,AssessmentDecision?,yes,,ACCEPTED|REJECTED,,
+shared,assessments,AssessmentEntity,rejection_rationale,text,String?,yes,,,,
+shared,assessments,AssessmentEntity,is_withdrawn,boolean,Boolean,no,,,,
+shared,assessments,AssessmentEntity,due_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,assessments,AssessmentEntity,version,bigint,Long,no,,,,@Version
+shared,approved_premises_assessments,ApprovedPremisesAssessmentEntity,id,uuid,UUID,no,PK,,OneToOne -> assessments,@DiscriminatorValue=approved-premises; @PrimaryKeyJoinColumn
+shared,approved_premises_assessments,ApprovedPremisesAssessmentEntity,created_from_appeal,boolean,Boolean,no,,,,
+shared,approved_premises_assessments,ApprovedPremisesAssessmentEntity,agree_with_short_notice_reason,boolean,Boolean?,yes,,,,
+shared,approved_premises_assessments,ApprovedPremisesAssessmentEntity,agree_with_short_notice_reason_comments,text,String?,yes,,,,
+shared,approved_premises_assessments,ApprovedPremisesAssessmentEntity,reason_for_late_application,text,String?,yes,,,,
+shared,temporary_accommodation_assessments,TemporaryAccommodationAssessmentEntity,id,uuid,UUID,no,PK,,OneToOne -> assessments,@DiscriminatorValue=temporary-accommodation; @PrimaryKeyJoinColumn
+shared,temporary_accommodation_assessments,TemporaryAccommodationAssessmentEntity,completed_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,temporary_accommodation_assessments,TemporaryAccommodationAssessmentEntity,summary_data,jsonb,String,no,,,,@Type(JsonType)
+shared,temporary_accommodation_assessments,TemporaryAccommodationAssessmentEntity,referral_rejection_reason_id,uuid,UUID?,yes,FK,,ManyToOne -> referral_rejection_reasons,
+shared,temporary_accommodation_assessments,TemporaryAccommodationAssessmentEntity,referral_rejection_reason_detail,text,String?,yes,,,,
+shared,temporary_accommodation_assessments,TemporaryAccommodationAssessmentEntity,release_date,date,LocalDate?,yes,,,,
+shared,temporary_accommodation_assessments,TemporaryAccommodationAssessmentEntity,accommodation_required_from_date,date,LocalDate?,yes,,,,
+shared,assessment_clarification_notes,AssessmentClarificationNoteEntity,id,uuid,UUID,no,PK,,,
+shared,assessment_clarification_notes,AssessmentClarificationNoteEntity,assessment_id,uuid,UUID,no,FK,,ManyToOne -> assessments,
+shared,assessment_clarification_notes,AssessmentClarificationNoteEntity,created_by_user_id,uuid,UUID,no,FK,,ManyToOne -> users,
+shared,assessment_clarification_notes,AssessmentClarificationNoteEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,assessment_clarification_notes,AssessmentClarificationNoteEntity,query,text,String,no,,,,
+shared,assessment_clarification_notes,AssessmentClarificationNoteEntity,response,text,String?,yes,,,,
+shared,assessment_clarification_notes,AssessmentClarificationNoteEntity,response_received_on,date,LocalDate?,yes,,,,
+shared,assessment_referral_history_notes,AssessmentReferralHistoryNoteEntity,id,uuid,UUID,no,PK,,,Base class (JOINED inheritance)
+shared,assessment_referral_history_notes,AssessmentReferralHistoryNoteEntity,assessment_id,uuid,UUID,no,FK,,ManyToOne -> assessments,
+shared,assessment_referral_history_notes,AssessmentReferralHistoryNoteEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,assessment_referral_history_notes,AssessmentReferralHistoryNoteEntity,message,text,String,no,,,,
+shared,assessment_referral_history_notes,AssessmentReferralHistoryNoteEntity,created_by_user_id,uuid,UUID,no,FK,,ManyToOne -> users,
+shared,assessment_referral_history_user_notes,AssessmentReferralHistoryUserNoteEntity,id,uuid,UUID,no,PK,,OneToOne -> assessment_referral_history_notes,subclass
+shared,assessment_referral_history_system_notes,AssessmentReferralHistorySystemNoteEntity,id,uuid,UUID,no,PK,,OneToOne -> assessment_referral_history_notes,subclass
+shared,assessment_referral_history_system_notes,AssessmentReferralHistorySystemNoteEntity,type,text,ReferralHistorySystemNoteType,no,,SUBMITTED|UNALLOCATED|IN_REVIEW|READY_TO_PLACE|REJECTED|COMPLETED,,
+shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,id,uuid,UUID,no,PK,,,
+shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> applications,
+shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,submitted_at,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
+shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,expected_arrival_date,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
+shared,placement_applications_placeholder,PlacementApplicationPlaceholderEntity,archived,boolean,Boolean,no,,,,
+shared,extensions,ExtensionEntity,id,uuid,UUID,no,PK,,,@Deprecated
+shared,extensions,ExtensionEntity,previous_departure_date,date,LocalDate,no,,,,@Deprecated
+shared,extensions,ExtensionEntity,new_departure_date,date,LocalDate,no,,,,@Deprecated
+shared,extensions,ExtensionEntity,notes,text,String?,yes,,,,@Deprecated
+shared,extensions,ExtensionEntity,created_at,timestamptz,OffsetDateTime,no,,,,@Deprecated
+shared,extensions,ExtensionEntity,booking_id,uuid,UUID,no,FK,,ManyToOne -> bookings,@Deprecated
+shared,arrivals,ArrivalEntity,id,uuid,UUID,no,PK,,,@Deprecated
+shared,arrivals,ArrivalEntity,arrival_date,date,LocalDate,no,,,,@Deprecated
+shared,arrivals,ArrivalEntity,arrival_date_time,timestamptz,Instant,no,,,,@Deprecated
+shared,arrivals,ArrivalEntity,expected_departure_date,date,LocalDate,no,,,,@Deprecated
+shared,arrivals,ArrivalEntity,notes,text,String?,yes,,,,@Deprecated
+shared,arrivals,ArrivalEntity,created_at,timestamptz,OffsetDateTime,no,,,,@Deprecated
+shared,arrivals,ArrivalEntity,booking_id,uuid,UUID,no,FK,,ManyToOne -> bookings,@Deprecated
+shared,premises,PremisesEntity,id,uuid,UUID,no,PK,,,Base class (JOINED inheritance); discriminator service
+shared,premises,PremisesEntity,service,text,String,no,,approved-premises|temporary-accommodation,,@DiscriminatorColumn(name=service)
+shared,premises,PremisesEntity,name,text,String,no,,,,
+shared,premises,PremisesEntity,address_line1,text,String,no,,,,
+shared,premises,PremisesEntity,address_line2,text,String?,yes,,,,
+shared,premises,PremisesEntity,town,text,String?,yes,,,,
+shared,premises,PremisesEntity,postcode,text,String,no,,,,
+shared,premises,PremisesEntity,longitude,numeric,Double?,yes,,,,
+shared,premises,PremisesEntity,latitude,numeric,Double?,yes,,,,
+shared,premises,PremisesEntity,notes,text,String,no,,,,
+shared,premises,PremisesEntity,email_address,text,String?,yes,,,,
+shared,premises,PremisesEntity,probation_region_id,uuid,UUID,no,FK,,ManyToOne -> probation_regions,
+shared,premises,PremisesEntity,local_authority_area_id,uuid,UUID?,yes,FK,,ManyToOne -> local_authority_areas,
+shared,premises,PremisesEntity,status,text,PropertyStatus,no,,active|archived,,
+shared,premises,PremisesEntity,created_at,timestamptz,OffsetDateTime,no,,,,@CreationTimestamp
+shared,approved_premises,ApprovedPremisesEntity,id,uuid,UUID,no,PK,,OneToOne -> premises,@DiscriminatorValue=approved-premises; @PrimaryKeyJoinColumn
+shared,approved_premises,ApprovedPremisesEntity,ap_code,text,String,no,,,,
+shared,approved_premises,ApprovedPremisesEntity,q_code,text,String,no,,,,
+shared,approved_premises,ApprovedPremisesEntity,point,geometry,Point?,yes,,,,PostGIS geometry
+shared,approved_premises,ApprovedPremisesEntity,gender,text,ApprovedPremisesGender,no,,MAN|WOMAN,,
+shared,approved_premises,ApprovedPremisesEntity,supports_space_bookings,boolean,Boolean,no,,,,
+shared,approved_premises,ApprovedPremisesEntity,manager_details,text,String?,yes,,,,
+shared,approved_premises,ApprovedPremisesEntity,full_address,text,String?,yes,,,,
+shared,approved_premises,ApprovedPremisesEntity,cas1_cru_management_area_id,uuid,UUID,no,FK,,ManyToOne -> cas1_cru_management_areas,
+shared,approved_premises,ApprovedPremisesEntity,allow_new_space_bookings,boolean,Boolean,no,,,,
+shared,temporary_accommodation_premises,TemporaryAccommodationPremisesEntity,id,uuid,UUID,no,PK,,OneToOne -> premises,@DiscriminatorValue=temporary-accommodation; @PrimaryKeyJoinColumn
+shared,temporary_accommodation_premises,TemporaryAccommodationPremisesEntity,start_date,date,LocalDate,no,,,,
+shared,temporary_accommodation_premises,TemporaryAccommodationPremisesEntity,end_date,date,LocalDate?,yes,,,,
+shared,temporary_accommodation_premises,TemporaryAccommodationPremisesEntity,probation_delivery_unit_id,uuid,UUID?,yes,FK,,ManyToOne -> probation_delivery_units,
+shared,temporary_accommodation_premises,TemporaryAccommodationPremisesEntity,turnaround_working_day_count,integer,Int,no,,,,
+shared,rooms,RoomEntity,id,uuid,UUID,no,PK,,,
+shared,rooms,RoomEntity,name,text,String,no,,,,
+shared,rooms,RoomEntity,code,text,String?,yes,,,,
+shared,rooms,RoomEntity,notes,text,String?,yes,,,,
+shared,rooms,RoomEntity,premises_id,uuid,UUID,no,FK,,ManyToOne -> premises,
+shared,domain_events,DomainEventEntity,id,uuid,UUID,no,PK,,,
+shared,domain_events,DomainEventEntity,application_id,uuid,UUID?,yes,,,,
+shared,domain_events,DomainEventEntity,assessment_id,uuid,UUID?,yes,,,,
+shared,domain_events,DomainEventEntity,booking_id,uuid,UUID?,yes,,,,
+shared,domain_events,DomainEventEntity,cas1_space_booking_id,uuid,UUID?,yes,,,,
+shared,domain_events,DomainEventEntity,cas3_premises_id,uuid,UUID?,yes,,,,
+shared,domain_events,DomainEventEntity,cas3_bedspace_id,uuid,UUID?,yes,,,,
+shared,domain_events,DomainEventEntity,crn,text,String?,yes,,,,
+shared,domain_events,DomainEventEntity,type,text,DomainEventType,no,,see DomainEventType enum (50+ values),,
+shared,domain_events,DomainEventEntity,occurred_at,timestamptz,OffsetDateTime,no,,,,
+shared,domain_events,DomainEventEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,domain_events,DomainEventEntity,cas3_cancelled_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,domain_events,DomainEventEntity,cas3_transaction_id,uuid,UUID?,yes,,,,
+shared,domain_events,DomainEventEntity,data,jsonb,String,no,,,,@Type(JsonType)
+shared,domain_events,DomainEventEntity,service,text,String,no,,,,
+shared,domain_events,DomainEventEntity,trigger_source,text,TriggerSourceType?,yes,,USER|SYSTEM,,
+shared,domain_events,DomainEventEntity,triggered_by_user_id,uuid,UUID?,yes,,,,
+shared,domain_events,DomainEventEntity,noms_number,text,String?,yes,,,,
+shared,domain_events,DomainEventEntity,schema_version,integer,Int?,yes,,,,
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,id,uuid,UUID,no,PK,,,
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_applications,"FK in migration 20231102094837; entity stores UUID not an association"
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,created_by_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,created_at,timestamp,OffsetDateTime,no,,,,migration uses timestamp (no time zone); entity is OffsetDateTime
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,body,text,String,no,,,,
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,cas1_space_booking_id,uuid,UUID?,yes,FK,,,FK in migration 20241205110116; entity stores UUID not an association
+shared,application_timeline_notes,ApplicationTimelineNoteEntity,deleted_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,move_on_categories,MoveOnCategoryEntity,id,uuid,UUID,no,PK,,,
+shared,move_on_categories,MoveOnCategoryEntity,name,text,String,no,,,,
+shared,move_on_categories,MoveOnCategoryEntity,is_active,boolean,Boolean,no,,,,
+shared,move_on_categories,MoveOnCategoryEntity,service_scope,text,String,no,,,,
+shared,move_on_categories,MoveOnCategoryEntity,legacy_delius_category_code,text,String?,yes,,,,
+shared,cache_refresh_exclusions_inmate_details,CacheRefreshExclusionsInmateDetailsEntity,noms_number,text,String,no,PK,,,
+shared,cache_refresh_exclusions_inmate_details,CacheRefreshExclusionsInmateDetailsEntity,description,text,String,no,,,,
+shared,placement_applications,PlacementApplicationEntity,id,uuid,UUID,no,PK,,,
+shared,placement_applications,PlacementApplicationEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_applications,
+shared,placement_applications,PlacementApplicationEntity,created_by_user_id,uuid,UUID,no,FK,,ManyToOne -> users,
+shared,placement_applications,PlacementApplicationEntity,data,jsonb,String?,yes,,,,@Type(JsonType)
+shared,placement_applications,PlacementApplicationEntity,document,jsonb,String?,yes,,,,@Type(JsonType)
+shared,placement_applications,PlacementApplicationEntity,created_at,timestamp,OffsetDateTime,no,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
+shared,placement_applications,PlacementApplicationEntity,submitted_at,timestamp,OffsetDateTime?,yes,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
+shared,placement_applications,PlacementApplicationEntity,allocated_to_user_id,uuid,UUID?,yes,FK,,ManyToOne -> users,
+shared,placement_applications,PlacementApplicationEntity,allocated_at,timestamp,OffsetDateTime?,yes,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
+shared,placement_applications,PlacementApplicationEntity,reallocated_at,timestamp,OffsetDateTime?,yes,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
+shared,placement_applications,PlacementApplicationEntity,decision,text,PlacementApplicationDecision?,yes,,ACCEPTED|REJECTED|WITHDRAW|WITHDRAWN_BY_PP,,
+shared,placement_applications,PlacementApplicationEntity,decision_made_at,timestamp,OffsetDateTime?,yes,,,,"migration uses timestamp (no time zone); entity is OffsetDateTime"
+shared,placement_applications,PlacementApplicationEntity,placement_type,text,PlacementType?,yes,,ROTL|RELEASE_FOLLOWING_DECISION|ADDITIONAL_PLACEMENT|AUTOMATIC,,
+shared,placement_applications,PlacementApplicationEntity,automatic,boolean,Boolean,no,,,,
+shared,placement_applications,PlacementApplicationEntity,withdrawal_reason,text,PlacementApplicationWithdrawalReason?,yes,,see PlacementApplicationWithdrawalReason enum,,
+shared,placement_applications,PlacementApplicationEntity,due_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,placement_application_submission_group_id,uuid,UUID?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,is_withdrawn,boolean,Boolean,no,,,,
+shared,placement_applications,PlacementApplicationEntity,expected_arrival,date,LocalDate?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,requested_duration,integer,Int?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,authorised_duration,integer,Int?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,expected_arrival_flexible,boolean,Boolean?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,release_type,text,Cas1ReleaseType?,yes,,Cas1ReleaseType,,
+shared,placement_applications,PlacementApplicationEntity,sentence_type,text,String?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,situation,text,String?,yes,,,,
+shared,placement_applications,PlacementApplicationEntity,backfilled_automatic,boolean,Boolean,no,,,,
+shared,placement_applications,PlacementApplicationEntity,version,bigint,Long,no,,,,@Version
+shared,placement_requests,PlacementRequestEntity,id,uuid,UUID,no,PK,,,
+shared,placement_requests,PlacementRequestEntity,expected_arrival,date,LocalDate,no,,,,
+shared,placement_requests,PlacementRequestEntity,duration,integer,Int,no,,,,
+shared,placement_requests,PlacementRequestEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_applications,FetchType.LAZY
+shared,placement_requests,PlacementRequestEntity,assessment_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_assessments,FetchType.LAZY
+shared,placement_requests,PlacementRequestEntity,placement_application_id,uuid,UUID?,yes,FK,,OneToOne -> placement_applications,
+shared,placement_requests,PlacementRequestEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,placement_requests,PlacementRequestEntity,notes,text,String?,yes,,,,
+shared,placement_requests,PlacementRequestEntity,placement_requirements_id,uuid,UUID,no,FK,,ManyToOne -> placement_requirements,FetchType.LAZY
+shared,placement_requests,PlacementRequestEntity,is_parole,boolean,Boolean,no,,,,
+shared,placement_requests,PlacementRequestEntity,is_withdrawn,boolean,Boolean,no,,,,
+shared,placement_requests,PlacementRequestEntity,withdrawal_reason,text,PlacementRequestWithdrawalReason?,yes,,see PlacementRequestWithdrawalReason enum,,
+shared,placement_requests,PlacementRequestEntity,due_at,timestamptz,,yes,,,,"physical column (migration 20240226130325); not mapped in PlacementRequestEntity"
+shared,placement_requests,PlacementRequestEntity,version,bigint,Long,no,,,,@Version
+shared,probation_area_probation_region_mappings,ProbationAreaProbationRegionMappingEntity,id,uuid,UUID,no,PK,,,
+shared,probation_area_probation_region_mappings,ProbationAreaProbationRegionMappingEntity,probation_area_delius_code,text,String,no,,,,
+shared,probation_area_probation_region_mappings,ProbationAreaProbationRegionMappingEntity,probation_region_id,uuid,UUID,no,FK,,ManyToOne -> probation_regions,
+shared,offline_applications,OfflineApplicationEntity,id,uuid,UUID,no,PK,,,
+shared,offline_applications,OfflineApplicationEntity,crn,text,String,no,,,,
+shared,offline_applications,OfflineApplicationEntity,service,text,String,no,,,,
+shared,offline_applications,OfflineApplicationEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,offline_applications,OfflineApplicationEntity,event_number,text,String?,yes,,,,
+shared,offline_applications,OfflineApplicationEntity,name,text,String?,yes,,,,
+shared,applications,ApplicationEntity,id,uuid,UUID,no,PK,,,Base class (JOINED inheritance); discriminator service
+shared,applications,ApplicationEntity,service,text,String,no,,approved-premises|temporary-accommodation,,@DiscriminatorColumn(name=service)
+shared,applications,ApplicationEntity,crn,text,String,no,,,,
+shared,applications,ApplicationEntity,created_by_user_id,uuid,UUID,no,FK,,ManyToOne -> users,
+shared,applications,ApplicationEntity,data,jsonb,String?,yes,,,,@Type(JsonType)
+shared,applications,ApplicationEntity,document,jsonb,String?,yes,,,,@Type(JsonType)
+shared,applications,ApplicationEntity,created_at,timestamptz,OffsetDateTime,no,,,,
+shared,applications,ApplicationEntity,submitted_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,applications,ApplicationEntity,deleted_at,timestamptz,OffsetDateTime?,yes,,,,
+shared,applications,ApplicationEntity,noms_number,text,String?,yes,,,,
+shared,applications,ApplicationEntity,version,bigint,Long,no,,,,@Version
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,id,uuid,UUID,no,PK,,OneToOne -> applications,@DiscriminatorValue=approved-premises; @PrimaryKeyJoinColumn
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,is_womens_application,boolean,Boolean?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,is_emergency_application,boolean,Boolean?,yes,,,,@Deprecated
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,ap_type,text,ApprovedPremisesType,no,,ApprovedPremisesType,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,is_inapplicable,boolean,Boolean?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,is_withdrawn,boolean,Boolean,no,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,withdrawal_reason,text,String?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,other_withdrawal_reason,text,String?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,conviction_id,bigint,Long,no,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,event_number,text,String,no,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,offence_id,text,String,no,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,risk_ratings,jsonb,PersonRisks,no,,,,@Type(JsonType)
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,release_type,text,Cas1ReleaseType?,yes,,Cas1ReleaseType,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,sentence_type,text,String?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,situation,text,String?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,arrival_date,timestamptz,OffsetDateTime?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,duration,integer,Int?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,name,text,String,no,,,,@Deprecated; use Cas1OffenderEntity
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,target_location,text,String?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,status,text,ApprovedPremisesApplicationStatus,no,,ApprovedPremisesApplicationStatus,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,inmate_in_out_status_on_submission,text,String?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,ap_area_id,uuid,UUID?,yes,FK,,ManyToOne -> ap_areas,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,cas1_cru_management_area_id,uuid,UUID?,yes,FK,,ManyToOne -> cas1_cru_management_areas,FetchType.LAZY
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,applicant_cas1_application_user_details_id,uuid,UUID?,yes,FK,,OneToOne -> cas_1_application_user_details,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,case_manager_is_not_applicant,boolean,Boolean?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,case_manager_cas1_application_user_details_id,uuid,UUID?,yes,FK,,OneToOne -> cas_1_application_user_details,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,notice_type,text,Cas1ApplicationTimelinessCategory?,yes,,Cas1ApplicationTimelinessCategory,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,licence_expiry_date,date,LocalDate?,yes,,,,
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,cas1_offender_id,uuid,UUID?,yes,FK,,ManyToOne -> cas1_offenders,FetchType.LAZY
+shared,approved_premises_applications,ApprovedPremisesApplicationEntity,expired_reason,text,String?,yes,,,,
+shared,approved_premises_application_team_codes,ApplicationTeamCodeEntity,id,uuid,UUID,no,PK,,,
+shared,approved_premises_application_team_codes,ApplicationTeamCodeEntity,application_id,uuid,UUID,no,FK,,ManyToOne -> approved_premises_applications,
+shared,approved_premises_application_team_codes,ApplicationTeamCodeEntity,team_code,text,String,no,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,id,uuid,UUID,no,PK,,OneToOne -> applications,@DiscriminatorValue=temporary-accommodation; @PrimaryKeyJoinColumn
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,conviction_id,bigint,Long,no,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,event_number,text,String,no,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,offence_id,text,String,no,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,risk_ratings,jsonb,PersonRisks,no,,,,@Type(JsonType)
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,probation_region_id,uuid,UUID,no,FK,,ManyToOne -> probation_regions,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,arrival_date,timestamptz,OffsetDateTime?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,is_registered_sex_offender,boolean,Boolean?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,is_history_of_sexual_offence,boolean,Boolean?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,is_concerning_sexual_behaviour,boolean,Boolean?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,needs_accessible_property,boolean,Boolean?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,has_history_of_arson,boolean,Boolean?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,is_concerning_arson_behaviour,boolean,Boolean?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,is_duty_to_refer_submitted,boolean,Boolean?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,duty_to_refer_submission_date,date,LocalDate?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,duty_to_refer_outcome,text,String?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,is_eligible,boolean,Boolean?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,eligibility_reason,text,String?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,duty_to_refer_local_authority_area_name,text,String?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,prison_name_on_creation,text,String?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,person_release_date,date,LocalDate?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,name,text,String?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,prison_release_types,text,String?,yes,,,,
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,probation_delivery_unit_id,uuid,UUID?,yes,FK,,ManyToOne -> probation_delivery_units,FetchType.LAZY
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,previous_referral_probation_region_id,uuid,UUID?,yes,FK,,ManyToOne -> probation_regions,FetchType.LAZY
+shared,temporary_accommodation_applications,TemporaryAccommodationApplicationEntity,previous_referral_probation_delivery_unit_id,uuid,UUID?,yes,FK,,ManyToOne -> probation_delivery_units,FetchType.LAZY
+shared,destination_providers,DestinationProviderEntity,id,uuid,UUID,no,PK,,,
+shared,destination_providers,DestinationProviderEntity,name,text,String,no,,,,
+shared,destination_providers,DestinationProviderEntity,is_active,boolean,Boolean,no,,,,
+shared,tasks,Task,id,uuid,UUID,no,PK,,,projection; native UNION ALL over assessments + placement_applications; no physical table
+shared,tasks,Task,created_at,timestamp,LocalDateTime,no,,,,
+shared,tasks,Task,type,text,TaskEntityType,no,,ASSESSMENT|PLACEMENT_APPLICATION,,
+shared,tasks,Task,person,text,String,no,,,,
+shared,tasks,Task,allocated_to,text,String?,yes,,,,
+shared,tasks,Task,completed_at,timestamp,LocalDateTime?,yes,,,,
+shared,tasks,Task,decision,text,String?,yes,,,,
