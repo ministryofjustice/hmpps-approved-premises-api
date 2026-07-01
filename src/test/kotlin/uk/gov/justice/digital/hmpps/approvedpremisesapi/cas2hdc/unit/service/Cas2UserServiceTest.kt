@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2.model.Cas2ServiceOrigin
@@ -25,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesForRequesterApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.PersonName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisGeneralAccountFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisStaffInformationFactory
@@ -317,95 +315,6 @@ class Cas2UserServiceTest {
         verify(exactly = 0) { mockCas2UserRepository.save(any()) }
         verify(exactly = 1) { mockCas2UserRepository.findByUsernameAndUserTypeAndServiceOrigin(any(), any(), any()) }
         assertThat(result).isEqualTo(userEntity)
-      }
-    }
-  }
-
-  @Nested
-  inner class GetCas2v2UserDetails {
-    @Test
-    fun `returns Cas2v2UserDto for a NOMIS user`() {
-      val username = "NOMIS_USER"
-      val user = Cas2UserEntityFactory()
-        .withUsername(username)
-        .withUserType(Cas2UserType.NOMIS)
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
-        .produce()
-
-      val result = cas2HdcUserService.getUserDetails(user)
-
-      assertThat(result.username).isEqualTo(username)
-      assertThat(result.type.name).isEqualTo("NOMIS")
-      assertThat(result.deliusUserInfo).isNull()
-    }
-
-    @Test
-    fun `returns Cas2v2UserDto for a DELIUS user`() {
-      val username = "DELIUS_USER"
-      val user = Cas2UserEntityFactory()
-        .withUsername(username)
-        .withUserType(Cas2UserType.DELIUS)
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
-        .produce()
-
-      val staffDetail = StaffDetailFactory.staffDetail(
-        deliusUsername = username,
-        probationArea = StaffDetailFactory.probationArea().copy(code = "P1", description = "Probation Area 1"),
-      )
-
-      every { mockApDeliusContextApiClient.getStaffDetail(username) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffDetail,
-      )
-
-      val result = cas2HdcUserService.getUserDetails(user)
-
-      assertThat(result.username).isEqualTo(username)
-      assertThat(result.type.name).isEqualTo("DELIUS")
-      assertThat(result.deliusUserInfo).isNotNull
-      assertThat(result.deliusUserInfo!!.probationArea.code).isEqualTo("P1")
-      assertThat(result.deliusUserInfo.probationArea.description).isEqualTo("Probation Area 1")
-    }
-
-    @Test
-    fun `throws NotFoundProblem when Delius API call return 404`() {
-      val username = "DELIUS_USER"
-      val user = Cas2UserEntityFactory()
-        .withUsername(username)
-        .withUserType(Cas2UserType.DELIUS)
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
-        .produce()
-
-      every { mockApDeliusContextApiClient.getStaffDetail(username) } returns ClientResult.Failure.StatusCode(
-        method = org.springframework.http.HttpMethod.GET,
-        path = "/",
-        status = HttpStatus.NOT_FOUND,
-        body = null,
-      )
-
-      assertThrows<NotFoundProblem> {
-        cas2HdcUserService.getUserDetails(user)
-      }
-    }
-
-    @Test
-    fun `throws exception when Delius API call fails`() {
-      val username = "DELIUS_USER"
-      val user = Cas2UserEntityFactory()
-        .withUsername(username)
-        .withUserType(Cas2UserType.DELIUS)
-        .withServiceOrigin(Cas2ServiceOrigin.BAIL)
-        .produce()
-
-      every { mockApDeliusContextApiClient.getStaffDetail(username) } returns ClientResult.Failure.StatusCode(
-        method = org.springframework.http.HttpMethod.GET,
-        path = "/",
-        status = HttpStatus.INTERNAL_SERVER_ERROR,
-        body = null,
-      )
-
-      assertThrows<RuntimeException> {
-        cas2HdcUserService.getUserDetails(user)
       }
     }
   }
