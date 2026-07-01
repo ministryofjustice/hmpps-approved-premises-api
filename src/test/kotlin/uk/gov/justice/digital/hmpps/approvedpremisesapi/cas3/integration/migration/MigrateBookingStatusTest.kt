@@ -3,53 +3,37 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.migrat
 import com.ninjasquad.springmockk.MockkSpyBean
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 
 class MigrateBookingStatusTest : MigrationJobTestBase() {
   @MockkSpyBean
-  lateinit var realBookingRepository: BookingRepository
-
-  @Test
-  fun `Should not migrate CAS1 booking with 'cancelled' status and returns 202 response`() {
-    givenAUser { userEntity, _ ->
-      givenAnOffender { _, _ ->
-        val approvedPremises = ServiceName.approvedPremises
-        val booking = createCAS1CancelledBooking()
-
-        assertBookingStatusIsNull(booking, approvedPremises)
-
-        migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
-
-        assertBookingStatusIsNull(booking, approvedPremises)
-      }
-    }
-  }
+  lateinit var realBookingRepository: Cas3v2BookingRepository
 
   @Test
   fun `Should not migrate CAS3 booking with existing status 'arrived' with existing departure entity and returns 202 response`() {
     givenAUser { userEntity, _ ->
       givenAnOffender { _, _ ->
-        val booking = createTemporaryAccommodationBooking(userEntity, BookingStatus.arrived)
-        booking.departures = departureEntityFactory.produceAndPersistMultiple(1) {
+        val booking = createCas3Booking(userEntity, Cas3BookingStatus.arrived)
+        booking.departures = cas3DepartureEntityFactory.produceAndPersistMultiple(1) {
           withBooking(booking)
+          withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
           withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
-          withMoveOnCategory(moveOnCategoryEntityFactory.produceAndPersist())
+          withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
         }.toMutableList()
 
-        assertBookingStatus(booking, BookingStatus.arrived, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking, Cas3BookingStatus.arrived, ServiceName.temporaryAccommodation)
 
         migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
-        assertBookingStatus(booking, BookingStatus.arrived, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking, Cas3BookingStatus.arrived, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -64,7 +48,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
-        assertBookingStatus(booking, BookingStatus.cancelled, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking, Cas3BookingStatus.cancelled, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -81,8 +65,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
-        assertBookingStatus(booking1, BookingStatus.cancelled, ServiceName.temporaryAccommodation)
-        assertBookingStatus(booking2, BookingStatus.cancelled, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking1, Cas3BookingStatus.cancelled, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking2, Cas3BookingStatus.cancelled, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -99,8 +83,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
-        assertBookingStatus(booking1, BookingStatus.departed, ServiceName.temporaryAccommodation)
-        assertBookingStatus(booking2, BookingStatus.departed, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking1, Cas3BookingStatus.departed, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking2, Cas3BookingStatus.departed, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -109,16 +93,16 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
   fun `Successfully migrate multiple CAS3 provisional booking and returns 202 response`() {
     givenAUser { userEntity, _ ->
       givenAnOffender { _, _ ->
-        val booking1 = createTemporaryAccommodationBooking(userEntity, null)
-        val booking2 = createTemporaryAccommodationBooking(userEntity, null)
+        val booking1 = createCas3Booking(userEntity, null)
+        val booking2 = createCas3Booking(userEntity, null)
 
         assertBookingStatusIsNull(booking1, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(booking2, ServiceName.temporaryAccommodation)
 
         migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
-        assertBookingStatus(booking1, BookingStatus.provisional, ServiceName.temporaryAccommodation)
-        assertBookingStatus(booking2, BookingStatus.provisional, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking1, Cas3BookingStatus.provisional, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking2, Cas3BookingStatus.provisional, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -135,8 +119,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
-        assertBookingStatus(booking1, BookingStatus.arrived, ServiceName.temporaryAccommodation)
-        assertBookingStatus(booking2, BookingStatus.arrived, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking1, Cas3BookingStatus.arrived, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking2, Cas3BookingStatus.arrived, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -153,8 +137,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
-        assertBookingStatus(booking1, BookingStatus.confirmed, ServiceName.temporaryAccommodation)
-        assertBookingStatus(booking2, BookingStatus.confirmed, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking1, Cas3BookingStatus.confirmed, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking2, Cas3BookingStatus.confirmed, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -167,7 +151,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
         val departedBooking2 = createCAS3DepartedBooking(userEntity)
         val arrivedBooking = createCAS3ArrivedBooking(userEntity)
         val confirmedBooking = createCAS3ConfirmedBooking(userEntity)
-        val provisionalBooking = createTemporaryAccommodationBooking(userEntity, null)
+        val provisionalBooking = createCas3Booking(userEntity, null)
 
         assertBookingStatusIsNull(departedBooking1, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(departedBooking2, ServiceName.temporaryAccommodation)
@@ -177,11 +161,11 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
-        assertBookingStatus(departedBooking1, BookingStatus.departed, ServiceName.temporaryAccommodation)
-        assertBookingStatus(departedBooking2, BookingStatus.departed, ServiceName.temporaryAccommodation)
-        assertBookingStatus(arrivedBooking, BookingStatus.arrived, ServiceName.temporaryAccommodation)
-        assertBookingStatus(confirmedBooking, BookingStatus.confirmed, ServiceName.temporaryAccommodation)
-        assertBookingStatus(provisionalBooking, BookingStatus.provisional, ServiceName.temporaryAccommodation)
+        assertBookingStatus(departedBooking1, Cas3BookingStatus.departed, ServiceName.temporaryAccommodation)
+        assertBookingStatus(departedBooking2, Cas3BookingStatus.departed, ServiceName.temporaryAccommodation)
+        assertBookingStatus(arrivedBooking, Cas3BookingStatus.arrived, ServiceName.temporaryAccommodation)
+        assertBookingStatus(confirmedBooking, Cas3BookingStatus.confirmed, ServiceName.temporaryAccommodation)
+        assertBookingStatus(provisionalBooking, Cas3BookingStatus.provisional, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -191,22 +175,22 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
     givenAUser { userEntity, _ ->
       givenAnOffender { _, _ ->
         val cancelledBooking = createCAS3CancelledBooking(userEntity)
-        val provisionalBooking = createTemporaryAccommodationBooking(userEntity, null)
+        val provisionalBooking = createCas3Booking(userEntity, null)
 
         assertBookingStatusIsNull(cancelledBooking, ServiceName.temporaryAccommodation)
         assertBookingStatusIsNull(provisionalBooking, ServiceName.temporaryAccommodation)
 
         migrationJobService.runMigrationJob(MigrationJobType.updateBookingStatus, 1)
 
-        assertBookingStatus(provisionalBooking, BookingStatus.provisional, ServiceName.temporaryAccommodation)
-        assertBookingStatus(cancelledBooking, BookingStatus.cancelled, ServiceName.temporaryAccommodation)
+        assertBookingStatus(provisionalBooking, Cas3BookingStatus.provisional, ServiceName.temporaryAccommodation)
+        assertBookingStatus(cancelledBooking, Cas3BookingStatus.cancelled, ServiceName.temporaryAccommodation)
       }
     }
   }
 
   private fun assertBookingStatus(
-    givenBooking: BookingEntity,
-    expectedStatus: BookingStatus,
+    givenBooking: Cas3BookingEntity,
+    expectedStatus: Cas3BookingStatus,
     serviceName: ServiceName,
   ) {
     val booking = realBookingRepository.findById(givenBooking.id)
@@ -216,7 +200,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
   }
 
   private fun assertBookingStatusIsNull(
-    booking: BookingEntity,
+    booking: Cas3BookingEntity,
     serviceName: ServiceName,
   ) {
     val updatedBooking = realBookingRepository.findById(booking.id)
@@ -225,20 +209,21 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
     Assertions.assertThat(updatedBooking.get().service).isEqualTo(serviceName.value)
   }
 
-  private fun createCAS3DepartedBooking(userEntity: UserEntity): BookingEntity {
-    val booking = createTemporaryAccommodationBooking(userEntity, null)
-    booking.departures = departureEntityFactory.produceAndPersistMultiple(1) {
+  private fun createCAS3DepartedBooking(userEntity: UserEntity): Cas3BookingEntity {
+    val booking = createCas3Booking(userEntity, null)
+    booking.departures = cas3DepartureEntityFactory.produceAndPersistMultiple(1) {
       withBooking(booking)
+      withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
       withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
-      withMoveOnCategory(moveOnCategoryEntityFactory.produceAndPersist())
+      withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
     }.toMutableList()
 
     return booking
   }
 
-  private fun createCAS3CancelledBooking(userEntity: UserEntity): BookingEntity {
-    val booking = createTemporaryAccommodationBooking(userEntity, null)
-    booking.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
+  private fun createCAS3CancelledBooking(userEntity: UserEntity): Cas3BookingEntity {
+    val booking = createCas3Booking(userEntity, null)
+    booking.cancellations = cas3CancellationEntityFactory.produceAndPersistMultiple(1) {
       withBooking(booking)
       withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
     }.toMutableList()
@@ -246,73 +231,41 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
     return booking
   }
 
-  private fun createCAS3ArrivedBooking(userEntity: UserEntity): BookingEntity {
-    val booking = createTemporaryAccommodationBooking(userEntity, null)
-    booking.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) {
+  private fun createCAS3ArrivedBooking(userEntity: UserEntity): Cas3BookingEntity {
+    val booking = createCas3Booking(userEntity, null)
+    booking.arrivals = cas3ArrivalEntityFactory.produceAndPersistMultiple(1) {
       withBooking(booking)
     }.toMutableList()
 
     return booking
   }
 
-  private fun createCAS3ConfirmedBooking(userEntity: UserEntity): BookingEntity {
-    val booking = createTemporaryAccommodationBooking(userEntity, null)
-    booking.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
+  private fun createCAS3ConfirmedBooking(userEntity: UserEntity): Cas3BookingEntity {
+    val booking = createCas3Booking(userEntity, null)
+    booking.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
       withBooking(booking)
     }
-
     return booking
   }
 
-  private fun createCAS1CancelledBooking(): BookingEntity {
-    val booking = createApprovedAccommodationBooking()
-    booking.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
-      withBooking(booking)
-      withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-    }.toMutableList()
-
-    return booking
-  }
-
-  private fun createTemporaryAccommodationBooking(userEntity: UserEntity, bookingStatus: BookingStatus?): BookingEntity {
-    val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-      withProbationRegion(userEntity.probationRegion)
-      withYieldedLocalAuthorityArea {
-        localAuthorityEntityFactory.produceAndPersist()
-      }
+  private fun createCas3Booking(userEntity: UserEntity, bookingStatus: Cas3BookingStatus?): Cas3BookingEntity {
+    val premises = cas3PremisesEntityFactory.produceAndPersist {
+      withProbationDeliveryUnit(
+        probationDeliveryUnitFactory.produceAndPersist {
+          withProbationRegion(userEntity.probationRegion)
+        },
+      )
+      withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     }
-
-    val room = roomEntityFactory.produceAndPersist {
+    val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
       withPremises(premises)
     }
-    val bed = bedEntityFactory.produceAndPersist {
-      withRoom(room)
-    }
-    val booking = bookingEntityFactory.produceAndPersist {
-      withPremises(bed.room.premises)
+    return cas3BookingEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withBedspace(bedspace)
       withCrn("X320741")
-      withBed(bed)
       withServiceName(ServiceName.temporaryAccommodation)
       bookingStatus?.let { withStatus(bookingStatus) }
     }
-    return booking
-  }
-
-  private fun createApprovedAccommodationBooking(): BookingEntity {
-    val premises = givenAnApprovedPremises()
-
-    val room = roomEntityFactory.produceAndPersist {
-      withPremises(premises)
-    }
-    val bed = bedEntityFactory.produceAndPersist {
-      withRoom(room)
-    }
-    val booking = bookingEntityFactory.produceAndPersist {
-      withPremises(bed.room.premises)
-      withCrn("X320741")
-      withBed(bed)
-      withServiceName(ServiceName.approvedPremises)
-    }
-    return booking
   }
 }

@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationTeamC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -189,49 +188,6 @@ class UserAccessServiceTest {
   }
 
   @Nested
-  inner class UserCanViewBooking {
-
-    private val cas3BookingNotInUserRegion = BookingEntityFactory()
-      .withPremises(temporaryAccommodationPremisesNotInUserRegion)
-      .produce()
-
-    private val cas3BookingInUserRegion = BookingEntityFactory()
-      .withPremises(temporaryAccommodationPremisesInUserRegion)
-      .produce()
-
-    @Test
-    fun `userCanViewBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
-      currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-      assertThat(userAccessService.userCanViewBooking(user, cas3BookingInUserRegion)).isTrue
-    }
-
-    @Test
-    fun `userCanViewBooking returns false if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
-      currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-      assertThat(
-        userAccessService.userCanViewBooking(
-          user,
-          cas3BookingNotInUserRegion,
-        ),
-      ).isFalse
-    }
-
-    @Test
-    fun `userCanViewBooking returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
-      currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-      assertThat(userAccessService.userCanViewBooking(user, cas3BookingInUserRegion)).isFalse
-      assertThat(userAccessService.userCanViewBooking(user, cas3BookingNotInUserRegion)).isFalse
-    }
-  }
-
-  @Nested
   inner class UserCanManagePremisesBookings {
 
     @Test
@@ -324,43 +280,6 @@ class UserAccessServiceTest {
           cas3PremisesNotInUserRegion,
         ),
       ).isFalse
-    }
-  }
-
-  @Nested
-  inner class UserMayCancelBooking {
-    private val cas3BookingNotInUserRegion = BookingEntityFactory()
-      .withPremises(temporaryAccommodationPremisesNotInUserRegion)
-      .produce()
-
-    private val cas3BookingInUserRegion = BookingEntityFactory()
-      .withPremises(temporaryAccommodationPremisesInUserRegion)
-      .produce()
-
-    @Test
-    fun `userMayCancelBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
-      currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-      assertThat(userAccessService.userMayCancelBooking(user, cas3BookingInUserRegion)).isTrue
-    }
-
-    @Test
-    fun `userMayCancelBooking returns false if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
-      currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-      assertThat(userAccessService.userMayCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
-    }
-
-    @Test
-    fun `userMayCancelBooking returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
-      currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-      assertThat(userAccessService.userMayCancelBooking(user, cas3BookingInUserRegion)).isFalse
-      assertThat(userAccessService.userMayCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
     }
   }
 

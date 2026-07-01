@@ -17,7 +17,6 @@ enum class SeedFileType(@get:JsonValue val value: String) {
   temporaryAccommodationUsers("temporary_accommodation_users"),
   approvedPremisesUsers("approved_premises_users"),
   characteristics("characteristics"),
-  updateNomsNumber("update_noms_number"),
   updateUsersFromApi("update_users_from_api"),
   usersBasic("users_basic"),
   approvedPremisesAssessmentMoreInfoBugFix("approved_premises_assessment_more_info_bug_fix"),

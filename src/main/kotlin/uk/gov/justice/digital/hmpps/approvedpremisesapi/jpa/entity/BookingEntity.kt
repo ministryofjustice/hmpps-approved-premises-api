@@ -16,10 +16,7 @@ import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.NamedNativeQuery
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
@@ -38,41 +35,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed ORDER BY b.createdAt")
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
 
-  @Modifying
-  @Query(
-    """
-    UPDATE bookings SET 
-    noms_number = :nomsNumber
-    WHERE UPPER(crn) = UPPER(:crn) AND UPPER(noms_number) = UPPER(:oldNomsNumber)
-    """,
-    nativeQuery = true,
-  )
-  fun updateNomsByCrn(crn: String, oldNomsNumber: String, nomsNumber: String): Int
-
-  @Query("SELECT DISTINCT(b.nomsNumber) FROM BookingEntity b WHERE b.nomsNumber IS NOT NULL")
-  fun getDistinctNomsNumbers(): List<String>
-
-  /*
-   * There is a bug in Hibernate that has been around since 2010. It is the reason why we have this awful line
-   *
-   * AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b )
-
-   * * https://hibernate.atlassian.net/browse/HHH-4795
-
-   * * https://stackoverflow.com/questions/52839973/hql-to-check-for-null-in-onetoone-relation
-   * */
-  @Query(
-    "SELECT b FROM BookingEntity b " +
-      "WHERE b.bed.id = :bedId " +
-      "AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b ) " +
-      "AND b.arrivalDate <= :date " +
-      "AND SIZE(b.cancellations) = 0 " +
-      "AND (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR b.id != :thisEntityId)",
-  )
-  fun findByBedIdAndArrivingBeforeDate(bedId: UUID, date: LocalDate, thisEntityId: UUID?): List<BookingEntity>
-
-  fun findAllByApplication(application: ApplicationEntity): List<BookingEntity>
-
   @Query(
     "SELECT * FROM bookings WHERE application_id = :applicationId AND service = :service ORDER BY created_at DESC LIMIT 1",
     nativeQuery = true,
@@ -81,21 +43,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     applicationId: UUID,
     service: String,
   ): Cas3BookingEntity?
-
-  @Modifying
-  @Query("UPDATE BookingEntity b set b.status = :status where b.id = :bookingId")
-  fun updateBookingStatus(bookingId: UUID, status: BookingStatus)
-
-  @Query(
-    "SELECT * FROM bookings WHERE status IS NULL AND service='temporary-accommodation' ",
-    nativeQuery = true,
-  )
-  fun findAllCas3bookingsWithNullStatus(pageable: Pageable?): Slice<BookingEntity>
-
-  @Query(
-    "SELECT b FROM BookingEntity b WHERE b.bed.id = :bedId ORDER BY b.arrivalDate ASC limit 1",
-  )
-  fun findFirstBookingByBedId(bedId: UUID): BookingEntity?
 }
 
 @NamedNativeQuery(

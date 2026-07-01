@@ -5,14 +5,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 
 @Component
 class BookingStatusMigrationJob(
-  private val bookingRepository: BookingRepository,
+  private val bookingRepository: Cas3v2BookingRepository,
   private val entityManager: EntityManager,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -23,7 +23,7 @@ class BookingStatusMigrationJob(
 
     var page = 1
     var hasNext = true
-    var slice: Slice<BookingEntity>
+    var slice: Slice<Cas3BookingEntity>
 
     while (hasNext) {
       log.info("Getting page $page")
@@ -38,13 +38,13 @@ class BookingStatusMigrationJob(
     log.info("Booking Status Migration process complete!")
   }
 
-  private fun setStatus(booking: BookingEntity) {
+  private fun setStatus(booking: Cas3BookingEntity) {
     booking.status = when {
-      booking.cancellations.isNotEmpty() -> BookingStatus.cancelled
-      booking.departures.isNotEmpty() -> BookingStatus.departed
-      booking.arrivals.isNotEmpty() -> BookingStatus.arrived
-      booking.confirmation != null -> BookingStatus.confirmed
-      else -> BookingStatus.provisional
+      booking.cancellations.isNotEmpty() -> Cas3BookingStatus.cancelled
+      booking.departures.isNotEmpty() -> Cas3BookingStatus.departed
+      booking.arrivals.isNotEmpty() -> Cas3BookingStatus.arrived
+      booking.confirmation != null -> Cas3BookingStatus.confirmed
+      else -> Cas3BookingStatus.provisional
     }
 
     log.info("Updating booking status ${booking.id} to ${booking.status}")

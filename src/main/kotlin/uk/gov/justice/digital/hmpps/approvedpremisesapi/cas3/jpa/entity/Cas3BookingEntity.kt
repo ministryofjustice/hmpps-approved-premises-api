@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
@@ -138,6 +139,16 @@ data class Cas3BookingEntity(
 
 @Repository
 interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
+  @Modifying
+  @Query("UPDATE Cas3BookingEntity b set b.status = :status where b.id = :bookingId")
+  fun updateBookingStatus(bookingId: UUID, status: Cas3BookingStatus)
+
+  @Query(
+    "SELECT * FROM bookings WHERE status IS NULL AND service='temporary-accommodation' ",
+    nativeQuery = true,
+  )
+  fun findAllCas3bookingsWithNullStatus(pageable: Pageable?): Slice<Cas3BookingEntity>
+
   @Query(
     """
       SELECT b FROM Cas3BookingEntity b
@@ -149,6 +160,15 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
     """,
   )
   fun findByBedspaceIdAndArrivingBeforeDate(bedspaceId: UUID, date: LocalDate, excludeBookingId: UUID?): List<Cas3BookingEntity>
+
+  @Query("SELECT DISTINCT(b.nomsNumber) FROM Cas3BookingEntity b WHERE b.nomsNumber IS NOT NULL")
+  fun getDistinctNomsNumbers(): List<String>
+
+  @Query(
+    "SELECT * FROM bookings WHERE bed_id = :bedId ORDER BY arrival_date ASC LIMIT 1",
+    nativeQuery = true,
+  )
+  fun findFirstBookingByBedId(bedId: UUID): Cas3BookingEntity?
 
   @Query(
     """      

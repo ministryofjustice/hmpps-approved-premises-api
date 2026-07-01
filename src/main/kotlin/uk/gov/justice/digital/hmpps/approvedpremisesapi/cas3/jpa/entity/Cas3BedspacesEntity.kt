@@ -48,6 +48,23 @@ data class Cas3BedspacesEntity(
 interface Cas3BedspacesRepository : JpaRepository<Cas3BedspacesEntity, UUID> {
 
   @Query(
+    """
+      SELECT b.*
+      FROM cas3_bedspaces b
+      INNER JOIN (
+        SELECT bk.bed_id, MIN(bk.arrival_date) earliest_arrival
+        FROM bookings bk
+        INNER JOIN cas3_bedspaces b ON bk.bed_id = b.id
+        WHERE bk.service = 'temporary-accommodation'
+        GROUP BY bk.bed_id
+      ) earliest_bookings ON b.id = earliest_bookings.bed_id
+      WHERE b.start_date > earliest_bookings.earliest_arrival
+    """,
+    nativeQuery = true,
+  )
+  fun findCas3BedspacesWithStartDateAfterBookingArrivalDate(): List<Cas3BedspacesEntity>
+
+  @Query(
     """select bedspace from Cas3BedspacesEntity bedspace 
           where bedspace.id = :bedspaceId and bedspace.premises.id = :premisesId""",
   )
