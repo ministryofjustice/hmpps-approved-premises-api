@@ -197,18 +197,7 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
     pageable: Pageable?,
   ): Page<Cas3v2BookingSearchResult>
 
-  @Query(
-    """
-      SELECT * FROM  bookings b 
-      WHERE b.service='temporary-accommodation'
-      ORDER BY b.crn
-      """,
-    nativeQuery = true,
-  )
-  fun <T : Cas3BookingEntity> findAllBookings(
-    type: Class<T>,
-    pageable: Pageable?,
-  ): Slice<Cas3BookingEntity>
+  fun findAllOrderByCrn(pageable: Pageable?): Slice<Cas3BookingEntity>
 
   @Query("SELECT b FROM Cas3BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bedspace = :bedspace ORDER BY b.createdAt")
   fun findAllByOverlappingDateForBedspace(startDate: LocalDate, endDate: LocalDate, bedspace: Cas3BedspacesEntity): List<Cas3BookingEntity>
