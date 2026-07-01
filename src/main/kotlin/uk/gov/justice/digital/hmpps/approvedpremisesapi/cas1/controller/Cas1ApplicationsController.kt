@@ -238,7 +238,7 @@ class Cas1ApplicationsController(
   fun updateApplication(
     @PathVariable applicationId: UUID,
     @RequestBody body: UpdateApprovedPremisesApplication,
-  ): ResponseEntity<ApprovedPremisesApplication> {
+  ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     val serializedData = jsonMapper.writeValueAsString(body.data)
@@ -258,9 +258,9 @@ class Cas1ApplicationsController(
       userForRequest = user,
     )
 
-    val updatedApplication = extractEntityFromCasResult(applicationResult)
+    ensureEntityFromCasResultIsSuccess(applicationResult)
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
+    return ResponseEntity(HttpStatus.OK)
   }
 
   @Operation(summary = "Add a note on applications")
