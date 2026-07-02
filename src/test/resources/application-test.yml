@@ -208,6 +208,8 @@ url-templates:
       application: http://cas2.frontend/applications/#id
       application-overview: http://cas2.frontend/applications/#id/overview
       submitted-application-overview: http://cas2.frontend/assess/applications/#applicationId/overview
+    cas3:
+      referral-full:  http://frontend.cas3/referrals/#applicationId/full
 
 preemptive-cache-enabled: false
 
