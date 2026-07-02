@@ -102,7 +102,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 
@@ -1873,8 +1875,11 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             reasonForShortNotice = "reasonForShort",
             reasonForShortNoticeOther = "reasonForShortOther",
             licenseExpiryDate = LocalDate.of(2026, 12, 1),
-            arrivalDate = LocalDate.of(2031, 5, 6),
-            duration = 52,
+            requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+              arrival = LocalDate.of(2031, 5, 6),
+              duration = 52,
+              arrivalFlexible = null,
+            ),
           ),
         )
         .exchange()
@@ -1891,6 +1896,8 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
       assertThat(persistedApplication.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 12, 1))
       assertThat(persistedApplication.releaseType).isEqualTo(Cas1ReleaseType.reReleasedFollowingFixedTermRecall)
+      assertThat(persistedApplication.arrivalDate).isEqualTo(OffsetDateTime.of(LocalDate.of(2031, 5, 6), LocalTime.of(0, 0), ZoneOffset.UTC))
+      assertThat(persistedApplication.duration).isEqualTo(52)
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }

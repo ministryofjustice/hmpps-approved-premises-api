@@ -219,8 +219,8 @@ class Cas1ApplicationCreationService(
       document = serializedTranslatedDocument
       releaseType = Cas1ReleaseType.fromApiType(submitApplication.releaseType)
       targetLocation = submitApplication.targetLocation
-      arrivalDate = getArrivalDate(submitApplication.arrivalDate)
-      duration = submitApplication.duration
+      arrivalDate = getArrivalDate(submitApplication.requestedPlacementPeriod?.arrival ?: submitApplication.arrivalDate)
+      duration = submitApplication.requestedPlacementPeriod?.duration ?: submitApplication.duration
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
