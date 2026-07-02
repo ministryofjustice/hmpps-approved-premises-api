@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
@@ -1069,6 +1070,71 @@ class Cas1ApplicationCreationServiceTest {
       every {
         mockPlacementApplicationPlaceholderRepository.save(any())
       } answers { it.invocation.args[0] as PlacementApplicationPlaceholderEntity }
+    }
+
+    @Test
+    fun `Success with requestedPlacementPeriod, creates assessment and stores event, triggers email, creates placement app placeholder`() {
+      defaultSubmitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        apType = ApType.pipe,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = SituationOption.bailSentence,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = false,
+        caseManagerUserDetails = null,
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        requestedPlacementPeriod = Cas1RequestedPlacementPeriod(
+          arrival = LocalDate.of(2023, 2, 1),
+          duration = 25,
+          arrivalFlexible = null,
+        ),
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+
+      setupMocksForSuccess(application)
+
+      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(any())
+      } returns theApplicantUserDetailsEntity
+
+      every {
+        mockPlacementApplicationPlaceholderRepository.save(any())
+      } returnsArgument 0
+
+      val result =
+        applicationService.submitApplication(
+          applicationId,
+          defaultSubmitApprovedPremisesApplication,
+          user,
+          apAreaId = apArea.id,
+        )
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
+        assertThat(it.duration).isEqualTo(25)
+
+        val placementAppPlaceholderCaptor = slot<PlacementApplicationPlaceholderEntity>()
+        verify {
+          mockPlacementApplicationPlaceholderRepository.save(
+            capture(placementAppPlaceholderCaptor),
+          )
+        }
+
+        assertThat(placementAppPlaceholderCaptor.captured.application).isEqualTo(it)
+        assertThat(placementAppPlaceholderCaptor.captured.expectedArrivalDate).isEqualTo(OffsetDateTime.parse("2023-02-01T00:00Z"))
+        assertThat(placementAppPlaceholderCaptor.captured.archived).isFalse
+      }
     }
   }
 

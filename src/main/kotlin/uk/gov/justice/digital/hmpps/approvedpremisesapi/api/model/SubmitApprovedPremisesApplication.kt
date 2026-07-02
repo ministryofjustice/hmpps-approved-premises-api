@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
 
 import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
 
@@ -16,8 +17,10 @@ data class SubmitApprovedPremisesApplication(
   val isEmergencyApplication: Boolean? = null,
   val situation: SituationOption? = null,
   @Schema(description = "If the applicant has requested a placement, this is the requested arrival date")
+  @Deprecated(message = "Use requestedPlacementPeriod.arrival instead")
   val arrivalDate: java.time.LocalDate? = null,
   @Schema(description = "If the applicant has requested a placement, this is the requested duration in days")
+  @Deprecated(message = "Use requestedPlacementPeriod.duration instead")
   val duration: Int? = null,
   @Schema(description = "If the user's ap area id is incorrect, they can optionally override it for the application")
   val apAreaId: java.util.UUID? = null,
@@ -29,4 +32,6 @@ data class SubmitApprovedPremisesApplication(
   val reasonForShortNoticeOther: String? = null,
   val licenseExpiryDate: java.time.LocalDate? = null,
   override val translatedDocument: Any? = null,
+  @Schema(description = "The applicant can make a single request for placement as part of the initial application")
+  val requestedPlacementPeriod: Cas1RequestedPlacementPeriod? = null,
 ) : SubmitApplication
