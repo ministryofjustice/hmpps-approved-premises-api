@@ -1,0 +1,1167 @@
+<style>
+    * {
+        font-family: "HelveticaNeue", "Helvetica Neue", "Arial", "Helvetica", sans-serif;
+        font-size: 12pt;
+        color: #0b0c0c;
+    }
+    /* --- HEADINGS --- */
+
+    .title {
+        font-size: 20pt;
+        text-align: center;
+    }
+
+    h1, h2, h3 {
+        color: #0b0c0c;
+        font-weight: 700;
+        display: block;
+        margin-top: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    h1 {
+        font-size: 18pt;
+        line-height: 1.09375;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        margin-block-start: 0.67em;
+        margin-block-end: 0.67em;
+    }
+
+    h2 {
+        font-size: 17pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h3 {
+        font-size: 16pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h4 {
+        font-size: 15pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    h5 {
+        font-size: 14pt;
+        line-height: 1.0416666667;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+    }
+
+    /* --- SUMMARY LIST --- */
+
+    table.summary-list {
+        display: table;
+        width: 700px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin: 0 0 5px;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    table.summary-list tr {
+        display: table-row;
+        margin: 0 0 20px;
+    }
+
+    table.summary-list tr td {
+        border-bottom: 1px solid #b1b4b6;
+        /*margin-bottom: 5px;*/
+        overflow-wrap: break-word;
+        display: table-cell;
+        /*padding-top: 2px;*/
+        /*padding-bottom: 2px;*/
+        /*padding-right: 0;*/
+        margin-inline-start: 40px;
+        width: 70%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        line-height: 1.25;
+        font-weight: 400;
+        white-space: normal;
+        vertical-align: top;
+    }
+
+    table.summary-list tr td:first-child {
+        font-size: 12pt;
+        width: 30%;
+        font-weight: 700;
+        padding-right: 20px;
+        vertical-align: top;
+    }
+
+    /* --- DATA TABLE --- */
+
+    table.data-table {
+        display: table;
+        width: 700px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin: 0 0 5px;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+    }
+
+    table.data-table tr {
+        display: table-row;
+        margin: 0 0 20px;
+    }
+
+    table.data-table tr td {
+        border-bottom: 1px solid #b1b4b6;
+        margin-bottom: 5px;
+        overflow-wrap: break-word;
+        display: table-cell;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        padding-right: 0;
+        margin-inline-start: 40px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        line-height: 1.25;
+        font-weight: 400;
+        white-space: pre-wrap;
+        vertical-align: top;
+    }
+
+    table.data-table tr:first-child td {
+        font-size: 12pt;
+        width: 30%;
+        font-weight: 700;
+        padding-right: 20px;
+        border-bottom: none;
+        vertical-align: top;
+    }
+
+    table.data-table tr td.data-column-5 { width: 5% }
+    table.data-table tr td.data-column-10 { width: 10% }
+    table.data-table tr td.data-column-15 { width: 15% }
+    table.data-table tr td.data-column-20 { width: 20% }
+    table.data-table tr td.data-column-25 { width: 25% }
+    table.data-table tr td.data-column-30 { width: 30% }
+    table.data-table tr td.data-column-35 { width: 35% }
+    table.data-table tr td.data-column-40 { width: 40% }
+    table.data-table tr td.data-column-45 { width: 45% }
+    table.data-table tr td.data-column-50 { width: 50% }
+    table.data-table tr td.data-column-55 { width: 55% }
+    table.data-table tr td.data-column-60 { width: 60% }
+    table.data-table tr td.data-column-65 { width: 65% }
+    table.data-table tr td.data-column-70 { width: 70% }
+    table.data-table tr td.data-column-75 { width: 75% }
+    table.data-table tr td.data-column-80 { width: 80% }
+    table.data-table tr td.data-column-85 { width: 85% }
+    table.data-table tr td.data-column-90 { width: 90% }
+    table.data-table tr td.data-column-95 { width: 95% }
+
+    table tr td.data-column-5 { width: 5% }
+    table tr td.data-column-10 { width: 10% }
+    table tr td.data-column-15 { width: 15% }
+    table tr td.data-column-20 { width: 20% }
+    table tr td.data-column-25 { width: 25% }
+    table tr td.data-column-30 { width: 30% }
+    table tr td.data-column-35 { width: 35% }
+    table tr td.data-column-40 { width: 40% }
+    table tr td.data-column-45 { width: 45% }
+    table tr td.data-column-50 { width: 50% }
+    table tr td.data-column-55 { width: 55% }
+    table tr td.data-column-60 { width: 60% }
+    table tr td.data-column-65 { width: 65% }
+    table tr td.data-column-70 { width: 70% }
+    table tr td.data-column-75 { width: 75% }
+    table tr td.data-column-80 { width: 80% }
+    table tr td.data-column-85 { width: 85% }
+    table tr td.data-column-90 { width: 90% }
+    table tr td.data-column-95 { width: 95% }
+
+    table.summary-list tr td.data-column-5 { width: 5% }
+    table.summary-list tr td.data-column-10 { width: 10% }
+    table.summary-list tr td.data-column-15 { width: 15% }
+    table.summary-list tr td.data-column-20 { width: 20% }
+    table.summary-list tr td.data-column-25 { width: 25% }
+    table.summary-list tr td.data-column-30 { width: 30% }
+    table.summary-list tr td.data-column-35 { width: 35% }
+    table.summary-list tr td.data-column-40 { width: 40% }
+    table.summary-list tr td.data-column-45 { width: 45% }
+    table.summary-list tr td.data-column-50 { width: 50% }
+    table.summary-list tr td.data-column-55 { width: 55% }
+    table.summary-list tr td.data-column-60 { width: 60% }
+    table.summary-list tr td.data-column-65 { width: 65% }
+    table.summary-list tr td.data-column-70 { width: 70% }
+    table.summary-list tr td.data-column-75 { width: 75% }
+    table.summary-list tr td.data-column-80 { width: 80% }
+    table.summary-list tr td.data-column-85 { width: 85% }
+    table.summary-list tr td.data-column-90 { width: 90% }
+    table.summary-list tr td.data-column-95 { width: 95% }
+
+    ul {
+        padding: 0 0 0 10px;
+    }
+
+</style>
+
+§<h1 class="title">Approved Premises</h1>
+
+    
+    <h2>Short term accommodation</h2>
+
+        <h3>Status update details</h3>
+        
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Status Label</td>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Detail Label</td>
+                </tr>
+                <tr>
+                    <td>Some Label</td>
+                    <td>2021-09-18 16:00:00</td>
+                    <td>Some detailed label</td>
+                </tr>
+            </table>
+        
+        
+
+        <h3>Applications</h3>
+        
+            <h4>Application</h4>
+            <br/>
+            <table class="summary-list">
+                <tr><td>Submitted at</td><td>19 October 2021, 5:00:00 pm</td></tr>
+                <tr><td>Conditional release date</td><td>20 September 2021</td></tr>
+                <tr><td>Created at</td><td>18 September 2021, 5:00:00 pm</td></tr>
+                <tr><td>Abandoned at</td><td>No Data Held</td></tr>
+                <tr><td>Referring prison code</td><td>Moorland (HMP &amp; YOI)</td></tr>
+                <tr><td>Preferred areas</td><td>some areas</td></tr>
+                <tr><td>Home Detention Curfew eligibility date</td><td>20 September 2021</td></tr>
+            </table>
+
+            <h5>Unsubmitted Document</h5>
+            
+                
+                    <p>The following is draft data captured for an unsubmitted form. Once submitted it will be presented in structured form with clear data labelling</p>
+                    <table class="summary-list">
+                        
+                            <tr><td class="data-column-50">address-history</td><td class="data-column-50">{previous-address&#x3D;{hasPreviousAddress&#x3D;yes, previousAddressLine2&#x3D;, previousAddressLine1&#x3D;12 The Street, previousPostcode&#x3D;LU1 2BQ, previousTownOrCity&#x3D;Luton, previousCounty&#x3D;}}</td></tr>
+                        
+                            <tr><td class="data-column-50">offending-history</td><td class="data-column-50">{any-previous-convictions&#x3D;{hasAnyPreviousConvictions&#x3D;yesRelevantRisk}, offence-history&#x3D;{}, offence-history-data&#x3D;[{summary&#x3D;Mr Bertrand entered the house of an associate John Smith on the night of Feb 20th, 2020 and took items of value including a laptop and flatscreen TV, offenceDate-month&#x3D;2, titleAndNumber&#x3D;Burglary in a dwelling - 02800, offenceDate-year&#x3D;2020, offenceCategory&#x3D;other, offenceDate-day&#x3D;20, sentenceLength&#x3D;6 months}, {summary&#x3D;Mr Bertrand was stopped whilst driving erratically on the night of June 15 and refused to give a blood sample, offenceDate-month&#x3D;06, titleAndNumber&#x3D;Failure to attend or stay for the duration of an initial assessment following test for a class A drug (Drugs Act 2005) - 19353, offenceDate-year&#x3D;2020, offenceCategory&#x3D;drugs, offenceDate-day&#x3D;15, sentenceLength&#x3D;2 days}, {summary&#x3D;Mr Bertrand was stopped on the A41 near Berkhamsted after being observed mounting the kerb at speed. , offenceDate-month&#x3D;06, titleAndNumber&#x3D;Dangerous driving/Aid, abet cause or permit reckless driving - 80200, offenceDate-year&#x3D;2020, offenceCategory&#x3D;other, offenceDate-day&#x3D;15, sentenceLength&#x3D;3 months}]}</td></tr>
+                        
+                            <tr><td class="data-column-50">risk-to-self</td><td class="data-column-50">{historical-risk&#x3D;{historicalRiskDetail&#x3D;[R8.1.4] Review 06.10.21:
+
+        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021 there..., confirmation&#x3D;confirmed}, oasys-import&#x3D;{oasysImportedDate&#x3D;2023-11-28T11:42:22.183Z, oasysStartedDate&#x3D;2023-11-20, oasysCompletedDate&#x3D;2023-11-22}, additional-information&#x3D;{additionalInformationDetail&#x3D;, hasAdditionalInformation&#x3D;no}, vulnerability&#x3D;{vulnerabilityDetail&#x3D;[R8.3.1] Review 06.10.21:
+
+        A previous assessor opined that Mr Smith was displaying all the characteristics of someone..., confirmation&#x3D;confirmed}, acct&#x3D;{}, current-risk&#x3D;{confirmation&#x3D;confirmed, currentRiskDetail&#x3D;[R8.1.1] Review 06.10.21:
+
+        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021...}}</td></tr>
+                        
+                            <tr><td class="data-column-50">cpp-details-and-hdc-licence-conditions</td><td class="data-column-50">{cpp-details&#x3D;{probationRegion&#x3D;Leeds, name&#x3D;Roger Smith, telephone&#x3D;01234 777 099, email&#x3D;cpp@justice.example.com}, non-standard-licence-conditions&#x3D;{nonStandardLicenceConditionsDetail&#x3D;There are exclusion zones, please check, nonStandardLicenceConditions&#x3D;yes}}</td></tr>
+                        
+                            <tr><td class="data-column-50">information-needed-from-applicant</td><td class="data-column-50">{information-needed-from-applicant&#x3D;{hasInformationNeeded&#x3D;yes}}</td></tr>
+                        
+                            <tr><td class="data-column-50">confirm-consent</td><td class="data-column-50">{confirm-consent&#x3D;{hasGivenConsent&#x3D;yes, consentDate-year&#x3D;2023, consentDate-month&#x3D;1, consentDate-day&#x3D;1, consentDate&#x3D;2023-01-01}}</td></tr>
+                        
+                            <tr><td class="data-column-50">funding-information</td><td class="data-column-50">{national-insurance&#x3D;{nationalInsuranceNumber&#x3D;NS 123 288 12}, funding-source&#x3D;{fundingSource&#x3D;personalSavings}}</td></tr>
+                        
+                            <tr><td class="data-column-50">confirm-eligibility</td><td class="data-column-50">{confirm-eligibility&#x3D;{isEligible&#x3D;yes}}</td></tr>
+                        
+                            <tr><td class="data-column-50">current-offences</td><td class="data-column-50">{current-offence-data&#x3D;[{summary&#x3D;summary detail, offenceDate-month&#x3D;6, titleAndNumber&#x3D;Arson (09000), outstandingCharges&#x3D;yes, offenceDate-year&#x3D;2020, offenceCategory&#x3D;Arson, offenceDate-day&#x3D;5, sentenceLength&#x3D;3 years, outstandingChargesDetail&#x3D;The offence took place at the home of his ex-partner in Liverpool}, {summary&#x3D;This offence is against a victim living in Liverpool, see exclusion zones., offenceDate-month&#x3D;7, titleAndNumber&#x3D;Stalking (08000), outstandingCharges&#x3D;no, offenceDate-year&#x3D;2023, offenceCategory&#x3D;Stalking, offenceDate-day&#x3D;6, sentenceLength&#x3D;2 months}], current-offences&#x3D;{}}</td></tr>
+                        
+                            <tr><td class="data-column-50">personal-information</td><td class="data-column-50">{working-mobile-phone&#x3D;{hasWorkingMobilePhone&#x3D;yes, mobilePhoneNumber&#x3D;07777 777 777, isSmartPhone&#x3D;yes}, immigration-status&#x3D;{immigrationStatus&#x3D;UK citizen}, pregnancy-information&#x3D;{dueDate-month&#x3D;6, dueDate-year&#x3D;2024, dueDate-day&#x3D;5, isPregnant&#x3D;yes}, support-worker-preference&#x3D;{supportWorkerPreference&#x3D;female, hasSupportWorkerPreference&#x3D;yes}}</td></tr>
+                        
+                            <tr><td class="data-column-50">check-your-answers</td><td class="data-column-50">{check-your-answers&#x3D;{checkYourAnswers&#x3D;confirmed}}</td></tr>
+                        
+                            <tr><td class="data-column-50">equality-and-diversity-monitoring</td><td class="data-column-50">{care-leaver&#x3D;{isCareLeaver&#x3D;no}, military-veteran&#x3D;{isVeteran&#x3D;no}, sex-and-gender&#x3D;{gender&#x3D;yes, sex&#x3D;male, optionalGenderIdentity&#x3D;}, ethnic-group&#x3D;{ethnicGroup&#x3D;white}, parental-carer-responsibilities&#x3D;{hasParentalOrCarerResponsibilities&#x3D;yes}, disability&#x3D;{hasDisability&#x3D;preferNotToSay, otherDisability&#x3D;}, white-background&#x3D;{optionalWhiteBackground&#x3D;, whiteBackground&#x3D;english}, sexual-orientation&#x3D;{orientation&#x3D;preferNotToSay, otherOrientation&#x3D;}, marital-status&#x3D;{maritalStatus&#x3D;neverMarried}, will-answer-equality-questions&#x3D;{willAnswer&#x3D;yes}, religion&#x3D;{religion&#x3D;atheist}}</td></tr>
+                        
+                            <tr><td class="data-column-50">risk-of-serious-harm</td><td class="data-column-50">{summary&#x3D;{additionalComments&#x3D;}, reducing-risk&#x3D;{factorsLikelyToReduceRisk&#x3D;[R10.5] Engage with Mental Health Services in prison and in the community.
+Maintain emotional stability.
+Abstain from alcohol.
+Abstain from illegal drugs.
+Regular testing for alcohol and drug use, in prison and on Licence.
+Maintain stable accommodation..., confirmation&#x3D;confirmed}, oasys-import&#x3D;{oasysImportedDate&#x3D;2023-11-28T11:43:06.137Z}, cell-share-information&#x3D;{hasCellShareComments&#x3D;no, cellShareInformationDetail&#x3D;}, summary-data&#x3D;{oasysImportedDate&#x3D;2023-11-28T11:42:22.183Z, oasysStartedDate&#x3D;2023-11-20, oasysCompletedDate&#x3D;2023-11-22, value&#x3D;{lastUpdated&#x3D;2022-11-02, overallRisk&#x3D;High, riskToChildren&#x3D;Medium, riskToPublic&#x3D;High, riskToKnownAdult&#x3D;High, riskToStaff&#x3D;Low}, status&#x3D;retrieved}, risk-factors&#x3D;{circumstancesLikelyToIncreaseRisk&#x3D;[R10.4] CIRCUMSTANCES:
+A lack of stable accommodation
+unemployment
+non constructive use of time
+breakdown of family support
+being unable to access benefits
+
+UNDERLYING FACTORS:
+pro criminal attitudes supporting commission of crime..., whenIsRiskLikelyToBeGreatest&#x3D;[R10.3] STATIC RISK FACTORS:
+
+Mr Smith gender - At the time of the offence, Mr Smith was 35 years old and considered to be in the higher risk group.
+
+STABLE DYNAMIC RISK FACTORS:
+Thinking and behaviour - limited ability to manage mood or emotions poor impulse control. Mr Smith demonstrated cognitive deficit in committing the index offences and this still remains a concern..., confirmation&#x3D;confirmed}, risk-management-arrangements&#x3D;{maracDetails&#x3D;, mappaDetails&#x3D;, iomDetails&#x3D;, arrangements&#x3D;no}, additional-risk-information&#x3D;{additionalInformationDetail&#x3D;, hasAdditionalInformation&#x3D;no}, risk-to-others&#x3D;{whoIsAtRisk&#x3D;[R10.1] IN CUSTODY
+
+KNOWN ADULTS:
+Such as Ms Elaine Underhill and any of the victims of the index offence if they are placed close to Mr Smith cell.
+
+CHILDREN:
+Simon Smith, Roger Smith, Lindy Smith, natureOfRisk&#x3D;[R10.2] IN CUSTODY:
+
+KNOWN ADULTS:
+Intimidation, threats of violence, use of weapons or boiling water, physical education and violent assault, long term psychological impact as a result of Mr Smith violent behaviour. This harm may be cause in the course of physical altercation due to seeking revenge or holding grudges..., confirmation&#x3D;confirmed}}</td></tr>
+                        
+                            <tr><td class="data-column-50">area-information</td><td class="data-column-50">{family-accommodation&#x3D;{familyProperty&#x3D;yes}, second-preferred-area&#x3D;{preferenceReason&#x3D;Mr Bertrand has a sister in Hertford, preferredArea&#x3D;Hertford}, exclusion-zones&#x3D;{hasExclusionZones&#x3D;yes, exclusionZonesDetail&#x3D;Avoid Liverpool}, first-preferred-area&#x3D;{preferenceReason&#x3D;This is where Mr Bertrand has spent the majority of his life and where his family live, preferredArea&#x3D;Luton}, gang-affiliations&#x3D;{gangOperationArea&#x3D;Derby, gangName&#x3D;Gang name, rivalGangDetail&#x3D;Rival gang detail, hasGangAffiliations&#x3D;yes}}</td></tr>
+                        
+                            <tr><td class="data-column-50">health-needs</td><td class="data-column-50">{physical-health&#x3D;{indyLivingDetail&#x3D;, needsDetail&#x3D;Mr Bertrand is in a wheelchair, canClimbStairs&#x3D;no, addSupportDetail&#x3D;Mr Bertrand needs assistance with getting to appointments, isReceivingMedicationOrTreatment&#x3D;no, canLiveIndependently&#x3D;yes, hasPhyHealthNeeds&#x3D;yes, medicationOrTreatmentDetail&#x3D;, requiresAdditionalSupport&#x3D;yes}, mental-health&#x3D;{needsDetail&#x3D;Mr Bertrand has a history of schizophrenic episodes and also suffers from epilepsy, cantManageMedicationNotes&#x3D;, isEngagedWithCommunity&#x3D;no, medicationIssues&#x3D;, needsPresentation&#x3D;He presents with withdrawal and occasionally erratic behaviour., hasMentalHealthNeeds&#x3D;yes, isEngagedWithServicesInCustody&#x3D;yes, canManageMedicationNotes&#x3D;, canManageMedication&#x3D;notPrescribedMedication}, substance-misuse&#x3D;{usesIllegalSubstances&#x3D;yes, releasedWithNaloxone&#x3D;yes, substituteMedicationDetail&#x3D;Methadone, pastSubstanceMisuse&#x3D;yes, requiresSubstituteMedication&#x3D;yes, substanceMisuse&#x3D;Mr Bertrand is a heroin user, pastSubstanceMisuseDetail&#x3D;Mr Bertrand frequently used heroin, engagedWithDrugAndAlcoholService&#x3D;yes, drugAndAlcoholServiceDetail&#x3D;Drug Awareness Service, intentToReferToServiceOnRelease&#x3D;yes}, learning-difficulties&#x3D;{needsDetail&#x3D;Mr Bertrand has been diagnosed with ADHD and has difficulty absorbing written information., addSupportDetail&#x3D;, interactionDetail&#x3D;, vulnerabilityDetail&#x3D;, isVulnerable&#x3D;no, hasLearningNeeds&#x3D;yes, hasDifficultyInteracting&#x3D;no, requiresAdditionalSupport&#x3D;no}, other-health&#x3D;{hasLongTermHealthCondition&#x3D;yes, healthConditionDetail&#x3D;Mr Bertrand has some complex vascular and circulatory issues which have contributed to his lack of mobility, hasHadStroke&#x3D;no, hasSeizures&#x3D;yes, seizuresDetail&#x3D;He has intermittent epilepsy which is well controlled by carbamazepine, beingTreatedForCancer&#x3D;no}, brain-injury&#x3D;{injuryDetail&#x3D;, addSupportDetail&#x3D;, interactionDetail&#x3D;, vulnerabilityDetail&#x3D;, isVulnerable&#x3D;no, hasDifficultyInteracting&#x3D;no, hasBrainInjury&#x3D;no, requiresAdditionalSupport&#x3D;no}, communication-and-language&#x3D;{supportDetail&#x3D;, requiresInterpreter&#x3D;no, interpretationDetail&#x3D;, hasSupportNeeds&#x3D;no, hasCommunicationNeeds&#x3D;no, communicationDetail&#x3D;}}</td></tr>
+                        
+                            <tr><td class="data-column-50">referrer-details</td><td class="data-column-50">{job-title&#x3D;{jobTitle&#x3D;POM}, contact-number&#x3D;{telephone&#x3D;07777 777 777}, confirm-details&#x3D;{name&#x3D;Roger Smith, email&#x3D;rsmith@justice.example.com}}</td></tr>
+                        
+                    </table>
+                
+                
+            
+            
+
+            <h5>Document</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+        
+            <h4>Application</h4>
+            <br/>
+            <table class="summary-list">
+                <tr><td>Submitted at</td><td>19 October 2021, 5:00:00 pm</td></tr>
+                <tr><td>Conditional release date</td><td>20 September 2021</td></tr>
+                <tr><td>Created at</td><td>18 September 2021, 5:00:00 pm</td></tr>
+                <tr><td>Abandoned at</td><td>No Data Held</td></tr>
+                <tr><td>Referring prison code</td><td>Moorland (HMP &amp; YOI)</td></tr>
+                <tr><td>Preferred areas</td><td>some areas</td></tr>
+                <tr><td>Home Detention Curfew eligibility date</td><td>20 September 2021</td></tr>
+            </table>
+
+            <h5>Unsubmitted Document</h5>
+            
+            
+                <p>No Data Held</p>
+            
+
+            <h5>Document</h5>
+            
+                
+                    <p><b>Before you apply</b></p>
+                    
+                        <p><b>Confirm eligibility</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is Aadland Bertrand eligible for Short-Term Accommodation (CAS-2)?</td></tr>
+                                <tr><td>Answer</td><td>Yes, I confirm Aadland Bertrand is eligible</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Confirm consent to share information</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Has Aadland Bertrand given their consent to apply for CAS-2?</td></tr>
+                                <tr><td>Answer</td><td>Yes, Aadland Bertrand has given their consent</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>When did they give consent?</td></tr>
+                                <tr><td>Answer</td><td>1 January 2023</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Add HDC licence dates</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>HDC eligibility date</td></tr>
+                                <tr><td>Answer</td><td>22 February 2024</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Conditional release date</td></tr>
+                                <tr><td>Answer</td><td>28 April 2024</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Add your details</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Name</td></tr>
+                                <tr><td>Answer</td><td>Roger Smith</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Email address</td></tr>
+                                <tr><td>Answer</td><td>rsmith@justice.example.com</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is your job title?</td></tr>
+                                <tr><td>Answer</td><td>POM</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is your contact telephone number?</td></tr>
+                                <tr><td>Answer</td><td>07777 777 777</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Check information needed from the applicant</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Have you got all the information you need from the applicant?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                    
+                    
+                
+                    <p><b>About the applicant</b></p>
+                    
+                        <p><b>Add personal information</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Will Aadland Bertrand have a working mobile phone when they are released?</td></tr>
+                                <tr><td>Answer</td><td>yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is their mobile number? (Optional)</td></tr>
+                                <tr><td>Answer</td><td>07777 777 777</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is their mobile a smart phone?</td></tr>
+                                <tr><td>Answer</td><td>yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is Aadland Bertrand pregnant?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>When is their due date?</td></tr>
+                                <tr><td>Answer</td><td>5 June 2024</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Does Aadland Bertrand have a gender preference for their support worker?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is their preference?</td></tr>
+                                <tr><td>Answer</td><td>Female</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Add address history</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Did Aadland Bertrand have an address before entering custody?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What was the address?</td></tr>
+                                <tr><td>Answer</td><td>12 The Street
+
+Luton
+
+LU1 2BQ
+</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Add equality and diversity monitoring information</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Equality questions for Aadland Bertrand</td></tr>
+                                <tr><td>Answer</td><td>Yes, answer the equality questions (takes 2 minutes)</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Does Aadland Bertrand have a disability?</td></tr>
+                                <tr><td>Answer</td><td>Prefer not to say</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is Aadland Bertrand&#x27;s sex?</td></tr>
+                                <tr><td>Answer</td><td>Male</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is the gender Aadland Bertrand identifies with the same as the sex registered at birth?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Which of the following best describes Aadland Bertrand&#x27;s sexual orientation?</td></tr>
+                                <tr><td>Answer</td><td>Prefer not to say</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is Aadland Bertrand&#x27;s ethnic group?</td></tr>
+                                <tr><td>Answer</td><td>White</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Which of the following best describes Aadland Bertrand&#x27;s White background?</td></tr>
+                                <tr><td>Answer</td><td>English, Welsh, Scottish, Northern Irish or British</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is Aadland Bertrand&#x27;s religion?</td></tr>
+                                <tr><td>Answer</td><td>Atheist or Humanist</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is Aadland Bertrand a military veteran?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is Aadland Bertrand a care leaver?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Does Aadland Bertrand have parental or carer responsibilities?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is Aadland Bertrand&#x27;s legal marital or registered civil partnership status?</td></tr>
+                                <tr><td>Answer</td><td>Never married and never registered in a civil partnership</td></tr>
+                            </table>
+                        
+                    
+                    
+                
+                    <p><b>Area, funding and ID</b></p>
+                    
+                        <p><b>Add exclusion zones and preferred areas</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>First preferred area</td></tr>
+                                <tr><td>Answer</td><td>Luton</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Reason for first preference</td></tr>
+                                <tr><td>Answer</td><td>This is where Mr Bertrand has spent the majority of his life and where his family live</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Second preferred area</td></tr>
+                                <tr><td>Answer</td><td>Hertford</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Reason for second preference</td></tr>
+                                <tr><td>Answer</td><td>Mr Bertrand has a sister in Hertford</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Does Aadland Bertrand have any exclusion zones?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Provide details about the exclusion zone</td></tr>
+                                <tr><td>Answer</td><td>Avoid Liverpool</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Does Aadland Bertrand have any gang affiliations?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is the name of the gang?</td></tr>
+                                <tr><td>Answer</td><td>Gang name</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Where do they operate?</td></tr>
+                                <tr><td>Answer</td><td>Derby</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Name any known rival gangs and where they operate (optional)</td></tr>
+                                <tr><td>Answer</td><td>Rival gang detail</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they want to apply to live with their children in a family property?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Confirm funding and ID</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>How will Aadland Bertrand pay for their accommodation and service charge?</td></tr>
+                                <tr><td>Answer</td><td>Personal money or savings</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is Aadland Bertrand&#x27;s National Insurance number? (Optional)</td></tr>
+                                <tr><td>Answer</td><td>NS 123 288 12</td></tr>
+                            </table>
+                        
+                    
+                    
+                
+                    <p><b>Risks and needs</b></p>
+                    
+                        <p><b>Add health needs</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they take any illegal substances in custody?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What substances do they take?</td></tr>
+                                <tr><td>Answer</td><td>Mr Bertrand is a heroin user</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Did they have any past issues with substance misuse before custody?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Describe their previous substance misuse</td></tr>
+                                <tr><td>Answer</td><td>Mr Bertrand frequently used heroin</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are they engaged with a drug and alcohol service in custody?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is there an intention to refer them to a drug and alcohol service when they are released?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Name the drug and alcohol service</td></tr>
+                                <tr><td>Answer</td><td>Drug Awareness Service</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they require any substitute medication for misused substances?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What substitute medication do they take?</td></tr>
+                                <tr><td>Answer</td><td>Methadone</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are they being released with naloxone?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they have any physical health needs?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Please describe their needs.</td></tr>
+                                <tr><td>Answer</td><td>Mr Bertrand is in a wheelchair</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Can they climb stairs?</td></tr>
+                                <tr><td>Answer</td><td>no</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are they currently receiving any medication or treatment for their physical health?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Can they live independently?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they require any additional support?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Please describe the types of support.</td></tr>
+                                <tr><td>Answer</td><td>Mr Bertrand needs assistance with getting to appointments</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they have any mental health needs?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Please describe their mental health needs.</td></tr>
+                                <tr><td>Answer</td><td>Mr Bertrand has a history of schizophrenic episodes and also suffers from epilepsy</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>How are they presenting?</td></tr>
+                                <tr><td>Answer</td><td>He presents with withdrawal and occasionally erratic behaviour.</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are they engaged with any community mental health services?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are they engaged with any mental health services in custody?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Can they manage their own mental health medication on release?</td></tr>
+                                <tr><td>Answer</td><td>They are not prescribed medication for their mental health</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they have any additional communication needs?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they need an interpreter?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they need any support to see, hear, speak, or understand?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they have any additional needs relating to learning difficulties or neurodiversity?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Please describe their additional needs.</td></tr>
+                                <tr><td>Answer</td><td>Mr Bertrand has been diagnosed with ADHD and has difficulty absorbing written information.</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are they vulnerable as a result of this condition?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they have difficulties interacting with other people as a result of this condition?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is additional support required?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they have a brain injury?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are they vulnerable as a result of this injury?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they have difficulties interacting with other people as a result of this injury?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is additional support required?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are they managing any long term health conditions?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Please describe the long term health conditions.</td></tr>
+                                <tr><td>Answer</td><td>Mr Bertrand has some complex vascular and circulatory issues which have contributed to his lack of mobility</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Have they experienced a stroke?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Do they experience seizures?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Please describe the type and any treatment.</td></tr>
+                                <tr><td>Answer</td><td>He has intermittent epilepsy which is well controlled by carbamazepine</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are they currently receiving regular treatment for cancer?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Add risk to self information</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Describe Aadland Bertrand&#x27;s current issues and needs related to self harm and suicide</td></tr>
+                                <tr><td>Answer</td><td>[R8.1.1] Review 06.10.21:
+
+        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021...</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>I confirm this information is relevant and up to date.</td></tr>
+                                <tr><td>Answer</td><td>Confirmed</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Describe Aadland Bertrand&#x27;s current circumstances, issues and needs related to vulnerability</td></tr>
+                                <tr><td>Answer</td><td>[R8.3.1] Review 06.10.21:
+
+        A previous assessor opined that Mr Smith was displaying all the characteristics of someone...</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>I confirm this information is relevant and up to date.</td></tr>
+                                <tr><td>Answer</td><td>Confirmed</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Describe Aadland Bertrand&#x27;s historical issues and needs related to self harm and suicide</td></tr>
+                                <tr><td>Answer</td><td>[R8.1.4] Review 06.10.21:
+
+        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021 there...</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>I confirm this information is relevant and up to date.</td></tr>
+                                <tr><td>Answer</td><td>Confirmed</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is there anything else to include about Aadland Bertrand&#x27;s risk to self?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Add risk of serious harm (RoSH) information</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Who is at risk?</td></tr>
+                                <tr><td>Answer</td><td>[R10.1] IN CUSTODY
+
+KNOWN ADULTS:
+Such as Ms Elaine Underhill and any of the victims of the index offence if they are placed close to Mr Smith cell.
+
+CHILDREN:
+Simon Smith, Roger Smith, Lindy Smith</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What is the nature of the risk?</td></tr>
+                                <tr><td>Answer</td><td>[R10.2] IN CUSTODY:
+
+KNOWN ADULTS:
+Intimidation, threats of violence, use of weapons or boiling water, physical education and violent assault, long term psychological impact as a result of Mr Smith violent behaviour. This harm may be cause in the course of physical altercation due to seeking revenge or holding grudges...</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>I confirm this information is relevant and up to date.</td></tr>
+                                <tr><td>Answer</td><td>Confirmed</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What circumstances are likely to increase risk?</td></tr>
+                                <tr><td>Answer</td><td>[R10.4] CIRCUMSTANCES:
+A lack of stable accommodation
+unemployment
+non constructive use of time
+breakdown of family support
+being unable to access benefits
+
+UNDERLYING FACTORS:
+pro criminal attitudes supporting commission of crime...</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>When is the risk likely to be greatest?</td></tr>
+                                <tr><td>Answer</td><td>[R10.3] STATIC RISK FACTORS:
+
+Mr Smith gender - At the time of the offence, Mr Smith was 35 years old and considered to be in the higher risk group.
+
+STABLE DYNAMIC RISK FACTORS:
+Thinking and behaviour - limited ability to manage mood or emotions poor impulse control. Mr Smith demonstrated cognitive deficit in committing the index offences and this still remains a concern...</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>I confirm this information is relevant and up to date.</td></tr>
+                                <tr><td>Answer</td><td>Confirmed</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>What factors are likely to reduce risk?</td></tr>
+                                <tr><td>Answer</td><td>[R10.5] Engage with Mental Health Services in prison and in the community.
+Maintain emotional stability.
+Abstain from alcohol.
+Abstain from illegal drugs.
+Regular testing for alcohol and drug use, in prison and on Licence.
+Maintain stable accommodation...</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>I confirm this information is relevant and up to date.</td></tr>
+                                <tr><td>Answer</td><td>Confirmed</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Are there any comments to add about cell sharing?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Is there any other risk information for Aadland Bertrand?</td></tr>
+                                <tr><td>Answer</td><td>No</td></tr>
+                            </table>
+                        
+                    
+                    
+                
+                    <p><b>Offence and licence information</b></p>
+                    
+                        <p><b>Add current offences</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Current offence 1</td></tr>
+                                <tr><td>Answer</td><td>Arson (09000)
+undefined
+5 June 2020
+3 years
+
+Summary: summary detail
+Outstanding charges: Yes
+Details of outstanding charges: The offence took place at the home of his ex-partner in Liverpool</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Current offence 2</td></tr>
+                                <tr><td>Answer</td><td>Stalking (08000)
+undefined
+6 July 2023
+2 months
+
+Summary: This offence is against a victim living in Liverpool, see exclusion zones.
+Outstanding charges: No</td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Add offending history</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Does Aadland Bertrand have any previous convictions?</td></tr>
+                                <tr><td>Answer</td><td>Yes, and there is relevant risk</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Historical offence 1</td></tr>
+                                <tr><td>Answer</td><td>Burglary in a dwelling - 02800
+Other
+20 February 2020
+6 months
+
+Summary: Mr Bertrand entered the house of an associate John Smith on the night of Feb 20th, 2020 and took items of value including a laptop and flatscreen TV</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Historical offence 2</td></tr>
+                                <tr><td>Answer</td><td>Failure to attend or stay for the duration of an initial assessment following test for a class A drug (Drugs Act 2005) - 19353
+Drugs
+15 June 2020
+2 days
+
+Summary: Mr Bertrand was stopped whilst driving erratically on the night of June 15 and refused to give a blood sample</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Historical offence 3</td></tr>
+                                <tr><td>Answer</td><td>Dangerous driving/Aid, abet cause or permit reckless driving - 80200
+Other
+15 June 2020
+3 months
+
+Summary: Mr Bertrand was stopped on the A41 near Berkhamsted after being observed mounting the kerb at speed. </td></tr>
+                            </table>
+                        
+                    
+                        <p><b>Add CPP details and HDC licence conditions</b></p>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Who is Aadland Bertrand&#x27;s Community Probation Practitioner (CPP)?</td></tr>
+                                <tr><td>Answer</td><td>Roger Smith
+Leeds
+cpp@justice.example.com
+01234 777 099</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Does Aadland Bertrand have any non-standard licence conditions?</td></tr>
+                                <tr><td>Answer</td><td>Yes</td></tr>
+                            </table>
+                        
+                            <table class="summary-list">
+                                <tr><td>Question</td><td>Describe the conditions</td></tr>
+                                <tr><td>Answer</td><td>There are exclusion zones, please check</td></tr>
+                            </table>
+                        
+                    
+                    
+                
+                
+            
+            
+
+        
+        
+
+        <h3>Assessments</h3>
+        
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Created at</td>
+                    <td class="data-column-30">Assessor name</td>
+                    <td class="data-column-30">Nacro referral id</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>SAR-TEST-ASSESSOR</td>
+                    <td>0000000001</td>
+                </tr>
+            </table>
+        
+        
+
+        <h3>Status updates</h3>
+        
+            <br/>
+            <table class="summary-list">
+                <tr><td>Created at</td><td>2021-09-18 16:00:00</td></tr>
+                <tr><td>Description</td><td>Some Description</td></tr>
+                <tr><td>Assessor origin</td><td>NACRO</td></tr>
+                <tr><td>Assessor name</td><td>SAR-TEST-EXTERNAL-USER</td></tr>
+                <tr><td>Label</td><td>Some Label</td></tr>
+            </table>
+        
+        
+
+        <h3>Application Notes</h3>
+        
+            <br/>
+            <table class="summary-list">
+                <tr><td>Created by user</td><td>SAR-TEST-NOMIS-USER</td></tr>
+                <tr><td>Body</td><td>some body text</td></tr>
+            </table>
+        
+        
+
+        <h3>Domain Events</h3>
+        
+
+            
+
+            
+
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-20">Created at</td>
+                    <td class="data-column-20">Trigger source</td>
+                    <td class="data-column-20">Triggered by user</td>
+                    <td class="data-column-20">Occurred at</td>
+                    <td class="data-column-20">Updated at</td>
+                </tr>
+                <tr>
+                    <td>18 September 2021, 5:00:00 pm</td>
+                    <td>No Data Held</td>
+                    <td>No Data Held</td>
+                    <td>21 September 2021, 5:00:00 pm</td>
+                    <td>No Data Held</td>
+                </tr>
+            </table>
+
+        
+        
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    
+
+
+
