@@ -16,11 +16,7 @@ import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.NamedNativeQuery
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingRecord
@@ -29,21 +25,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
-
-@Repository
-interface BookingRepository : JpaRepository<BookingEntity, UUID> {
-  @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed ORDER BY b.createdAt")
-  fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
-
-  @Query(
-    "SELECT * FROM bookings WHERE application_id = :applicationId AND service = :service ORDER BY created_at DESC LIMIT 1",
-    nativeQuery = true,
-  )
-  fun findLatestCas3BookingEntity(
-    applicationId: UUID,
-    service: String,
-  ): Cas3BookingEntity?
-}
 
 @NamedNativeQuery(
   name = "BookingEntity.getBookingsV2",

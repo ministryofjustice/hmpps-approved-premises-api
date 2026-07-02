@@ -171,6 +171,15 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
   fun findFirstBookingByBedId(bedId: UUID): Cas3BookingEntity?
 
   @Query(
+    "SELECT * FROM bookings WHERE application_id = :applicationId AND service = :service ORDER BY created_at DESC LIMIT 1",
+    nativeQuery = true,
+  )
+  fun findLatestBookingEntity(
+    applicationId: UUID,
+    service: String,
+  ): Cas3BookingEntity?
+
+  @Query(
     """      
       SELECT
         b.crn AS personCrn,

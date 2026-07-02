@@ -6,6 +6,7 @@ import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ReferralHistory
@@ -13,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -38,7 +38,7 @@ class Cas3AssessmentTransformer(
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val userTransformer: UserTransformer,
   private val jsonMapper: JsonMapper,
-  private val bookingRepository: BookingRepository,
+  private val bookingRepository: Cas3v2BookingRepository,
 ) {
   fun transformJpaToApi(
     jpa: TemporaryAccommodationAssessmentEntity,
@@ -85,7 +85,7 @@ class Cas3AssessmentTransformer(
   fun transformAssessmentToCas3ReferralHistory(a: TemporaryAccommodationAssessmentEntity): Cas3ReferralHistory {
     val application = a.typedApplication<TemporaryAccommodationApplicationEntity>()
 
-    val latestBooking = bookingRepository.findLatestCas3BookingEntity(application.id, ServiceName.temporaryAccommodation.value)
+    val latestBooking = bookingRepository.findLatestBookingEntity(application.id, ServiceName.temporaryAccommodation.value)
 
     val placementAddress = latestBooking?.let {
       listOfNotNull(it.premises.addressLine1, it.premises.town, it.premises.postcode).joinToString(", ")
