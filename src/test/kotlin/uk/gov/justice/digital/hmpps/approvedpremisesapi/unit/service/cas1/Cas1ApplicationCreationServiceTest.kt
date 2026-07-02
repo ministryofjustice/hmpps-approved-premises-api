@@ -270,6 +270,7 @@ class Cas1ApplicationCreationServiceTest {
             data = "{}",
             isInapplicable = null,
             noticeType = Cas1ApplicationTimelinessCategory.standard,
+            document = null,
           ),
           userForRequest = user,
         ),
@@ -300,6 +301,7 @@ class Cas1ApplicationCreationServiceTest {
             data = "{}",
             isInapplicable = null,
             noticeType = Cas1ApplicationTimelinessCategory.standard,
+            document = null,
           ),
           userForRequest = otherUser,
         ),
@@ -323,6 +325,7 @@ class Cas1ApplicationCreationServiceTest {
           data = "{}",
           isInapplicable = null,
           noticeType = Cas1ApplicationTimelinessCategory.emergency,
+          document = null,
         ),
         userForRequest = user,
       )
@@ -352,6 +355,7 @@ class Cas1ApplicationCreationServiceTest {
           data = "{}",
           isInapplicable = null,
           noticeType = Cas1ApplicationTimelinessCategory.emergency,
+          document = null,
         ),
         userForRequest = user,
       )
@@ -389,6 +393,7 @@ class Cas1ApplicationCreationServiceTest {
           data = updatedData,
           isInapplicable = false,
           noticeType = Cas1ApplicationTimelinessCategory.emergency,
+          document = null,
         ),
         userForRequest = user,
       )
@@ -445,6 +450,7 @@ class Cas1ApplicationCreationServiceTest {
           data = updatedData,
           isInapplicable = false,
           noticeType = null,
+          document = null,
         ),
         userForRequest = user,
       )

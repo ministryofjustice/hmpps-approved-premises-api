@@ -214,6 +214,7 @@ class Cas1ApplicationSeedService(
           data = APPLICATION_DATA_JSON,
           isInapplicable = false,
           noticeType = Cas1ApplicationTimelinessCategory.standard,
+          document = null,
         ),
         userForRequest = createdByUser,
       ),

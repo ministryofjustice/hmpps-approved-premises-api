@@ -243,17 +243,20 @@ class Cas1ApplicationsController(
 
     val serializedData = jsonMapper.writeValueAsString(body.data)
 
+    val serializedDocument = body.document?.let { jsonMapper.writeValueAsString(it) }
+
     val applicationResult = cas1ApplicationCreationService.updateApplication(
       applicationId = applicationId,
       Cas1ApplicationCreationService.Cas1ApplicationUpdateFields(
-        data = serializedData,
         isWomensApplication = body.isWomensApplication,
         isEmergencyApplication = body.isEmergencyApplication,
         apType = body.apType,
         releaseType = body.releaseType,
         arrivalDate = body.arrivalDate,
+        data = serializedData,
         isInapplicable = body.isInapplicable,
         noticeType = body.noticeType,
+        document = serializedDocument,
       ),
       userForRequest = user,
     )

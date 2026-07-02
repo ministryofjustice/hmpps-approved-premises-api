@@ -68,7 +68,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
         assertThat(newApplication.crn).isEqualTo(sourceApplication.crn)
         assertThat(newApplication.createdByUser.id).isEqualTo(sourceApplication.createdByUser.id)
         assertThat(newApplication.data).isEqualTo(sourceApplication.data)
-        assertThat(newApplication.document).isNull()
+        assertThat(newApplication.document).isEqualTo(sourceApplication.document)
         assertThat(newApplication.createdAt).isWithinTheLastMinute()
         assertThat(newApplication.submittedAt).isNull()
         assertThat(newApplication.isWomensApplication).isEqualTo(sourceApplication.isWomensApplication)

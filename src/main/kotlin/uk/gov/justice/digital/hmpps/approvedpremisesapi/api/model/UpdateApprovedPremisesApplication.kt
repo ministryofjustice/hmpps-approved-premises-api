@@ -27,4 +27,7 @@ data class UpdateApprovedPremisesApplication(
   @get:JsonProperty("arrivalDate") val arrivalDate: java.time.LocalDate? = null,
 
   @get:JsonProperty("noticeType") val noticeType: Cas1ApplicationTimelinessCategory? = null,
+
+  @get:JsonProperty("document") val document: Any? = null,
+
 ) : UpdateApplication

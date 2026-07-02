@@ -336,6 +336,7 @@ class Cas1ApplicationCreationService(
       }
       this.data = updateFields.data
       this.noticeType = getNoticeType(updateFields.noticeType, updateFields.isEmergencyApplication, this)
+      this.document = updateFields.document
     }
 
     cas1ApplicationStatusService.unsubmittedApplicationUpdated(application)
@@ -392,5 +393,6 @@ class Cas1ApplicationCreationService(
     val data: String,
     val isInapplicable: Boolean?,
     val noticeType: Cas1ApplicationTimelinessCategory?,
+    val document: String?,
   )
 }
