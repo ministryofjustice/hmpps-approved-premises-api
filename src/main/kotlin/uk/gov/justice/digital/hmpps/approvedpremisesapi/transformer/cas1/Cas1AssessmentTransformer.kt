@@ -7,17 +7,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external.Cas1ExternalApplicationService.Cas1PlacementHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -33,7 +34,6 @@ class Cas1AssessmentTransformer(
   private val userTransformer: UserTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
-  private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
 ) {
 
   fun transformJpaToCas1Assessment(
@@ -60,7 +60,10 @@ class Cas1AssessmentTransformer(
     createdFromAppeal = jpa.createdFromAppeal,
   )
 
-  fun transformDomainToCas1AssessmentSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult): Cas1AssessmentSummary = Cas1AssessmentSummary(
+  fun transformDomainToCas1AssessmentSummary(
+    ase: DomainAssessmentSummary,
+    personInfo: PersonInfoResult,
+  ): Cas1AssessmentSummary = Cas1AssessmentSummary(
     id = ase.id,
     applicationId = ase.applicationId,
     createdAt = ase.createdAt,
@@ -77,29 +80,38 @@ class Cas1AssessmentTransformer(
     dueAt = ase.dueAt!!,
   )
 
-  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity): Cas1ReferralHistory {
+  fun transformDomainToApiCas1ReferralHistory(entity: ApprovedPremisesAssessmentEntity, placementHistories: List<Cas1PlacementHistory>): List<Cas1ReferralHistory> {
     val application = entity.cas1Application()
 
-    val latestBooking = cas1SpaceBookingRepository.findLatestCas1SpaceBooking(application.id).firstOrNull()
-
-    val placementAddress = latestBooking?.premises?.let {
-      listOfNotNull(it.addressLine1, it.town, it.postcode).joinToString(", ")
-    }
-
-    return Cas1ReferralHistory(
+    val referralHistory = Cas1ReferralHistory(
       id = entity.id,
       applicationId = entity.application.id,
       createdAt = entity.createdAt.toInstant(),
-      status = getStatusForCas1Assessment(entity),
+      applicationStatus = application.status,
       type = ServiceType.CAS1,
       referralRejectionReason = entity.rejectionRationale,
       localAuthorityArea = application.apArea?.name,
       pdu = application.cruManagementArea?.name,
       referredBy = transformToStaffDto(application.createdByUser),
-      placementAddress = placementAddress,
-      placementStatus = latestBooking?.getSpaceBookingStatus()?.status?.value,
+      placementAddress = null,
+      placementStatus = null,
+      requestForPlacementStatus = null,
     )
+
+    return placementHistories.map {
+      referralHistory.copy(
+        placementAddress = toPlacementAddress(it.premises),
+        placementStatus = it.placementStatus,
+        requestForPlacementStatus = it.requestForPlacementStatus,
+      )
+    }.ifEmpty { listOf(referralHistory) }
   }
+
+  private fun toPlacementAddress(premises: Cas1ExternalPremisesDto?): String? = listOfNotNull(
+    premises?.addressLine1,
+    premises?.town,
+    premises?.postcode,
+  ).takeIf { it.isNotEmpty() }?.joinToString(", ")
 
   fun transformCas1AssessmentStatusToDomainSummaryState(status: Cas1AssessmentStatus) = when (status) {
     Cas1AssessmentStatus.awaitingResponse -> DomainAssessmentSummaryStatus.AWAITING_RESPONSE
