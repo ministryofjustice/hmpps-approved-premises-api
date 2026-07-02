@@ -11,6 +11,7 @@ data class Cas1SuitableApplication(
   val requestForPlacementStatus: RequestForPlacementStatus?,
   val placementStatus: Cas1SpaceBookingStatus?,
   val premises: Cas1ExternalPremisesDto?,
+  // TODO add created by
 )
 
 data class Cas1ExternalPremisesDto(

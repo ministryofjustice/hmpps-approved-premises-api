@@ -57,6 +57,7 @@ class Cas2ApplicationsTransformerTest {
     mockCas2HdcAssessmentsTransformer,
     cas2HdcUserService,
     offenderManagementUnitRepository,
+    "http://referralUrl",
   )
 
   private val nomisUserEntity = Cas2UserEntityFactory().produce()

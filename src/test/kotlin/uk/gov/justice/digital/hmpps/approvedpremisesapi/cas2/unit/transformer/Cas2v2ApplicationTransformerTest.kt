@@ -50,6 +50,7 @@ class Cas2v2ApplicationTransformerTest {
     mockCas2TimelineEventsTransformer,
     mockCas2AssessmentsTransformer,
     mockOffenderManagementUnitRepository,
+    "http://referralUrl",
   )
 
   private val user = Cas2UserEntityFactory()

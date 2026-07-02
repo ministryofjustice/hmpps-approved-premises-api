@@ -84,6 +84,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referredBy = createStaffDto(assessment1.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
+              referralUrl = "http://frontend/applications/${assessment1.application.id}",
             ),
             Cas1ReferralHistory(
               id = assessment2.id,
@@ -97,6 +98,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referredBy = createStaffDto(assessment2.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
+              referralUrl = "http://frontend/applications/${assessment2.application.id}",
             ),
             Cas1ReferralHistory(
               id = assessment3.id,
@@ -110,6 +112,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referredBy = createStaffDto(assessment3.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
+              referralUrl = "http://frontend/applications/${assessment3.application.id}",
             ),
             Cas1ReferralHistory(
               id = assessment4.id,
@@ -123,6 +126,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referredBy = createStaffDto(assessment4.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
+              referralUrl = "http://frontend/applications/${assessment4.application.id}",
             ),
             Cas1ReferralHistory(
               id = assessment5.id,
@@ -136,6 +140,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
               referredBy = createStaffDto(assessment5.application.createdByUser),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas1SpaceBookingStatus.ARRIVED.value,
+              referralUrl = "http://frontend/applications/${assessment5.application.id}",
             ),
           )
 

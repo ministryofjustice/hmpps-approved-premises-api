@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
+@Suppress("LongParameterList")
 @Component
 class Cas1AssessmentTransformer(
   private val jsonMapper: JsonMapper,
@@ -34,6 +36,7 @@ class Cas1AssessmentTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
+  @Value($$"${url-templates.frontend.application}") private val cas1ApplicationUrl: String,
 ) {
 
   fun transformJpaToCas1Assessment(
@@ -98,6 +101,7 @@ class Cas1AssessmentTransformer(
       referredBy = transformToStaffDto(application.createdByUser),
       placementAddress = placementAddress,
       placementStatus = latestBooking?.getSpaceBookingStatus()?.status?.value,
+      referralUrl = cas1ApplicationUrl.replace("#id", entity.id.toString()),
     )
   }
 
