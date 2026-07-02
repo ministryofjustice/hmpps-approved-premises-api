@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
@@ -34,6 +35,7 @@ class Cas1AssessmentTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
+  @Value($$"${url-templates.frontend.application}") private val cas1ApplicationUrlTemplate: String,
 ) {
 
   fun transformJpaToCas1Assessment(
@@ -98,6 +100,7 @@ class Cas1AssessmentTransformer(
       referredBy = transformToStaffDto(application.createdByUser),
       placementAddress = placementAddress,
       placementStatus = latestBooking?.getSpaceBookingStatus()?.status?.value,
+      applicationUrl = cas1ApplicationUrlTemplate.replace("#id", entity.application.id.toString()),
     )
   }
 
