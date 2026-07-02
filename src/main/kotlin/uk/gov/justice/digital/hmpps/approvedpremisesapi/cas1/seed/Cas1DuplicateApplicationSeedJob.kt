@@ -101,6 +101,7 @@ class Cas1DuplicateApplicationSeedJob(
         data = sourceApplication.data!!,
         isInapplicable = sourceApplication.isInapplicable,
         noticeType = sourceApplication.noticeType,
+        document = sourceApplication.document,
       ),
       createdByUser,
     )

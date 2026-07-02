@@ -1798,6 +1798,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
                   isWomensApplication = false,
                   apType = ApType.pipe,
                   type = UpdateApplicationType.CAS1,
+                  document = mapOf("basic-information" to "basic-information-value"),
                 ),
               )
               .exchange()
@@ -1809,7 +1810,11 @@ class Cas1ApplicationTest : IntegrationTestBase() {
 
             val result = jsonMapper.readValue(resultBody, Application::class.java)
 
+            assertThat(result).isNotNull()
+            result as ApprovedPremisesApplication
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+            assertThat(result.document)
+              .isEqualTo(mapOf("basic-information" to "basic-information-value"))
           }
         }
       }
