@@ -49,7 +49,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-  implementation("io.sentry:sentry-spring-boot-4:8.43.2")
+  implementation("io.sentry:sentry-spring-boot-4:8.47.0")
 
   runtimeOnly("org.postgresql:postgresql:42.7.11")
   runtimeOnly("org.ehcache:ehcache")
