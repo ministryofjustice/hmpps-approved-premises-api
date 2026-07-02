@@ -12,8 +12,6 @@ import org.jetbrains.kotlinx.dataframe.api.toList
 import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.jetbrains.kotlinx.dataframe.size
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -90,17 +88,6 @@ import kotlin.collections.listOf
 import kotlin.text.get
 
 class Cas3v2ReportsTest : IntegrationTestBase() {
-
-  @BeforeEach
-  fun beforeEach() {
-    mockFeatureFlagService.setFlag("cas3-reports-with-new-bedspace-model-tables-enabled", true)
-  }
-
-  @AfterEach
-  fun afterEach() {
-    mockFeatureFlagService.reset()
-  }
-
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
   fun `Get report for all regions returns 403 Forbidden if user does not have all regions access`(reportType: Cas3ReportType) {

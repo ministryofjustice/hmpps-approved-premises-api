@@ -6,8 +6,6 @@ import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns.Remove
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
@@ -32,16 +30,6 @@ import java.time.OffsetDateTime
 
 @SuppressWarnings("LargeClass")
 class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
-
-  @BeforeEach
-  fun beforeEach() {
-    mockFeatureFlagService.setFlag("cas3-reports-with-new-bedspace-model-tables-enabled", true)
-  }
-
-  @AfterEach
-  fun afterEach() {
-    mockFeatureFlagService.reset()
-  }
 
   @Test
   fun `Get bedspace occupancy report returns OK with correct body`() {
