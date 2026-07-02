@@ -84,6 +84,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
+              referralUrl = "http://frontend.cas3/referrals/${assessment1.application.id}/full",
             ),
             Cas3ReferralHistory(
               id = assessment2.id,
@@ -98,6 +99,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
+              referralUrl = "http://frontend.cas3/referrals/${assessment2.application.id}/full",
             ),
             Cas3ReferralHistory(
               id = assessment3.id,
@@ -112,6 +114,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
+              referralUrl = "http://frontend.cas3/referrals/${assessment3.application.id}/full",
             ),
             Cas3ReferralHistory(
               id = assessment4.id,
@@ -126,6 +129,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
+              referralUrl = "http://frontend.cas3/referrals/${assessment4.application.id}/full",
             ),
             Cas3ReferralHistory(
               id = assessment5.id,
@@ -140,6 +144,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
               placementStatus = Cas3BookingStatus.provisional.value,
+              referralUrl = "http://frontend.cas3/referrals/${assessment5.application.id}/full",
             ),
           )
 
