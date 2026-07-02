@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.transformer
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
@@ -29,6 +30,8 @@ class Cas2HdcApplicationsTransformer(
   private val cas2HdcAssessmentsTransformer: Cas2HdcAssessmentsTransformer,
   private val cas2HdcUserService: Cas2HdcUserService,
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
+  @Value($$"${url-templates.frontend.cas2.application}") private val cas2ApplicationUrl: String,
+
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2HdcApplication {
@@ -107,6 +110,7 @@ class Cas2HdcApplicationsTransformer(
       referredBy = jpa.createdByUser.name,
       placementAddress = placementAddress,
       placementStatus = latestStatusUpdate?.label,
+      referralUrl = cas2ApplicationUrl.replace("#id", jpa.id.toString()),
     )
   }
 

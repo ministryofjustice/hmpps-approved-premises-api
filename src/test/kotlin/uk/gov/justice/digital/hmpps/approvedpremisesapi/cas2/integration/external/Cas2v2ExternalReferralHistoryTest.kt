@@ -70,6 +70,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referredBy = application1.createdByUser.name,
               placementAddress = omu.prisonName,
               placementStatus = application1.statusUpdates!!.first().label,
+              referralUrl = "http://cas2.frontend/applications/${application1.id}/overview",
             ),
             Cas2ReferralHistory(
               id = application2.assessment!!.id,
@@ -83,6 +84,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referredBy = application2.createdByUser.name,
               placementAddress = omu.prisonName,
               placementStatus = application2.statusUpdates!!.first().label,
+              referralUrl = "http://cas2.frontend/applications/${application2.id}/overview",
             ),
             Cas2ReferralHistory(
               id = application3.assessment!!.id,
@@ -96,6 +98,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referredBy = application3.createdByUser.name,
               placementAddress = omu.prisonName,
               placementStatus = application3.statusUpdates!!.first().label,
+              referralUrl = "http://cas2.frontend/applications/${application3.id}/overview",
             ),
             Cas2ReferralHistory(
               id = application4.assessment!!.id,
@@ -109,6 +112,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referredBy = application4.createdByUser.name,
               placementAddress = omu.prisonName,
               placementStatus = application4.statusUpdates!!.first().label,
+              referralUrl = "http://cas2.frontend/applications/${application4.id}/overview",
             ),
             Cas2ReferralHistory(
               id = application5.assessment!!.id,
@@ -122,6 +126,7 @@ class Cas2v2ExternalReferralHistoryTest : IntegrationTestBase() {
               referredBy = application5.createdByUser.name,
               placementAddress = omu.prisonName,
               placementStatus = application5.statusUpdates!!.first().label,
+              referralUrl = "http://cas2.frontend/applications/${application5.id}/overview",
             ),
           )
 

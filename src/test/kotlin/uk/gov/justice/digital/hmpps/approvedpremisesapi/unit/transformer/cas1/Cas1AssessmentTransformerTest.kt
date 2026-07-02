@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
@@ -71,6 +72,9 @@ class Cas1AssessmentTransformerTest {
 
   @MockK
   lateinit var mockCas1SpaceBookingRepository: Cas1SpaceBookingRepository
+
+  @Mock
+  private val cas1ApplicationUrl = "https://cas1.com"
 
   private val risksTransformer = RisksTransformer()
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()

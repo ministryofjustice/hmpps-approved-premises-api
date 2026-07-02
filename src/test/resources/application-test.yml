@@ -204,10 +204,18 @@ url-templates:
     application-timeline: http://frontend/applications/#applicationId?tab=timeline
     assessment: http://frontend/assessments/#id
     booking: http://frontend/premises/#premisesId/bookings/#bookingId
+    cas1:
+      application-start: http://frontend.cas1.applications/start
     cas2:
       application: http://cas2.frontend/applications/#id
-      application-overview: http://cas2.frontend/applications/#id/overview
       submitted-application-overview: http://cas2.frontend/assess/applications/#applicationId/overview
+      application-start: http://cas2.frontend/applications/before-you-start
+    cas2v2:
+      application: http://cas2.frontend/applications/#id
+    cas3:
+      application-start: http://frontend.cas3/applications/start
+      application-full: http://frontend.cas3/applications/#id/full
+
 
 preemptive-cache-enabled: false
 

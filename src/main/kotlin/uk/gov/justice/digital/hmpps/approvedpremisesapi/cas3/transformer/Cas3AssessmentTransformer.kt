@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
@@ -30,6 +31,7 @@ import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision as JpaAssessmentDecision
 
+@Suppress("LongParameterList")
 @Component
 class Cas3AssessmentTransformer(
   private val applicationsTransformer: ApplicationsTransformer,
@@ -39,6 +41,7 @@ class Cas3AssessmentTransformer(
   private val userTransformer: UserTransformer,
   private val jsonMapper: JsonMapper,
   private val bookingRepository: BookingRepository,
+  @Value($$"${url-templates.frontend.cas3.application-full}") private val cas3ApplicationFullUrl: String,
 ) {
   fun transformJpaToApi(
     jpa: TemporaryAccommodationAssessmentEntity,
@@ -82,8 +85,8 @@ class Cas3AssessmentTransformer(
     probationDeliveryUnitName = ase.probationDeliveryUnitName,
   )
 
-  fun transformAssessmentToCas3ReferralHistory(a: TemporaryAccommodationAssessmentEntity): Cas3ReferralHistory {
-    val application = a.typedApplication<TemporaryAccommodationApplicationEntity>()
+  fun transformAssessmentToCas3ReferralHistory(assessmentEntity: TemporaryAccommodationAssessmentEntity): Cas3ReferralHistory {
+    val application = assessmentEntity.typedApplication<TemporaryAccommodationApplicationEntity>()
 
     val latestBooking = bookingRepository.findLatestCas3BookingEntity(application.id, ServiceName.temporaryAccommodation.value)
 
@@ -92,18 +95,19 @@ class Cas3AssessmentTransformer(
     }
 
     return Cas3ReferralHistory(
-      id = a.id,
+      id = assessmentEntity.id,
       applicationId = application.id,
-      createdAt = a.createdAt.toInstant(),
-      status = a.deriveAssessmentStatus(),
+      createdAt = assessmentEntity.createdAt.toInstant(),
+      status = assessmentEntity.deriveAssessmentStatus(),
       type = ServiceType.CAS3,
-      referralRejectionReason = a.referralRejectionReason?.name ?: a.rejectionRationale,
-      referralRejectionReasonDetail = a.referralRejectionReasonDetail,
+      referralRejectionReason = assessmentEntity.referralRejectionReason?.name ?: assessmentEntity.rejectionRationale,
+      referralRejectionReasonDetail = assessmentEntity.referralRejectionReasonDetail,
       localAuthorityArea = application.dutyToReferLocalAuthorityAreaName,
       pdu = application.probationDeliveryUnit?.name,
       referredBy = transformToStaffDto(application.createdByUser),
       placementAddress = placementAddress,
       placementStatus = latestBooking?.status?.value,
+      referralUrl = cas3ApplicationFullUrl.replace("#id", assessmentEntity.application.id.toString()),
     )
   }
 

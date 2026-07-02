@@ -16,4 +16,5 @@ data class Cas2HdcReferralHistory(
   val referredBy: String,
   val placementAddress: String?,
   val placementStatus: String?,
+  val referralUrl: String,
 )
