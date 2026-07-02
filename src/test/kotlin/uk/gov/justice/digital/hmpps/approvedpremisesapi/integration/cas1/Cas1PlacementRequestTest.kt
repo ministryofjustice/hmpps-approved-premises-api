@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestSummary.PlacementRequestStatus
@@ -1509,6 +1510,87 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                     ),
                   ),
                 )
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class BookingNotMade {
+    @Test
+    fun `No JWT returns 401`() {
+      webTestClient.post()
+        .uri("/cas1/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/booking-not-made")
+        .bodyValue(
+          Cas1NewBookingNotMade(
+            notes = "some notes",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_JANITOR", "CAS1_EXPERIMENTAL"], mode = EnumSource.Mode.EXCLUDE)
+    fun `Create a Booking Not Made from a Placement Request with an unauthorised role returns 403`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            givenAPlacementRequest(
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+              webTestClient.post()
+                .uri("/cas1/placement-requests/${placementRequest.id}/booking-not-made")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  Cas1NewBookingNotMade(
+                    notes = "some notes",
+                  ),
+                )
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER"], mode = EnumSource.Mode.INCLUDE)
+    fun `Create a Booking Not Made from a Placement Request returns 200 and creates a domain event`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            givenAPlacementRequest(
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+              webTestClient.post()
+                .uri("/cas1/placement-requests/${placementRequest.id}/booking-not-made")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  Cas1NewBookingNotMade(
+                    notes = "some notes",
+                  ),
+                )
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .jsonPath("$.placementRequestId").isEqualTo(placementRequest.id.toString())
+                .jsonPath("$.notes").isEqualTo("some notes")
+
+              domainEventAsserter.assertDomainEventOfTypeStored(
+                placementRequest.application.id,
+                DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
+              )
             }
           }
         }
