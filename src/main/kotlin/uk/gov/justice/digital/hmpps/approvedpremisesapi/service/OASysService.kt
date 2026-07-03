@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.AssessmentInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OASysAssessmentSummary
@@ -131,12 +130,6 @@ class OASysService(
     }
     is ClientResult.Failure -> response.throwException()
   }
-
-  private fun AssessmentInfo.toAssessmentDates(crn: String) = OASysSuitabilityService.OASysAssessmentDates(
-    crn = crn,
-    initiationDate = initiationDate,
-    dateCompleted = dateCompleted,
-  )
 
   private fun <T> notFound(crn: String) = CasResult.NotFound<T>("OASysAssessment", crn)
 }

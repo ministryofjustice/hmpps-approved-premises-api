@@ -21,6 +21,7 @@ class OffenderRisksService(
   private val apAndOASysClient: ApAndOASysClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val sentryService: SentryService,
+  private val oaSysSuitabilityService: OASysSuitabilityService,
 ) {
 
   private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
@@ -40,19 +41,29 @@ class OffenderRisksService(
     is ClientResult.Success -> {
       val summary = roshRisksResponse.body.rosh
 
-      when (summary.anyRisksAreNull()) {
-        true -> RiskWithStatus(status = RiskStatus.NotFound)
-        false -> RiskWithStatus(
-          value = RoshRisks(
-            overallRisk = summary.determineOverallRiskLevel().text,
-            riskToChildren = summary.riskChildrenCommunity!!.text,
-            riskToPublic = summary.riskPublicCommunity!!.text,
-            riskToKnownAdult = summary.riskKnownAdultCommunity!!.text,
-            riskToStaff = summary.riskStaffCommunity!!.text,
-            lastUpdated = roshRisksResponse.body.dateCompleted?.toLocalDate()
-              ?: roshRisksResponse.body.initiationDate.toLocalDate(),
-          ),
-        )
+      val isSuitable = oaSysSuitabilityService.isSuitable(
+        crn,
+        assessmentInfo = roshRisksResponse.body,
+        strategy = OASysSuitabilityService.SuitabilityStrategy.CompletedInLastSixMonths,
+      )
+
+      if (!isSuitable) {
+        RiskWithStatus(status = RiskStatus.NotFound)
+      } else {
+        when (summary.anyRisksAreNull()) {
+          true -> RiskWithStatus(status = RiskStatus.NotFound)
+          false -> RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = summary.determineOverallRiskLevel().text,
+              riskToChildren = summary.riskChildrenCommunity!!.text,
+              riskToPublic = summary.riskPublicCommunity!!.text,
+              riskToKnownAdult = summary.riskKnownAdultCommunity!!.text,
+              riskToStaff = summary.riskStaffCommunity!!.text,
+              lastUpdated = roshRisksResponse.body.dateCompleted?.toLocalDate()
+                ?: roshRisksResponse.body.initiationDate.toLocalDate(),
+            ),
+          )
+        }
       }
     }
     is ClientResult.Failure.StatusCode -> when (roshRisksResponse.status) {
