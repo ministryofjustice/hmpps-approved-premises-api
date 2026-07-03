@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
@@ -11,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ReferralHistory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASingleAccommodationServiceClientCredentialsApiCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -75,7 +75,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               id = assessment1.id,
               applicationId = assessment1.application.id,
               createdAt = assessment1.createdAt.toInstant(),
-              status = TemporaryAccommodationAssessmentStatus.readyToPlace,
+              applicationStatus = ApplicationStatus.submitted,
               type = ServiceType.CAS3,
               referralRejectionReason = null,
               referralRejectionReasonDetail = null,
@@ -83,14 +83,14 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               pdu = (assessment1.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
-              placementStatus = Cas3BookingStatus.provisional.value,
+              bookingStatus = Cas3BookingStatus.provisional,
               uiUrl = "http://frontend.cas3/referrals/${assessment1.application.id}/full",
             ),
             Cas3ReferralHistory(
               id = assessment2.id,
               applicationId = assessment2.application.id,
               createdAt = assessment2.createdAt.toInstant(),
-              status = TemporaryAccommodationAssessmentStatus.rejected,
+              applicationStatus = ApplicationStatus.submitted,
               type = ServiceType.CAS3,
               referralRejectionReason = "A random rejection reason",
               referralRejectionReasonDetail = "Some random rejection detail",
@@ -98,14 +98,14 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               pdu = (assessment2.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
-              placementStatus = Cas3BookingStatus.provisional.value,
+              bookingStatus = Cas3BookingStatus.provisional,
               uiUrl = "http://frontend.cas3/referrals/${assessment2.application.id}/full",
             ),
             Cas3ReferralHistory(
               id = assessment3.id,
               applicationId = assessment3.application.id,
               createdAt = assessment3.createdAt.toInstant(),
-              status = TemporaryAccommodationAssessmentStatus.closed,
+              applicationStatus = ApplicationStatus.submitted,
               type = ServiceType.CAS3,
               referralRejectionReason = null,
               referralRejectionReasonDetail = null,
@@ -113,14 +113,14 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               pdu = (assessment3.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
-              placementStatus = Cas3BookingStatus.provisional.value,
+              bookingStatus = Cas3BookingStatus.provisional,
               uiUrl = "http://frontend.cas3/referrals/${assessment3.application.id}/full",
             ),
             Cas3ReferralHistory(
               id = assessment4.id,
               applicationId = assessment4.application.id,
               createdAt = assessment4.createdAt.toInstant(),
-              status = TemporaryAccommodationAssessmentStatus.inReview,
+              applicationStatus = ApplicationStatus.submitted,
               type = ServiceType.CAS3,
               referralRejectionReason = null,
               referralRejectionReasonDetail = null,
@@ -128,14 +128,14 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               pdu = (assessment4.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
-              placementStatus = Cas3BookingStatus.provisional.value,
+              bookingStatus = Cas3BookingStatus.provisional,
               uiUrl = "http://frontend.cas3/referrals/${assessment4.application.id}/full",
             ),
             Cas3ReferralHistory(
               id = assessment5.id,
               applicationId = assessment5.application.id,
               createdAt = assessment5.createdAt.toInstant(),
-              status = TemporaryAccommodationAssessmentStatus.unallocated,
+              applicationStatus = ApplicationStatus.submitted,
               type = ServiceType.CAS3,
               referralRejectionReason = null,
               referralRejectionReasonDetail = null,
@@ -143,7 +143,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
               pdu = (assessment5.application as TemporaryAccommodationApplicationEntity).probationDeliveryUnit?.name,
               referredBy = createStaffDto(user),
               placementAddress = "10 Test Street, London, SW1A 1AA",
-              placementStatus = Cas3BookingStatus.provisional.value,
+              bookingStatus = Cas3BookingStatus.provisional,
               uiUrl = "http://frontend.cas3/referrals/${assessment5.application.id}/full",
             ),
           )
