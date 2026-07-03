@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 class Cas3ExternalUrlTemplateControllerTest : Cas3IntegrationTestBase() {
 
   @Test
-  fun `Get `() {
+  fun `Returns expected cas3 UI template links`() {
     givenAUser { _, _ ->
       givenASingleAccommodationServiceClientCredentialsApiCall { clientCredentialsJwt ->
         webTestClient.get()
