@@ -52,6 +52,7 @@ generic-service:
     URL-TEMPLATES_FRONTEND_APPLICATION-APPEAL: https://approved-premises.hmpps.service.justice.gov.uk/applications/#applicationId/appeals/#appealId
     URL-TEMPLATES_FRONTEND_APPLICATION-TIMELINE: https://approved-premises.hmpps.service.justice.gov.uk/applications/#applicationId?tab=timeline
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises.hmpps.service.justice.gov.uk/assessments/#id
+    URL-TEMPLATES_FRONTEND_CAS1_APPLICATION-START: https://approved-premises.hmpps.service.justice.gov.uk/applications/start
     URL-TEMPLATES_FRONTEND_CAS1_CRU-DASHBOARD: https://approved-premises.hmpps.service.justice.gov.uk/admin/cru-dashboard
     URL-TEMPLATES_FRONTEND_CAS1_CRU-OPEN-CHANGE-REQUESTS: https://approved-premises.hmpps.service.justice.gov.uk/admin/cru-dashboard/change-requests
     URL-TEMPLATES_FRONTEND_CAS1_SPACE-BOOKING: https://approved-premises.hmpps.service.justice.gov.uk/manage/premises/#premisesId/placements/#bookingId
@@ -63,6 +64,7 @@ generic-service:
     URL-TEMPLATES_FRONTEND_CAS2V2_APPLICATION-OVERVIEW: https://short-term-accommodation-cas-2-bail.hmpps.service.justice.gov.uk/applications/#id/overview
     URL-TEMPLATES_FRONTEND_CAS2V2_SUBMITTED-APPLICATION-OVERVIEW: https://short-term-accommodation-cas-2-bail.hmpps.service.justice.gov.uk/assess/applications/#applicationId/overview
     URL-TEMPLATES_FRONTEND_CAS3_REFERRAL-FULL: https://transitional-accommodation.hmpps.service.justice.gov.uk/referrals/#applicationId/full
+    URL-TEMPLATES_FRONTEND_CAS3_REFERRAL-START: https://transitional-accommodation.hmpps.service.justice.gov.uk/referrals/start
     URL-TEMPLATES_API_CAS1_APPLICATION-SUBMITTED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/application-submitted/#eventId
     URL-TEMPLATES_API_CAS1_APPLICATION-ASSESSED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/application-assessed/#eventId
     URL-TEMPLATES_API_CAS1_BOOKING-MADE-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/booking-made/#eventId

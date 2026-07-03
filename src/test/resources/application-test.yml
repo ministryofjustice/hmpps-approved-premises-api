@@ -204,13 +204,15 @@ url-templates:
     application-timeline: http://frontend/applications/#applicationId?tab=timeline
     assessment: http://frontend/assessments/#id
     booking: http://frontend/premises/#premisesId/bookings/#bookingId
+    cas1:
+      application-start: http://frontend.cas1/applications/start
     cas2:
       application: http://cas2.frontend/applications/#id
       application-overview: http://cas2.frontend/applications/#id/overview
       submitted-application-overview: http://cas2.frontend/assess/applications/#applicationId/overview
     cas3:
-      referral-full:  http://frontend.cas3/referrals/#applicationId/full
-
+      referral-full: http://frontend.cas3/referrals/#applicationId/full
+      referral-start: http://frontend.cas3/applications/start
 preemptive-cache-enabled: false
 
 arrived-departed-domain-events-disabled: false
