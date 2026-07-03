@@ -1,11 +1,21 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.AssessmentsCas1Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PaginationHeaders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
@@ -30,7 +40,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
-@Service
+@Cas1Controller
+@Tag(name = "CAS1 Assessments")
 class Cas1AssessmentsController(
   private val cas1AssessmentService: Cas1AssessmentService,
   private val userService: UserService,
@@ -38,15 +49,26 @@ class Cas1AssessmentsController(
   private val jsonMapper: JsonMapper,
   private val cas1AssessmentClarificationNoteTransformer: Cas1AssessmentClarificationNoteTransformer,
   private val offenderDetailService: OffenderDetailService,
-) : AssessmentsCas1Delegate {
+) {
 
-  override fun getAssessmentsForUser(
-    sortDirection: SortDirection?,
-    sortBy: Cas1AssessmentSortField?,
-    statuses: List<Cas1AssessmentStatus>?,
-    crnOrName: String?,
-    page: Int?,
-    perPage: Int?,
+  @PaginationHeaders
+  @Operation(
+    summary = "Gets assessments the user is authorised to view",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved assessments", content = [Content(array = ArraySchema(schema = Schema(implementation = Cas1AssessmentSummary::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/assessments"],
+    produces = ["application/json"],
+  )
+  fun getAssessmentsForUser(
+    @RequestParam sortDirection: SortDirection?,
+    @RequestParam sortBy: Cas1AssessmentSortField?,
+    @RequestParam statuses: List<Cas1AssessmentStatus>?,
+    @RequestParam page: Int?,
+    @RequestParam perPage: Int?,
   ): ResponseEntity<List<Cas1AssessmentSummary>> {
     val user = userService.getUserForRequest()
     val resolvedSortDirection = sortDirection ?: SortDirection.asc
@@ -67,7 +89,18 @@ class Cas1AssessmentsController(
       .body(transformedSummaries)
   }
 
-  override fun getAssessment(assessmentId: UUID): ResponseEntity<Cas1Assessment> {
+  @Operation(
+    summary = "Gets a single assessment by its id",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully retrieved assessment", content = [Content(schema = Schema(implementation = Cas1Assessment::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/assessments/{assessmentId}"],
+    produces = ["application/json"],
+  )
+  fun getAssessment(@PathVariable assessmentId: UUID): ResponseEntity<Cas1Assessment> {
     val user = userService.getUserForRequest()
 
     val assessment = extractEntityFromCasResult(
@@ -84,10 +117,22 @@ class Cas1AssessmentsController(
     return ResponseEntity.ok(transformedResponse)
   }
 
+  @Operation(
+    summary = "Updates an assessment",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully updated assessment", content = [Content(schema = Schema(implementation = Cas1Assessment::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/assessments/{assessmentId}"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
   @Transactional
-  override fun updateAssessment(
-    assessmentId: UUID,
-    cas1UpdateAssessment: Cas1UpdateAssessment,
+  fun updateAssessment(
+    @PathVariable assessmentId: UUID,
+    @RequestBody cas1UpdateAssessment: Cas1UpdateAssessment,
   ): ResponseEntity<Cas1Assessment> {
     val user = userService.getUserForRequest()
 
@@ -107,10 +152,22 @@ class Cas1AssessmentsController(
     )
   }
 
+  @Operation(
+    summary = "Adds a clarification note to an assessment",
+    responses = [
+      ApiResponse(responseCode = "201", description = "successfully created a clarification note", content = [Content(schema = Schema(implementation = Cas1ClarificationNote::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/notes"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
   @Transactional
-  override fun addClarificationNoteToAssessment(
-    assessmentId: UUID,
-    cas1NewClarificationNote: Cas1NewClarificationNote,
+  fun addClarificationNoteToAssessment(
+    @PathVariable assessmentId: UUID,
+    @RequestBody cas1NewClarificationNote: Cas1NewClarificationNote,
   ): ResponseEntity<Cas1ClarificationNote> {
     val user = userService.getUserForRequest()
 
@@ -126,11 +183,23 @@ class Cas1AssessmentsController(
     )
   }
 
+  @Operation(
+    summary = "Updates an assessment's clarification note",
+    responses = [
+      ApiResponse(responseCode = "201", description = "successfully updated a clarification note", content = [Content(schema = Schema(implementation = Cas1ClarificationNote::class))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.PUT],
+    value = ["/assessments/{assessmentId}/notes/{noteId}"],
+    produces = ["application/json"],
+    consumes = ["application/json"],
+  )
   @Transactional
-  override fun updateAssessmentClarificationNote(
-    assessmentId: UUID,
-    noteId: UUID,
-    cas1UpdatedClarificationNote: Cas1UpdatedClarificationNote,
+  fun updateAssessmentClarificationNote(
+    @PathVariable assessmentId: UUID,
+    @PathVariable noteId: UUID,
+    @RequestBody cas1UpdatedClarificationNote: Cas1UpdatedClarificationNote,
   ): ResponseEntity<Cas1ClarificationNote> {
     val user = userService.getUserForRequest()
     val clarificationNoteResult = cas1AssessmentService.updateAssessmentClarificationNote(
@@ -146,9 +215,20 @@ class Cas1AssessmentsController(
     )
   }
 
-  override fun acceptAssessment(
-    assessmentId: UUID,
-    cas1AssessmentAcceptance: Cas1AssessmentAcceptance,
+  @Operation(
+    summary = "Accepts an Assessment",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully accepted the assessment"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/acceptance"],
+    consumes = ["application/json"],
+  )
+  fun acceptAssessment(
+    @PathVariable assessmentId: UUID,
+    @RequestBody cas1AssessmentAcceptance: Cas1AssessmentAcceptance,
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
@@ -171,9 +251,20 @@ class Cas1AssessmentsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
-  override fun rejectAssessment(
-    assessmentId: UUID,
-    cas1AssessmentRejection: Cas1AssessmentRejection,
+  @Operation(
+    summary = "Rejects an Assessment",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successfully rejected the assessment"),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.POST],
+    value = ["/assessments/{assessmentId}/rejection"],
+    consumes = ["application/json"],
+  )
+  fun rejectAssessment(
+    @PathVariable assessmentId: UUID,
+    @RequestBody cas1AssessmentRejection: Cas1AssessmentRejection,
   ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
