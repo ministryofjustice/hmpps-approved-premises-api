@@ -14,4 +14,4 @@ class Cas1ExternalUrlTemplateController(private val cas1UrlTemplates: Cas1UrlTem
 }
 
 @Component
-data class Cas1UrlTemplates(@Value($$"${url-templates.frontend.cas1.application-start}") var cas1ApplicationStart: String)
+data class Cas1UrlTemplates(@Value($$"${url-templates.frontend.cas1.application-start}") val cas1ApplicationStart: String)

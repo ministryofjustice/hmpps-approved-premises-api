@@ -15,5 +15,5 @@ class Cas3ExternalUrlTemplateController(private val cas3UrlTemplates: Cas3UrlTem
 
 @Component
 data class Cas3UrlTemplates(
-  @Value($$"${url-templates.frontend.cas3.referral-start}") var cas3ReferralStart: String,
+  @Value($$"${url-templates.frontend.cas3.referral-start}") val cas3ReferralStart: String,
 )
