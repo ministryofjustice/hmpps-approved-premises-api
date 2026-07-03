@@ -72,6 +72,8 @@ class Cas1AssessmentTransformerTest {
   @MockK
   lateinit var mockCas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
+  private val cas1ApplicationUrlTemplate: String = "http://localhost:3000/applications/#id"
+
   private val risksTransformer = RisksTransformer()
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()
 
