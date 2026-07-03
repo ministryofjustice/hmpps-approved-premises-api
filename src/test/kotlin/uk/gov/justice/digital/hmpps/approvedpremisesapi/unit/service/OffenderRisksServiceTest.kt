@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysSuitabilityService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.LocalDate
@@ -34,12 +35,14 @@ class OffenderRisksServiceTest {
   private val mockApOASysContextApiClient = mockk<ApAndOASysClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockSentryService = mockk<SentryService>()
+  private val mockOASysSuitabilityService = mockk<OASysSuitabilityService>()
 
   private val apDeliusContextApiOffenderRisksService = OffenderRisksService(
     mockApDeliusContextApiClient,
     mockApOASysContextApiClient,
     mockHMPPSTierApiClient,
     mockSentryService,
+    mockOASysSuitabilityService,
   )
 
   @Test
@@ -111,6 +114,73 @@ class OffenderRisksServiceTest {
   }
 
   @Test
+  fun `getPersonRisks returns RoSH not found when OASys assessment is older than 6 months`() {
+    val crn = "a-crn"
+
+    mock200RoSH(
+      crn,
+      RoshRatingsFactory().apply {
+        withDateCompleted(OffsetDateTime.parse("2022-09-06T13:45:00Z"))
+        withAssessmentId(34853487)
+        withRiskChildrenCommunity(RiskLevel.LOW)
+        withRiskPublicCommunity(RiskLevel.MEDIUM)
+        withRiskKnownAdultCommunity(RiskLevel.HIGH)
+        withRiskStaffCommunity(RiskLevel.VERY_HIGH)
+      }.produce(),
+    )
+
+    mock200Tier(
+      crn,
+      Tier(
+        tierScore = "M2",
+        calculationId = UUID.randomUUID(),
+        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+      ),
+    )
+
+    mock200CaseDetail(
+      crn,
+      CaseDetailFactory()
+        .withRegistrations(
+          listOf(
+            Registration(
+              code = "MAPP",
+              description = "MAPPA",
+              startDate = LocalDate.parse("2022-09-06"),
+            ),
+            Registration(
+              code = "FLAG",
+              description = "RISK FLAG",
+              startDate = LocalDate.parse("2022-09-06"),
+            ),
+          ),
+        )
+        .withMappaDetail(
+          MappaDetail(
+            level = 1,
+            levelDescription = "L1",
+            category = 1,
+            categoryDescription = "C1",
+            startDate = LocalDate.parse("2022-09-06"),
+            lastUpdated = ZonedDateTime.parse("2022-09-06T00:00:00Z"),
+          ),
+        )
+        .produce(),
+    )
+
+    every { mockOASysSuitabilityService.isSuitable(crn, any(), OASysSuitabilityService.SuitabilityStrategy.CompletedInLastSixMonths) } returns false
+
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
+
+    assertThat(result.roshRisks.status).isEqualTo(RiskStatus.NotFound)
+    assertThat(result.tier.status).isEqualTo(RiskStatus.Retrieved)
+    assertThat(result.mappa.status).isEqualTo(RiskStatus.Retrieved)
+    assertThat(result.flags.status).isEqualTo(RiskStatus.Retrieved)
+
+    verify { mockSentryService wasNot Called }
+  }
+
+  @Test
   fun `getPersonRisks returns Retrieved envelopes with expected contents for RoSH, Tier, Mappa & flags when respective Clients return 200`() {
     val crn = "a-crn"
 
@@ -164,6 +234,8 @@ class OffenderRisksServiceTest {
         )
         .produce(),
     )
+
+    every { mockOASysSuitabilityService.isSuitable(crn, any(), OASysSuitabilityService.SuitabilityStrategy.CompletedInLastSixMonths) } returns true
 
     val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
 
@@ -249,6 +321,8 @@ class OffenderRisksServiceTest {
         )
         .produce(),
     )
+
+    every { mockOASysSuitabilityService.isSuitable(crn, any(), OASysSuitabilityService.SuitabilityStrategy.CompletedInLastSixMonths) } returns true
 
     val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
 

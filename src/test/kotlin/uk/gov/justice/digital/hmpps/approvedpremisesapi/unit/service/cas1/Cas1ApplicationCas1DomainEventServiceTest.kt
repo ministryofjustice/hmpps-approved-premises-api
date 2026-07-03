@@ -62,6 +62,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
     apAndOASysClient = mockk(),
     hmppsTierApiClient = mockk(),
     sentryService = mockk(),
+    oaSysSuitabilityService = mockk(),
   )
 
   private val service = Cas1ApplicationDomainEventService(

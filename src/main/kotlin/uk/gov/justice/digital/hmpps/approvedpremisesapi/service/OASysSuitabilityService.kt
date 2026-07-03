@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.AssessmentInfo
 import java.time.Clock
 import java.time.OffsetDateTime
 
@@ -12,6 +13,15 @@ class OASysSuitabilityService(
   private val sentryService: SentryService,
 ) {
   var logger: Logger = LoggerFactory.getLogger(this::class.java)
+
+  fun isSuitable(
+    crn: String,
+    assessmentInfo: AssessmentInfo,
+    strategy: SuitabilityStrategy,
+  ) = isSuitable(
+    assessmentDates = assessmentInfo.toAssessmentDates(crn),
+    strategy = strategy,
+  )
 
   fun isSuitable(
     assessmentDates: OASysAssessmentDates,
@@ -50,3 +60,9 @@ class OASysSuitabilityService(
     CompletedInLastSixMonths,
   }
 }
+
+fun AssessmentInfo.toAssessmentDates(crn: String) = OASysSuitabilityService.OASysAssessmentDates(
+  crn = crn,
+  initiationDate = initiationDate,
+  dateCompleted = dateCompleted,
+)
