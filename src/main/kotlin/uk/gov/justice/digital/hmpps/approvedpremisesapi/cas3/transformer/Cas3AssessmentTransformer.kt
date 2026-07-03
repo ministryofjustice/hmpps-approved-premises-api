@@ -106,7 +106,7 @@ class Cas3AssessmentTransformer(
       referredBy = transformToStaffDto(application.createdByUser),
       placementAddress = placementAddress,
       placementStatus = latestBooking?.status?.value,
-      referralUrl = cas3ApplicationFullUrlTemplate.replace("#applicationId", application.id.toString()),
+      uiUrl = cas3ApplicationFullUrlTemplate.replace("#applicationId", application.id.toString()),
     )
   }
 
