@@ -18,4 +18,5 @@ data class Cas3ReferralHistory(
   val referredBy: Cas3StaffDto,
   val placementAddress: String?,
   val placementStatus: String?,
+  val uiUrl: String,
 )
