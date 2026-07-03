@@ -7,12 +7,18 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TierVersionDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.factory.Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.factory.Cas1TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -251,6 +257,61 @@ class Cas1RequestForPlacementServiceTest {
       placementRequests.forEach {
         verify(exactly = 1) { requestForPlacementTransformer.transformPlacementRequestEntityToApi(it, true) }
       }
+    }
+  }
+
+  @Nested
+  inner class GetRequestsForPlacementDurations {
+    @ParameterizedTest
+    @ValueSource(
+      strings = [
+        "normal",
+        "mhapElliottHouse",
+        "mhapStJosephs",
+        "rfap",
+      ],
+    )
+    fun `returns duration 84 (12 x 7) when apType is normal or mhapElliottHouse or mhapStJosephs or rfap and tier version is V2`(apType: String) {
+      val request = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory().withApType(ApType.valueOf(apType)).produce()
+      val result = cas1RequestForPlacementService.defaultDurations(request)
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.defaultDurationDays).isEqualTo(84)
+        assertThat(it.maxDurationDays).isNull()
+      }
+    }
+
+    @Test
+    fun `returns duration 182 (26 x 7) when apType is pipe and tier version is V2`() {
+      val request = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory().withApType(ApType.pipe).produce()
+      val result = cas1RequestForPlacementService.defaultDurations(request)
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.defaultDurationDays).isEqualTo(182)
+        assertThat(it.maxDurationDays).isNull()
+      }
+    }
+
+    @Test
+    fun `returns duration 364 (52 x 7) when apType is esap and tier version is V2`() {
+      val request = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory().withApType(ApType.esap).produce()
+      val result = cas1RequestForPlacementService.defaultDurations(request)
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.defaultDurationDays).isEqualTo(364)
+        assertThat(it.maxDurationDays).isNull()
+      }
+    }
+
+    @Test
+    fun `returns error when tier version is v3`() {
+      val request = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory().withApType(ApType.esap).withTier(
+        Cas1TierDtoFactory().withVersion(Cas1TierVersionDto.V3).produce(),
+      ).produce()
+
+      val result = cas1RequestForPlacementService.defaultDurations(request)
+
+      assertThatCasResult(result).isGeneralValidationError("Tier version V3 is not supported for duration calculations")
     }
   }
 }
