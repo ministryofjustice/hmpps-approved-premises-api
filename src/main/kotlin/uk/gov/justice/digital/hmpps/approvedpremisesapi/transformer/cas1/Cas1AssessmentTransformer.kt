@@ -100,7 +100,7 @@ class Cas1AssessmentTransformer(
       referredBy = transformToStaffDto(application.createdByUser),
       placementAddress = placementAddress,
       placementStatus = latestBooking?.getSpaceBookingStatus()?.status?.value,
-      applicationUrl = cas1ApplicationUrlTemplate.replace("#id", entity.application.id.toString()),
+      uiUrl = cas1ApplicationUrlTemplate.replace("#id", entity.application.id.toString()),
     )
   }
 
