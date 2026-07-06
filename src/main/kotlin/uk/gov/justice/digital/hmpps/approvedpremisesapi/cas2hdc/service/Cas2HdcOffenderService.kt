@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
@@ -23,8 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import java.util.stream.Collectors
 
@@ -44,8 +43,8 @@ import java.util.stream.Collectors
 class Cas2HdcOffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val apAndOASysClient: ApAndOASysClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
+  private val offenderRisksService: OffenderRisksService,
   @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
 
@@ -264,7 +263,7 @@ class Cas2HdcOffenderService(
       val risks = PersonRisks(
         // Note that Tier, Mappa and Flags are all hardcoded to NotFound
         // and these unused 'envelopes' will be removed.
-        roshRisks = getRoshRisksEnvelope(crn),
+        roshRisks = offenderRisksService.getRoshRisksEnvelope(crn),
         mappa = RiskWithStatus(status = RiskStatus.NotFound),
         tier = RiskWithStatus(status = RiskStatus.NotFound),
         flags = RiskWithStatus(status = RiskStatus.NotFound),
@@ -272,51 +271,6 @@ class Cas2HdcOffenderService(
 
       AuthorisableActionResult.Success(
         risks,
-      )
-    }
-  }
-
-  private fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> {
-    when (val roshRisksResponse = apAndOASysClient.getRoshRatings(crn)) {
-      is ClientResult.Success -> {
-        val summary = roshRisksResponse.body.rosh
-
-        if (summary.anyRisksAreNull()) {
-          return RiskWithStatus(
-            status = RiskStatus.NotFound,
-            value = null,
-          )
-        }
-
-        return RiskWithStatus(
-          status = RiskStatus.Retrieved,
-          value = RoshRisks(
-            overallRisk = summary.determineOverallRiskLevel().text,
-            riskToChildren = summary.riskChildrenCommunity!!.text,
-            riskToPublic = summary.riskPublicCommunity!!.text,
-            riskToKnownAdult = summary.riskKnownAdultCommunity!!.text,
-            riskToStaff = summary.riskStaffCommunity!!.text,
-            lastUpdated = roshRisksResponse.body.dateCompleted?.toLocalDate()
-              ?: roshRisksResponse.body.initiationDate.toLocalDate(),
-          ),
-        )
-      }
-
-      is ClientResult.Failure.StatusCode -> return if (roshRisksResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
-        RiskWithStatus(
-          status = RiskStatus.NotFound,
-          value = null,
-        )
-      } else {
-        RiskWithStatus(
-          status = RiskStatus.Error,
-          value = null,
-        )
-      }
-
-      is ClientResult.Failure -> return RiskWithStatus(
-        status = RiskStatus.Error,
-        value = null,
       )
     }
   }
