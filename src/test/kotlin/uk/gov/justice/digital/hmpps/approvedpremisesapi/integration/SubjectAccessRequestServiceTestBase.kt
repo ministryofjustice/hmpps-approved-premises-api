@@ -198,8 +198,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
             "status" : "Retrieved",
             "value" : {
               "level" : "M1",
-              "lastUpdated" : [ 2023, 6, 26 ],
-              "version": "V2"
+              "lastUpdated" : [ 2023, 6, 26 ]
             }
           },
           "flags" : {

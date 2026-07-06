@@ -62,17 +62,10 @@ data class Mappa(
 data class RiskTier(
   val level: String,
   val lastUpdated: LocalDate,
-  // all risk tiers persisted before this property existed were V2, hence the default value set here
-  val version: RiskTierVersion = RiskTierVersion.V2,
 ) : Serializable {
   companion object {
     private const val serialVersionUID: Long = 1L
   }
-}
-
-enum class RiskTierVersion {
-  V2,
-  V3,
 }
 
 @Converter(autoApply = true)
