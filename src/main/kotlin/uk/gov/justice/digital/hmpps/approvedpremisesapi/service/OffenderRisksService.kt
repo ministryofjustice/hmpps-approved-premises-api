@@ -37,7 +37,7 @@ class OffenderRisksService(
     )
   }
 
-  fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> = when (val roshRisksResponse = apAndOASysClient.getRoshRatings(crn)) {
+  internal fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> = when (val roshRisksResponse = apAndOASysClient.getRoshRatings(crn)) {
     is ClientResult.Success -> {
       val summary = roshRisksResponse.body.rosh
 
