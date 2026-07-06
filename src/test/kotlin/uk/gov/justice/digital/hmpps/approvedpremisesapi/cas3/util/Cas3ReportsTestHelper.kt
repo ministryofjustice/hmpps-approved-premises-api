@@ -69,15 +69,17 @@ fun List<Cas3BookingEntity>.toBookingsReportData(): List<BookingsReportData> = t
       override val postCode: String
         get() = it.bedspace.premises.postcode
       override val overstayCreatedAt: Instant?
-        get() = it.overstays.maxByOrNull { o -> o.createdAt }?.createdAt!!.toInstant()
+        get() = it.overstays.maxByOrNull { o -> o.createdAt }?.createdAt?.toInstant()
       override val overstayIsAuthorised: Boolean?
         get() = it.overstays.maxByOrNull { o -> o.createdAt }?.isAuthorised
       override val overstayReason: String?
         get() = it.overstays.maxByOrNull { o -> o.createdAt }?.reason
       override val extensionCreatedAt: Instant?
-        get() = it.extensions.maxByOrNull { o -> o.createdAt }?.createdAt!!.toInstant()
+        get() = it.extensions.maxByOrNull { o -> o.createdAt }?.createdAt?.toInstant()
     }
   }
   .sortedBy { it.bookingId }
+
+fun List<Cas3BookingEntity>.toBookingsReportDataAndPersonInfo(): List<BookingsReportDataAndPersonInfo> = this.toBookingsReportDataAndPersonInfo { PersonInformationReportData(null, null, null, null, null) }
 
 fun List<Cas3BookingEntity>.toBookingsReportDataAndPersonInfo(configuration: (crn: String) -> PersonInformationReportData) = this.toBookingsReportData().map { BookingsReportDataAndPersonInfo(it, configuration(it.crn)) }

@@ -4,7 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -39,7 +38,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var departures: Yielded<MutableList<DepartureEntity>>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
   private var cancellations: Yielded<MutableList<CancellationEntity>>? = null
-  private var confirmation: Yielded<Cas3ConfirmationEntity>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var dateChanges: Yielded<MutableList<DateChangeEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
@@ -112,14 +110,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
 
   fun withCancellations(cancellations: MutableList<CancellationEntity>) = apply {
     this.cancellations = { cancellations }
-  }
-
-  fun withYieldedConfirmation(confirmation: Yielded<Cas3ConfirmationEntity>) = apply {
-    this.confirmation = confirmation
-  }
-
-  fun withConfirmation(confirmation: Cas3ConfirmationEntity) = apply {
-    this.confirmation = { confirmation }
   }
 
   fun withYieldedExtensions(extensions: Yielded<MutableList<ExtensionEntity>>) = apply {
@@ -211,7 +201,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     departures = this.departures?.invoke() ?: mutableListOf(),
     nonArrival = this.nonArrival?.invoke(),
     cancellations = this.cancellations?.invoke() ?: mutableListOf(),
-    confirmation = this.confirmation?.invoke(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
     dateChanges = this.dateChanges?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),

@@ -17,7 +17,6 @@ import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.NamedNativeQuery
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingRecord
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
@@ -64,6 +63,7 @@ import java.util.UUID
 )
 @Entity
 @Table(name = "bookings")
+@Deprecated(message = "This is a legacy entity. Use CAS3BookingEntity for CAS3 and Cas1SpaceBookingEntity for CAS1")
 data class BookingEntity(
   @Id
   val id: UUID,
@@ -80,8 +80,6 @@ data class BookingEntity(
   var nonArrival: NonArrivalEntity?,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var cancellations: MutableList<CancellationEntity>,
-  @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY)
-  var confirmation: Cas3ConfirmationEntity?,
   @OneToOne
   @JoinColumn(name = "application_id")
   var application: ApplicationEntity?,
@@ -149,7 +147,6 @@ data class BookingEntity(
     if (departureDate != other.departureDate) return false
     if (keyWorkerStaffCode != other.keyWorkerStaffCode) return false
     if (nonArrival != other.nonArrival) return false
-    if (confirmation != other.confirmation) return false
     if (originalArrivalDate != other.originalArrivalDate) return false
     if (originalDepartureDate != other.originalDepartureDate) return false
     if (createdAt != other.createdAt) return false
@@ -163,7 +160,6 @@ data class BookingEntity(
     departureDate,
     keyWorkerStaffCode,
     nonArrival,
-    confirmation,
     originalArrivalDate,
     originalDepartureDate,
     createdAt,

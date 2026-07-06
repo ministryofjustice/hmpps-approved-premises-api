@@ -64,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Bedspac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CancellationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ExtensionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3NonArrivalEntityFactory
@@ -87,7 +86,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Beds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3NonArrivalEntity
@@ -107,7 +105,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3Arri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3BedspaceTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3BookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3CancellationTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3ConfirmationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3DepartureTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3ExtensionTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3NonArrivalTestRepository
@@ -414,9 +411,6 @@ abstract class IntegrationTestBase {
   lateinit var arrivalRepository: ArrivalTestRepository
 
   @Autowired
-  lateinit var confirmationRepository: Cas3ConfirmationTestRepository
-
-  @Autowired
   lateinit var cas3v2ConfirmationRepository: Cas3v2ConfirmationTestRepository
 
   @Autowired
@@ -667,7 +661,6 @@ abstract class IntegrationTestBase {
   lateinit var cas3PremisesEntityFactory: PersistedFactory<Cas3PremisesEntity, UUID, Cas3PremisesEntityFactory>
   lateinit var bookingEntityFactory: PersistedFactory<BookingEntity, UUID, BookingEntityFactory>
   lateinit var arrivalEntityFactory: PersistedFactory<ArrivalEntity, UUID, ArrivalEntityFactory>
-  lateinit var cas3ConfirmationEntityFactory: PersistedFactory<Cas3ConfirmationEntity, UUID, Cas3ConfirmationEntityFactory>
   lateinit var cas3v2ConfirmationEntityFactory: PersistedFactory<Cas3v2ConfirmationEntity, UUID, Cas3v2ConfirmationEntityFactory>
   lateinit var departureEntityFactory: PersistedFactory<DepartureEntity, UUID, DepartureEntityFactory>
   lateinit var destinationProviderEntityFactory: PersistedFactory<DestinationProviderEntity, UUID, DestinationProviderEntityFactory>
@@ -795,7 +788,6 @@ abstract class IntegrationTestBase {
     cas3PremisesEntityFactory = PersistedFactory({ Cas3PremisesEntityFactory() }, cas3PremisesRepository)
     bookingEntityFactory = PersistedFactory({ BookingEntityFactory() }, bookingRepository)
     arrivalEntityFactory = PersistedFactory({ ArrivalEntityFactory() }, arrivalRepository)
-    cas3ConfirmationEntityFactory = PersistedFactory({ Cas3ConfirmationEntityFactory() }, confirmationRepository)
     cas3v2ConfirmationEntityFactory = PersistedFactory({ Cas3v2ConfirmationEntityFactory() }, cas3v2ConfirmationRepository)
     departureEntityFactory = PersistedFactory({ DepartureEntityFactory() }, departureRepository)
     destinationProviderEntityFactory = PersistedFactory({ DestinationProviderEntityFactory() }, destinationProviderRepository)
