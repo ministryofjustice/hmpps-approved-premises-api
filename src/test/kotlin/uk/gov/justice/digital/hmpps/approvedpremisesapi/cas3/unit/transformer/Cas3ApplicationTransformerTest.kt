@@ -73,7 +73,10 @@ class Cas3ApplicationTransformerTest {
   private val assessmentFactory = TemporaryAccommodationAssessmentEntityFactory()
     .withAllocatedToUser(allocatedToUser)
 
-  private val cas3ApplicationsTransformer = Cas3ApplicationTransformer(jsonMapper, mockPersonTransformer, mockRisksTransformer)
+  private val uiUrl = "http://localhost/applications/#applicationId"
+
+  private val cas3ApplicationsTransformer =
+    Cas3ApplicationTransformer(jsonMapper, mockPersonTransformer, mockRisksTransformer, uiUrl)
 
   @BeforeEach
   fun setup() {
@@ -108,6 +111,7 @@ class Cas3ApplicationTransformerTest {
       assessmentStatus = TemporaryAccommodationAssessmentStatus.readyToPlace,
       bookingStatus = null,
       premises = null,
+      uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
     )
 
     val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, null)
@@ -157,6 +161,7 @@ class Cas3ApplicationTransformerTest {
         town = premises.town,
         postcode = premises.postcode,
       ),
+      uiUrl = uiUrl.replace("#applicationId", application.id.toString()),
     )
 
     val result = cas3ApplicationsTransformer.transformToCas3SuitableApplication(application, booking)

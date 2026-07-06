@@ -49,6 +49,8 @@ class Cas1ExternalApplicationServiceTest {
   @MockK
   private lateinit var cas1PremisesService: Cas1PremisesService
 
+  private val cas1ApplicationUrlTemplate: String = "http://localhost:3000/applications/#id"
+
   @InjectMockKs
   private lateinit var service: Cas1ExternalApplicationService
 
@@ -373,6 +375,7 @@ class Cas1ExternalApplicationServiceTest {
           requestForPlacementStatus = requestForPlacement2.status,
           placementStatus = null,
           premises = null,
+          uiUrl = "http://localhost:3000/applications/${awaitingPlacementApplication.id}",
         ),
       )
     }
@@ -500,7 +503,9 @@ class Cas1ExternalApplicationServiceTest {
             town = premisesEntity.town,
             postcode = premisesEntity.postcode,
           ),
+          uiUrl = "http://localhost:3000/applications/${awaitingPlacementApplication.id}",
         ),
+
       )
     }
 
@@ -587,6 +592,7 @@ class Cas1ExternalApplicationServiceTest {
         requestForPlacementStatus = requestForPlacement.status,
         placementStatus = placement.status,
         premises = premises,
+        uiUrl = "http://localhost:3000/applications/${application.id}",
       )
       val result = service.getSuitableApplicationByCrn(application.crn)
 
@@ -606,6 +612,7 @@ class Cas1ExternalApplicationServiceTest {
         premises = null,
         requestForPlacementStatus = null,
         placementStatus = null,
+        uiUrl = "http://localhost:3000/applications/${suitableApprovedPremisesApplication.id}",
       )
 
       every { cas1RequestForPlacementService.getRequestsForPlacementByApplication(suitableApplication.id, null) } returns CasResult.Success(emptyList())
@@ -657,6 +664,7 @@ class Cas1ExternalApplicationServiceTest {
         premises = null,
         requestForPlacementStatus = null,
         placementStatus = null,
+        uiUrl = "http://localhost:3000/applications/${latestAwaitingPlacementApplication.id}",
       )
       val result = service.getSuitableApplicationByCrn(crn)
 
@@ -706,6 +714,7 @@ class Cas1ExternalApplicationServiceTest {
         premises = null,
         requestForPlacementStatus = null,
         placementStatus = null,
+        uiUrl = "http://localhost:3000/applications/${latestStartedApplication.id}",
       )
 
       val result = service.getSuitableApplicationByCrn(crn)

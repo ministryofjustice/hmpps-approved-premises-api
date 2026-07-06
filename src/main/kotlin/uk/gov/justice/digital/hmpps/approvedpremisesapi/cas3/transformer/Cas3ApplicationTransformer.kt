@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
@@ -23,6 +24,7 @@ class Cas3ApplicationTransformer(
   private val jsonMapper: JsonMapper,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
+  @Value($$"${url-templates.frontend.cas3.referral-full}") private val cas3ApplicationFullUrlTemplate: String,
 ) {
   fun transformToCas3SuitableApplication(application: TemporaryAccommodationApplicationEntity, booking: Cas3BookingEntity?) = Cas3SuitableApplication(
     id = application.id,
@@ -32,6 +34,7 @@ class Cas3ApplicationTransformer(
     premises = booking?.premises?.let {
       transformToCas3PremisesSummary(booking)
     },
+    uiUrl = cas3ApplicationFullUrlTemplate.replace("#applicationId", application.id.toString()),
   )
 
   fun transformToCas3PremisesSummary(booking: Cas3BookingEntity) = Cas3ExternalPremisesDto(
