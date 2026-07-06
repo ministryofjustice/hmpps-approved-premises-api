@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOp
 
 data class Cas1RequestsForPlacementDurationsCalculationRequestDto(
   val apType: ApType,
-  val tier: Cas1TierDto,
+  val tier: TierDto,
   val isWomensApplication: Boolean,
   val sentenceType: SentenceTypeOption,
 )

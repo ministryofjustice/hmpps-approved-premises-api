@@ -564,7 +564,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         )
         .produce()
       val roshRatings = RoshRatingsFactory().produce()
-      val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now())
+      val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "Change Reason")
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       givenAnOffender { offenderDetails, _ ->
         apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)

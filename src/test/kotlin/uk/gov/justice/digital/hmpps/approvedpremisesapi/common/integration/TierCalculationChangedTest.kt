@@ -5,10 +5,11 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.domainevent.listener.InboxEventDispatcher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.domainevent.listener.TierCalculationChangedHandler.Companion.TIER_CALCULATION_EVENT_TYPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.HmppsDomainEventFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMock404TierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMock500TierCall
@@ -45,15 +46,18 @@ class TierCalculationChangedTest : IntegrationTestBase() {
   fun `case exists, update tier, inbox event is PROCESSED`() {
     caseEntityFactory.produceAndPersist {
       withCrn(CRN)
-      withTier(OLD_TIER)
+      withTierV2(
+        TierFactory().withTierScore(OLD_TIER).produce(),
+      )
     }
 
     hmppsTierMockSuccessfulTierCall(
       CRN,
-      Tier(
+      uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier(
         tierScore = NEW_TIER,
         calculationId = UUID.randomUUID(),
         calculationDate = LocalDateTime.now(),
+        changeReason = "reason",
       ),
     )
 
@@ -65,7 +69,7 @@ class TierCalculationChangedTest : IntegrationTestBase() {
 
     inboxAsserter.assertProcessedCount(1)
 
-    assertThat(caseService.getCase(CRN)!!.tier).isEqualTo(NEW_TIER)
+    assertThat(caseService.getCase(CRN)!!.tier!!.tierScore).isEqualTo(NEW_TIER)
   }
 
   @Test
@@ -83,7 +87,11 @@ class TierCalculationChangedTest : IntegrationTestBase() {
   fun `case exists, tier not found, alert, inbox event is FAILED`() {
     caseEntityFactory.produceAndPersist {
       withCrn(CRN)
-      withTier(OLD_TIER)
+      withTierV2(
+        TierFactory()
+          .withTierScore(OLD_TIER)
+          .produce(),
+      )
     }
 
     hmppsTierMock404TierCall(CRN)
@@ -101,7 +109,11 @@ class TierCalculationChangedTest : IntegrationTestBase() {
   fun `case exists, upstream error, FAILED`() {
     caseEntityFactory.produceAndPersist {
       withCrn(CRN)
-      withTier(OLD_TIER)
+      withTierV2(
+        TierFactory()
+          .withTierScore(OLD_TIER)
+          .produce(),
+      )
     }
 
     hmppsTierMock500TierCall(CRN)

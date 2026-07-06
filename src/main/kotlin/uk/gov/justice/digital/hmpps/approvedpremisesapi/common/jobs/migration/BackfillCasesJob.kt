@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.BackfillCaseSummaryMigrationDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -15,6 +17,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Component
+@SuppressWarnings("MaxLineLength")
 class BackfillCasesJob(
   private val caseRepository: CaseRepository,
   private val offenderService: OffenderService,
@@ -96,15 +99,24 @@ class BackfillCasesJob(
         crn = dto.crn,
         name = name,
         nomsNumber = nomsNumber,
-        tier = retrieveTierForCrn(dto),
+        tierV2 = retrieveTierForCrn(dto)?.let {
+          Tier(
+            tierScore = it.tierScore,
+            changeReason = it.changeReason,
+            calculationId = it.calculationId,
+            calculationDate = it.calculationDate,
+            provisional = null,
+            version = TierVersion.V2,
+          )
+        },
         createdAt = now,
         lastUpdatedAt = now,
       ),
     )
   }
 
-  private fun BackfillCasesJob.retrieveTierForCrn(dto: BackfillCaseSummaryMigrationDto): String? = when (val tierResponse = hmppsTierApiClient.getTier(dto.crn)) {
-    is ClientResult.Success -> tierResponse.body.tierScore
+  private fun BackfillCasesJob.retrieveTierForCrn(dto: BackfillCaseSummaryMigrationDto): uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier? = when (val tierResponse = hmppsTierApiClient.getTier(dto.crn)) {
+    is ClientResult.Success -> tierResponse.body
     is ClientResult.Failure -> {
       log.warn("Could not retrieve tier for CRN ${dto.crn}")
       null

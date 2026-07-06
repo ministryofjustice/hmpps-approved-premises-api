@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -65,26 +66,26 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
 
     apDeliusContextAddListCaseSummaryToBulkResponse(listOf(case1, case2, case3))
 
-    hmppsTierMockSuccessfulTierCall("CRN1", Tier("A1", UUID.randomUUID(), LocalDateTime.now()))
-    hmppsTierMockSuccessfulTierCall("CRN2", Tier("B2", UUID.randomUUID(), LocalDateTime.now()))
-    hmppsTierMockSuccessfulTierCall("CRN3", Tier("C3", UUID.randomUUID(), LocalDateTime.now()))
+    hmppsTierMockSuccessfulTierCall("CRN1", Tier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+    hmppsTierMockSuccessfulTierCall("CRN2", Tier("B2", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason2"))
+    hmppsTierMockSuccessfulTierCall("CRN3", Tier("C3", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason3"))
 
     migrationJobService.runMigrationJob(MigrationJobType.backfillCases, 10)
 
     val c1 = caseRepository.findByCrn("CRN1")!!
     assertThat(c1.name).isEqualTo("DELIUS ONE")
     assertThat(c1.nomsNumber).isEqualTo("NOMS1")
-    assertThat(c1.tier).isEqualTo("A1")
+    assertThat(c1.tierV2!!.tierScore).isEqualTo("A1")
 
     val c2 = caseRepository.findByCrn("CRN2")!!
     assertThat(c2.name).isEqualTo("DELIUS TWO")
     assertThat(c2.nomsNumber).isEqualTo("NOMS2")
-    assertThat(c2.tier).isEqualTo("B2")
+    assertThat(c2.tierV2!!.tierScore).isEqualTo("B2")
 
     val c3 = caseRepository.findByCrn("CRN3")!!
     assertThat(c3.name).isEqualTo("DELIUS THREE")
     assertThat(c3.nomsNumber).isEqualTo("NOMS3")
-    assertThat(c3.tier).isEqualTo("C3")
+    assertThat(c3.tierV2!!.tierScore).isEqualTo("C3")
   }
 
   @Test
@@ -101,7 +102,7 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
         crn = "EXISTING_CRN",
         name = "Existing Name",
         nomsNumber = "NOMS_EXISTING",
-        tier = "B1",
+        tierV2 = uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier("B1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1", version = TierVersion.V2),
         createdAt = java.time.OffsetDateTime.now(),
         lastUpdatedAt = java.time.OffsetDateTime.now(),
       ),
@@ -119,7 +120,7 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
 
     val caseNew = CaseSummaryFactory().withCrn("NEW_CRN").withName(NameFactory().withForename("New").withSurname("Name").produce()).withNomsId("NOMS_NEW").produce()
     apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseNew))
-    hmppsTierMockSuccessfulTierCall("NEW_CRN", Tier("A1", UUID.randomUUID(), LocalDateTime.now()))
+    hmppsTierMockSuccessfulTierCall("NEW_CRN", Tier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
 
     migrationJobService.runMigrationJob(MigrationJobType.backfillCases, 10)
 
@@ -148,13 +149,13 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
 
     apDeliusContextMockUnsuccessfulCaseSummaryCall(500)
 
-    hmppsTierMockSuccessfulTierCall("CRN_FALLBACK", Tier("D4", UUID.randomUUID(), LocalDateTime.now()))
+    hmppsTierMockSuccessfulTierCall("CRN_FALLBACK", Tier("D4", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason 2"))
 
     migrationJobService.runMigrationJob(MigrationJobType.backfillCases, 10)
 
     val c = caseRepository.findByCrn("CRN_FALLBACK")!!
     assertThat(c.name).isEqualTo("PERSISTED NAME")
     assertThat(c.nomsNumber).isEqualTo("NOMS_PERSISTED")
-    assertThat(c.tier).isEqualTo("D4")
+    assertThat(c.tierV2!!.tierScore).isEqualTo("D4")
   }
 }

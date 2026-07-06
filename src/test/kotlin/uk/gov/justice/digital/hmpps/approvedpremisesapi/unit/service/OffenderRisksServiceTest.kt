@@ -135,6 +135,7 @@ class OffenderRisksServiceTest {
         tierScore = "M2",
         calculationId = UUID.randomUUID(),
         calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+        changeReason = null,
       ),
     )
 
@@ -202,6 +203,7 @@ class OffenderRisksServiceTest {
         tierScore = "M2",
         calculationId = UUID.randomUUID(),
         calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+        changeReason = "reason",
       ),
     )
 
@@ -289,6 +291,7 @@ class OffenderRisksServiceTest {
         tierScore = "M2",
         calculationId = UUID.randomUUID(),
         calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
+        changeReason = "reason",
       ),
     )
 

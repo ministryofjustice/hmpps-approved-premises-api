@@ -8,9 +8,9 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestsForPlacementDurationsCalculationResponseDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TierVersionDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.factory.Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.factory.Cas1TierDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
@@ -39,7 +39,7 @@ class Cas1RequestsForPlacementIT : IntegrationTestBase() {
 
       val requestDto = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory()
         .withApType(ApType.mhapElliottHouse)
-        .withTier(Cas1TierDtoFactory().withVersion(Cas1TierVersionDto.V3).produce())
+        .withTier(TierDtoFactory().withVersion(TierVersionDto.V3).produce())
         .produce()
 
       val response = webTestClient.post()
@@ -63,7 +63,7 @@ class Cas1RequestsForPlacementIT : IntegrationTestBase() {
 
       val requestDto = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory()
         .withApType(ApType.mhapElliottHouse)
-        .withTier(Cas1TierDtoFactory().withVersion(Cas1TierVersionDto.V2).produce())
+        .withTier(TierDtoFactory().withVersion(TierVersionDto.V2).produce())
         .produce()
 
       val response = webTestClient.post()

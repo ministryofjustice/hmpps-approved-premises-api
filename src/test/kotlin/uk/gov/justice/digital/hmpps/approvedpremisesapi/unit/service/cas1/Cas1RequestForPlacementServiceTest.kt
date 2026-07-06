@@ -16,9 +16,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TierVersionDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.factory.Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.factory.Cas1TierDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -306,7 +306,7 @@ class Cas1RequestForPlacementServiceTest {
     @Test
     fun `returns error when tier version is v3`() {
       val request = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory().withApType(ApType.esap).withTier(
-        Cas1TierDtoFactory().withVersion(Cas1TierVersionDto.V3).produce(),
+        TierDtoFactory().withVersion(TierVersionDto.V3).produce(),
       ).produce()
 
       val result = cas1RequestForPlacementService.defaultDurations(request)

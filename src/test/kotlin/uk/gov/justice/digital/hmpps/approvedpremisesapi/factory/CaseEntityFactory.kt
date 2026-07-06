@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -14,7 +15,7 @@ class CaseEntityFactory : Factory<CaseEntity> {
   private var crn: Yielded<String> = { randomStringUpperCase(7) }
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
-  private var tier: Yielded<String?> = { listOf("A", "B", "C", "D").random() }
+  private var tierV2: Yielded<Tier?> = { TierFactory().produce() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(randomInt(0, 365).toLong()) }
   private var lastUpdatedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var version: Yielded<Long> = { 1L }
@@ -23,7 +24,7 @@ class CaseEntityFactory : Factory<CaseEntity> {
   fun withCrn(crn: String) = apply { this.crn = { crn } }
   fun withNomsNumber(nomsNumber: String?) = apply { this.nomsNumber = { nomsNumber } }
   fun withName(name: String) = apply { this.name = { name } }
-  fun withTier(tier: String?) = apply { this.tier = { tier } }
+  fun withTierV2(tierV2: Tier?) = apply { this.tierV2 = { tierV2 } }
   fun withCreatedAt(createdAt: OffsetDateTime) = apply { this.createdAt = { createdAt } }
   fun withLastUpdatedAt(lastUpdatedAt: OffsetDateTime) = apply { this.lastUpdatedAt = { lastUpdatedAt } }
   fun withVersion(version: Long) = apply { this.version = { version } }
@@ -33,7 +34,7 @@ class CaseEntityFactory : Factory<CaseEntity> {
     crn = this.crn(),
     nomsNumber = this.nomsNumber(),
     name = this.name(),
-    tier = this.tier(),
+    tierV2 = this.tierV2(),
     createdAt = this.createdAt(),
     lastUpdatedAt = this.lastUpdatedAt(),
     version = this.version(),
