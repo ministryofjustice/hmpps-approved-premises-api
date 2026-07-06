@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Canc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
@@ -170,7 +170,7 @@ class Cas3BookingTransformerTest {
     .produce()
 
   private val nullDepartureEntity: Cas3DepartureEntity? = null
-  private val nullConfirmationEntity: Cas3v2ConfirmationEntity? = null
+  private val nullConfirmationEntity: Cas3ConfirmationEntity? = null
 
   private val bedspaceSummaryModel = Cas3BedspaceSummary(
     id = bedspaceEntity.id,
@@ -1426,7 +1426,7 @@ class Cas3BookingTransformerTest {
       id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
       service = ServiceName.temporaryAccommodation.value,
     ).apply {
-      confirmation = Cas3v2ConfirmationEntity(
+      confirmation = Cas3ConfirmationEntity(
         id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),
         dateTime = OffsetDateTime.parse("2022-11-23T12:34:56.789Z"),
         notes = null,

@@ -626,7 +626,7 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2023-04-10"))
         }
 
-        cas3v2ConfirmationEntityFactory.produceAndPersist {
+        cas3ConfirmationEntityFactory.produceAndPersist {
           withBooking(booking)
         }
 

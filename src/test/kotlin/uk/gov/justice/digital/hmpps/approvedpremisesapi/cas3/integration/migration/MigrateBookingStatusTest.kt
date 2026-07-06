@@ -242,7 +242,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
   private fun createCAS3ConfirmedBooking(userEntity: UserEntity): Cas3BookingEntity {
     val booking = createCas3Booking(userEntity, null)
-    booking.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
+    booking.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
       withBooking(booking)
     }
     return booking
