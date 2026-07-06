@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getCharacteristicPropertyNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getOpenChangeRequestTypes
@@ -39,18 +38,15 @@ class Cas1SpaceBookingTransformer(
   private val userTransformer: UserTransformer,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService,
-  private val cas1ChangeRequestTransformer: Cas1ChangeRequestTransformer,
 ) {
   fun transformJpaToApi(
     person: PersonInfoResult,
     jpa: Cas1SpaceBookingEntity,
     otherBookingsAtPremiseForCrn: List<Cas1SpaceBookingAtPremises>,
-    changeRequests: List<Cas1ChangeRequestEntity>,
   ): Cas1SpaceBooking {
     val placementRequest = jpa.placementRequest
     val application = jpa.application
     val applicationId = jpa.applicationFacade.id
-    val openChangeRequests = cas1ChangeRequestTransformer.transformToChangeRequestSummaries(changeRequests, person)
     return Cas1SpaceBooking(
       id = jpa.id,
       applicationId = applicationId,
@@ -90,7 +86,7 @@ class Cas1SpaceBookingTransformer(
       departure = jpa.extractDeparture(),
       characteristics = jpa.criteria.toCas1SpaceCharacteristics(),
       allowedActions = cas1SpaceBookingActionsService.determineActions(jpa).available().map { it.apiType },
-      openChangeRequests = openChangeRequests,
+      openChangeRequests = emptyList(),
       additionalInformation = jpa.additionalInformation,
       transferReason = jpa.transferReason,
       status = jpa.getSpaceBookingStatus().status,

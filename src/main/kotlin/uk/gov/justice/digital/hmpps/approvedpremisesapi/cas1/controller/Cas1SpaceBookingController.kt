@@ -502,9 +502,7 @@ class Cas1SpaceBookingController(
     ).filter { it.id != booking.id }
       .sortedBy { it.canonicalArrivalDate }
 
-    val changeRequests = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(booking)
-
-    return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn, changeRequests)
+    return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn)
   }
 
   @SuppressWarnings("ThrowsCount")
