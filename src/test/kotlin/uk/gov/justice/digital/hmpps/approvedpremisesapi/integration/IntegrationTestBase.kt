@@ -71,7 +71,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3NonArri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3OverstayEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesCharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
@@ -94,7 +93,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
@@ -110,7 +108,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3Depa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3ExtensionTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3OverstayTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3TurnaroundTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3VoidBedspaceCancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3VoidBedspaceReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3VoidBedspacesTestRepository
@@ -405,9 +402,6 @@ abstract class IntegrationTestBase {
   lateinit var cas3OverstayTestRepository: Cas3OverstayTestRepository
 
   @Autowired
-  lateinit var cas3TurnaroundTestRepository: Cas3TurnaroundTestRepository
-
-  @Autowired
   lateinit var arrivalRepository: ArrivalTestRepository
 
   @Autowired
@@ -550,9 +544,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var probationDeliveryUnitRepository: ProbationDeliveryUnitTestRepository
-
-  @Autowired
-  lateinit var turnaroundRepository: Cas3TurnaroundTestRepository
 
   @Autowired
   lateinit var cas3v2TurnaroundRepository: Cas3v2TurnaroundRepository
@@ -706,7 +697,6 @@ abstract class IntegrationTestBase {
   lateinit var bookingNotMadeFactory: PersistedFactory<BookingNotMadeEntity, UUID, BookingNotMadeEntityFactory>
   lateinit var probationDeliveryUnitFactory: PersistedFactory<ProbationDeliveryUnitEntity, UUID, ProbationDeliveryUnitEntityFactory>
   lateinit var applicationTeamCodeFactory: PersistedFactory<ApplicationTeamCodeEntity, UUID, ApplicationTeamCodeEntityFactory>
-  lateinit var cas3TurnaroundFactory: PersistedFactory<Cas3TurnaroundEntity, UUID, Cas3TurnaroundEntityFactory>
   lateinit var cas3v2TurnaroundFactory: PersistedFactory<Cas3v2TurnaroundEntity, UUID, Cas3v2TurnaroundEntityFactory>
   lateinit var placementApplicationFactory: PersistedFactory<PlacementApplicationEntity, UUID, PlacementApplicationEntityFactory>
   lateinit var probationAreaProbationRegionMappingFactory: PersistedFactory<ProbationAreaProbationRegionMappingEntity, UUID, ProbationAreaProbationRegionMappingEntityFactory>
@@ -833,7 +823,6 @@ abstract class IntegrationTestBase {
     bookingNotMadeFactory = PersistedFactory({ BookingNotMadeEntityFactory() }, bookingNotMadeRepository)
     probationDeliveryUnitFactory = PersistedFactory({ ProbationDeliveryUnitEntityFactory() }, probationDeliveryUnitRepository)
     applicationTeamCodeFactory = PersistedFactory({ ApplicationTeamCodeEntityFactory() }, applicationTeamCodeRepository)
-    cas3TurnaroundFactory = PersistedFactory({ Cas3TurnaroundEntityFactory() }, turnaroundRepository)
     cas3v2TurnaroundFactory = PersistedFactory({ Cas3v2TurnaroundEntityFactory() }, cas3v2TurnaroundRepository)
     placementApplicationFactory = PersistedFactory({ PlacementApplicationEntityFactory() }, placementApplicationRepository)
     probationAreaProbationRegionMappingFactory = PersistedFactory({ ProbationAreaProbationRegionMappingEntityFactory() }, probationAreaProbationRegionMappingRepository)

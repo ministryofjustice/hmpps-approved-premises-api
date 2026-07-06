@@ -48,7 +48,6 @@ class PlacementRequestBookingSummaryTransformerTest {
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
         application = null,
         offlineApplication = null,
-        turnarounds = mutableListOf(),
         nomsNumber = "NOMS123",
         status = null,
         offenderName = null,

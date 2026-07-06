@@ -17,7 +17,6 @@ import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.NamedNativeQuery
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingRecord
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import java.time.LocalDate
@@ -100,8 +99,6 @@ data class BookingEntity(
   var originalArrivalDate: LocalDate,
   var originalDepartureDate: LocalDate,
   val createdAt: OffsetDateTime,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
-  var turnarounds: MutableList<Cas3TurnaroundEntity>,
   var nomsNumber: String?,
   @Enumerated(value = EnumType.STRING)
   var status: BookingStatus?,
@@ -115,9 +112,6 @@ data class BookingEntity(
 
   val cancellation: CancellationEntity?
     get() = cancellations.maxByOrNull { it.createdAt }
-
-  val turnaround: Cas3TurnaroundEntity?
-    get() = turnarounds.maxByOrNull { it.createdAt }
 
   val isCancelled: Boolean
     get() = cancellation != null
