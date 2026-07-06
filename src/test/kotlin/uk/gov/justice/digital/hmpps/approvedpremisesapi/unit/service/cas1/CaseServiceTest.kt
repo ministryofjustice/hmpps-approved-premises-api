@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ManagerFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -40,7 +41,6 @@ class CaseServiceTest {
       .withCrn(crn)
       .withName("NAME")
       .withNomsNumber("NOMS123")
-      .withTier("tier")
       .produce()
 
     val caseSummary = CaseSummary(
@@ -76,6 +76,7 @@ class CaseServiceTest {
         tierScore = "low",
         calculationId = UUID.randomUUID(),
         calculationDate = LocalDateTime.now(),
+        changeReason = "reason",
       ),
       status = HttpStatus.OK,
     )
@@ -92,7 +93,7 @@ class CaseServiceTest {
       .withCrn(crn)
       .withName("NAME")
       .withNomsNumber("NOMS123")
-      .withTier("tier")
+      .withTierV2(TierFactory().withTierScore("tier").produce())
       .produce()
 
     val caseSummary = CaseSummary(
@@ -127,6 +128,7 @@ class CaseServiceTest {
         tierScore = "tier",
         calculationId = UUID.randomUUID(),
         calculationDate = LocalDateTime.now(),
+        changeReason = "reason",
       ),
       status = HttpStatus.OK,
     )
@@ -142,7 +144,7 @@ class CaseServiceTest {
       .withCrn(crn)
       .withName("NAME")
       .withNomsNumber("NOMS123")
-      .withTier(null)
+      .withTierV2(null)
       .produce()
 
     val caseSummary = CaseSummary(

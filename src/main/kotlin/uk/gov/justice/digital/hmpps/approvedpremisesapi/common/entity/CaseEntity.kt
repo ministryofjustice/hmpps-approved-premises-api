@@ -1,14 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.BackfillCaseSummaryMigrationDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.asHibernateProxy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getHibernateClass
 import java.time.OffsetDateTime
@@ -71,9 +75,11 @@ data class CaseEntity(
    * will consider any LAO restrictions
    */
   var name: String,
-  var tier: String?,
   val createdAt: OffsetDateTime,
   var lastUpdatedAt: OffsetDateTime,
+  @Column(name = "tier_v2", columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
+  var tierV2: Tier?,
   @Version
   var version: Long = 1,
 ) {
