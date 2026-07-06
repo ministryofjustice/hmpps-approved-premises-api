@@ -1,29 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
-import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository.FindOpenChangeRequestResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ChangeRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
-import java.time.LocalDate
-import java.util.UUID
 
 class Cas1ChangeRequestTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
@@ -31,55 +20,12 @@ class Cas1ChangeRequestTransformerTest {
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()
 
   val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
-  val personInfoResult = PersonSummaryInfoResult.Success.Full(
-    crn = offenderDetailSummary.otherIds.crn,
-    summary = CaseSummaryFactory()
-      .withName(Name("max", "power", emptyList()))
-      .produce(),
-  )
-
-  val personSummary = object : PersonSummary {
-    override val crn = offenderDetailSummary.otherIds.crn
-    override val personType = PersonSummaryDiscriminator.fullPersonSummary
-  }
 
   val entity = Cas1ChangeRequestEntityFactory()
     .withDecision(ChangeRequestDecision.APPROVED)
     .produce()
 
   private val cas1ChangeRequestTransformer = Cas1ChangeRequestTransformer(mockPersonTransformer, jsonMapper)
-
-  @Test
-  fun `findOpenResultsToChangeRequestSummary transforms correctly`() {
-    every { mockPersonTransformer.personSummaryInfoToPersonSummary(personInfoResult) } returns personSummary
-
-    val findOpenChangeRequestResult = object : FindOpenChangeRequestResult {
-      override val id = UUID.randomUUID()
-      override val crn = offenderDetailSummary.otherIds.crn
-      override val type = ChangeRequestType.PLACEMENT_APPEAL.name
-      override val createdAt = java.time.Instant.now()
-      override val tier = "TierA"
-      override val expectedArrivalDate = LocalDate.of(2025, 1, 1)
-      override val actualArrivalDate: LocalDate? = null
-      override val placementRequestId = UUID.randomUUID()
-    }
-
-    val expected = Cas1ChangeRequestSummary(
-      id = findOpenChangeRequestResult.id,
-      person = personSummary,
-      type = Cas1ChangeRequestType.PLACEMENT_APPEAL,
-      createdAt = findOpenChangeRequestResult.createdAt,
-      tier = findOpenChangeRequestResult.tier,
-      expectedArrivalDate = findOpenChangeRequestResult.expectedArrivalDate,
-      actualArrivalDate = findOpenChangeRequestResult.actualArrivalDate,
-      placementRequestId = findOpenChangeRequestResult.placementRequestId,
-    )
-
-    val result = cas1ChangeRequestTransformer.findOpenResultsToChangeRequestSummary(findOpenChangeRequestResult, personInfoResult)
-
-    assertThat(result).isInstanceOf(Cas1ChangeRequestSummary::class.java)
-    assertThat(result).isEqualTo(expected)
-  }
 
   @Test
   fun `transformEntityToCas1ChangeRequest transforms correctly`() {

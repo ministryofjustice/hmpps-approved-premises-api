@@ -4,10 +4,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.context.request.NativeWebRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RejectChangeRequest
 import java.util.Optional
@@ -55,23 +52,6 @@ interface ChangeRequestsCas1Delegate {
       for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
         if (mediaType.isCompatibleWith(MediaType.valueOf("application/problem+json"))) {
           ApiUtil.setExampleResponse(request, "application/problem+json", "Custom MIME type example not yet supported: application/problem+json")
-          break
-        }
-      }
-    }
-    return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
-  }
-
-  fun findOpen(
-    page: Int?,
-    cruManagementAreaId: java.util.UUID?,
-    sortBy: Cas1ChangeRequestSortField?,
-    sortDirection: SortDirection?,
-  ): ResponseEntity<List<Cas1ChangeRequestSummary>> {
-    getRequest().ifPresent { request ->
-      for (mediaType in MediaType.parseMediaTypes(request.getHeader("Accept"))) {
-        if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-          ApiUtil.setExampleResponse(request, "application/json", "[ {  \"createdAt\" : \"2000-01-23T04:56:07.000+00:00\",  \"actualArrivalDate\" : \"2000-01-23\",  \"placementRequestId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"tier\" : \"tier\",  \"expectedArrivalDate\" : \"2000-01-23\",  \"person\" : {    \"personType\" : \"FullPersonSummary\",    \"crn\" : \"crn\"  },  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"type\" : \"placementAppeal\"}, {  \"createdAt\" : \"2000-01-23T04:56:07.000+00:00\",  \"actualArrivalDate\" : \"2000-01-23\",  \"placementRequestId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"tier\" : \"tier\",  \"expectedArrivalDate\" : \"2000-01-23\",  \"person\" : {    \"personType\" : \"FullPersonSummary\",    \"crn\" : \"crn\"  },  \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\",  \"type\" : \"placementAppeal\"} ]")
           break
         }
       }
