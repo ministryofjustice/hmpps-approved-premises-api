@@ -29,7 +29,7 @@ class Cas2ApplicationsTransformer(
   private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
 ) {
 
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.transformModelToPersonApi(personInfo))
+  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.personInfoResultToPerson(personInfo))
 
   fun transformJpaAndFullPersonToApi(jpa: Cas2ApplicationEntity, fullPerson: Person) = Cas2Application(
     id = jpa.id,

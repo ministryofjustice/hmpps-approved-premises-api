@@ -269,7 +269,7 @@ class PlacementRequestDetailTransformerTest {
     )
 
     every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns AssessmentDecision.accepted
-    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockk<Person>()
+    every { mockPersonTransformer.personInfoResultToPerson(mockPersonInfoResult) } returns mockk<Person>()
     every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockk<PersonRisks>()
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockk<ApprovedPremisesUser>()
 

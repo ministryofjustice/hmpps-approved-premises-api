@@ -45,7 +45,7 @@ class Cas2HdcPeopleController(
           ?: RuntimeException("Could not retrieve person info for Prison Number: $nomsNumber")
 
       is ProbationOffenderSearchResult.Success.Full -> return ResponseEntity.ok(
-        personTransformer.transformProbationOffenderToPersonApi(probationOffenderResult),
+        personTransformer.transformProbationOffenderToFullPerson(probationOffenderResult),
       )
 
       null -> throw NotFoundProblem(nomsNumber, "Offender")

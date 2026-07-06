@@ -153,7 +153,7 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = inmateDetails,
         )
@@ -190,7 +190,7 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = inmateDetails,
         )
@@ -243,21 +243,21 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult1Success,
           inmateStatus = inmateDetails1,
         )
       } returns mockPersonInfoResult1
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult2Restricted,
           inmateStatus = null,
         )
       } returns mockPersonInfoResult2
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult3Success,
           inmateStatus = inmateDetails3,
         )
@@ -286,7 +286,7 @@ class OffenderDetailServiceTest {
       } returns listOf(personSummaryInfoResult)
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = null,
         )
@@ -315,7 +315,7 @@ class OffenderDetailServiceTest {
       } returns listOf(personSummaryInfoResult)
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = null,
         )
@@ -344,7 +344,7 @@ class OffenderDetailServiceTest {
       } returns listOf(personSummaryInfoResult)
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = null,
         )
@@ -387,7 +387,7 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = inmateDetails,
         )
@@ -423,7 +423,7 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = inmateDetails,
         )
@@ -449,7 +449,7 @@ class OffenderDetailServiceTest {
       } returns listOf(personSummaryInfoResult)
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = null,
         )
@@ -477,7 +477,7 @@ class OffenderDetailServiceTest {
       } returns listOf(personSummaryInfoResult)
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = null,
         )
@@ -505,7 +505,7 @@ class OffenderDetailServiceTest {
       } returns listOf(personSummaryInfoResult)
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = null,
         )
@@ -547,7 +547,7 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = inmateDetails,
         )
@@ -584,7 +584,7 @@ class OffenderDetailServiceTest {
       )
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = inmateDetails,
         )
@@ -611,7 +611,7 @@ class OffenderDetailServiceTest {
       } returns listOf(personSummaryInfoResult)
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = null,
         )
@@ -640,7 +640,7 @@ class OffenderDetailServiceTest {
       } returns listOf(personSummaryInfoResult)
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = null,
         )
@@ -669,7 +669,7 @@ class OffenderDetailServiceTest {
       } returns listOf(personSummaryInfoResult)
 
       every {
-        mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(
+        mockPersonTransformer.personSummaryInfoResultToPersonInfoResult(
           personSummaryInfoResult = personSummaryInfoResult,
           inmateStatus = null,
         )

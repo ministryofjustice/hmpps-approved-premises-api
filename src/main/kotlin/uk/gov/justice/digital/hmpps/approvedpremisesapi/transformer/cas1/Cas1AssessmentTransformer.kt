@@ -78,7 +78,7 @@ class Cas1AssessmentTransformer(
         ase.crn,
       )
     },
-    person = personTransformer.transformModelToPersonApi(personInfo),
+    person = personTransformer.personInfoResultToPerson(personInfo),
     dueAt = ase.dueAt!!,
   )
 

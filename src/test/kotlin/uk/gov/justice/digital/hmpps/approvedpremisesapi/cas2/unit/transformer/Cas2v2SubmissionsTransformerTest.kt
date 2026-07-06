@@ -70,7 +70,7 @@ class Cas2v2SubmissionsTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+    every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
     every { mockCas2UserTransformer.transformJpaToApi(any()) } returns mockCas2User
     every { mockCas2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
     every { mockCas2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment

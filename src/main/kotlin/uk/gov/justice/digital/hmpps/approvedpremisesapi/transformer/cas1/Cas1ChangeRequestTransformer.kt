@@ -8,11 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
 @Service
 class Cas1ChangeRequestTransformer(
-  private val personTransformer: PersonTransformer,
   private val jsonMapper: JsonMapper,
 ) {
 

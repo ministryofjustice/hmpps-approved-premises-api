@@ -25,7 +25,7 @@ class Cas2SubmissionsTransformer(
       .Success,
   ): Cas2SubmittedApplication = Cas2SubmittedApplication(
     id = jpa.id,
-    person = personTransformer.transformModelToPersonApi(personInfo),
+    person = personTransformer.personInfoResultToPerson(personInfo),
     submittedBy = cas2UserTransformer.transformJpaToApi(jpa.createdByUser),
     createdAt = jpa.createdAt.toInstant(),
     submittedAt = jpa.submittedAt?.toInstant(),

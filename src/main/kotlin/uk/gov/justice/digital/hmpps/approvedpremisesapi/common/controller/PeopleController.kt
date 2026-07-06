@@ -58,7 +58,7 @@ class PeopleController(
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Unknown -> throw personInfo.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
       is PersonInfoResult.Success -> return ResponseEntity.ok(
-        personTransformer.transformModelToPersonApi(personInfo),
+        personTransformer.personInfoResultToPerson(personInfo),
       )
     }
   }

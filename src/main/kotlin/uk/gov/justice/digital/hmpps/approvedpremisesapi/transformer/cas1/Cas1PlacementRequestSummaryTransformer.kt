@@ -19,7 +19,7 @@ class Cas1PlacementRequestSummaryTransformer(
     requestedPlacementDuration = jpa.getRequestedPlacementDuration(),
     requestedPlacementArrivalDate = jpa.getRequestedPlacementArrivalDate(),
     id = jpa.getId(),
-    person = personTransformer.transformModelToPersonApi(personInfo),
+    person = personTransformer.personInfoResultToPerson(personInfo),
     placementRequestStatus = jpa.getPlacementRequestStatus(),
     isParole = jpa.getIsParole(),
     personTier = jpa.getPersonTier(),

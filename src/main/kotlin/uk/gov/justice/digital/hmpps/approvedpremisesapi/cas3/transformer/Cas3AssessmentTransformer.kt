@@ -80,7 +80,7 @@ class Cas3AssessmentTransformer(
         ase.crn,
       )
     },
-    person = personTransformer.transformModelToPersonApi(personInfo),
+    person = personTransformer.personInfoResultToPerson(personInfo),
     probationDeliveryUnitName = ase.probationDeliveryUnitName,
   )
 

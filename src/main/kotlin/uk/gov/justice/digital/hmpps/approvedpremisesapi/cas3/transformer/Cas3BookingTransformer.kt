@@ -29,7 +29,7 @@ class Cas3BookingTransformer(
     val hasNonZeroDayTurnaround = jpa.hasNonZeroDayTurnaround()
     return Cas3Booking(
       id = jpa.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.personInfoResultToPerson(personInfo),
       arrivalDate = jpa.arrivalDate,
       departureDate = jpa.departureDate,
       status = determineStatus(jpa),

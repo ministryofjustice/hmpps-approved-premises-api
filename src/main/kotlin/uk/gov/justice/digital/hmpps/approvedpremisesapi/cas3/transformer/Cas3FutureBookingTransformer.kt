@@ -14,7 +14,7 @@ class Cas3FutureBookingTransformer(
 ) {
   fun transformJpaToApi(jpa: BookingEntity, personSummaryInfo: PersonSummaryInfoResult): FutureBooking = FutureBooking(
     id = jpa.id,
-    person = personTransformer.transformSummaryToPersonApi(personSummaryInfo),
+    person = personTransformer.personSummaryInfoResultToPerson(personSummaryInfo),
     arrivalDate = jpa.arrivalDate,
     departureDate = jpa.departureDate,
     bed = jpa.bed?.let { bedTransformer.transformJpaToApi(it) },

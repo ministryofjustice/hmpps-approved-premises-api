@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
-import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -10,13 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ChangeRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFactory
 
 class Cas1ChangeRequestTransformerTest {
-  private val mockPersonTransformer = mockk<PersonTransformer>()
-
   private val jsonMapper = JsonMapperFactory.createJackson3JsonMapper()
 
   val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
@@ -25,7 +21,7 @@ class Cas1ChangeRequestTransformerTest {
     .withDecision(ChangeRequestDecision.APPROVED)
     .produce()
 
-  private val cas1ChangeRequestTransformer = Cas1ChangeRequestTransformer(mockPersonTransformer, jsonMapper)
+  private val cas1ChangeRequestTransformer = Cas1ChangeRequestTransformer(jsonMapper)
 
   @Test
   fun `transformEntityToCas1ChangeRequest transforms correctly`() {

@@ -106,7 +106,7 @@ class ApplicationsTransformersTest {
 
   @BeforeEach
   fun setup() {
-    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+    every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
     every { mockPersonTransformer.inmateStatusToPersonInfoApiStatus(any()) } returns PersonStatus.inCommunity
     every { mockRisksTransformer.transformDomainToApi(any<PersonRisks>(), any<String>()) } returns mockk()
   }
@@ -405,7 +405,7 @@ class ApplicationsTransformersTest {
       override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
       override fun getHasRequestsForPlacement(): Boolean = true
     }
-    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
+    every { mockPersonTransformer.personInfoResultToPerson(mockPersonInfoResult) } returns mockPerson
 
     val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
       application,
@@ -450,7 +450,7 @@ class ApplicationsTransformersTest {
       override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
       override fun getHasRequestsForPlacement(): Boolean = true
     }
-    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
+    every { mockPersonTransformer.personInfoResultToPerson(mockPersonInfoResult) } returns mockPerson
 
     val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
       application,
@@ -484,7 +484,7 @@ class ApplicationsTransformersTest {
       override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
       override fun getHasRequestsForPlacement(): Boolean = true
     }
-    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
+    every { mockPersonTransformer.personInfoResultToPerson(mockPersonInfoResult) } returns mockPerson
 
     val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
       application,
@@ -521,7 +521,7 @@ class ApplicationsTransformersTest {
       override fun getHasRequestsForPlacement(): Boolean = true
     }
 
-    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
+    every { mockPersonTransformer.personInfoResultToPerson(mockPersonInfoResult) } returns mockPerson
 
     val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
       application,

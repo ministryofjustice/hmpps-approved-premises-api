@@ -38,7 +38,7 @@ class PlacementRequestTransformer(
     location = jpa.placementRequirements.postcodeDistrict.outcode,
     radius = jpa.placementRequirements.radius,
     essentialCriteria = jpa.placementRequirements.essentialCriteria.mapNotNull { characteristicToCriteria(it) },
-    person = personTransformer.transformModelToPersonApi(personInfo),
+    person = personTransformer.personInfoResultToPerson(personInfo),
     risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
     applicationId = jpa.application.id,
     assessmentId = jpa.assessment.id,

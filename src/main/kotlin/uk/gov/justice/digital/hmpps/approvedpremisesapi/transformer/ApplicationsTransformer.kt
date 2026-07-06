@@ -50,7 +50,7 @@ class ApplicationsTransformer(
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
         id = applicationEntity.id,
-        person = personTransformer.transformModelToPersonApi(personInfo),
+        person = personTransformer.personInfoResultToPerson(personInfo),
         createdByUserId = applicationEntity.createdByUser.id,
         createdAt = applicationEntity.createdAt.toInstant(),
         submittedAt = applicationEntity.submittedAt?.toInstant(),
@@ -84,7 +84,7 @@ class ApplicationsTransformer(
 
     return ApprovedPremisesApplication(
       id = applicationEntity.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.personInfoResultToPerson(personInfo),
       createdByUserId = applicationEntity.createdByUser.id,
       createdByUserName = applicationEntity.createdByUser.name,
       createdAt = applicationEntity.createdAt.toInstant(),
@@ -143,7 +143,7 @@ class ApplicationsTransformer(
 
     return Cas1ApplicationSummary(
       id = domain.getId(),
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.personInfoResultToPerson(personInfo),
       createdByUserId = domain.getCreatedByUserId(),
       createdAt = domain.getCreatedAt(),
       submittedAt = domain.getSubmittedAt(),
@@ -166,7 +166,7 @@ class ApplicationsTransformer(
 
     return Cas1Application(
       id = applicationEntity.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.personInfoResultToPerson(personInfo),
       createdByUserId = applicationEntity.createdByUser.id,
       createdAt = applicationEntity.createdAt.toInstant(),
       submittedAt = applicationEntity.submittedAt?.toInstant(),
@@ -203,7 +203,7 @@ class ApplicationsTransformer(
 
   fun transformJpaToApi(jpa: OfflineApplicationEntity, personInfo: PersonInfoResult) = OfflineApplication(
     id = jpa.id,
-    person = personTransformer.transformModelToPersonApi(personInfo),
+    person = personTransformer.personInfoResultToPerson(personInfo),
     createdAt = jpa.createdAt.toInstant(),
     type = "Offline",
   )

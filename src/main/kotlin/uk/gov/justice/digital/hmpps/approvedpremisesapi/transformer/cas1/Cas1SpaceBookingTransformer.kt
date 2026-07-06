@@ -51,7 +51,7 @@ class Cas1SpaceBookingTransformer(
       id = jpa.id,
       applicationId = applicationId,
       assessmentId = placementRequest?.assessment?.id,
-      person = personTransformer.transformModelToPersonApi(person),
+      person = personTransformer.personInfoResultToPerson(person),
       premises = NamedId(
         id = jpa.premises.id,
         name = jpa.premises.name,
@@ -202,7 +202,7 @@ class Cas1SpaceBookingTransformer(
     val openChangeRequestsForBooking = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(spaceBooking)
     return Cas1SpaceBookingSummary(
       id = spaceBooking.id,
-      person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
+      person = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
       premises = NamedId(
         spaceBooking.premises.id,
         spaceBooking.premises.name,
@@ -237,7 +237,7 @@ class Cas1SpaceBookingTransformer(
     personSummaryInfo: PersonSummaryInfoResult,
   ) = Cas1SpaceBookingSummary(
     id = searchResult.id,
-    person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
+    person = personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo),
     premises = NamedId(
       id = premises.id,
       name = premises.name,

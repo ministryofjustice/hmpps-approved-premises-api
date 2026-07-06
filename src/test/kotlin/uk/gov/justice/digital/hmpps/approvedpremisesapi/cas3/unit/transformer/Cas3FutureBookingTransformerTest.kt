@@ -81,7 +81,7 @@ class Cas3FutureBookingTransformerTest {
       .produce()
 
     every { mockBedTransformer.transformJpaToApi(bedEntity) } returns bed
-    every { mockPersonTransformer.transformSummaryToPersonApi(fullPersonSummaryInfo) } returns person
+    every { mockPersonTransformer.personSummaryInfoResultToPerson(fullPersonSummaryInfo) } returns person
 
     val result = cas3FutureBookingTransformer.transformJpaToApi(bookingEntity, fullPersonSummaryInfo)
 

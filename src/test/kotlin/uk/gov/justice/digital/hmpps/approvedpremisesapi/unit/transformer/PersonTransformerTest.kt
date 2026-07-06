@@ -105,7 +105,7 @@ class PersonTransformerTest {
 
     @Test
     fun `map full person`() {
-      val result = personTransformer.personSummaryInfoToPersonSummary(
+      val result = personTransformer.personSummaryInfoResultToPersonSummary(
         PersonSummaryInfoResult.Success.Full(
           crn = "the crn",
           summary = CaseSummaryFactory()
@@ -131,7 +131,7 @@ class PersonTransformerTest {
       hasRestriction: Boolean,
       expectedIsRestricted: Boolean,
     ) {
-      val result = personTransformer.personSummaryInfoToPersonSummary(
+      val result = personTransformer.personSummaryInfoResultToPersonSummary(
         PersonSummaryInfoResult.Success.Full(
           crn = "the crn",
           summary = CaseSummaryFactory()
@@ -146,7 +146,7 @@ class PersonTransformerTest {
 
     @Test
     fun `map restricted person`() {
-      val result = personTransformer.personSummaryInfoToPersonSummary(
+      val result = personTransformer.personSummaryInfoResultToPersonSummary(
         PersonSummaryInfoResult.Success.Restricted(
           crn = "the crn",
           nomsNumber = "the noms number",
@@ -160,7 +160,7 @@ class PersonTransformerTest {
 
     @Test
     fun `map not found person`() {
-      val result = personTransformer.personSummaryInfoToPersonSummary(
+      val result = personTransformer.personSummaryInfoResultToPersonSummary(
         PersonSummaryInfoResult.NotFound(
           crn = "the crn",
         ),
@@ -173,7 +173,7 @@ class PersonTransformerTest {
 
     @Test
     fun `map unknown person`() {
-      val result = personTransformer.personSummaryInfoToPersonSummary(
+      val result = personTransformer.personSummaryInfoResultToPersonSummary(
         PersonSummaryInfoResult.Unknown(
           crn = "the crn",
         ),
@@ -194,7 +194,7 @@ class PersonTransformerTest {
 
       val personInfoResult = PersonInfoResult.Success.Restricted(crn, null)
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result is RestrictedPerson).isTrue
       assertThat(result.crn).isEqualTo(crn)
@@ -206,7 +206,7 @@ class PersonTransformerTest {
 
       val personInfoResult = PersonInfoResult.NotFound(crn)
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result is UnknownPerson).isTrue
       assertThat(result.crn).isEqualTo(crn)
@@ -218,7 +218,7 @@ class PersonTransformerTest {
 
       val personInfoResult = PersonInfoResult.Unknown(crn)
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result is UnknownPerson).isTrue
       assertThat(result.crn).isEqualTo(crn)
@@ -282,7 +282,7 @@ class PersonTransformerTest {
         inmateDetail = null,
       )
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is FullPerson).isTrue
@@ -376,7 +376,7 @@ class PersonTransformerTest {
         inmateDetail = inmateDetail,
       )
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is FullPerson).isTrue
@@ -470,7 +470,7 @@ class PersonTransformerTest {
         inmateDetail = inmateDetail,
       )
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is FullPerson).isTrue
@@ -509,7 +509,7 @@ class PersonTransformerTest {
         inmateDetail = null,
       )
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is FullPerson).isTrue
@@ -532,7 +532,7 @@ class PersonTransformerTest {
         inmateDetail = null,
       )
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is FullPerson).isTrue
@@ -555,7 +555,7 @@ class PersonTransformerTest {
         inmateDetail = null,
       )
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is FullPerson).isTrue
@@ -578,7 +578,7 @@ class PersonTransformerTest {
         inmateDetail = null,
       )
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is FullPerson).isTrue
@@ -602,7 +602,7 @@ class PersonTransformerTest {
         inmateDetail = null,
       )
 
-      val result = personTransformer.transformModelToPersonApi(personInfoResult)
+      val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is FullPerson).isTrue
@@ -620,7 +620,7 @@ class PersonTransformerTest {
 
       val personInfoResult = PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary)
 
-      val result = personTransformer.transformSummaryToPersonApi(personInfoResult)
+      val result = personTransformer.personSummaryInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(caseSummary.crn)
       assertThat(result is FullPerson).isTrue
@@ -649,7 +649,7 @@ class PersonTransformerTest {
       val crn = "CRN123"
       val personInfoResult = PersonSummaryInfoResult.Success.Restricted(crn, null)
 
-      val result = personTransformer.transformSummaryToPersonApi(personInfoResult)
+      val result = personTransformer.personSummaryInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is RestrictedPerson).isTrue
@@ -660,7 +660,7 @@ class PersonTransformerTest {
       val crn = "CRN123"
       val personInfoResult = PersonSummaryInfoResult.NotFound(crn)
 
-      val result = personTransformer.transformSummaryToPersonApi(personInfoResult)
+      val result = personTransformer.personSummaryInfoResultToPerson(personInfoResult)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is UnknownPerson).isTrue
@@ -687,7 +687,7 @@ class PersonTransformerTest {
 
       val probationOffenderSearchResult = ProbationOffenderSearchResult.Success.Full(nomsNumber, caseSummary, inmateDetail)
 
-      val result = personTransformer.transformProbationOffenderToPersonApi(probationOffenderSearchResult)
+      val result = personTransformer.transformProbationOffenderToFullPerson(probationOffenderSearchResult)
 
       assertThat(result.crn).isEqualTo(crn)
 
@@ -725,7 +725,7 @@ class PersonTransformerTest {
 
       val probationOffenderSearchResult = ProbationOffenderSearchResult.Success.Full(nomsNumber, caseSummary, inmateDetail)
 
-      val result = personTransformer.transformProbationOffenderToPersonApi(probationOffenderSearchResult)
+      val result = personTransformer.transformProbationOffenderToFullPerson(probationOffenderSearchResult)
 
       assertThat(result.crn).isEqualTo(crn)
 
@@ -810,7 +810,7 @@ class PersonTransformerTest {
       val inmateDetail = InmateDetailFactory()
         .withCustodyStatus(InmateStatus.IN)
         .produce()
-      val result = personTransformer.transformPersonSummaryInfoToPersonInfo(personSummaryInfoResult, inmateDetail)
+      val result = personTransformer.personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult, inmateDetail)
 
       assertThat(result.crn).isEqualTo(caseSummary.crn)
       assertThat(result is PersonInfoResult.Success.Full).isTrue
@@ -824,7 +824,7 @@ class PersonTransformerTest {
 
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber)
 
-      val result = personTransformer.transformPersonSummaryInfoToPersonInfo(personSummaryInfoResult, null)
+      val result = personTransformer.personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult, null)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is PersonInfoResult.Success.Restricted).isTrue
@@ -837,7 +837,7 @@ class PersonTransformerTest {
 
       val personSummaryInfoResult = PersonSummaryInfoResult.NotFound(crn)
 
-      val result = personTransformer.transformPersonSummaryInfoToPersonInfo(personSummaryInfoResult, null)
+      val result = personTransformer.personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult, null)
 
       assertThat(result is PersonInfoResult.NotFound).isTrue
       assertThat(result.crn).isEqualTo(crn)
@@ -851,7 +851,7 @@ class PersonTransformerTest {
 
       val personSummaryInfoResult = PersonSummaryInfoResult.Unknown(crn, throwable)
 
-      val result = personTransformer.transformPersonSummaryInfoToPersonInfo(personSummaryInfoResult, null)
+      val result = personTransformer.personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult, null)
 
       assertThat(result is PersonInfoResult.Unknown).isTrue
       assertThat(result.crn).isEqualTo(crn)

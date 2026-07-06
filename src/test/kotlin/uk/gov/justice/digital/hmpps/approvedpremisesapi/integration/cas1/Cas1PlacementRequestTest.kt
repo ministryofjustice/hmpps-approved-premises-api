@@ -1199,7 +1199,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
       requestedPlacementDuration = jpa.duration,
       requestedPlacementArrivalDate = jpa.expectedArrival,
       id = jpa.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.personInfoResultToPerson(personInfo),
       placementRequestStatus = PlacementRequestStatus.notMatched,
       isParole = jpa.isParole,
       personTier = jpa.application.riskRatings?.tier?.value?.level,

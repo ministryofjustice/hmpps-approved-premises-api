@@ -86,7 +86,7 @@ class TaskTransformer(
     apType = placementApplication.application.apType.asApiType(),
   )
 
-  private fun getPersonSummary(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>): PersonSummary = personTransformer.personSummaryInfoToPersonSummary(
+  private fun getPersonSummary(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>): PersonSummary = personTransformer.personSummaryInfoResultToPersonSummary(
     offenderSummaries.first { it.crn == application.crn },
   )
 
