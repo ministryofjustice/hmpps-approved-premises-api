@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.external
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExternalPremisesDto
@@ -20,6 +21,7 @@ class Cas1ExternalApplicationService(
   private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
   private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
   private val cas1PremisesService: Cas1PremisesService,
+  @Value($$"${url-templates.frontend.application}") private val cas1ApplicationUrlTemplate: String,
 ) {
 
   private val mostSuitableApplication = compareBy<ApprovedPremisesApplicationEntity> { suitableStatusesAsc[it.status] }
@@ -82,6 +84,7 @@ class Cas1ExternalApplicationService(
         requestForPlacementStatus = suitablePlacement?.requestForPlacementStatus,
         placementStatus = suitablePlacement?.placementStatus,
         premises = suitablePlacement?.premises,
+        uiUrl = cas1ApplicationUrlTemplate.replace("#id", application.id.toString()),
       )
     }
 

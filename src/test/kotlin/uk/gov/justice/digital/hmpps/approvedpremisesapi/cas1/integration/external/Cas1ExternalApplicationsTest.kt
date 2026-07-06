@@ -106,6 +106,7 @@ class Cas1ExternalApplicationsTest : IntegrationTestBase() {
                 town = premises.town,
                 postcode = premises.postcode,
               ),
+              uiUrl = "http://frontend/applications/${application.id}",
             )
 
             val response = webTestClient.get()

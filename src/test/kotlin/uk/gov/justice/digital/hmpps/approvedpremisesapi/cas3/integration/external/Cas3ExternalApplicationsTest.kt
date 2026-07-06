@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.extern
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
@@ -57,6 +58,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             assessmentStatus = null,
             bookingStatus = null,
             premises = null,
+            uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
           )
 
           val response = webTestClient.get()
@@ -65,7 +67,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBody(Cas3SuitableApplication::class.java)
+            .expectBody<Cas3SuitableApplication>()
             .returnResult()
             .responseBody
 
@@ -91,6 +93,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             null,
             bookingStatus = null,
             premises = null,
+            uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
           )
 
           val response = webTestClient.get()
@@ -99,7 +102,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBody(Cas3SuitableApplication::class.java)
+            .expectBody<Cas3SuitableApplication>()
             .returnResult()
             .responseBody
 
@@ -153,6 +156,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
               town = premises.town,
               postcode = premises.postcode,
             ),
+            uiUrl = "http://frontend.cas3/referrals/${application.id}/full",
           )
 
           val response = webTestClient.get()
@@ -161,7 +165,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBody(Cas3SuitableApplication::class.java)
+            .expectBody<Cas3SuitableApplication>()
             .returnResult()
             .responseBody
 
@@ -285,7 +289,7 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isOk
-            .expectBody(Cas3ExternalPremisesDto::class.java)
+            .expectBody<Cas3ExternalPremisesDto>()
             .returnResult()
             .responseBody
 

@@ -11,6 +11,7 @@ data class Cas1SuitableApplication(
   val requestForPlacementStatus: RequestForPlacementStatus?,
   val placementStatus: Cas1SpaceBookingStatus?,
   val premises: Cas1ExternalPremisesDto?,
+  val uiUrl: String,
 )
 
 data class Cas1ExternalPremisesDto(

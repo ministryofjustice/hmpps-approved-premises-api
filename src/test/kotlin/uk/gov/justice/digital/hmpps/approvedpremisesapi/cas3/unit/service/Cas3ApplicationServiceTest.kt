@@ -72,7 +72,6 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import kotlin.collections.listOf
 
 class Cas3ApplicationServiceTest {
   private val now = OffsetDateTime.now()
@@ -112,6 +111,8 @@ class Cas3ApplicationServiceTest {
     mockCas3ApplicationTransformer,
     mockCaseService,
   )
+
+  private val uiUrl = "http://localhost/applications/#applicationId"
 
   val user = UserEntityFactory()
     .withUnitTestControlProbationRegion()
@@ -169,6 +170,7 @@ class Cas3ApplicationServiceTest {
         null,
         bookingStatus = null,
         premises = null,
+        uiUrl = uiUrl.replace("#applicationId", inProgressApplicationNewer.id.toString()),
       )
 
       every { mockTemporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn) } returns listOf(
@@ -245,6 +247,7 @@ class Cas3ApplicationServiceTest {
         null,
         bookingStatus = null,
         premises = null,
+        uiUrl = uiUrl.replace("#applicationId", submittedApplication2.id.toString()),
       )
 
       every { mockCas3v2BookingService.getLatestBooking(submittedApplication2.id) } returns null
@@ -295,6 +298,7 @@ class Cas3ApplicationServiceTest {
         null,
         bookingStatus = null,
         premises = null,
+        uiUrl = uiUrl.replace("#applicationId", submittedApplication2.id.toString()),
       )
 
       every { mockCas3v2BookingService.getLatestBooking(submittedApplication2.id) } returns null
@@ -336,6 +340,8 @@ class Cas3ApplicationServiceTest {
         TemporaryAccommodationAssessmentStatus.readyToPlace,
         bookingStatus = null,
         premises = null,
+        uiUrl = uiUrl.replace("#applicationId", submittedApplication.id.toString()),
+
       )
 
       every { mockCas3v2BookingService.getLatestBooking(submittedApplication.id) } returns null
@@ -396,6 +402,8 @@ class Cas3ApplicationServiceTest {
           town = booking.premises.town,
           postcode = booking.premises.postcode,
         ),
+        uiUrl = uiUrl.replace("#applicationId", submittedApplication.id.toString()),
+
       )
 
       every { mockCas3v2BookingService.getLatestBooking(submittedApplication.id) } returns booking

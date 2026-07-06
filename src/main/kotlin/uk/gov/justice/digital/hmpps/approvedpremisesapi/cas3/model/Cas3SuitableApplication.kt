@@ -12,6 +12,7 @@ data class Cas3SuitableApplication(
   val assessmentStatus: TemporaryAccommodationAssessmentStatus?,
   val bookingStatus: Cas3BookingStatus?,
   val premises: Cas3ExternalPremisesDto?,
+  val uiUrl: String,
 )
 
 data class Cas3ExternalPremisesDto(
