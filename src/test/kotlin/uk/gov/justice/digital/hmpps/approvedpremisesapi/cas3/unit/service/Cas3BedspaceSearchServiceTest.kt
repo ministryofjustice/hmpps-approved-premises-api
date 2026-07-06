@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3Beds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3CharacteristicNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3v2CandidateBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3v2CandidateBedspaceOverlap
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspaceSearchService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BedspaceSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas3v2BedspaceSearchServiceTest {
+class Cas3BedspaceSearchServiceTest {
   private val mockCas3BedspaceSearchRepository = mockk<Cas3BedspaceSearchRepository>()
   private val mockCharacteristicService = mockk<CharacteristicService>()
   private val mockCas3v2BookingRepository = mockk<Cas3v2BookingRepository>()
@@ -38,7 +38,7 @@ class Cas3v2BedspaceSearchServiceTest {
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockOffenderService = mockk<OffenderService>()
 
-  private val cas3v2BedspaceSearchService = Cas3v2BedspaceSearchService(
+  private val cas3v2BedspaceSearchService = Cas3BedspaceSearchService(
     mockCas3BedspaceSearchRepository,
     mockCas3v2BookingRepository,
     mockProbationDeliveryUnitRepository,

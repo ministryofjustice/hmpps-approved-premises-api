@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
@@ -16,7 +16,7 @@ import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingSearchSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingSearchService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.TestCas3BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -29,13 +29,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.OffsetDateTime
 
-class Cas3v2BookingSearchServiceTest {
+class Cas3BookingSearchServiceTest {
   private val mockCas3v2BookingRepository = mockk<Cas3v2BookingRepository>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
   private val cas3BookingSearchPageSize = 50
 
-  private val cas3BookingSearchService = Cas3v2BookingSearchService(
+  private val cas3BookingSearchService = Cas3BookingSearchService(
     mockCas3v2BookingRepository,
     mockOffenderService,
     mockUserService,

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.stereotype.Service
@@ -12,8 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceArchiveActions
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService.Companion.MAX_DAYS_CREATE_BEDSPACE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService.Companion.MAX_LENGTH_BEDSPACE_REFERENCE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_CREATE_BEDSPACE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_LENGTH_BEDSPACE_REFERENCE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.BedspaceStatusHelper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult.Cas3FieldValidationError
@@ -29,10 +30,10 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class Cas3v2BedspacesService(
+class Cas3BedspacesService(
   private val characteristicService: CharacteristicService,
   private val cas3BedspacesRepository: Cas3BedspacesRepository,
-  private val cas3PremisesService: Cas3v2PremisesService,
+  private val cas3PremisesService: Cas3PremisesService,
   private val cas3v2DomainEventService: Cas3v2DomainEventService,
   private val jsonMapper: JsonMapper,
 ) {

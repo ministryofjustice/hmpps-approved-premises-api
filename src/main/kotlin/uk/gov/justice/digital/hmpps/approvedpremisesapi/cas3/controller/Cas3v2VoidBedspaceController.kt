@@ -11,10 +11,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3VoidBedspaceRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BedspacesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3VoidBedspaceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
@@ -23,11 +23,11 @@ import java.util.UUID
 
 @Cas3Controller
 class Cas3v2VoidBedspaceController(
-  private val voidBedspaceService: Cas3v2VoidBedspaceService,
-  private val cas3PremisesService: Cas3v2PremisesService,
+  private val voidBedspaceService: Cas3VoidBedspaceService,
+  private val cas3PremisesService: Cas3PremisesService,
   private val cas3UserAccessService: Cas3UserAccessService,
   private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
-  private val cas3BedspaceService: Cas3v2BedspacesService,
+  private val cas3BedspaceService: Cas3BedspacesService,
 ) {
 
   private fun validateUserAccess(premises: Cas3PremisesEntity) {

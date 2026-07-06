@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.data.repository.findByIdOrNull
@@ -20,12 +20,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ValidationResults
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService.Companion.MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService.Companion.MAX_DAYS_ARCHIVE_PREMISES_IN_PAST
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService.Companion.MAX_DAYS_UNARCHIVE_BEDSPACE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService.Companion.MAX_DAYS_UNARCHIVE_PREMISES
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService.Companion.MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService.Companion.MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_BEDSPACE_IN_PAST
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_ARCHIVE_PREMISES_IN_PAST
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_UNARCHIVE_BEDSPACE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_DAYS_UNARCHIVE_PREMISES
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_BEDSPACE_IN_FUTURE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService.Companion.MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.BedspaceStatusHelper.isCas3BedspaceActive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.BedspaceStatusHelper.isCas3BedspaceArchived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.BedspaceStatusHelper.isCas3BedspaceOnline
@@ -46,7 +47,7 @@ import java.util.UUID
 
 @SuppressWarnings("TooManyFunctions")
 @Service
-class Cas3v2ArchiveService(
+class Cas3ArchiveService(
   private val cas3BedspacesRepository: Cas3BedspacesRepository,
   private val cas3PremisesRepository: Cas3PremisesRepository,
   private val cas3v2BookingRepository: Cas3v2BookingRepository,

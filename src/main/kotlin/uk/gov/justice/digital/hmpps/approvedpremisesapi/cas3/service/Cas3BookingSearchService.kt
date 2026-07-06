@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
@@ -22,7 +22,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @Service
-class Cas3v2BookingSearchService(
+class Cas3BookingSearchService(
   private val cas3BookingRepository: Cas3v2BookingRepository,
   private val offenderService: OffenderService,
   private val userService: UserService,

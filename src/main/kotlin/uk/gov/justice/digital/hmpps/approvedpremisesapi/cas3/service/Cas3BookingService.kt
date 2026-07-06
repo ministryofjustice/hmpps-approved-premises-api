@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import io.sentry.Sentry
 import jakarta.transaction.Transactional
@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validatedCasResult
@@ -50,7 +51,7 @@ import java.util.UUID
 
 @Service
 @Suppress("TooManyFunctions")
-class Cas3v2BookingService(
+class Cas3BookingService(
   private val cas3BookingRepository: Cas3v2BookingRepository,
   private val cas3BedspaceRepository: Cas3BedspacesRepository,
   private val cas3CancellationRepository: Cas3CancellationRepository,

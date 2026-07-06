@@ -7,7 +7,6 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
@@ -55,7 +54,7 @@ class Cas3ApplicationService(
   private val offenderService: OffenderService,
   private val offenderRisksService: OffenderRisksService,
   private val jsonMapper: JsonMapper,
-  private val cas3v2BookingService: Cas3v2BookingService,
+  private val cas3BookingService: Cas3BookingService,
   private val clock: Clock,
   private val transformer: Cas3ApplicationTransformer,
   private val caseService: CaseService,
@@ -64,7 +63,7 @@ class Cas3ApplicationService(
 
   fun getCurrentPremisesByCrn(crn: String): Cas3ExternalPremisesDto? = temporaryAccommodationApplicationRepository.findByCrnOrderByCreatedAtDesc(crn)
     .firstNotNullOfOrNull { application ->
-      cas3v2BookingService.getLatestArrivedBooking(application.id)
+      cas3BookingService.getLatestArrivedBooking(application.id)
         ?.let { transformer.transformToCas3PremisesSummary(it) }
     }
 
@@ -81,7 +80,7 @@ class Cas3ApplicationService(
     ?.let {
       transformer.transformToCas3SuitableApplication(
         application = it,
-        booking = cas3v2BookingService.getLatestBooking(it.id),
+        booking = cas3BookingService.getLatestBooking(it.id),
       )
     }
 

@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3UpdatePremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesSearchResultsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
@@ -27,7 +27,7 @@ import java.util.UUID
 @RequestMapping("/cas3/v2", headers = ["X-Service-Name=temporary-accommodation"])
 class Cas3v2PremisesController(
   private val cas3UserAccessService: Cas3UserAccessService,
-  private val cas3v2PremisesService: Cas3v2PremisesService,
+  private val cas3PremisesService: Cas3PremisesService,
   private val cas3PremisesTransformer: Cas3PremisesTransformer,
   private val cas3PremisesSearchResultsTransformer: Cas3PremisesSearchResultsTransformer,
   private val userService: UserService,
@@ -35,8 +35,8 @@ class Cas3v2PremisesController(
 
   @GetMapping("/premises/{premisesId}")
   fun getPremises(@PathVariable premisesId: UUID): ResponseEntity<Cas3Premises> {
-    val premises = extractEntityFromCasResult(cas3v2PremisesService.getValidatedPremises(premisesId))
-    val archiveHistory = extractEntityFromCasResult(cas3v2PremisesService.getPremisesArchiveHistory(premises.id))
+    val premises = extractEntityFromCasResult(cas3PremisesService.getValidatedPremises(premisesId))
+    val archiveHistory = extractEntityFromCasResult(cas3PremisesService.getPremisesArchiveHistory(premises.id))
     return ResponseEntity.ok(cas3PremisesTransformer.toCas3Premises(premises, archiveHistory))
   }
 
@@ -46,7 +46,7 @@ class Cas3v2PremisesController(
     @RequestParam premisesStatus: Cas3PremisesStatus,
   ): ResponseEntity<Cas3PremisesSearchResults> {
     val user = userService.getUserForRequest()
-    val premisesSummaries = cas3v2PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, premisesStatus).groupBy { it.id }
+    val premisesSummaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress, premisesStatus).groupBy { it.id }
     val premisesSearchResults = cas3PremisesSearchResultsTransformer.transformDomainToCas3PremisesSearchResults(premisesSummaries)
     val sortedResults = Cas3PremisesSearchResults(
       results = premisesSearchResults.results?.sortedBy { it.id },
@@ -65,7 +65,7 @@ class Cas3v2PremisesController(
     }
 
     val premises = extractEntityFromCasResult(
-      cas3v2PremisesService.createNewPremises(
+      cas3PremisesService.createNewPremises(
         reference = body.reference,
         addressLine1 = body.addressLine1,
         addressLine2 = body.addressLine2,
@@ -95,7 +95,7 @@ class Cas3v2PremisesController(
       throw ForbiddenProblem()
     }
 
-    val premises = cas3v2PremisesService.updatePremises(
+    val premises = cas3PremisesService.updatePremises(
       premisesId = premisesId,
       addressLine1 = body.addressLine1,
       addressLine2 = body.addressLine2,

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service
 
 import com.fasterxml.jackson.databind.json.JsonMapper
 import io.mockk.every
@@ -22,9 +22,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
@@ -39,7 +39,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-class Cas3v2PremisesServiceTest {
+class Cas3PremisesServiceTest {
 
   @MockK
   lateinit var cas3PremisesRepository: Cas3PremisesRepository
@@ -63,7 +63,7 @@ class Cas3v2PremisesServiceTest {
   lateinit var jsonMapper: JsonMapper
 
   @InjectMockKs
-  lateinit var cas3v2PremisesService: Cas3v2PremisesService
+  lateinit var cas3PremisesService: Cas3PremisesService
 
   @Nested
   inner class GetPremises {
@@ -71,7 +71,7 @@ class Cas3v2PremisesServiceTest {
     fun `returns CasResult-NotFound when premises is not found`() {
       every { cas3PremisesRepository.findByIdOrNull(any()) } returns null
       val id = UUID.randomUUID()
-      val result = cas3v2PremisesService.getValidatedPremises(id)
+      val result = cas3PremisesService.getValidatedPremises(id)
 
       assertThatCasResult(result).isNotFound("Cas3Premises", id)
     }
@@ -82,7 +82,7 @@ class Cas3v2PremisesServiceTest {
       every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
       every { cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id) } returns false
 
-      val result = cas3v2PremisesService.getValidatedPremises(premises.id)
+      val result = cas3PremisesService.getValidatedPremises(premises.id)
 
       assertThatCasResult(result).isUnauthorised()
     }
@@ -93,7 +93,7 @@ class Cas3v2PremisesServiceTest {
       every { cas3PremisesRepository.findByIdOrNull(premises.id) } returns premises
       every { cas3UserAccessService.currentUserCanViewPremises(premises.probationDeliveryUnit.probationRegion.id) } returns true
 
-      val result = cas3v2PremisesService.getValidatedPremises(premises.id)
+      val result = cas3PremisesService.getValidatedPremises(premises.id)
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it)
@@ -131,7 +131,7 @@ class Cas3v2PremisesServiceTest {
       every { cas3PremisesRepository.save(capture(premisesSlot)) } answers { premisesSlot.captured }
 
       val updatedName = "updatedName"
-      val result = cas3v2PremisesService.updatePremises(
+      val result = cas3PremisesService.updatePremises(
         premisesId = premises.id,
         reference = updatedName,
         addressLine1 = "asd1",
@@ -190,7 +190,7 @@ class Cas3v2PremisesServiceTest {
 
       val characteristicId = UUID.randomUUID()
 
-      val result = cas3v2PremisesService.updatePremises(
+      val result = cas3PremisesService.updatePremises(
         premisesId = premises.id,
         reference = "",
         addressLine1 = "",
@@ -230,7 +230,7 @@ class Cas3v2PremisesServiceTest {
         )
       } returns true
 
-      val result = cas3v2PremisesService.updatePremises(
+      val result = cas3PremisesService.updatePremises(
         premisesId = premises.id,
         reference = "notUnique",
         addressLine1 = "address1",
@@ -252,7 +252,7 @@ class Cas3v2PremisesServiceTest {
 
     @Test
     fun `has validation error when post code is greater than 8 characters`() {
-      val result = cas3v2PremisesService.updatePremises(
+      val result = cas3PremisesService.updatePremises(
         premisesId = premises.id,
         reference = premises.name,
         addressLine1 = premises.addressLine1,
@@ -276,7 +276,7 @@ class Cas3v2PremisesServiceTest {
     fun `returns Not Found when premises does not exist`() {
       every { cas3PremisesRepository.findByIdOrNull(any()) } returns null
       val invalidId = UUID.randomUUID()
-      val result = cas3v2PremisesService.updatePremises(
+      val result = cas3PremisesService.updatePremises(
         premisesId = invalidId,
         reference = "",
         addressLine1 = "",
@@ -306,7 +306,7 @@ class Cas3v2PremisesServiceTest {
 
       val characteristicId = UUID.randomUUID()
 
-      val result = cas3v2PremisesService.createNewPremises(
+      val result = cas3PremisesService.createNewPremises(
         reference = "",
         addressLine1 = "",
         addressLine2 = "",
@@ -346,7 +346,7 @@ class Cas3v2PremisesServiceTest {
 
       val pduId = UUID.randomUUID()
 
-      val result = cas3v2PremisesService.createNewPremises(
+      val result = cas3PremisesService.createNewPremises(
         reference = "notunique",
         addressLine1 = "asd",
         addressLine2 = "asd",
@@ -387,7 +387,7 @@ class Cas3v2PremisesServiceTest {
       } returns false
       every { cas3PremisesCharacteristicRepository.findActiveCharacteristicsByIdIn(listOf(cas3PremisesCharacteristic.id)) } returns mutableListOf(cas3PremisesCharacteristic)
 
-      val result = cas3v2PremisesService.createNewPremises(
+      val result = cas3PremisesService.createNewPremises(
         reference = premisesName,
         addressLine1 = "asd1",
         addressLine2 = "asd2",
@@ -428,7 +428,7 @@ class Cas3v2PremisesServiceTest {
       val premisesSlot = slot<Cas3PremisesEntity>()
       every { cas3PremisesRepository.save(capture(premisesSlot)) } answers { premisesSlot.captured }
 
-      val result = cas3v2PremisesService.createNewPremises(
+      val result = cas3PremisesService.createNewPremises(
         reference = premisesName,
         addressLine1 = "asd1",
         addressLine2 = "asd2",
@@ -497,7 +497,7 @@ class Cas3v2PremisesServiceTest {
       val premisesSlot = slot<Cas3PremisesEntity>()
       every { cas3PremisesRepository.save(capture(premisesSlot)) } answers { premisesSlot.captured }
 
-      val result = cas3v2PremisesService.createNewPremises(
+      val result = cas3PremisesService.createNewPremises(
         reference = premisesName,
         addressLine1 = "asd1",
         addressLine2 = "asd2",
@@ -545,7 +545,7 @@ class Cas3v2PremisesServiceTest {
       every { cas3PremisesRepository.save(match { it.id == premises.id }) } returns updatedPremises
       every { cas3DomainEventService.savePremisesUnarchiveEvent(eq(updatedPremises), premises.startDate, restartDate, premises.endDate!!, any()) } returns Unit
 
-      cas3v2PremisesService.unarchivePremisesAndSaveDomainEvent(premises, restartDate, UUID.randomUUID())
+      cas3PremisesService.unarchivePremisesAndSaveDomainEvent(premises, restartDate, UUID.randomUUID())
 
       val slot = slot<Cas3PremisesEntity>()
       verify(exactly = 1) {
