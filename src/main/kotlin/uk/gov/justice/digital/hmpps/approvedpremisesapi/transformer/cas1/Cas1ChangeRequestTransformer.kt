@@ -10,10 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository.FindOpenChangeRequestResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosecondsToNearestMillisecond
 
 @Service
 class Cas1ChangeRequestTransformer(
@@ -57,28 +55,6 @@ class Cas1ChangeRequestTransformer(
     requestJson = entity.requestJson,
     spaceBookingId = entity.spaceBooking.id,
   )
-
-  fun transformToChangeRequestSummaries(
-    cas1ChangeRequests: List<Cas1ChangeRequestEntity>,
-    personInfoResult: PersonInfoResult,
-  ): List<Cas1ChangeRequestSummary> {
-    val personSummary = personTransformer.transformPersonInfoResultToPersonSummary(personInfoResult)
-
-    return cas1ChangeRequests.map { entity ->
-      val booking = entity.spaceBooking
-
-      Cas1ChangeRequestSummary(
-        id = entity.id,
-        person = personSummary,
-        type = Cas1ChangeRequestType.valueOf(entity.type.name),
-        createdAt = entity.createdAt.roundNanosecondsToNearestMillisecond().toInstant(),
-        tier = booking.application?.riskRatings?.tier?.value?.level,
-        expectedArrivalDate = booking.expectedArrivalDate,
-        actualArrivalDate = booking.actualArrivalDate,
-        placementRequestId = entity.placementRequest.id,
-      )
-    }
-  }
 }
 
 fun ChangeRequestType.toApiType() = Cas1ChangeRequestType.valueOf(this.name)

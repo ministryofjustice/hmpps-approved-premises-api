@@ -123,7 +123,6 @@ class PlacementRequestDetailTransformerTest {
     every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
     every { mockApplicationsTransformer.transformJpaToCas1Application(mockApplicationEntity, mockPersonInfoResult) } returns mockCas1Application
     every { mockPersonTransformer.personInfoResultToPersonSummaryInfoResult(mockPersonInfoResult) } returns mockPersonSummaryInfoResult
-    every { mockCas1ChangeRequestTransformer.transformToChangeRequestSummaries(listOf(mockCas1ChangeRequestEntity), mockPersonInfoResult) } returns changeRequests
 
     val result = placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
       mockPlacementRequestEntity,
@@ -193,7 +192,6 @@ class PlacementRequestDetailTransformerTest {
     every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
     every { mockApplicationsTransformer.transformJpaToCas1Application(mockApplicationEntity, mockPersonInfoResult) } returns mockCas1Application
     every { mockPersonTransformer.personInfoResultToPersonSummaryInfoResult(mockPersonInfoResult) } returns mockPersonSummaryInfoResult
-    every { mockCas1ChangeRequestTransformer.transformToChangeRequestSummaries(changeRequests, mockPersonInfoResult) } returns emptyList()
 
     val result = placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
       mockPlacementRequestEntity,
