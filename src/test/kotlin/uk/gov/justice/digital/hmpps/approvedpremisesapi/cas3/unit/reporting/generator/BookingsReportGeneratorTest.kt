@@ -7,13 +7,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ConfirmationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ExtensionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3OverstayEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.v2.Cas3v2ConfirmationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.PersonInformationReportData
@@ -21,24 +22,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.propertie
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.util.toBookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportDataAndPersonInfo
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -49,28 +45,29 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The probation region name is returned in the report`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
+    val premises = Cas3PremisesEntityFactory()
+      .withProbationDeliveryUnit(
+        ProbationDeliveryUnitEntityFactory()
+          .withProbationRegion(
             ProbationRegionEntityFactory()
               .withName("East of England")
               .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea {
-            LocalAuthorityEntityFactory()
-              .withName("St Albans")
-              .produce()
-          }
-          .produce()
-      }
+              .produce(),
+          )
+          .produce(),
+      )
+      .withLocalAuthorityArea(
+        LocalAuthorityEntityFactory()
+          .withName("St Albans")
+          .produce(),
+      )
       .produce()
+
+    val booking = createBooking(premises).produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
-      BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::probationRegion]).isEqualTo("East of England")
@@ -79,24 +76,13 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The CRN is returned in the report`() {
-    val booking = BookingEntityFactory()
+    val booking = createBooking()
       .withCrn("X123456")
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
       .produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
-      BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::crn]).isEqualTo("X123456")
@@ -104,21 +90,9 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The 'offer accepted' column is true in the report if the booking was confirmed`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
-    booking.confirmation = Cas3ConfirmationEntityFactory()
+    booking.confirmation = Cas3v2ConfirmationEntityFactory()
       .withBooking(booking)
       .produce()
 
@@ -132,19 +106,7 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The 'offer accepted' column is false in the report if the booking was not confirmed`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
@@ -156,22 +118,10 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The 'is cancelled' column is true and the cancellation reason is returned in the report if the booking was cancelled`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     booking.cancellations = mutableListOf(
-      CancellationEntityFactory()
+      Cas3CancellationEntityFactory()
         .withYieldedReason {
           CancellationReasonEntityFactory()
             .withName("House exploded")
@@ -183,7 +133,7 @@ class BookingsReportGeneratorTest {
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
-      BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::isCancelled]).isEqualTo("Yes")
@@ -193,23 +143,11 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The 'is cancelled' column is false and no cancellation reason is returned in the report if the booking was not cancelled`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
-      BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::isCancelled]).isEqualTo("No")
@@ -220,21 +158,9 @@ class BookingsReportGeneratorTest {
   @Test
   fun `The start and end dates are returned from the arrival in the report if it exists`() {
     val today = LocalDate.now()
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
-    booking.arrivals += ArrivalEntityFactory()
+    booking.arrivals += Cas3ArrivalEntityFactory()
       .withArrivalDate(today)
       .withExpectedDepartureDate(today.plusDays(84L))
       .withBooking(booking)
@@ -252,19 +178,7 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The start and end dates are not returned in the report if the booking has no arrival`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
@@ -281,22 +195,10 @@ class BookingsReportGeneratorTest {
     val now = OffsetDateTime.now()
     val today = now.toLocalDate()
 
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     booking.departures = mutableListOf(
-      DepartureEntityFactory()
+      Cas3DepartureEntityFactory()
         .withDateTime(now)
         .withYieldedReason {
           DepartureReasonEntityFactory()
@@ -316,7 +218,7 @@ class BookingsReportGeneratorTest {
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
-      BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::actualEndDate]).isEqualTo(today)
@@ -324,23 +226,11 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The actual end date is not returned in the report if the booking has no departure`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
-      BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::actualEndDate]).isNull()
@@ -351,21 +241,9 @@ class BookingsReportGeneratorTest {
     val today = LocalDate.now()
     val arrivalDate = today.minusDays(37L)
 
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
-    booking.arrivals += ArrivalEntityFactory()
+    booking.arrivals += Cas3ArrivalEntityFactory()
       .withArrivalDate(arrivalDate)
       .withExpectedDepartureDate(arrivalDate.plusDays(84L))
       .withBooking(booking)
@@ -381,19 +259,7 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The number of nights stayed so far is not returned in the report if the booking has no arrival`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
@@ -410,28 +276,16 @@ class BookingsReportGeneratorTest {
     val expectedDepartureDate = today.minusDays(3L)
     val arrivalDate = expectedDepartureDate.minusDays(84L)
 
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
-    booking.arrivals += ArrivalEntityFactory()
+    booking.arrivals += Cas3ArrivalEntityFactory()
       .withArrivalDate(arrivalDate)
       .withExpectedDepartureDate(expectedDepartureDate)
       .withBooking(booking)
       .produce()
 
     booking.departures = mutableListOf(
-      DepartureEntityFactory()
+      Cas3DepartureEntityFactory()
         .withDateTime(now)
         .withYieldedReason {
           DepartureReasonEntityFactory()
@@ -451,7 +305,7 @@ class BookingsReportGeneratorTest {
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
-      BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::currentNightsStayed]).isNull()
@@ -464,28 +318,16 @@ class BookingsReportGeneratorTest {
     val expectedDepartureDate = today.minusDays(3L)
     val arrivalDate = expectedDepartureDate.minusDays(84L)
 
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
-    booking.arrivals += ArrivalEntityFactory()
+    booking.arrivals += Cas3ArrivalEntityFactory()
       .withArrivalDate(arrivalDate)
       .withExpectedDepartureDate(expectedDepartureDate)
       .withBooking(booking)
       .produce()
 
     booking.departures = mutableListOf(
-      DepartureEntityFactory()
+      Cas3DepartureEntityFactory()
         .withDateTime(now)
         .withYieldedReason {
           DepartureReasonEntityFactory()
@@ -505,7 +347,7 @@ class BookingsReportGeneratorTest {
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
-      BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::actualNightsStayed]).isEqualTo(87L)
@@ -513,23 +355,11 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The actual number of nights stayed is returned in the report if the booking has no departure`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.approvedPremises)
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
-      BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::actualNightsStayed]).isNull()
@@ -537,22 +367,10 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The accommodation outcome is returned from the departure in the report if it exists`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     booking.departures = mutableListOf(
-      DepartureEntityFactory()
+      Cas3DepartureEntityFactory()
         .withYieldedReason {
           DepartureReasonEntityFactory()
             .produce()
@@ -580,19 +398,7 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The accommodation outcome is not returned in the report if the booking has no departure`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
@@ -604,19 +410,7 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The referral columns are empty if there is no application for the booking`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
@@ -676,14 +470,7 @@ class BookingsReportGeneratorTest {
       .withDutyToReferLocalAuthorityAreaName("London")
       .produce()
 
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withProbationRegion(probationRegion)
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
+    val booking = createBooking()
       .withApplication(application)
       .produce()
 
@@ -748,14 +535,7 @@ class BookingsReportGeneratorTest {
       .withEligiblilityReason("Some reason")
       .produce()
 
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withProbationRegion(probationRegion)
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
+    val booking = createBooking()
       .withApplication(application)
       .produce()
 
@@ -782,19 +562,7 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The personal details columns are empty if there is no person information available for the booking`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val actual = reportGenerator.createReport(
       listOf(booking).toBookingsReportDataAndPersonInfo(),
@@ -810,19 +578,7 @@ class BookingsReportGeneratorTest {
 
   @Test
   fun `The personal details columns are returned when there is person information available for the booking`() {
-    val booking = BookingEntityFactory()
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
-          .produce()
-      }
-      .produce()
+    val booking = createBooking().produce()
 
     val pnc = "PNC Number"
     val caseSummary = CaseSummaryFactory()
@@ -1023,4 +779,11 @@ class BookingsReportGeneratorTest {
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::overstay]).isEqualTo("N")
   }
+
+  private fun createBooking(
+    premises: Cas3PremisesEntity = Cas3PremisesEntityFactory().withDefaults().produce(),
+  ) = Cas3BookingEntityFactory()
+    .withServiceName(ServiceName.temporaryAccommodation)
+    .withPremises(premises)
+    .withBedspace(Cas3BedspaceEntityFactory().withPremises(premises).produce())
 }
