@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class Cas2PersonRisksTest : IntegrationTestBase() {
@@ -77,12 +76,13 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
 
   @Test
   fun `Getting risks for a CRN returns OK with correct body`() {
+    val dateTimeCompleted = OffsetDateTime.now().minusMonths(1)
     givenACas2PomUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         apAndOASysMockSuccessfulRoshRatingsCall(
           offenderDetails.otherIds.crn,
           RoshRatingsFactory().apply {
-            withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))
+            withDateCompleted(dateTimeCompleted)
             withAssessmentId(34853487)
             withRiskChildrenCommunity(RiskLevel.LOW)
             withRiskPublicCommunity(RiskLevel.MEDIUM)
@@ -110,7 +110,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
                     riskToPublic = "Medium",
                     riskToKnownAdult = "High",
                     riskToStaff = "Very High",
-                    lastUpdated = LocalDate.parse("2022-09-06"),
+                    lastUpdated = dateTimeCompleted.toLocalDate(),
                   ),
                 ),
                 tier = RiskTierEnvelopeDto(

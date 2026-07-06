@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
@@ -30,11 +29,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import java.time.LocalDate
-import java.time.OffsetDateTime
 
 @SuppressWarnings("UnusedPrivateProperty")
 class Cas2OffenderServiceTest {
@@ -42,12 +42,13 @@ class Cas2OffenderServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApOASysContextApiClient = mockk<ApAndOASysClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+  private val mockOffenderRisksService = mockk<OffenderRisksService>()
 
   private val offenderService = Cas2HdcOffenderService(
     mockPrisonsApiClient,
     mockApDeliusContextApiClient,
-    mockApOASysContextApiClient,
     mockOffenderDetailsDataSource,
+    offenderRisksService = mockOffenderRisksService,
     2,
   )
 
@@ -78,6 +79,8 @@ class Cas2OffenderServiceTest {
       mockExistingNonLaoOffender()
       mock404RoSH(crn)
 
+      every { mockOffenderRisksService.getRoshRisksEnvelope(crn) } returns RiskWithStatus(status = RiskStatus.NotFound)
+
       val result = offenderService.getRiskByCrn(crn)
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -93,7 +96,8 @@ class Cas2OffenderServiceTest {
       val crn = "a-crn"
 
       mockExistingNonLaoOffender()
-      mock500RoSH(crn)
+
+      every { mockOffenderRisksService.getRoshRisksEnvelope(crn) } returns RiskWithStatus(status = RiskStatus.Error)
 
       val result = offenderService.getRiskByCrn(crn)
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -111,17 +115,16 @@ class Cas2OffenderServiceTest {
 
       mockExistingNonLaoOffender()
 
-      mock200RoSH(
-        crn,
-        RoshRatingsFactory().apply {
-          withDateCompleted(OffsetDateTime.parse("2022-09-06T13:45:00Z"))
-          withAssessmentId(34853487)
-          withRiskChildrenCommunity(RiskLevel.LOW)
-          withRiskPublicCommunity(RiskLevel.MEDIUM)
-          withRiskKnownAdultCommunity(RiskLevel.HIGH)
-          withRiskStaffCommunity(RiskLevel.VERY_HIGH)
-        }.produce(),
+      val riskStatus = RoshRisks(
+        overallRisk = "Very High",
+        riskToChildren = "Low",
+        riskToPublic = "Medium",
+        riskToKnownAdult = "High",
+        riskToStaff = "Very High",
+        lastUpdated = LocalDate.parse("2022-09-06"),
       )
+
+      every { mockOffenderRisksService.getRoshRisksEnvelope(crn) } returns RiskWithStatus(value = riskStatus)
 
       val result = offenderService.getRiskByCrn(crn)
       assertThat(result is AuthorisableActionResult.Success).isTrue
