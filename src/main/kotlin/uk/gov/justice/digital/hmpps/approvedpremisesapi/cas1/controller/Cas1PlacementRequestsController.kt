@@ -239,12 +239,9 @@ class Cas1PlacementRequestsController(
       forUser.cas1LaoStrategy(),
     )
 
-    val changeRequests = cas1ChangeRequestRepository.findAllByPlacementRequestAndResolvedIsFalse(placementRequestEntity)
-
     return placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
       placementRequestEntity,
       personInfo,
-      changeRequests,
     )
   }
 }
