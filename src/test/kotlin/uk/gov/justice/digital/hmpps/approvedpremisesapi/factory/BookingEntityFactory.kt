@@ -4,7 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -46,7 +45,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }
   private var application: Yielded<ApplicationEntity?> = { null }
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
-  private var turnarounds: Yielded<MutableList<Cas3TurnaroundEntity>>? = null
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var status: Yielded<BookingStatus?> = { null }
   private var adhoc: Yielded<Boolean?> = { null }
@@ -167,14 +165,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.offlineApplication = { offlineApplication }
   }
 
-  fun withYieldedTurnarounds(turnarounds: Yielded<MutableList<Cas3TurnaroundEntity>>) = apply {
-    this.turnarounds = turnarounds
-  }
-
-  fun withTurnarounds(turnarounds: MutableList<Cas3TurnaroundEntity>) = apply {
-    this.turnarounds = { turnarounds }
-  }
-
   fun withNomsNumber(nomsNumber: String?) = apply {
     this.nomsNumber = { nomsNumber }
   }
@@ -211,7 +201,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     createdAt = this.createdAt(),
     application = this.application(),
     offlineApplication = this.offlineApplication(),
-    turnarounds = this.turnarounds?.invoke() ?: mutableListOf(),
     nomsNumber = this.nomsNumber(),
     status = this.status.invoke(),
     adhoc = this.adhoc(),
