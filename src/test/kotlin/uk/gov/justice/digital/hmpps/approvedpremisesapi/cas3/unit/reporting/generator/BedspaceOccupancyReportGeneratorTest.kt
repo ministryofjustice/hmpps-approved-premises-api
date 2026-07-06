@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.v2.Cas3v2ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.v2.Cas3v2TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceOccupancyReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceOccupancyReportData
@@ -374,7 +374,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2023-03-28"))
         .withDepartureDate(LocalDate.parse("2023-04-04"))
         .produce().apply {
-          confirmation = Cas3v2ConfirmationEntityFactory().withBooking(this).produce()
+          confirmation = Cas3ConfirmationEntityFactory().withBooking(this).produce()
         }
 
     val relevantBookingStraddlingEndOfMonth =
@@ -384,7 +384,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2023-04-28"))
         .withDepartureDate(LocalDate.parse("2023-05-04"))
         .produce().apply {
-          confirmation = Cas3v2ConfirmationEntityFactory().withBooking(this).produce()
+          confirmation = Cas3ConfirmationEntityFactory().withBooking(this).produce()
         }
 
     val bedspaceOccupancyBedspaceReportData = convertToCas3BedspaceOccupancyBedspaceReportData(cas3Bedspace)

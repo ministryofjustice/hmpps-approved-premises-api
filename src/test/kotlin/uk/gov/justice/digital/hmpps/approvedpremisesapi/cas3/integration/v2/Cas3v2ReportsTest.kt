@@ -2068,7 +2068,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             reportEndDate.randomDateAfter(20),
           )
           bookingFour.let {
-            it.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
+            it.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
               withBooking(it)
             }
           }
@@ -2098,7 +2098,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             reportEndDate.randomDateAfter(40),
           )
           bookingFive.let {
-            it.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
+            it.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
               withBooking(it)
             }
           }
@@ -2122,7 +2122,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             reportEndDate.plusDays(90),
             reportEndDate.plusDays(120),
           ).let {
-            it.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
+            it.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
               withBooking(it)
             }
           }
@@ -2135,7 +2135,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             reportEndDate.plusDays(70),
             reportEndDate.plusDays(85),
           ).let {
-            it.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
+            it.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
               withBooking(it)
             }
           }
@@ -2360,7 +2360,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             reportEndDate.randomDateAfter(20),
           )
           bookingFour.let {
-            it.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
+            it.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
               withBooking(it)
             }
           }
@@ -2390,7 +2390,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             reportEndDate.randomDateAfter(40),
           )
           bookingFive.let {
-            it.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
+            it.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
               withBooking(it)
             }
           }
@@ -2414,7 +2414,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             reportEndDate.plusDays(90),
             reportEndDate.plusDays(120),
           ).let {
-            it.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
+            it.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
               withBooking(it)
             }
           }
@@ -2427,7 +2427,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             reportEndDate.plusDays(70),
             reportEndDate.plusDays(85),
           ).let {
-            it.confirmation = cas3v2ConfirmationEntityFactory.produceAndPersist {
+            it.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
               withBooking(it)
             }
           }

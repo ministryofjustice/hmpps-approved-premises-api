@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ConfirmationTransformer
 import java.time.OffsetDateTime
@@ -16,7 +16,7 @@ class Cas3ConfirmationTransformerTest {
   private val cas3ConfirmationTransformer = Cas3ConfirmationTransformer()
 
   @Test
-  fun `transformJpaToApi transforms the Cas3v2ConfirmationEntity into a Cas3Confirmation`() {
+  fun `transformJpaToApi transforms the Cas3ConfirmationEntity into a Cas3Confirmation`() {
     val premises = Cas3PremisesEntityFactory()
       .withDefaults()
       .produce()
@@ -32,7 +32,7 @@ class Cas3ConfirmationTransformerTest {
       .produce()
 
     val confirmationId = UUID.randomUUID()
-    val cas3ConfirmationEntity = Cas3v2ConfirmationEntity(
+    val cas3ConfirmationEntity = Cas3ConfirmationEntity(
       id = confirmationId,
       dateTime = OffsetDateTime.parse("2025-04-08T00:00:00Z"),
       notes = "Test notes",

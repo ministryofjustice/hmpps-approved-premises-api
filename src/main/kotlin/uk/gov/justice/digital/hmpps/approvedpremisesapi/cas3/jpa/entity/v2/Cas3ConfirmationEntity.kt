@@ -14,11 +14,11 @@ import java.util.Objects
 import java.util.UUID
 
 @Repository
-interface Cas3v2ConfirmationRepository : JpaRepository<Cas3v2ConfirmationEntity, UUID>
+interface Cas3ConfirmationRepository : JpaRepository<Cas3ConfirmationEntity, UUID>
 
 @Entity
 @Table(name = "cas3_confirmations")
-data class Cas3v2ConfirmationEntity(
+data class Cas3ConfirmationEntity(
   @Id
   val id: UUID,
   val dateTime: OffsetDateTime,
@@ -31,7 +31,7 @@ data class Cas3v2ConfirmationEntity(
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    if (other !is Cas3v2ConfirmationEntity) return false
+    if (other !is Cas3ConfirmationEntity) return false
 
     if (id != other.id) return false
     if (dateTime != other.dateTime) return false
@@ -43,5 +43,5 @@ data class Cas3v2ConfirmationEntity(
 
   override fun hashCode() = Objects.hash(dateTime, notes, createdAt)
 
-  override fun toString() = "Cas3v2ConfirmationEntity:$id"
+  override fun toString() = "Cas3ConfirmationEntity:$id"
 }

@@ -22,7 +22,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -53,7 +53,7 @@ data class Cas3BookingEntity(
   @Fetch(FetchMode.SUBSELECT)
   var cancellations: MutableList<Cas3CancellationEntity>,
   @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY)
-  var confirmation: Cas3v2ConfirmationEntity?,
+  var confirmation: Cas3ConfirmationEntity?,
   @OneToOne
   @JoinColumn(name = "application_id")
   var application: ApplicationEntity?,

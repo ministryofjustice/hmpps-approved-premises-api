@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Exte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
@@ -38,7 +38,7 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
   private var departures: Yielded<MutableList<Cas3DepartureEntity>>? = null
   private var nonArrival: Yielded<Cas3NonArrivalEntity>? = null
   private var cancellations: Yielded<MutableList<Cas3CancellationEntity>>? = null
-  private var confirmation: Yielded<Cas3v2ConfirmationEntity>? = null
+  private var confirmation: Yielded<Cas3ConfirmationEntity>? = null
   private var extensions: Yielded<MutableList<Cas3ExtensionEntity>>? = null
   private var overstays: Yielded<MutableList<Cas3OverstayEntity>>? = null
   private var dateChanges: Yielded<MutableList<DateChangeEntity>>? = null
@@ -109,11 +109,11 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
     this.cancellations = { cancellations }
   }
 
-  fun withYieldedConfirmation(confirmation: Yielded<Cas3v2ConfirmationEntity>) = apply {
+  fun withYieldedConfirmation(confirmation: Yielded<Cas3ConfirmationEntity>) = apply {
     this.confirmation = confirmation
   }
 
-  fun withConfirmation(confirmation: Cas3v2ConfirmationEntity) = apply {
+  fun withConfirmation(confirmation: Cas3ConfirmationEntity) = apply {
     this.confirmation = { confirmation }
   }
 

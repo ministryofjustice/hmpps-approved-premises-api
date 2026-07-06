@@ -21,8 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Over
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2ConfirmationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
@@ -64,7 +64,7 @@ class Cas3v2BookingService(
   private val offenderService: OffenderService,
   private val cas3DomainEventService: Cas3v2DomainEventService,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
-  private val cas3v2ConfirmationRepository: Cas3v2ConfirmationRepository,
+  private val cas3ConfirmationRepository: Cas3ConfirmationRepository,
   private val cas3ExtensionRepository: Cas3ExtensionRepository,
   private val cas3OverstayRepository: Cas3OverstayRepository,
   private val workingDayService: WorkingDayService,
@@ -379,13 +379,13 @@ class Cas3v2BookingService(
     dateTime: OffsetDateTime,
     notes: String?,
     user: UserEntity,
-  ) = validatedCasResult<Cas3v2ConfirmationEntity> {
+  ) = validatedCasResult<Cas3ConfirmationEntity> {
     if (booking.confirmation != null) {
-      return CasResult.GeneralValidationError<Cas3v2ConfirmationEntity>("This Booking already has a Confirmation set")
+      return CasResult.GeneralValidationError<Cas3ConfirmationEntity>("This Booking already has a Confirmation set")
     }
 
-    val cas3ConfirmationEntity = cas3v2ConfirmationRepository.save(
-      Cas3v2ConfirmationEntity(
+    val cas3ConfirmationEntity = cas3ConfirmationRepository.save(
+      Cas3ConfirmationEntity(
         id = UUID.randomUUID(),
         dateTime = dateTime,
         notes = notes,
