@@ -24,6 +24,8 @@ data class Cas1SpaceBooking(
   val otherBookingsInPremisesForCrn: List<Cas1SpaceBookingDates>,
   val characteristics: List<Cas1SpaceCharacteristic>,
   val allowedActions: List<Cas1SpaceBookingAction>,
+  @Schema(description = "Change requests were developed but never used", deprecated = true)
+  @Deprecated(message = "Change requests were developed but never used")
   val openChangeRequests: List<Cas1ChangeRequestSummary>,
   val assessmentId: UUID? = null,
   @Schema(description = "Tier when the application was created")

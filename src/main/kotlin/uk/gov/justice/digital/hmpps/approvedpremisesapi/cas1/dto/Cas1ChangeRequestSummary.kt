@@ -7,6 +7,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
+@Schema(description = "Change requests were developed but never used", deprecated = true)
+@Deprecated(message = "Change requests were developed but never used")
 data class Cas1ChangeRequestSummary(
 
   @get:JsonProperty("id", required = true) val id: UUID,

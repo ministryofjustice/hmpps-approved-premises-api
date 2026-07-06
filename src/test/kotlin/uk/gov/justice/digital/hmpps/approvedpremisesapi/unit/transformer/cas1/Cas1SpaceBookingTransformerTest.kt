@@ -12,14 +12,12 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingStatus
@@ -55,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ChangeRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -83,9 +80,6 @@ class Cas1SpaceBookingTransformerTest {
 
   @MockK
   private lateinit var cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService
-
-  @MockK
-  private lateinit var cas1ChangeRequestTransformer: Cas1ChangeRequestTransformer
 
   @InjectMockKs
   private lateinit var transformer: Cas1SpaceBookingTransformer
@@ -202,24 +196,6 @@ class Cas1SpaceBookingTransformerTest {
         ),
       )
 
-      val changeRequests = listOf(
-        Cas1ChangeRequestSummary(
-          id = UUID.randomUUID(),
-          person = FullPersonSummary(
-            crn = "CRN1",
-            name = "NAME",
-            isRestricted = false,
-            personType = PersonSummaryDiscriminator.fullPersonSummary,
-          ),
-          type = Cas1ChangeRequestType.PLACEMENT_APPEAL,
-          createdAt = Instant.now(),
-          tier = "TierA",
-          expectedArrivalDate = LocalDate.parse("2023-01-01"),
-          actualArrivalDate = LocalDate.parse("2023-01-01"),
-          placementRequestId = UUID.randomUUID(),
-        ),
-      )
-
       every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
       every {
         userTransformer.transformJpaToApi(
@@ -232,9 +208,7 @@ class Cas1SpaceBookingTransformerTest {
         SpaceBookingAction.APPEAL_CREATE,
       )
 
-      every { cas1ChangeRequestTransformer.transformToChangeRequestSummaries(any(), any()) } returns changeRequests
-
-      val result = transformer.transformJpaToApi(personInfo, spaceBooking, otherBookings, emptyList())
+      val result = transformer.transformJpaToApi(personInfo, spaceBooking, otherBookings)
 
       assertThat(result.id).isEqualTo(spaceBooking.id)
       assertThat(result.applicationId).isEqualTo(application.id)
@@ -296,8 +270,6 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       assertThat(result.allowedActions).containsExactly(Cas1SpaceBookingAction.APPEAL_CREATE)
-      assertThat(result.openChangeRequests.size).isEqualTo(1)
-      assertThat(result.openChangeRequests[0]).isEqualTo(changeRequests[0])
       assertThat(result.status).isEqualTo(Cas1SpaceBookingStatus.CANCELLED)
     }
 
@@ -368,9 +340,7 @@ class Cas1SpaceBookingTransformerTest {
         SpaceBookingAction.APPEAL_CREATE,
       )
 
-      every { cas1ChangeRequestTransformer.transformToChangeRequestSummaries(any(), any()) } returns emptyList()
-
-      val result = transformer.transformJpaToApi(personInfo, spaceBooking, emptyList(), emptyList())
+      val result = transformer.transformJpaToApi(personInfo, spaceBooking, emptyList())
 
       assertThat(result.id).isEqualTo(spaceBooking.id)
       val departure = result.departure!!

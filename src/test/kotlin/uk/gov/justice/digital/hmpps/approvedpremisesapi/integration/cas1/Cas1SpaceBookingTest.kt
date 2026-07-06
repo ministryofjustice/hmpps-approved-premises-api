@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
@@ -75,7 +76,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
@@ -1233,9 +1233,7 @@ class Cas1SpaceBookingTest {
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremises2021: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremises2020: Cas1SpaceBookingEntity
-    lateinit var cas1ChangeRequestEntity: Cas1ChangeRequestEntity
     lateinit var appealRejectionReason: Cas1ChangeRequestRejectionReasonEntity
-    lateinit var changeRequestReason: Cas1ChangeRequestReasonEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -1328,16 +1326,6 @@ class Cas1SpaceBookingTest {
         .produceAndPersist {
           withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
         }
-
-      changeRequestReason = cas1ChangeRequestReasonEntityFactory.produceAndPersist {
-        withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
-      }
-
-      cas1ChangeRequestEntity = cas1ChangeRequestEntityFactory.produceAndPersist {
-        withSpaceBooking(spaceBooking)
-        withChangeRequestReason(changeRequestReason)
-        withPlacementRequest(spaceBooking.placementRequest!!)
-      }
     }
 
     @Test
@@ -1362,7 +1350,7 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceBooking::class.java).responseBody.blockFirst()!!
+        .returnResult<Cas1SpaceBooking>().responseBody.blockFirst()!!
 
       assertThat(response.id).isEqualTo(spaceBooking.id)
       assertThat(response.otherBookingsInPremisesForCrn).hasSize(2)
@@ -1374,7 +1362,6 @@ class Cas1SpaceBookingTest {
       assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
       assertThat(response.actualArrivalTime).isEqualTo("11:24")
       assertThat(response.actualDepartureTime).isEqualTo("10:24")
-      assertThat(response.openChangeRequests.size).isEqualTo(1)
       assertThat(response.status).isEqualTo(Cas1SpaceBookingStatus.UPCOMING)
     }
   }

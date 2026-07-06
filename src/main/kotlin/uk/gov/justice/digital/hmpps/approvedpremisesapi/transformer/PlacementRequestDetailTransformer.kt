@@ -5,9 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ChangeRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 
 @Component
@@ -17,7 +15,6 @@ class PlacementRequestDetailTransformer(
   private val applicationTransformer: ApplicationsTransformer,
   private val personTransformer: PersonTransformer,
   private val cas1SpaceBookingTransformer: Cas1SpaceBookingTransformer,
-  private val cas1ChangeRequestTransformer: Cas1ChangeRequestTransformer,
 ) {
   val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummariesTransformer(
     bookingSummaryTransformer,
@@ -26,12 +23,10 @@ class PlacementRequestDetailTransformer(
   fun transformJpaToCas1PlacementRequestDetail(
     jpa: PlacementRequestEntity,
     personInfo: PersonInfoResult,
-    changeRequests: List<Cas1ChangeRequestEntity>,
   ): Cas1PlacementRequestDetail {
     val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, personInfo)
     val personSummaryInfo = personTransformer.personInfoResultToPersonSummaryInfoResult(personInfo)
     val placementRequestBookingSummary = placementRequestBookingSummaryTransformer.getBookingSummary(jpa)
-    val openChangeRequests = cas1ChangeRequestTransformer.transformToChangeRequestSummaries(changeRequests, personInfo)
 
     return Cas1PlacementRequestDetail(
       id = placementRequest.id,
@@ -63,7 +58,7 @@ class PlacementRequestDetailTransformer(
       application = applicationTransformer.transformJpaToCas1Application(jpa.application, personInfo),
       spaceBookings = jpa.spaceBookings.filter { it.isActive() }
         .map { cas1SpaceBookingTransformer.transformToSummary(it, personSummaryInfo) },
-      openChangeRequests = openChangeRequests,
+      openChangeRequests = emptyList(),
       requestedPlacementPeriod = requestedPlacementPeriod(jpa),
       authorisedPlacementPeriod = authorisedPlacementPeriod(jpa),
     )
