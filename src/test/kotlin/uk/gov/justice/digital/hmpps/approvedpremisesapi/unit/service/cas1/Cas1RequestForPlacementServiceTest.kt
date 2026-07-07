@@ -16,9 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.factory.Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -271,9 +268,8 @@ class Cas1RequestForPlacementServiceTest {
         "rfap",
       ],
     )
-    fun `returns duration 84 (12 x 7) when apType is normal or mhapElliottHouse or mhapStJosephs or rfap and tier version is V2`(apType: String) {
-      val request = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory().withApType(ApType.valueOf(apType)).produce()
-      val result = cas1RequestForPlacementService.defaultDurations(request)
+    fun `returns duration 84 (12 x 7) when apType is normal or mhapElliottHouse or mhapStJosephs or rfap`(apType: String) {
+      val result = cas1RequestForPlacementService.defaultDurations(ApType.valueOf(apType))
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.defaultDurationDays).isEqualTo(84)
@@ -282,9 +278,8 @@ class Cas1RequestForPlacementServiceTest {
     }
 
     @Test
-    fun `returns duration 182 (26 x 7) when apType is pipe and tier version is V2`() {
-      val request = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory().withApType(ApType.pipe).produce()
-      val result = cas1RequestForPlacementService.defaultDurations(request)
+    fun `returns duration 182 (26 x 7) when apType is pipe`() {
+      val result = cas1RequestForPlacementService.defaultDurations(ApType.pipe)
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.defaultDurationDays).isEqualTo(182)
@@ -293,25 +288,13 @@ class Cas1RequestForPlacementServiceTest {
     }
 
     @Test
-    fun `returns duration 364 (52 x 7) when apType is esap and tier version is V2`() {
-      val request = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory().withApType(ApType.esap).produce()
-      val result = cas1RequestForPlacementService.defaultDurations(request)
+    fun `returns duration 364 (52 x 7) when apType is esap`() {
+      val result = cas1RequestForPlacementService.defaultDurations(ApType.esap)
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.defaultDurationDays).isEqualTo(364)
         assertThat(it.maxDurationDays).isNull()
       }
-    }
-
-    @Test
-    fun `returns error when tier version is v3`() {
-      val request = Cas1RequestsForPlacementDurationsCalculationRequestDtoFactory().withApType(ApType.esap).withTier(
-        TierDtoFactory().withVersion(TierVersionDto.V3).produce(),
-      ).produce()
-
-      val result = cas1RequestForPlacementService.defaultDurations(request)
-
-      assertThatCasResult(result).isGeneralValidationError("Tier version V3 is not supported for duration calculations")
     }
   }
 }
