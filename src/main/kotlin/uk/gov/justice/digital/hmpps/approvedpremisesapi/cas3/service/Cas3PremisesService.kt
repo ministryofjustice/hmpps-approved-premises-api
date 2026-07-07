@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import com.fasterxml.jackson.databind.json.JsonMapper
 import org.springframework.data.repository.findByIdOrNull
@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesArchiveAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResultValidatedScope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResultValidatedScope.Companion.NDELIUS_MAX_POSTCODE_LENGTH
@@ -29,7 +30,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class Cas3v2PremisesService(
+class Cas3PremisesService(
   private val cas3PremisesRepository: Cas3PremisesRepository,
   private val cas3v2DomainEventService: Cas3v2DomainEventService,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,

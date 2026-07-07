@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
@@ -21,9 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BedspacesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BedspacesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType.CAS3_BEDSPACE_ARCHIVED
@@ -38,18 +38,18 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class Cas3v2BedspaceServiceTest {
+class Cas3BedspaceServiceTest {
   private val mockCharacteristicService = mockk<CharacteristicService>()
   private val mockCas3BedspacesRepository = mockk<Cas3BedspacesRepository>()
-  private val mockCas3v2PremisesService = mockk<Cas3v2PremisesService>()
+  private val mockCas3PremisesService = mockk<Cas3PremisesService>()
   private val mockCas3v2DomainEventService = mockk<Cas3v2DomainEventService>()
 
   private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
 
-  private val cas3v2BedspacesService = Cas3v2BedspacesService(
+  private val cas3v2BedspacesService = Cas3BedspacesService(
     mockCharacteristicService,
     mockCas3BedspacesRepository,
-    mockCas3v2PremisesService,
+    mockCas3PremisesService,
     mockCas3v2DomainEventService,
     jsonMapper,
   )
@@ -89,7 +89,7 @@ class Cas3v2BedspaceServiceTest {
       )
 
       every { mockCas3BedspacesRepository.save(any()) } answers { firstArg() }
-      every { mockCas3v2PremisesService.unarchivePremisesAndSaveDomainEvent(any(), any(), any()) } returns Unit
+      every { mockCas3PremisesService.unarchivePremisesAndSaveDomainEvent(any(), any(), any()) } returns Unit
 
       val result = cas3v2BedspacesService.createBedspace(
         premises,
@@ -108,7 +108,7 @@ class Cas3v2BedspaceServiceTest {
 
       verify(exactly = 1) {
         mockCas3BedspacesRepository.save(any())
-        mockCas3v2PremisesService.unarchivePremisesAndSaveDomainEvent(eq(premises), eq(bedspaceStartDate), any())
+        mockCas3PremisesService.unarchivePremisesAndSaveDomainEvent(eq(premises), eq(bedspaceStartDate), any())
       }
     }
 

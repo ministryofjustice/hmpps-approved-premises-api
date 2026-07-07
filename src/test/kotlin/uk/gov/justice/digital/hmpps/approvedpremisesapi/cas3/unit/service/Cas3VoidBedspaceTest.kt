@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service
 
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -21,15 +21,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Void
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3v2VoidBedspaceService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3VoidBedspaceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-class Cas3v2VoidBedspaceTest {
+class Cas3VoidBedspaceTest {
   @MockK
   lateinit var cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository
 
@@ -37,10 +37,10 @@ class Cas3v2VoidBedspaceTest {
   lateinit var cas3VoidBedspaceReasonRepository: Cas3VoidBedspaceReasonRepository
 
   @MockK
-  lateinit var cas3BookingService: Cas3v2BookingService
+  lateinit var cas3BookingService: Cas3BookingService
 
   @InjectMockKs
-  lateinit var cas3v2VoidBedspaceService: Cas3v2VoidBedspaceService
+  lateinit var cas3v2VoidBedspaceService: Cas3VoidBedspaceService
 
   private val voidBedspaceReason = Cas3VoidBedspaceReasonEntityFactory().produce()
 

@@ -22,8 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderIds
@@ -88,7 +88,7 @@ class Cas3ApplicationServiceTest {
   private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockJsonMapper = mockk<JsonMapper>()
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
-  private val mockCas3v2BookingService = mockk<Cas3v2BookingService>()
+  private val mockCas3BookingService = mockk<Cas3BookingService>()
   private val mockCas3ApplicationTransformer = mockk<Cas3ApplicationTransformer>()
   private val mockCaseService = mockk<CaseService>()
 
@@ -106,7 +106,7 @@ class Cas3ApplicationServiceTest {
     mockOffenderService,
     mockOffenderRisksService,
     mockJsonMapper,
-    mockCas3v2BookingService,
+    mockCas3BookingService,
     Clock.systemDefaultZone(),
     mockCas3ApplicationTransformer,
     mockCaseService,
@@ -177,7 +177,7 @@ class Cas3ApplicationServiceTest {
         inProgressApplicationNewer,
         inProgressApplicationOlder,
       )
-      every { mockCas3v2BookingService.getLatestBooking(inProgressApplicationNewer.id) } returns null
+      every { mockCas3BookingService.getLatestBooking(inProgressApplicationNewer.id) } returns null
       every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(inProgressApplicationNewer, null) } returns suitableApplication
 
       assertThat(
@@ -250,7 +250,7 @@ class Cas3ApplicationServiceTest {
         uiUrl = uiUrl.replace("#applicationId", submittedApplication2.id.toString()),
       )
 
-      every { mockCas3v2BookingService.getLatestBooking(submittedApplication2.id) } returns null
+      every { mockCas3BookingService.getLatestBooking(submittedApplication2.id) } returns null
       every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication2, null) } returns suitableApplication
 
       assertThat(
@@ -301,7 +301,7 @@ class Cas3ApplicationServiceTest {
         uiUrl = uiUrl.replace("#applicationId", submittedApplication2.id.toString()),
       )
 
-      every { mockCas3v2BookingService.getLatestBooking(submittedApplication2.id) } returns null
+      every { mockCas3BookingService.getLatestBooking(submittedApplication2.id) } returns null
       every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication2, null) } returns suitableApplication
 
       assertThat(
@@ -344,7 +344,7 @@ class Cas3ApplicationServiceTest {
 
       )
 
-      every { mockCas3v2BookingService.getLatestBooking(submittedApplication.id) } returns null
+      every { mockCas3BookingService.getLatestBooking(submittedApplication.id) } returns null
       every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication, null) } returns suitableApplication
 
       assertThat(
@@ -406,7 +406,7 @@ class Cas3ApplicationServiceTest {
 
       )
 
-      every { mockCas3v2BookingService.getLatestBooking(submittedApplication.id) } returns booking
+      every { mockCas3BookingService.getLatestBooking(submittedApplication.id) } returns booking
       every { mockCas3ApplicationTransformer.transformToCas3SuitableApplication(submittedApplication, booking) } returns suitableApplication
 
       assertThat(
@@ -455,7 +455,7 @@ class Cas3ApplicationServiceTest {
         submittedApplication,
       )
 
-      every { mockCas3v2BookingService.getLatestArrivedBooking(submittedApplication.id) } returns null
+      every { mockCas3BookingService.getLatestArrivedBooking(submittedApplication.id) } returns null
 
       assertThat(
         cas3ApplicationService.getCurrentPremisesByCrn(crn),
@@ -524,8 +524,8 @@ class Cas3ApplicationServiceTest {
         postcode = booking.premises.postcode,
       )
 
-      every { mockCas3v2BookingService.getLatestArrivedBooking(mostRecentSubmittedApplication.id) } returns null
-      every { mockCas3v2BookingService.getLatestArrivedBooking(submittedApplication.id) } returns booking
+      every { mockCas3BookingService.getLatestArrivedBooking(mostRecentSubmittedApplication.id) } returns null
+      every { mockCas3BookingService.getLatestArrivedBooking(submittedApplication.id) } returns booking
       every { mockCas3ApplicationTransformer.transformToCas3PremisesSummary(booking) } returns currentPremises
 
       assertThat(

@@ -33,9 +33,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.NewCas3Arrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingSearchService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingSearchService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingSearchResultTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3BookingTransformer
@@ -66,14 +66,14 @@ import java.util.UUID
 class Cas3v2BookingController(
   private val userService: UserService,
   private val offenderDetailService: OffenderDetailService,
-  private val bookingService: Cas3v2BookingService,
-  private val bookingSearchService: Cas3v2BookingSearchService,
+  private val bookingService: Cas3BookingService,
+  private val bookingSearchService: Cas3BookingSearchService,
   private val bookingTransformer: Cas3BookingTransformer,
   private val bookingSearchResultTransformer: Cas3BookingSearchResultTransformer,
   private val usersService: UserService,
   private val userAccessService: UserAccessService,
-  private val cas3PremisesService: Cas3v2PremisesService,
-  private val cas3BookingService: Cas3v2BookingService,
+  private val cas3PremisesService: Cas3PremisesService,
+  private val cas3BookingService: Cas3BookingService,
   private val cas3CancellationTransformer: Cas3CancellationTransformer,
   private val cas3ArrivalTransformer: Cas3ArrivalTransformer,
   private val cas3DepartureTransformer: Cas3DepartureTransformer,

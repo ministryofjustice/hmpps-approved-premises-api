@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
@@ -28,7 +28,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 @Service
-class Cas3v2BedspaceSearchService(
+class Cas3BedspaceSearchService(
   private val cas3BedspaceSearchRepository: Cas3BedspaceSearchRepository,
   private val cas3v2BookingRepository: Cas3v2BookingRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2ArchiveService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3ArchiveService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
@@ -62,7 +62,7 @@ import java.util.Optional
 import java.util.UUID
 import java.util.stream.Stream
 
-class Cas3v2ArchiveServiceTest {
+class Cas3ArchiveServiceTest {
   private val cas3PremisesRepositoryMock = mockk<Cas3PremisesRepository>()
   private val cas3VoidBedspacesRepositoryMock = mockk<Cas3VoidBedspacesRepository>()
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
@@ -72,7 +72,7 @@ class Cas3v2ArchiveServiceTest {
   private val cas3DomainEventServiceMock = mockk<Cas3v2DomainEventService>()
   private val jsonMapper = JsonMapperFactory.createJackson2JsonMapper()
 
-  private val cas3v2ArchiveService = Cas3v2ArchiveService(
+  private val cas3v2ArchiveService = Cas3ArchiveService(
     cas3BedspaceRepositoryMock,
     cas3PremisesRepositoryMock,
     cas3v2BookingRepositoryMock,
@@ -426,7 +426,7 @@ class Cas3v2ArchiveServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2.Cas3v2ArchiveServiceTest#endDateProvider")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.Cas3ArchiveServiceTest#endDateProvider")
     fun `When cancelling a scheduled archive premise whose end date is today or in the past return premisesAlreadyArchived`(endDate: LocalDate) {
       val premises = createPremisesEntity(endDate = endDate, status = Cas3PremisesStatus.archived)
 
@@ -1598,7 +1598,7 @@ class Cas3v2ArchiveServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2.Cas3v2ArchiveServiceTest#endDateProvider")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.Cas3ArchiveServiceTest#endDateProvider")
     fun `cancelScheduledArchiveBedspace returns FieldValidationError when bedspace is already archived`(endDate: LocalDate) {
       val premises = createPremisesEntity()
       val archivedBedspace = createBedspace(premises, startDate = LocalDate.now().minusDays(10), endDate = endDate)
@@ -1679,7 +1679,7 @@ class Cas3v2ArchiveServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.v2.Cas3v2ArchiveServiceTest#startDateProvider")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.Cas3ArchiveServiceTest#startDateProvider")
     fun `cancelScheduledUnarchiveBedspace returns FieldValidationError when bedspace startDate (already online)`(startDate: LocalDate) {
       val premises = createPremisesEntity()
       val scheduledToUnarchiveBedspace = createBedspace(premises, startDate = startDate)
