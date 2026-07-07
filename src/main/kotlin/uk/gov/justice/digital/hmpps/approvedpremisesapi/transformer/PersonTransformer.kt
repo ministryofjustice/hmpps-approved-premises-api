@@ -138,39 +138,6 @@ class PersonTransformer {
     )
   }
 
-  // ideally the caller would use personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult,null) and then convert that
-  // removing the need for this function. This may change the output for sex and gender, so that would need addressing
-  fun personSummaryInfoResultToPerson(personSummaryInfoResult: PersonSummaryInfoResult): Person = when (personSummaryInfoResult) {
-    is PersonSummaryInfoResult.Success.Full -> {
-      val caseSummary = personSummaryInfoResult.summary
-      FullPerson(
-        type = PersonType.fullPerson,
-        crn = personSummaryInfoResult.crn,
-        name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
-        dateOfBirth = caseSummary.dateOfBirth,
-        sex = caseSummary.gender ?: "Not Found",
-        status = PersonStatus.unknown,
-        nomsNumber = caseSummary.nomsId,
-        ethnicity = caseSummary.profile?.ethnicity,
-        nationality = caseSummary.profile?.nationality,
-        religionOrBelief = caseSummary.profile?.religion,
-        genderIdentity = caseSummary.profile?.genderIdentity,
-        prisonName = null,
-        isRestricted = (caseSummary.currentRestriction || caseSummary.currentExclusion),
-      )
-    }
-
-    is PersonSummaryInfoResult.Success.Restricted -> RestrictedPerson(
-      type = PersonType.restrictedPerson,
-      crn = personSummaryInfoResult.crn,
-    )
-
-    is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> UnknownPerson(
-      type = PersonType.unknownPerson,
-      crn = personSummaryInfoResult.crn,
-    )
-  }
-
   fun transformProbationOffenderToFullPerson(probationOffenderResult: ProbationOffenderSearchResult.Success.Full): FullPerson {
     val caseSummary = probationOffenderResult.caseSummary
     val inmateDetail = probationOffenderResult.inmateDetail
