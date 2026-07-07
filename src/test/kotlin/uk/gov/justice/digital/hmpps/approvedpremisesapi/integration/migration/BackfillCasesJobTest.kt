@@ -105,6 +105,7 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
         tierV2 = uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier("B1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1", version = TierVersion.V2),
         createdAt = java.time.OffsetDateTime.now(),
         lastUpdatedAt = java.time.OffsetDateTime.now(),
+        tierV3 = null,
       ),
     )
 

@@ -14,93 +14,116 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
 
 @Service
 class CaseService(
   private val caseRepository: CaseRepository,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,
+  private val featureFlagService: FeatureFlagService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  private val includeTierV3: Boolean
+    get() = featureFlagService.getBooleanFlag("include-tier-v3")
+
   fun ensureCaseExists(crn: String): CaseEntity {
     val caseSummary = getCaseSummary(crn)
-    val riskTier = getRiskTierOrNull(crn)
+    val tiers = fetchAvailableTiers(crn)
 
-    val fullName =
-      "${caseSummary.name.forename} ${caseSummary.name.surname}"
-        .uppercase()
-        .trim()
-
-    fun toTier() = riskTier?.toTier()
-
-    val existing = caseRepository.findByCrn(caseSummary.crn)
-
-    val caseEntity = existing?.apply {
-      name = fullName
-      nomsNumber = caseSummary.nomsId
-      tierV2 = toTier()
-    } ?: CaseEntity(
-      id = UUID.randomUUID(),
-      crn = caseSummary.crn,
-      name = fullName,
-      nomsNumber = caseSummary.nomsId,
-      createdAt = OffsetDateTime.now(),
-      lastUpdatedAt = OffsetDateTime.now(),
-      tierV2 = toTier(),
-    )
+    val caseEntity = caseRepository.findByCrn(caseSummary.crn)
+      ?.updateFrom(caseSummary, tiers)
+      ?: newCaseEntity(caseSummary, tiers)
 
     return caseRepository.saveAndFlush(caseEntity)
-  }
-
-  fun getCase(crn: String): CaseDto? = caseRepository.findByCrn(crn)?.let {
-    CaseDto(
-      crn = it.crn,
-      nomsNumber = it.nomsNumber,
-      name = it.name,
-      createdAt = it.createdAt,
-      lastUpdatedAt = it.lastUpdatedAt,
-      tier = it.tierV2?.let {
-        TierDto(
-          tierScore = it.tierScore,
-          calculationDate = it.calculationDate,
-          provisional = it.provisional,
-          version = TierVersionDto.valueOf(it.version.name),
-        )
-      },
-    )
   }
 
   fun reviseTier(crn: String): Boolean {
     val case = caseRepository.findByCrn(crn) ?: return false
 
-    val tier = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
-      is ClientResult.Success -> tierResponse.body
-      is ClientResult.Failure -> throw tierResponse.toException()
+    case.tierV2 = fetchTierOrError(crn, TierVersion.V2)
+    log.info("Have updated tierV2 for $crn to $case.tierV2")
+
+    if (includeTierV3) {
+      case.tierV3 = fetchTierOrError(crn, TierVersion.V3)
+      log.info("Have updated tierV3 for $crn to $case.tierV3")
     }
-
-    case.tierV2 = tier.toTier()
-
     caseRepository.save(case)
-
-    log.info("Have updated tier for $crn to $tier")
     return true
   }
 
-  private fun uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier.toTier() = Tier(
+  fun getCase(crn: String): CaseDto? = caseRepository.findByCrn(crn)?.toDto()
+
+  private data class CaseTiers(
+    val v2: Tier?,
+    val v3: Tier?,
+  )
+
+  private fun fetchAvailableTiers(crn: String) = CaseTiers(
+    v2 = fetchTierOrNull(crn, TierVersion.V2),
+    v3 = if (includeTierV3) fetchTierOrNull(crn, TierVersion.V3) else null,
+  )
+
+  private fun CaseEntity.updateFrom(caseSummary: CaseSummary, tiers: CaseTiers): CaseEntity = apply {
+    name = "${caseSummary.name.forename} ${caseSummary.name.surname}"
+      .uppercase()
+      .trim()
+    nomsNumber = caseSummary.nomsId
+    lastUpdatedAt = OffsetDateTime.now()
+    tierV2 = tiers.v2
+    tierV3 = tiers.v3
+  }
+
+  private fun newCaseEntity(caseSummary: CaseSummary, tiers: CaseTiers) = CaseEntity(
+    id = UUID.randomUUID(),
+    crn = caseSummary.crn,
+    createdAt = OffsetDateTime.now(),
+    lastUpdatedAt = OffsetDateTime.now(),
+    name = "${caseSummary.name.forename} ${caseSummary.name.surname}"
+      .uppercase()
+      .trim(),
+    nomsNumber = caseSummary.nomsId,
+    tierV2 = tiers.v2,
+    tierV3 = tiers.v3,
+  )
+
+  private fun CaseEntity.toDto() = CaseDto(
+    crn = crn,
+    nomsNumber = nomsNumber,
+    name = name,
+    createdAt = createdAt,
+    lastUpdatedAt = lastUpdatedAt,
+    tier = tierV2?.toDto(),
+  )
+
+  private fun Tier.toDto() = TierDto(
+    tierScore = tierScore,
+    calculationDate = calculationDate,
+    provisional = provisional,
+    version = TierVersionDto.valueOf(version.name),
+  )
+
+  private fun UpstreamTier.toTier(tierVersion: TierVersion) = Tier(
     tierScore = tierScore,
     calculationId = calculationId,
     calculationDate = calculationDate,
     changeReason = changeReason,
-    provisional = null,
-    version = TierVersion.V2,
+    provisional = provisional,
+    version = tierVersion,
   )
 
-  private fun getRiskTierOrNull(crn: String): uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier? = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
-    is ClientResult.Success -> tierResponse.body
+  private fun fetchTierOrNull(crn: String, version: TierVersion) = when (val response = hmppsTierApiClient.getTier(crn, version)) {
+    is ClientResult.Success -> response.body.toTier(version)
     is ClientResult.Failure -> null
+  }
+
+  private fun fetchTierOrError(crn: String, version: TierVersion) = when (val response = hmppsTierApiClient.getTier(crn, version)) {
+    is ClientResult.Success -> response.body.toTier(version)
+    is ClientResult.Failure -> throw response.toException()
   }
 
   private fun getCaseSummary(crn: String): CaseSummary = when (
