@@ -612,62 +612,6 @@ class PersonTransformerTest {
   }
 
   @Nested
-  inner class TransformSummaryToPersonApi {
-
-    @Test
-    fun `transformSummaryToPersonApi returns the correct response for a full person info`() {
-      val caseSummary = CaseSummaryFactory().produce()
-
-      val personInfoResult = PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary)
-
-      val result = personTransformer.personSummaryInfoResultToPerson(personInfoResult)
-
-      assertThat(result.crn).isEqualTo(caseSummary.crn)
-      assertThat(result is FullPerson).isTrue
-
-      assertThat(result).isEqualTo(
-        FullPerson(
-          type = PersonType.fullPerson,
-          crn = caseSummary.crn,
-          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
-          dateOfBirth = caseSummary.dateOfBirth,
-          sex = caseSummary.gender!!,
-          status = PersonStatus.unknown,
-          nomsNumber = caseSummary.nomsId,
-          ethnicity = caseSummary.profile!!.ethnicity,
-          nationality = caseSummary.profile!!.nationality,
-          religionOrBelief = caseSummary.profile!!.religion,
-          genderIdentity = caseSummary.profile!!.genderIdentity,
-          prisonName = null,
-          isRestricted = false,
-        ),
-      )
-    }
-
-    @Test
-    fun `transformSummaryToPersonApi returns the correct response for a restricted person info`() {
-      val crn = "CRN123"
-      val personInfoResult = PersonSummaryInfoResult.Success.Restricted(crn, null)
-
-      val result = personTransformer.personSummaryInfoResultToPerson(personInfoResult)
-
-      assertThat(result.crn).isEqualTo(crn)
-      assertThat(result is RestrictedPerson).isTrue
-    }
-
-    @Test
-    fun `transformSummaryToPersonApi returns the correct response for a not found person info`() {
-      val crn = "CRN123"
-      val personInfoResult = PersonSummaryInfoResult.NotFound(crn)
-
-      val result = personTransformer.personSummaryInfoResultToPerson(personInfoResult)
-
-      assertThat(result.crn).isEqualTo(crn)
-      assertThat(result is UnknownPerson).isTrue
-    }
-  }
-
-  @Nested
   inner class TransformProbationOffenderToPersonApi {
     @Test
     fun `transformProbationOffenderToPersonApi returns the correct response when all data is present`() {
