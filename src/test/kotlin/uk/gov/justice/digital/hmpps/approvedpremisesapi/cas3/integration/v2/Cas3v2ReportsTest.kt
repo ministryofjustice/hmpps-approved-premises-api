@@ -3264,7 +3264,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2024-04-10"),
           )
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking1)
             withWorkingDayCount(2)
           }
@@ -3463,7 +3463,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2024-04-05"),
           )
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking1)
             withWorkingDayCount(2)
           }
@@ -3544,7 +3544,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2024-10-11"),
           )
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking1)
             withWorkingDayCount(3)
           }
@@ -3557,7 +3557,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2024-10-22"),
           )
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking2)
             withWorkingDayCount(2)
           }
@@ -3630,7 +3630,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2024-10-15"),
           )
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking1)
             withWorkingDayCount(2)
           }
@@ -3643,7 +3643,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2024-10-22"),
           )
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking2)
             withWorkingDayCount(2)
           }
@@ -3726,12 +3726,12 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2025-10-07"),
           )
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking)
             withWorkingDayCount(2)
             withCreatedAt(OffsetDateTime.now().minusDays(20))
           }
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking)
             withWorkingDayCount(0)
             withCreatedAt(OffsetDateTime.now().minusDays(10))
@@ -3806,7 +3806,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2024-08-22"),
             LocalDate.parse("2024-09-25"),
           )
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking1)
             withWorkingDayCount(2)
           }
@@ -3876,7 +3876,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2024-10-10"),
           )
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking1)
             withWorkingDayCount(2)
           }

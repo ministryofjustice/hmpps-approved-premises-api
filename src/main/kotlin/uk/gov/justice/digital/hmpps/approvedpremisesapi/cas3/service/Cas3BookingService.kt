@@ -21,13 +21,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Exte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.util.getPersonName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -60,7 +59,7 @@ class Cas3BookingService(
   private val cas3DepartureRepository: Cas3DepartureRepository,
   private val departureReasonRepository: DepartureReasonRepository,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
-  private val cas3v2TurnaroundRepository: Cas3v2TurnaroundRepository,
+  private val cas3TurnaroundRepository: Cas3TurnaroundRepository,
   private val assessmentRepository: AssessmentRepository,
   private val offenderService: OffenderService,
   private val cas3DomainEventService: Cas3v2DomainEventService,
@@ -180,8 +179,8 @@ class Cas3BookingService(
       ),
     )
 
-    val turnaround = cas3v2TurnaroundRepository.save(
-      Cas3v2TurnaroundEntity(
+    val turnaround = cas3TurnaroundRepository.save(
+      Cas3TurnaroundEntity(
         id = UUID.randomUUID(),
         workingDayCount = getWorkingDayCount(enableTurnarounds, premises),
         createdAt = bookingCreatedAt,
@@ -473,7 +472,7 @@ class Cas3BookingService(
   fun createTurnaround(
     booking: Cas3BookingEntity,
     workingDays: Int,
-  ) = validatedCasResult<Cas3v2TurnaroundEntity> {
+  ) = validatedCasResult<Cas3TurnaroundEntity> {
     if (workingDays < 0) {
       "$.workingDays" hasValidationError "isNotAPositiveInteger"
     }
@@ -484,8 +483,8 @@ class Cas3BookingService(
     if (validationErrors.any()) {
       return fieldValidationError
     }
-    val turnaround = cas3v2TurnaroundRepository.save(
-      Cas3v2TurnaroundEntity(
+    val turnaround = cas3TurnaroundRepository.save(
+      Cas3TurnaroundEntity(
         id = UUID.randomUUID(),
         workingDayCount = workingDays,
         createdAt = OffsetDateTime.now(),

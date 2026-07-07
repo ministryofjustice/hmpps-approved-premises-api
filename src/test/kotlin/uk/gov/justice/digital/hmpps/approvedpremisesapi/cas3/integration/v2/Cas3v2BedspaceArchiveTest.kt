@@ -379,7 +379,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
             withStatus(Cas3BookingStatus.provisional)
           }
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withBooking(booking)
             withWorkingDayCount(3)
           }
@@ -1354,7 +1354,7 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
             withStatus(Cas3BookingStatus.provisional)
           }
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withWorkingDayCount(2)
             withBooking(booking)
           }

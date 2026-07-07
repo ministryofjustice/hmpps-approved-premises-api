@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Conf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3Arrival
@@ -641,7 +641,7 @@ class Cas3BookingTransformerTest {
         ),
       )
 
-      turnarounds += Cas3v2TurnaroundEntity(
+      turnarounds += Cas3TurnaroundEntity(
         id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
         workingDayCount = 0,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
@@ -838,7 +838,7 @@ class Cas3BookingTransformerTest {
         ),
       )
 
-      turnarounds += Cas3v2TurnaroundEntity(
+      turnarounds += Cas3TurnaroundEntity(
         id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
         workingDayCount = 2,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
@@ -1039,7 +1039,7 @@ class Cas3BookingTransformerTest {
         ),
       )
 
-      turnarounds += Cas3v2TurnaroundEntity(
+      turnarounds += Cas3TurnaroundEntity(
         id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
         workingDayCount = 2,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
@@ -1498,19 +1498,19 @@ class Cas3BookingTransformerTest {
       turnarounds = mutableListOf(),
     )
 
-    val turnaround1 = Cas3v2TurnaroundEntity(
+    val turnaround1 = Cas3TurnaroundEntity(
       id = UUID.fromString("34ae3124-cf7a-47d5-86c1-ef9ab4255e30"),
       workingDayCount = 2,
       createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       booking = awaitingArrivalBooking,
     )
-    val turnaround2 = Cas3v2TurnaroundEntity(
+    val turnaround2 = Cas3TurnaroundEntity(
       id = UUID.fromString("b2af671a-997d-443e-906d-3a1a28c71416"),
       workingDayCount = 3,
       createdAt = OffsetDateTime.parse("2022-07-02T10:11:12.345Z"),
       booking = awaitingArrivalBooking,
     )
-    val turnaround3 = Cas3v2TurnaroundEntity(
+    val turnaround3 = Cas3TurnaroundEntity(
       id = UUID.fromString("146d05f8-ba83-42ae-a6d7-807a16b7946d"),
       workingDayCount = 4,
       createdAt = OffsetDateTime.parse("2022-07-03T09:08:07.654Z"),

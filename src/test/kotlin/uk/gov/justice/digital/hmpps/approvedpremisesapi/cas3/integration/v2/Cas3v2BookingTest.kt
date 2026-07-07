@@ -1079,7 +1079,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        val existingTurnarounds = cas3v2TurnaroundFactory.produceAndPersistMultiple(1) {
+        val existingTurnarounds = cas3TurnaroundFactory.produceAndPersistMultiple(1) {
           withWorkingDayCount(5)
           withCreatedAt(existingBooking.createdAt)
           withBooking(existingBooking)
@@ -2403,7 +2403,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             withArrivalDate(LocalDate.parse("2022-06-12"))
             withDepartureDate(LocalDate.parse("2022-07-12"))
           }
-          val turnarounds = cas3v2TurnaroundFactory.produceAndPersistMultiple(1) {
+          val turnarounds = cas3TurnaroundFactory.produceAndPersistMultiple(1) {
             withWorkingDayCount(2)
             withCreatedAt(booking.createdAt)
             withBooking(booking)
@@ -2487,7 +2487,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
             withArrivalDate(LocalDate.parse("2022-06-12"))
             withDepartureDate(LocalDate.parse("2022-07-12"))
           }
-          val turnarounds = cas3v2TurnaroundFactory.produceAndPersistMultiple(1) {
+          val turnarounds = cas3TurnaroundFactory.produceAndPersistMultiple(1) {
             withWorkingDayCount(2)
             withCreatedAt(booking.createdAt)
             withBooking(booking)

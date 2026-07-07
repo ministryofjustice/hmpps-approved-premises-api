@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Exte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -47,7 +47,7 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
   private var bedspace: Yielded<Cas3BedspacesEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }
   private var application: Yielded<TemporaryAccommodationApplicationEntity?> = { null }
-  private var turnarounds: Yielded<MutableList<Cas3v2TurnaroundEntity>>? = null
+  private var turnarounds: Yielded<MutableList<Cas3TurnaroundEntity>>? = null
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
   private var status: Yielded<Cas3BookingStatus?> = { null }

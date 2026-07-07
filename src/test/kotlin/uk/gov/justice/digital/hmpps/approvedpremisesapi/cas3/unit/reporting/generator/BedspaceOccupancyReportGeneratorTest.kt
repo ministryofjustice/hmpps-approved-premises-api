@@ -11,9 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.v2.Cas3v2TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceOccupancyReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceOccupancyReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceOccupancyReportRow
@@ -433,7 +433,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withPremises(premises)
         .withArrivalDate(LocalDate.parse("2023-03-28"))
         .withDepartureDate(LocalDate.parse("2023-04-04")).produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
         }
 
     every {
@@ -453,7 +453,7 @@ class BedspaceOccupancyReportGeneratorTest {
     val relevantBookingStraddlingEndOfMonth =
       Cas3BookingEntityFactory().withBedspace(cas3Bedspace).withPremises(premises).withArrivalDate(LocalDate.parse("2023-04-25"))
         .withDepartureDate(LocalDate.parse("2023-04-27")).produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
         }
 
     every {
@@ -519,7 +519,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2023-03-28"))
         .withDepartureDate(LocalDate.parse("2023-04-04"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory()
+          turnarounds += Cas3TurnaroundEntityFactory()
             .withBooking(this)
             .withWorkingDayCount(5)
             .produce()
@@ -546,7 +546,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2023-04-25"))
         .withDepartureDate(LocalDate.parse("2023-04-27"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory()
+          turnarounds += Cas3TurnaroundEntityFactory()
             .withBooking(this)
             .withWorkingDayCount(3)
             .produce()
@@ -669,7 +669,7 @@ class BedspaceOccupancyReportGeneratorTest {
     val relevantBookingStraddlingStartOfMonth =
       Cas3BookingEntityFactory().withBedspace(cas3Bedspace).withPremises(premises).withArrivalDate(LocalDate.parse("2023-03-28"))
         .withDepartureDate(LocalDate.parse("2023-04-04")).produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
           arrivals += Cas3ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2023-03-28")).produce()
           departures += Cas3DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2023-04-04T12:00:00.000Z"))
@@ -700,7 +700,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withDepartureDate(LocalDate.parse("2023-04-27"))
         .produce()
         .apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory()
+          turnarounds += Cas3TurnaroundEntityFactory()
             .withBooking(this)
             .withWorkingDayCount(4)
             .produce()
@@ -934,7 +934,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2024-02-07"))
         .withDepartureDate(LocalDate.parse("2024-02-12"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
           arrivals += Cas3ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-07")).produce()
           departures += Cas3DepartureEntityFactory()
             .withBooking(this)
@@ -965,7 +965,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2024-02-16"))
         .withDepartureDate(LocalDate.parse("2024-02-22"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
           arrivals += Cas3ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-16")).produce()
           departures += Cas3DepartureEntityFactory()
             .withBooking(this)
@@ -1046,7 +1046,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2024-02-07"))
         .withDepartureDate(LocalDate.parse("2024-02-12"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory()
+          turnarounds += Cas3TurnaroundEntityFactory()
             .withBooking(this)
             .withWorkingDayCount(2)
             .produce()
@@ -1083,7 +1083,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2024-02-16"))
         .withDepartureDate(LocalDate.parse("2024-02-22"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
           arrivals += Cas3ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-16")).produce()
           departures += Cas3DepartureEntityFactory()
             .withBooking(this)
@@ -1164,7 +1164,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2024-02-02"))
         .withDepartureDate(LocalDate.parse("2024-02-07"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
           arrivals += Cas3ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-02")).produce()
           departures += Cas3DepartureEntityFactory()
             .withBooking(this)
@@ -1195,7 +1195,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2024-02-10"))
         .withDepartureDate(LocalDate.parse("2024-02-15"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
           arrivals += Cas3ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-10")).produce()
           departures += Cas3DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2024-02-15T12:00:00.000Z"))
@@ -1278,7 +1278,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2024-02-02"))
         .withDepartureDate(LocalDate.parse("2024-02-07"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
           arrivals += Cas3ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-02")).produce()
           departures += Cas3DepartureEntityFactory()
             .withBooking(this)
@@ -1309,7 +1309,7 @@ class BedspaceOccupancyReportGeneratorTest {
         .withArrivalDate(LocalDate.parse("2024-02-10"))
         .withDepartureDate(LocalDate.parse("2024-02-15"))
         .produce().apply {
-          turnarounds += Cas3v2TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
           arrivals += Cas3ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-10")).produce()
           departures += Cas3DepartureEntityFactory()
             .withBooking(this)

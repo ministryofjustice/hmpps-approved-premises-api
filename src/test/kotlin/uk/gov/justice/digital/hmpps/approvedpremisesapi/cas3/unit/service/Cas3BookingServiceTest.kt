@@ -43,11 +43,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Exte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3OverstayRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.v2.Cas3v2TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingService
@@ -93,7 +93,7 @@ class Cas3BookingServiceTest {
   private val mockBedspaceRepository = mockk<Cas3BedspacesRepository>()
   private val mockCancellationRepository = mockk<Cas3CancellationRepository>()
   private val mockCancellationReasonRepository = mockk<CancellationReasonRepository>()
-  private val mockCas3v2TurnaroundRepository = mockk<Cas3v2TurnaroundRepository>()
+  private val mockCas3TurnaroundRepository = mockk<Cas3TurnaroundRepository>()
   private val mockCas3ConfirmationRepository = mockk<Cas3ConfirmationRepository>()
   private val mockCas3VoidBedspacesRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
@@ -116,7 +116,7 @@ class Cas3BookingServiceTest {
     departureReasonRepository = mockDepartureReasonRepository,
     cas3ConfirmationRepository = mockCas3ConfirmationRepository,
     moveOnCategoryRepository = mockMoveOnCategoryRepository,
-    cas3v2TurnaroundRepository = mockCas3v2TurnaroundRepository,
+    cas3TurnaroundRepository = mockCas3TurnaroundRepository,
     assessmentRepository = mockAssessmentRepository,
     cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
     offenderService = mockOffenderService,
@@ -416,7 +416,7 @@ class Cas3BookingServiceTest {
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -464,7 +464,7 @@ class Cas3BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -538,7 +538,7 @@ class Cas3BookingServiceTest {
         )
       } returns listOf()
 
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -608,7 +608,7 @@ class Cas3BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -642,7 +642,7 @@ class Cas3BookingServiceTest {
       }
 
       verify(exactly = 1) {
-        this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(
+        this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(
           match {
             it.booking == bookingSlot.captured &&
               it.workingDayCount == 0
@@ -681,7 +681,7 @@ class Cas3BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -715,7 +715,7 @@ class Cas3BookingServiceTest {
       }
 
       verify(exactly = 1) {
-        mockCas3v2TurnaroundRepository.save(
+        mockCas3TurnaroundRepository.save(
           match {
             it.booking == bookingSlot.captured &&
               it.workingDayCount == premises.turnaroundWorkingDays
@@ -753,7 +753,7 @@ class Cas3BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -833,7 +833,7 @@ class Cas3BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -909,7 +909,7 @@ class Cas3BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -984,7 +984,7 @@ class Cas3BookingServiceTest {
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -1032,7 +1032,7 @@ class Cas3BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -1109,7 +1109,7 @@ class Cas3BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
 
-      every { this@Cas3BookingServiceTest.mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -2303,7 +2303,7 @@ class Cas3BookingServiceTest {
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
       every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
-      every { mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       val result = cas3BookingService.createTurnaround(booking, -1)
 
@@ -2316,7 +2316,7 @@ class Cas3BookingServiceTest {
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
       every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
-      every { mockCas3v2TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3v2TurnaroundEntity }
+      every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       val result = cas3BookingService.createTurnaround(booking, 2)
       assertThatCasResult(result).isSuccess().with {
