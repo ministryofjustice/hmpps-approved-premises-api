@@ -19,6 +19,7 @@
       "cas1_assess_placement_application",
       "cas1_booking_change_dates",
       "cas1_booking_withdraw",
+      "cas1_change_request_list",
       "cas1_change_request_view",
       "cas1_experimental",
       "cas1_experimental_new_assign_keyworker_flow",
@@ -122,6 +123,7 @@
   {
     "name" : "change_request_dev",
     "permissions" : [
+      "cas1_change_request_list",
       "cas1_change_request_view",
       "cas1_placement_appeal_assess",
       "cas1_placement_appeal_create",
@@ -178,6 +180,7 @@
       "cas1_assess_placement_application",
       "cas1_booking_change_dates",
       "cas1_booking_withdraw",
+      "cas1_change_request_list",
       "cas1_change_request_view",
       "cas1_experimental_new_assign_keyworker_flow",
       "cas1_experimental_new_request_for_placement_flow",

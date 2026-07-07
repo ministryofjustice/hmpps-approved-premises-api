@@ -3,9 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestsForPlacementDurationsCalculationRequestDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestsForPlacementDurationsCalculationResponseDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -45,10 +43,9 @@ class Cas1RequestForPlacementService(
   }
 
   fun defaultDurations(
-    requestDto: Cas1RequestsForPlacementDurationsCalculationRequestDto,
+    apType: ApType,
   ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
-    if (requestDto.tier.version == TierVersionDto.V3) return CasResult.GeneralValidationError("Tier version V3 is not supported for duration calculations")
-    val responseDto = when (requestDto.apType) {
+    val responseDto = when (apType) {
       ApType.pipe -> Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(26).days, maxDurationDays = null)
       ApType.esap -> Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(52).days, maxDurationDays = null)
       ApType.normal,
