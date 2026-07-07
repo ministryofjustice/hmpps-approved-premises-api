@@ -442,7 +442,7 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
             departureDate = justUnder3Months,
           )
 
-          cas3v2TurnaroundFactory.produceAndPersist {
+          cas3TurnaroundFactory.produceAndPersist {
             withWorkingDayCount(3)
             withBooking(booking)
           }
