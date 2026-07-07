@@ -5,12 +5,9 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository.FindOpenChangeRequestResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
 @Service
@@ -18,20 +15,6 @@ class Cas1ChangeRequestTransformer(
   private val personTransformer: PersonTransformer,
   private val jsonMapper: JsonMapper,
 ) {
-
-  fun findOpenResultsToChangeRequestSummary(
-    result: FindOpenChangeRequestResult,
-    person: PersonSummaryInfoResult,
-  ) = Cas1ChangeRequestSummary(
-    id = result.id,
-    person = personTransformer.personSummaryInfoToPersonSummary(person),
-    type = Cas1ChangeRequestType.valueOf(result.type),
-    createdAt = result.createdAt,
-    tier = result.tier,
-    expectedArrivalDate = result.expectedArrivalDate,
-    actualArrivalDate = result.actualArrivalDate,
-    placementRequestId = result.placementRequestId,
-  )
 
   fun transformEntityToCas1ChangeRequest(
     entity: Cas1ChangeRequestEntity,

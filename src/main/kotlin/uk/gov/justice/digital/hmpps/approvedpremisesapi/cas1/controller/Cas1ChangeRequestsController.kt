@@ -4,35 +4,26 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ChangeRequestsCas1Delegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_CHANGE_REQUEST_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_CHANGE_REQUEST_VIEW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ChangeRequestTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
+@Deprecated("Change requests was developed but never used")
 @Service
 class Cas1ChangeRequestsController(
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
-  private val offenderService: OffenderService,
-  private val userService: UserService,
   private val cas1ChangeRequestTransformer: Cas1ChangeRequestTransformer,
   private val userAccessService: Cas1UserAccessService,
 ) : ChangeRequestsCas1Delegate {
@@ -60,39 +51,6 @@ class Cas1ChangeRequestsController(
   override fun createPlacementExtension(placementRequestId: UUID, cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> = throw BadRequestProblem(
     errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.PLACEMENT_APPEAL}",
   )
-
-  override fun findOpen(
-    page: Int?,
-    cruManagementAreaId: UUID?,
-    sortBy: Cas1ChangeRequestSortField?,
-    sortDirection: SortDirection?,
-  ): ResponseEntity<List<Cas1ChangeRequestSummary>> {
-    userAccessService.ensureCurrentUserHasPermission(CAS1_CHANGE_REQUEST_LIST)
-
-    val results = cas1ChangeRequestService.findOpen(
-      cruManagementAreaId,
-      PageCriteria(
-        sortBy = sortBy ?: Cas1ChangeRequestSortField.NAME,
-        sortDirection = sortDirection ?: SortDirection.asc,
-        page = page,
-      ),
-    )
-
-    val offenderSummaries = offenderService.getPersonSummaryInfoResults(
-      crns = results.map { it.crn }.toSet(),
-      laoStrategy = userService.getUserForRequest().cas1LaoStrategy(),
-    ).associateBy { it.crn }
-
-    return ResponseEntity.ok(
-      results
-        .map {
-          cas1ChangeRequestTransformer.findOpenResultsToChangeRequestSummary(
-            result = it,
-            person = offenderSummaries[it.crn]!!,
-          )
-        },
-    )
-  }
 
   override fun get(
     placementRequestId: UUID,

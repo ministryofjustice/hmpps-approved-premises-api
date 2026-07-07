@@ -4,7 +4,6 @@ import jakarta.transaction.Transactional
 import org.springframework.context.event.EventListener
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RejectChangeRequest
@@ -21,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository.FindOpenChangeRequestResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestRepository
@@ -34,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.springevent.PlannedTransferRequestRejected
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -124,20 +121,6 @@ class Cas1ChangeRequestService(
 
     return success(Unit)
   }
-
-  fun findOpen(
-    cruManagementAreaId: UUID?,
-    pageCriteria: PageCriteria<Cas1ChangeRequestSortField>,
-  ): List<FindOpenChangeRequestResult> = cas1ChangeRequestRepository.findOpen(
-    cruManagementAreaId,
-    pageCriteria.toPageableOrAllPages(
-      sortBy = when (pageCriteria.sortBy) {
-        Cas1ChangeRequestSortField.NAME -> "name"
-        Cas1ChangeRequestSortField.TIER -> "tier"
-        Cas1ChangeRequestSortField.CANONICAL_ARRIVAL_DATE -> "canonicalArrivalDate"
-      },
-    ),
-  )
 
   @Transactional
   fun approvePlacementAppeal(changeRequestId: UUID, user: UserEntity): CasResult<Unit> = validatedCasResult {

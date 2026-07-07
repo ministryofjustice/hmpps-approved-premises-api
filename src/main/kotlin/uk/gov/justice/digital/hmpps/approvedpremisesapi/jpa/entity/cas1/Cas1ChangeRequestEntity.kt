@@ -14,7 +14,6 @@ import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.Type
-import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
@@ -29,37 +28,6 @@ import java.util.UUID
 @Deprecated("Change request functionality was developed but never used")
 @Repository
 interface Cas1ChangeRequestRepository : JpaRepository<Cas1ChangeRequestEntity, UUID> {
-
-  @Query(
-    value = """
-      WITH results AS (
-        SELECT 
-          cr.id as id,
-          apa.name as name,
-          booking.crn as crn,
-          cr.type as type,
-          cr.created_at as createdAt,
-          apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
-          booking.canonical_arrival_date as canonicalArrivalDate,
-          booking.expected_arrival_date as expectedArrivalDate,
-          booking.actual_arrival_date as actualArrivalDate,
-          pr.id as placementRequestId
-        FROM cas1_change_requests cr
-        INNER JOIN cas1_space_bookings booking on cr.cas1_space_booking_id = booking.id
-        INNER JOIN placement_requests pr on cr.placement_request_id = pr.id
-        INNER JOIN approved_premises_applications apa on apa.id = pr.application_id
-        WHERE
-          cr.resolved IS FALSE AND
-          ((CAST(:cruManagementAreaId AS pg_catalog.uuid) IS NULL) OR apa.cas1_cru_management_area_id = :cruManagementAreaId)
-      )
-      select * from results  
-    """,
-    nativeQuery = true,
-  )
-  fun findOpen(
-    cruManagementAreaId: UUID?,
-    pageable: Pageable,
-  ): List<FindOpenChangeRequestResult>
 
   fun findAllBySpaceBookingAndResolvedIsFalse(spaceBooking: Cas1SpaceBookingEntity): List<Cas1ChangeRequestEntity>
 
