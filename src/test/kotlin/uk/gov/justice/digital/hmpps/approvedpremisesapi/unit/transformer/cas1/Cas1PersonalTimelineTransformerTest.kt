@@ -127,7 +127,7 @@ class Cas1PersonalTimelineTransformerTest {
     every { userTransformer.transformJpaToApi(application2.createdByUser, ServiceName.approvedPremises) } returns user2
     every { userTransformer.transformJpaToApi(application3.createdByUser, ServiceName.approvedPremises) } returns user3
 
-    every { personTransformer.transformModelToPersonApi(personInfoResult) } returns mockPerson
+    every { personTransformer.personInfoResultToPerson(personInfoResult) } returns mockPerson
 
     val transformedPersonalTimeline = cas1PersonalTimelineTransformer
       .transformApplicationTimelineModels(personInfoResult, applicationTimelineModels)
@@ -142,6 +142,6 @@ class Cas1PersonalTimelineTransformerTest {
 
     assertThat(transformedPersonalTimeline.person).isEqualTo(mockPerson)
 
-    verify(exactly = 1) { personTransformer.transformModelToPersonApi(personInfoResult) }
+    verify(exactly = 1) { personTransformer.personInfoResultToPerson(personInfoResult) }
   }
 }

@@ -196,7 +196,7 @@ class Cas1SpaceBookingTransformerTest {
         ),
       )
 
-      every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
+      every { personTransformer.personInfoResultToPerson(personInfo) } returns expectedPerson
       every {
         userTransformer.transformJpaToApi(
           spaceBooking.createdBy!!,
@@ -329,7 +329,7 @@ class Cas1SpaceBookingTransformerTest {
 
       val expectedUser = ApprovedPremisesUserFactory().produce()
 
-      every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
+      every { personTransformer.personInfoResultToPerson(personInfo) } returns expectedPerson
       every {
         userTransformer.transformJpaToApi(
           spaceBooking.createdBy!!,
@@ -370,7 +370,7 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       val cas1ChangeRequests = listOf(Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLACEMENT_APPEAL).produce())
-      every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
+      every { personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
       every { cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns cas1ChangeRequests
 
       val premises = ApprovedPremisesEntityFactory().withDefaults().withName("The booking's premise").produce()
@@ -470,7 +470,7 @@ class Cas1SpaceBookingTransformerTest {
 
       val premises = ApprovedPremisesEntityFactory().withDefaults().withName("the premise").produce()
 
-      every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
+      every { personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
 
       val keyWorkerId = UUID.randomUUID()
       val result = transformer.transformSearchResultToSummary(
@@ -542,7 +542,7 @@ class Cas1SpaceBookingTransformerTest {
         PersonSummaryDiscriminator.restrictedPersonSummary,
       )
 
-      every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
+      every { personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
 
       val result = transformer.transformSearchResultToSummary(
         Cas1SpaceBookingSearchResultImpl(

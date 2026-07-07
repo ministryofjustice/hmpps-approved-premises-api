@@ -141,7 +141,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
               .json(
                 jsonMapper.writeValueAsString(
                   Cas1PersonalTimeline(
-                    person = personTransformer.transformModelToPersonApi(personInfoResult),
+                    person = personTransformer.personInfoResultToPerson(personInfoResult),
                     applications = listOf(
                       Cas1ApplicationTimeline(
                         id = submittedApplication.id,
@@ -309,7 +309,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             .json(
               jsonMapper.writeValueAsString(
                 Cas1PersonalTimeline(
-                  person = personTransformer.transformModelToPersonApi(personInfoResult),
+                  person = personTransformer.personInfoResultToPerson(personInfoResult),
                   applications = emptyList(),
                 ),
               ),
@@ -354,7 +354,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
               .json(
                 jsonMapper.writeValueAsString(
                   Cas1PersonalTimeline(
-                    person = personTransformer.transformModelToPersonApi(personInfoResult),
+                    person = personTransformer.personInfoResultToPerson(personInfoResult),
                     applications = listOf(
                       Cas1ApplicationTimeline(
                         id = application.id,
@@ -460,7 +460,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             .json(
               jsonMapper.writeValueAsString(
                 Cas1PersonalTimeline(
-                  person = personTransformer.transformModelToPersonApi(personInfoResult),
+                  person = personTransformer.personInfoResultToPerson(personInfoResult),
                   applications = listOf(
                     Cas1ApplicationTimeline(
                       id = offlineApplication.id,
@@ -524,7 +524,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             .json(
               jsonMapper.writeValueAsString(
                 Cas1PersonalTimeline(
-                  person = personTransformer.transformModelToPersonApi(personInfoResult),
+                  person = personTransformer.personInfoResultToPerson(personInfoResult),
                   applications = emptyList(),
                 ),
               ),

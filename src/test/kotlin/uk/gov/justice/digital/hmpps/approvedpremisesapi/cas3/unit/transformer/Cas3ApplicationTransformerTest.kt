@@ -80,7 +80,7 @@ class Cas3ApplicationTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+    every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
     every { mockRisksTransformer.transformDomainToApi(any<PersonRisks>(), any<String>()) } returns mockk()
   }
 

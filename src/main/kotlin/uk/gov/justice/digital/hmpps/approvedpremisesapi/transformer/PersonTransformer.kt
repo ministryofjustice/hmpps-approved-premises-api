@@ -24,6 +24,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSu
 @Component
 class PersonTransformer {
 
+  fun personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult: PersonSummaryInfoResult, inmateStatus: InmateDetail?): PersonInfoResult = when (personSummaryInfoResult) {
+    is PersonSummaryInfoResult.NotFound -> PersonInfoResult.NotFound(
+      crn = personSummaryInfoResult.crn,
+    )
+
+    is PersonSummaryInfoResult.Success.Full -> PersonInfoResult.Success.Full(
+      crn = personSummaryInfoResult.crn,
+      offenderDetailSummary = personSummaryInfoResult.summary.asOffenderDetailSummary(),
+      inmateDetail = inmateStatus,
+    )
+
+    is PersonSummaryInfoResult.Success.Restricted -> PersonInfoResult.Success.Restricted(
+      crn = personSummaryInfoResult.crn,
+      nomsNumber = personSummaryInfoResult.nomsNumber,
+    )
+
+    is PersonSummaryInfoResult.Unknown -> PersonInfoResult.Unknown(
+      crn = personSummaryInfoResult.crn,
+      throwable = personSummaryInfoResult.throwable,
+    )
+  }
+
   fun personInfoResultToPersonSummaryInfoResult(
     personInfo: PersonInfoResult,
   ): PersonSummaryInfoResult = when (personInfo) {
@@ -46,7 +68,7 @@ class PersonTransformer {
     )
   }
 
-  fun personSummaryInfoToPersonSummary(
+  fun personSummaryInfoResultToPersonSummary(
     personSummaryInfo: PersonSummaryInfoResult,
   ): PersonSummary {
     when (personSummaryInfo) {
@@ -75,7 +97,7 @@ class PersonTransformer {
     }
   }
 
-  fun transformModelToPersonApi(personInfoResult: PersonInfoResult): Person = when (personInfoResult) {
+  fun personInfoResultToPerson(personInfoResult: PersonInfoResult): Person = when (personInfoResult) {
     is PersonInfoResult.Success.Full -> {
       val offenderDetailSummary = personInfoResult.offenderDetailSummary
       val inmateDetail = personInfoResult.inmateDetail
@@ -116,12 +138,14 @@ class PersonTransformer {
     )
   }
 
-  fun transformSummaryToPersonApi(personInfoResult: PersonSummaryInfoResult): Person = when (personInfoResult) {
+  // ideally the caller would use personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult,null) and then convert that
+  // removing the need for this function. This may change the output for sex and gender, so that would need addressing
+  fun personSummaryInfoResultToPerson(personSummaryInfoResult: PersonSummaryInfoResult): Person = when (personSummaryInfoResult) {
     is PersonSummaryInfoResult.Success.Full -> {
-      val caseSummary = personInfoResult.summary
+      val caseSummary = personSummaryInfoResult.summary
       FullPerson(
         type = PersonType.fullPerson,
-        crn = personInfoResult.crn,
+        crn = personSummaryInfoResult.crn,
         name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
         dateOfBirth = caseSummary.dateOfBirth,
         sex = caseSummary.gender ?: "Not Found",
@@ -132,29 +156,22 @@ class PersonTransformer {
         religionOrBelief = caseSummary.profile?.religion,
         genderIdentity = caseSummary.profile?.genderIdentity,
         prisonName = null,
-        isRestricted = (caseSummary.currentRestriction == true || caseSummary.currentExclusion == true),
+        isRestricted = (caseSummary.currentRestriction || caseSummary.currentExclusion),
       )
     }
 
     is PersonSummaryInfoResult.Success.Restricted -> RestrictedPerson(
       type = PersonType.restrictedPerson,
-      crn = personInfoResult.crn,
+      crn = personSummaryInfoResult.crn,
     )
 
     is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> UnknownPerson(
       type = PersonType.unknownPerson,
-      crn = personInfoResult.crn,
+      crn = personSummaryInfoResult.crn,
     )
   }
 
-  fun transformPersonSummaryInfoToPersonInfo(personSummaryInfoResult: PersonSummaryInfoResult, inmateStatus: InmateDetail?): PersonInfoResult = when (personSummaryInfoResult) {
-    is PersonSummaryInfoResult.Success.Full -> PersonInfoResult.Success.Full(personSummaryInfoResult.crn, personSummaryInfoResult.summary.asOffenderDetailSummary(), inmateStatus)
-    is PersonSummaryInfoResult.Success.Restricted -> PersonInfoResult.Success.Restricted(personSummaryInfoResult.crn, personSummaryInfoResult.nomsNumber)
-    is PersonSummaryInfoResult.NotFound -> PersonInfoResult.NotFound(personSummaryInfoResult.crn)
-    is PersonSummaryInfoResult.Unknown -> PersonInfoResult.Unknown(personSummaryInfoResult.crn, personSummaryInfoResult.throwable)
-  }
-
-  fun transformProbationOffenderToPersonApi(probationOffenderResult: ProbationOffenderSearchResult.Success.Full): FullPerson {
+  fun transformProbationOffenderToFullPerson(probationOffenderResult: ProbationOffenderSearchResult.Success.Full): FullPerson {
     val caseSummary = probationOffenderResult.caseSummary
     val inmateDetail = probationOffenderResult.inmateDetail
     return FullPerson(

@@ -21,7 +21,7 @@ class Cas1PersonalTimelineTransformer(
     personInfoResult: PersonInfoResult,
     applicationTimelineModels: List<Cas1ApplicationTimelineModel>,
   ) = Cas1PersonalTimeline(
-    person = personTransformer.transformModelToPersonApi(personInfoResult),
+    person = personTransformer.personInfoResultToPerson(personInfoResult),
     applications = applicationTimelineModels.map { transformApplication(it.application, it.cas1TimelineEvents) },
   )
 

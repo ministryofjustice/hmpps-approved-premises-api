@@ -67,14 +67,14 @@ class OffenderDetailService(
               else -> null
             }
           }
-          personTransformer.transformPersonSummaryInfoToPersonInfo(it, inmateDetails)
+          personTransformer.personSummaryInfoResultToPersonInfoResult(it, inmateDetails)
         }
 
         is PersonSummaryInfoResult.Success.Restricted,
         is PersonSummaryInfoResult.NotFound,
         is PersonSummaryInfoResult.Unknown,
         ->
-          personTransformer.transformPersonSummaryInfoToPersonInfo(it, null)
+          personTransformer.personSummaryInfoResultToPersonInfoResult(it, null)
       }
     }
   }

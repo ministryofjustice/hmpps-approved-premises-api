@@ -121,7 +121,7 @@ class PlacementRequestTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns decision
-    every { mockPersonTransformer.transformModelToPersonApi(personInfo) } returns mockPersonInfo
+    every { mockPersonTransformer.personInfoResultToPerson(personInfo) } returns mockPersonInfo
     every { mockRisksTransformer.transformDomainToApi(application.riskRatings!!, application.crn) } returns mockRisks
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
   }

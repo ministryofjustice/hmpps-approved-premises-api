@@ -31,7 +31,7 @@ class Cas2HdcSubmissionsTransformer(
     val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     return Cas2HdcSubmittedApplication(
       id = jpa.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.personInfoResultToPerson(personInfo),
       submittedBy = cas2HdcNomisUserTransformer.transformJpaToApi(jpa),
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),

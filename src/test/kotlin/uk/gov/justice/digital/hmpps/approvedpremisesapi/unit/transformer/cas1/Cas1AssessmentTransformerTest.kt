@@ -270,7 +270,7 @@ class Cas1AssessmentTransformerTest {
         probationDeliveryUnitName = null,
       )
 
-      every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+      every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
       val apiSummary = cas1AssessmentTransformer.transformDomainToCas1AssessmentSummary(domainSummary, mockk())
 
       assertThat(apiSummary).isInstanceOf(Cas1AssessmentSummary::class.java)

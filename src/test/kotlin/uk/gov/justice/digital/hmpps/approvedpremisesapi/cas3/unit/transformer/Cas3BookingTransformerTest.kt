@@ -186,7 +186,7 @@ class Cas3BookingTransformerTest {
     every { mockBedspaceTransformer.transformJpaToCas3BedspaceSummary(bedspaceEntity) } returns bedspaceSummaryModel
     every { mockDepartureTransformer.transformJpaToApi(nullDepartureEntity) } returns null
 
-    every { mockPersonTransformer.transformModelToPersonApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(
+    every { mockPersonTransformer.personInfoResultToPerson(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(
       type = PersonType.fullPerson,
       crn = "crn",
       name = "first last",

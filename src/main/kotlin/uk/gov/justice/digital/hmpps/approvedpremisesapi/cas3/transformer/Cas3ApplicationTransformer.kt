@@ -52,7 +52,7 @@ class Cas3ApplicationTransformer(
 
     return Cas3Application(
       id = applicationEntity.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.personInfoResultToPerson(personInfo),
       createdByUserId = applicationEntity.createdByUser.id,
       createdAt = applicationEntity.createdAt.toInstant(),
       submittedAt = applicationEntity.submittedAt?.toInstant(),
@@ -83,7 +83,7 @@ class Cas3ApplicationTransformer(
 
     return Cas3ApplicationSummary(
       id = domain.getId(),
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.personInfoResultToPerson(personInfo),
       createdByUserId = domain.getCreatedByUserId(),
       createdAt = domain.getCreatedAt(),
       submittedAt = domain.getSubmittedAt(),

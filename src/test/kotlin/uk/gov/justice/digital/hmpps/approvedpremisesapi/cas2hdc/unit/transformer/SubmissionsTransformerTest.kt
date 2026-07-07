@@ -71,7 +71,7 @@ class SubmissionsTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+    every { mockPersonTransformer.personInfoResultToPerson(any()) } returns mockk<Person>()
     every {
       mockCas2HdcNomisUserTransformer.transformJpaToApi(
         nomisUserEntity,
