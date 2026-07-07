@@ -296,6 +296,8 @@ class ApplicationsTransformersTest {
       .withCaseManagerIsNotApplicant(true)
       .withCaseManagerUserDetails(caseManagerUserDetails)
       .withLicenseExpiredDate(LocalDate.of(2026, 5, 5))
+      .withSentenceType(SentenceTypeOption.bailPlacement.name)
+      .withReleaseType(Cas1ReleaseType.notApplicable)
       .produce()
 
     every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(applicantUserDetails) } returns Cas1ApplicationUserDetails("applicant", "", "")
@@ -312,6 +314,21 @@ class ApplicationsTransformersTest {
     assertThat(result.caseManagerIsNotApplicant).isTrue()
     assertThat(result.caseManagerUserDetails!!.name).isEqualTo("caseManager")
     assertThat(result.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 5, 5))
+    assertThat(result.sentenceType).isEqualTo(SentenceTypeOption.bailPlacement)
+    assertThat(result.releaseType).isEqualTo(ReleaseTypeOption.notApplicable)
+  }
+
+  @Test
+  fun `transformJpaToCas1Application maps an unknown sentenceType to null`() {
+    val application = approvedPremisesApplicationFactory
+      .withSentenceType("someUnknownSentenceType")
+      .produce()
+
+    every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(any()) } returns Cas1ApplicationUserDetails("", "", "")
+
+    val result = applicationsTransformer.transformJpaToCas1Application(application, mockk())
+
+    assertThat(result.sentenceType).isNull()
   }
 
   @Test
