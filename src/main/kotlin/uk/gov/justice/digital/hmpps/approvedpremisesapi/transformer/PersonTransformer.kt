@@ -138,6 +138,8 @@ class PersonTransformer {
     )
   }
 
+  // ideally the caller would use personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult,null) and then convert that
+  // removing the need for this function. This may change the output for sex and gender, so that would need addressing
   fun personSummaryInfoResultToPerson(personSummaryInfoResult: PersonSummaryInfoResult): Person = when (personSummaryInfoResult) {
     is PersonSummaryInfoResult.Success.Full -> {
       val caseSummary = personSummaryInfoResult.summary
@@ -154,7 +156,7 @@ class PersonTransformer {
         religionOrBelief = caseSummary.profile?.religion,
         genderIdentity = caseSummary.profile?.genderIdentity,
         prisonName = null,
-        isRestricted = (caseSummary.currentRestriction == true || caseSummary.currentExclusion == true),
+        isRestricted = (caseSummary.currentRestriction || caseSummary.currentExclusion),
       )
     }
 
