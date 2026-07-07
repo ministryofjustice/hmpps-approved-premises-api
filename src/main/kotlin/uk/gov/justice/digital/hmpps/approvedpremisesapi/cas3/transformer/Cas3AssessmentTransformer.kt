@@ -94,6 +94,7 @@ class Cas3AssessmentTransformer(
       applicationId = application.id,
       createdAt = a.createdAt.toInstant(),
       applicationStatus = application.getStatus(),
+      assessmentStatus = a.deriveAssessmentStatus(),
       type = ServiceType.CAS3,
       referralRejectionReason = a.referralRejectionReason?.name ?: a.rejectionRationale,
       referralRejectionReasonDetail = a.referralRejectionReasonDetail,
