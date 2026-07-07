@@ -80,6 +80,9 @@ data class CaseEntity(
   @Column(name = "tier_v2", columnDefinition = "jsonb")
   @JdbcTypeCode(SqlTypes.JSON)
   var tierV2: Tier?,
+  @Column(name = "tier_v3", columnDefinition = "jsonb")
+  @JdbcTypeCode(SqlTypes.JSON)
+  var tierV3: Tier?,
   @Version
   var version: Long = 1,
 ) {

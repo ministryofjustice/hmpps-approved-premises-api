@@ -102,6 +102,8 @@ generic-service:
     FEATURE-FLAGS_CAS2-OASYS-USE-NEW-QUESTIONS: true
     FEATURE-FLAGS_CAS3-REPORTS-WITH-NEW-BEDSPACE-MODEL-TABLES-ENABLED: true
     FEATURE-FLAGS_ISR-EMAIL-CHANGES-ENABLED: false
+    FEATURE-FLAGS_INCLUDE-TIER-V3: false
+
 
   namespace_secrets:
     hmpps-domain-events-topic:

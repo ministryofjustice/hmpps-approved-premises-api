@@ -109,6 +109,7 @@ class BackfillCasesJob(
             version = TierVersion.V2,
           )
         },
+        tierV3 = null,
         createdAt = now,
         lastUpdatedAt = now,
       ),

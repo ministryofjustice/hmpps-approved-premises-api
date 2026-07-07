@@ -173,6 +173,7 @@ class Cas1ApplicationCreationServiceTest {
         name = "name",
         nomsNumber = "nomsNo",
         tierV2 = Tier(tierScore = "level", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "reason", version = TierVersion.V2),
+        tierV3 = Tier(tierScore = "level", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "reason", version = TierVersion.V3),
         id = cas1OffenderEntityId,
         createdAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
         lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
