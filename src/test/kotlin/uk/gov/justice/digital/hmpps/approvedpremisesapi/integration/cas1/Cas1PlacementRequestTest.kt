@@ -1058,9 +1058,9 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     fun `It sorts by personRisksTier when the user is a manager`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
-          val placementRequest1TierB1 = createPlacementRequest(offenderDetails, user, tierOnApplicationCreation = RiskTierLevel.b1)
-          val placementRequest2TierA0 = createPlacementRequest(offenderDetails, user, tierOnApplicationCreation = RiskTierLevel.a0)
-          val placementRequest3TierA1 = createPlacementRequest(offenderDetails, user, tierOnApplicationCreation = RiskTierLevel.a1)
+          val placementRequest1ApplicationTierB1 = createPlacementRequest(offenderDetails, user, tierOnApplicationCreation = RiskTierLevel.b1)
+          val placementRequest2ApplicationTierA0 = createPlacementRequest(offenderDetails, user, tierOnApplicationCreation = RiskTierLevel.a0)
+          val placementRequest3ApplicationTierA1 = createPlacementRequest(offenderDetails, user, tierOnApplicationCreation = RiskTierLevel.a1)
 
           webTestClient.get()
             .uri("/cas1/placement-requests?page=1&sortBy=person_risks_tier&sortDirection=asc")
@@ -1069,9 +1069,9 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath("$[0].id").isEqualTo(placementRequest2TierA0.id.toString())
-            .jsonPath("$[1].id").isEqualTo(placementRequest3TierA1.id.toString())
-            .jsonPath("$[2].id").isEqualTo(placementRequest1TierB1.id.toString())
+            .jsonPath("$[0].id").isEqualTo(placementRequest2ApplicationTierA0.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest3ApplicationTierA1.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequest1ApplicationTierB1.id.toString())
 
           webTestClient.get()
             .uri("/cas1/placement-requests?page=1&sortBy=person_risks_tier&sortDirection=desc")
@@ -1080,11 +1080,45 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .jsonPath("$[0].id").isEqualTo(placementRequest1TierB1.id.toString())
-            .jsonPath("$[1].id").isEqualTo(placementRequest3TierA1.id.toString())
-            .jsonPath("$[2].id").isEqualTo(placementRequest2TierA0.id.toString())
+            .jsonPath("$[0].id").isEqualTo(placementRequest1ApplicationTierB1.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest3ApplicationTierA1.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequest2ApplicationTierA0.id.toString())
         }
       }
+    }
+
+    @Test
+    fun `It sorts by person tier v2 when the user is a manager`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+      val (offenderDetails1, _) = givenAnOffender()
+      val (offenderDetails2, _) = givenAnOffender()
+      val (offenderDetails3, _) = givenAnOffender()
+
+      val placementRequest1PersonTierD3 = createPlacementRequest(offenderDetails1, user, tierOnApplicationCreation = RiskTierLevel.a0, caseTierV2 = "D3")
+      val placementRequest2PersonTierD1 = createPlacementRequest(offenderDetails2, user, tierOnApplicationCreation = RiskTierLevel.a1, caseTierV2 = "D1")
+      val placementRequest3PersonTierD2 = createPlacementRequest(offenderDetails3, user, tierOnApplicationCreation = RiskTierLevel.b1, caseTierV2 = "D2")
+
+      webTestClient.get()
+        .uri("/cas1/placement-requests?page=1&sortBy=person_tier&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$[0].id").isEqualTo(placementRequest2PersonTierD1.id.toString())
+        .jsonPath("$[1].id").isEqualTo(placementRequest3PersonTierD2.id.toString())
+        .jsonPath("$[2].id").isEqualTo(placementRequest1PersonTierD3.id.toString())
+
+      webTestClient.get()
+        .uri("/cas1/placement-requests?page=1&sortBy=person_tier&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$[0].id").isEqualTo(placementRequest1PersonTierD3.id.toString())
+        .jsonPath("$[1].id").isEqualTo(placementRequest3PersonTierD2.id.toString())
+        .jsonPath("$[2].id").isEqualTo(placementRequest2PersonTierD1.id.toString())
     }
 
     @Test

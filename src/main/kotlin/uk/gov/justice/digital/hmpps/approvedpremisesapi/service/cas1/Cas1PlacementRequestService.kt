@@ -69,6 +69,7 @@ class Cas1PlacementRequestService(
           PlacementRequestSortField.personRisksTier -> "tierOnApplicationCreation"
           PlacementRequestSortField.firstBookingPremisesName -> "bookingPremisesName"
           PlacementRequestSortField.firstBookingArrivalDate -> "bookingArrivalDate"
+          PlacementRequestSortField.personTier -> "personTierScore"
         },
         "id",
       ),

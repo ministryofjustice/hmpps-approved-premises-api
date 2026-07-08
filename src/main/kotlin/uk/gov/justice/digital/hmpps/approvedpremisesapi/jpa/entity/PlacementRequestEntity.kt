@@ -42,6 +42,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       pq.id AS id,
       application.crn AS personCrn,
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tierOnApplicationCreation,
+      (cases.tier_v2->>'tierScore')::text AS personTierScore,
       pq.application_id AS applicationId,
       apa.name as personName,
       pq.is_parole as isParole,

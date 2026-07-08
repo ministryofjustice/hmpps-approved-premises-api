@@ -16,6 +16,9 @@ enum class PlacementRequestSortField(@get:JsonValue val value: String) {
 
   @Schema(description = "Sort on the tier captured when the application was created")
   personRisksTier("person_risks_tier"),
+
+  @Schema(description = "Sort on the person's live tier")
+  personTier("person_tier"),
   firstBookingPremisesName("name"),
   firstBookingArrivalDate("canonical_arrival_date"),
   ;
