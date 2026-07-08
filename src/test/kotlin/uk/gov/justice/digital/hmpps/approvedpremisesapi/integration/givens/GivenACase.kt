@@ -13,7 +13,7 @@ fun IntegrationTestBase.givenACase(
   val case = caseEntityFactory.produceAndPersist {
     withCrn(crn)
     withTierV2(tierV2)
-    withTierV2(tierV3)
+    withTierV3(tierV3)
   }
 
   return case

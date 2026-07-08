@@ -18,6 +18,14 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
 
+/**
+ * An entry in the `cases` table should exist for every CRN for which an application exists,
+ * regardless of the CAS it originated from
+ *
+ * The tier value for a case will always be up-to date
+ *
+ * Currently the names and noms number are not updated after the entry has been created
+ */
 @Service
 class CaseService(
   private val caseRepository: CaseRepository,
@@ -58,7 +66,7 @@ class CaseService(
   fun getCase(crn: String): CaseDto? = caseRepository.findByCrn(crn)?.toDto()
 
   /**
-   * If a case can't be found there will be no `CaseDto` representation will be included in the result
+   * If a case can't be found for a given CRN there will be no corresponding entry in the result
    */
   fun getCases(crns: List<String>): List<CaseDto> = caseRepository.findByCrnIn(crns).map { it.toDto() }
 
