@@ -1,5 +1,5 @@
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.6"
   kotlin("plugin.spring") version "2.4.0"
   kotlin("plugin.jpa") version "2.4.0"
   id("dev.detekt") version "2.0.0-alpha.5"
@@ -75,10 +75,6 @@ dependencies {
   implementation("net.javacrumbs.shedlock:shedlock-provider-redis-spring:$shedLockVersion")
 
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.15.0")
-
-  val appinsightsCore = "core:2.6.4"
-  implementation("io.micrometer:micrometer-registry-azure-monitor:1.17.0")
-  implementation("com.microsoft.azure:applicationinsights-$appinsightsCore")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.0")
   implementation("uk.gov.service.notify:notifications-java-client:6.0.0-RELEASE")
