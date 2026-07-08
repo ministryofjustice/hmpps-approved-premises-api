@@ -58,6 +58,11 @@ class CaseService(
 
   fun getCase(crn: String): CaseDto? = caseRepository.findByCrn(crn)?.toDto()
 
+  /**
+   * If a case can't be found there will be no `CaseDto` representation will be included in the result
+   */
+  fun getCases(crns: List<String>): List<CaseDto> = caseRepository.findByCrnIn(crns).map { it.toDto() }
+
   private data class CaseTiers(
     val v2: Tier?,
     val v3: Tier?,

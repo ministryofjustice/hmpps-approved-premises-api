@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Adjudi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.BookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -38,7 +39,6 @@ class OffenderService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
-  private val featureFlagService: FeatureFlagService,
   private val offenderRiskNoteParser: OffenderRiskNoteParser,
   private val caseService: CaseService,
 ) {
@@ -123,12 +123,15 @@ class OffenderService(
       }
     }
 
+    val casesByCrn = caseService.getCases(crnsList).associateBy { it.crn }
+
     return crns.map { crn ->
       toPersonSummaryInfo(
-        crn,
-        caseSummariesByCrn[crn],
-        caseAccessByCrn[crn],
-        laoStrategy,
+        crn = crn,
+        caseSummary = caseSummariesByCrn[crn],
+        caseAccess = caseAccessByCrn[crn],
+        laoStrategy = laoStrategy,
+        case = casesByCrn[crn],
       )
     }
   }
@@ -153,6 +156,7 @@ class OffenderService(
     caseSummary: CaseSummary?,
     caseAccess: CaseAccess?,
     laoStrategy: LaoStrategy,
+    case: CaseDto?,
   ): PersonSummaryInfoResult {
     if (caseSummary == null) {
       log.debug("Could not find case summary for '$crn'. Returning not found")
@@ -161,7 +165,11 @@ class OffenderService(
 
     if (!caseSummary.hasLimitedAccess() || laoStrategy is LaoStrategy.NeverRestricted) {
       log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
-      return PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+      return PersonSummaryInfoResult.Success.Full(
+        crn = crn,
+        summary = caseSummary,
+        tier = case?.tier,
+      )
     }
 
     return if (caseAccess == null) {
@@ -171,10 +179,18 @@ class OffenderService(
     } else {
       if (caseAccess.hasLimitedAccess()) {
         log.debug("Caller cannot access LAO '$crn'. Returning restricted")
-        PersonSummaryInfoResult.Success.Restricted(crn, caseSummary.nomsId)
+        PersonSummaryInfoResult.Success.Restricted(
+          crn = crn,
+          nomsNumber = caseSummary.nomsId,
+          tier = case?.tier,
+        )
       } else {
         log.debug("Caller can access LAO '$crn'. Returning full details")
-        PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+        PersonSummaryInfoResult.Success.Full(
+          crn = crn,
+          summary = caseSummary,
+          tier = case?.tier,
+        )
       }
     }
   }

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.CsraSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -42,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -56,7 +56,6 @@ class OffenderServiceTest {
   private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
-  private val mockFeatureFlagService = mockk<FeatureFlagService>()
   private val mockOffenderRiskNoteParser = mockk<OffenderRiskNoteParser>()
   private val mockCaseService = mockk<CaseService>()
 
@@ -70,7 +69,6 @@ class OffenderServiceTest {
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
     adjudicationsConfigBindingModel,
-    mockFeatureFlagService,
     mockOffenderRiskNoteParser,
     mockCaseService,
   )
@@ -701,6 +699,16 @@ class OffenderServiceTest {
     const val OFFENDER_4_NOMS = "NOMS4"
     const val OFFENDER_5_CRN = "CRN5"
     const val USERNAME = "deliusUsername"
+    val OFFENDER_1_TIER = TierDtoFactory().produce()
+    val OFFENDER_1_CASE = CaseDtoFactory().withCrn(OFFENDER_1_CRN).withTier(OFFENDER_1_TIER).produce()
+    val OFFENDER_2_TIER = TierDtoFactory().produce()
+    val OFFENDER_2_CASE = CaseDtoFactory().withCrn(OFFENDER_2_CRN).withTier(OFFENDER_2_TIER).produce()
+    val OFFENDER_3_TIER = TierDtoFactory().produce()
+    val OFFENDER_3_CASE = CaseDtoFactory().withCrn(OFFENDER_3_CRN).withTier(OFFENDER_3_TIER).produce()
+    val OFFENDER_4_TIER = TierDtoFactory().produce()
+    val OFFENDER_4_CASE = CaseDtoFactory().withCrn(OFFENDER_4_CRN).withTier(OFFENDER_4_TIER).produce()
+    val OFFENDER_5_TIER = TierDtoFactory().produce()
+    val OFFENDER_5_CASE = CaseDtoFactory().withCrn(OFFENDER_5_CRN).withTier(OFFENDER_5_TIER).produce()
   }
 
   @Nested
@@ -765,6 +773,10 @@ class OffenderServiceTest {
         mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
 
+      every {
+        mockCaseService.getCases(listOf(OFFENDER_1_CRN))
+      } returns emptyList()
+
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
@@ -793,6 +805,10 @@ class OffenderServiceTest {
         mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
 
+      every {
+        mockCaseService.getCases(listOf(OFFENDER_1_CRN))
+      } returns listOf(OFFENDER_1_CASE)
+
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
@@ -803,6 +819,7 @@ class OffenderServiceTest {
       val result0 = results[0] as PersonSummaryInfoResult.Success.Full
       assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
       assertThat(result0.summary).isSameAs(offender1CaseSummary)
+      assertThat(result0.tier).isSameAs(OFFENDER_1_TIER)
     }
 
     @ParameterizedTest
@@ -828,6 +845,10 @@ class OffenderServiceTest {
       every {
         mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+
+      every {
+        mockCaseService.getCases(listOf(OFFENDER_1_CRN))
+      } returns emptyList()
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
@@ -876,6 +897,10 @@ class OffenderServiceTest {
         ),
       )
 
+      every {
+        mockCaseService.getCases(listOf(OFFENDER_1_CRN))
+      } returns listOf(OFFENDER_1_CASE)
+
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
@@ -886,6 +911,7 @@ class OffenderServiceTest {
       val result0 = results[0] as PersonSummaryInfoResult.Success.Full
       assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
       assertThat(result0.summary).isSameAs(offender1CaseSummary)
+      assertThat(result0.tier).isSameAs(OFFENDER_1_TIER)
     }
 
     @ParameterizedTest
@@ -924,6 +950,10 @@ class OffenderServiceTest {
         ),
       )
 
+      every {
+        mockCaseService.getCases(listOf(OFFENDER_1_CRN))
+      } returns listOf(OFFENDER_1_CASE)
+
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
@@ -934,6 +964,7 @@ class OffenderServiceTest {
       val result0 = results[0] as PersonSummaryInfoResult.Success.Restricted
       assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
       assertThat(result0.nomsNumber).isEqualTo(OFFENDER_1_NOMS)
+      assertThat(result0.tier).isEqualTo(OFFENDER_1_TIER)
     }
 
     @ParameterizedTest
@@ -957,6 +988,10 @@ class OffenderServiceTest {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
 
+      every {
+        mockCaseService.getCases(listOf(OFFENDER_1_CRN))
+      } returns listOf(OFFENDER_1_CASE)
+
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
         laoStrategy = LaoStrategy.NeverRestricted,
@@ -969,6 +1004,7 @@ class OffenderServiceTest {
       val result0 = results[0] as PersonSummaryInfoResult.Success.Full
       assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
       assertThat(result0.summary).isSameAs(offender1CaseSummary)
+      assertThat(result0.tier).isSameAs(OFFENDER_1_TIER)
     }
 
     @Test
@@ -1043,6 +1079,18 @@ class OffenderServiceTest {
         ),
       )
 
+      every {
+        mockCaseService.getCases(
+          listOf(
+            OFFENDER_1_CRN,
+            OFFENDER_2_CRN,
+            OFFENDER_3_CRN,
+            OFFENDER_4_CRN,
+            OFFENDER_5_CRN,
+          ),
+        )
+      } returns listOf(OFFENDER_1_CASE, OFFENDER_2_CASE, OFFENDER_3_CASE, OFFENDER_4_CASE, OFFENDER_5_CASE)
+
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN, OFFENDER_4_CRN, OFFENDER_5_CRN),
         laoStrategy = CheckUserAccess(USERNAME),
@@ -1054,25 +1102,61 @@ class OffenderServiceTest {
       val result0 = results[0] as PersonSummaryInfoResult.Success.Full
       assertThat(result0.crn).isEqualTo(OFFENDER_1_CRN)
       assertThat(result0.summary).isSameAs(offender1NotLao)
+      assertThat(result0.tier).isSameAs(OFFENDER_1_TIER)
 
       assertThat(results[1]).isInstanceOf(PersonSummaryInfoResult.Success.Restricted::class.java)
       val result1 = results[1] as PersonSummaryInfoResult.Success.Restricted
       assertThat(result1.crn).isEqualTo(OFFENDER_2_CRN)
       assertThat(result1.nomsNumber).isEqualTo(OFFENDER_2_NOMS)
+      assertThat(result1.tier).isSameAs(OFFENDER_2_TIER)
 
       assertThat(results[2]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
       val result2 = results[2] as PersonSummaryInfoResult.Success.Full
       assertThat(result2.crn).isEqualTo(OFFENDER_3_CRN)
       assertThat(result2.summary).isSameAs(offender3ExcludedButNotToUser)
+      assertThat(result2.tier).isSameAs(OFFENDER_3_TIER)
 
       assertThat(results[3]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
       val result3 = results[3] as PersonSummaryInfoResult.Success.Full
       assertThat(result3.crn).isEqualTo(OFFENDER_4_CRN)
       assertThat(result3.summary).isSameAs(offender4NotLao)
+      assertThat(result3.tier).isSameAs(OFFENDER_4_TIER)
 
       assertThat(results[4]).isInstanceOf(PersonSummaryInfoResult.NotFound::class.java)
       val result4 = results[4] as PersonSummaryInfoResult.NotFound
       assertThat(result4.crn).isEqualTo(OFFENDER_5_CRN)
+    }
+
+    @Test
+    fun `if no case available, tier cant be popualted`() {
+      val offender1CaseSummary = CaseSummaryFactory()
+        .withCrn(OFFENDER_1_CRN)
+        .withNomsId(OFFENDER_1_NOMS)
+        .withCurrentExclusion(false)
+        .withCurrentRestriction(false)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, listOf(OFFENDER_1_CRN))
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+
+      every {
+        mockCaseService.getCases(listOf(OFFENDER_1_CRN))
+      } returns emptyList()
+
+      val results = offenderService.getPersonSummaryInfoResults(
+        crns = setOf(OFFENDER_1_CRN),
+        laoStrategy = CheckUserAccess(USERNAME),
+      )
+
+      assertThat(results).hasSize(1)
+      assertThat(results[0]).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      val result0 = results[0] as PersonSummaryInfoResult.Success.Full
+      assertThat(result0.tier).isNull()
     }
   }
 
@@ -1096,6 +1180,7 @@ class OffenderServiceTest {
       val crns = (1..750).map { "CRN$it" }
       val offenderSummaries = crns.map { CaseSummaryFactory().withCrn(it).produce() }
       val caseAccesses = crns.map { CaseAccessFactory().withCrn(it).produce() }
+      val cases = crns.map { CaseDtoFactory().withCrn(it).withTier(TierDtoFactory().produce()).produce() }
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries((1..400).map { "CRN$it" })
@@ -1111,7 +1196,15 @@ class OffenderServiceTest {
 
       every {
         mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, (401..750).map { "CRN$it" })
-      } returns ClientResult.Success(HttpStatus.OK, UserAccess(caseAccesses.subList(401, 750)))
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(caseAccesses.subList(400, 750)))
+
+      every {
+        mockCaseService.getCases((1..400).map { "CRN$it" })
+      } returns cases.subList(0, 400)
+
+      every {
+        mockCaseService.getCases((401..750).map { "CRN$it" })
+      } returns cases.subList(400, 750)
 
       val results = offenderService.getPersonSummaryInfoResultsInBatches(
         crns = crns.toSet(),
@@ -1123,7 +1216,10 @@ class OffenderServiceTest {
       (0..749).forEach {
         val result = results[it]
         assertThat(result).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
-        assertThat((result as PersonSummaryInfoResult.Success.Full).summary).isEqualTo(offenderSummaries[it])
+        result as PersonSummaryInfoResult.Success.Full
+        assertThat(result.crn).isEqualTo(crns[it])
+        assertThat(result.summary).isEqualTo(offenderSummaries[it])
+        assertThat(result.tier).isSameAs(cases[it].tier)
       }
     }
   }
@@ -1149,10 +1245,12 @@ class OffenderServiceTest {
         ),
       )
 
-      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
-        .withCrn(crn)
-        .withNomsNumber(nomsNumber)
-        .produce()
+      every { mockCaseService.getCases(listOf(crn)) } returns listOf(
+        CaseDtoFactory()
+          .withCrn(crn)
+          .withNomsNumber(nomsNumber)
+          .produce(),
+      )
 
       every { mockPrisonsApiClient.getCsraSummariesForOffender(nomsNumber) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -1196,7 +1294,7 @@ class OffenderServiceTest {
         ),
       )
 
-      every { mockCaseService.getCase(crn) } returns null
+      every { mockCaseService.getCases(listOf(crn)) } returns emptyList()
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -1225,7 +1323,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns Unauthorised when getPersonSummaryInfoResult returns restricted due to LAO restrictions`() {
-      every { mockCaseService.getCase(crn) } returns null
+      every { mockCaseService.getCases(listOf(crn)) } returns emptyList()
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -1263,7 +1361,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound when getPersonSummaryInfoResult fails because Person is not found`() {
-      every { mockCaseService.getCase(crn) } returns null
+      every { mockCaseService.getCases(listOf(crn)) } returns emptyList()
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -1282,7 +1380,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound when getPersonSummaryInfoResult fails because NOMS number is null`() {
-      every { mockCaseService.getCase(crn) } returns null
+      every { mockCaseService.getCases(listOf(crn)) } returns emptyList()
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -1305,10 +1403,12 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound when Prisons API returns 404`() {
-      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
-        .withCrn(crn)
-        .withNomsNumber(nomsNumber)
-        .produce()
+      every { mockCaseService.getCases(listOf(crn)) } returns listOf(
+        CaseDtoFactory()
+          .withCrn(crn)
+          .withNomsNumber(nomsNumber)
+          .produce(),
+      )
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
@@ -1338,10 +1438,12 @@ class OffenderServiceTest {
 
     @Test
     fun `throws exception when Prisons API returns 500`() {
-      every { mockCaseService.getCase(crn) } returns CaseDtoFactory()
-        .withCrn(crn)
-        .withNomsNumber(nomsNumber)
-        .produce()
+      every { mockCaseService.getCases(listOf(crn)) } returns listOf(
+        CaseDtoFactory()
+          .withCrn(crn)
+          .withNomsNumber(nomsNumber)
+          .produce(),
+      )
 
       every {
         mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
