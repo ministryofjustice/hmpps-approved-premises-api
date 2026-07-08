@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Pro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -39,6 +40,8 @@ class PersonTransformerTest {
 
   @Nested
   inner class PersonInfoResultToPersonSummaryInfoResult {
+
+    val tier = TierDtoFactory().produce()
 
     @Test
     fun `not found`() {
@@ -72,6 +75,7 @@ class PersonTransformerTest {
         PersonInfoResult.Success.Restricted(
           crn = "CRN123",
           nomsNumber = "NOMS123",
+          tier = tier,
         ),
       )
 
@@ -80,6 +84,7 @@ class PersonTransformerTest {
 
       assertThat(restricted.crn).isEqualTo("CRN123")
       assertThat(restricted.nomsNumber).isEqualTo("NOMS123")
+      assertThat(restricted.tier).isEqualTo(tier)
     }
 
     @Test
@@ -89,6 +94,7 @@ class PersonTransformerTest {
           crn = "CRN123",
           offenderDetailSummary = OffenderDetailsSummaryFactory().withGender("male").produce(),
           inmateDetail = InmateDetailFactory().produce(),
+          tier = tier,
         ),
       )
 
@@ -97,6 +103,7 @@ class PersonTransformerTest {
 
       assertThat(full.crn).isEqualTo("CRN123")
       assertThat(full.summary.gender).isEqualTo("male")
+      assertThat(full.tier).isEqualTo(tier)
     }
   }
 
@@ -693,6 +700,9 @@ class PersonTransformerTest {
 
   @Nested
   inner class TransformPersonSummaryInfoToPersonInfo {
+
+    val tier = TierDtoFactory().produce()
+
     @Test
     fun `transformPersonSummaryInfoToPersonInfo transforms correctly for a full person info`() {
       val gender = "Male"
@@ -750,7 +760,7 @@ class PersonTransformerTest {
         isActiveProbationManagedSentence = null,
       )
 
-      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary)
+      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary, tier)
       val inmateDetail = InmateDetailFactory()
         .withCustodyStatus(InmateStatus.IN)
         .produce()
@@ -758,7 +768,7 @@ class PersonTransformerTest {
 
       assertThat(result.crn).isEqualTo(caseSummary.crn)
       assertThat(result is PersonInfoResult.Success.Full).isTrue
-      assertThat(result).isEqualTo(PersonInfoResult.Success.Full(caseSummary.crn, offenderDetailSummary, inmateDetail))
+      assertThat(result).isEqualTo(PersonInfoResult.Success.Full(caseSummary.crn, offenderDetailSummary, inmateDetail, tier))
     }
 
     @Test
@@ -766,13 +776,13 @@ class PersonTransformerTest {
       val crn = randomStringMultiCaseWithNumbers(10)
       val nomsNumber = randomStringMultiCaseWithNumbers(6)
 
-      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber)
+      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber, tier)
 
       val result = personTransformer.personSummaryInfoResultToPersonInfoResult(personSummaryInfoResult, null)
 
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result is PersonInfoResult.Success.Restricted).isTrue
-      assertThat(result).isEqualTo(PersonInfoResult.Success.Restricted(crn, nomsNumber))
+      assertThat(result).isEqualTo(PersonInfoResult.Success.Restricted(crn, nomsNumber, tier))
     }
 
     @Test

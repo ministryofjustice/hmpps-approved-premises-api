@@ -33,11 +33,13 @@ class PersonTransformer {
       crn = personSummaryInfoResult.crn,
       offenderDetailSummary = personSummaryInfoResult.summary.asOffenderDetailSummary(),
       inmateDetail = inmateStatus,
+      tier = personSummaryInfoResult.tier,
     )
 
     is PersonSummaryInfoResult.Success.Restricted -> PersonInfoResult.Success.Restricted(
       crn = personSummaryInfoResult.crn,
       nomsNumber = personSummaryInfoResult.nomsNumber,
+      tier = personSummaryInfoResult.tier,
     )
 
     is PersonSummaryInfoResult.Unknown -> PersonInfoResult.Unknown(
@@ -56,11 +58,13 @@ class PersonTransformer {
     is PersonInfoResult.Success.Full -> PersonSummaryInfoResult.Success.Full(
       crn = personInfo.crn,
       summary = personInfo.offenderDetailSummary.asCaseSummary(),
+      tier = personInfo.tier,
     )
 
     is PersonInfoResult.Success.Restricted -> PersonSummaryInfoResult.Success.Restricted(
       crn = personInfo.crn,
       nomsNumber = personInfo.nomsNumber,
+      tier = personInfo.tier,
     )
 
     is PersonInfoResult.Unknown -> PersonSummaryInfoResult.Unknown(
