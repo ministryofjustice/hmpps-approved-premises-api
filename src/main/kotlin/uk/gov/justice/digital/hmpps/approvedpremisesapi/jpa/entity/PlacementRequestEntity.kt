@@ -56,8 +56,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     private const val DASHBOARD_FROM_CLAUSE = """
       FROM
       placement_requests pq
-      LEFT JOIN approved_premises_applications apa ON apa.id = pq.application_id
-      LEFT JOIN applications application ON application.id = pq.application_id
+      INNER JOIN approved_premises_applications apa ON apa.id = pq.application_id
+      INNER JOIN applications application ON application.id = pq.application_id
       LEFT OUTER JOIN LATERAL (
         SELECT id, premises_id, canonical_arrival_date
         FROM cas1_space_bookings b
@@ -67,8 +67,10 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       ) spaceBooking ON TRUE
       LEFT JOIN premises spaceBookingPremises ON spaceBooking.premises_id = spaceBookingPremises.id
       LEFT JOIN booking_not_mades bnm ON bnm.placement_request_id = pq.id
+      LEFT JOIN cases ON cases.crn = application.crn
       WHERE
-      (:tierOnApplicationCreation IS NULL OR apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tierOnApplicationCreation)      
+      (:tierOnApplicationCreation IS NULL OR apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tierOnApplicationCreation) 
+      AND (:personTierScore IS NULL OR (cases.tier_v2->>'tierScore')::text = :personTierScore)
       AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS DATE) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
       AND (
@@ -101,6 +103,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     status: String? = null,
     crnOrName: String? = null,
     tierOnApplicationCreation: String? = null,
+    personTierScore: String? = null,
     arrivalDateFrom: LocalDate? = null,
     arrivalDateTo: LocalDate? = null,
     requestType: String? = null,

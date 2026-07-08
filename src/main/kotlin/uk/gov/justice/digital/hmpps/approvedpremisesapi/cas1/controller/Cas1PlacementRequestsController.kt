@@ -75,6 +75,8 @@ class Cas1PlacementRequestsController(
     @RequestParam crnOrName: String?,
     @Schema(description = "Filter on the tier captured when the application was created")
     @RequestParam tier: RiskTierLevel?,
+    @Schema(description = "Filter on the person's live tier")
+    @RequestParam personTier: String?,
     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) arrivalDateStart: LocalDate?,
     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) arrivalDateEnd: LocalDate?,
     @RequestParam requestType: PlacementRequestRequestType?,
@@ -94,6 +96,7 @@ class Cas1PlacementRequestsController(
         status = status,
         crnOrName = crnOrName,
         tierOnApplicationCreation = tier?.value,
+        personTier = personTier,
         arrivalDateStart = arrivalDateStart,
         arrivalDateEnd = arrivalDateEnd,
         requestType = requestType,

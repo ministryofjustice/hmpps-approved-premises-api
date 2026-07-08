@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.Offende
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
@@ -586,7 +587,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It searches by tier where user is manager`() {
+    fun `It searches by tier on application creation where user is manager`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           createPlacementRequest(offenderDetails, user, tierOnApplicationCreation = RiskTierLevel.a0)
@@ -612,6 +613,36 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             )
         }
       }
+    }
+
+    @Test
+    fun `It searches by person tier v2 where user is manager`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+      val (offender1Details, _) = givenAnOffender()
+      val (offender2Details, inmate2Details) = givenAnOffender()
+      val (offender3Details, _) = givenAnOffender()
+
+      createPlacementRequest(offender1Details, user, tierOnApplicationCreation = RiskTierLevel.a0, caseTierV2 = "B5")
+      val placementRequestB6 = createPlacementRequest(offender2Details, user, tierOnApplicationCreation = RiskTierLevel.a1, caseTierV2 = "B6")
+      createPlacementRequest(offender3Details, user, tierOnApplicationCreation = RiskTierLevel.a2, caseTierV2 = "B7")
+
+      webTestClient.get()
+        .uri("/cas1/placement-requests?personTier=B6")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          jackson3JsonMapper.writeValueAsString(
+            listOf(
+              transformNotMatchedPlacementRequestJpaToApiSummary(
+                placementRequestB6,
+                PersonInfoResult.Success.Full(offender2Details.otherIds.crn, offender2Details, inmate2Details),
+              ),
+            ),
+          ),
+        )
     }
 
     @Test
@@ -1139,9 +1170,19 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
       isParole: Boolean = false,
       apArea: ApAreaEntity? = null,
       cruManagementArea: Cas1CruManagementAreaEntity? = null,
+      caseTierV2: String? = null,
     ): PlacementRequestEntity {
+      val crn = offenderDetails.otherIds.crn
+
+      if (caseTierV2 != null) {
+        caseEntityFactory.produceAndPersist {
+          withCrn(crn)
+          withTierV2(TierFactory().withTierScore(caseTierV2).produce())
+        }
+      }
+
       val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withCrn(offenderDetails.otherIds.crn)
+        withCrn(crn)
         withCreatedByUser(user)
         withSubmittedAt(OffsetDateTime.now())
         withReleaseType(Cas1ReleaseType.licence)
