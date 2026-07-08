@@ -534,12 +534,15 @@ data class Cas1SpaceBookingEntity(
   var canonicalDepartureDate: LocalDate,
   val crn: String,
   /**
-   * We are in the process of capturing keyworkers as keyWorkerUser instead of keyWorkerStaffCode/Name
-   *
-   * Until this is done, both fields will be populated
+   * This is the primary field used to determine if a key worker is assigned
    */
   @ManyToOne(fetch = FetchType.LAZY)
   var keyWorkerUser: UserEntity? = null,
+  /**
+   * The field is retained because some key worker users could not be backfilled
+   * from staff code when adding `keyWorkerUser`
+   */
+  @Deprecated("User keyWorkerUser")
   var keyWorkerStaffCode: String?,
   var keyWorkerName: String?,
   /**
