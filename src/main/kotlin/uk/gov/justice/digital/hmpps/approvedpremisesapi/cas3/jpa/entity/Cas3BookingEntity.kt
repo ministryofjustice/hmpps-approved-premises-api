@@ -24,7 +24,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -60,8 +59,6 @@ data class Cas3BookingEntity(
   @Fetch(FetchMode.SUBSELECT)
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var overstays: MutableList<Cas3OverstayEntity>,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
-  var dateChanges: MutableList<DateChangeEntity>,
   var service: String,
   var originalArrivalDate: LocalDate,
   var originalDepartureDate: LocalDate,

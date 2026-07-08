@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
@@ -36,7 +35,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var departures: Yielded<MutableList<DepartureEntity>>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
-  private var dateChanges: Yielded<MutableList<DateChangeEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
   private var serviceName: Yielded<ServiceName> = { randomOf(listOf(ServiceName.approvedPremises, ServiceName.temporaryAccommodation)) }
   private var bed: Yielded<BedEntity?> = { null }
@@ -60,56 +58,8 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.arrivalDate = { arrivalDate }
   }
 
-  fun withOriginalArrivalDate(arrivalDate: LocalDate) = apply {
-    this.originalArrivalDate = { arrivalDate }
-  }
-
   fun withDepartureDate(departureDate: LocalDate) = apply {
     this.departureDate = { departureDate }
-  }
-
-  fun withOriginalDepartureDate(departureDate: LocalDate) = apply {
-    this.originalDepartureDate = { departureDate }
-  }
-
-  fun withStaffKeyWorkerCode(staffKeyWorkerCode: String?) = apply {
-    this.keyWorkerStaffCode = { staffKeyWorkerCode }
-  }
-
-  fun withYieldedArrivals(arrivals: Yielded<MutableList<ArrivalEntity>>) = apply {
-    this.arrivals = arrivals
-  }
-
-  fun withArrivals(arrivals: MutableList<ArrivalEntity>) = apply {
-    this.arrivals = { arrivals }
-  }
-
-  fun withYieldedDepartures(departures: Yielded<MutableList<DepartureEntity>>) = apply {
-    this.departures = departures
-  }
-
-  fun withDepartures(departures: MutableList<DepartureEntity>) = apply {
-    this.departures = { departures }
-  }
-
-  fun withYieldedNonArrival(nonArrival: Yielded<NonArrivalEntity>) = apply {
-    this.nonArrival = nonArrival
-  }
-
-  fun withNonArrival(nonArrival: NonArrivalEntity) = apply {
-    this.nonArrival = { nonArrival }
-  }
-
-  fun withYieldedExtensions(extensions: Yielded<MutableList<ExtensionEntity>>) = apply {
-    this.extensions = extensions
-  }
-
-  fun withExtensions(extensions: MutableList<ExtensionEntity>) = apply {
-    this.extensions = { extensions }
-  }
-
-  fun withDateChanges(dateChanges: MutableList<DateChangeEntity>) = apply {
-    this.dateChanges = { dateChanges }
   }
 
   fun withYieldedPremises(premises: Yielded<PremisesEntity>) = apply {
@@ -139,10 +89,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.bed = { bed }
   }
 
-  fun withYieldedBed(bed: Yielded<BedEntity>) = apply {
-    this.bed = bed
-  }
-
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
     this.createdAt = { createdAt }
   }
@@ -167,10 +113,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.adhoc = { adhoc }
   }
 
-  fun withOffenderName(offenderName: String?) = apply {
-    this.offenderName = { offenderName }
-  }
-
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -181,7 +123,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     departures = this.departures?.invoke() ?: mutableListOf(),
     nonArrival = this.nonArrival?.invoke(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
-    dateChanges = this.dateChanges?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bed = this.bed(),
     service = this.serviceName.invoke().value,

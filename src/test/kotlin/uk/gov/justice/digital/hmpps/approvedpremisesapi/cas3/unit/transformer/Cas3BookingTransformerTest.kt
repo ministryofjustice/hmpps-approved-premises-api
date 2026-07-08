@@ -144,7 +144,6 @@ class Cas3BookingTransformerTest {
     confirmation = null,
     extensions = mutableListOf(),
     overstays = mutableListOf(),
-    dateChanges = mutableListOf(),
     premises = premisesEntity,
     bedspace = bedspaceEntity,
     service = ServiceName.temporaryAccommodation.value,

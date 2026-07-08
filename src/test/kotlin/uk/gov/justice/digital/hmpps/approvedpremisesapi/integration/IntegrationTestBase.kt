@@ -147,7 +147,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DateChangeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
@@ -213,8 +212,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
@@ -433,9 +430,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var extensionRepository: ExtensionTestRepository
-
-  @Autowired
-  lateinit var dateChangeRepository: DateChangeRepository
 
   @Autowired
   lateinit var nonArrivalReasonRepository: NonArrivalReasonTestRepository
@@ -657,7 +651,6 @@ abstract class IntegrationTestBase {
   lateinit var cas3VoidBedspaceReasonEntityFactory: PersistedFactory<Cas3VoidBedspaceReasonEntity, UUID, Cas3VoidBedspaceReasonEntityFactory>
   lateinit var cas3VoidBedspaceCancellationEntityFactory: PersistedFactory<Cas3VoidBedspaceCancellationEntity, UUID, Cas3VoidBedspaceCancellationEntityFactory>
   lateinit var extensionEntityFactory: PersistedFactory<ExtensionEntity, UUID, ExtensionEntityFactory>
-  lateinit var dateChangeEntityFactory: PersistedFactory<DateChangeEntity, UUID, DateChangeEntityFactory>
   lateinit var nonArrivalReasonEntityFactory: PersistedFactory<NonArrivalReasonEntity, UUID, NonArrivalReasonEntityFactory>
   lateinit var approvedPremisesApplicationEntityFactory: PersistedFactory<ApprovedPremisesApplicationEntity, UUID, ApprovedPremisesApplicationEntityFactory>
   lateinit var cas2ApplicationEntityFactory: PersistedFactory<Cas2ApplicationEntity, UUID, Cas2ApplicationEntityFactory>
@@ -782,7 +775,6 @@ abstract class IntegrationTestBase {
     cas3VoidBedspaceReasonEntityFactory = PersistedFactory({ Cas3VoidBedspaceReasonEntityFactory() }, cas3VoidBedspaceReasonTestRepository)
     cas3VoidBedspaceCancellationEntityFactory = PersistedFactory({ Cas3VoidBedspaceCancellationEntityFactory() }, cas3VoidBedspaceCancellationTestRepository)
     extensionEntityFactory = PersistedFactory({ ExtensionEntityFactory() }, extensionRepository)
-    dateChangeEntityFactory = PersistedFactory({ DateChangeEntityFactory() }, dateChangeRepository)
     nonArrivalReasonEntityFactory = PersistedFactory({ NonArrivalReasonEntityFactory() }, nonArrivalReasonRepository)
     approvedPremisesApplicationEntityFactory = PersistedFactory({ ApprovedPremisesApplicationEntityFactory() }, approvedPremisesApplicationRepository)
     cas2ApplicationEntityFactory = PersistedFactory({ Cas2ApplicationEntityFactory() }, cas2ApplicationRepository)

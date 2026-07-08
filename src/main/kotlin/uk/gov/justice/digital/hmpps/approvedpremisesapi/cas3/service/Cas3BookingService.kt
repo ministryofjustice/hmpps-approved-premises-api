@@ -165,7 +165,6 @@ class Cas3BookingService(
         confirmation = null,
         extensions = mutableListOf(),
         overstays = mutableListOf(),
-        dateChanges = mutableListOf(),
         premises = premises,
         bedspace = bedspace!!,
         service = ServiceName.temporaryAccommodation.value,
