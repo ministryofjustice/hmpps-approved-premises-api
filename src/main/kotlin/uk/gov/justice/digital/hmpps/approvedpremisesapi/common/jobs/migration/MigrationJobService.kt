@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillApplicationDraftDocumentJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillApplicationDuration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillAutomaticPlacementApplicationsJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration.Cas1BackfillUserApArea
@@ -71,6 +72,7 @@ class MigrationJobService(
         MigrationJobType.cas2BackfillApplicationCohorts -> getBean(Cas2HdcBackfillApplicationCohortJob::class)
         MigrationJobType.backfillCases -> getBean(BackfillCasesJob::class)
         MigrationJobType.replayFailedInboxEvents -> getBean(ReplayFailedInboxEventsMigrationJob::class)
+        MigrationJobType.cas1BackfillAppDraftDoc -> getBean(Cas1BackfillApplicationDraftDocumentJob::class)
       }
 
       if (job.shouldRunInTransaction) {

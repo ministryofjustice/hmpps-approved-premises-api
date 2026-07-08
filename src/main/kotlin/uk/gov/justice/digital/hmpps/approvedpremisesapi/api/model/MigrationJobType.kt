@@ -30,4 +30,5 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   cas2BackfillApplicationCohorts("cas2_backfill_application_cohorts"),
   backfillCases("backfill_cases"),
   replayFailedInboxEvents("replay_failed_inbox_events"),
+  cas1BackfillAppDraftDoc("cas1_backfill_app_draft_doc"),
 }

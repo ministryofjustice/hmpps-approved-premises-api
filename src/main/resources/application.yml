@@ -224,6 +224,8 @@ services:
     base-url: http://localhost:8091
   health-and-medication-api:
     base-url: http://localhost:8093
+  cas1-ui:
+    base-url: http://localhost:8094
 
 hmpps:
   auth:
