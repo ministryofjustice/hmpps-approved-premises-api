@@ -11,13 +11,13 @@ sealed interface PersonInfoResult {
   val crn: String
 
   sealed interface Success : PersonInfoResult {
-    data class Full(override val crn: String, val offenderDetailSummary: OffenderDetailSummary, val inmateDetail: InmateDetail?, val tier: TierDto? = null) : Success
+    data class Full(override val crn: String, val offenderDetailSummary: OffenderDetailSummary, val inmateDetail: InmateDetail?, val tier: TierDto?) : Success
 
     /**
      * Indicates that the person is a Limited Access Offender, and the calling user
      * does not have access to their record
      */
-    data class Restricted(override val crn: String, val nomsNumber: String?, val tier: TierDto? = null) : Success
+    data class Restricted(override val crn: String, val nomsNumber: String?, val tier: TierDto?) : Success
   }
 
   data class NotFound(override val crn: String) : PersonInfoResult

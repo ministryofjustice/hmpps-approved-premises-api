@@ -241,6 +241,7 @@ class Cas3BookingServiceTest {
       every { mockOffenderService.getPersonSummaryInfoResult(eq("CRN123"), eq(LaoStrategy.NeverRestricted)) } returns PersonSummaryInfoResult.Success.Full(
         "CRN123",
         CaseSummaryFactory().withCrn("CRN123").withName(Name("John", "Smith", emptyList())).produce(),
+        tier = null,
       )
     }
 

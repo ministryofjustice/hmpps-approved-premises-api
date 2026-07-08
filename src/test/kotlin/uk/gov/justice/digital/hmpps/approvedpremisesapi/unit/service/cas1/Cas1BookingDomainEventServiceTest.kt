@@ -639,6 +639,7 @@ class Cas1BookingDomainEventServiceTest {
     } returns PersonSummaryInfoResult.Success.Full(
       crn = crn,
       summary = CaseSummaryFactory().withNomsId(nomsNumber).produce(),
+      tier = null,
     )
   }
 }

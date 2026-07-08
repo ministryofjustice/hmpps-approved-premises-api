@@ -66,7 +66,7 @@ class PlacementRequestTransformerTest {
 
   private val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
   private val inmateDetail = InmateDetailFactory().produce()
-  private val personInfo = PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail)
+  private val personInfo = PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail, tier = null)
   private val mockBookingSummary = mockk<PlacementRequestBookingSummary>()
 
   private val user = UserEntityFactory()
@@ -157,7 +157,7 @@ class PlacementRequestTransformerTest {
 
       val result = placementRequestTransformer.transformJpaToApi(
         placementRequestEntity,
-        PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail),
+        PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail, tier = null),
       )
 
       assertThat(result).isEqualTo(
@@ -272,7 +272,7 @@ class PlacementRequestTransformerTest {
 
       val result = placementRequestTransformer.transformJpaToApi(
         placementRequestEntity,
-        PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail),
+        PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail, tier = null),
       )
 
       assertThat(result.status).isEqualTo(PlacementRequestStatus.notMatched)
@@ -295,7 +295,7 @@ class PlacementRequestTransformerTest {
 
       val result = placementRequestTransformer.transformJpaToApi(
         placementRequestEntity,
-        PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail),
+        PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail, tier = null),
       )
 
       assertThat(result.releaseType).isEqualTo(releaseTypeOption)
@@ -313,7 +313,7 @@ class PlacementRequestTransformerTest {
 
       val result = placementRequestTransformer.transformJpaToApi(
         placementRequestEntity,
-        PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail),
+        PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail, tier = null),
       )
 
       assertThat(result.releaseType).isEqualTo(releaseTypeOption)

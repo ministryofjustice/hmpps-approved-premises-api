@@ -119,6 +119,7 @@ class Cas1PersonalTimelineTransformerTest {
       crn = offenderDetailSummary.otherIds.crn,
       offenderDetailSummary = offenderDetailSummary,
       inmateDetail = null,
+      tier = null,
     )
     val mockPerson = mockk<Person>()
 

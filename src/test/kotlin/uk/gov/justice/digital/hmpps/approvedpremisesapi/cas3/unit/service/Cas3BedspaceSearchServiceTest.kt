@@ -220,7 +220,7 @@ class Cas3BedspaceSearchServiceTest {
       mockProbationDeliveryUnitRepository.existsById(probationDeliveryUnit.id)
     } returns true
     every { mockOffenderService.getPersonSummaryInfoResults(setOf(caseSummary.crn), any()) } returns
-      listOf(PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary))
+      listOf(PersonSummaryInfoResult.Success.Full(caseSummary.crn, caseSummary, tier = null))
 
     val result = cas3v2BedspaceSearchService.searchBedspaces(
       user = user,

@@ -185,7 +185,7 @@ class Cas3BookingTransformerTest {
     every { mockBedspaceTransformer.transformJpaToCas3BedspaceSummary(bedspaceEntity) } returns bedspaceSummaryModel
     every { mockDepartureTransformer.transformJpaToApi(nullDepartureEntity) } returns null
 
-    every { mockPersonTransformer.personInfoResultToPerson(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(
+    every { mockPersonTransformer.personInfoResultToPerson(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail, tier = null)) } returns FullPerson(
       type = PersonType.fullPerson,
       crn = "crn",
       name = "first last",
@@ -215,7 +215,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       awaitingArrivalBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -277,7 +277,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       nonArrivalBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -348,7 +348,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       arrivalBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -421,7 +421,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       cancellationBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -540,7 +540,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       cancellationBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -692,7 +692,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -893,7 +893,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -1095,7 +1095,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -1325,7 +1325,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -1454,7 +1454,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       confirmationBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(
@@ -1555,7 +1555,7 @@ class Cas3BookingTransformerTest {
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       awaitingArrivalBooking,
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetail, tier = null),
     )
 
     assertThat(transformedBooking).isEqualTo(

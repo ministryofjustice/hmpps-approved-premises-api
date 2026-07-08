@@ -115,7 +115,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
               jsonMapper.writeValueAsString(
                 bookingTransformer.transformJpaToApi(
                   booking,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                 ),
               ),
             )
@@ -235,7 +235,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
               jsonMapper.writeValueAsString(
                 bookingTransformer.transformJpaToApi(
                   booking,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                 ),
               ),
             )
@@ -302,7 +302,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
               jsonMapper.writeValueAsString(
                 bookingTransformer.transformJpaToApi(
                   booking,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null, tier = null),
                 ),
               ),
             )
@@ -430,7 +430,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           bookings.map {
             bookingTransformer.transformJpaToApi(
               it,
-              PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
             )
           },
         )
@@ -500,6 +500,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
                 offenderDetailSummary = offenderDetails,
                 inmateDetail = null,
+                tier = null,
               ),
             ),
           ),

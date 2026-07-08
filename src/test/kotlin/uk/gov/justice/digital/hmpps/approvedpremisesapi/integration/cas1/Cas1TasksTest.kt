@@ -2626,6 +2626,7 @@ class Cas1TasksTest {
           .produce(),
       )
         .produce(),
+      tier = null,
     ),
   )
 

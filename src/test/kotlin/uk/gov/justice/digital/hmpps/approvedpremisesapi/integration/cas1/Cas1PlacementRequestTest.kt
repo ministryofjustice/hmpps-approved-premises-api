@@ -281,11 +281,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       unmatchedPlacementRequest,
-                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate, tier = null),
                     ),
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       withdrawnPlacementRequest,
-                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate, tier = null),
                     ),
                   ),
                 ),
@@ -479,7 +479,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                     ),
                   ),
                 ),
@@ -509,7 +509,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                     ),
                   ),
                 ),
@@ -539,11 +539,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest5thJan,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                   ),
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest10thJan,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                   ),
                 ),
               ),
@@ -572,11 +572,11 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest1stJan,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                   ),
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequest5thJan,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                   ),
                 ),
               ),
@@ -605,7 +605,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequestA1,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                   ),
                 ),
               ),
@@ -638,7 +638,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     placementRequestA1,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                   ),
                 ),
               ),
@@ -666,7 +666,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     standardRelease,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                   ),
                 ),
               ),
@@ -694,7 +694,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                 listOf(
                   transformNotMatchedPlacementRequestJpaToApiSummary(
                     parole,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                   ),
                 ),
               ),
@@ -736,7 +736,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   listOf(
                     transformNotMatchedPlacementRequestJpaToApiSummary(
                       placementOffender1On5thJanTierA2Parole,
-                      PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details),
+                      PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details, tier = null),
                     ),
                   ),
                 ),
@@ -1271,7 +1271,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
               val cas1PlacementRequestDetail = placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                 spaceBooking.placementRequest!!,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
               )
 
               val response = webTestClient.get()
@@ -1392,7 +1392,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               val expected = jackson3JsonMapper.writeValueAsString(
                 placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                   spaceBooking.placementRequest!!,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                 ),
               )
 
@@ -1449,7 +1449,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   jackson3JsonMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       spaceBooking.placementRequest!!,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                     ),
                   ),
                 )
@@ -1480,7 +1480,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
                   jackson3JsonMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToCas1PlacementRequestDetail(
                       placementRequestRepository.findByIdOrNull(placementRequest.id)!!,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                     ),
                   ),
                 )

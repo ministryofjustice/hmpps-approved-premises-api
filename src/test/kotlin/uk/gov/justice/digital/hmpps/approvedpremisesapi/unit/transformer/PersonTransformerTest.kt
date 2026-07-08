@@ -531,6 +531,7 @@ class PersonTransformerTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = null,
+        tier = null,
       )
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)
@@ -554,6 +555,7 @@ class PersonTransformerTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = null,
+        tier = null,
       )
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)
@@ -577,6 +579,7 @@ class PersonTransformerTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = null,
+        tier = null,
       )
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)
@@ -600,6 +603,7 @@ class PersonTransformerTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = null,
+        tier = null,
       )
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)
@@ -624,6 +628,7 @@ class PersonTransformerTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = null,
+        tier = null,
       )
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)

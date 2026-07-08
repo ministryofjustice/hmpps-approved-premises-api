@@ -93,6 +93,7 @@ class Cas1SpaceBookingTransformerTest {
         "SOMECRN",
         CaseSummaryFactory().produce().asOffenderDetailSummary(),
         null,
+        tier = null,
       )
 
       val expectedPerson = RestrictedPerson(
@@ -280,6 +281,7 @@ class Cas1SpaceBookingTransformerTest {
         "SOMECRN",
         CaseSummaryFactory().produce().asOffenderDetailSummary(),
         null,
+        tier = null,
       )
 
       val expectedPerson = RestrictedPerson(
@@ -364,7 +366,7 @@ class Cas1SpaceBookingTransformerTest {
     fun success(cancelled: Boolean) {
       val id = UUID.randomUUID()
 
-      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
+      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms", tier = null)
 
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
@@ -465,7 +467,7 @@ class Cas1SpaceBookingTransformerTest {
     fun `Space booking is transformed correctly with case worker`() {
       val id = UUID.randomUUID()
 
-      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
+      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms", tier = null)
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
         PersonSummaryDiscriminator.restrictedPersonSummary,
@@ -540,7 +542,7 @@ class Cas1SpaceBookingTransformerTest {
     fun `Space booking is transformed correctly without case worker`() {
       val id = UUID.randomUUID()
 
-      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
+      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms", tier = null)
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
         PersonSummaryDiscriminator.restrictedPersonSummary,
