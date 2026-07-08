@@ -82,6 +82,7 @@ class PersonTransformer {
           personType = PersonSummaryDiscriminator.fullPersonSummary,
           name = getNameFromPersonSummaryInfoResult(personSummaryInfo),
           isRestricted = personSummaryInfo.summary.currentRestriction || personSummaryInfo.summary.currentExclusion,
+          tier = personSummaryInfo.tier,
         )
       }
 
@@ -89,6 +90,7 @@ class PersonTransformer {
         return RestrictedPersonSummary(
           crn = personSummaryInfo.crn,
           personType = PersonSummaryDiscriminator.restrictedPersonSummary,
+          tier = personSummaryInfo.tier,
         )
       }
 
@@ -128,12 +130,14 @@ class PersonTransformer {
           },
         // this is used by Cas2 which ignores currentExclusion, isRestricted flag is not used on the cas 2 frontend so it can be left in
         isRestricted = (offenderDetailSummary.currentExclusion || offenderDetailSummary.currentRestriction),
+        tier = personInfoResult.tier,
       )
     }
 
     is PersonInfoResult.Success.Restricted -> RestrictedPerson(
       type = PersonType.restrictedPerson,
       crn = personInfoResult.crn,
+      tier = personInfoResult.tier,
     )
 
     is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> UnknownPerson(
@@ -161,6 +165,7 @@ class PersonTransformer {
             ?: inmateDetail?.assignedLivingUnit?.agencyId
         },
       isRestricted = caseSummary.currentExclusion || caseSummary.currentRestriction,
+      tier = null,
     )
   }
 

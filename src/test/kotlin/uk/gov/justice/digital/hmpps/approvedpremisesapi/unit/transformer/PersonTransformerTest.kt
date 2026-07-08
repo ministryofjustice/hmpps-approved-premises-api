@@ -110,6 +110,8 @@ class PersonTransformerTest {
   @Nested
   inner class PersonSummaryInfoToPersonSummary {
 
+    val tier = TierDtoFactory().produce()
+
     @Test
     fun `map full person`() {
       val result = personTransformer.personSummaryInfoResultToPersonSummary(
@@ -118,6 +120,7 @@ class PersonTransformerTest {
           summary = CaseSummaryFactory()
             .withName(Name("max", "power", emptyList()))
             .produce(),
+          tier = tier,
         ),
       )
 
@@ -125,6 +128,7 @@ class PersonTransformerTest {
       assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
       assertThat(result).isInstanceOf(FullPersonSummary::class.java)
       assertThat((result as FullPersonSummary).name).isEqualTo("max power")
+      assertThat(result.tier).isEqualTo(tier)
     }
 
     @ParameterizedTest
@@ -145,10 +149,12 @@ class PersonTransformerTest {
             .withCurrentExclusion(hasExclusion)
             .withCurrentRestriction(hasRestriction)
             .produce(),
+          tier = tier,
         ),
       )
 
       assertThat((result as FullPersonSummary).isRestricted).isEqualTo(expectedIsRestricted)
+      assertThat(result.tier).isEqualTo(tier)
     }
 
     @Test
@@ -157,12 +163,14 @@ class PersonTransformerTest {
         PersonSummaryInfoResult.Success.Restricted(
           crn = "the crn",
           nomsNumber = "the noms number",
+          tier = tier,
         ),
       )
 
       assertThat(result.crn).isEqualTo("the crn")
       assertThat(result.personType).isEqualTo(PersonSummaryDiscriminator.restrictedPersonSummary)
       assertThat(result).isInstanceOf(RestrictedPersonSummary::class.java)
+      assertThat((result as RestrictedPersonSummary).tier).isEqualTo(tier)
     }
 
     @Test
@@ -193,22 +201,25 @@ class PersonTransformerTest {
   }
 
   @Nested
-  inner class TransformModelToPersonInfoApi {
+  inner class TransformPersonInfoResultToPerson {
+
+    val tier = TierDtoFactory().produce()
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly for a restricted person info`() {
+    fun `transforms correctly for a restricted person info`() {
       val crn = "CRN123"
 
-      val personInfoResult = PersonInfoResult.Success.Restricted(crn, null)
+      val personInfoResult = PersonInfoResult.Success.Restricted(crn, null, tier = tier)
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)
 
       assertThat(result is RestrictedPerson).isTrue
       assertThat(result.crn).isEqualTo(crn)
+      assertThat((result as RestrictedPerson).tier).isEqualTo(tier)
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly for a not found person info`() {
+    fun `transforms correctly for a not found person info`() {
       val crn = "CRN123"
 
       val personInfoResult = PersonInfoResult.NotFound(crn)
@@ -220,7 +231,7 @@ class PersonTransformerTest {
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly for an unknown person info`() {
+    fun `transforms correctly for an unknown person info`() {
       val crn = "CRN123"
 
       val personInfoResult = PersonInfoResult.Unknown(crn)
@@ -232,7 +243,7 @@ class PersonTransformerTest {
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly for a full person info without prison info`() {
+    fun `transforms correctly for a full person info without prison info`() {
       val crn = "CRN123"
 
       val offenderDetailSummary = OffenderDetailSummary(
@@ -287,6 +298,7 @@ class PersonTransformerTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = null,
+        tier = tier,
       )
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)
@@ -309,12 +321,13 @@ class PersonTransformerTest {
           genderIdentity = null,
           prisonName = null,
           isRestricted = false,
+          tier = tier,
         ),
       )
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly for a full person info with prison info`() {
+    fun `transforms correctly for a full person info with prison info`() {
       val crn = "CRN123"
 
       val offenderDetailSummary = OffenderDetailSummary(
@@ -381,6 +394,7 @@ class PersonTransformerTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = tier,
       )
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)
@@ -403,12 +417,13 @@ class PersonTransformerTest {
           genderIdentity = null,
           prisonName = "HMP Bristol",
           isRestricted = false,
+          tier = tier,
         ),
       )
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly without pnc number`() {
+    fun `transforms correctly without pnc number`() {
       val crn = "CRN123"
 
       val offenderDetailSummary = OffenderDetailSummary(
@@ -475,6 +490,7 @@ class PersonTransformerTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = tier,
       )
 
       val result = personTransformer.personInfoResultToPerson(personInfoResult)
@@ -497,12 +513,13 @@ class PersonTransformerTest {
           genderIdentity = null,
           prisonName = "HMP Bristol",
           isRestricted = false,
+          tier = tier,
         ),
       )
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly without gender identity`() {
+    fun `transforms correctly without gender identity`() {
       val crn = "CRN123"
 
       val offenderDetailSummary = OffenderDetailsSummaryFactory()
@@ -525,7 +542,7 @@ class PersonTransformerTest {
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly with an exclusion`() {
+    fun `transforms correctly with an exclusion`() {
       val crn = "CRN123"
 
       val offenderDetailSummary = OffenderDetailsSummaryFactory()
@@ -548,7 +565,7 @@ class PersonTransformerTest {
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly with a restriction`() {
+    fun `transforms correctly with a restriction`() {
       val crn = "CRN123"
 
       val offenderDetailSummary = OffenderDetailsSummaryFactory()
@@ -571,7 +588,7 @@ class PersonTransformerTest {
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly with gender identity`() {
+    fun `transforms correctly with gender identity`() {
       val crn = "CRN123"
 
       val offenderDetailSummary = OffenderDetailsSummaryFactory()
@@ -594,7 +611,7 @@ class PersonTransformerTest {
     }
 
     @Test
-    fun `transformModelToPersonInfoApi transforms correctly with self described gender identity`() {
+    fun `transforms correctly with self described gender identity`() {
       val crn = "CRN123"
 
       val offenderDetailSummary = OffenderDetailsSummaryFactory()
@@ -655,6 +672,7 @@ class PersonTransformerTest {
           nationality = caseSummary.profile?.nationality!!,
           prisonName = inmateDetail.assignedLivingUnit?.agencyName,
           isRestricted = false,
+          tier = null,
         ),
       )
     }
@@ -693,6 +711,7 @@ class PersonTransformerTest {
           nationality = "Not found",
           prisonName = inmateDetail.assignedLivingUnit?.agencyName,
           isRestricted = false,
+          tier = null,
         ),
       )
     }
