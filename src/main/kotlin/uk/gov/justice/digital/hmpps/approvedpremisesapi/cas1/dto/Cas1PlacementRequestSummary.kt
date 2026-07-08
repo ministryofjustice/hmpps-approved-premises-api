@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
+import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import java.time.LocalDate
 import java.util.UUID
@@ -21,6 +22,7 @@ data class Cas1PlacementRequestSummary(
 
   @get:JsonProperty("requestedPlacementArrivalDate") val requestedPlacementArrivalDate: LocalDate? = null,
 
+  @Schema(description = "This is the tier captured when the application was created. For the person's live tier use `person.tier`")
   @get:JsonProperty("personTier") val personTier: String? = null,
 
   @get:JsonProperty("applicationId") val applicationId: UUID? = null,

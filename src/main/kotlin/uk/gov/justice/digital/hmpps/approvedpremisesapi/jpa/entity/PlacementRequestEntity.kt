@@ -41,7 +41,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       pq.expected_arrival AS requestedPlacementArrivalDate,
       pq.id AS id,
       application.crn AS personCrn,
-      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS personTier,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tierOnApplicationCreation,
       pq.application_id AS applicationId,
       apa.name as personName,
       pq.is_parole as isParole,
@@ -68,7 +68,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       LEFT JOIN premises spaceBookingPremises ON spaceBooking.premises_id = spaceBookingPremises.id
       LEFT JOIN booking_not_mades bnm ON bnm.placement_request_id = pq.id
       WHERE
-      (:tier IS NULL OR apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier)      
+      (:tierOnApplicationCreation IS NULL OR apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tierOnApplicationCreation)      
       AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS DATE) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
       AND (
@@ -100,7 +100,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   fun allForCas1Dashboard(
     status: String? = null,
     crnOrName: String? = null,
-    tier: String? = null,
+    tierOnApplicationCreation: String? = null,
     arrivalDateFrom: LocalDate? = null,
     arrivalDateTo: LocalDate? = null,
     requestType: String? = null,
@@ -274,7 +274,7 @@ interface Cas1PlacementRequestSummary {
   fun getRequestedPlacementArrivalDate(): LocalDate
   fun getId(): UUID
   fun getPersonCrn(): String
-  fun getPersonTier(): String?
+  fun getTierOnApplicationCreation(): String?
   fun getApplicationId(): UUID
   fun getPlacementRequestStatus(): PlacementRequestStatus
   fun getApplicationSubmittedDate(): LocalDate

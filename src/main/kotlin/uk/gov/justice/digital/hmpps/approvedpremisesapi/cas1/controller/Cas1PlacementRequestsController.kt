@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
@@ -56,7 +55,6 @@ class Cas1PlacementRequestsController(
   private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
   private val offenderDetailService: OffenderDetailService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
-  private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val bookingNotMadeTransformer: BookingNotMadeTransformer,
   private val userAccessService: Cas1UserAccessService,
 ) {
@@ -75,6 +73,7 @@ class Cas1PlacementRequestsController(
   fun search(
     @RequestParam status: PlacementRequestStatus?,
     @RequestParam crnOrName: String?,
+    @Schema(description = "Filter on the tier captured when the application was created")
     @RequestParam tier: RiskTierLevel?,
     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) arrivalDateStart: LocalDate?,
     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) arrivalDateEnd: LocalDate?,
@@ -94,7 +93,7 @@ class Cas1PlacementRequestsController(
       Cas1PlacementRequestService.AllActiveSearchCriteria(
         status = status,
         crnOrName = crnOrName,
-        tier = tier?.value,
+        tierOnApplicationCreation = tier?.value,
         arrivalDateStart = arrivalDateStart,
         arrivalDateEnd = arrivalDateEnd,
         requestType = requestType,

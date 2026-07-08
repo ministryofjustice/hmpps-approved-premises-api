@@ -22,7 +22,7 @@ class Cas1PlacementRequestSummaryTransformer(
     person = personTransformer.personInfoResultToPerson(personInfo),
     placementRequestStatus = jpa.getPlacementRequestStatus(),
     isParole = jpa.getIsParole(),
-    personTier = jpa.getPersonTier(),
+    personTier = jpa.getTierOnApplicationCreation(),
     applicationId = jpa.getApplicationId(),
     applicationSubmittedDate = jpa.getApplicationSubmittedDate(),
     firstBookingPremisesName = jpa.getBookingPremisesName(),
