@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Temporality
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas1OutOfServiceBed
@@ -25,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionEntity
@@ -1561,186 +1559,6 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.revisionHistory[1].referenceNumber").isEqualTo("REF-123")
           .jsonPath("$.revisionHistory[1].notes").isEqualTo("notes")
           .jsonPath("$.revisionHistory[2]").doesNotExist()
-      }
-    }
-
-    @Test
-    fun `Update Out-Of-Service Beds succeeds even if overlapping with Booking`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
-        val premises = givenAnApprovedPremises()
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
-              withYieldedPremises { premises }
-            }
-          }
-        }
-
-        val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-          withBed(bed)
-        }.apply {
-          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            withCreatedBy(user)
-            withOutOfServiceBed(this@apply)
-            withStartDate(LocalDate.parse("2022-08-16"))
-            withEndDate(LocalDate.parse("2022-08-30"))
-            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
-          }
-        }
-
-        val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
-
-        // existingBooking
-        bookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.approvedPremises)
-          withCrn("CRN123")
-          withYieldedPremises { premises }
-          withBed(bed)
-          withArrivalDate(LocalDate.parse("2022-07-15"))
-          withDepartureDate(LocalDate.parse("2022-08-15"))
-        }
-
-        govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-        webTestClient.put()
-          .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            UpdateCas1OutOfServiceBed(
-              startDate = LocalDate.parse("2022-08-01"),
-              endDate = LocalDate.parse("2022-08-30"),
-              reason = reason.id,
-              referenceNumber = "REF-123",
-              notes = "notes",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-      }
-    }
-
-    @Test
-    fun `Update Out-Of-Service Beds returns OK with correct body when only cancelled bookings for the same bed overlap`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          val premises = givenAnApprovedPremises()
-
-          val bed = bedEntityFactory.produceAndPersist {
-            withYieldedRoom {
-              roomEntityFactory.produceAndPersist {
-                withYieldedPremises { premises }
-              }
-            }
-          }
-
-          val originalDetails: Cas1OutOfServiceBedRevisionEntity
-
-          val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-            withBed(bed)
-          }.apply {
-            originalDetails = cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-              withCreatedBy(user)
-              withOutOfServiceBed(this@apply)
-              withStartDate(LocalDate.parse("2022-08-16"))
-              withEndDate(LocalDate.parse("2022-08-30"))
-              withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
-            }
-
-            this.revisionHistory += originalDetails
-          }
-
-          val reason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
-
-          val existingBooking = bookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.approvedPremises)
-            withCrn(offenderDetails.otherIds.crn)
-            withYieldedPremises { premises }
-            withBed(bed)
-            withArrivalDate(LocalDate.parse("2022-07-15"))
-            withDepartureDate(LocalDate.parse("2022-08-15"))
-          }
-
-          existingBooking.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
-            withYieldedBooking { existingBooking }
-            withDate(LocalDate.parse("2022-07-01"))
-            withReason(cancellationReasonEntityFactory.produceAndPersist())
-          }.toMutableList()
-
-          webTestClient.put()
-            .uri("/cas1/premises/${premises.id}/out-of-service-beds/${outOfServiceBed.id}")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              UpdateCas1OutOfServiceBed(
-                startDate = LocalDate.parse("2022-08-01"),
-                endDate = LocalDate.parse("2022-08-15"),
-                reason = reason.id,
-                referenceNumber = "REF-123",
-                notes = "notes",
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .jsonPath("$.startDate").isEqualTo("2022-08-01")
-            .jsonPath("$.endDate").isEqualTo("2022-08-15")
-            .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
-            .jsonPath("$.bed.name").isEqualTo(bed.name)
-            .jsonPath("$.room.id").isEqualTo(bed.room.id.toString())
-            .jsonPath("$.room.name").isEqualTo(bed.room.name)
-            .jsonPath("$.premises.id").isEqualTo(premises.id.toString())
-            .jsonPath("$.premises.name").isEqualTo(premises.name)
-            .jsonPath("$.apArea.id").isEqualTo(premises.probationRegion.apArea!!.id.toString())
-            .jsonPath("$.apArea.name").isEqualTo(premises.probationRegion.apArea!!.name)
-            .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
-            .jsonPath("$.reason.name").isEqualTo(reason.name)
-            .jsonPath("$.reason.isActive").isEqualTo(true)
-            .jsonPath("$.daysLostCount").isEqualTo(15)
-            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
-            .jsonPath("$.referenceNumber").isEqualTo("REF-123")
-            .jsonPath("$.notes").isEqualTo("notes")
-            .jsonPath("$.status").isEqualTo("active")
-            .jsonPath("$.cancellation").isEqualTo(null)
-            .jsonPath("$.revisionHistory[0].updatedBy.id").isEqualTo(originalDetails.createdBy!!.id.toString())
-            .jsonPath("$.revisionHistory[0].updatedBy.name").isEqualTo(originalDetails.createdBy!!.name)
-            .jsonPath("$.revisionHistory[0].updatedBy.deliusUsername").isEqualTo(originalDetails.createdBy!!.deliusUsername)
-            .jsonPath("$.revisionHistory[0].revisionType").value(
-              containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.created.value,
-              ),
-            )
-            .jsonPath("$.revisionHistory[0].startDate").isEqualTo(originalDetails.startDate.toString())
-            .jsonPath("$.revisionHistory[0].endDate").isEqualTo(originalDetails.endDate.toString())
-            .jsonPath("$.revisionHistory[0].reason.id").isEqualTo(originalDetails.reason.id.toString())
-            .jsonPath("$.revisionHistory[0].reason.name").isEqualTo(originalDetails.reason.name)
-            .jsonPath("$.revisionHistory[0].reason.isActive").isEqualTo(originalDetails.reason.isActive)
-            .jsonPath("$.revisionHistory[0].referenceNumber").isEqualTo(originalDetails.referenceNumber)
-            .jsonPath("$.revisionHistory[0].notes").isEqualTo(originalDetails.notes)
-            .jsonPath("$.revisionHistory[1].updatedBy.id").isEqualTo(user.id.toString())
-            .jsonPath("$.revisionHistory[1].updatedBy.name").isEqualTo(user.name)
-            .jsonPath("$.revisionHistory[1].updatedBy.deliusUsername").isEqualTo(user.deliusUsername)
-            .jsonPath("$.revisionHistory[1].revisionType").value(
-              containsInAnyOrder(
-                Cas1OutOfServiceBedRevisionType.updatedStartDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedEndDate.value,
-                Cas1OutOfServiceBedRevisionType.updatedReferenceNumber.value,
-                Cas1OutOfServiceBedRevisionType.updatedReason.value,
-                Cas1OutOfServiceBedRevisionType.updatedNotes.value,
-              ),
-            )
-            .jsonPath("$.revisionHistory[1].startDate").isEqualTo("2022-08-01")
-            .jsonPath("$.revisionHistory[1].endDate").isEqualTo("2022-08-15")
-            .jsonPath("$.revisionHistory[1].reason.id").isEqualTo(reason.id.toString())
-            .jsonPath("$.revisionHistory[1].reason.name").isEqualTo(reason.name)
-            .jsonPath("$.revisionHistory[1].reason.isActive").isEqualTo(true)
-            .jsonPath("$.revisionHistory[1].referenceNumber").isEqualTo("REF-123")
-            .jsonPath("$.revisionHistory[1].notes").isEqualTo("notes")
-            .jsonPath("$.revisionHistory[2]").doesNotExist()
-        }
       }
     }
 

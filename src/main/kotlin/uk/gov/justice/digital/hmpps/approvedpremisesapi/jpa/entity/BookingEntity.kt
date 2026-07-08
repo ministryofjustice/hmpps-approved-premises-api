@@ -77,8 +77,6 @@ data class BookingEntity(
   var departures: MutableList<DepartureEntity>,
   @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var nonArrival: NonArrivalEntity?,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
-  var cancellations: MutableList<CancellationEntity>,
   @OneToOne
   @JoinColumn(name = "application_id")
   var application: ApplicationEntity?,
@@ -110,12 +108,6 @@ data class BookingEntity(
   val departure: DepartureEntity?
     get() = departures.maxByOrNull { it.createdAt }
 
-  val cancellation: CancellationEntity?
-    get() = cancellations.maxByOrNull { it.createdAt }
-
-  val isCancelled: Boolean
-    get() = cancellation != null
-
   val arrival: ArrivalEntity?
     get() = arrivals.maxByOrNull { it.createdAt }
 
@@ -126,8 +118,6 @@ data class BookingEntity(
       }
       return Cas1ApplicationFacade(application as ApprovedPremisesApplicationEntity?, offlineApplication)
     }
-
-  fun isActive() = !isCancelled
 
   fun hasArrivals() = arrivals.isNotEmpty()
 
@@ -167,5 +157,4 @@ interface BookingSummaryForAvailability {
   fun getDepartureDate(): LocalDate
   fun getArrived(): Boolean
   fun getIsNotArrived(): Boolean
-  fun getCancelled(): Boolean
 }

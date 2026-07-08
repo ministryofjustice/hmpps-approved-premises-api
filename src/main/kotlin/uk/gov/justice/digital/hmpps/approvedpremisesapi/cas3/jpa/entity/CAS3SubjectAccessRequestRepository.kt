@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SubjectAccessRequestRepositoryBase
 import java.time.LocalDateTime
 
@@ -64,6 +65,43 @@ class CAS3SubjectAccessRequestRepository(
 
     return toJsonString(result)
   }
+
+  fun temporaryAccommodationBookings(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
+    val result = jdbcTemplate.queryForMap(
+      """
+    select json_agg(booking) as json
+    from (
+          select
+              b.crn,
+              b.noms_number,
+              b.arrival_date,
+              b.departure_date,
+              b.original_arrival_date,
+              b.original_departure_date,
+              b.created_at,
+              b.status,
+              p.name as premises_name,
+              b.offender_name
+          from
+              bookings b
+          left join cas3_premises p on
+              b.premises_id = p.id
+          where
+              b.service = :service_name
+          and
+              (b.crn = :crn
+              or b.noms_number = :noms_number )
+          and (:start_date::date is null or b.created_at >= :start_date)
+          and (:end_date::date is null or b.created_at <= :end_date)
+  ) booking
+      """.trimIndent(),
+      MapSqlParameterSource()
+        .addSarParameters(crn, nomsNumber, startDate, endDate)
+        .addValue("service_name", ServiceName.temporaryAccommodation.value),
+    )
+    return toJsonString(result)
+  }
+
   fun temporaryAccommodationAssessments(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String? {
     val result = jdbcTemplate.queryForMap(
       """

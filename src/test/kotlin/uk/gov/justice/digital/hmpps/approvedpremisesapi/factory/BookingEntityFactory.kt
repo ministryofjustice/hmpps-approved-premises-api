@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
@@ -36,7 +35,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var arrivals: Yielded<MutableList<ArrivalEntity>>? = null
   private var departures: Yielded<MutableList<DepartureEntity>>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
-  private var cancellations: Yielded<MutableList<CancellationEntity>>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var dateChanges: Yielded<MutableList<DateChangeEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
@@ -100,14 +98,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
 
   fun withNonArrival(nonArrival: NonArrivalEntity) = apply {
     this.nonArrival = { nonArrival }
-  }
-
-  fun withYieldedCancellations(cancellations: Yielded<MutableList<CancellationEntity>>) = apply {
-    this.cancellations = cancellations
-  }
-
-  fun withCancellations(cancellations: MutableList<CancellationEntity>) = apply {
-    this.cancellations = { cancellations }
   }
 
   fun withYieldedExtensions(extensions: Yielded<MutableList<ExtensionEntity>>) = apply {
@@ -190,7 +180,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     arrivals = this.arrivals?.invoke() ?: mutableListOf(),
     departures = this.departures?.invoke() ?: mutableListOf(),
     nonArrival = this.nonArrival?.invoke(),
-    cancellations = this.cancellations?.invoke() ?: mutableListOf(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
     dateChanges = this.dateChanges?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),

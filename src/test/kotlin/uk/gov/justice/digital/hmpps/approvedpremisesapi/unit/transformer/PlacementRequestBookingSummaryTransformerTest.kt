@@ -37,7 +37,6 @@ class PlacementRequestBookingSummaryTransformerTest {
         arrivals = mutableListOf(),
         departures = mutableListOf(),
         nonArrival = null,
-        cancellations = mutableListOf(),
         extensions = mutableListOf(),
         dateChanges = mutableListOf(),
         premises = premises,

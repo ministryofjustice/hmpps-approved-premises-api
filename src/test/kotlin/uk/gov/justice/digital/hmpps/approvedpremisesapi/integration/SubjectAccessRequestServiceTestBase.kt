@@ -1,35 +1,36 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ExtensionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ReleaseType
@@ -100,7 +101,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
 
   protected fun OffsetDateTime.toStandardisedFormat(): String = this.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-  protected fun cancellationJson(cancellation: CancellationEntity): String =
+  protected fun cancellationJson(cancellation: Cas3CancellationEntity): String =
     """
       {   
           "crn": "${cancellation.booking.crn}",
@@ -113,7 +114,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       }
     """.trimIndent()
 
-  protected fun bookingExtensionJson(bookingExtension: ExtensionEntity): String =
+  protected fun bookingExtensionJson(bookingExtension: Cas3ExtensionEntity): String =
     """
       {
         "crn": "${bookingExtension.booking.crn}",
@@ -165,7 +166,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       }
     """.trimIndent()
 
-  protected fun bookingsJson(booking: BookingEntity): String =
+  protected fun bookingsJson(booking: Cas3BookingEntity): String =
     """
       {
          "crn": "${booking.crn}",
@@ -177,8 +178,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
          "created_at": "$CREATED_AT",
          "status": "${booking.status}",
          "premises_name": "${booking.premises.name}",
-         "adhoc": ${booking.adhoc},
-         "key_worker_staff_code": "${booking.keyWorkerStaffCode}",
          "offender_name": ${booking.offenderName?.let { "\"${it}\"" }},
       }
     """.trimIndent()
@@ -232,7 +231,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       }
     """.trimIndent()
 
-  protected fun cancellationEntity(booking: BookingEntity): CancellationEntity = cancellationEntityFactory.produceAndPersist {
+  protected fun cancellationEntity(booking: Cas3BookingEntity): Cas3CancellationEntity = cas3CancellationEntityFactory.produceAndPersist {
     withReason(
       cancellationReasonEntityFactory.produceAndPersist {
         withName("some reason")
@@ -247,7 +246,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     withOtherReason("some other reason")
   }
 
-  protected fun bookingExtensionEntity(booking: BookingEntity): ExtensionEntity = extensionEntityFactory.produceAndPersist {
+  protected fun bookingExtensionEntity(booking: Cas3BookingEntity): Cas3ExtensionEntity = cas3ExtensionEntityFactory.produceAndPersist {
     withBooking(booking)
     withNotes("some notes")
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
@@ -320,30 +319,26 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   protected fun bookingEntity(
     offenderDetails: OffenderDetailSummary,
     application: ApplicationEntity,
-    offlineApplication: OfflineApplicationEntity? = null,
-    serviceName: ServiceName = ServiceName.approvedPremises,
-  ): BookingEntity {
-    val bed = bedEntity()
+    serviceName: ServiceName = ServiceName.temporaryAccommodation,
+  ): Cas3BookingEntity {
+    val user = userEntity()
+    val (cas3Premises, cas3Bedspace) = givenCas3PremisesAndBedspace(user = user)
 
-    val booking = bookingEntityFactory.produceAndPersist {
+    return cas3BookingEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber)
       withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withAdhoc(true)
-      withOfflineApplication(offlineApplication)
       withDepartureDate(LocalDate.parse(departedAtDateOnly))
-      withApplication(application)
+      withApplication(application as? TemporaryAccommodationApplicationEntity)
       withArrivalDate(LocalDate.parse(arrivedAtDateOnly))
       withOriginalArrivalDate(LocalDate.parse(arrivedAtDateOnly))
       withOriginalDepartureDate(LocalDate.parse(departedAtDateOnly))
-      withPremises(bed.room.premises)
-      withStaffKeyWorkerCode("KEYWORKERSTAFFCODE")
-      withStatus(BookingStatus.arrived)
-      withBed(bed)
+      withPremises(cas3Premises)
+      withBedspace(cas3Bedspace)
+      withStatus(Cas3BookingStatus.arrived)
       withServiceName(serviceName)
       withOffenderName("${offenderDetails.firstName} ${offenderDetails.surname}")
     }
-    return booking
   }
 
   protected fun bedEntity(premisesEntity: ApprovedPremisesEntity? = null) = bedEntityFactory.produceAndPersist {
