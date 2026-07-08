@@ -5,5 +5,5 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
 class RestrictedPersonSummary(
   override val crn: String,
   override val personType: PersonSummaryDiscriminator,
-  val tier: TierDto? = null,
+  val tier: TierDto?,
 ) : PersonSummary

@@ -98,6 +98,7 @@ class Cas1SpaceBookingTransformerTest {
       val expectedPerson = RestrictedPerson(
         "SOMECRN",
         PersonType.restrictedPerson,
+        tier = null,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -284,6 +285,7 @@ class Cas1SpaceBookingTransformerTest {
       val expectedPerson = RestrictedPerson(
         "SOMECRN",
         PersonType.restrictedPerson,
+        tier = null,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -367,6 +369,7 @@ class Cas1SpaceBookingTransformerTest {
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
         PersonSummaryDiscriminator.restrictedPersonSummary,
+        tier = null,
       )
 
       val cas1ChangeRequests = listOf(Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLACEMENT_APPEAL).produce())
@@ -466,6 +469,7 @@ class Cas1SpaceBookingTransformerTest {
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
         PersonSummaryDiscriminator.restrictedPersonSummary,
+        tier = null,
       )
 
       val premises = ApprovedPremisesEntityFactory().withDefaults().withName("the premise").produce()
@@ -540,6 +544,7 @@ class Cas1SpaceBookingTransformerTest {
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
         PersonSummaryDiscriminator.restrictedPersonSummary,
+        tier = null,
       )
 
       every { personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo) } returns expectedPersonSummary

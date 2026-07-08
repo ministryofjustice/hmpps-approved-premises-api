@@ -17,5 +17,5 @@ data class FullPerson(
   val genderIdentity: String? = null,
   val prisonName: String? = null,
   val isRestricted: Boolean? = null,
-  val tier: TierDto? = null,
+  val tier: TierDto?,
 ) : Person

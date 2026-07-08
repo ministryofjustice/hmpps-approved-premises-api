@@ -33,6 +33,7 @@ class Cas1PremisesDayTransformerTest {
         person = RestrictedPersonSummary(
           crn = "crn",
           personType = PersonSummaryDiscriminator.restrictedPersonSummary,
+          tier = null,
         ),
         canonicalArrivalDate = currentSearchDay.minusDays(1),
         canonicalDepartureDate = currentSearchDay.plusDays(1),

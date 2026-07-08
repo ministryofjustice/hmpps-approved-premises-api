@@ -383,6 +383,7 @@ class Cas2v2ApplicationServiceTest {
           type = PersonType.fullPerson,
           isRestricted = false,
           nomsNumber = "12345",
+          tier = null,
         ),
       )
 
@@ -896,6 +897,7 @@ class Cas2v2ApplicationServiceTest {
           crn = cas2v2Application.crn,
           type = PersonType.fullPerson,
           isRestricted = false,
+          tier = null,
         ),
       )
 

@@ -7,5 +7,5 @@ data class FullPersonSummary(
   val isRestricted: Boolean,
   override val crn: String,
   override val personType: PersonSummaryDiscriminator,
-  val tier: TierDto? = null,
+  val tier: TierDto?,
 ) : PersonSummary

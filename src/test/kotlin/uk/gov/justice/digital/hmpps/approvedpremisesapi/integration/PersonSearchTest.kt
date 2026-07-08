@@ -150,6 +150,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 genderIdentity = "This is a self described identity",
                 prisonName = "HMP Bristol",
                 isRestricted = false,
+                tier = null,
               ),
             ),
           )
@@ -198,6 +199,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 genderIdentity = "This is a self described identity",
                 prisonName = null,
                 isRestricted = false,
+                tier = null,
               ),
             ),
           )
