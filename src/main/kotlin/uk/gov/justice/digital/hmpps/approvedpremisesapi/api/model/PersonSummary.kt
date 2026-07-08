@@ -11,9 +11,9 @@ import io.swagger.v3.oas.annotations.media.Schema
   JsonSubTypes.Type(value = UnknownPersonSummary::class, name = "UnknownPersonSummary"),
 )
 interface PersonSummary {
-  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
+  @get:Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   val crn: String
 
-  @get:Schema(example = "null", requiredMode = Schema.RequiredMode.REQUIRED, description = "")
+  @get:Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   val personType: PersonSummaryDiscriminator
 }
