@@ -198,6 +198,8 @@ class ApplicationsTransformer(
       apType = applicationEntity.apType.asApiType(),
       licenceExpiryDate = applicationEntity.licenceExpiryDate,
       createdByUserName = applicationEntity.createdByUser.name,
+      releaseType = applicationEntity.releaseType?.apiType,
+      sentenceType = SentenceTypeOption.fromValueOrNull(applicationEntity.sentenceType),
     )
   }
 

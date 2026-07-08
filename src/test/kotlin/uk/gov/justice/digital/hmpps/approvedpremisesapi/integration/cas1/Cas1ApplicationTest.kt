@@ -1145,6 +1145,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withCreatedByUser(userEntity)
             withData("""{"thingId":123}""")
             withReleaseType(Cas1ReleaseType.reReleasedFollowingFixedTermRecall)
+            withSentenceType(SentenceTypeOption.nonStatutory.name)
           }
 
           val rawResponseBody = webTestClient.get()
@@ -1166,6 +1167,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           assertThat(responseBody.createdByUserName).isEqualTo(applicationEntity.createdByUser.name)
           assertThat(responseBody.submittedAt).isEqualTo(applicationEntity.submittedAt?.toInstant())
           assertThat(responseBody.releaseType).isEqualTo(applicationEntity.releaseType!!.apiType)
+          assertThat(responseBody.sentenceType).isEqualTo(SentenceTypeOption.valueOf(applicationEntity.sentenceType!!))
           assertThat(serializableToJsonNode(responseBody.data)).isEqualTo(serializableToJsonNode(applicationEntity.data))
         }
       }

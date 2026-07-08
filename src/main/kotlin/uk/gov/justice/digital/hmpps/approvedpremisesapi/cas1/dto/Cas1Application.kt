@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDeci
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -68,4 +70,8 @@ data class Cas1Application(
   val caseManagerUserDetails: Cas1ApplicationUserDetails? = null,
 
   val licenceExpiryDate: LocalDate? = null,
+
+  val releaseType: ReleaseTypeOption? = null,
+
+  val sentenceType: SentenceTypeOption? = null,
 )

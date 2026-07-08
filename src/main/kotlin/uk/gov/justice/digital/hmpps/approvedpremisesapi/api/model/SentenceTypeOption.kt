@@ -16,8 +16,13 @@ enum class SentenceTypeOption(@get:JsonValue val value: String) {
   ;
 
   companion object {
+    private val ENTRIES_BY_LOWERCASE_VALUE: Map<String, SentenceTypeOption> =
+      entries.associateBy { it.value.lowercase() }
+
     @JvmStatic
     @JsonCreator
     fun forValue(value: String): SentenceTypeOption = values().first { it.value == value }
+
+    fun fromValueOrNull(value: String?): SentenceTypeOption? = value?.let { ENTRIES_BY_LOWERCASE_VALUE[it.lowercase()] }
   }
 }
