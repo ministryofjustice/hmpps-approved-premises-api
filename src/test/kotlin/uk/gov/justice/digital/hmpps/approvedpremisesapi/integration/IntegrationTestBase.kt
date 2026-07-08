@@ -138,7 +138,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentReferr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
@@ -201,7 +200,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
@@ -272,7 +270,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.AssessmentTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingNotMadeTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationReasonTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedCancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedDetailsTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedReasonTestRepository
@@ -415,9 +412,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var nonArrivalRepository: NonArrivalTestRepository
-
-  @Autowired
-  lateinit var cancellationRepository: CancellationTestRepository
 
   @Autowired
   lateinit var departureReasonRepository: DepartureReasonTestRepository
@@ -658,7 +652,6 @@ abstract class IntegrationTestBase {
   lateinit var departureReasonEntityFactory: PersistedFactory<DepartureReasonEntity, UUID, DepartureReasonEntityFactory>
   lateinit var moveOnCategoryEntityFactory: PersistedFactory<MoveOnCategoryEntity, UUID, MoveOnCategoryEntityFactory>
   lateinit var nonArrivalEntityFactory: PersistedFactory<NonArrivalEntity, UUID, NonArrivalEntityFactory>
-  lateinit var cancellationEntityFactory: PersistedFactory<CancellationEntity, UUID, CancellationEntityFactory>
   lateinit var cancellationReasonEntityFactory: PersistedFactory<CancellationReasonEntity, UUID, CancellationReasonEntityFactory>
   lateinit var cas3VoidBedspaceEntityFactory: PersistedFactory<Cas3VoidBedspaceEntity, UUID, Cas3VoidBedspaceEntityFactory>
   lateinit var cas3VoidBedspaceReasonEntityFactory: PersistedFactory<Cas3VoidBedspaceReasonEntity, UUID, Cas3VoidBedspaceReasonEntityFactory>
@@ -784,7 +777,6 @@ abstract class IntegrationTestBase {
     departureReasonEntityFactory = PersistedFactory({ DepartureReasonEntityFactory() }, departureReasonRepository)
     moveOnCategoryEntityFactory = PersistedFactory({ MoveOnCategoryEntityFactory() }, moveOnCategoryRepository)
     nonArrivalEntityFactory = PersistedFactory({ NonArrivalEntityFactory() }, nonArrivalRepository)
-    cancellationEntityFactory = PersistedFactory({ CancellationEntityFactory() }, cancellationRepository)
     cancellationReasonEntityFactory = PersistedFactory({ CancellationReasonEntityFactory() }, cancellationReasonRepository)
     cas3VoidBedspaceEntityFactory = PersistedFactory({ Cas3VoidBedspaceEntityFactory() }, cas3VoidBedspacesTestRepository)
     cas3VoidBedspaceReasonEntityFactory = PersistedFactory({ Cas3VoidBedspaceReasonEntityFactory() }, cas3VoidBedspaceReasonTestRepository)

@@ -94,7 +94,7 @@ class SubjectAccessRequestService(
     val temporaryAccommodationApplicationsJson = cas3SubjectAccessRequestRepository.temporaryAccommodationApplications(crn, nomsNumber, startDate, endDate)
     val temporaryAccommodationAssessmentsJson = cas3SubjectAccessRequestRepository.temporaryAccommodationAssessments(crn, nomsNumber, startDate, endDate)
     val assessmentReferralHistoryNotesJson = cas3SubjectAccessRequestRepository.assessmentReferralHistoryNotes(crn, nomsNumber, startDate, endDate)
-    val bookingsJson = cas3SubjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
+    val bookingsJson = cas3SubjectAccessRequestRepository.temporaryAccommodationBookings(crn, nomsNumber, startDate, endDate)
     val bookingExtensionsJson = cas3SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
     val cancellationsJson = cas3SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate, ServiceName.temporaryAccommodation)
     val domainEventsJson = cas3SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS3")
