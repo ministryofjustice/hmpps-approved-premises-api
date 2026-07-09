@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortFieldConstants
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
@@ -32,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
@@ -56,7 +56,6 @@ class Cas1PlacementRequestsController(
   private val placementRequestDetailTransformer: PlacementRequestDetailTransformer,
   private val offenderDetailService: OffenderDetailService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
-  private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val bookingNotMadeTransformer: BookingNotMadeTransformer,
   private val userAccessService: Cas1UserAccessService,
 ) {
@@ -75,12 +74,16 @@ class Cas1PlacementRequestsController(
   fun search(
     @RequestParam status: PlacementRequestStatus?,
     @RequestParam crnOrName: String?,
+    @Schema(description = "Filter on the tier captured when the application was created")
     @RequestParam tier: RiskTierLevel?,
+    @Schema(description = "Filter on the person's live tier")
+    @RequestParam personTier: String?,
     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) arrivalDateStart: LocalDate?,
     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) arrivalDateEnd: LocalDate?,
     @RequestParam requestType: PlacementRequestRequestType?,
     @RequestParam cruManagementAreaId: UUID?,
     @RequestParam page: Int?,
+    @Schema(description = PlacementRequestSortFieldConstants.DESCRIPTION)
     @RequestParam sortBy: PlacementRequestSortField?,
     @RequestParam sortDirection: SortDirection?,
   ): ResponseEntity<List<Cas1PlacementRequestSummary>> {
@@ -94,7 +97,8 @@ class Cas1PlacementRequestsController(
       Cas1PlacementRequestService.AllActiveSearchCriteria(
         status = status,
         crnOrName = crnOrName,
-        tier = tier?.value,
+        tierOnApplicationCreation = tier?.value,
+        personTier = personTier,
         arrivalDateStart = arrivalDateStart,
         arrivalDateEnd = arrivalDateEnd,
         requestType = requestType,

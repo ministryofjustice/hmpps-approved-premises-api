@@ -66,9 +66,10 @@ class Cas1PlacementRequestService(
           PlacementRequestSortField.duration -> "requestedPlacementDuration"
           PlacementRequestSortField.requestType -> "requestType"
           PlacementRequestSortField.personName -> "personName"
-          PlacementRequestSortField.personRisksTier -> "personTier"
+          PlacementRequestSortField.personRisksTier -> "tierOnApplicationCreation"
           PlacementRequestSortField.firstBookingPremisesName -> "bookingPremisesName"
           PlacementRequestSortField.firstBookingArrivalDate -> "bookingArrivalDate"
+          PlacementRequestSortField.personTier -> "personTierScore"
         },
         "id",
       ),
@@ -81,7 +82,8 @@ class Cas1PlacementRequestService(
     val response = placementRequestRepository.allForCas1Dashboard(
       status = searchCriteria.status?.name,
       crnOrName = searchCriteria.crnOrName,
-      tier = searchCriteria.tier,
+      tierOnApplicationCreation = searchCriteria.tierOnApplicationCreation,
+      personTierScore = searchCriteria.personTier,
       arrivalDateFrom = searchCriteria.arrivalDateStart,
       arrivalDateTo = searchCriteria.arrivalDateEnd,
       requestType = searchCriteria.requestType?.name,
@@ -286,7 +288,8 @@ class Cas1PlacementRequestService(
   data class AllActiveSearchCriteria(
     val status: PlacementRequestStatus? = null,
     val crnOrName: String? = null,
-    val tier: String? = null,
+    val tierOnApplicationCreation: String? = null,
+    val personTier: String? = null,
     val arrivalDateStart: LocalDate? = null,
     val arrivalDateEnd: LocalDate? = null,
     val requestType: PlacementRequestRequestType? = null,
