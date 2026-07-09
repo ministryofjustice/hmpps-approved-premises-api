@@ -378,7 +378,7 @@ class Cas1SpaceBookingServiceTest {
       "canonicalArrivalDate,canonicalArrivalDate",
       "canonicalDepartureDate,canonicalDepartureDate",
       "keyWorkerName,keyWorkerName",
-      "tier,tier",
+      "tier,tierOnApplicationCreation",
     )
     fun `delegate to repository, defining correct sort column`(
       inputSortField: Cas1SpaceBookingSummarySortField,

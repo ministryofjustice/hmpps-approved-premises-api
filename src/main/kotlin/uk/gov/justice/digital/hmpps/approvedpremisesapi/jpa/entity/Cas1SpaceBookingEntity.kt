@@ -100,7 +100,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         b.actual_departure_date AS actualDepartureDate,
         b.actual_departure_time AS actualDepartureTime,
         b.non_arrival_confirmed_at AS nonArrivalConfirmedAtDateTime,
-        apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tier,
+        apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tierOnApplicationCreation,
         b.key_worker_staff_code AS keyWorkerStaffCode,
         b.key_worker_assigned_at AS keyWorkerAssignedAt,
         b.key_worker_name AS keyWorkerName,
@@ -224,7 +224,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         END AS personName,
     b.delius_event_number AS deliusEventNumber,
     b.cancellation_occurred_at IS NOT NULL AS cancelled,
-      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tierOnApplicationCreation,
       CASE
         WHEN apa.id IS NOT NULL THEN apa.name
         ELSE offline_app.name
@@ -440,7 +440,7 @@ interface Cas1SpaceBookingSearchResult {
   val actualDepartureDate: LocalDate?
   val actualDepartureTime: LocalTime?
   val nonArrivalConfirmedAtDateTime: LocalDateTime?
-  val tier: String?
+  val tierOnApplicationCreation: String?
   val keyWorkerStaffCode: String?
   val keyWorkerAssignedAt: Instant?
   val keyWorkerName: String?

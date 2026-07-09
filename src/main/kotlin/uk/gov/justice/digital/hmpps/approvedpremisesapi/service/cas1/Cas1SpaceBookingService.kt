@@ -127,7 +127,7 @@ class Cas1SpaceBookingService(
           Cas1SpaceBookingSummarySortField.canonicalArrivalDate -> "canonicalArrivalDate"
           Cas1SpaceBookingSummarySortField.canonicalDepartureDate -> "canonicalDepartureDate"
           Cas1SpaceBookingSummarySortField.keyWorkerName -> "keyWorkerName"
-          Cas1SpaceBookingSummarySortField.tier -> "tier"
+          Cas1SpaceBookingSummarySortField.tier -> "tierOnApplicationCreation"
         },
       ),
     )
@@ -425,7 +425,13 @@ class Cas1SpaceBookingService(
         SortDirection.desc -> Sort.Direction.DESC
         SortDirection.asc -> Sort.Direction.ASC
       },
-      bookingsSortBy.value,
+      when (bookingsSortBy) {
+        Cas1SpaceBookingDaySummarySortField.PERSON_NAME -> "personName"
+        Cas1SpaceBookingDaySummarySortField.TIER -> "tierOnApplicationCreation"
+        Cas1SpaceBookingDaySummarySortField.CANONICAL_ARRIVAL_DATE -> "canonicalArrivalDate"
+        Cas1SpaceBookingDaySummarySortField.CANONICAL_DEPARTURE_DATE -> "canonicalDepartureDate"
+        Cas1SpaceBookingDaySummarySortField.RELEASE_TYPE -> "releaseType"
+      },
     )
 
     val spaceBookingsForDate = cas1SpaceBookingRepository.findSpaceBookingsByPremisesIdAndCriteriaForDate(

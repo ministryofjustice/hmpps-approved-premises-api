@@ -16,6 +16,6 @@ enum class Cas1SpaceBookingDaySummarySortField(@get:JsonValue val value: String)
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): Cas1SpaceBookingDaySummarySortField = values().first { it.value == value }
+    fun forValue(value: String): Cas1SpaceBookingDaySummarySortField = entries.first { it.value == value }
   }
 }
