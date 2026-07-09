@@ -29,4 +29,5 @@ enum class MigrationJobType(@get:JsonValue val value: String) {
   updateCas3PremisesDomainEventDates("update_cas3_premises_domain_event_dates"),
   cas2BackfillApplicationCohorts("cas2_backfill_application_cohorts"),
   backfillCases("backfill_cases"),
+  replayFailedInboxEvents("replay_failed_inbox_events"),
 }
