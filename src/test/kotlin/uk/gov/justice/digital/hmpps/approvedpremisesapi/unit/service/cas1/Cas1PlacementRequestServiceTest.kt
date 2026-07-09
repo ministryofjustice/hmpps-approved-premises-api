@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
@@ -63,6 +64,7 @@ class Cas1PlacementRequestServiceTest {
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
   private val offenderService = mockk<OffenderService>()
+  private val featureFlagService = mockk<FeatureFlagService>()
 
   private val placementRequestService = Cas1PlacementRequestService(
     placementRequestRepository,
@@ -74,6 +76,7 @@ class Cas1PlacementRequestServiceTest {
     cas1PlacementRequestDomainEventService,
     cas1BookingDomainEventService,
     offenderService,
+    featureFlagService,
     clock = Clock.systemDefaultZone(),
   )
 

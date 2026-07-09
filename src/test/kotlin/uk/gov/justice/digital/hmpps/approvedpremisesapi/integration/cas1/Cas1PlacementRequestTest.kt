@@ -630,14 +630,16 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It searches by person tier v2 where user is manager`() {
+      mockFeatureFlagService.setFlag("use-tier-v3", false)
+
       val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
       val (offender1Details, _) = givenAnOffender()
       val (offender2Details, inmate2Details) = givenAnOffender()
       val (offender3Details, _) = givenAnOffender()
 
-      createPlacementRequest(offender1Details, user, tierOnApplicationCreation = RiskTierLevel.a0, caseTierV2 = "B5")
-      val placementRequestB6 = createPlacementRequest(offender2Details, user, tierOnApplicationCreation = RiskTierLevel.a1, caseTierV2 = "B6")
-      createPlacementRequest(offender3Details, user, tierOnApplicationCreation = RiskTierLevel.a2, caseTierV2 = "B7")
+      createPlacementRequest(offender1Details, user, tierOnApplicationCreation = RiskTierLevel.a0, caseTierV2 = "B5", caseTierV3 = "D")
+      val placementRequestB6 = createPlacementRequest(offender2Details, user, tierOnApplicationCreation = RiskTierLevel.a1, caseTierV2 = "B6", caseTierV3 = "E")
+      createPlacementRequest(offender3Details, user, tierOnApplicationCreation = RiskTierLevel.a2, caseTierV2 = "B7", caseTierV3 = "F")
 
       val crn = offender2Details.otherIds.crn
 
@@ -654,6 +656,40 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
               transformNotMatchedPlacementRequestJpaToApiSummary(
                 placementRequestB6,
                 PersonInfoResult.Success.Full(crn, offender2Details, inmate2Details, caseService.getCase(crn)!!.tier),
+              ),
+            ),
+          ),
+        )
+    }
+
+    @Test
+    fun `It searches by person tier v3 when feature flag is enabled and user is manager`() {
+      mockFeatureFlagService.setFlag("use-tier-v3", true)
+
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+      val (offender1Details, _) = givenAnOffender()
+      val (offender2Details, inmate2Details) = givenAnOffender()
+      val (offender3Details, _) = givenAnOffender()
+
+      createPlacementRequest(offender1Details, user, tierOnApplicationCreation = RiskTierLevel.a0, caseTierV2 = "B5", caseTierV3 = "D")
+      val placementRequestE = createPlacementRequest(offender2Details, user, tierOnApplicationCreation = RiskTierLevel.a1, caseTierV2 = "B6", caseTierV3 = "E")
+      createPlacementRequest(offender3Details, user, tierOnApplicationCreation = RiskTierLevel.a2, caseTierV2 = "B7", caseTierV3 = "F")
+
+      val crn = offender2Details.otherIds.crn
+
+      webTestClient.get()
+        .uri("/cas1/placement-requests?personTier=E")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          jackson3JsonMapper.writeValueAsString(
+            listOf(
+              transformNotMatchedPlacementRequestJpaToApiSummary(
+                placementRequestE,
+                PersonInfoResult.Success.Full(offender2Details.otherIds.crn, offender2Details, inmate2Details, caseService.getCase(crn)!!.tier),
               ),
             ),
           ),
@@ -1104,14 +1140,16 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
 
     @Test
     fun `It sorts by person tier v2 when the user is a manager`() {
+      mockFeatureFlagService.setFlag("use-tier-v3", false)
+
       val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
       val (offenderDetails1, _) = givenAnOffender()
       val (offenderDetails2, _) = givenAnOffender()
       val (offenderDetails3, _) = givenAnOffender()
 
-      val placementRequest1PersonTierD3 = createPlacementRequest(offenderDetails1, user, tierOnApplicationCreation = RiskTierLevel.a0, caseTierV2 = "D3")
-      val placementRequest2PersonTierD1 = createPlacementRequest(offenderDetails2, user, tierOnApplicationCreation = RiskTierLevel.a1, caseTierV2 = "D1")
-      val placementRequest3PersonTierD2 = createPlacementRequest(offenderDetails3, user, tierOnApplicationCreation = RiskTierLevel.b1, caseTierV2 = "D2")
+      val placementRequest1PersonTierD3 = createPlacementRequest(offenderDetails1, user, tierOnApplicationCreation = RiskTierLevel.a0, caseTierV2 = "D3", caseTierV3 = "A")
+      val placementRequest2PersonTierD1 = createPlacementRequest(offenderDetails2, user, tierOnApplicationCreation = RiskTierLevel.a1, caseTierV2 = "D1", caseTierV3 = "B")
+      val placementRequest3PersonTierD2 = createPlacementRequest(offenderDetails3, user, tierOnApplicationCreation = RiskTierLevel.b1, caseTierV2 = "D2", caseTierV3 = "C")
 
       webTestClient.get()
         .uri("/cas1/placement-requests?page=1&sortBy=person_tier&sortDirection=asc")
@@ -1134,6 +1172,42 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
         .jsonPath("$[0].id").isEqualTo(placementRequest1PersonTierD3.id.toString())
         .jsonPath("$[1].id").isEqualTo(placementRequest3PersonTierD2.id.toString())
         .jsonPath("$[2].id").isEqualTo(placementRequest2PersonTierD1.id.toString())
+    }
+
+    @Test
+    fun `It sorts by person tier v3 when feature flag is enabled and the user is a manager`() {
+      mockFeatureFlagService.setFlag("use-tier-v3", true)
+
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+      val (offenderDetails1, _) = givenAnOffender()
+      val (offenderDetails2, _) = givenAnOffender()
+      val (offenderDetails3, _) = givenAnOffender()
+
+      val placementRequest1PersonTierC = createPlacementRequest(offenderDetails1, user, tierOnApplicationCreation = RiskTierLevel.a0, caseTierV2 = "D1", caseTierV3 = "C")
+      val placementRequest2PersonTierA = createPlacementRequest(offenderDetails2, user, tierOnApplicationCreation = RiskTierLevel.a1, caseTierV2 = "D2", caseTierV3 = "A")
+      val placementRequest3PersonTierB = createPlacementRequest(offenderDetails3, user, tierOnApplicationCreation = RiskTierLevel.b1, caseTierV2 = "D3", caseTierV3 = "B")
+
+      webTestClient.get()
+        .uri("/cas1/placement-requests?page=1&sortBy=person_tier&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$[0].id").isEqualTo(placementRequest2PersonTierA.id.toString())
+        .jsonPath("$[1].id").isEqualTo(placementRequest3PersonTierB.id.toString())
+        .jsonPath("$[2].id").isEqualTo(placementRequest1PersonTierC.id.toString())
+
+      webTestClient.get()
+        .uri("/cas1/placement-requests?page=1&sortBy=person_tier&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$[0].id").isEqualTo(placementRequest1PersonTierC.id.toString())
+        .jsonPath("$[1].id").isEqualTo(placementRequest3PersonTierB.id.toString())
+        .jsonPath("$[2].id").isEqualTo(placementRequest2PersonTierA.id.toString())
     }
 
     @Test
@@ -1220,13 +1294,21 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
       apArea: ApAreaEntity? = null,
       cruManagementArea: Cas1CruManagementAreaEntity? = null,
       caseTierV2: String? = null,
+      caseTierV3: String? = null,
     ): PlacementRequestEntity {
       val crn = offenderDetails.otherIds.crn
 
-      if (caseTierV2 != null) {
+      if (caseTierV2 != null || caseTierV3 != null) {
         caseEntityFactory.produceAndPersist {
           withCrn(crn)
-          withTierV2(TierFactory().withTierScore(caseTierV2).produce())
+
+          if (caseTierV2 != null) {
+            withTierV2(TierFactory().withTierScore(caseTierV2).produce())
+          }
+
+          if (caseTierV3 != null) {
+            withTierV3(TierFactory().withTierScore(caseTierV3).produce())
+          }
         }
       }
 
