@@ -164,6 +164,7 @@ class TasksTest {
           .produce(),
       )
         .produce(),
+      tier = null,
     ),
   )
 }

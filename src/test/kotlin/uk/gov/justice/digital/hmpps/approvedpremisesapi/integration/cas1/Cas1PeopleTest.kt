@@ -127,6 +127,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
               crn = offenderDetails.otherIds.crn,
               offenderDetailSummary = offenderDetails,
               inmateDetail = inmateDetails,
+              tier = null,
             )
 
             val apArea = userEntity.apArea!!
@@ -297,6 +298,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             crn = offenderDetails.otherIds.crn,
             offenderDetailSummary = offenderDetails,
             inmateDetail = inmateDetails,
+            tier = null,
           )
 
           webTestClient.get()
@@ -340,6 +342,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
               crn = offenderDetails.otherIds.crn,
               offenderDetailSummary = offenderDetails,
               inmateDetail = null,
+              tier = null,
             )
 
             val apArea = userEntity.apArea!!
@@ -439,6 +442,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
             crn = offenderDetails.otherIds.crn,
             offenderDetailSummary = offenderDetails,
             inmateDetail = inmateDetails,
+            tier = null,
           )
 
           val offlineApplication = offlineApplicationEntityFactory.produceAndPersist {
@@ -508,10 +512,11 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       givenAUser { _, jwt ->
         givenAnOffender(
           offenderDetailsConfigBlock = { withCurrentRestriction(true) },
-        ) { offenderDetails, inmateDetails ->
+        ) { offenderDetails, _ ->
           val personInfoResult = PersonInfoResult.Success.Restricted(
             crn = offenderDetails.otherIds.crn,
             nomsNumber = offenderDetails.otherIds.nomsNumber!!,
+            tier = null,
           )
 
           webTestClient.get()

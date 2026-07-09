@@ -8,15 +8,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PlacementRequestDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -41,10 +37,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ChangeRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.UUID
 
 class PlacementRequestDetailTransformerTest {
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
@@ -80,24 +74,6 @@ class PlacementRequestDetailTransformerTest {
   @Test
   fun `transforms correctly to Cas1PlacementRequestDetail`() {
     val transformedPlacementRequest = getTransformedPlacementRequest()
-
-    val changeRequests = listOf(
-      Cas1ChangeRequestSummary(
-        id = UUID.randomUUID(),
-        person = FullPersonSummary(
-          crn = "CRN1",
-          name = "NAME",
-          isRestricted = false,
-          personType = PersonSummaryDiscriminator.fullPersonSummary,
-        ),
-        type = Cas1ChangeRequestType.PLACEMENT_APPEAL,
-        createdAt = Instant.now(),
-        tier = "TierA",
-        expectedArrivalDate = LocalDate.parse("2023-01-01"),
-        actualArrivalDate = LocalDate.parse("2023-01-01"),
-        placementRequestId = UUID.randomUUID(),
-      ),
-    )
 
     val prExpectedArrival = LocalDate.parse("2024-01-15")
     val prDuration = 12

@@ -710,7 +710,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
       fun toSummary(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): Cas1AssessmentSummary = cas1AssessmentTransformer.transformDomainToCas1AssessmentSummary(
         toAssessmentSummaryEntity(assessment, status),
-        PersonInfoResult.Success.Full(offenderDetails.crn, offenderDetails.asOffenderDetailSummary(), inmateDetails),
+        PersonInfoResult.Success.Full(offenderDetails.crn, offenderDetails.asOffenderDetailSummary(), inmateDetails, tier = null),
       )
 
       private fun toAssessmentSummaryEntity(
@@ -819,7 +819,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
                 jackson3JsonMapper.writeValueAsString(
                   cas1AssessmentTransformer.transformJpaToCas1Assessment(
                     assessment,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                   ),
                 ),
               )
@@ -896,7 +896,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
               jackson3JsonMapper.writeValueAsString(
                 cas1AssessmentTransformer.transformJpaToCas1Assessment(
                   assessment,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                 ),
               ),
             )
@@ -934,7 +934,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
               jackson3JsonMapper.writeValueAsString(
                 cas1AssessmentTransformer.transformJpaToCas1Assessment(
                   assessment,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                 ),
               ),
             )

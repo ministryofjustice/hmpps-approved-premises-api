@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
@@ -14,11 +12,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
 
+/**
+ * An entry in the `cases` table should exist for every CRN for which an application exists,
+ * regardless of the CAS it originated from
+ *
+ * The tier value for a case will always be up-to date
+ *
+ * Currently the names and noms number are not updated after the entry has been created
+ */
 @Service
 class CaseService(
   private val caseRepository: CaseRepository,
@@ -57,6 +64,11 @@ class CaseService(
   }
 
   fun getCase(crn: String): CaseDto? = caseRepository.findByCrn(crn)?.toDto()
+
+  /**
+   * If a case can't be found for a given CRN there will be no corresponding entry in the result
+   */
+  fun getCases(crns: List<String>): List<CaseDto> = caseRepository.findByCrnIn(crns).map { it.toDto() }
 
   private data class CaseTiers(
     val v2: Tier?,
@@ -98,13 +110,6 @@ class CaseService(
     createdAt = createdAt,
     lastUpdatedAt = lastUpdatedAt,
     tier = tierV2?.toDto(),
-  )
-
-  private fun Tier.toDto() = TierDto(
-    tierScore = tierScore,
-    calculationDate = calculationDate,
-    provisional = provisional,
-    version = TierVersionDto.valueOf(version.name),
   )
 
   private fun UpstreamTier.toTier(tierVersion: TierVersion) = Tier(

@@ -442,11 +442,12 @@ class TaskTransformerTest {
             crn,
             CaseSummaryFactory().withName(NameFactory().withForename("First").withSurname("Last").produce())
               .produce(),
+            tier = null,
           ),
         )
       PersonSummaryDiscriminator.restrictedPersonSummary -> {
         return listOf(
-          PersonSummaryInfoResult.Success.Restricted(crn, "nomsNumber"),
+          PersonSummaryInfoResult.Success.Restricted(crn, "nomsNumber", tier = null),
         )
       }
       PersonSummaryDiscriminator.unknownPersonSummary -> {

@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.OffenderD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
@@ -37,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksSer
 import java.time.LocalDate
 
 @SuppressWarnings("UnusedPrivateProperty")
-class Cas2OffenderServiceTest {
+class Cas2HdcOffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApOASysContextApiClient = mockk<ApAndOASysClient>()
@@ -517,10 +516,10 @@ class Cas2OffenderServiceTest {
 
       val result = offenderService.getFullInfoForPersonOrThrow(crn)
 
-      assertThat(result is PersonInfoResult.Success.Full).isTrue
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result.offenderDetailSummary).isEqualTo(offenderDetails)
       assertThat(result.inmateDetail).isEqualTo(inmateDetail)
+      assertThat(result.tier).isNull()
     }
 
     @Test
@@ -549,10 +548,10 @@ class Cas2OffenderServiceTest {
 
       val result = offenderService.getFullInfoForPersonOrThrow(crn)
 
-      assertThat(result is PersonInfoResult.Success.Full).isTrue
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result.offenderDetailSummary).isEqualTo(offenderDetails)
       assertThat(result.inmateDetail).isEqualTo(inmateDetail)
+      assertThat(result.tier).isNull()
     }
   }
 

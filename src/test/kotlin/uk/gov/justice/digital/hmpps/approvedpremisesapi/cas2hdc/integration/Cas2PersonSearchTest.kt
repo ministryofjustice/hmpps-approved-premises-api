@@ -201,6 +201,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
                   nationality = "English",
                   isRestricted = false,
                   prisonName = "HMP Bristol",
+                  tier = null,
                 ),
               ),
             )

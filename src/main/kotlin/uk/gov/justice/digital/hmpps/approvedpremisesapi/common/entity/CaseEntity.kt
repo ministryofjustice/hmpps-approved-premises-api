@@ -22,6 +22,8 @@ import java.util.UUID
 interface CaseRepository : JpaRepository<CaseEntity, UUID> {
   fun findByCrn(crn: String): CaseEntity?
 
+  fun findByCrnIn(crns: List<String>): List<CaseEntity>
+
   @Query(
     """
         WITH all_applications_crn AS (

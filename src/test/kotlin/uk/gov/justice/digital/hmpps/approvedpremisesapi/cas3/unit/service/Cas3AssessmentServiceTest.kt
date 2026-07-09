@@ -133,7 +133,7 @@ class Cas3AssessmentServiceTest {
       )
 
       every { offenderServiceMock.getPersonSummaryInfoResult(assessment.application.crn, user.cas1LaoStrategy()) } returns
-        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce(), tier = null)
 
       val result = assessmentService.getAssessmentAndValidate(user, assessment.id)
 
@@ -583,7 +583,7 @@ class Cas3AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
 
@@ -629,7 +629,7 @@ class Cas3AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       val result = assessmentService.acceptAssessment(user, assessmentId, "{}")
 
@@ -735,7 +735,7 @@ class Cas3AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       val result = assessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
@@ -821,6 +821,7 @@ class Cas3AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           assessment.application.crn,
           CaseSummaryFactory().withCrn(assessment.application.crn).produce(),
+          tier = null,
         )
 
       every { userServiceMock.getUserForRequest() } returns user
@@ -925,6 +926,7 @@ class Cas3AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       val result = assessmentService.closeAssessment(user, assessment.id)
@@ -972,6 +974,7 @@ class Cas3AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       every { userServiceMock.getUserForRequest() } returns user

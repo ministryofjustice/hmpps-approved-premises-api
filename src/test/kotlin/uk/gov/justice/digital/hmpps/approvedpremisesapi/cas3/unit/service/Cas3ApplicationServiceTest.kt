@@ -969,6 +969,7 @@ class Cas3ApplicationServiceTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = null,
       )
       val user = userWithUsername(username).apply {
         this.roles.add(
@@ -1001,6 +1002,7 @@ class Cas3ApplicationServiceTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = null,
       )
       every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
@@ -1036,6 +1038,7 @@ class Cas3ApplicationServiceTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = null,
       )
       every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
 
@@ -1071,6 +1074,7 @@ class Cas3ApplicationServiceTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = null,
       )
 
       every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
@@ -1112,6 +1116,7 @@ class Cas3ApplicationServiceTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = null,
       )
 
       val user = userWithUsername(username).apply {
@@ -1189,6 +1194,7 @@ class Cas3ApplicationServiceTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = null,
       )
 
       val user = userWithUsername(username).apply {
@@ -1265,6 +1271,7 @@ class Cas3ApplicationServiceTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = null,
       )
 
       val user = userWithUsername(username).apply {
@@ -1342,6 +1349,7 @@ class Cas3ApplicationServiceTest {
         crn = crn,
         offenderDetailSummary = offenderDetailSummary,
         inmateDetail = inmateDetail,
+        tier = null,
       )
 
       val user = userWithUsername(username).apply {

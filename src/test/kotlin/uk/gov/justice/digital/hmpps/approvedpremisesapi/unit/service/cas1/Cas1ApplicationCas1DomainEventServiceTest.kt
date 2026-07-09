@@ -125,6 +125,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
           .withNomsId("THENOMS")
           .withDateOfBirth(LocalDate.of(1982, 3, 11))
           .produce(),
+        tier = null,
       )
 
       every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(

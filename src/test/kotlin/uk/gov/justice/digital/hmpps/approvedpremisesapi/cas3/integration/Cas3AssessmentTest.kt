@@ -916,7 +916,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
               jackson3JsonMapper.writeValueAsString(
                 cas3AssessmentTransformer.transformJpaToApi(
                   assessment,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
                 ),
               ),
             )
@@ -1508,7 +1508,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
       status: DomainAssessmentSummaryStatus? = null,
     ): Cas3AssessmentSummary = cas3AssessmentTransformer.transformDomainToApiSummary(
       toAssessmentSummaryEntity(assessment, status),
-      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails, tier = null),
     )
 
     fun toRestricted(
@@ -1516,7 +1516,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
       status: DomainAssessmentSummaryStatus? = null,
     ): Cas3AssessmentSummary = cas3AssessmentTransformer.transformDomainToApiSummary(
       toAssessmentSummaryEntity(assessment, status),
-      PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
+      PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, tier = null),
     )
 
     private fun toAssessmentSummaryEntity(

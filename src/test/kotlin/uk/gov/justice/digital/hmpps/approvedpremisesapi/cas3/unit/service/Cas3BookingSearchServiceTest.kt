@@ -66,7 +66,7 @@ class Cas3BookingSearchServiceTest {
     )
 
     every { mockOffenderService.getPersonSummaryInfoResults(crns, any()) } returns
-      crns.map { PersonSummaryInfoResult.Success.Full(it, CaseSummaryFactory().produce()) }
+      crns.map { PersonSummaryInfoResult.Success.Full(it, CaseSummaryFactory().produce(), tier = null) }
 
     val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
@@ -109,9 +109,9 @@ class Cas3BookingSearchServiceTest {
     )
     every { mockOffenderService.getPersonSummaryInfoResults(setOf("crn1", "crn2", "crn3"), any()) } returns
       listOf(
-        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce()),
-        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().withName(NameFactory().withForename("Franz").withSurname("Kafka").produce()).produce()),
-        PersonSummaryInfoResult.Success.Restricted("crn3", "crn3noms"),
+        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(), tier = null),
+        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().withName(NameFactory().withForename("Franz").withSurname("Kafka").produce()).produce(), tier = null),
+        PersonSummaryInfoResult.Success.Restricted("crn3", "crn3noms", tier = null),
       )
 
     val (results, metadata) = cas3BookingSearchService.findBookings(
@@ -157,8 +157,8 @@ class Cas3BookingSearchServiceTest {
     )
     every { mockOffenderService.getPersonSummaryInfoResults(setOf("crn1", "crn2", "crn3"), any()) } returns
       listOf(
-        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
-        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
+        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce(), tier = null),
+        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce(), tier = null),
         PersonSummaryInfoResult.NotFound("crn3"),
       )
 
@@ -207,9 +207,9 @@ class Cas3BookingSearchServiceTest {
     )
     every { mockOffenderService.getPersonSummaryInfoResults(setOf("crn1", "crn2", "crn3"), any()) } returns
       listOf(
-        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
-        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
-        PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce()),
+        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce(), tier = null),
+        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce(), tier = null),
+        PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce(), tier = null),
       )
 
     val (results, metaData) = cas3BookingSearchService.findBookings(
@@ -259,9 +259,9 @@ class Cas3BookingSearchServiceTest {
     )
     every { mockOffenderService.getPersonSummaryInfoResults(setOf("crn1", "crn2", "crn3"), any()) } returns
       listOf(
-        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
-        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
-        PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce()),
+        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce(), tier = null),
+        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce(), tier = null),
+        PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce(), tier = null),
       )
 
     val (results, metaData) = cas3BookingSearchService.findBookings(
@@ -311,9 +311,9 @@ class Cas3BookingSearchServiceTest {
     )
     every { mockOffenderService.getPersonSummaryInfoResults(setOf("crn1", "crn2", "crn3"), any()) } returns
       listOf(
-        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
-        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
-        PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce()),
+        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce(), tier = null),
+        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce(), tier = null),
+        PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce(), tier = null),
       )
 
     val (results, metaData) = cas3BookingSearchService.findBookings(

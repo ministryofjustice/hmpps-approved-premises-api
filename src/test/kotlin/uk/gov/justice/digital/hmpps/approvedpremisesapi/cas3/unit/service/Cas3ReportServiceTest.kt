@@ -84,7 +84,7 @@ class Cas3ReportServiceTest {
 
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
-      PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce(), tier = null),
     )
 
     cas3ReportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
@@ -117,7 +117,7 @@ class Cas3ReportServiceTest {
     } returns listOf(testTransitionalAccommodationReferralReportData)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 3) } returns listOf(
-      PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce(), tier = null),
     )
 
     val cas3ReportServiceWithThreeMonths = Cas3ReportService(
@@ -200,7 +200,7 @@ class Cas3ReportServiceTest {
     } returns listOf(testTransitionalAccommodationReferralReportData)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
-      PersonSummaryInfoResult.Success.Full("crn-with-previous", CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full("crn-with-previous", CaseSummaryFactory().produce(), tier = null),
     )
 
     val outputStream = ByteArrayOutputStream()
@@ -208,7 +208,7 @@ class Cas3ReportServiceTest {
 
     val reportDataAndPersonInfo = TransitionalAccommodationReferralReportDataAndPersonInfo(
       testTransitionalAccommodationReferralReportData,
-      PersonSummaryInfoResult.Success.Full("crn-with-previous", CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full("crn-with-previous", CaseSummaryFactory().produce(), tier = null),
     )
     val reportGenerator = TransitionalAccommodationReferralReportGenerator()
     val dataFrame = reportGenerator.createReport(listOf(reportDataAndPersonInfo), properties)
@@ -258,7 +258,7 @@ class Cas3ReportServiceTest {
     } returns listOf(testTransitionalAccommodationReferralReportData)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
-      PersonSummaryInfoResult.Success.Full("crn-without-previous", CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full("crn-without-previous", CaseSummaryFactory().produce(), tier = null),
     )
 
     val outputStream = ByteArrayOutputStream()
@@ -266,7 +266,7 @@ class Cas3ReportServiceTest {
 
     val reportDataAndPersonInfo = TransitionalAccommodationReferralReportDataAndPersonInfo(
       testTransitionalAccommodationReferralReportData,
-      PersonSummaryInfoResult.Success.Full("crn-without-previous", CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full("crn-without-previous", CaseSummaryFactory().produce(), tier = null),
     )
     val reportGenerator = TransitionalAccommodationReferralReportGenerator()
     val dataFrame = reportGenerator.createReport(listOf(reportDataAndPersonInfo), properties)
@@ -350,7 +350,7 @@ class Cas3ReportServiceTest {
     } returns listOf(bookingsReportData)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
-      PersonSummaryInfoResult.Success.Full(crn, CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full(crn, CaseSummaryFactory().produce(), tier = null),
     )
 
     cas3ReportService.createBookingsReport(properties, ByteArrayOutputStream())
@@ -387,9 +387,9 @@ class Cas3ReportServiceTest {
     )
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) } returns listOf(
-      PersonSummaryInfoResult.Success.Full(crns[0], CaseSummaryFactory().produce()),
-      PersonSummaryInfoResult.Success.Full(crns[1], CaseSummaryFactory().produce()),
-      PersonSummaryInfoResult.Success.Full(crns[2], CaseSummaryFactory().produce()),
+      PersonSummaryInfoResult.Success.Full(crns[0], CaseSummaryFactory().produce(), tier = null),
+      PersonSummaryInfoResult.Success.Full(crns[1], CaseSummaryFactory().produce(), tier = null),
+      PersonSummaryInfoResult.Success.Full(crns[2], CaseSummaryFactory().produce(), tier = null),
     )
 
     cas3ReportService.createBookingsReport(properties, ByteArrayOutputStream())

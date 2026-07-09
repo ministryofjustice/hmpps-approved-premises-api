@@ -163,13 +163,14 @@ class Cas2HdcOffenderService(
     }
 
     if (offender.currentRestriction) {
-      return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
+      return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber, tier = null)
     }
 
     return PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offender,
       inmateDetail = inmateDetails,
+      tier = null,
     )
   }
 

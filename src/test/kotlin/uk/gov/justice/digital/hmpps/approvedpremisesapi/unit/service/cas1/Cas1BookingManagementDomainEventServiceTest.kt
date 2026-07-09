@@ -116,7 +116,7 @@ class Cas1BookingManagementDomainEventServiceTest {
       every { domainEventService.savePersonArrivedEvent(any()) } just Runs
 
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
-        listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
+        listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary, tier = null))
 
       every { apDeliusContextApiClient.getStaffDetailByStaffCode(keyWorker.code) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -270,7 +270,7 @@ class Cas1BookingManagementDomainEventServiceTest {
       every { domainEventService.savePersonDepartedEvent(any()) } just Runs
 
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
-        listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
+        listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary, tier = null))
 
       every { apDeliusContextApiClient.getStaffDetailByStaffCode(keyWorker.code) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -427,7 +427,7 @@ class Cas1BookingManagementDomainEventServiceTest {
       every { domainEventService.saveKeyWorkerAssignedEvent(any()) } just Runs
 
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
-        listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
+        listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary, tier = null))
 
       every { apDeliusContextApiClient.getStaffDetailByStaffCode(any()) } returns ClientResult.Success(
         HttpStatus.OK,

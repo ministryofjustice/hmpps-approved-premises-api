@@ -36,5 +36,6 @@ class Cas2v2PersonTransformerTest {
     assertThat(fullPerson.name).isEqualTo("John Smith")
     assertThat(fullPerson.type).isEqualTo(PersonType.fullPerson)
     assertThat(fullPerson.nationality).isEqualTo(nationality)
+    assertThat(fullPerson.tier).isNull()
   }
 }

@@ -6,12 +6,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import java.time.LocalDate
 
 class PersonSearchTest : IntegrationTestBase() {
+
+  companion object {
+    const val CRN = "CRN456"
+  }
+
   @Test
   fun `Searching by CRN without a JWT returns 401`() {
     webTestClient.get()
@@ -85,7 +93,7 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN that does not exist returns 404`() {
-    givenAUser { userEntity, jwt ->
+    givenAUser { _, jwt ->
       apDeliusContextEmptyCaseSummaryToBulkResponse("CRN1")
 
       webTestClient.get()
@@ -98,11 +106,11 @@ class PersonSearchTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Searching for a CRN returns OK with correct body`() {
+  fun `Searching for a CRN returns OK with correct body, including tier v2`() {
     givenAUser { _, jwt ->
       givenAnOffender(
         offenderDetailsConfigBlock = {
-          withCrn("CRN")
+          withCrn(CRN)
           withDateOfBirth(LocalDate.parse("1985-05-05"))
           withNomsNumber("NOMS321")
           withFirstName("James")
@@ -126,9 +134,13 @@ class PersonSearchTest : IntegrationTestBase() {
             ),
           )
         },
-      ) { offenderDetails, inmateDetails ->
+      ) { _, _ ->
+
+        val tier = TierFactory().withTierScore("D4").produce()
+        givenACase(crn = CRN, tierV2 = tier, tierV3 = null)
+
         webTestClient.get()
-          .uri("/people/search?crn=CRN")
+          .uri("/people/search?crn=$CRN")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -138,7 +150,7 @@ class PersonSearchTest : IntegrationTestBase() {
             jsonMapper.writeValueAsString(
               FullPerson(
                 type = PersonType.fullPerson,
-                crn = "CRN",
+                crn = CRN,
                 name = "James Someone",
                 dateOfBirth = LocalDate.parse("1985-05-05"),
                 sex = "Male",
@@ -150,6 +162,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 genderIdentity = "This is a self described identity",
                 prisonName = "HMP Bristol",
                 isRestricted = false,
+                tier = tier.toDto(),
               ),
             ),
           )
@@ -158,7 +171,7 @@ class PersonSearchTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Searching for a CRN without a NomsNumber returns OK with correct body`() {
+  fun `Searching for a CRN without a NomsNumber & inmate details returns OK with correct body`() {
     givenAUser { _, jwt ->
       givenAnOffender(
         offenderDetailsConfigBlock = {
@@ -174,7 +187,7 @@ class PersonSearchTest : IntegrationTestBase() {
           withGenderIdentity("Prefer to self-describe")
           withSelfDescribedGenderIdentity("This is a self described identity")
         },
-      ) { offenderDetails, _ ->
+      ) { _, _ ->
         webTestClient.get()
           .uri("/people/search?crn=CRN")
           .header("Authorization", "Bearer $jwt")
@@ -198,6 +211,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 genderIdentity = "This is a self described identity",
                 prisonName = null,
                 isRestricted = false,
+                tier = null,
               ),
             ),
           )

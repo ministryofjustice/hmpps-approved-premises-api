@@ -136,6 +136,7 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(
         crn = CRN1,
         summary = CaseSummaryFactory().withNomsId(NOMS1).produce(),
+        tier = null,
       )
 
       every {
@@ -173,6 +174,7 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(
         crn = CRN1,
         summary = CaseSummaryFactory().withNomsId(NOMS1).produce(),
+        tier = null,
       )
 
       every {
@@ -210,16 +212,19 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult1Success = PersonSummaryInfoResult.Success.Full(
         crn = CRN1,
         summary = CaseSummaryFactory().withNomsId(NOMS1).produce(),
+        tier = null,
       )
 
       val personSummaryInfoResult2Restricted = PersonSummaryInfoResult.Success.Restricted(
         crn = CRN2,
         nomsNumber = NOMS2,
+        tier = null,
       )
 
       val personSummaryInfoResult3Success = PersonSummaryInfoResult.Success.Full(
         crn = CRN3,
         summary = CaseSummaryFactory().withNomsId(NOMS3).produce(),
+        tier = null,
       )
 
       every {
@@ -334,7 +339,7 @@ class OffenderDetailServiceTest {
 
     @Test
     fun `If offender restricted don't fetch inmate details and return restricted`() {
-      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(CRN1, NOMS1)
+      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(CRN1, NOMS1, tier = null)
 
       every {
         mockOffenderService.getPersonSummaryInfoResults(
@@ -370,6 +375,7 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(
         crn = CRN1,
         summary = CaseSummaryFactory().withNomsId(NOMS1).produce(),
+        tier = null,
       )
 
       every {
@@ -406,6 +412,7 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(
         crn = CRN1,
         summary = CaseSummaryFactory().withNomsId(NOMS1).produce(),
+        tier = null,
       )
 
       every {
@@ -495,7 +502,7 @@ class OffenderDetailServiceTest {
 
     @Test
     fun `If offender restricted don't fetch inmate details and return restricted`() {
-      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(CRN1, NOMS1)
+      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(CRN1, NOMS1, tier = null)
 
       every {
         mockOffenderService.getPersonSummaryInfoResults(
@@ -530,6 +537,7 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(
         crn = CRN1,
         summary = CaseSummaryFactory().withNomsId(NOMS1).produce(),
+        tier = null,
       )
 
       every {
@@ -567,6 +575,7 @@ class OffenderDetailServiceTest {
       val personSummaryInfoResult = PersonSummaryInfoResult.Success.Full(
         crn = CRN1,
         summary = CaseSummaryFactory().withNomsId(NOMS1).produce(),
+        tier = null,
       )
 
       every {
@@ -659,7 +668,7 @@ class OffenderDetailServiceTest {
 
     @Test
     fun `If offender restricted don't fetch inmate details and return restricted`() {
-      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(CRN1, NOMS1)
+      val personSummaryInfoResult = PersonSummaryInfoResult.Success.Restricted(CRN1, NOMS1, tier = null)
 
       every {
         mockOffenderService.getPersonSummaryInfoResults(

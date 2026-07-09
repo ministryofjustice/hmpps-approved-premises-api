@@ -93,11 +93,13 @@ class Cas1SpaceBookingTransformerTest {
         "SOMECRN",
         CaseSummaryFactory().produce().asOffenderDetailSummary(),
         null,
+        tier = null,
       )
 
       val expectedPerson = RestrictedPerson(
         "SOMECRN",
         PersonType.restrictedPerson,
+        tier = null,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -279,11 +281,13 @@ class Cas1SpaceBookingTransformerTest {
         "SOMECRN",
         CaseSummaryFactory().produce().asOffenderDetailSummary(),
         null,
+        tier = null,
       )
 
       val expectedPerson = RestrictedPerson(
         "SOMECRN",
         PersonType.restrictedPerson,
+        tier = null,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -362,11 +366,12 @@ class Cas1SpaceBookingTransformerTest {
     fun success(cancelled: Boolean) {
       val id = UUID.randomUUID()
 
-      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
+      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms", tier = null)
 
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
         PersonSummaryDiscriminator.restrictedPersonSummary,
+        tier = null,
       )
 
       val cas1ChangeRequests = listOf(Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLACEMENT_APPEAL).produce())
@@ -462,10 +467,11 @@ class Cas1SpaceBookingTransformerTest {
     fun `Space booking is transformed correctly with case worker`() {
       val id = UUID.randomUUID()
 
-      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
+      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms", tier = null)
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
         PersonSummaryDiscriminator.restrictedPersonSummary,
+        tier = null,
       )
 
       val premises = ApprovedPremisesEntityFactory().withDefaults().withName("the premise").produce()
@@ -536,10 +542,11 @@ class Cas1SpaceBookingTransformerTest {
     fun `Space booking is transformed correctly without case worker`() {
       val id = UUID.randomUUID()
 
-      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
+      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms", tier = null)
       val expectedPersonSummary = RestrictedPersonSummary(
         "the crn",
         PersonSummaryDiscriminator.restrictedPersonSummary,
+        tier = null,
       )
 
       every { personTransformer.personSummaryInfoResultToPersonSummary(personSummaryInfo) } returns expectedPersonSummary

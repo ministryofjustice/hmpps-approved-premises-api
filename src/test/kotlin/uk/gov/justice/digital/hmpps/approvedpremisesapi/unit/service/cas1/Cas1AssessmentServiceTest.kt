@@ -203,7 +203,7 @@ class Cas1AssessmentServiceTest {
     every { approvedPremisesAssessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
 
     every { offenderServiceMock.getPersonSummaryInfoResult(assessment.application.crn, user.cas1LaoStrategy()) } returns
-      PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce())
+      PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce(), tier = null)
 
     val result = cas1AssessmentService.getAssessmentAndValidate(user, assessment.id)
 
@@ -549,7 +549,7 @@ class Cas1AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       every { cas1AssessmentDomainEventService.furtherInformationRequested(any(), any()) } just Runs
 
@@ -617,7 +617,7 @@ class Cas1AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       every { cas1AssessmentDomainEventService.furtherInformationRequested(any(), any()) } just Runs
 
@@ -674,7 +674,7 @@ class Cas1AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       val result = cas1AssessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
 
@@ -701,7 +701,7 @@ class Cas1AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       val result = cas1AssessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
 
@@ -747,7 +747,7 @@ class Cas1AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       val result = cas1AssessmentService.updateAssessment(user, assessment.id, "{}")
 
@@ -774,7 +774,7 @@ class Cas1AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       val result = cas1AssessmentService.updateAssessment(user, assessment.id, "{}")
 
@@ -802,7 +802,7 @@ class Cas1AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       val result = cas1AssessmentService.updateAssessment(user, assessment.id, "{}")
 
@@ -856,7 +856,7 @@ class Cas1AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns
-        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce())
+        PersonSummaryInfoResult.Success.Full(assessment.application.crn, CaseSummaryFactory().produce(), tier = null)
 
       val result = cas1AssessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
 
@@ -930,6 +930,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       every { userServiceMock.getUserForRequest() } returns user
@@ -967,6 +968,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       every { userServiceMock.getUserForRequest() } returns user
@@ -1028,6 +1030,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       val result =
@@ -1056,6 +1059,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       val result =
@@ -1122,6 +1126,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       every {
@@ -1133,6 +1138,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       every { userServiceMock.getUserForRequest() } returns user
@@ -1255,6 +1261,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       every {
@@ -1266,6 +1273,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       every { userServiceMock.getUserForRequest() } returns user
@@ -1382,6 +1390,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
@@ -1412,6 +1421,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
@@ -1442,6 +1452,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
@@ -1475,6 +1486,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
+          tier = null,
         )
 
       val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
@@ -1547,6 +1559,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           caseSummary,
+          tier = null,
         )
 
       every {
@@ -1558,6 +1571,7 @@ class Cas1AssessmentServiceTest {
         PersonSummaryInfoResult.Success.Full(
           "crn1",
           caseSummary,
+          tier = null,
         )
 
       val result = cas1AssessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
