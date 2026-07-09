@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3Over
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -41,7 +40,6 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
   private var confirmation: Yielded<Cas3ConfirmationEntity>? = null
   private var extensions: Yielded<MutableList<Cas3ExtensionEntity>>? = null
   private var overstays: Yielded<MutableList<Cas3OverstayEntity>>? = null
-  private var dateChanges: Yielded<MutableList<DateChangeEntity>>? = null
   private var premises: Yielded<Cas3PremisesEntity>? = null
   private var serviceName: Yielded<ServiceName> = { randomOf(listOf(ServiceName.approvedPremises, ServiceName.temporaryAccommodation)) }
   private var bedspace: Yielded<Cas3BedspacesEntity>? = null
@@ -133,10 +131,6 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
     this.overstays = { overstays }
   }
 
-  fun withDateChanges(dateChanges: MutableList<DateChangeEntity>) = apply {
-    this.dateChanges = { dateChanges }
-  }
-
   fun withYieldedPremises(premises: Yielded<Cas3PremisesEntity>) = apply {
     this.premises = premises
   }
@@ -204,7 +198,6 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
     confirmation = this.confirmation?.invoke(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
     overstays = this.overstays?.invoke() ?: mutableListOf(),
-    dateChanges = this.dateChanges?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bedspace = this.bedspace?.invoke() ?: throw RuntimeException("Must provide a Bedspace"),
     service = this.serviceName.invoke().value,

@@ -73,8 +73,6 @@
     <ID>TooGenericExceptionThrown:CharacteristicTransformer.kt:CharacteristicTransformer$throw RuntimeException("Unsupported service scope: ${jpa.serviceScope}")</ID>
     <ID>TooGenericExceptionThrown:CharacteristicsSeedJob.kt:CharacteristicsSeedJob$throw RuntimeException("The field: '$requiredField' is required")</ID>
     <ID>TooGenericExceptionThrown:CharacteristicsSeedJob.kt:CharacteristicsSeedJob$throw RuntimeException("Your '$requiredField' value: '$value' is not recognised")</ID>
-    <ID>TooGenericExceptionThrown:DateChangeEntityFactory.kt:DateChangeEntityFactory$throw RuntimeException("Must provide a booking")</ID>
-    <ID>TooGenericExceptionThrown:DateChangeEntityFactory.kt:DateChangeEntityFactory$throw RuntimeException("Must provide a changedByUser")</ID>
     <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt:DepartureEntityFactory$throw RuntimeException("Booking must be provided")</ID>
     <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt:DepartureEntityFactory$throw RuntimeException("MoveOnCategory must be provided")</ID>
     <ID>TooGenericExceptionThrown:DepartureEntityFactory.kt:DepartureEntityFactory$throw RuntimeException("Reason must be provided")</ID>
