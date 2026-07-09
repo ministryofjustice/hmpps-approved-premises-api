@@ -1,0 +1,2 @@
+ALTER TABLE cases
+    ALTER COLUMN name DROP NOT NULL;

@@ -3,22 +3,26 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMock404V3TierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulV3TierCall
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
 
 class BackfillCasesJobTest : MigrationJobTestBase() {
 
   @Test
-  fun `backfill unique cases from all 3 application tables`() {
+  fun `backfill job adds missing cases from all application tables`() {
     val probationRegion = givenAProbationRegion()
     val user = userEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
@@ -51,11 +55,10 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
       withCreatedByUser(user)
     }
 
-    val taAppWithCrnExistInCas2 = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withCrn("CRN2")
-      withName("TA Name")
-      withNomsNumber("NOMS3")
-      withProbationRegion(probationRegion)
+    val apApp = approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withCrn("CRN4")
+      withName("AP Name")
+      withNomsNumber("NOMS4")
       withCreatedByUser(user)
     }
 
@@ -63,12 +66,21 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
     val case1 = CaseSummaryFactory().withCrn("CRN1").withName(NameFactory().withForename("Delius").withSurname("One").produce()).withNomsId("NOMS1").produce()
     val case2 = CaseSummaryFactory().withCrn("CRN2").withName(NameFactory().withForename("Delius").withSurname("Two").produce()).withNomsId("NOMS2").produce()
     val case3 = CaseSummaryFactory().withCrn("CRN3").withName(NameFactory().withForename("Delius").withSurname("Three").produce()).withNomsId("NOMS3").produce()
+    val case4 = CaseSummaryFactory().withCrn("CRN4").withName(NameFactory().withForename("Delius").withSurname("Four").produce()).withNomsId("NOMS4").produce()
 
-    apDeliusContextAddListCaseSummaryToBulkResponse(listOf(case1, case2, case3))
+    apDeliusContextAddListCaseSummaryToBulkResponse(listOf(case1, case2, case3, case4))
 
-    hmppsTierMockSuccessfulTierCall("CRN1", Tier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
-    hmppsTierMockSuccessfulTierCall("CRN2", Tier("B2", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason2"))
-    hmppsTierMockSuccessfulTierCall("CRN3", Tier("C3", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason3"))
+    // tier_v2
+    hmppsTierMockSuccessfulTierCall("CRN1", UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+    hmppsTierMockSuccessfulTierCall("CRN2", UpstreamTier("B2", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason2"))
+    hmppsTierMockSuccessfulTierCall("CRN3", UpstreamTier("C3", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason3"))
+    hmppsTierMockSuccessfulTierCall("CRN4", UpstreamTier("D4", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason4"))
+
+    // tier_v3 with failure
+    hmppsTierMockSuccessfulV3TierCall("CRN1", UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+    hmppsTierMock404V3TierCall("CRN2")
+    hmppsTierMockSuccessfulV3TierCall("CRN3", UpstreamTier("C3", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason3"))
+    hmppsTierMockSuccessfulV3TierCall("CRN4", UpstreamTier("D4", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason4"))
 
     migrationJobService.runMigrationJob(MigrationJobType.backfillCases, 10)
 
@@ -76,20 +88,29 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
     assertThat(c1.name).isEqualTo("DELIUS ONE")
     assertThat(c1.nomsNumber).isEqualTo("NOMS1")
     assertThat(c1.tierV2!!.tierScore).isEqualTo("A1")
+    assertThat(c1.tierV3!!.tierScore).isEqualTo("A1")
 
     val c2 = caseRepository.findByCrn("CRN2")!!
     assertThat(c2.name).isEqualTo("DELIUS TWO")
     assertThat(c2.nomsNumber).isEqualTo("NOMS2")
     assertThat(c2.tierV2!!.tierScore).isEqualTo("B2")
+    assertThat(c2.tierV3).isNull()
 
     val c3 = caseRepository.findByCrn("CRN3")!!
     assertThat(c3.name).isEqualTo("DELIUS THREE")
     assertThat(c3.nomsNumber).isEqualTo("NOMS3")
     assertThat(c3.tierV2!!.tierScore).isEqualTo("C3")
+    assertThat(c3.tierV3!!.tierScore).isEqualTo("C3")
+
+    val c4 = caseRepository.findByCrn("CRN4")!!
+    assertThat(c4.name).isEqualTo("DELIUS FOUR")
+    assertThat(c4.nomsNumber).isEqualTo("NOMS4")
+    assertThat(c4.tierV2!!.tierScore).isEqualTo("D4")
+    assertThat(c4.tierV3!!.tierScore).isEqualTo("D4")
   }
 
   @Test
-  fun `backfill cases ignores CRNs already in cases table`() {
+  fun `backfill job updates cases already in cases table with missing tiers`() {
     val probationRegion = givenAProbationRegion()
     userEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
@@ -102,7 +123,7 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
         crn = "EXISTING_CRN",
         name = "Existing Name",
         nomsNumber = "NOMS_EXISTING",
-        tierV2 = uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier("B1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1", version = TierVersion.V2),
+        tierV2 = Tier("B1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1", version = TierVersion.V2),
         createdAt = java.time.OffsetDateTime.now(),
         lastUpdatedAt = java.time.OffsetDateTime.now(),
         tierV3 = null,
@@ -121,19 +142,28 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
 
     val caseNew = CaseSummaryFactory().withCrn("NEW_CRN").withName(NameFactory().withForename("New").withSurname("Name").produce()).withNomsId("NOMS_NEW").produce()
     apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseNew))
-    hmppsTierMockSuccessfulTierCall("NEW_CRN", Tier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+
+    hmppsTierMockSuccessfulTierCall("NEW_CRN", UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+    hmppsTierMockSuccessfulV3TierCall("NEW_CRN", UpstreamTier("C1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+
+    hmppsTierMockSuccessfulV3TierCall("EXISTING_CRN", UpstreamTier("B1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
 
     migrationJobService.runMigrationJob(MigrationJobType.backfillCases, 10)
 
     val existing = caseRepository.findByCrn("EXISTING_CRN")!!
     assertThat(existing.name).isEqualTo("Existing Name") // Unchanged
+    assertThat(existing.tierV2!!.tierScore).isEqualTo("B1") // Unchanged
+    assertThat(existing.tierV3!!.tierScore).isEqualTo("B1")
 
     val new = caseRepository.findByCrn("NEW_CRN")!!
     assertThat(new.name).isEqualTo("NEW NAME")
+    assertThat(new.nomsNumber).isEqualTo("NOMS_NEW")
+    assertThat(new.tierV2!!.tierScore).isEqualTo("A1")
+    assertThat(new.tierV3!!.tierScore).isEqualTo("C1")
   }
 
   @Test
-  fun `backfill cases uses fallbacks when Delius summary fails`() {
+  fun `backfill job uses fallbacks when Delius summary fails`() {
     val probationRegion = givenAProbationRegion()
     val user = userEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
@@ -150,7 +180,8 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
 
     apDeliusContextMockUnsuccessfulCaseSummaryCall(500)
 
-    hmppsTierMockSuccessfulTierCall("CRN_FALLBACK", Tier("D4", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason 2"))
+    hmppsTierMockSuccessfulTierCall("CRN_FALLBACK", UpstreamTier("D4", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason 2"))
+    hmppsTierMockSuccessfulV3TierCall("CRN_FALLBACK", UpstreamTier("D4", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason 2"))
 
     migrationJobService.runMigrationJob(MigrationJobType.backfillCases, 10)
 
@@ -158,5 +189,45 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
     assertThat(c.name).isEqualTo("PERSISTED NAME")
     assertThat(c.nomsNumber).isEqualTo("NOMS_PERSISTED")
     assertThat(c.tierV2!!.tierScore).isEqualTo("D4")
+    assertThat(c.tierV3!!.tierScore).isEqualTo("D4")
+  }
+
+  @Test
+  fun `backfill job handles duplicate CRNs by picking the latest application details`() {
+    val crn = "DUPLICATE_CRN"
+
+    val probationRegion = givenAProbationRegion()
+    val user = userEntityFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
+    // Older application
+    temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+      withCrn(crn)
+      withName("Old Name")
+      withCreatedAt(OffsetDateTime.now().minusDays(2))
+      withProbationRegion(probationRegion)
+      withCreatedByUser(user)
+    }
+
+    // Newer application
+    approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withCrn(crn)
+      withName("New Name")
+      withCreatedAt(OffsetDateTime.now().minusDays(1))
+      withCreatedByUser(user)
+    }
+
+    apDeliusContextMockUnsuccessfulCaseSummaryCall(500)
+
+    hmppsTierMockSuccessfulTierCall(crn, UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+    hmppsTierMockSuccessfulV3TierCall(crn, UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
+
+    migrationJobService.runMigrationJob(MigrationJobType.backfillCases, 10)
+
+    val c = caseRepository.findByCrn(crn)!!
+    assertThat(c.name).isEqualTo("NEW NAME")
+    assertThat(c.tierV2!!.tierScore).isEqualTo("A1")
+    assertThat(c.tierV3!!.tierScore).isEqualTo("A1")
   }
 }
