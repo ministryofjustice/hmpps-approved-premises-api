@@ -35,4 +35,6 @@ class InboxEventService(
     inboxEvent.processedAt = Instant.now()
     inboxEventRepository.save(inboxEvent)
   }
+
+  fun getStats(): List<InboxEventRepository.ProcessedStatusCount> = inboxEventRepository.findCountByStatus()
 }
