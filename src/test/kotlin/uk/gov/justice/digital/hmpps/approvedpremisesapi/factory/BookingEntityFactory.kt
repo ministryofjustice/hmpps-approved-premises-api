@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -32,7 +31,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var keyWorkerStaffCode: Yielded<String?> = { null }
   private var arrivals: Yielded<MutableList<ArrivalEntity>>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
-  private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
   private var serviceName: Yielded<ServiceName> = { randomOf(listOf(ServiceName.approvedPremises, ServiceName.temporaryAccommodation)) }
   private var bed: Yielded<BedEntity?> = { null }
@@ -119,7 +117,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     keyWorkerStaffCode = this.keyWorkerStaffCode(),
     arrivals = this.arrivals?.invoke() ?: mutableListOf(),
     nonArrival = this.nonArrival?.invoke(),
-    extensions = this.extensions?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bed = this.bed(),
     service = this.serviceName.invoke().value,

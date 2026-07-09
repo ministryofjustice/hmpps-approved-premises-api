@@ -164,7 +164,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             e.notes,
             e.created_at
         from
-            extensions e
+            cas3_extensions e
         join bookings b on
             b.id = e.booking_id
         left join applications a on

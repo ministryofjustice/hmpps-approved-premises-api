@@ -17,7 +17,7 @@ import java.util.UUID
 interface Cas3ExtensionRepository : JpaRepository<Cas3ExtensionEntity, UUID>
 
 @Entity
-@Table(name = "extensions")
+@Table(name = "cas3_extensions")
 data class Cas3ExtensionEntity(
   @Id
   val id: UUID,

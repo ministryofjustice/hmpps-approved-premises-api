@@ -73,7 +73,7 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
     LEFT JOIN 
       cas3_overstays overstay ON overstay.booking_id = booking.id AND overstay.created_at = (SELECT max(o.created_at) FROM cas3_overstays o WHERE o.booking_id = booking.id)
     LEFT JOIN
-      extensions extension ON extension.booking_id = booking.id AND extension.created_at = (SELECT max(e.created_at) FROM extensions e WHERE e.booking_id = booking.id)
+      cas3_extensions extension ON extension.booking_id = booking.id AND extension.created_at = (SELECT max(e.created_at) FROM cas3_extensions e WHERE e.booking_id = booking.id)
     WHERE
       booking.arrival_date <= :endDate
       AND booking.departure_date >= :startDate
