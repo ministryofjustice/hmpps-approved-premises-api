@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortFieldConstants
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
@@ -82,6 +83,7 @@ class Cas1PlacementRequestsController(
     @RequestParam requestType: PlacementRequestRequestType?,
     @RequestParam cruManagementAreaId: UUID?,
     @RequestParam page: Int?,
+    @Schema(description = PlacementRequestSortFieldConstants.DESCRIPTION)
     @RequestParam sortBy: PlacementRequestSortField?,
     @RequestParam sortDirection: SortDirection?,
   ): ResponseEntity<List<Cas1PlacementRequestSummary>> {
