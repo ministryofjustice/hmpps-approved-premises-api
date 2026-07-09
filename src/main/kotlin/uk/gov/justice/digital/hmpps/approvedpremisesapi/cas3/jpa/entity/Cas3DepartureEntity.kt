@@ -19,7 +19,7 @@ import java.util.UUID
 interface Cas3DepartureRepository : JpaRepository<Cas3DepartureEntity, UUID>
 
 @Entity
-@Table(name = "departures")
+@Table(name = "cas3_departures")
 data class Cas3DepartureEntity(
   @Id
   val id: UUID,

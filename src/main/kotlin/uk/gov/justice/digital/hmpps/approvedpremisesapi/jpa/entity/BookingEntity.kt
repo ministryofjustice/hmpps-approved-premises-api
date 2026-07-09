@@ -73,8 +73,6 @@ data class BookingEntity(
   var keyWorkerStaffCode: String?,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var arrivals: MutableList<ArrivalEntity>,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
-  var departures: MutableList<DepartureEntity>,
   @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var nonArrival: NonArrivalEntity?,
   @OneToOne
@@ -103,8 +101,6 @@ data class BookingEntity(
   var version: Long = 1,
   var offenderName: String?,
 ) {
-  val departure: DepartureEntity?
-    get() = departures.maxByOrNull { it.createdAt }
 
   val arrival: ArrivalEntity?
     get() = arrivals.maxByOrNull { it.createdAt }

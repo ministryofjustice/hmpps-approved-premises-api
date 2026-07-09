@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -32,7 +31,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var originalDepartureDate: Yielded<LocalDate>? = null
   private var keyWorkerStaffCode: Yielded<String?> = { null }
   private var arrivals: Yielded<MutableList<ArrivalEntity>>? = null
-  private var departures: Yielded<MutableList<DepartureEntity>>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
@@ -120,7 +118,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     departureDate = this.departureDate(),
     keyWorkerStaffCode = this.keyWorkerStaffCode(),
     arrivals = this.arrivals?.invoke() ?: mutableListOf(),
-    departures = this.departures?.invoke() ?: mutableListOf(),
     nonArrival = this.nonArrival?.invoke(),
     extensions = this.extensions?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),

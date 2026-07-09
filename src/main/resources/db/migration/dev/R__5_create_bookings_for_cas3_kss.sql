@@ -388,7 +388,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -462,7 +462,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -536,7 +536,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -610,7 +610,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -684,7 +684,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -758,7 +758,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -832,7 +832,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -906,7 +906,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -980,7 +980,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -1054,7 +1054,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
@@ -1128,7 +1128,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  departures (
+  cas3_departures (
     "id",
     "date_time",
     "departure_reason_id",
