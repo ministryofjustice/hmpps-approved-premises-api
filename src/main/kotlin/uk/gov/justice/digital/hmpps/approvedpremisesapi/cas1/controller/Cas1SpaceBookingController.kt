@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingSummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingSummarySortFieldConstants
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.BadRequestProblem
@@ -141,6 +142,7 @@ class Cas1SpaceBookingController(
     @Schema(deprecated = true, description = "Use keyworker user id") @RequestParam keyWorkerStaffCode: String?,
     @RequestParam keyWorkerUserId: UUID?,
     @RequestParam sortDirection: SortDirection?,
+    @Schema(description = Cas1SpaceBookingSummarySortFieldConstants.DESCRIPTION)
     @RequestParam sortBy: Cas1SpaceBookingSummarySortField?,
     @RequestParam page: Int?,
     @RequestParam perPage: Int?,
