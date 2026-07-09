@@ -69,7 +69,7 @@ class Cas1PlacementRequestService(
           PlacementRequestSortField.personRisksTier -> "tierOnApplicationCreation"
           PlacementRequestSortField.firstBookingPremisesName -> "bookingPremisesName"
           PlacementRequestSortField.firstBookingArrivalDate -> "bookingArrivalDate"
-          PlacementRequestSortField.personTier -> "personTierScore"
+          PlacementRequestSortField.personTier -> "personTierV2Score"
         },
         "id",
       ),
@@ -83,7 +83,7 @@ class Cas1PlacementRequestService(
       status = searchCriteria.status?.name,
       crnOrName = searchCriteria.crnOrName,
       tierOnApplicationCreation = searchCriteria.tierOnApplicationCreation,
-      personTierScore = searchCriteria.personTier,
+      personTierV2Score = searchCriteria.personTier,
       arrivalDateFrom = searchCriteria.arrivalDateStart,
       arrivalDateTo = searchCriteria.arrivalDateEnd,
       requestType = searchCriteria.requestType?.name,
