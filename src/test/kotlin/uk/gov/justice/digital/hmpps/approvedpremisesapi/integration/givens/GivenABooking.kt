@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -21,15 +19,11 @@ fun IntegrationTestBase.givenABooking(
   premises: PremisesEntity? = null,
   arrivalDate: LocalDate = LocalDate.now().randomDateBefore(14),
   departureDate: LocalDate = LocalDate.now().randomDateBefore(14),
-  departureReason: DepartureReasonEntity? = null,
-  departureNotes: String? = null,
-  departureMoveOnCategory: MoveOnCategoryEntity? = null,
   nonArrivalReason: NonArrivalReasonEntity? = null,
   nonArrivalConfirmedAt: OffsetDateTime? = null,
   nonArrivalNotes: String? = null,
   adhoc: Boolean = false,
   actualArrivalDate: LocalDateTime? = null,
-  actualDepartureDate: LocalDateTime? = null,
 ): BookingEntity {
   val booking = bookingEntityFactory.produceAndPersist {
     withCrn(crn)
@@ -46,18 +40,6 @@ fun IntegrationTestBase.givenABooking(
         withBooking(booking)
         withArrivalDate(actualArrivalDate.toLocalDate())
         withArrivalDateTime(actualArrivalDate.toInstant(ZoneOffset.UTC))
-      },
-    )
-  }
-
-  actualDepartureDate?.let {
-    booking.departures.add(
-      departureEntityFactory.produceAndPersist {
-        withBooking(booking)
-        withDateTime(actualDepartureDate.atOffset(ZoneOffset.UTC))
-        withReason(departureReason ?: departureReasonEntityFactory.produceAndPersist())
-        withMoveOnCategory(departureMoveOnCategory ?: moveOnCategoryEntityFactory.produceAndPersist())
-        withNotes(departureNotes)
       },
     )
   }
