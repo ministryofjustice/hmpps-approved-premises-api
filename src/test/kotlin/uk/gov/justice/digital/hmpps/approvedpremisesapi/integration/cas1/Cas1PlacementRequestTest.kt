@@ -110,9 +110,22 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `should return 0 placement requests if none exist`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER))
+      val summaries = webTestClient.get()
+        .uri("/cas1/placement-requests")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+      assertThat(summaries).isEmpty()
+    }
+
+    @Test
     fun `should return 1 placement request when there are 0 active bookings`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
-        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+        givenAnOffender { unmatchedOffender, _ ->
           givenAPlacementRequest(
             assessmentAllocatedTo = user,
             createdByUser = user,
@@ -626,6 +639,8 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
       val placementRequestB6 = createPlacementRequest(offender2Details, user, tierOnApplicationCreation = RiskTierLevel.a1, caseTierV2 = "B6")
       createPlacementRequest(offender3Details, user, tierOnApplicationCreation = RiskTierLevel.a2, caseTierV2 = "B7")
 
+      val crn = offender2Details.otherIds.crn
+
       webTestClient.get()
         .uri("/cas1/placement-requests?personTier=B6")
         .header("Authorization", "Bearer $jwt")
@@ -638,7 +653,7 @@ class Cas1PlacementRequestTest : IntegrationTestBase() {
             listOf(
               transformNotMatchedPlacementRequestJpaToApiSummary(
                 placementRequestB6,
-                PersonInfoResult.Success.Full(offender2Details.otherIds.crn, offender2Details, inmate2Details),
+                PersonInfoResult.Success.Full(crn, offender2Details, inmate2Details, caseService.getCase(crn)!!.tier),
               ),
             ),
           ),
