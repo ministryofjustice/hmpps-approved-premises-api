@@ -6,7 +6,7 @@ import java.time.OffsetDateTime
 data class CaseDto(
   var crn: String,
   var nomsNumber: String?,
-  var name: String,
+  var name: String?,
   var tier: TierDto?,
   val createdAt: OffsetDateTime,
   var lastUpdatedAt: OffsetDateTime,

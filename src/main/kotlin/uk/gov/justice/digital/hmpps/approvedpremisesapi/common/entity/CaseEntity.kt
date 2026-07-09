@@ -24,41 +24,67 @@ interface CaseRepository : JpaRepository<CaseEntity, UUID> {
 
   @Query(
     """
-    SELECT DISTINCT ON (crn)
-        crn,
-        name,
-        noms_number AS nomsNumber
-    FROM (
-        SELECT
-            crn,
-            name,
-            CAST(NULL AS text) AS noms_number
-        FROM offline_applications
-    
-        UNION ALL
-    
-        SELECT
-            crn,
-            CAST(NULL AS text) AS name,
-            noms_number
-        FROM cas_2_applications
-    
-        UNION ALL
-    
-        SELECT crn, name, noms_number
-        FROM applications a
-        INNER JOIN temporary_accommodation_applications taa
-            ON taa.id = a.id
-    ) missing_cases
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM cases c
-        WHERE c.crn = missing_cases.crn
-    )
+        WITH all_applications_crn AS (
+              SELECT
+                crn,
+                name,
+                NULL::text AS noms_number,
+                created_at
+              FROM offline_applications
+            
+              UNION ALL
+            
+              SELECT
+                crn,
+                NULL::text AS name,
+                noms_number,
+                created_at
+              FROM cas_2_applications
+            
+              UNION ALL
+            
+            SELECT
+                a.crn,
+                COALESCE(ta.name, ap.name) AS name,
+                a.noms_number,
+                a.created_at
+            FROM applications a
+            LEFT JOIN temporary_accommodation_applications ta
+                ON ta.id = a.id
+            LEFT JOIN approved_premises_applications ap
+                ON ap.id = a.id
+            ),
+        latest_applications_crn AS (
+              SELECT
+                crn,
+                name,
+                noms_number,
+                created_at
+              FROM (
+                SELECT
+                  *,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY crn
+                    ORDER BY created_at DESC
+                  ) AS row_num
+                FROM all_applications_crn
+              ) ranked
+              WHERE row_num = 1
+            )
+            SELECT
+              la.crn,
+              la.name,
+              la.noms_number AS nomsNumber,
+              (c.id IS NOT NULL) AS case_exists,
+              (c.tier_v2 IS NOT NULL) AS has_tier_v2,
+              (c.tier_v3 IS NOT NULL) AS has_tier_v3
+            FROM latest_applications_crn la
+            LEFT JOIN cases c
+              ON c.crn = la.crn
     """,
     nativeQuery = true,
   )
-  fun findAllUniqueCrnsMissingFromCases(): List<BackfillCaseSummaryMigrationDto>
+  fun findUniqueCrnsForBackfill(): List<BackfillCaseSummaryMigrationDto>
 }
 
 @Entity
@@ -74,7 +100,7 @@ data class CaseEntity(
    * If returning the offender name to the user, use the [OffenderService], which
    * will consider any LAO restrictions
    */
-  var name: String,
+  var name: String?,
   val createdAt: OffsetDateTime,
   var lastUpdatedAt: OffsetDateTime,
   @Column(name = "tier_v2", columnDefinition = "jsonb")
