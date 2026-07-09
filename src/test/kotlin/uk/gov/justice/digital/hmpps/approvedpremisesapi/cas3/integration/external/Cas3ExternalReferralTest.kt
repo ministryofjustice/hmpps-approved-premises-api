@@ -74,7 +74,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
             Cas3ReferralHistory(
               id = assessment1.id,
               applicationId = assessment1.application.id,
-              createdAt = assessment1.createdAt.toInstant(),
+              date = assessment1.createdAt.toLocalDate(),
               applicationStatus = ApplicationStatus.submitted,
               assessmentStatus = assessment1.deriveAssessmentStatus(),
               type = ServiceType.CAS3,
@@ -90,7 +90,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
             Cas3ReferralHistory(
               id = assessment2.id,
               applicationId = assessment2.application.id,
-              createdAt = assessment2.createdAt.toInstant(),
+              date = assessment2.createdAt.toLocalDate(),
               applicationStatus = ApplicationStatus.submitted,
               assessmentStatus = assessment2.deriveAssessmentStatus(),
               type = ServiceType.CAS3,
@@ -106,7 +106,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
             Cas3ReferralHistory(
               id = assessment3.id,
               applicationId = assessment3.application.id,
-              createdAt = assessment3.createdAt.toInstant(),
+              date = assessment3.createdAt.toLocalDate(),
               applicationStatus = ApplicationStatus.submitted,
               assessmentStatus = assessment3.deriveAssessmentStatus(),
               type = ServiceType.CAS3,
@@ -122,7 +122,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
             Cas3ReferralHistory(
               id = assessment4.id,
               applicationId = assessment4.application.id,
-              createdAt = assessment4.createdAt.toInstant(),
+              date = assessment4.createdAt.toLocalDate(),
               applicationStatus = ApplicationStatus.submitted,
               assessmentStatus = assessment4.deriveAssessmentStatus(),
               type = ServiceType.CAS3,
@@ -138,7 +138,7 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
             Cas3ReferralHistory(
               id = assessment5.id,
               applicationId = assessment5.application.id,
-              createdAt = assessment5.createdAt.toInstant(),
+              date = assessment5.createdAt.toLocalDate(),
               applicationStatus = ApplicationStatus.submitted,
               assessmentStatus = assessment5.deriveAssessmentStatus(),
               type = ServiceType.CAS3,
