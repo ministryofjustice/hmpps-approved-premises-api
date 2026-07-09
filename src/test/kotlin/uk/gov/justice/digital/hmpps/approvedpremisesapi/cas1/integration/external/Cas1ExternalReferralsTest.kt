@@ -78,7 +78,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
             Cas1ReferralHistory(
               id = assessment1.id,
               applicationId = assessment1.application.id,
-              createdAt = assessment1.createdAt.toInstant(),
+              date = assessment1.createdAt.toLocalDate(),
               applicationStatus = (assessment1.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
               referralRejectionReason = "Not suitable",
@@ -93,7 +93,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
             Cas1ReferralHistory(
               id = assessment2.id,
               applicationId = assessment2.application.id,
-              createdAt = assessment2.createdAt.toInstant(),
+              date = assessment2.createdAt.toLocalDate(),
               applicationStatus = (assessment2.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
               referralRejectionReason = "Not suitable",
@@ -108,7 +108,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
             Cas1ReferralHistory(
               id = assessment3.id,
               applicationId = assessment3.application.id,
-              createdAt = assessment3.createdAt.toInstant(),
+              date = assessment3.createdAt.toLocalDate(),
               applicationStatus = (assessment3.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
               referralRejectionReason = "Not suitable",
@@ -123,7 +123,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
             Cas1ReferralHistory(
               id = assessment4.id,
               applicationId = assessment4.application.id,
-              createdAt = assessment4.createdAt.toInstant(),
+              date = assessment4.createdAt.toLocalDate(),
               applicationStatus = (assessment4.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
               referralRejectionReason = "Not suitable",
@@ -138,7 +138,7 @@ class Cas1ExternalReferralsTest : IntegrationTestBase() {
             Cas1ReferralHistory(
               id = assessment5.id,
               applicationId = assessment5.application.id,
-              createdAt = assessment5.createdAt.toInstant(),
+              date = assessment5.createdAt.toLocalDate(),
               applicationStatus = (assessment5.application as ApprovedPremisesApplicationEntity).status,
               type = ServiceType.CAS1,
               referralRejectionReason = "Not suitable",

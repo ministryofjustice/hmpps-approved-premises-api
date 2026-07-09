@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.TemporaryAccommodationAssessmentStatus
-import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 data class Cas3ReferralHistory(
@@ -13,7 +13,7 @@ data class Cas3ReferralHistory(
   val applicationId: UUID,
   val applicationStatus: ApplicationStatus,
   val assessmentStatus: TemporaryAccommodationAssessmentStatus?,
-  val createdAt: Instant,
+  val date: LocalDate,
   val referralRejectionReason: String?,
   val referralRejectionReasonDetail: String?,
   val localAuthorityArea: String?,

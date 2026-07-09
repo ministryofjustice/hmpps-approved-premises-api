@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 data class Cas1ReferralHistory(
@@ -12,7 +12,7 @@ data class Cas1ReferralHistory(
   val applicationId: UUID,
   val applicationStatus: ApprovedPremisesApplicationStatus,
   val requestForPlacementStatus: RequestForPlacementStatus?,
-  val createdAt: Instant,
+  val date: LocalDate,
   val referralRejectionReason: String?,
   val localAuthorityArea: String?,
   val pdu: String?,

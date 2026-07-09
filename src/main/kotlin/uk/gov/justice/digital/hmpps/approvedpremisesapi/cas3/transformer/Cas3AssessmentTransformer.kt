@@ -92,7 +92,7 @@ class Cas3AssessmentTransformer(
     val referralHistory = Cas3ReferralHistory(
       id = a.id,
       applicationId = application.id,
-      createdAt = a.createdAt.toInstant(),
+      date = a.submittedAt?.toLocalDate() ?: a.createdAt.toLocalDate(),
       applicationStatus = application.getStatus(),
       assessmentStatus = a.deriveAssessmentStatus(),
       type = ServiceType.CAS3,

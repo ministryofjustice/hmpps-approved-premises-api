@@ -88,7 +88,7 @@ class Cas1AssessmentTransformer(
     val referralHistory = Cas1ReferralHistory(
       id = entity.id,
       applicationId = entity.application.id,
-      createdAt = entity.createdAt.toInstant(),
+      date = entity.submittedAt?.toLocalDate() ?: entity.createdAt.toLocalDate(),
       applicationStatus = application.status,
       type = ServiceType.CAS1,
       referralRejectionReason = entity.rejectionRationale,
@@ -103,6 +103,7 @@ class Cas1AssessmentTransformer(
 
     return placementHistories.map {
       referralHistory.copy(
+        date = it.dateApplied,
         placementAddress = toPlacementAddress(it.premises),
         placementStatus = it.placementStatus,
         requestForPlacementStatus = it.requestForPlacementStatus,
