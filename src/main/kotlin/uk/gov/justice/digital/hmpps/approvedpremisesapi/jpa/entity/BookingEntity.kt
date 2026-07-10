@@ -81,8 +81,6 @@ data class BookingEntity(
   @OneToOne
   @JoinColumn(name = "offline_application_id")
   var offlineApplication: OfflineApplicationEntity?,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
-  var extensions: MutableList<ExtensionEntity>,
   @ManyToOne
   @JoinColumn(name = "premises_id")
   var premises: PremisesEntity,

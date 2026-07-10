@@ -150,7 +150,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExtensionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
@@ -214,7 +213,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
@@ -272,7 +270,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DestinationProviderTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DomainEventTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ExtensionTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.LocalAuthorityAreaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.MoveOnCategoryTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalReasonTestRepository
@@ -421,9 +418,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var cas3VoidBedspaceCancellationTestRepository: Cas3VoidBedspaceCancellationTestRepository
-
-  @Autowired
-  lateinit var extensionRepository: ExtensionTestRepository
 
   @Autowired
   lateinit var nonArrivalReasonRepository: NonArrivalReasonTestRepository
@@ -643,7 +637,6 @@ abstract class IntegrationTestBase {
   lateinit var cas3VoidBedspaceEntityFactory: PersistedFactory<Cas3VoidBedspaceEntity, UUID, Cas3VoidBedspaceEntityFactory>
   lateinit var cas3VoidBedspaceReasonEntityFactory: PersistedFactory<Cas3VoidBedspaceReasonEntity, UUID, Cas3VoidBedspaceReasonEntityFactory>
   lateinit var cas3VoidBedspaceCancellationEntityFactory: PersistedFactory<Cas3VoidBedspaceCancellationEntity, UUID, Cas3VoidBedspaceCancellationEntityFactory>
-  lateinit var extensionEntityFactory: PersistedFactory<ExtensionEntity, UUID, ExtensionEntityFactory>
   lateinit var nonArrivalReasonEntityFactory: PersistedFactory<NonArrivalReasonEntity, UUID, NonArrivalReasonEntityFactory>
   lateinit var approvedPremisesApplicationEntityFactory: PersistedFactory<ApprovedPremisesApplicationEntity, UUID, ApprovedPremisesApplicationEntityFactory>
   lateinit var cas2ApplicationEntityFactory: PersistedFactory<Cas2ApplicationEntity, UUID, Cas2ApplicationEntityFactory>
@@ -766,7 +759,6 @@ abstract class IntegrationTestBase {
     cas3VoidBedspaceEntityFactory = PersistedFactory({ Cas3VoidBedspaceEntityFactory() }, cas3VoidBedspacesTestRepository)
     cas3VoidBedspaceReasonEntityFactory = PersistedFactory({ Cas3VoidBedspaceReasonEntityFactory() }, cas3VoidBedspaceReasonTestRepository)
     cas3VoidBedspaceCancellationEntityFactory = PersistedFactory({ Cas3VoidBedspaceCancellationEntityFactory() }, cas3VoidBedspaceCancellationTestRepository)
-    extensionEntityFactory = PersistedFactory({ ExtensionEntityFactory() }, extensionRepository)
     nonArrivalReasonEntityFactory = PersistedFactory({ NonArrivalReasonEntityFactory() }, nonArrivalReasonRepository)
     approvedPremisesApplicationEntityFactory = PersistedFactory({ ApprovedPremisesApplicationEntityFactory() }, approvedPremisesApplicationRepository)
     cas2ApplicationEntityFactory = PersistedFactory({ Cas2ApplicationEntityFactory() }, cas2ApplicationRepository)
