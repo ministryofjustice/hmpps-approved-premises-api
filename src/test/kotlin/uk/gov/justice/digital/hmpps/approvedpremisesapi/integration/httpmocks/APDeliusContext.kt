@@ -8,27 +8,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ReferralDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import java.time.ZonedDateTime
 import java.util.UUID
-
-fun IntegrationTestBase.apDeliusContextMockSuccessfulGetReferralDetails(
-  crn: String,
-  bookingId: String,
-  arrivedAt: ZonedDateTime?,
-  departedAt: ZonedDateTime?,
-) = mockSuccessfulGetCallWithJsonResponse(
-  url = "/probation-case/$crn/referrals/$bookingId",
-  responseBody = ReferralDetail(
-    arrivedAt = arrivedAt,
-    departedAt = departedAt,
-  ),
-)
 
 fun IntegrationTestBase.apDeliusContextMockSuccessfulStaffMembersCall(staffMember: StaffMember, qCode: String) {
   mockSuccessfulGetCallWithJsonResponse(
@@ -75,10 +60,6 @@ fun IntegrationTestBase.apDeliusContextMockSuccessfulTeamsManagingCaseCall(crn: 
 fun IntegrationTestBase.apDeliusContextMockUserAccess(caseAccess: CaseAccess, username: String = ".*") {
   apDeliusContextAddResponseToUserAccessCall(listOf(caseAccess), username)
   apDeliusContextAddSingleResponseToUserAccessCall(caseAccess, username)
-}
-
-fun IntegrationTestBase.apDeliusContextUserAccessEmptyResponse() {
-  apDeliusContextAddResponseToUserAccessCall(emptyList())
 }
 
 fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(casesAccess: List<CaseAccess>, username: String = ".*") {

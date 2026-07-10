@@ -873,21 +873,28 @@ abstract class IntegrationTestBase {
       ),
   )
 
-  fun mockSuccessfulGetCallWithJsonResponse(url: String, responseBody: Any, responseStatus: Int = 200) = mockOAuth2ClientCredentialsCallIfRequired {
+  fun mockSuccessfulGetCallWithJsonResponse(url: String, responseBody: Any, responseStatus: Int = 200) = mockSuccessfulGetCallWithJsonStringResponse(url, jsonMapper.writeValueAsString(responseBody), responseStatus)
+
+  fun mockSuccessfulGetCallWithJsonStringResponse(url: String, responseBody: String, responseStatus: Int = 200) = mockOAuth2ClientCredentialsCallIfRequired {
     wiremockServer.stubFor(
       WireMock.get(urlEqualTo(url))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
-            .withBody(
-              jsonMapper.writeValueAsString(responseBody),
-            ),
+            .withBody(responseBody),
         ),
     )
   }
 
-  fun mockSuccessfulPostCallWithJsonResponse(url: String, requestBody: StringValuePattern, responseBody: Any, responseStatus: Int = 200) = mockOAuth2ClientCredentialsCallIfRequired {
+  fun mockSuccessfulPostCallWithJsonResponse(url: String, requestBody: StringValuePattern, responseBody: Any, responseStatus: Int = 200) = mockSuccessfulPostCallWithJsonStringResponse(
+    url = url,
+    requestBody = requestBody,
+    responseBody = jsonMapper.writeValueAsString(responseBody),
+    responseStatus = responseStatus,
+  )
+
+  fun mockSuccessfulPostCallWithJsonStringResponse(url: String, requestBody: StringValuePattern, responseBody: String, responseStatus: Int = 200) = mockOAuth2ClientCredentialsCallIfRequired {
     wiremockServer.stubFor(
       post(urlEqualTo(url))
         .withRequestBody(requestBody)
@@ -895,9 +902,7 @@ abstract class IntegrationTestBase {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(responseStatus)
-            .withBody(
-              jsonMapper.writeValueAsString(responseBody),
-            ),
+            .withBody(responseBody),
         ),
     )
   }

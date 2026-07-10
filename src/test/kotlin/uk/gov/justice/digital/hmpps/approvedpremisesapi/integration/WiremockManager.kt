@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.common.Slf4jNotifier
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -67,7 +69,11 @@ class WiremockManager {
   fun beforeTest() {
     if (!this::wiremockServer.isInitialized || !wiremockServer.isRunning) {
       log.info("Starting wiremock on port $wiremockPort")
-      wiremockServer = WireMockServer(wiremockPort.toInt())
+      wiremockServer = WireMockServer(
+        options()
+          .port(wiremockPort.toInt())
+          .notifier(Slf4jNotifier(true)),
+      )
       wiremockServer.start()
     }
   }

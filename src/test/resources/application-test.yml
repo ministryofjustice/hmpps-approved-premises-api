@@ -144,6 +144,8 @@ services:
     base-url: http://localhost:#WIREMOCK_PORT
   health-and-medication-api:
     base-url: http://localhost:#WIREMOCK_PORT
+  cas1-ui:
+    base-url: http://localhost:#WIREMOCK_PORT
 
 prison-case-notes:
   lookback-days: 365
@@ -254,6 +256,8 @@ logging:
   level:
     logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
     org.zalando.logbook: TRACE
+    # change to INFO to see requests and responses
+    WireMock: WARN
 
 refresh-inmate-details-cache:
   lock-at-least-for: 1s
