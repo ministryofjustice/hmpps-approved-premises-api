@@ -39,7 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -358,7 +358,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
     fun `Assessor can view single submitted application`() {
       val crn = "CRN321"
       val nomsNumber = "NOMS321"
-      apDeliusContextAddSingleCaseSummaryToBulkResponse(
+      apDeliusContextCaseSummariesSingleCase(
         caseSummary = CaseSummaryFactory()
           .withCrn(crn)
           .withNomsId(nomsNumber)
@@ -490,7 +490,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
     fun `Assessor cannot view single submitted application on a restricted offender`() {
       val crn = "CRN321"
       val nomsNumber = "NOMS321"
-      apDeliusContextAddSingleCaseSummaryToBulkResponse(
+      apDeliusContextCaseSummariesSingleCase(
         caseSummary = CaseSummaryFactory()
           .withCrn(crn)
           .withNomsId(nomsNumber)
@@ -537,7 +537,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
     fun `Assessor can view single submitted application on an excluded offender`() {
       val crn = "CRN321"
       val nomsNumber = "NOMS321"
-      apDeliusContextAddSingleCaseSummaryToBulkResponse(
+      apDeliusContextCaseSummariesSingleCase(
         caseSummary = CaseSummaryFactory()
           .withCrn(crn)
           .withNomsId(nomsNumber)
@@ -695,7 +695,7 @@ class Cas2v2SubmissionTest : IntegrationTestBase() {
       fun `Admin can view single submitted application`() {
         val crn = "CRN321"
         val nomsNumber = "NOMS321"
-        apDeliusContextAddSingleCaseSummaryToBulkResponse(
+        apDeliusContextCaseSummariesSingleCase(
           caseSummary = CaseSummaryFactory()
             .withCrn(crn)
             .withNomsId(nomsNumber)

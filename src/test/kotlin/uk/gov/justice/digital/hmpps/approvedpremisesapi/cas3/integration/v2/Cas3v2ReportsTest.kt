@@ -55,7 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision.ACCEPTED
@@ -83,9 +83,7 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import kotlin.collections.get
 import kotlin.collections.listOf
-import kotlin.text.get
 
 class Cas3v2ReportsTest : IntegrationTestBase() {
   @ParameterizedTest
@@ -342,7 +340,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -415,7 +413,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -492,7 +490,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -564,7 +562,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -629,7 +627,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             LocalDate.parse("2023-12-15"),
           )
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -731,7 +729,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -818,7 +816,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -908,7 +906,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
               withAccommodationRequiredFromDate(LocalDate.now().plusDays(10))
             }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -988,7 +986,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1063,7 +1061,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1140,7 +1138,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1243,7 +1241,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1326,7 +1324,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1409,7 +1407,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1543,7 +1541,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1626,7 +1624,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1718,7 +1716,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1810,7 +1808,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             .withPnc(offenderDetails.otherIds.pncNumber)
             .produce()
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -2140,7 +2138,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             }
           }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -2432,7 +2430,7 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
             }
           }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)

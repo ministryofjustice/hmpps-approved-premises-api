@@ -18,9 +18,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesErrorResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
 import java.time.LocalDate
 
@@ -75,7 +75,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
         @Test
         fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
           givenACas2v2NomisUser { _, jwt ->
-            apDeliusContextMockUnsuccessfulCaseSummaryCall(403)
+            apDeliusContextCaseSummariesErrorResponse(403)
 
             webTestClient.get()
               .uri("/cas2/people/search-by-noms/NOMS321")
@@ -89,7 +89,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
         @Test
         fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
           givenACas2v2DeliusUser { _, jwt ->
-            apDeliusContextMockUnsuccessfulCaseSummaryCall(404)
+            apDeliusContextCaseSummariesErrorResponse(404)
 
             webTestClient.get()
               .uri("/cas2/people/search-by-noms/NOMS321")
@@ -103,7 +103,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
         @Test
         fun `Searching for a NOMIS ID returns server error when there is a server error`() {
           givenACas2v2NomisUser { _, jwt ->
-            apDeliusContextMockUnsuccessfulCaseSummaryCall()
+            apDeliusContextCaseSummariesErrorResponse()
 
             webTestClient.get()
               .uri("/cas2/people/search-by-noms/NOMS321")
@@ -144,7 +144,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
               )
               .produce()
 
-            apDeliusContextMockCaseSummary(caseSummary)
+            apDeliusContextCaseSummariesSingleCase(caseSummary)
             prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
             webTestClient.get()
@@ -236,9 +236,7 @@ class Cas2v2PersonSearchTest : IntegrationTestBase() {
 
         @Test
         fun `Searching for a CRN that does not exist returns 404`() {
-          apDeliusContextAddCaseSummaryToBulkResponse(
-            CaseSummaryFactory().produce(),
-          )
+          apDeliusContextCaseSummariesEmptyResponseForCrn("CRN")
 
           givenACas2v2DeliusUser { _, jwt ->
             wiremockServer.stubFor(

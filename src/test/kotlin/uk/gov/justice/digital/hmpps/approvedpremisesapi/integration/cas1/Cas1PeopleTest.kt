@@ -48,11 +48,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoshRatingsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccesfullCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockForbiddenDietAndAllergyCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockNotFoundDietAndAllergyCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.healthAndMedicationMockSuccessfulDietAndAllergyCall
@@ -93,7 +93,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
     @Test
     fun `Getting a personal timeline for a CRN that does not exist returns 404`() {
       givenAUser { _, jwt ->
-        apDeliusContextEmptyCaseSummaryToBulkResponse("CRN1")
+        apDeliusContextCaseSummariesEmptyResponseForCrn("CRN1")
 
         webTestClient.get()
           .uri("/cas1/people/CRN1/timeline")
@@ -682,8 +682,8 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         .withUserRestricted(false)
         .produce()
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseSummary))
-      apDeliusContextAddResponseToUserAccessCall(listOf(caseAccess), user.deliusUsername)
+      apDeliusContextCaseSummariesMultipleCases(listOf(caseSummary))
+      apDeliusContextUserAccessAddCase(listOf(caseAccess), user.deliusUsername)
       prisonAPIMockSuccessfulCsraSummariesCall(nomsNumber, csraSummaries)
 
       webTestClient.get()
@@ -714,8 +714,8 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
         .withUserRestricted(true)
         .produce()
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseSummary))
-      apDeliusContextAddResponseToUserAccessCall(listOf(caseAccess), user.deliusUsername)
+      apDeliusContextCaseSummariesMultipleCases(listOf(caseSummary))
+      apDeliusContextUserAccessAddCase(listOf(caseAccess), user.deliusUsername)
 
       webTestClient.get()
         .uri("/cas1/people/$crn/csra-summaries")
@@ -730,7 +730,7 @@ class Cas1PeopleTest : InitialiseDatabasePerClassTestBase() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val crn = "NOT_FOUND_CRN"
 
-      apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
+      apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
 
       webTestClient.get()
         .uri("/cas1/people/$crn/csra-summaries")

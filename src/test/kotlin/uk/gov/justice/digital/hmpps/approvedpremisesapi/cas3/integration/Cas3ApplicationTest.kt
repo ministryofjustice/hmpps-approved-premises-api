@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -99,7 +99,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               val anotherUsersApplication =
                 createApplicationEntity(otherUser, offenderDetails, probationRegion, null)
 
-              apDeliusContextAddResponseToUserAccessCall(
+              apDeliusContextUserAccessAddCase(
                 listOf(
                   CaseAccessFactory()
                     .withCrn(offenderDetails.otherIds.crn)
@@ -189,7 +189,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             )
           }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -223,7 +223,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            apDeliusContextAddResponseToUserAccessCall(
+            apDeliusContextUserAccessAddCase(
               listOf(
                 CaseAccessFactory()
                   .withCrn(offenderDetails.otherIds.crn)
@@ -258,7 +258,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            apDeliusContextAddResponseToUserAccessCall(
+            apDeliusContextUserAccessAddCase(
               listOf(
                 CaseAccessFactory()
                   .withCrn(offenderDetails.otherIds.crn)
@@ -293,7 +293,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            apDeliusContextAddResponseToUserAccessCall(
+            apDeliusContextUserAccessAddCase(
               listOf(
                 CaseAccessFactory()
                   .withCrn(offenderDetails.otherIds.crn)
@@ -330,7 +330,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            apDeliusContextAddResponseToUserAccessCall(
+            apDeliusContextUserAccessAddCase(
               listOf(
                 CaseAccessFactory()
                   .withCrn(offenderDetails.otherIds.crn)
@@ -369,7 +369,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             )
           }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -450,7 +450,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            apDeliusContextAddResponseToUserAccessCall(
+            apDeliusContextUserAccessAddCase(
               listOf(
                 CaseAccessFactory()
                   .withCrn(offenderDetails.otherIds.crn)
@@ -487,7 +487,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
               )
             }
 
-            apDeliusContextAddResponseToUserAccessCall(
+            apDeliusContextUserAccessAddCase(
               listOf(
                 CaseAccessFactory()
                   .withCrn(offenderDetails.otherIds.crn)
@@ -523,7 +523,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
             )
           }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)

@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 
@@ -51,7 +51,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
           .produce()
       }
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(cases)
+      apDeliusContextCaseSummariesMultipleCases(cases)
 
       migrationJobService.runMigrationJob(MigrationJobType.updateCas3ApplicationOffenderName, 10)
 
@@ -96,7 +96,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
           .produce()
       }
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(cases)
+      apDeliusContextCaseSummariesMultipleCases(cases)
 
       migrationJobService.runMigrationJob(MigrationJobType.updateCas3ApplicationOffenderName, 10)
 
@@ -130,7 +130,7 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withCrn(crn)
       }
 
-      apDeliusContextEmptyCaseSummaryToBulkResponse(offenderDetails.otherIds.crn)
+      apDeliusContextCaseSummariesEmptyResponseForCrn(offenderDetails.otherIds.crn)
 
       migrationJobService.runMigrationJob(MigrationJobType.updateCas3ApplicationOffenderName, 10)
 

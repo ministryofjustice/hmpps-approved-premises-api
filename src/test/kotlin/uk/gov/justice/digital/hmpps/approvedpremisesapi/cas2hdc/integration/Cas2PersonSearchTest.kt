@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesErrorResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
 import java.time.LocalDate
 
@@ -66,7 +66,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       @Test
       fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
         givenACas2PomUser { userEntity, jwt ->
-          apDeliusContextMockUnsuccessfulCaseSummaryCall(403)
+          apDeliusContextCaseSummariesErrorResponse(403)
 
           webTestClient.get()
             .uri("/cas2-hdc/people/search?nomsNumber=NOMS321")
@@ -106,7 +106,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
             )
             .produce()
 
-          apDeliusContextMockCaseSummary(caseSummary)
+          apDeliusContextCaseSummariesSingleCase(caseSummary)
           prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
           webTestClient.get()
@@ -121,7 +121,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       @Test
       fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
         givenACas2PomUser { userEntity, jwt ->
-          apDeliusContextMockUnsuccessfulCaseSummaryCall(404)
+          apDeliusContextCaseSummariesErrorResponse(404)
 
           webTestClient.get()
             .uri("/cas2-hdc/people/search?nomsNumber=NOMS321")
@@ -135,7 +135,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       @Test
       fun `Searching for a NOMIS ID returns server error when there is a server error`() {
         givenACas2PomUser { userEntity, jwt ->
-          apDeliusContextMockUnsuccessfulCaseSummaryCall()
+          apDeliusContextCaseSummariesErrorResponse()
 
           webTestClient.get()
             .uri("/cas2-hdc/people/search?nomsNumber=NOMS321")
@@ -177,7 +177,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
             )
             .produce()
 
-          apDeliusContextMockCaseSummary(caseSummary)
+          apDeliusContextCaseSummariesSingleCase(caseSummary)
           prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
           webTestClient.get()

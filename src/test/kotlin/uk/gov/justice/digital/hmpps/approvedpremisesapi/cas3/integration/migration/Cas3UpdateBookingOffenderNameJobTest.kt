@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 
 class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
@@ -47,8 +47,8 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
           .produce()
       }
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(cases1)
-      apDeliusContextAddListCaseSummaryToBulkResponse(cases2)
+      apDeliusContextCaseSummariesMultipleCases(cases1)
+      apDeliusContextCaseSummariesMultipleCases(cases2)
 
       migrationJobService.runMigrationJob(MigrationJobType.updateCas3BookingOffenderName, 10)
 
@@ -80,7 +80,7 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
           .produce()
       }
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(cases)
+      apDeliusContextCaseSummariesMultipleCases(cases)
 
       listOf(approvedPremises, cas2, cas2v2).forEach { serviceName ->
         bookingEntityFactory.produceAndPersistMultiple(2) {

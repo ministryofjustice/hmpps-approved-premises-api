@@ -42,8 +42,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
@@ -709,7 +709,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       givenACas2PomUser { userEntity, jwt ->
         val crn = "X1234"
 
-        apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
+        apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
 
         produceAndPersistBasicApplication(crn, userEntity)
         webTestClient.get()
@@ -1642,7 +1642,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .withCurrentExclusion(true).produce()
 
           val caseDetail = offenderDetails.asCaseSummary()
-          apDeliusContextMockCaseSummary(caseDetail)
+          apDeliusContextCaseSummariesSingleCase(caseDetail)
           mockInmateDetailPrisonsApiCall(InmateDetail(caseDetail.nomsId!!, InmateStatus.IN, null, bookingId = null))
 
           webTestClient.post()

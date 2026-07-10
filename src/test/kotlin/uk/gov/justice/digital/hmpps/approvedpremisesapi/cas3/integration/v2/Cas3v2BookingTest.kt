@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3ApplicationAndAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremiseBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withConflictMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.withNotFoundMessage
@@ -254,7 +254,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           withServiceName(ServiceName.temporaryAccommodation)
         }
 
-        apDeliusContextEmptyCaseSummaryToBulkResponse("SOME-CRN")
+        apDeliusContextCaseSummariesEmptyResponseForCrn("SOME-CRN")
 
         webTestClient.get()
           .uri("/cas3/v2/premises/${premises.id}/bookings/${booking.id}")
@@ -467,7 +467,7 @@ class Cas3v2BookingTest : IntegrationTestBase() {
         ),
       )
 
-      apDeliusContextEmptyCaseSummaryToBulkResponse("SOME-CRN")
+      apDeliusContextCaseSummariesEmptyResponseForCrn("SOME-CRN")
 
       webTestClient.get()
         .uri("/cas3/v2/premises/${premises.id}/bookings")

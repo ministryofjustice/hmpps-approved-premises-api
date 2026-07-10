@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
@@ -40,7 +40,7 @@ fun IntegrationTestBase.givenAnOffender(
 
   apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
 
-  apDeliusContextMockCaseSummary(caseDetail.case)
+  apDeliusContextCaseSummariesAddCase(caseDetail.case)
   apDeliusContextMockUserAccess(
     CaseAccessFactory()
       .withCrn(offenderDetails.otherIds.crn)
@@ -109,7 +109,7 @@ fun IntegrationTestBase.givenSomeOffenders(
 
     apDeliusContextMockSuccessfulCaseDetailCall(offenderDetails.otherIds.crn, caseDetail)
 
-    apDeliusContextMockCaseSummary(caseDetail.case)
+    apDeliusContextCaseSummariesAddCase(caseDetail.case)
     apDeliusContextMockUserAccess(
       CaseAccessFactory()
         .withCrn(offenderDetails.otherIds.crn)

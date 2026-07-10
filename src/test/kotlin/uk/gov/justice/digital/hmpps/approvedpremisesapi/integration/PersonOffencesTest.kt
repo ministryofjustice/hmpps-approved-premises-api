@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailOffenc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import java.time.LocalDate
@@ -62,7 +62,7 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
     givenAUser { userEntity, jwt ->
       val crn = "CRN123"
 
-      apDeliusContextAddSingleResponseToUserAccessCall(
+      apDeliusContextUserAccessSingleCase(
         CaseAccessFactory()
           .withUserRestricted(true)
           .withCrn(crn)
