@@ -101,6 +101,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         b.actual_departure_time AS actualDepartureTime,
         b.non_arrival_confirmed_at AS nonArrivalConfirmedAtDateTime,
         apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tierOnApplicationCreation,
+        (cases.tier_v2->>'tierScore')::text AS personTierScore,
         b.key_worker_staff_code AS keyWorkerStaffCode,
         b.key_worker_assigned_at AS keyWorkerAssignedAt,
         b.key_worker_name AS keyWorkerName,
@@ -131,6 +132,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       LEFT OUTER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       LEFT OUTER JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
       LEFT OUTER JOIN users key_worker_user ON b.key_worker_user_id = key_worker_user.id
+      LEFT OUTER JOIN cases ON cases.crn = b.crn
       WHERE 
       b.premises_id = :premisesId AND 
       b.cancellation_occurred_at IS NULL AND 

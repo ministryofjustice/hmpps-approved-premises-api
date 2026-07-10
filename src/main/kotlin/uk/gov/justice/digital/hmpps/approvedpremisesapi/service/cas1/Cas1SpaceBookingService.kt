@@ -128,6 +128,7 @@ class Cas1SpaceBookingService(
           Cas1SpaceBookingSummarySortField.canonicalDepartureDate -> "canonicalDepartureDate"
           Cas1SpaceBookingSummarySortField.keyWorkerName -> "keyWorkerName"
           Cas1SpaceBookingSummarySortField.tier -> "tierOnApplicationCreation"
+          Cas1SpaceBookingSummarySortField.personTier -> "personTierScore"
         },
       ),
     )

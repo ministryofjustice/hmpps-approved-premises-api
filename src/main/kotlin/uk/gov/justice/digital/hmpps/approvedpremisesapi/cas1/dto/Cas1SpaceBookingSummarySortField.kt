@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.v3.oas.annotations.media.Schema
 
 object Cas1SpaceBookingSummarySortFieldConstants {
-  const val DESCRIPTION: String = "'tier' sorts on the tier captured when the application was created"
+  const val DESCRIPTION: String = "'personTier' sorts on the person's live tier. 'tier' sorts on the tier captured when the application was created"
 }
 
 @Suppress("ktlint:standard:enum-entry-name-case", "EnumNaming")
@@ -17,11 +17,12 @@ enum class Cas1SpaceBookingSummarySortField(@get:JsonValue val value: String) {
   canonicalDepartureDate("canonicalDepartureDate"),
   keyWorkerName("keyWorkerName"),
   tier("tier"),
+  personTier("personTier"),
   ;
 
   companion object {
     @JvmStatic
     @JsonCreator
-    fun forValue(value: String): Cas1SpaceBookingSummarySortField = values().first { it.value == value }
+    fun forValue(value: String): Cas1SpaceBookingSummarySortField = entries.first { it.value == value }
   }
 }
