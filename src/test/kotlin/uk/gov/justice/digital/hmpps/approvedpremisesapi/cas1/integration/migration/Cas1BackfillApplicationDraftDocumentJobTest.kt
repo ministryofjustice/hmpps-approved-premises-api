@@ -18,14 +18,19 @@ class Cas1BackfillApplicationDraftDocumentJobTest : IntegrationTestBase() {
   @Test
   fun `backfill applications ignoring null data`() {
     val applicationNoDataNoDocument = givenACas1Application(
+      submittedAt = null,
       data = null,
       document = null,
     )
-    val applicationHasDataNoDocument = givenACas1Application(
-      data = """{ "name" : "populated data" }""",
-      document = null,
-    )
+    val applicationsHasDataNoDocument = (0..12).map {
+      givenACas1Application(
+        submittedAt = null,
+        data = """{ "name" : "populated data" }""",
+        document = null,
+      )
+    }
     val applicationHasDocument = givenACas1Application(
+      submittedAt = null,
       data = """{ "name" : "populated data" }""",
       document = """{ "name": "already populated document" }""",
     )
@@ -44,8 +49,10 @@ class Cas1BackfillApplicationDraftDocumentJobTest : IntegrationTestBase() {
 
     assertThat(approvedPremisesApplicationRepository.findByIdOrNull(applicationNoDataNoDocument.id)!!.document).isNull()
 
-    assertThat(approvedPremisesApplicationRepository.findByIdOrNull(applicationHasDataNoDocument.id)!!.document)
-      .isEqualTo("""{ "name": "backfilled document" }""")
+    applicationsHasDataNoDocument.forEach { applicationHasDataNoDocument ->
+      assertThat(approvedPremisesApplicationRepository.findByIdOrNull(applicationHasDataNoDocument.id)!!.document)
+        .isEqualTo("""{ "name": "backfilled document" }""")
+    }
 
     assertThat(approvedPremisesApplicationRepository.findByIdOrNull(applicationHasDocument.id)!!.document)
       .isEqualTo("""{ "name": "already populated document" }""")
