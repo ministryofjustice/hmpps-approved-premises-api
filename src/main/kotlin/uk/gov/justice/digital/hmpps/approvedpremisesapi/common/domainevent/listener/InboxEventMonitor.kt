@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.domainevent.list
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.ProcessedStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TelemetryService
 import kotlin.collections.associate
 
@@ -19,12 +20,21 @@ class InboxEventMonitor(
     lockAtMostFor = "PT1M",
     lockAtLeastFor = "PT1M",
   )
+  fun publishStatsOnSchedule() {
+    publishStats()
+  }
+
   fun publishStats() {
+    val stats = inboxEventService.getStats().associateBy { it.getProcessedStatus() }
+    val metrics = ProcessedStatus.entries.associate { status ->
+      status.name to (stats[status]?.getCount()?.toDouble() ?: 0.0)
+    }
+
     telemetryService.trackEvent(
       TelemetryService.Event(
         name = "InboxEventStats",
         properties = mapOf(),
-        metrics = inboxEventService.getStats().associate { it.getProcessedStatus() to it.getCount().toDouble() },
+        metrics = metrics,
       ),
     )
   }
