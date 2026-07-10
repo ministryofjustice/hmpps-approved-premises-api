@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.transformer.toDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_INCLUDE_TIER_V3
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier as UpstreamTier
@@ -36,7 +38,10 @@ class CaseService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   private val includeTierV3: Boolean
-    get() = featureFlagService.getBooleanFlag("include-tier-v3")
+    get() = featureFlagService.getBooleanFlag(FEATURE_FLAG_INCLUDE_TIER_V3)
+
+  private val useTierV3: Boolean
+    get() = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
 
   fun ensureCaseExists(crn: String): CaseEntity {
     val caseSummary = getCaseSummary(crn)
@@ -113,7 +118,11 @@ class CaseService(
     name = name,
     createdAt = createdAt,
     lastUpdatedAt = lastUpdatedAt,
-    tier = tierV2?.toDto(),
+    tier = if (useTierV3) {
+      tierV3?.toDto()
+    } else {
+      tierV2?.toDto()
+    },
   )
 
   private fun UpstreamTier.toTier(tierVersion: TierVersion) = Tier(

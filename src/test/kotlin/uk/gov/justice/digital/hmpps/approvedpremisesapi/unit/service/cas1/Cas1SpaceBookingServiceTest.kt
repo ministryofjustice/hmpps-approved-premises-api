@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionsResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
@@ -90,6 +91,7 @@ class Cas1SpaceBookingServiceTest {
   private val cas1SpaceBookingUpdateService = mockk<Cas1SpaceBookingUpdateService>()
   private val offenderService = mockk<OffenderService>()
   private val cas1SpaceBookingTransformer = mockk<Cas1SpaceBookingTransformer>()
+  private val featureFlagService = mockk<FeatureFlagService>()
 
   private val service = Cas1SpaceBookingService(
     cas1PremisesService,
@@ -107,6 +109,7 @@ class Cas1SpaceBookingServiceTest {
     cas1SpaceBookingUpdateService,
     offenderService,
     cas1SpaceBookingTransformer,
+    featureFlagService,
   )
 
   companion object CONSTANTS {
@@ -356,6 +359,7 @@ class Cas1SpaceBookingServiceTest {
     @Test
     fun `approved premises not found return error`() {
       every { cas1PremisesService.findPremisesById(PREMISES_ID) } returns null
+      every { featureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val result = service.search(
         PREMISES_ID,
@@ -374,16 +378,21 @@ class Cas1SpaceBookingServiceTest {
 
     @ParameterizedTest
     @CsvSource(
-      "personName,personName",
-      "canonicalArrivalDate,canonicalArrivalDate",
-      "canonicalDepartureDate,canonicalDepartureDate",
-      "keyWorkerName,keyWorkerName",
-      "tier,tierOnApplicationCreation",
+      "personName,personName,false",
+      "canonicalArrivalDate,canonicalArrivalDate,false",
+      "canonicalDepartureDate,canonicalDepartureDate,false",
+      "keyWorkerName,keyWorkerName,false",
+      "tier,tierOnApplicationCreation,false",
+      "personTier,personTierV2Score,false",
+      "personTier,personTierV3Score,true",
     )
     fun `delegate to repository, defining correct sort column`(
       inputSortField: Cas1SpaceBookingSummarySortField,
       sqlSortField: String,
+      useTierV3FeatureFlag: Boolean,
     ) {
+      every { featureFlagService.getBooleanFlag("use-tier-v3") } returns useTierV3FeatureFlag
+
       every { cas1PremisesService.findPremisesById(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults()
         .produce()
 

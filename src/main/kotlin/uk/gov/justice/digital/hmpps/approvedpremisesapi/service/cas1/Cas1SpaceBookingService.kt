@@ -41,6 +41,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingCreateService.CreateBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingUpdateService.UpdateBookingDetails
@@ -74,6 +76,7 @@ class Cas1SpaceBookingService(
   private val cas1SpaceBookingUpdateService: Cas1SpaceBookingUpdateService,
   private val offenderService: OffenderService,
   private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
+  private val featureFlagService: FeatureFlagService,
 ) {
 
   @Transactional
@@ -112,6 +115,8 @@ class Cas1SpaceBookingService(
     filterCriteria: SpaceBookingFilterCriteria,
     pageCriteria: PageCriteria<Cas1SpaceBookingSummarySortField>,
   ): CasResult<SearchResultContainer> {
+    val useTierV3 = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
+
     val premises = cas1PremisesService.findPremisesById(premisesId)
       ?: return CasResult.NotFound("premises", premisesId.toString())
 
@@ -128,7 +133,11 @@ class Cas1SpaceBookingService(
           Cas1SpaceBookingSummarySortField.canonicalDepartureDate -> "canonicalDepartureDate"
           Cas1SpaceBookingSummarySortField.keyWorkerName -> "keyWorkerName"
           Cas1SpaceBookingSummarySortField.tier -> "tierOnApplicationCreation"
-          Cas1SpaceBookingSummarySortField.personTier -> "personTierScore"
+          Cas1SpaceBookingSummarySortField.personTier -> if (useTierV3) {
+            "personTierV3Score"
+          } else {
+            "personTierV2Score"
+          }
         },
       ),
     )

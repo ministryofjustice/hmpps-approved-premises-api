@@ -682,7 +682,7 @@ class Cas1SpaceBookingTest {
       )
 
       currentSpaceBooking1 =
-        createSpaceBooking(crn = "CRN_CURRENT1", firstName = "curt", lastName = "rent 1", tierOnApplicationCreation = "A", caseTierV2 = "Z") {
+        createSpaceBooking(crn = "CRN_CURRENT1", firstName = "curt", lastName = "rent 1", tierOnApplicationCreation = "A", caseTierV2 = "Z", caseTierV3 = "F") {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2026-01-02"))
           withExpectedDepartureDate(LocalDate.parse("2026-02-02"))
@@ -732,7 +732,7 @@ class Cas1SpaceBookingTest {
       }
 
       currentSpaceBooking3 =
-        createSpaceBooking(crn = "CRN_CURRENT3", firstName = "curt", lastName = "rent 3", tierOnApplicationCreation = "B", caseTierV2 = "Y") {
+        createSpaceBooking(crn = "CRN_CURRENT3", firstName = "curt", lastName = "rent 3", tierOnApplicationCreation = "B", caseTierV2 = "Y", caseTierV3 = "A") {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2026-03-02"))
           withExpectedDepartureDate(LocalDate.parse("2026-04-02"))
@@ -767,6 +767,7 @@ class Cas1SpaceBookingTest {
         lastName = "rent 4",
         tierOnApplicationCreation = "B",
         caseTierV2 = "X",
+        caseTierV3 = "X",
         isRestricted = true,
       ) {
         withPremises(premisesWithBookings)
@@ -782,7 +783,7 @@ class Cas1SpaceBookingTest {
       }
 
       departedSpaceBooking =
-        createSpaceBooking(crn = "CRN_DEPARTED", firstName = "de", lastName = "parted", tierOnApplicationCreation = "D", caseTierV2 = "W") {
+        createSpaceBooking(crn = "CRN_DEPARTED", firstName = "de", lastName = "parted", tierOnApplicationCreation = "D", caseTierV2 = "W", caseTierV3 = "H") {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2025-01-03"))
           withExpectedDepartureDate(LocalDate.parse("2025-02-03"))
@@ -796,7 +797,7 @@ class Cas1SpaceBookingTest {
         }
 
       upcomingSpaceBookingWithKeyWorker =
-        createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming senior", tierOnApplicationCreation = "U", caseTierV2 = "E") {
+        createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming senior", tierOnApplicationCreation = "U", caseTierV2 = "E", caseTierV3 = "D") {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
           withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
@@ -811,7 +812,7 @@ class Cas1SpaceBookingTest {
         }
 
       upcomingCancelledSpaceBooking =
-        createSpaceBooking(crn = "CRN_UPCOMING_CANCELLED", firstName = "up", lastName = "coming", tierOnApplicationCreation = "U", caseTierV2 = "E") {
+        createSpaceBooking(crn = "CRN_UPCOMING_CANCELLED", firstName = "up", lastName = "coming", tierOnApplicationCreation = "U", caseTierV2 = "E", caseTierV3 = "B") {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
           withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
@@ -826,7 +827,7 @@ class Cas1SpaceBookingTest {
         }
 
       nonArrivedSpaceBooking =
-        createSpaceBooking(crn = "CRN_NONARRIVAL", firstName = "None", lastName = "Arrived", tierOnApplicationCreation = "A", caseTierV2 = "Z") {
+        createSpaceBooking(crn = "CRN_NONARRIVAL", firstName = "None", lastName = "Arrived", tierOnApplicationCreation = "A", caseTierV2 = "Z", caseTierV3 = "E") {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2028-01-02"))
           withExpectedDepartureDate(LocalDate.parse("2028-02-02"))
@@ -843,7 +844,7 @@ class Cas1SpaceBookingTest {
         }
 
       legacySpaceBookingNoArrival =
-        createSpaceBooking(crn = "CRN_LEGACY_NO_ARRIVAL", firstName = "None", lastName = "Historic", tierOnApplicationCreation = "A", caseTierV2 = "Z") {
+        createSpaceBooking(crn = "CRN_LEGACY_NO_ARRIVAL", firstName = "None", lastName = "Historic", tierOnApplicationCreation = "A", caseTierV2 = "Z", caseTierV3 = "L") {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2024-05-02"))
           withExpectedDepartureDate(LocalDate.parse("2024-05-31"))
@@ -858,7 +859,7 @@ class Cas1SpaceBookingTest {
         }
 
       legacySpaceBookingNoDeparture =
-        createSpaceBooking(crn = "CRN_LEGACY_NO_DEPARTURE", firstName = "None", lastName = "Historic", tierOnApplicationCreation = "Z", caseTierV2 = "A") {
+        createSpaceBooking(crn = "CRN_LEGACY_NO_DEPARTURE", firstName = "None", lastName = "Historic", tierOnApplicationCreation = "Z", caseTierV2 = "A", caseTierV3 = "C") {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2024-05-01"))
           withExpectedDepartureDate(LocalDate.parse("2024-05-30"))
@@ -872,7 +873,7 @@ class Cas1SpaceBookingTest {
         }
 
       upcomingSpaceBookingBeforeThreshold =
-        createSpaceBooking(crn = "CRN_UPCOMING_BEFORE_THRESHOLD", firstName = "up", lastName = "coming before threshold esquire", tierOnApplicationCreation = "S", caseTierV2 = "G") {
+        createSpaceBooking(crn = "CRN_UPCOMING_BEFORE_THRESHOLD", firstName = "up", lastName = "coming before threshold esquire", tierOnApplicationCreation = "S", caseTierV2 = "G", caseTierV3 = "Z") {
           withPremises(premisesWithBookings)
           withExpectedArrivalDate(LocalDate.parse("2024-12-31"))
           withExpectedDepartureDate(LocalDate.parse("2024-12-31"))
@@ -1235,6 +1236,8 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Sort on Live Tier v2`() {
+      mockFeatureFlagService.setFlag("use-tier-v3", false)
+
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
@@ -1275,6 +1278,53 @@ class Cas1SpaceBookingTest {
       assertThat(response[8].person.personTierScore()).isEqualTo("E")
 
       assertThat(response[9].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[9].person.personTierScore()).isEqualTo("A")
+    }
+
+    @Test
+    fun `Sort on Live Tier v3`() {
+      mockFeatureFlagService.setFlag("use-tier-v3", true)
+
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=personTier&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(10)
+
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
+      assertThat(response[0].tier).isNull()
+
+      assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING_BEFORE_THRESHOLD")
+      assertThat(response[1].person.personTierScore()).isEqualTo("Z")
+
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[2].person.personTierScore()).isEqualTo("X")
+
+      assertThat(response[3].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[3].person.personTierScore()).isEqualTo("L")
+
+      assertThat(response[4].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[4].person.personTierScore()).isEqualTo("H")
+
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[5].person.personTierScore()).isEqualTo("F")
+
+      assertThat(response[6].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[6].person.personTierScore()).isEqualTo("E")
+
+      assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[7].person.personTierScore()).isEqualTo("D")
+
+      assertThat(response[8].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[8].person.personTierScore()).isEqualTo("C")
+
+      assertThat(response[9].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[9].person.personTierScore()).isEqualTo("A")
     }
   }
@@ -3652,6 +3702,7 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
     tierOnApplicationCreation: String,
     isRestricted: Boolean = false,
     caseTierV2: String? = null,
+    caseTierV3: String? = null,
     configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
   ): Cas1SpaceBookingEntity {
     val (user) = givenAUser()
@@ -3669,10 +3720,15 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
       tier = tierOnApplicationCreation,
     )
 
-    if (caseTierV2 != null) {
+    if (caseTierV2 != null || caseTierV3 != null) {
       caseEntityFactory.produceAndPersist {
         withCrn(crn)
-        withTierV2(TierFactory().withTierScore(caseTierV2).produce())
+        if (caseTierV2 != null) {
+          withTierV2(TierFactory().withTierScore(caseTierV2).produce())
+        }
+        if (caseTierV3 != null) {
+          withTierV3(TierFactory().withTierScore(caseTierV3).produce())
+        }
       }
     }
 
