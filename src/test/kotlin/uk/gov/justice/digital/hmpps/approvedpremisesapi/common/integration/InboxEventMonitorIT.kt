@@ -16,6 +16,25 @@ class InboxEventMonitorIT : IntegrationTestBase() {
   lateinit var noOpTelemetryService: NoOpTelemetryService
 
   @Test
+  fun `if no entries still publish stats`() {
+    inboxEventMonitor.publishStats()
+
+    noOpTelemetryService.assertEventRaised(
+      TelemetryService.Event(
+        name = "InboxEventStats",
+        properties = emptyMap(),
+        metrics = mapOf(
+          "FAILED" to 0.0,
+          "FAILED_REVIEWED" to 0.0,
+          "IGNORED" to 0.0,
+          "PENDING" to 0.0,
+          "PROCESSED" to 0.0,
+        ),
+      ),
+    )
+  }
+
+  @Test
   fun `stats are published correctly`() {
     inboxEventEntityFactory.produceAndPersist { withProcessedStatus(ProcessedStatus.PENDING) }
     inboxEventEntityFactory.produceAndPersist { withProcessedStatus(ProcessedStatus.PENDING) }

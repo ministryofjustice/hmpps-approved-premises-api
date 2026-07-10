@@ -42,7 +42,7 @@ interface InboxEventRepository : JpaRepository<InboxEventEntity, UUID> {
 
   interface ProcessedStatusCount {
     fun getCount(): Long
-    fun getProcessedStatus(): String
+    fun getProcessedStatus(): ProcessedStatus
   }
 }
 
