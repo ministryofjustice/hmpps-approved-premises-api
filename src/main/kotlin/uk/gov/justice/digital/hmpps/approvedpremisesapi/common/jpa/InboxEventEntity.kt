@@ -10,6 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.asHibernateProxy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getHibernateClass
 import java.net.URI
@@ -19,6 +20,22 @@ import java.util.UUID
 
 interface InboxEventRepository : JpaRepository<InboxEventEntity, UUID> {
   fun findAllByProcessedStatus(processedStatus: ProcessedStatus, pageable: Pageable): List<InboxEventEntity>
+
+  @Query(
+    value = """SELECT 
+      count(*) as count,
+      processed_status as processed_status 
+      from inbox_events 
+      group by processed_status 
+      order by processed_status""",
+    nativeQuery = true,
+  )
+  fun findCountByStatus(): List<ProcessedStatusCount>
+
+  interface ProcessedStatusCount {
+    fun getCount(): Long
+    fun getProcessedStatus(): String
+  }
 }
 
 @Entity
@@ -58,4 +75,5 @@ enum class ProcessedStatus {
   PROCESSED,
   IGNORED,
   FAILED,
+  FAILED_REVIEWED,
 }

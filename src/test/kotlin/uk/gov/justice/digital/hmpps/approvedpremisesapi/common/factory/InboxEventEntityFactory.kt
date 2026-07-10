@@ -18,7 +18,7 @@ class InboxEventEntityFactory : Factory<InboxEventEntity> {
   private var createdAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(14) }
   private var processedStatus: Yielded<ProcessedStatus> = { ProcessedStatus.entries.random() }
   private var processedAt: Yielded<Instant?> = { Instant.now().randomDateTimeBefore(14) }
-  private var payload: Yielded<String> = { randomStringUpperCase(12) }
+  private var payload: Yielded<String> = { "{}" }
 
   fun withEventType(eventType: String) = apply {
     this.eventType = { eventType }
