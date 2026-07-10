@@ -9,9 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1CreateApplicationOutcome
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierEligibility
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
@@ -125,6 +129,101 @@ class Cas1ApplicationCreationService(
 
     return success(createdApplication)
   }
+
+  fun createApprovedPremisesEligibleApplication(
+    crn: String,
+    user: UserEntity,
+    convictionId: Long,
+    deliusEventNumber: String,
+    offenceId: String,
+  ): CasResult<Cas1CreateApplicationOutcome> {
+    return validatedCasResult {
+
+      val riskRatings = offenderRisksService.getPersonRisks(crn)
+
+      val case = caseService.ensureCaseExists(crn)
+
+      if (case.tier == null) {
+        success(Cas1CreateApplicationOutcome(
+          outcome = TierEligibility.NOT_ELIGIBLE,
+        ))
+      }
+      else {
+
+        val tierEligibility = getEligibility(case.gender, case.tier!!.tierScore)
+
+        val createdApplicationId = applicationRepository.saveAndFlush(
+          createApprovedPremisesEligibleApplicationEntity(
+            crn,
+            user,
+            convictionId,
+            deliusEventNumber,
+            offenceId,
+            riskRatings,
+            case,
+          ),
+        ).id
+
+        success(Cas1CreateApplicationOutcome(
+          outcome = tierEligibility,
+          applicationId = createdApplicationId,
+          tier = case.tier,
+        ))
+      }
+    }
+  }
+
+
+  fun createApprovedPremisesEligibleApplicationEntity(
+    crn: String,
+    user: UserEntity,
+    convictionId: Long?,
+    deliusEventNumber: String?,
+    offenceId: String?,
+    riskRatings: PersonRisks,
+    case: CaseDto,
+  ): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
+    id = UUID.randomUUID(),
+    crn = crn,
+    createdByUser = user,
+    data = null,
+    document = null,
+    createdAt = OffsetDateTime.now(),
+    submittedAt = null,
+    deletedAt = null,
+    isWomensApplication = null,
+    isEmergencyApplication = null,
+    apType = ApprovedPremisesType.NORMAL,
+    convictionId = convictionId!!,
+    eventNumber = deliusEventNumber!!,
+    offenceId = offenceId!!,
+    riskRatings = riskRatings,
+    assessments = mutableListOf(),
+    teamCodes = mutableListOf(),
+    placementRequests = mutableListOf(),
+    releaseType = null,
+    arrivalDate = null,
+    duration = null,
+    isInapplicable = null,
+    isWithdrawn = false,
+    withdrawalReason = null,
+    otherWithdrawalReason = null,
+    nomsNumber = case.nomsNumber,
+    name = case.name?.uppercase() ?: error("name is null"),
+    targetLocation = null,
+    status = ApprovedPremisesApplicationStatus.STARTED,
+    sentenceType = null,
+    situation = null,
+    inmateInOutStatusOnSubmission = null,
+    apArea = null,
+    cruManagementArea = null,
+    applicantUserDetails = null,
+    caseManagerIsNotApplicant = null,
+    caseManagerUserDetails = null,
+    noticeType = null,
+    licenceExpiryDate = null,
+    expiredReason = null,
+  )
 
   fun createApprovedPremisesApplicationEntity(
     crn: String,
@@ -382,6 +481,19 @@ class Cas1ApplicationCreationService(
     } else {
       Cas1ApplicationTimelinessCategory.standard
     }
+
+  private fun getEligibility(gender: String?, tierScore: String): TierEligibility {
+    val applicableTiersAll = arrayOf("A1", "A2", "A3", "B1", "B2", "B3")
+    val applicableTiersWomen = arrayOf("C3")
+
+    val applicableTiers = if (gender == "Female") { arrayOf(*applicableTiersAll, *applicableTiersWomen) } else applicableTiersAll
+
+    return if (applicableTiers.contains(tierScore)) {
+      TierEligibility.ELIGIBLE
+    } else {
+      TierEligibility.NOT_ELIGIBLE
+    }
+  }
 
   data class Cas1ApplicationUpdateFields(
     val isWomensApplication: Boolean?,

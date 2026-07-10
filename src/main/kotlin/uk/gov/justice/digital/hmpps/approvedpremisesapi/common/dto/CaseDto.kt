@@ -10,4 +10,5 @@ data class CaseDto(
   var tier: TierDto?,
   val createdAt: OffsetDateTime,
   var lastUpdatedAt: OffsetDateTime,
+  val gender: String? = null,
 )

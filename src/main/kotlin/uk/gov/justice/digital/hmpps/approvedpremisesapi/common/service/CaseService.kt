@@ -38,7 +38,7 @@ class CaseService(
   private val includeTierV3: Boolean
     get() = featureFlagService.getBooleanFlag("include-tier-v3")
 
-  fun ensureCaseExists(crn: String): CaseEntity {
+  fun ensureCaseExists(crn: String): CaseDto {
     val caseSummary = getCaseSummary(crn)
     val tiers = fetchAvailableTiers(crn)
 
@@ -46,7 +46,23 @@ class CaseService(
       ?.updateFrom(caseSummary, tiers)
       ?: newCaseEntity(caseSummary, tiers)
 
-    return caseRepository.saveAndFlush(caseEntity)
+    return caseRepository.saveAndFlush(caseEntity).toDto(caseSummary.gender)
+
+//    return CaseDto(
+//      crn = caseEntity.crn,
+//      nomsNumber = caseEntity.nomsNumber,
+//      name = caseEntity.name,
+//      createdAt = caseEntity.createdAt,
+//      lastUpdatedAt = caseEntity.lastUpdatedAt,
+//      tier = caseEntity.tierV2?.let {
+//        TierDto(
+//          tierScore = it.tierScore,
+//          calculationDate = it.calculationDate,
+//          provisional = it.provisional,
+//          version = TierVersionDto.valueOf(it.version.name),
+//        )
+//      },
+//    )
   }
 
   fun reviseTier(crn: String): Boolean {
@@ -103,13 +119,14 @@ class CaseService(
     tierV3 = tiers.v3,
   )
 
-  private fun CaseEntity.toDto() = CaseDto(
+  private fun CaseEntity.toDto(gender: String? = null) = CaseDto(
     crn = crn,
     nomsNumber = nomsNumber,
     name = name,
     createdAt = createdAt,
     lastUpdatedAt = lastUpdatedAt,
     tier = tierV2?.toDto(),
+    gender = gender,
   )
 
   private fun UpstreamTier.toTier(tierVersion: TierVersion) = Tier(

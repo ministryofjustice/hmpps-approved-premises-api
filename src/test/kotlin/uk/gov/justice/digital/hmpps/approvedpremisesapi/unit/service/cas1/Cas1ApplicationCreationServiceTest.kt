@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
+import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
@@ -24,13 +26,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOptio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierEligibility
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -168,20 +174,18 @@ class Cas1ApplicationCreationServiceTest {
 
       val cas1OffenderEntityId = UUID.randomUUID()
 
-      val caseEntity = CaseEntity(
+      val caseDto = CaseDto(
         crn = "CRN345",
-        name = "name",
         nomsNumber = "nomsNo",
-        tierV2 = Tier(tierScore = "level", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "reason", version = TierVersion.V2),
-        tierV3 = Tier(tierScore = "level", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "reason", version = TierVersion.V3),
-        id = cas1OffenderEntityId,
+        name = "name",
+        tier = TierDtoFactory().withVersion(TierVersionDto.V2).produce(),
         createdAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
         lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
       )
 
       every { mockApplicationRepository.saveAndFlush(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockApplicationTeamCodeRepository.save(any()) } answers { it.invocation.args[0] as ApplicationTeamCodeEntity }
-      every { mockCaseService.ensureCaseExists(any()) } returns caseEntity
+      every { mockCaseService.ensureCaseExists(any()) } returns caseDto
 
       val riskRatings = PersonRisksFactory()
         .withRoshRisks(
@@ -225,6 +229,261 @@ class Cas1ApplicationCreationServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class CreateApprovedPremisesEligibleApplication {
+
+    @Test
+    fun `Returns tier not eligible and no application created if tier is null`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val user = userWithUsername(username)
+
+      val caseDto = CaseDto(
+        crn = "CRN345",
+        nomsNumber = "nomsNo",
+        name = "JANE DOE",
+        tier = null,
+        createdAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+        lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+      )
+
+      every { mockCaseService.ensureCaseExists(any()) } returns caseDto
+
+      val riskRatings = PersonRisksFactory().produce()
+
+      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+
+      val result = applicationService.createApprovedPremisesEligibleApplication(crn, user, 123, "1", "A12HI")
+
+      assertThatCasResult(result).isSuccess().with {
+        val outcome = it
+        assertThat(outcome.outcome).isEqualTo(TierEligibility.NOT_ELIGIBLE)
+        assertThat(outcome.tier).isNull()
+      }
+
+      verify{mockApplicationRepository wasNot Called }
+    }
+
+    @ParameterizedTest
+    @CsvSource("Male,A1", "Male,A2", "Male,A3", "Male,B1", "Male,B2", "Male,B3")
+    @CsvSource("Female,A1", "Female,A2", "Female,A3", "Female,B1", "Female,B2", "Female,B3", "Female,C3")
+    fun `Returns success with created application, tier eligible and persists risk data and offender name`(gender: String, tierScore: String) {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val user = userWithUsername(username)
+
+      val caseDto = CaseDto(
+        crn = "CRN345",
+        nomsNumber = "nomsNo",
+        name = "JANE DOE",
+        tier = TierDtoFactory().withVersion(TierVersionDto.V2).withTierScore(tierScore).produce(),
+        createdAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+        lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+        gender = gender
+      )
+
+      every { mockCaseService.ensureCaseExists(any()) } returns caseDto
+
+      val riskRatings = PersonRisksFactory()
+        .withRoshRisks(
+          RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = "High",
+              riskToChildren = "Medium",
+              riskToPublic = "Low",
+              riskToKnownAdult = "High",
+              riskToStaff = "High",
+              lastUpdated = null,
+            ),
+          ),
+        )
+        .withMappa(
+          RiskWithStatus(
+            value = Mappa(
+              level = "",
+              lastUpdated = LocalDate.parse("2022-12-12"),
+            ),
+          ),
+        )
+        .withFlags(
+          RiskWithStatus(
+            value = listOf(
+              "flag1",
+              "flag2",
+            ),
+          ),
+        )
+        .produce()
+
+      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+
+      val savedApplication = slot<ApplicationEntity>()
+
+      every { mockApplicationRepository.saveAndFlush(capture(savedApplication)) } answers {
+        savedApplication.captured
+      }
+
+      val result = applicationService.createApprovedPremisesEligibleApplication(crn, user, 123, "1", "A12HI")
+
+      assertThatCasResult(result).isSuccess().with {
+        val outcome = it
+        assertThat(outcome.outcome).isEqualTo(TierEligibility.ELIGIBLE)
+        assertThat(outcome.tier?.version).isEqualTo(TierVersionDto.V2)
+        assertThat(outcome.tier?.tierScore).isEqualTo(tierScore)
+      }
+
+      val createdApplication = savedApplication.captured as ApprovedPremisesApplicationEntity
+      assertThat(createdApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(createdApplication.name).isEqualTo("JANE DOE")
+    }
+
+    @ParameterizedTest
+    @CsvSource("Male,C3", "Male,C4", "Male,D0")
+    @CsvSource("Female,C4")
+    fun `Returns success with created application, tier in-eligible and persists risk data and offender name`(gender: String, tierScore: String) {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val user = userWithUsername(username)
+
+      val caseDto = CaseDto(
+        crn = "CRN345",
+        nomsNumber = "nomsNo",
+        name = "JANE DOE",
+        tier = TierDtoFactory().withVersion(TierVersionDto.V2).withTierScore(tierScore).produce(),
+        createdAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+        lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+        gender = gender
+      )
+
+      every { mockCaseService.ensureCaseExists(any()) } returns caseDto
+
+      val riskRatings = PersonRisksFactory()
+        .withRoshRisks(
+          RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = "High",
+              riskToChildren = "Medium",
+              riskToPublic = "Low",
+              riskToKnownAdult = "High",
+              riskToStaff = "High",
+              lastUpdated = null,
+            ),
+          ),
+        )
+        .withMappa(
+          RiskWithStatus(
+            value = Mappa(
+              level = "",
+              lastUpdated = LocalDate.parse("2022-12-12"),
+            ),
+          ),
+        )
+        .withFlags(
+          RiskWithStatus(
+            value = listOf(
+              "flag1",
+              "flag2",
+            ),
+          ),
+        )
+        .produce()
+
+      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+
+      val savedApplication = slot<ApplicationEntity>()
+
+      every { mockApplicationRepository.saveAndFlush(capture(savedApplication)) } answers {
+        savedApplication.captured
+      }
+
+      val result = applicationService.createApprovedPremisesEligibleApplication(crn, user, 123, "1", "A12HI")
+
+      assertThatCasResult(result).isSuccess().with {
+        val outcome = it
+        assertThat(outcome.outcome).isEqualTo(TierEligibility.NOT_ELIGIBLE)
+        assertThat(outcome.tier?.version).isEqualTo(TierVersionDto.V2)
+        assertThat(outcome.tier?.tierScore).isEqualTo(tierScore)
+      }
+
+      val createdApplication = savedApplication.captured as ApprovedPremisesApplicationEntity
+      assertThat(createdApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(createdApplication.name).isEqualTo("JANE DOE")
+    }
+
+    @ParameterizedTest
+    @CsvSource("A1", "A2", "A3", "B1", "B2", "B3")
+    fun `Returns success with created application, tier eligible and persists risk data and offender name when gender is null`(tierScore: String) {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+      val user = userWithUsername(username)
+
+      val caseDto = CaseDto(
+        crn = "CRN345",
+        nomsNumber = "nomsNo",
+        name = "JANE DOE",
+        tier = TierDtoFactory().withVersion(TierVersionDto.V2).withTierScore(tierScore).produce(),
+        createdAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+        lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+        gender = null
+      )
+
+      every { mockCaseService.ensureCaseExists(any()) } returns caseDto
+
+      val riskRatings = PersonRisksFactory()
+        .withRoshRisks(
+          RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = "High",
+              riskToChildren = "Medium",
+              riskToPublic = "Low",
+              riskToKnownAdult = "High",
+              riskToStaff = "High",
+              lastUpdated = null,
+            ),
+          ),
+        )
+        .withMappa(
+          RiskWithStatus(
+            value = Mappa(
+              level = "",
+              lastUpdated = LocalDate.parse("2022-12-12"),
+            ),
+          ),
+        )
+        .withFlags(
+          RiskWithStatus(
+            value = listOf(
+              "flag1",
+              "flag2",
+            ),
+          ),
+        )
+        .produce()
+
+      every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
+
+      val savedApplication = slot<ApplicationEntity>()
+
+      every { mockApplicationRepository.saveAndFlush(capture(savedApplication)) } answers {
+        savedApplication.captured
+      }
+
+      val result = applicationService.createApprovedPremisesEligibleApplication(crn, user, 123, "1", "A12HI")
+
+      assertThatCasResult(result).isSuccess().with {
+        val outcome = it
+        assertThat(outcome.outcome).isEqualTo(TierEligibility.ELIGIBLE)
+        assertThat(outcome.tier?.version).isEqualTo(TierVersionDto.V2)
+        assertThat(outcome.tier?.tierScore).isEqualTo(tierScore)
+      }
+
+      val createdApplication = savedApplication.captured as ApprovedPremisesApplicationEntity
+      assertThat(createdApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(createdApplication.name).isEqualTo("JANE DOE")
+    }
+  }
+
 
   @Nested
   inner class UpdateApplication {

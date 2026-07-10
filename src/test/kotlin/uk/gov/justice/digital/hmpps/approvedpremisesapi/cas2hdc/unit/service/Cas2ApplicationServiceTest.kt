@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.Authorisa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas2NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -418,7 +419,7 @@ class Cas2ApplicationServiceTest {
         it.invocation.args[0] as
           Cas2ApplicationEntity
       }
-      every { mockCaseService.ensureCaseExists(any()) } returns CaseEntityFactory().produce()
+      every { mockCaseService.ensureCaseExists(any()) } returns CaseDtoFactory().produce()
 
       val result = applicationService.createApplication(personInfoResult, user)
 

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -13,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
@@ -20,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.CaseDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.CaseRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
@@ -30,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -56,10 +61,12 @@ class CaseServiceTest {
     @Test
     fun `should return existing offender when exist`() {
       val crn = "CRN123"
+      val now = OffsetDateTime.now()
       val caseEntity = CaseEntityFactory()
         .withCrn(crn)
         .withName("NAME")
         .withNomsNumber("NOMS123")
+        .withCreatedAt(now)
         .produce()
 
       val caseSummary = CaseSummary(
@@ -90,11 +97,14 @@ class CaseServiceTest {
         ),
       )
 
+      mockkStatic(OffsetDateTime::class)
+      every { OffsetDateTime.now() } returns now
+
       every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Success(
         body = Tier(
           tierScore = "low",
           calculationId = UUID.randomUUID(),
-          calculationDate = LocalDateTime.now(),
+          calculationDate = now.toLocalDateTime(),
           changeReason = "reason",
         ),
         status = HttpStatus.OK,
@@ -102,7 +112,19 @@ class CaseServiceTest {
 
       val result = service.ensureCaseExists(crn)
 
-      assertThat(result).isEqualTo(caseEntity)
+      assertThat(result).isEqualTo(CaseDto(
+        crn = "CRN123",
+        nomsNumber = "NOMS123",
+        name = "JOHN SMITH",
+        createdAt = now,
+        lastUpdatedAt = now,
+        tier = TierDto(
+          tierScore = "low",
+          calculationDate = now.toLocalDateTime(),
+          provisional = null,
+          version = TierVersionDto.V2,
+        ),
+      ))
     }
 
     @Test
@@ -142,18 +164,34 @@ class CaseServiceTest {
           ),
         ),
       )
+      val now = OffsetDateTime.now()
       every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Success(
         body = Tier(
           tierScore = "tier",
           calculationId = UUID.randomUUID(),
-          calculationDate = LocalDateTime.now(),
+          calculationDate = now.toLocalDateTime(),
           changeReason = "reason",
         ),
         status = HttpStatus.OK,
       )
 
+      mockkStatic(OffsetDateTime::class)
+      every { OffsetDateTime.now() } returns now
+
       val result = service.ensureCaseExists(crn)
-      assertThat(result).isEqualTo(caseEntity)
+      assertThat(result).isEqualTo(CaseDto(
+        crn = "CRN123",
+        nomsNumber = "NOMS123",
+        name = "JOHN SMITH",
+        createdAt = now,
+        lastUpdatedAt = now,
+        tier = TierDto(
+          tierScore = "tier",
+          calculationDate = now.toLocalDateTime(),
+          provisional = null,
+          version = TierVersionDto.V2,
+        ),
+      ))
     }
 
     @Test
@@ -200,8 +238,20 @@ class CaseServiceTest {
         body = null,
       )
 
+      mockkStatic(OffsetDateTime::class)
+      val now = OffsetDateTime.now()
+      every { OffsetDateTime.now() } returns now
+
       val result = service.ensureCaseExists(crn)
-      assertThat(result).isEqualTo(caseEntity)
+
+      assertThat(result).isEqualTo(CaseDto(
+        crn = "CRN123",
+        nomsNumber = "NOMS123",
+        name = "JOHN SMITH",
+        createdAt = now,
+        lastUpdatedAt = now,
+        tier = null,
+      ))
     }
 
     @Test
