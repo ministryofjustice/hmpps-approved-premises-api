@@ -70,6 +70,7 @@ class MigrationJobService(
         MigrationJobType.updateCas3PremisesDomainEventDates -> getBean(Cas3AdjustPremisesDomainEventDatesJob::class)
         MigrationJobType.cas2BackfillApplicationCohorts -> getBean(Cas2HdcBackfillApplicationCohortJob::class)
         MigrationJobType.backfillCases -> getBean(BackfillCasesJob::class)
+        MigrationJobType.replayFailedInboxEvents -> getBean(ReplayFailedInboxEventsMigrationJob::class)
       }
 
       if (job.shouldRunInTransaction) {

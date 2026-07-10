@@ -10,6 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.asHibernateProxy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.getHibernateClass
@@ -31,6 +32,13 @@ interface InboxEventRepository : JpaRepository<InboxEventEntity, UUID> {
     nativeQuery = true,
   )
   fun findCountByStatus(): List<ProcessedStatusCount>
+
+  @Query(
+    value = "update inbox_events set processed_status = 'PENDING', processed_at = NULL where processed_status = 'FAILED'",
+    nativeQuery = true,
+  )
+  @Modifying
+  fun setFailedAsPending(): Int
 
   interface ProcessedStatusCount {
     fun getCount(): Long
