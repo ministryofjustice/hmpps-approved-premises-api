@@ -8,7 +8,6 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpEntity
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
@@ -17,6 +16,10 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.postForEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import java.util.UUID
 
 @Component
@@ -24,6 +27,8 @@ class Cas1BackfillApplicationDraftDocumentJob(
   private val repository: Cas1BackfillApplicationDraftDocumentJobRepository,
   private val transactionTemplate: TransactionTemplate,
   @Value($$"${services.cas1-ui.base-url}") private val cas1UiBaseUrl: String,
+  private val applicationsTransformer: ApplicationsTransformer,
+  private val offenderDetailService: OffenderDetailService,
 ) : MigrationJob() {
   override val shouldRunInTransaction = false
   private val restTemplate = RestTemplate()
@@ -39,37 +44,52 @@ class Cas1BackfillApplicationDraftDocumentJob(
         log.info("Have processed $runningCount applications")
       }
 
-      val applicationIds = repository.applicationIdsWithNoDocument(PageRequest.of(0, 50))
+      val applications = repository.applicationsWithNoDocument(PageRequest.of(0, pageSize))
+      val personInfoResults = offenderDetailService.getPersonInfoResults(
+        applications.map { it.crn }.toSet(),
+        LaoStrategy.NeverRestricted,
+      )
 
-      applicationIds.forEach { applicationId ->
+      applications.forEach { application ->
+        val personInfoResult = personInfoResults.first { it.crn == application.crn }
+
         transactionTemplate.executeWithoutResult {
-          processApplication(applicationId)
+          processApplication(
+            application,
+            personInfoResult,
+          )
         }
       }
 
-      runningCount += applicationIds.size
+      runningCount += applications.size
 
-      hasNext = applicationIds.hasNext()
+      hasNext = applications.hasNext()
     }
+
+    log.info("Have backfilled a total $runningCount applications")
   }
 
   @SuppressWarnings("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-  private fun processApplication(applicationId: UUID) {
-    val application = repository.findByIdOrNull(applicationId)!!
+  private fun processApplication(
+    application: ApprovedPremisesApplicationEntity,
+    personInfoResult: PersonInfoResult,
+  ) {
+    val applicationId = application.id
 
     if (application.submittedAt != null) {
       error("Application $applicationId has no document but has been submitted")
     }
 
-    val data = application.data
+    val cas1Application = applicationsTransformer.transformJpaToCas1Application(
+      application,
+      personInfoResult,
+    )
 
-    if (data != null) {
-      try {
-        val result = restTemplate.postForEntity<String>("$cas1UiBaseUrl/render-application", HttpEntity(data))
-        repository.updateDocument(applicationId, result.body!!)
-      } catch (e: Exception) {
-        throw Exception("Error getting document for $applicationId", e)
-      }
+    try {
+      val result = restTemplate.postForEntity<String>("$cas1UiBaseUrl/render-application", HttpEntity(cas1Application))
+      repository.updateDocument(applicationId, result.body!!)
+    } catch (e: Exception) {
+      throw Exception("Error getting document for $applicationId", e)
     }
   }
 }
@@ -79,12 +99,11 @@ interface Cas1BackfillApplicationDraftDocumentJobRepository : JpaRepository<Appr
 
   @Query(
     value = """
-      SELECT a.id 
-      FROM applications a inner join approved_premises_applications apa on a.id = apa.id 
-      WHERE a.document IS NULL AND a.data IS NOT NULL AND a.submitted_at IS NULL""",
-    nativeQuery = true,
+      FROM ApprovedPremisesApplicationEntity a
+      WHERE a.document IS NULL AND a.data IS NOT NULL AND a.submittedAt IS NULL
+      ORDER BY a.createdAt ASC""",
   )
-  fun applicationIdsWithNoDocument(pageable: Pageable): Slice<UUID>
+  fun applicationsWithNoDocument(pageable: Pageable): Slice<ApprovedPremisesApplicationEntity>
 
   @Modifying
   @Query(
