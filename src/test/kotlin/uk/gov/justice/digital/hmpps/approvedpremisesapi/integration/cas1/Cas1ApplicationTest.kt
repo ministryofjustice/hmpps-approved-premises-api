@@ -64,11 +64,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -1365,7 +1365,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         ) { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1452,7 +1452,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withData("{}")
           }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1497,7 +1497,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
           }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1545,7 +1545,7 @@ class Cas1ApplicationTest : IntegrationTestBase() {
       givenAUser { _, jwt ->
         val crn = "X1234"
 
-        apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
+        apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
 
         webTestClient.post()
           .uri("/cas1/applications")

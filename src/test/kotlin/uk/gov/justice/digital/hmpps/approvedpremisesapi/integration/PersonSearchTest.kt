@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
 import java.time.LocalDate
 
 class PersonSearchTest : IntegrationTestBase() {
@@ -94,7 +94,7 @@ class PersonSearchTest : IntegrationTestBase() {
   @Test
   fun `Searching for a CRN that does not exist returns 404`() {
     givenAUser { _, jwt ->
-      apDeliusContextEmptyCaseSummaryToBulkResponse("CRN1")
+      apDeliusContextCaseSummariesEmptyResponseForCrn("CRN1")
 
       webTestClient.get()
         .uri("/people/search?crn=CRN1")

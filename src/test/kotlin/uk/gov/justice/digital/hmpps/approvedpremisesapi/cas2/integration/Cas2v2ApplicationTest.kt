@@ -39,9 +39,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesErrorResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -587,7 +587,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
       givenACas2v2DeliusUser { userEntity, jwt ->
         val crn = "X1234"
 
-        apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
+        apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
 
         produceAndPersistBasicApplication(crn, userEntity)
 
@@ -1128,7 +1128,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             },
           ) { offenderDetails, _ ->
 
-            apDeliusContextAddSingleCaseSummaryToBulkResponse(
+            apDeliusContextCaseSummariesSingleCase(
               caseSummary = CaseSummaryFactory()
                 .withCrn(crn)
                 .withNomsId(nomsNumber)
@@ -1182,7 +1182,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
             },
           ) { offenderDetails, _ ->
 
-            apDeliusContextAddSingleCaseSummaryToBulkResponse(
+            apDeliusContextCaseSummariesSingleCase(
               caseSummary = CaseSummaryFactory()
                 .withCrn(crn)
                 .withNomsId(nomsNumber)
@@ -1278,7 +1278,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
               },
             ) { offenderDetails, _ ->
 
-              apDeliusContextAddSingleCaseSummaryToBulkResponse(
+              apDeliusContextCaseSummariesSingleCase(
                 caseSummary = CaseSummaryFactory()
                   .withCrn(crn)
                   .withNomsId(nomsNumber)
@@ -1458,7 +1458,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application for cas2v2 as a Noms user returns 201 with correct body and Location header`() {
-      apDeliusContextAddSingleCaseSummaryToBulkResponse(
+      apDeliusContextCaseSummariesSingleCase(
         caseSummary = CaseSummaryFactory()
           .withCrn(crn)
           .withNomsId(nomsNumber)
@@ -1472,7 +1472,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Create new cas2v2 application as a Noms user returns 404 when a person cannot be found`() {
       givenACas2v2NomisUser { _, jwt ->
-        apDeliusContextMockUnsuccessfulCaseSummaryCall(404)
+        apDeliusContextCaseSummariesErrorResponse(404)
         createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt)
       }
     }
@@ -1562,7 +1562,7 @@ class Cas2v2ApplicationTest : IntegrationTestBase() {
         },
       ) { offenderDetails, _ ->
 
-        apDeliusContextAddSingleCaseSummaryToBulkResponse(
+        apDeliusContextCaseSummariesSingleCase(
           caseSummary = CaseSummaryFactory()
             .withCrn(crn)
             .withNomsId(nomsNumber)

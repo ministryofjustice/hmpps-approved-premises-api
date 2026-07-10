@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -272,7 +272,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
             crn = offenderDetails.otherIds.crn,
             createdByUser = user,
           ) { placementApplicationEntity ->
-            apDeliusContextAddResponseToUserAccessCall(
+            apDeliusContextUserAccessAddCase(
               listOf(
                 CaseAccessFactory()
                   .withCrn(offenderDetails.otherIds.crn)
@@ -344,7 +344,7 @@ class Cas1PlacementApplicationsTest : IntegrationTestBase() {
           createdByUser = user,
         ) { placementApplicationEntity ->
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(placementApplicationEntity.application.crn)

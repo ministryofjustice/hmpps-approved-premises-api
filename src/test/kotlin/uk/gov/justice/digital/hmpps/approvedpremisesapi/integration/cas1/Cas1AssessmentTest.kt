@@ -45,7 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplicationPlaceholder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -548,7 +548,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
         })
         val assessBagatha = createApprovedPremisesAssessmentForStatus(user, offender4.asCaseSummary(), cas1InProgress)
 
-        apDeliusContextAddListCaseSummaryToBulkResponse(listOf(offender1.asCaseSummary(), offender2.asCaseSummary(), offender3.asCaseSummary(), offender4.asCaseSummary()))
+        apDeliusContextCaseSummariesMultipleCases(listOf(offender1.asCaseSummary(), offender2.asCaseSummary(), offender3.asCaseSummary(), offender4.asCaseSummary()))
 
         assertAssessmentsReturnedGivenStatus(
           jwt,
@@ -579,7 +579,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
         val (offender4, inmate4) = givenAnOffender({ withCrn("CRN3") })
         val assessCrn3 = createApprovedPremisesAssessmentForStatus(user, offender4.asCaseSummary(), cas1InProgress)
 
-        apDeliusContextAddListCaseSummaryToBulkResponse(listOf(offender1.asCaseSummary(), offender2.asCaseSummary(), offender3.asCaseSummary(), offender4.asCaseSummary()))
+        apDeliusContextCaseSummariesMultipleCases(listOf(offender1.asCaseSummary(), offender2.asCaseSummary(), offender3.asCaseSummary(), offender4.asCaseSummary()))
 
         assertAssessmentsReturnedGivenStatus(
           jwt,

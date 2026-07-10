@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoshRatingsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
 import java.time.OffsetDateTime
 
 class Cas2PersonRisksTest : IntegrationTestBase() {
@@ -63,7 +63,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
     givenACas2PomUser { userEntity, jwt ->
       val crn = "CRN123"
 
-      apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
+      apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
 
       webTestClient.get()
         .uri("/cas2-hdc/people/$crn/risks")

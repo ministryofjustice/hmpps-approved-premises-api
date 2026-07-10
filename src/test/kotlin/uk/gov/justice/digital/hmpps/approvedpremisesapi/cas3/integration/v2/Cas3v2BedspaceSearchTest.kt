@@ -39,8 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenCas3PremisesAndBedspace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS3_PROPERTY_NAME_SHARED_PROPERTY
@@ -474,9 +474,9 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             withId(UUID.randomUUID())
           }
 
-          apDeliusContextAddListCaseSummaryToBulkResponse(listOf(fullPersonCaseSummary, userExcludedCaseSummary, currentRestrictionCaseSummary))
+          apDeliusContextCaseSummariesMultipleCases(listOf(fullPersonCaseSummary, userExcludedCaseSummary, currentRestrictionCaseSummary))
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(userExcludedCaseSummary.crn)
@@ -641,7 +641,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             withReason(cancellationReasonEntityFactory.produceAndPersist())
           }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -846,7 +846,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             }
           }
 
-          apDeliusContextAddResponseToUserAccessCall(
+          apDeliusContextUserAccessAddCase(
             listOf(
               CaseAccessFactory()
                 .withCrn(offenderDetails.otherIds.crn)
@@ -1559,7 +1559,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             withCrn(offenderDetailsThree.otherIds.crn)
           }
 
-          apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseSummaryTwo))
+          apDeliusContextCaseSummariesMultipleCases(listOf(caseSummaryTwo))
 
           webTestClient.post()
             .uri("cas3/v2/bedspaces/search")
@@ -1741,7 +1741,7 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             withCrn(offenderDetailsThree.otherIds.crn)
           }
 
-          apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseSummaryTwo))
+          apDeliusContextCaseSummariesMultipleCases(listOf(caseSummaryTwo))
 
           webTestClient.post()
             .uri("cas3/v2/bedspaces/search")

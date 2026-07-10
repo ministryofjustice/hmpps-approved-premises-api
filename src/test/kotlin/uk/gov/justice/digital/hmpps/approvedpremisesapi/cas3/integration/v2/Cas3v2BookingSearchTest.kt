@@ -26,8 +26,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -78,8 +78,8 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         )
         val expectedResponse = getExpectedResponse(expectedBookingSearchResult, crn, personName = "Unknown")
 
-        apDeliusContextAddListCaseSummaryToBulkResponse(casesSummary = emptyList(), crns = listOf("S121978"))
-        apDeliusContextAddResponseToUserAccessCall(casesAccess = emptyList(), username = userEntity.deliusUsername)
+        apDeliusContextCaseSummariesMultipleCases(casesSummary = emptyList(), crns = listOf("S121978"))
+        apDeliusContextUserAccessAddCase(casesAccess = emptyList(), username = userEntity.deliusUsername)
 
         // when CRN is upper case
         callApiAndAssertResponse("/cas3/v2/bookings/search?crnOrName=$crn", jwt, expectedResponse, true)
@@ -111,9 +111,9 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
           .withCurrentExclusion(true)
           .produce()
 
-        apDeliusContextAddListCaseSummaryToBulkResponse(listOf(userExcludedCaseSummary))
+        apDeliusContextCaseSummariesMultipleCases(listOf(userExcludedCaseSummary))
 
-        apDeliusContextAddResponseToUserAccessCall(
+        apDeliusContextUserAccessAddCase(
           listOf(
             CaseAccessFactory()
               .withCrn(userExcludedCaseSummary.crn)
@@ -357,7 +357,7 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
         for (page in 0..<totalPages) {
           val currentPageSize = if (page == totalPages - 1) totalResults % pageSize else pageSize
 
-          apDeliusContextAddListCaseSummaryToBulkResponse(
+          apDeliusContextCaseSummariesMultipleCases(
             casesSummary = offendersSorted.drop(page * pageSize)
               .take(pageSize)
               .map { it.first.asCaseSummary() },
@@ -1209,8 +1209,8 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
       }
     }
 
-    apDeliusContextAddListCaseSummaryToBulkResponse(cases)
-    apDeliusContextAddResponseToUserAccessCall(
+    apDeliusContextCaseSummariesMultipleCases(cases)
+    apDeliusContextUserAccessAddCase(
       casesAccess = cases.map { CaseAccessFactory().withCrn(it.crn).withAccess().produce() },
       username = username,
     )

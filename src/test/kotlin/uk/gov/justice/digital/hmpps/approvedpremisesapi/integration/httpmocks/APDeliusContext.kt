@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.matching.AnythingPattern
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseDetail
@@ -58,53 +58,49 @@ fun IntegrationTestBase.apDeliusContextMockSuccessfulTeamsManagingCaseCall(crn: 
 )
 
 fun IntegrationTestBase.apDeliusContextMockUserAccess(caseAccess: CaseAccess, username: String = ".*") {
-  apDeliusContextAddResponseToUserAccessCall(listOf(caseAccess), username)
-  apDeliusContextAddSingleResponseToUserAccessCall(caseAccess, username)
+  apDeliusContextUserAccessAddCase(listOf(caseAccess), username)
+  apDeliusContextUserAccessSingleCase(caseAccess, username)
 }
 
-fun IntegrationTestBase.apDeliusContextAddResponseToUserAccessCall(casesAccess: List<CaseAccess>, username: String = ".*") {
+fun IntegrationTestBase.apDeliusContextUserAccessAddCase(casesAccess: List<CaseAccess>, username: String = ".*") {
+  val metadata = "apDeliusContextAddResponseToUserAccessCall-$username"
   val url = "/users/access"
-  val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url && it.metadata != null && it.metadata.containsKey("bulk") }
+  // we use anything pattern because it's very difficult to accurately determine the
+  // list of CRNs provided for a given bulk response when the bulk response is being
+  // built on-the-fly
+  val requestBodyPattern = AnythingPattern()
+  val existingMock = findStubMappingByMetadataKey(metadata)
 
   if (existingMock != null) {
     val mockId = existingMock.id
     val responseBody = jsonMapper.readValue(existingMock.response.body, UserAccess::class.java)
-    val requestBody = jsonMapper.readValue(existingMock.request.bodyPatterns[0].expected, object : TypeReference<List<String>>() {}).toMutableList()
 
-    requestBody += casesAccess.map { it.crn }
     responseBody.access += casesAccess
 
     editGetStubWithBodyAndJsonResponse(
       url = url,
       uuid = mockId,
-      requestBody = WireMock.equalToJson(jsonMapper.writeValueAsString(requestBody), true, true),
+      requestBody = requestBodyPattern,
       responseBody = responseBody,
     ) {
       withQueryParam("username", WireMock.matching(username))
-      withMetadata(mapOf("bulk" to Unit))
+      withMetadata(mapOf(metadata to Unit))
     }
   } else {
-    val requestBody = casesAccess.map { it.crn }
     mockSuccessfulGetCallWithBodyAndJsonResponse(
       url = url,
-      requestBody = WireMock.equalToJson(
-        jsonMapper.writeValueAsString(
-          requestBody,
-        ),
-        true,
-        true,
-      ),
+      requestBody = requestBodyPattern,
       responseBody = UserAccess(
         access = casesAccess,
       ),
     ) {
       withQueryParam("username", WireMock.matching(username))
-      withMetadata(mapOf("bulk" to Unit))
+      withMetadata(mapOf(metadata to Unit))
     }
   }
 }
 
-fun IntegrationTestBase.apDeliusContextAddSingleResponseToUserAccessCall(caseAccess: CaseAccess, username: String = ".*") {
+fun IntegrationTestBase.apDeliusContextUserAccessSingleCase(caseAccess: CaseAccess, username: String = ".*") {
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/users/access",
     requestBody = WireMock.equalToJson(
@@ -122,51 +118,42 @@ fun IntegrationTestBase.apDeliusContextAddSingleResponseToUserAccessCall(caseAcc
   }
 }
 
-fun IntegrationTestBase.apDeliusContextMockCaseSummary(caseSummary: CaseSummary) {
-  this.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary)
-  this.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSummary)
-}
-
-fun IntegrationTestBase.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
+fun IntegrationTestBase.apDeliusContextCaseSummariesAddCase(caseSummary: CaseSummary) {
+  val metadata = "apDeliusContextAddCaseSummaryToBulkResponse"
   val url = "/probation-cases/summaries"
-  val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url && it.metadata != null && it.metadata.containsKey("bulk") }
+  // we use anything pattern because it's very difficult to accurately determine the
+  // list of CRNs provided for a given bulk response when the bulk response is being
+  // built on-the-fly
+  val requestBodyPattern = AnythingPattern()
+  val existingMock = findStubMappingByMetadataKey(metadata)
 
   if (existingMock != null) {
     val mockId = existingMock.id
     val responseBody = jsonMapper.readValue(existingMock.response.body, CaseSummaries::class.java)
-    val requestBody = jsonMapper.readValue(existingMock.request.bodyPatterns[0].expected, object : TypeReference<List<String>>() {}).toMutableList()
-
-    requestBody += caseSummary.crn
     responseBody.cases += caseSummary
 
     editGetStubWithBodyAndJsonResponse(
       url = url,
       uuid = mockId,
-      requestBody = WireMock.equalToJson(jsonMapper.writeValueAsString(requestBody), true, true),
+      requestBody = requestBodyPattern,
       responseBody = responseBody,
     ) {
-      withMetadata(mapOf("bulk" to Unit))
+      withMetadata(mapOf(metadata to Unit))
     }
   } else {
     mockSuccessfulGetCallWithBodyAndJsonResponse(
       url = url,
-      requestBody = WireMock.equalToJson(
-        jsonMapper.writeValueAsString(
-          listOf(caseSummary.crn),
-        ),
-        true,
-        true,
-      ),
+      requestBody = requestBodyPattern,
       responseBody = CaseSummaries(
         cases = listOf(caseSummary),
       ),
     ) {
-      withMetadata(mapOf("bulk" to Unit))
+      withMetadata(mapOf(metadata to Unit))
     }
   }
 }
 
-fun IntegrationTestBase.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
+fun IntegrationTestBase.apDeliusContextCaseSummariesSingleCase(caseSummary: CaseSummary) {
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
     requestBody = WireMock.equalToJson(
@@ -197,7 +184,7 @@ fun IntegrationTestBase.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSu
   }
 }
 
-fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(
+fun IntegrationTestBase.apDeliusContextCaseSummariesMultipleCases(
   casesSummary: List<CaseSummary>,
   crns: List<String> = casesSummary.map { it.crn },
 ) {
@@ -227,7 +214,7 @@ fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(
   }
 }
 
-fun IntegrationTestBase.apDeliusContextEmptyCaseSummaryToBulkResponse(crn: String) {
+fun IntegrationTestBase.apDeliusContextCaseSummariesEmptyResponseForCrn(crn: String) {
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
     requestBody = WireMock.equalToJson(
@@ -243,7 +230,7 @@ fun IntegrationTestBase.apDeliusContextEmptyCaseSummaryToBulkResponse(crn: Strin
   )
 }
 
-fun IntegrationTestBase.apDeliusContextMockUnsuccessfulCaseSummaryCall(responseStatus: Int = 500) = mockUnsuccessfulGetCall(
+fun IntegrationTestBase.apDeliusContextCaseSummariesErrorResponse(responseStatus: Int = 500) = mockUnsuccessfulGetCall(
   url = "/probation-cases/summaries",
   responseStatus = responseStatus,
 )
@@ -286,3 +273,5 @@ fun IntegrationTestBase.apDeliusContextMockSuccessfulDocumentDownloadCall(crn: S
       ),
   )
 }
+
+private fun IntegrationTestBase.findStubMappingByMetadataKey(key: String) = wiremockServer.listAllStubMappings().mappings.find { it.metadata?.containsKey(key) == true }

@@ -9,8 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesErrorResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMock404V3TierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulV3TierCall
@@ -68,7 +68,7 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
     val case3 = CaseSummaryFactory().withCrn("CRN3").withName(NameFactory().withForename("Delius").withSurname("Three").produce()).withNomsId("NOMS3").produce()
     val case4 = CaseSummaryFactory().withCrn("CRN4").withName(NameFactory().withForename("Delius").withSurname("Four").produce()).withNomsId("NOMS4").produce()
 
-    apDeliusContextAddListCaseSummaryToBulkResponse(listOf(case1, case2, case3, case4))
+    apDeliusContextCaseSummariesMultipleCases(listOf(case1, case2, case3, case4))
 
     // tier_v2
     hmppsTierMockSuccessfulTierCall("CRN1", UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
@@ -141,7 +141,7 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
     }
 
     val caseNew = CaseSummaryFactory().withCrn("NEW_CRN").withName(NameFactory().withForename("New").withSurname("Name").produce()).withNomsId("NOMS_NEW").produce()
-    apDeliusContextAddListCaseSummaryToBulkResponse(listOf(caseNew))
+    apDeliusContextCaseSummariesMultipleCases(listOf(caseNew))
 
     hmppsTierMockSuccessfulTierCall("NEW_CRN", UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
     hmppsTierMockSuccessfulV3TierCall("NEW_CRN", UpstreamTier("C1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
@@ -178,7 +178,7 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
       withCreatedByUser(user)
     }
 
-    apDeliusContextMockUnsuccessfulCaseSummaryCall(500)
+    apDeliusContextCaseSummariesErrorResponse(500)
 
     hmppsTierMockSuccessfulTierCall("CRN_FALLBACK", UpstreamTier("D4", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason 2"))
     hmppsTierMockSuccessfulV3TierCall("CRN_FALLBACK", UpstreamTier("D4", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason 2"))
@@ -218,7 +218,7 @@ class BackfillCasesJobTest : MigrationJobTestBase() {
       withCreatedByUser(user)
     }
 
-    apDeliusContextMockUnsuccessfulCaseSummaryCall(500)
+    apDeliusContextCaseSummariesErrorResponse(500)
 
     hmppsTierMockSuccessfulTierCall(crn, UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))
     hmppsTierMockSuccessfulV3TierCall(crn, UpstreamTier("A1", UUID.randomUUID(), LocalDateTime.now(), changeReason = "reason1"))

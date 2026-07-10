@@ -56,9 +56,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffDetailByCodeCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
@@ -255,7 +255,7 @@ class Cas1SpaceBookingTest {
 
           val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
-          apDeliusContextAddSingleCaseSummaryToBulkResponse(
+          apDeliusContextCaseSummariesSingleCase(
             CaseSummaryFactory()
               .withCrn(application.crn)
               .produce(),
@@ -350,7 +350,7 @@ class Cas1SpaceBookingTest {
 
           val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
-          apDeliusContextAddSingleCaseSummaryToBulkResponse(
+          apDeliusContextCaseSummariesSingleCase(
             CaseSummaryFactory()
               .withCrn(application.crn)
               .produce(),
@@ -458,7 +458,7 @@ class Cas1SpaceBookingTest {
             )
           }
 
-          apDeliusContextAddSingleCaseSummaryToBulkResponse(
+          apDeliusContextCaseSummariesSingleCase(
             CaseSummaryFactory()
               .withCrn(application.crn)
               .produce(),
@@ -580,7 +580,7 @@ class Cas1SpaceBookingTest {
             )
           }
 
-          apDeliusContextAddSingleCaseSummaryToBulkResponse(
+          apDeliusContextCaseSummariesSingleCase(
             CaseSummaryFactory()
               .withCrn(application.crn)
               .produce(),
@@ -1032,7 +1032,7 @@ class Cas1SpaceBookingTest {
     fun `Filter on CRN, RestrictedPerson`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      apDeliusContextAddSingleResponseToUserAccessCall(
+      apDeliusContextUserAccessSingleCase(
         caseAccess = CaseAccessFactory()
           .withUserExcluded(true)
           .withUserRestricted(true)

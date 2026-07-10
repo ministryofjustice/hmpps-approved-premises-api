@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Cas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -30,7 +30,7 @@ class Cas1PlacementRequestSearchPaginationTest : IntegrationTestBase() {
         val createdAt = OffsetDateTime.parse("2024-01-01T10:00:00Z")
         val offenders = offenderSequence.take(15).toList()
 
-        apDeliusContextAddListCaseSummaryToBulkResponse(offenders.map { it.first.asCaseSummary() })
+        apDeliusContextCaseSummariesMultipleCases(offenders.map { it.first.asCaseSummary() })
 
         offenders.forEach { (offender, _) ->
           createPlacementRequest(offender.asCaseSummary(), user, createdAt = createdAt, applicationDate = createdAt)
@@ -96,7 +96,7 @@ class Cas1PlacementRequestSearchPaginationTest : IntegrationTestBase() {
         val b1Offenders = allOffenders.take(15)
         val c1Offenders = allOffenders.drop(15).take(5)
 
-        apDeliusContextAddListCaseSummaryToBulkResponse((b1Offenders + c1Offenders).map { it.first.asCaseSummary() })
+        apDeliusContextCaseSummariesMultipleCases((b1Offenders + c1Offenders).map { it.first.asCaseSummary() })
 
         // Create 15 placement requests with the same tier and createdAt
         b1Offenders.forEach { (offender, _) ->

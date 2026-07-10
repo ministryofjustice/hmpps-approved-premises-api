@@ -37,7 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -340,7 +340,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenSomeOffenders { offenderSequence ->
           val offenders = offenderSequence.take(5).toList()
-          apDeliusContextAddListCaseSummaryToBulkResponse(offenders.map { (offenderDetails, _) -> offenderDetails.asCaseSummary() })
+          apDeliusContextCaseSummariesMultipleCases(offenders.map { (offenderDetails, _) -> offenderDetails.asCaseSummary() })
 
           data class AssessmentParams(
             val assessment: TemporaryAccommodationAssessmentEntity,
@@ -516,7 +516,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
             .sortedBy { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
             .map { assessmentSummaryMapper(it.offenderDetails, it.inmateDetails).toCas3Summary(it.assessment) }
 
-          apDeliusContextAddListCaseSummaryToBulkResponse(offenders.map { (offenderDetails, _) -> offenderDetails.asCaseSummary() })
+          apDeliusContextCaseSummariesMultipleCases(offenders.map { (offenderDetails, _) -> offenderDetails.asCaseSummary() })
 
           assertResponseForUrl(
             jwt,
@@ -683,7 +683,7 @@ class Cas3AssessmentTest : IntegrationTestBase() {
           val otherAssessment =
             produceAndPersistAssessmentEntity(user, otherApplication)
 
-          apDeliusContextAddListCaseSummaryToBulkResponse(
+          apDeliusContextCaseSummariesMultipleCases(
             listOf(
               offender.first.asCaseSummary(),
               otherOffender.first.asCaseSummary(),

@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRiskToTheIndividualCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockUnsuccessfulRisksToTheIndividualCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
 
 class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
   @Autowired
@@ -60,7 +60,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     givenACas2PomUser { _, jwt ->
       val crn = "CRN123"
 
-      apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
+      apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
 
       webTestClient.get()
         .uri("/cas2-hdc/people/$crn/oasys/risk-to-self")
