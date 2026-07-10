@@ -3,13 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 @SuppressWarnings("LongParameterList")
@@ -19,9 +16,6 @@ fun IntegrationTestBase.givenABooking(
   premises: PremisesEntity? = null,
   arrivalDate: LocalDate = LocalDate.now().randomDateBefore(14),
   departureDate: LocalDate = LocalDate.now().randomDateBefore(14),
-  nonArrivalReason: NonArrivalReasonEntity? = null,
-  nonArrivalConfirmedAt: OffsetDateTime? = null,
-  nonArrivalNotes: String? = null,
   adhoc: Boolean = false,
   actualArrivalDate: LocalDateTime? = null,
 ): BookingEntity {
@@ -44,31 +38,5 @@ fun IntegrationTestBase.givenABooking(
     )
   }
 
-  nonArrivalReason?.let {
-    booking.nonArrival = nonArrivalEntityFactory.produceAndPersist {
-      withBooking(booking)
-      withReason(it)
-      withCreatedAt(nonArrivalConfirmedAt ?: OffsetDateTime.now())
-      withNotes(nonArrivalNotes ?: "default notes")
-    }
-  }
-
   return booking
-}
-
-@SuppressWarnings("LongParameterList")
-fun IntegrationTestBase.givenABookingForAnOfflineApplication(
-  crn: String,
-  offlineApplication: OfflineApplicationEntity,
-  premises: PremisesEntity? = null,
-  arrivalDate: LocalDate = LocalDate.now().randomDateBefore(14),
-  departureDate: LocalDate = LocalDate.now().randomDateBefore(14),
-) = bookingEntityFactory.produceAndPersist {
-  withCrn(crn)
-  withPremises(premises ?: approvedPremisesEntityFactory.produceAndPersist())
-  withApplication(null)
-  withOfflineApplication(offlineApplication)
-  withArrivalDate(arrivalDate)
-  withDepartureDate(departureDate)
-  withAdhoc(true)
 }
