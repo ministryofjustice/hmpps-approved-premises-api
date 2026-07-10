@@ -154,7 +154,6 @@ fun IntegrationTestBase.apDeliusContextCaseSummariesAddCase(caseSummary: CaseSum
 }
 
 fun IntegrationTestBase.apDeliusContextCaseSummariesSingleCase(caseSummary: CaseSummary) {
-
   mockSuccessfulGetCallWithBodyAndJsonResponse(
     url = "/probation-cases/summaries",
     requestBody = WireMock.equalToJson(

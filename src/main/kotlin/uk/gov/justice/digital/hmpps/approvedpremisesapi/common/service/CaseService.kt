@@ -135,7 +135,7 @@ class CaseService(
     val caseSummariesResponse = apDeliusContextApiClient.getCaseSummaries(listOf(crn))
   ) {
     is ClientResult.Success ->
-      caseSummariesResponse.body.cases.firstOrNull() ?: throw NotFoundProblem(crn, "Offender")
+      caseSummariesResponse.body.cases.firstOrNull { it.crn == crn } ?: throw NotFoundProblem(crn, "Offender")
 
     is ClientResult.Failure -> caseSummariesResponse.throwException()
   }
