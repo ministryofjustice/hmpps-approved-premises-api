@@ -36,7 +36,6 @@ class Cas1BackfillApplicationDraftDocumentJobTest : IntegrationTestBase() {
     )
 
     cas1UiMockPostForBackfillApplicationDocument(
-      applicationId = applicationHasDataNoDocument.id,
       request = """{ "name" : "populated data" }""",
       response = """{ "name": "backfilled document" }""",
     )

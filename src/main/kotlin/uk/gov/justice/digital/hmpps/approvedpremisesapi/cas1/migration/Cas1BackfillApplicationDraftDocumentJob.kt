@@ -52,7 +52,7 @@ class Cas1BackfillApplicationDraftDocumentJob(
 
     if (data != null) {
       try {
-        val result = restTemplate.postForEntity<String>("$cas1UiBaseUrl/backfill/application/$applicationId", HttpEntity(data))
+        val result = restTemplate.postForEntity<String>("$cas1UiBaseUrl/render-application", HttpEntity(data))
         repository.updateDocument(applicationId, result.body!!)
       } catch (e: Exception) {
         log.error("Error getting document for $applicationId", e)
