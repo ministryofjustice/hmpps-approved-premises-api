@@ -73,8 +73,6 @@ data class BookingEntity(
   var keyWorkerStaffCode: String?,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var arrivals: MutableList<ArrivalEntity>,
-  @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
-  var nonArrival: NonArrivalEntity?,
   @OneToOne
   @JoinColumn(name = "application_id")
   var application: ApplicationEntity?,
@@ -122,7 +120,6 @@ data class BookingEntity(
     if (arrivalDate != other.arrivalDate) return false
     if (departureDate != other.departureDate) return false
     if (keyWorkerStaffCode != other.keyWorkerStaffCode) return false
-    if (nonArrival != other.nonArrival) return false
     if (originalArrivalDate != other.originalArrivalDate) return false
     if (originalDepartureDate != other.originalDepartureDate) return false
     if (createdAt != other.createdAt) return false
@@ -135,18 +132,10 @@ data class BookingEntity(
     arrivalDate,
     departureDate,
     keyWorkerStaffCode,
-    nonArrival,
     originalArrivalDate,
     originalDepartureDate,
     createdAt,
   )
 
   override fun toString() = "BookingEntity:$id"
-}
-
-interface BookingSummaryForAvailability {
-  fun getArrivalDate(): LocalDate
-  fun getDepartureDate(): LocalDate
-  fun getArrived(): Boolean
-  fun getIsNotArrived(): Boolean
 }

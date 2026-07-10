@@ -165,7 +165,7 @@ const val BED_SUMMARY_QUERY =
         from bookings booking
           left join cancellations cancellation
             on booking.id = cancellation.booking_id
-          left join non_arrivals non_arrival 
+          left join cas3_non_arrivals non_arrival 
             on non_arrival.booking_id = booking.id
         where booking.bed_id = b.id
           and booking.arrival_date <= CURRENT_DATE

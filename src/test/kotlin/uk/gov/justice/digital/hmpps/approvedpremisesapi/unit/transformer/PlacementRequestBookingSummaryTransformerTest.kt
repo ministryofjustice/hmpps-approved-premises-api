@@ -35,7 +35,6 @@ class PlacementRequestBookingSummaryTransformerTest {
         keyWorkerStaffCode = "789",
         crn = "CRN123",
         arrivals = mutableListOf(),
-        nonArrival = null,
         premises = premises,
         bed = null,
         service = ServiceName.approvedPremises.value,

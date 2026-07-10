@@ -14,7 +14,7 @@ import java.util.Objects
 import java.util.UUID
 
 @Entity
-@Table(name = "non_arrivals")
+@Table(name = "cas3_non_arrivals")
 data class Cas3NonArrivalEntity(
   @Id
   val id: UUID,

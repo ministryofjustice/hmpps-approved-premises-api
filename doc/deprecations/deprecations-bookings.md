@@ -8,7 +8,7 @@ For this reason the following 'common' booking Entities are now deprecated, and 
 
 For this reason, the following entities are deprecated and will be removed in the near future:
 
-* `ArrivalsEntity`
+* `ArrivalEntity`
 * `CancellationEntity`
 * `DateChangeEntity` (this doesn't have a cas3 equivalent and the table is now empty)
 * `DepartureEntity`
