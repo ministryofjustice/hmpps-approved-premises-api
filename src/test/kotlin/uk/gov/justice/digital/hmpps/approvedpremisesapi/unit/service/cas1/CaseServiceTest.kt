@@ -10,6 +10,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers.any
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -52,7 +53,7 @@ class CaseServiceTest {
   @Nested
   inner class EnsureCaseExists {
     @Test
-    fun `should update and return an existing case`() {
+    fun `existing case, update`() {
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
 
       val crn = "CRN123"
@@ -106,7 +107,7 @@ class CaseServiceTest {
     }
 
     @Test
-    fun `should create new case if one doesn't already exist`() {
+    fun `no existing case, create new`() {
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
 
       val crn = "CRN123"
@@ -159,7 +160,7 @@ class CaseServiceTest {
     }
 
     @Test
-    fun `should create new case if one doesn't already exist, setting tiers to null if get tiers errors`() {
+    fun `no existing case, create new, setting tiers to null if get tiers errors`() {
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
 
       val crn = "CRN123"
@@ -210,7 +211,7 @@ class CaseServiceTest {
     }
 
     @Test
-    fun `on create should not include v3 flag is disabled`() {
+    fun `no existing case, create new, dont include v3 tier if flag is disabled`() {
       val crn = "CRN123"
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
 
@@ -257,7 +258,7 @@ class CaseServiceTest {
     }
 
     @Test
-    fun `on create should include tier v3 when flag is enabled`() {
+    fun `no existing case, create new, include tier v3 when flag is enabled`() {
       val crn = "CRN123"
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
 
