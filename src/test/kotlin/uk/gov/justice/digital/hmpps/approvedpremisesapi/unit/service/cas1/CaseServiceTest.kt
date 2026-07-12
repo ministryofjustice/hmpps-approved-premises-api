@@ -118,6 +118,39 @@ class CaseServiceTest {
     }
 
     @Test
+    fun `existing case, update, leaving tiers as current value if getting tiers fails`() {
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+
+      val crn = "CRN123"
+      val caseEntity = CaseEntityFactory()
+        .withCrn(crn)
+        .withTierV2(TierFactory().withTierScore("oldv2").produce())
+        .withTierV3(TierFactory().withTierScore("oldv3").produce())
+        .produce()
+
+      val caseSummary = CaseSummaryFactory().withCrn(crn).produce()
+
+      every { mockCaseRepository.findByCrn(crn) } returns caseEntity
+      val createdCase = slot<CaseEntity>()
+      every { mockCaseRepository.saveAndFlush(capture(createdCase)) } returnsArgument 0
+      every { mockApDeliusContextApiClient.getCaseSummaries(any()) } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(listOf(caseSummary)),
+      )
+
+      every { mockHMPPSTierApiClient.getTier(crn, any()) } returns ClientResult.Failure.StatusCode(
+        status = HttpStatus.INTERNAL_SERVER_ERROR,
+        method = HttpMethod.GET,
+        path = "/crn/crn123/tier",
+        body = null,
+      )
+
+      val result = service.ensureCaseExists(crn)
+      assertThat(result.tierV2?.tierScore).isEqualTo("oldv2")
+      assertThat(result.tierV3?.tierScore).isEqualTo("oldv3")
+    }
+
+    @Test
     fun `no existing case, create new`() {
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
 
@@ -232,8 +265,6 @@ class CaseServiceTest {
         body = Tier(tierScore = "tier value", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "reason"),
         status = HttpStatus.OK,
       )
-
-      service.ensureCaseExists(crn)
 
       val result = service.ensureCaseExists(crn)
 

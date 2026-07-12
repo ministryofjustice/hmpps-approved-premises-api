@@ -86,8 +86,12 @@ class CaseService(
       .trim()
     nomsNumber = caseSummary.nomsId
     lastUpdatedAt = OffsetDateTime.now()
-    tierV2 = tiers.v2
-    tierV3 = tiers.v3
+    if (tiers.v2 != null) {
+      tierV2 = tiers.v2
+    }
+    if (tiers.v3 != null) {
+      tierV3 = tiers.v3
+    }
   }
 
   private fun newCaseEntity(caseSummary: CaseSummary, tiers: CaseTiers) = CaseEntity(
