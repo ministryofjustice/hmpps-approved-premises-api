@@ -1,16 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.every
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.any
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -34,27 +33,28 @@ import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
 class CaseServiceTest {
-  private val mockCaseRepository = mockk<CaseRepository>()
-  private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
-  private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
+  @MockK
+  private lateinit var mockCaseRepository: CaseRepository
+
+  @MockK
+  private lateinit var mockHMPPSTierApiClient: HMPPSTierApiClient
+
+  @MockK
+  private lateinit var mockApDeliusContextApiClient: ApDeliusContextApiClient
+
+  @MockK
+  private lateinit var mockFeatureFlagService: FeatureFlagService
+
+  @InjectMockKs
   private lateinit var service: CaseService
-
-  private fun setupService(includeTierV3: Boolean = false) {
-    every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns includeTierV3
-    service = CaseService(mockCaseRepository, mockApDeliusContextApiClient, mockHMPPSTierApiClient, mockFeatureFlagService)
-  }
 
   @Nested
   inner class EnsureCaseExists {
-    @BeforeEach
-    fun setup() {
-      setupService(includeTierV3 = false)
-    }
-
     @Test
-    fun `should return existing offender when exist`() {
+    fun `should update and return an existing case`() {
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+
       val crn = "CRN123"
       val caseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -106,7 +106,9 @@ class CaseServiceTest {
     }
 
     @Test
-    fun `should create new offender when not exist`() {
+    fun `should create new case if one doesn't already exist`() {
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+
       val crn = "CRN123"
       val caseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -157,13 +159,16 @@ class CaseServiceTest {
     }
 
     @Test
-    fun `should set tier null and create new offender when not exist and get tier return error`() {
+    fun `should create new case if one doesn't already exist, setting tiers to null if get tiers errors`() {
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+
       val crn = "CRN123"
-      val caseEntity = CaseEntityFactory()
+      val expectedCaseEntity = CaseEntityFactory()
         .withCrn(crn)
         .withName("NAME")
         .withNomsNumber("NOMS123")
         .withTierV2(null)
+        .withTierV3(null)
         .produce()
 
       val caseSummary = CaseSummary(
@@ -184,7 +189,7 @@ class CaseServiceTest {
       )
 
       every { mockCaseRepository.findByCrn(crn) } returns null
-      every { mockCaseRepository.saveAndFlush(any()) } returns caseEntity
+      every { mockCaseRepository.saveAndFlush(any()) } returns expectedCaseEntity
       every { mockApDeliusContextApiClient.getCaseSummaries(any()) } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(
@@ -201,13 +206,13 @@ class CaseServiceTest {
       )
 
       val result = service.ensureCaseExists(crn)
-      assertThat(result).isEqualTo(caseEntity)
+      assertThat(result).isEqualTo(expectedCaseEntity)
     }
 
     @Test
-    fun `should only include tier v2 when flag is disabled`() {
+    fun `on create should not include v3 flag is disabled`() {
       val crn = "CRN123"
-      setupService(includeTierV3 = false)
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
 
       val caseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -252,9 +257,9 @@ class CaseServiceTest {
     }
 
     @Test
-    fun `should include tier v3 when flag is enabled`() {
+    fun `on create should include tier v3 when flag is enabled`() {
       val crn = "CRN123"
-      setupService(includeTierV3 = true)
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
 
       val caseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -326,7 +331,7 @@ class CaseServiceTest {
     @Test
     fun `should update tierV2 and tierV3 when flag is enabled`() {
       val crn = "CRN123"
-      setupService(includeTierV3 = true)
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
 
       val caseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -360,7 +365,7 @@ class CaseServiceTest {
     @Test
     fun `should only update tierV2 when flag is disabled`() {
       val crn = "CRN123"
-      setupService(includeTierV3 = false)
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
 
       val caseEntity = CaseEntityFactory()
         .withCrn(crn)
@@ -390,7 +395,7 @@ class CaseServiceTest {
     @Test
     fun `should return false if case does not exist`() {
       val crn = "CRN123"
-      setupService()
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
       every { mockCaseRepository.findByCrn(crn) } returns null
 
       val result = service.reviseTier(crn)
@@ -401,7 +406,7 @@ class CaseServiceTest {
     @Test
     fun `should throw exception if fetch fails`() {
       val crn = "CRN123"
-      setupService()
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
       val caseEntity = CaseEntityFactory().withCrn(crn).produce()
 
       every { mockCaseRepository.findByCrn(crn) } returns caseEntity
@@ -424,7 +429,7 @@ class CaseServiceTest {
     @Test
     fun `should return tierV2`() {
       val crn = "CRN123"
-      setupService(includeTierV3 = false)
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
 
       val tierV2 = TierFactory().withTierScore("V2").withVersion(TierVersion.V2).produce()
       val tierV3 = TierFactory().withTierScore("V3").withVersion(TierVersion.V3).produce()
