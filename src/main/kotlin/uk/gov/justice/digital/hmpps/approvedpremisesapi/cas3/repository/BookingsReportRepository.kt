@@ -59,7 +59,7 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
     LEFT JOIN
       cas3_departures departure ON departure.booking_id = booking.id AND departure.created_at = (SELECT max(d.created_at) FROM cas3_departures d WHERE d.booking_id=booking.id)
     LEFT JOIN
-      arrivals arr ON arr.booking_id = booking.id AND arr.created_at = (SELECT max(a.created_at) FROM arrivals a WHERE a.booking_id=booking.id)
+      cas3_arrivals arr ON arr.booking_id = booking.id AND arr.created_at = (SELECT max(a.created_at) FROM cas3_arrivals a WHERE a.booking_id=booking.id)
     LEFT JOIN
       cancellations cancellation ON cancellation.booking_id = booking.id
     LEFT JOIN
