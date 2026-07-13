@@ -167,7 +167,6 @@ class Cas3BookingService(
         overstays = mutableListOf(),
         premises = premises,
         bedspace = bedspace!!,
-        service = ServiceName.temporaryAccommodation.value,
         originalArrivalDate = arrivalDate,
         originalDepartureDate = departureDate,
         createdAt = bookingCreatedAt,
@@ -257,7 +256,7 @@ class Cas3BookingService(
     if (reason == null) {
       "$.reason" hasValidationError "doesNotExist"
       return@validatedCasResult fieldValidationError
-    } else if (!reason.serviceScopeMatches(booking.service)) {
+    } else if (!reason.serviceScopeMatches(ServiceName.temporaryAccommodation.value)) {
       "$.reason" hasValidationError "incorrectCancellationReasonServiceScope"
       return@validatedCasResult fieldValidationError
     }
@@ -330,14 +329,14 @@ class Cas3BookingService(
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
       "$.reasonId" hasValidationError "doesNotExist"
-    } else if (!reason.serviceScopeMatches(booking.service)) {
+    } else if (!reason.serviceScopeMatches(ServiceName.temporaryAccommodation.value)) {
       "$.reasonId" hasValidationError "incorrectDepartureReasonServiceScope"
     }
 
     val moveOnCategory = moveOnCategoryRepository.findByIdOrNull(moveOnCategoryId)
     if (moveOnCategory == null) {
       "$.moveOnCategoryId" hasValidationError "doesNotExist"
-    } else if (!moveOnCategory.serviceScopeMatches(booking.service)) {
+    } else if (!moveOnCategory.serviceScopeMatches(ServiceName.temporaryAccommodation.value)) {
       "$.moveOnCategoryId" hasValidationError "incorrectMoveOnCategoryServiceScope"
     }
 

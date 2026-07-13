@@ -53,9 +53,8 @@ interface Cas3BedspacesRepository : JpaRepository<Cas3BedspacesEntity, UUID> {
       FROM cas3_bedspaces b
       INNER JOIN (
         SELECT bk.bed_id, MIN(bk.arrival_date) earliest_arrival
-        FROM bookings bk
+        FROM cas3_bookings bk
         INNER JOIN cas3_bedspaces b ON bk.bed_id = b.id
-        WHERE bk.service = 'temporary-accommodation'
         GROUP BY bk.bed_id
       ) earliest_bookings ON b.id = earliest_bookings.bed_id
       WHERE b.start_date > earliest_bookings.earliest_arrival

@@ -412,7 +412,6 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withBedspace(bedspace)
                 withStatus(Cas3BookingStatus.provisional)
-                withServiceName(ServiceName.temporaryAccommodation)
               }
             }
             // Confirmed
@@ -422,7 +421,6 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withBedspace(bedspace)
                 withStatus(Cas3BookingStatus.confirmed)
-                withServiceName(ServiceName.temporaryAccommodation)
               }
               val confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
                 withBooking(booking)
@@ -437,7 +435,6 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withBedspace(bedspace)
                 withStatus(Cas3BookingStatus.arrived)
-                withServiceName(ServiceName.temporaryAccommodation)
               }
               val arrival = cas3ArrivalEntityFactory.produceAndPersist {
                 withBooking(booking)
@@ -452,7 +449,6 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withBedspace(bedspace)
                 withStatus(Cas3BookingStatus.closed)
-                withServiceName(ServiceName.temporaryAccommodation)
               }
               val departure = cas3DepartureEntityFactory.produceAndPersist {
                 withBooking(booking)
@@ -473,7 +469,6 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withBedspace(bedspace)
                 withStatus(Cas3BookingStatus.cancelled)
-                withServiceName(ServiceName.temporaryAccommodation)
               }
               val cancellation = cas3CancellationEntityFactory.produceAndPersist {
                 withBooking(booking)
@@ -490,7 +485,6 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
                 withCrn(offenderDetails.otherIds.crn)
                 withBedspace(bedspace)
                 withStatus(Cas3BookingStatus.provisional)
-                withServiceName(ServiceName.temporaryAccommodation)
               }
             }
           }
@@ -540,7 +534,6 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
             withPremises(it.premises)
             withCrn(offenderDetails.otherIds.crn)
             withBedspace(it)
-            withServiceName(ServiceName.temporaryAccommodation)
           }
         }
 
@@ -1161,7 +1154,6 @@ class Cas3v2BookingSearchTest : IntegrationTestBase() {
     withPremises(bedspace.premises)
     withBedspace(bedspace)
     withStatus(bookingStatus)
-    withServiceName(ServiceName.temporaryAccommodation)
     withArrivalDate(arrivalDate)
     withDepartureDate(departureDate)
     withCreatedAt(createdAt)

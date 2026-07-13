@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3PremisesComplete
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3PremisesWithBedspaces
@@ -285,7 +284,6 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           val bedspace = bedspaces.first()
           val bookingDepartureDate = LocalDate.now(clock).plusDays(10)
           cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premises)
             withBedspace(bedspace)
             withArrivalDate(LocalDate.now(clock).minusDays(20))
@@ -371,7 +369,6 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           val bedspaceArchivingDate = LocalDate.now(clock).plusDays(10)
 
           val booking = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premises)
             withBedspace(bedspace)
             withArrivalDate(LocalDate.now(clock).minusDays(20))
@@ -1215,7 +1212,6 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
         ) { premises, bedspaces ->
           val bedspace = bedspaces.first()
           cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premises)
             withBedspace(bedspace)
             withArrivalDate(LocalDate.now().plusDays(1))
@@ -1247,7 +1243,6 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           val bedspace = bedspaces.first()
 
           val booking = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premises)
             withBedspace(bedspace)
             withArrivalDate(LocalDate.now(clock).plusDays(1))
@@ -1346,7 +1341,6 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
           val booking = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premises)
             withBedspace(bedspace)
             withArrivalDate(LocalDate.now(clock).plusDays(1))
@@ -1384,7 +1378,6 @@ class Cas3v2BedspaceArchiveTest : Cas3IntegrationTestBase() {
           val exactlyThreeMonthsMinusOneDay = LocalDate.now(clock).plusMonths(3).minusDays(1)
 
           cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premises)
             withBedspace(bedspace)
             withArrivalDate(LocalDate.now(clock).minusDays(5))

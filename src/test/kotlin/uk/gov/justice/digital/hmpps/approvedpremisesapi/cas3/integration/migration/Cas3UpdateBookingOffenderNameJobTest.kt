@@ -4,15 +4,11 @@ import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.approvedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.cas2
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.cas2v2
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesMultipleCases
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 
@@ -24,13 +20,15 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
 
       val probationRegion = givenAProbationRegion()
 
-      val premises = givenAnApprovedPremises(
-        region = probationRegion,
-      )
+      val premises = givenACas3Premises(probationRegion = probationRegion)
 
-      val bookings = bookingEntityFactory.produceAndPersistMultiple(15) {
+      val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
         withPremises(premises)
-        withServiceName(temporaryAccommodation)
+      }
+
+      val bookings = cas3BookingEntityFactory.produceAndPersistMultiple(15) {
+        withPremises(premises)
+        withBedspace(bedspace)
       }
 
       val cases1 = bookings.sortedBy { it.crn }.take(10).map {
@@ -52,53 +50,10 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
 
       migrationJobService.runMigrationJob(MigrationJobType.updateCas3BookingOffenderName, 10)
 
-      val savedBookings = bookingRepository.findAll()
+      val savedBookings = cas3BookingRepository.findAll()
       assertThat(savedBookings).hasSize(15)
       savedBookings.forEach {
         assertThat(it.offenderName).isEqualTo("Forename ${it.crn} Surname ${it.crn}")
-      }
-    }
-  }
-
-  @Test
-  fun `only cas3 bookings offender names are updated from Delius`() {
-    givenAUser { user, jwt ->
-      val probationRegion = givenAProbationRegion()
-
-      val premises = givenAnApprovedPremises(
-        region = probationRegion,
-      )
-
-      val bookings = bookingEntityFactory.produceAndPersistMultiple(2) {
-        withPremises(premises)
-        withServiceName(temporaryAccommodation)
-      }
-      val cases = bookings.map {
-        CaseSummaryFactory()
-          .withCrn(it.crn)
-          .withName(Name(forename = "Forename ${it.crn}", surname = "Surname ${it.crn}"))
-          .produce()
-      }
-
-      apDeliusContextCaseSummariesMultipleCases(cases)
-
-      listOf(approvedPremises, cas2, cas2v2).forEach { serviceName ->
-        bookingEntityFactory.produceAndPersistMultiple(2) {
-          withPremises(premises)
-          withServiceName(serviceName)
-        }
-      }
-
-      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BookingOffenderName, 10)
-
-      val savedBookings = bookingRepository.findAll()
-      assertThat(savedBookings).hasSize(8)
-      savedBookings.forEach {
-        if (temporaryAccommodation.value.equals(it.service)) {
-          assertThat(it.offenderName).isEqualTo("Forename ${it.crn} Surname ${it.crn}")
-        } else {
-          assertThat(it.offenderName).isNull()
-        }
       }
     }
   }
@@ -108,13 +63,15 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
     givenAUser { user, jwt ->
       val probationRegion = givenAProbationRegion()
 
-      val premises = givenAnApprovedPremises(
-        region = probationRegion,
-      )
+      val premises = givenACas3Premises(probationRegion = probationRegion)
 
-      val booking = bookingEntityFactory.produceAndPersist {
+      val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
         withPremises(premises)
-        withServiceName(temporaryAccommodation)
+      }
+
+      val booking = cas3BookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withBedspace(bedspace)
       }
 
       migrationJobService.runMigrationJob(MigrationJobType.updateCas3BookingOffenderName, 10)
@@ -128,7 +85,7 @@ class Cas3UpdateBookingOffenderNameJobTest : MigrationJobTestBase() {
             it.throwable.message == "Unable to complete GET request to /probation-cases/summaries: 404 NOT_FOUND"
         }
 
-      val savedBooking = bookingRepository.findAll()
+      val savedBooking = cas3BookingRepository.findAll()
       Assertions.assertThat(savedBooking).hasSize(1)
       Assertions.assertThat(savedBooking.get(0).id).isEqualTo(booking.id)
       Assertions.assertThat(savedBooking.get(0).offenderName).isNull()

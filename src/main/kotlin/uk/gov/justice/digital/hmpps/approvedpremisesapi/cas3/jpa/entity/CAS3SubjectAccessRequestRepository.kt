@@ -83,12 +83,10 @@ class CAS3SubjectAccessRequestRepository(
               p.name as premises_name,
               b.offender_name
           from
-              bookings b
+              cas3_bookings b
           left join cas3_premises p on
               b.premises_id = p.id
           where
-              b.service = :service_name
-          and
               (b.crn = :crn
               or b.noms_number = :noms_number )
           and (:start_date::date is null or b.created_at >= :start_date)

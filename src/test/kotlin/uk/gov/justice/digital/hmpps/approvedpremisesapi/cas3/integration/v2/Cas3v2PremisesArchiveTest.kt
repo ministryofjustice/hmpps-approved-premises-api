@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3PremisesComplete
@@ -743,7 +742,6 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
       departureDate: LocalDate,
       status: Cas3BookingStatus = Cas3BookingStatus.provisional,
     ) = cas3BookingEntityFactory.produceAndPersist {
-      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premises)
       withBedspace(bedspace)
       withCrn(randomStringMultiCaseWithNumbers(6))
@@ -1416,7 +1414,6 @@ class Cas3v2PremisesArchiveTest : Cas3IntegrationTestBase() {
     departureDate: LocalDate,
     status: Cas3BookingStatus = Cas3BookingStatus.provisional,
   ) = cas3BookingEntityFactory.produceAndPersist {
-    withServiceName(ServiceName.temporaryAccommodation)
     withPremises(premises)
     withBedspace(bedspace)
     withCrn(randomStringMultiCaseWithNumbers(6))

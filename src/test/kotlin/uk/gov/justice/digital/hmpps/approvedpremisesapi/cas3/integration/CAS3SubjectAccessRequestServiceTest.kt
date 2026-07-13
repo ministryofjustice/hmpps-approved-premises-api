@@ -124,7 +124,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val user = userEntity()
     val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
 
-    val booking = bookingEntity(offenderDetails, application, ServiceName.temporaryAccommodation)
+    val booking = bookingEntity(offenderDetails, application)
 
     val result =
       sarService.getCAS3Result(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber, START_DATE, END_DATE)
@@ -153,7 +153,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val user = userEntity()
     val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
 
-    val booking = bookingEntity(offenderDetails, application, ServiceName.temporaryAccommodation)
+    val booking = bookingEntity(offenderDetails, application)
     val bookingExtension = bookingExtensionEntity(booking)
 
     val result =
@@ -182,7 +182,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     val (offenderDetails, _) = givenAnOffender()
     val user = userEntity()
     val application = temporaryAccommodationApplicationEntity(offenderDetails, user)
-    val booking = bookingEntity(offenderDetails, application, ServiceName.temporaryAccommodation)
+    val booking = bookingEntity(offenderDetails, application)
     val cancellation = cancellationEntity(booking)
 
     val result =

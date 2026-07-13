@@ -31,7 +31,7 @@ interface Cas3BookingGapReportRepository : JpaRepository<Cas3VoidBedspaceEntity,
   )
   fun getBedspacesV2(startDate: LocalDate, endDate: LocalDate): List<BedspaceInfo>
 
-  @Query(name = "BookingEntity.getBookingsV2", nativeQuery = true)
+  @Query(name = "Cas3BookingEntity.getBookingsV2", nativeQuery = true)
   fun getBookingsV2(startDate: LocalDate, endDate: LocalDate): List<BookingRecord>
 
   @Query(

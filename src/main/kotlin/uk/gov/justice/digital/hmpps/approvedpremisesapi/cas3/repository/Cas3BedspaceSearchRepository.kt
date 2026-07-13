@@ -16,7 +16,7 @@ class Cas3BedspaceSearchRepository(private val namedParameterJdbcTemplate: Named
     """
     WITH BookedBedspaces AS
         (SELECT distinct b.bed_id as bedspace_id, b.premises_id 
-             FROM bookings b
+             FROM cas3_bookings b
              INNER JOIN cas3_premises p ON b.premises_id = p.id
              INNER JOIN probation_delivery_units pdu on pdu.id = p.probation_delivery_unit_id
              LEFT JOIN cancellations bc ON bc.booking_id = b.id

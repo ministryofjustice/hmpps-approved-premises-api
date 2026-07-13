@@ -53,7 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
@@ -478,7 +477,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2024, 1, 1))
             withDepartureDate(LocalDate.of(2024, 1, 1))
@@ -550,7 +548,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2024, 1, 1))
             withDepartureDate(LocalDate.of(2024, 1, 1))
@@ -974,7 +971,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2024, 1, 1))
             withDepartureDate(LocalDate.of(2024, 1, 1))
@@ -1480,7 +1476,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           shouldBeIncludedBookings += cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2023, 3, 29))
             withDepartureDate(LocalDate.of(2023, 4, 1))
@@ -1490,7 +1485,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           shouldBeIncludedBookings += cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2023, 4, 2))
             withDepartureDate(LocalDate.of(2023, 4, 3))
@@ -1500,7 +1494,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           shouldBeIncludedBookings += cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2023, 4, 30))
             withDepartureDate(LocalDate.of(2023, 5, 15))
@@ -1510,7 +1503,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           shouldBeIncludedBookings += cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2023, 3, 28))
             withDepartureDate(LocalDate.of(2023, 5, 28))
@@ -1520,7 +1512,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           shouldNotBeIncludedBookings += cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2023, 3, 28))
             withDepartureDate(LocalDate.of(2023, 3, 30))
@@ -1530,7 +1521,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           shouldNotBeIncludedBookings += cas3BookingEntityFactory.produceAndPersist {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2023, 5, 1))
             withDepartureDate(LocalDate.of(2023, 5, 3))
@@ -1646,7 +1636,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           cas3BookingEntityFactory.produceAndPersistMultiple(5) {
             withPremises(unexpectedPremises)
             withBedspace(unexpectedBedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2023, 4, 5))
             withDepartureDate(LocalDate.of(2023, 4, 7))
@@ -1701,7 +1690,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           val bookings = cas3BookingEntityFactory.produceAndPersistMultiple(1) {
             withPremises(premises)
             withBedspace(bedspace)
-            withServiceName(ServiceName.temporaryAccommodation)
             withCrn(offenderDetails.otherIds.crn)
             withArrivalDate(LocalDate.of(2023, 4, 5))
             withDepartureDate(LocalDate.of(2023, 4, 7))
@@ -1709,98 +1697,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
           }
           bookings[0].let {
             it.arrivals = cas3ArrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
-          }
-
-          val caseSummary = CaseSummaryFactory()
-            .fromOffenderDetails(offenderDetails)
-            .withPnc(offenderDetails.otherIds.pncNumber)
-            .produce()
-
-          apDeliusContextUserAccessAddCase(
-            listOf(
-              CaseAccessFactory()
-                .withCrn(offenderDetails.otherIds.crn)
-                .produce(),
-            ),
-            user.deliusUsername,
-          )
-
-          val expectedDataFrame = BookingsReportGenerator()
-            .createReport(
-              bookings.toBookingsReportDataAndPersonInfo { crn ->
-                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
-              },
-              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
-            )
-
-          webTestClient.get()
-            .uri("/cas3/reports/booking?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
-            .headers(buildTemporaryAccommodationHeaders(jwt))
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith {
-              val actual = DataFrame
-                .readExcel(it.responseBody!!.inputStream())
-                .convertTo<BookingsReportRow>(Remove)
-                .sortBy(BookingsReportRow::bookingId)
-              assertThat(actual).isEqualTo(expectedDataFrame)
-            }
-        }
-      }
-    }
-
-    @Test
-    fun `Get bookings report returns OK with only bookings from the specified service`() {
-      givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
-          val startDate = LocalDate.of(2023, 4, 1)
-          val endDate = LocalDate.of(2023, 4, 30)
-          val bookings = mutableListOf<Cas3BookingEntity>()
-          repeat(5) {
-            bookings.add(
-              setupPremisesWIthABedspaceAndABooking(
-                crn = offenderDetails.otherIds.crn,
-                user,
-                startDate,
-              ).third,
-            )
-          }
-
-          bookings[1].let { it.arrivals = cas3ArrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
-          bookings[2].let {
-            it.arrivals = cas3ArrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
-            it.extensions = cas3ExtensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
-            it.departures = cas3DepartureEntityFactory.produceAndPersistMultiple(1) {
-              withBooking(it)
-              withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
-              withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
-              withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
-            }.toMutableList()
-          }
-          bookings[3].let {
-            it.cancellations = cas3CancellationEntityFactory.produceAndPersistMultiple(1) {
-              withBooking(it)
-              withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-            }.toMutableList()
-          }
-          bookings[4].let {
-            it.nonArrival = cas3NonArrivalEntityFactory.produceAndPersist {
-              withBooking(it)
-              withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
-            }
-          }
-
-          val unexpectedPremises = givenAnApprovedPremises()
-
-          // Unexpected bookings
-          bookingEntityFactory.produceAndPersistMultiple(5) {
-            withPremises(unexpectedPremises)
-            withServiceName(ServiceName.approvedPremises)
-            withCrn(offenderDetails.otherIds.crn)
-            withArrivalDate(LocalDate.of(2023, 4, 5))
-            withDepartureDate(LocalDate.of(2023, 4, 7))
           }
 
           val caseSummary = CaseSummaryFactory()
@@ -2662,7 +2558,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
       withApplication(application)
       withPremises(premises)
       withBedspace(bedspace)
-      withServiceName(ServiceName.temporaryAccommodation)
       withCrn(crn)
       withArrivalDate(arrivalDate)
       withDepartureDate(departureDate)
@@ -4070,7 +3965,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
     ): Cas3BookingEntity = cas3BookingEntityFactory.produceAndPersist {
       withPremises(premises)
       withBedspace(bedspace)
-      withServiceName(ServiceName.temporaryAccommodation)
       withCrn(crn)
       withArrivalDate(arrivalDate)
       withDepartureDate(departureDate)
@@ -4097,7 +3991,6 @@ class Cas3v2ReportsTest : IntegrationTestBase() {
       withEndDate(null)
     }
     val booking = cas3BookingEntityFactory.produceAndPersist {
-      withServiceName(ServiceName.temporaryAccommodation)
       withPremises(premises)
       withBedspace(bedspace)
       withCrn(crn)

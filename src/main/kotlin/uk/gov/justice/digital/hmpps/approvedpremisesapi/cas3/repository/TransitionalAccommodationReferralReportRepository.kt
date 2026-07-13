@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-interface TransitionalAccommodationReferralReportRepository : JpaRepository<BookingEntity, UUID> {
+interface TransitionalAccommodationReferralReportRepository : JpaRepository<Cas3BookingEntity, UUID> {
 
   @Query(
     """
@@ -56,7 +56,7 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
     LEFT JOIN probation_delivery_units pdu ON taa.probation_delivery_unit_id = pdu.id
     LEFT JOIN probation_regions previous_probation_region ON previous_probation_region.id = taa.previous_referral_probation_region_id
     LEFT JOIN probation_delivery_units previous_pdu ON previous_pdu.id = taa.previous_referral_probation_delivery_unit_id
-    LEFT JOIN bookings b on b.application_id = ap.id AND b.service='temporary-accommodation'
+    LEFT JOIN cas3_bookings b on b.application_id = ap.id
     LEFT JOIN cas3_premises premises ON premises.id = b.premises_id
     LEFT JOIN referral_rejection_reasons rrr ON aa.referral_rejection_reason_id = rrr.id
     WHERE

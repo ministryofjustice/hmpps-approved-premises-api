@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.transformer
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
@@ -28,7 +27,6 @@ class Cas3ConfirmationTransformerTest {
     val booking = Cas3BookingEntityFactory()
       .withPremises(premises)
       .withBedspace(bedspace)
-      .withServiceName(ServiceName.temporaryAccommodation)
       .produce()
 
     val confirmationId = UUID.randomUUID()

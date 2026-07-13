@@ -201,7 +201,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     longitude = this.longitude(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
-    bookings = mutableListOf(),
     lostBeds = mutableListOf(),
     addressLine1 = this.addressLine1(),
     addressLine2 = this.addressLine2(),

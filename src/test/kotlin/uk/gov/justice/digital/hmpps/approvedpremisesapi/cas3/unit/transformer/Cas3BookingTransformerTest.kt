@@ -146,7 +146,6 @@ class Cas3BookingTransformerTest {
     overstays = mutableListOf(),
     premises = premisesEntity,
     bedspace = bedspaceEntity,
-    service = ServiceName.temporaryAccommodation.value,
     originalArrivalDate = LocalDate.parse("2022-08-10"),
     originalDepartureDate = LocalDate.parse("2022-08-30"),
     createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
@@ -210,7 +209,6 @@ class Cas3BookingTransformerTest {
   fun `Premises Provisional entity is correctly transformed`() {
     val awaitingArrivalBooking = baseBookingEntity.copy(
       id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-      service = ServiceName.temporaryAccommodation.value,
     )
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
@@ -479,7 +477,6 @@ class Cas3BookingTransformerTest {
   @Test
   fun `Premises with edited cancellation is correctly transformed`() {
     val cancellationBooking = baseBookingEntity.copy(id = UUID.fromString("d182c0b8-1f5f-433b-9a0e-b0e51fee8b8d")).apply {
-      service = ServiceName.temporaryAccommodation.value
       cancellations = mutableListOf(
         Cas3CancellationEntity(
           id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
@@ -606,7 +603,7 @@ class Cas3BookingTransformerTest {
   @Test
   fun `Premises entity with zero day turnaround period and departure is correctly transformed to closed status`() {
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
-    val departedBooking = baseBookingEntity.copy(id = bookingId, service = ServiceName.temporaryAccommodation.value).apply {
+    val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
       arrivals += Cas3ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
@@ -802,7 +799,7 @@ class Cas3BookingTransformerTest {
     every { LocalDate.now() } returns timeNow.toLocalDate()
 
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
-    val departedBooking = baseBookingEntity.copy(id = bookingId, service = ServiceName.temporaryAccommodation.value).apply {
+    val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
       departureDate = departedAt.toLocalDate()
 
       arrivals += Cas3ArrivalEntity(
@@ -1004,7 +1001,7 @@ class Cas3BookingTransformerTest {
     every { LocalDate.now() } returns timeNow.toLocalDate()
 
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
-    val departedBooking = baseBookingEntity.copy(id = bookingId, service = ServiceName.temporaryAccommodation.value).apply {
+    val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
       departureDate = departedAt.toLocalDate()
 
       arrivals += Cas3ArrivalEntity(
@@ -1199,7 +1196,6 @@ class Cas3BookingTransformerTest {
   fun `Premises Entity with edited departure is correctly transformed`() {
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
     val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
-      service = ServiceName.temporaryAccommodation.value
       arrivals += Cas3ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
@@ -1433,7 +1429,6 @@ class Cas3BookingTransformerTest {
   fun `Premises Confirmed entity is correctly transformed`() {
     val confirmationBooking = baseBookingEntity.copy(
       id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
-      service = ServiceName.temporaryAccommodation.value,
     ).apply {
       confirmation = Cas3ConfirmationEntity(
         id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),
@@ -1504,7 +1499,6 @@ class Cas3BookingTransformerTest {
   fun `Turnarounds on a booking are correctly transformed`() {
     val awaitingArrivalBooking = baseBookingEntity.copy(
       id = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
-      service = ServiceName.temporaryAccommodation.value,
       turnarounds = mutableListOf(),
     )
 

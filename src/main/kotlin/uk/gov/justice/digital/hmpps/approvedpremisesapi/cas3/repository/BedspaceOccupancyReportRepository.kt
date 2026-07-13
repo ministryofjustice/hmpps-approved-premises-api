@@ -54,7 +54,7 @@ interface BedspaceOccupancyReportRepository : JpaRepository<BedEntity, UUID> {
       CAST(arrival.id AS VARCHAR) AS arrivalId,
       arrival.created_at AS arrivalCreatedAt,
       CAST(confirmation.id AS VARCHAR) AS confirmationId
-    From bookings booking
+    From cas3_bookings booking
     INNER JOIN cas3_bedspaces bedspace ON bedspace.id = booking.bed_id
     INNER JOIN cas3_premises premises ON booking.premises_id = premises.id
     INNER JOIN probation_delivery_units pdu ON premises.probation_delivery_unit_id = pdu.id
@@ -76,7 +76,7 @@ interface BedspaceOccupancyReportRepository : JpaRepository<BedEntity, UUID> {
       CAST(booking.id AS VARCHAR) AS bookingId,
       cancellation.created_at AS createdAt
     From cancellations cancellation
-    INNER JOIN bookings booking ON cancellation.booking_id = booking.id
+    INNER JOIN cas3_bookings booking ON cancellation.booking_id = booking.id
     INNER JOIN cas3_bedspaces bedspace ON bedspace.id = booking.bed_id
     INNER JOIN cas3_premises premises ON booking.premises_id = premises.id
     INNER JOIN probation_delivery_units pdu ON premises.probation_delivery_unit_id = pdu.id
@@ -97,7 +97,7 @@ interface BedspaceOccupancyReportRepository : JpaRepository<BedEntity, UUID> {
       turnaround.created_at AS CreatedAt,
       working_day_count AS workingDayCount
     From cas3_turnarounds turnaround
-    INNER JOIN bookings booking ON booking.id = turnaround.booking_id
+    INNER JOIN cas3_bookings booking ON booking.id = turnaround.booking_id
     INNER JOIN cas3_bedspaces bedspace ON bedspace.id = booking.bed_id
     INNER JOIN cas3_premises premises ON booking.premises_id = premises.id
     INNER JOIN probation_delivery_units pdu ON premises.probation_delivery_unit_id = pdu.id

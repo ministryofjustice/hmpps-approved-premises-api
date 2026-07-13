@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewOutOfSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
@@ -1089,13 +1088,6 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             }
           }
         }
-
-        BookingEntityFactory()
-          .withBed(bed)
-          .withPremises(premises)
-          .withArrivalDate(LocalDate.parse("2022-08-15"))
-          .withDepartureDate(LocalDate.parse("2022-08-18"))
-          .produce()
 
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/out-of-service-beds")

@@ -631,7 +631,6 @@ class BookingsReportGeneratorTest {
     val booking = Cas3BookingEntityFactory()
       .withPremises(premises)
       .withBedspace(bedspace)
-      .withServiceName(ServiceName.temporaryAccommodation)
       .produce()
 
     booking.arrivals += Cas3ArrivalEntityFactory()
@@ -694,7 +693,6 @@ class BookingsReportGeneratorTest {
     val booking = Cas3BookingEntityFactory()
       .withPremises(premises)
       .withBedspace(bedspace)
-      .withServiceName(ServiceName.temporaryAccommodation)
       .produce()
 
     booking.arrivals += Cas3ArrivalEntityFactory()
@@ -751,7 +749,6 @@ class BookingsReportGeneratorTest {
     val booking = Cas3BookingEntityFactory()
       .withPremises(premises)
       .withBedspace(bedspace)
-      .withServiceName(ServiceName.temporaryAccommodation)
       .produce()
 
     val arrival = Cas3ArrivalEntityFactory()
@@ -783,7 +780,6 @@ class BookingsReportGeneratorTest {
   private fun createBooking(
     premises: Cas3PremisesEntity = Cas3PremisesEntityFactory().withDefaults().produce(),
   ) = Cas3BookingEntityFactory()
-    .withServiceName(ServiceName.temporaryAccommodation)
     .withPremises(premises)
     .withBedspace(Cas3BedspaceEntityFactory().withPremises(premises).produce())
 }

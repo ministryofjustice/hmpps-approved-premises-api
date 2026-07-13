@@ -10,7 +10,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicEntity
@@ -264,7 +263,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           withReference("Matching Bed")
         }
         val booking = cas3BookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBedspace(bedspace)
           withArrivalDate(LocalDate.parse("2022-12-21"))
@@ -350,7 +348,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           withReference("Matching Bedspace")
         }
         val booking = cas3BookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBedspace(bedspace)
           withArrivalDate(LocalDate.parse("2022-12-21"))
@@ -424,7 +421,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             .produce()
 
           val overlappingBookingSameBedspaces = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withApplication(fullPersonApplication)
             withPremises(premises)
             withBedspace(bedspaceTwo)
@@ -444,7 +440,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             .produce()
 
           val currentRestrictionOverlappingBooking = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withApplication(currentRestrictionApplication)
             withPremises(premises)
             withBedspace(bedspaceThree)
@@ -464,7 +459,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             .produce()
 
           val userExcludedOverlappingBooking = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withApplication(userExcludedApplication)
             withPremises(premises)
             withBedspace(bedspaceFour)
@@ -605,7 +599,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             withReference("overlapping bed in premises two")
           }
           val overlappingBookingForBedInPremisesOne = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withApplication(application)
             withPremises(premisesOne)
             withBedspace(overlappingBedInPremisesOne)
@@ -615,7 +608,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             withId(UUID.randomUUID())
           }
           val overlappingBookingForBedInPremisesTwo = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withApplication(application)
             withPremises(premisesTwo)
             withBedspace(overlappingBedInPremisesTwo)
@@ -626,7 +618,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           }
 
           val cancelledOverlappingBookingForBedInPremisesTwo = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withApplication(application)
             withPremises(premisesTwo)
             withBedspace(overlappingBedInPremisesTwo)
@@ -747,7 +738,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           withReference("2 - matching bed with non-overlapping booking")
         }
         val nonOverlappingBooking = cas3BookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
           withPremises(premises)
           withBedspace(bedTwo)
           withArrivalDate(LocalDate.now().plusDays(60))
@@ -830,7 +820,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
             withReference("2 - matching bed with a cancelled booking")
           }
           val nonOverlappingBooking = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withApplication(application)
             withPremises(premises)
             withBedspace(bedTwo)
@@ -1517,7 +1506,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           val premisesPubNearBy = premises.first { p -> p.id == UUID.fromString(PREMISES_PUB_NEARBY_ID) }
           val premisesPubNearByBedspaceOne = premisesPubNearBy.bedspaces.first()
           cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesPubNearBy)
             withBedspace(premisesPubNearByBedspaceOne)
             withArrivalDate(LocalDate.now().minusDays(20))
@@ -1534,7 +1522,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           val premisesSharedProperty = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_ID) }
           val premisesSharedPropertyRoomTwo = premisesSharedProperty.bedspaces.drop(1).first()
           val bookingOffenderTwo = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesSharedPropertyRoomTwo.premises)
             withBedspace(premisesSharedPropertyRoomTwo)
             withArrivalDate(LocalDate.now().minusDays(6))
@@ -1551,7 +1538,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           val premisesSingleOccupancyWheelchairAccessible = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_WHEELCHAIR_ACCESSIBILITY_ID) }
           val premisesSingleOccupancyWheelchairAccessibleRoomOne = premisesSingleOccupancyWheelchairAccessible.bedspaces.first()
           cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesSingleOccupancyWheelchairAccessible)
             withBedspace(premisesSingleOccupancyWheelchairAccessibleRoomOne)
             withArrivalDate(LocalDate.now().minusDays(28))
@@ -1699,7 +1685,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           val premisesSingleOccupancy = premises.first { p -> p.id == UUID.fromString(PREMISES_SINGLE_OCCUPANCY_ID) }
           val premisesSingleOccupancyRoomOne = premisesSingleOccupancy.bedspaces.first()
           cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesSingleOccupancy)
             withBedspace(premisesSingleOccupancyRoomOne)
             withArrivalDate(LocalDate.now().minusDays(10))
@@ -1716,7 +1701,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           val premisesSharedProperty = premises.first { p -> p.id == UUID.fromString(PREMISES_SHARED_PROPERTY_ID) }
           val premisesSharedPropertyRoomTwo = premisesSharedProperty.bedspaces.drop(1).first()
           val bookingOffenderTwo = cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesSharedProperty)
             withBedspace(premisesSharedPropertyRoomTwo)
             withArrivalDate(LocalDate.now().minusDays(2))
@@ -1733,7 +1717,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
           val premisesPubNearby = premises.first { p -> p.id == UUID.fromString(PREMISES_PUB_NEARBY_ID) }
           val premisesPubNearbyRoomOne = premisesPubNearby.bedspaces.first()
           cas3BookingEntityFactory.produceAndPersist {
-            withServiceName(ServiceName.temporaryAccommodation)
             withPremises(premisesPubNearby)
             withBedspace(premisesPubNearbyRoomOne)
             withArrivalDate(LocalDate.now().minusDays(3))

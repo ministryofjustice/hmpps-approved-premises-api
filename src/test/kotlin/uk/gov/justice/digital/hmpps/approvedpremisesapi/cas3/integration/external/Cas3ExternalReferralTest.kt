@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
@@ -207,7 +206,6 @@ class Cas3ExternalReferralTest : Cas3IntegrationTestBase() {
         withPremises(premises)
         withBedspace(bedspace)
         withStatus(Cas3BookingStatus.provisional)
-        withServiceName(ServiceName.temporaryAccommodation)
       }
     }
     return assessment
