@@ -8,6 +8,7 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpEntity
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
@@ -44,26 +45,26 @@ class Cas1BackfillApplicationDraftDocumentJob(
         log.info("Have processed $runningCount applications")
       }
 
-      val applications = repository.applicationsWithNoDocument(PageRequest.of(0, pageSize))
+      val applicationsSlice = repository.applicationsWithNoDocument(PageRequest.of(0, pageSize))
       val personInfoResults = offenderDetailService.getPersonInfoResults(
-        applications.map { it.crn }.toSet(),
+        applicationsSlice.map { it.getCrn() }.toSet(),
         LaoStrategy.NeverRestricted,
       )
 
-      applications.forEach { application ->
-        val personInfoResult = personInfoResults.first { it.crn == application.crn }
+      applicationsSlice.forEach { applicationIdAndCrn ->
+        val personInfoResult = personInfoResults.first { it.crn == applicationIdAndCrn.getCrn() }
 
         transactionTemplate.executeWithoutResult {
           processApplication(
-            application,
+            repository.findByIdOrNull(applicationIdAndCrn.getId()) ?: error("Couldn't find application ${applicationIdAndCrn.getId()}"),
             personInfoResult,
           )
         }
       }
 
-      runningCount += applications.size
+      runningCount += applicationsSlice.numberOfElements
 
-      hasNext = applications.hasNext()
+      hasNext = applicationsSlice.hasNext()
     }
 
     log.info("Have backfilled a total $runningCount applications")
@@ -89,7 +90,7 @@ class Cas1BackfillApplicationDraftDocumentJob(
       val result = restTemplate.postForEntity<String>("$cas1UiBaseUrl/render-application", HttpEntity(cas1Application))
       repository.updateDocument(applicationId, result.body!!)
     } catch (e: Exception) {
-      throw Exception("Error getting document for $applicationId", e)
+      throw Exception("Error rendering document for application $applicationId", e)
     }
   }
 }
@@ -99,11 +100,18 @@ interface Cas1BackfillApplicationDraftDocumentJobRepository : JpaRepository<Appr
 
   @Query(
     value = """
-      FROM ApprovedPremisesApplicationEntity a
-      WHERE a.document IS NULL AND a.data IS NOT NULL AND a.submittedAt IS NULL
-      ORDER BY a.createdAt ASC""",
+      SELECT a.id, a.crn
+      FROM applications a INNER JOIN approved_premises_applications apa ON a.id = apa.id
+      WHERE a.document IS NULL AND a.data IS NOT NULL AND a.submitted_at IS NULL
+      ORDER BY a.created_at""",
+    nativeQuery = true,
   )
-  fun applicationsWithNoDocument(pageable: Pageable): Slice<ApprovedPremisesApplicationEntity>
+  fun applicationsWithNoDocument(pageable: Pageable): Slice<ApplicationIdAndCrn>
+
+  interface ApplicationIdAndCrn {
+    fun getId(): UUID
+    fun getCrn(): String
+  }
 
   @Modifying
   @Query(
