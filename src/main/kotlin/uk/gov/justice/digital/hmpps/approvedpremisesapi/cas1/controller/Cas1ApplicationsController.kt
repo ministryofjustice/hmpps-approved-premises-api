@@ -240,6 +240,7 @@ class Cas1ApplicationsController(
     summary = "Creates an application",
   )
   @PostMapping("/applications/create")
+  @Transactional
   fun createEligibleApplication(
     @RequestBody body: Cas1NewApplication,
   ): ResponseEntity<Cas1CreateApplicationOutcome> {
