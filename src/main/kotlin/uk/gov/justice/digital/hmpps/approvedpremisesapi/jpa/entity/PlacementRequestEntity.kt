@@ -42,7 +42,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       pq.id AS id,
       application.crn AS personCrn,
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tierOnApplicationCreation,
-      (cases.tier_v2->>'tierScore')::text AS personTierScore,
+      (cases.tier_v2->>'tierScore')::text AS personTierV2Score,
+      (cases.tier_v3->>'tierScore')::text AS personTierV3Score,
       pq.application_id AS applicationId,
       apa.name as personName,
       pq.is_parole as isParole,
@@ -71,7 +72,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       LEFT JOIN cases ON cases.crn = application.crn
       WHERE
       (:tierOnApplicationCreation IS NULL OR apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tierOnApplicationCreation) 
-      AND (:personTierScore IS NULL OR (cases.tier_v2->>'tierScore')::text = :personTierScore)
+      AND (:personTierV2Score IS NULL OR (cases.tier_v2->>'tierScore')::text = :personTierV2Score) 
+      AND (:personTierV3Score IS NULL OR (cases.tier_v3->>'tierScore')::text = :personTierV3Score)
       AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS DATE) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
       AND (
@@ -104,7 +106,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     status: String? = null,
     crnOrName: String? = null,
     tierOnApplicationCreation: String? = null,
-    personTierScore: String? = null,
+    personTierV2Score: String? = null,
+    personTierV3Score: String? = null,
     arrivalDateFrom: LocalDate? = null,
     arrivalDateTo: LocalDate? = null,
     requestType: String? = null,

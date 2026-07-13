@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -48,6 +49,7 @@ class Cas1PlacementRequestService(
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val offenderService: OffenderService,
+  private val featureFlagService: FeatureFlagService,
   private val clock: Clock,
 ) {
 
@@ -57,6 +59,8 @@ class Cas1PlacementRequestService(
     searchCriteria: AllActiveSearchCriteria,
     pageCriteria: PageCriteria<PlacementRequestSortField>,
   ): Pair<List<Cas1PlacementRequestSummary>, PaginationMetadata?> {
+    val useTierV3 = featureFlagService.getBooleanFlag("use-tier-v3")
+
     val pageable = getPageableOrAllPages(
       sortBy = listOf(
         when (pageCriteria.sortBy) {
@@ -69,7 +73,11 @@ class Cas1PlacementRequestService(
           PlacementRequestSortField.personRisksTier -> "tierOnApplicationCreation"
           PlacementRequestSortField.firstBookingPremisesName -> "bookingPremisesName"
           PlacementRequestSortField.firstBookingArrivalDate -> "bookingArrivalDate"
-          PlacementRequestSortField.personTier -> "personTierScore"
+          PlacementRequestSortField.personTier -> if (useTierV3) {
+            "personTierV3Score"
+          } else {
+            "personTierV2Score"
+          }
         },
         "id",
       ),
@@ -83,7 +91,16 @@ class Cas1PlacementRequestService(
       status = searchCriteria.status?.name,
       crnOrName = searchCriteria.crnOrName,
       tierOnApplicationCreation = searchCriteria.tierOnApplicationCreation,
-      personTierScore = searchCriteria.personTier,
+      personTierV2Score = if (!useTierV3) {
+        searchCriteria.personTier
+      } else {
+        null
+      },
+      personTierV3Score = if (useTierV3) {
+        searchCriteria.personTier
+      } else {
+        null
+      },
       arrivalDateFrom = searchCriteria.arrivalDateStart,
       arrivalDateTo = searchCriteria.arrivalDateEnd,
       requestType = searchCriteria.requestType?.name,
