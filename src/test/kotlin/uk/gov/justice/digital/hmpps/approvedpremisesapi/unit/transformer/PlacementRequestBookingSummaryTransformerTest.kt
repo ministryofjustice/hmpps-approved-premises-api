@@ -34,7 +34,6 @@ class PlacementRequestBookingSummaryTransformerTest {
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorkerStaffCode = "789",
         crn = "CRN123",
-        arrivals = mutableListOf(),
         premises = premises,
         bed = null,
         service = ServiceName.approvedPremises.value,

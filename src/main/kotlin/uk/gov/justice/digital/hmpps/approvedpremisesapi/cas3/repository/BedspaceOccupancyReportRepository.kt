@@ -59,7 +59,7 @@ interface BedspaceOccupancyReportRepository : JpaRepository<BedEntity, UUID> {
     INNER JOIN cas3_premises premises ON booking.premises_id = premises.id
     INNER JOIN probation_delivery_units pdu ON premises.probation_delivery_unit_id = pdu.id
     INNER JOIN probation_regions probation_region ON probation_region.id = pdu.probation_region_id
-    LEFT JOIN arrivals arrival ON booking.id = arrival.booking_id
+    LEFT JOIN cas3_arrivals arrival ON booking.id = arrival.booking_id
     LEFT JOIN cas3_confirmations confirmation ON booking.id = confirmation.booking_id
     WHERE (CAST(:probationRegionId AS UUID) IS NULL OR pdu.probation_region_id = :probationRegionId)
       AND booking.arrival_date <= :endDate AND booking.departure_date >= :startDate

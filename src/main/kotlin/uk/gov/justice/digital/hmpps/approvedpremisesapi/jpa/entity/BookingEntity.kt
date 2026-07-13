@@ -1,16 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import jakarta.persistence.CascadeType
 import jakarta.persistence.ColumnResult
 import jakarta.persistence.ConstructorResult
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
@@ -71,8 +68,6 @@ data class BookingEntity(
   var departureDate: LocalDate,
   @Deprecated(message = "This is a legacy CAS1-only field that is no longer captured and will be removed once bookings have been fully migrated to space bookings")
   var keyWorkerStaffCode: String?,
-  @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
-  var arrivals: MutableList<ArrivalEntity>,
   @OneToOne
   @JoinColumn(name = "application_id")
   var application: ApplicationEntity?,
@@ -98,9 +93,6 @@ data class BookingEntity(
   var offenderName: String?,
 ) {
 
-  val arrival: ArrivalEntity?
-    get() = arrivals.maxByOrNull { it.createdAt }
-
   val cas1ApplicationFacade: Cas1ApplicationFacade
     get() {
       if (offlineApplication == null && application !is ApprovedPremisesApplicationEntity) {
@@ -108,8 +100,6 @@ data class BookingEntity(
       }
       return Cas1ApplicationFacade(application as ApprovedPremisesApplicationEntity?, offlineApplication)
     }
-
-  fun hasArrivals() = arrivals.isNotEmpty()
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

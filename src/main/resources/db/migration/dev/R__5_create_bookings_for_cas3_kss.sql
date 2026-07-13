@@ -167,7 +167,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  arrivals (
+  cas3_arrivals (
     "arrival_date",
     "booking_id",
     "created_at",
@@ -252,7 +252,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  arrivals (
+  cas3_arrivals (
     "arrival_date",
     "booking_id",
     "created_at",
@@ -320,7 +320,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  arrivals (
+  cas3_arrivals (
     "arrival_date",
     "booking_id",
     "created_at",
@@ -1151,4 +1151,4 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
-UPDATE arrivals SET arrival_date_time = cast(arrival_date as timestamp) at time zone 'utc';
+UPDATE cas3_arrivals SET arrival_date_time = cast(arrival_date as timestamp) at time zone 'utc';

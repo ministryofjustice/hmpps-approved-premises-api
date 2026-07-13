@@ -48,7 +48,6 @@
     <ID>TooGenericExceptionThrown:ApprovedPremisesAssessmentEntityFactory.kt:ApprovedPremisesAssessmentEntityFactory$throw RuntimeException("Must provide an application")</ID>
     <ID>TooGenericExceptionThrown:ApprovedPremisesEntityFactory.kt:ApprovedPremisesEntityFactory$throw RuntimeException("Must provide a local authority area")</ID>
     <ID>TooGenericExceptionThrown:ApprovedPremisesEntityFactory.kt:ApprovedPremisesEntityFactory$throw RuntimeException("Must provide a probation region")</ID>
-    <ID>TooGenericExceptionThrown:ArrivalEntityFactory.kt:ArrivalEntityFactory$throw RuntimeException("Booking must be provided")</ID>
     <ID>TooGenericExceptionThrown:AssessmentClarificationNoteEntityFactory.kt:AssessmentClarificationNoteEntityFactory$throw RuntimeException("Must provide a createdBy")</ID>
     <ID>TooGenericExceptionThrown:AssessmentClarificationNoteEntityFactory.kt:AssessmentClarificationNoteEntityFactory$throw RuntimeException("Must provide an assessment")</ID>
     <ID>TooGenericExceptionThrown:AssessmentReferralHistoryNoteTransformer.kt:AssessmentReferralHistoryNoteTransformer$throw RuntimeException("Unsupported ReferralHistoryNote type: ${jpa::class.qualifiedName}")</ID>

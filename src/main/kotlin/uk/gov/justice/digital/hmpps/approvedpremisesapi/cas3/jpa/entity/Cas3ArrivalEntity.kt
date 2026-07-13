@@ -17,7 +17,7 @@ import java.util.UUID
 interface Cas3ArrivalRepository : JpaRepository<Cas3ArrivalEntity, UUID>
 
 @Entity
-@Table(name = "arrivals")
+@Table(name = "cas3_arrivals")
 data class Cas3ArrivalEntity(
   @Id
   val id: UUID,
