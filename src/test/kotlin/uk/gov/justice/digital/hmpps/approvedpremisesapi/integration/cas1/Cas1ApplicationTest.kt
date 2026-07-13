@@ -42,15 +42,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1CreateApplicationOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExpireApplicationReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.entity.model.TierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
@@ -64,12 +69,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextCaseSummariesEmptyResponseForCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulV3TierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
@@ -1767,6 +1775,266 @@ class Cas1ApplicationTest : IntegrationTestBase() {
             it.person.crn == offenderDetails.otherIds.crn &&
               caseService.getCase(it.person.crn) != null
           }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateEligibleApplication {
+
+    @Test
+    fun `Create new application without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/cas1/applications/create")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Create new application returns 404 when a person cannot be found`() {
+      givenAUser { user, jwt ->
+        val crn = "X1234"
+
+        apDeliusContextCaseSummariesEmptyResponseForCrn(crn)
+
+        apDeliusContextMockUserAccess(
+          caseAccess = CaseAccessFactory()
+            .withCrn(crn)
+            .withUserExcluded(false)
+            .withUserRestricted(false)
+            .produce(),
+          username = user.deliusUsername,
+        )
+
+        webTestClient.post()
+          .uri("/cas1/applications/create")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            Cas1NewApplication(
+              crn = crn,
+              convictionId = 1234,
+              deliusEventNumber = "1",
+              offenceId = "offence123",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
+      }
+    }
+
+    @Test
+    fun `Create new application returns 201 with correct body and Location header`() {
+      givenAUser { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          apAndOASysMockSuccessfulNeedsDetailsCall(
+            offenderDetails.otherIds.crn,
+            NeedsDetailsFactory().produce(),
+          )
+
+          apAndOASysMockSuccessfulRoshRatingsCall(
+            offenderDetails.otherIds.crn,
+            RoshRatingsFactory().produce(),
+          )
+
+          val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "Change Reason")
+
+          hmppsTierMockSuccessfulTierCall(
+            offenderDetails.otherIds.crn,
+            tier,
+          )
+
+          hmppsTierMockSuccessfulV3TierCall(
+            offenderDetails.otherIds.crn,
+            tier,
+          )
+
+          val result = webTestClient.post()
+            .uri("/cas1/applications/create")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(Cas1CreateApplicationOutcome::class.java)
+            .responseBody
+            .blockFirst()
+
+          assertThat(result!!.applicationId).isNotNull
+          assertThat(result.tier!!.tierScore).isEqualTo(tier.tierScore)
+          assertThat(result.tier.calculationDate).isEqualTo(tier.calculationDate)
+          assertThat(result.tier.provisional).isNull()
+          assertThat(result.tier.version.name).isEqualTo(TierVersion.V2.name)
+        }
+      }
+    }
+
+    @Test
+    fun `Create new application returns successfully when a person has no NOMS number`() {
+      givenAUser { _, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = { withoutNomsNumber() },
+        ) { offenderDetails, _ ->
+
+          apAndOASysMockSuccessfulRoshRatingsCall(
+            offenderDetails.otherIds.crn,
+            RoshRatingsFactory().produce(),
+          )
+
+          val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "Change Reason")
+
+          hmppsTierMockSuccessfulTierCall(
+            offenderDetails.otherIds.crn,
+            tier,
+          )
+
+          hmppsTierMockSuccessfulV3TierCall(
+            offenderDetails.otherIds.crn,
+            tier,
+          )
+
+          val result = webTestClient.post()
+            .uri("/cas1/applications/create")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(Cas1CreateApplicationOutcome::class.java)
+            .responseBody
+            .blockFirst()
+
+          assertThat(result!!.applicationId).isNotNull
+          assertThat(result.tier!!.tierScore).isEqualTo(tier.tierScore)
+          assertThat(result.tier.calculationDate).isEqualTo(tier.calculationDate)
+          assertThat(result.tier.provisional).isNull()
+          assertThat(result.tier.version.name).isEqualTo(TierVersion.V2.name)
+        }
+      }
+    }
+
+    @Test
+    fun `Create new application returns successfully when the person cannot be fetched from the prisons API`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withNomsNumber("ABC123")
+          },
+        ) { offenderDetails, _ ->
+
+          apAndOASysMockSuccessfulRoshRatingsCall(
+            offenderDetails.otherIds.crn,
+            RoshRatingsFactory().produce(),
+          )
+
+          val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "Change Reason")
+
+          hmppsTierMockSuccessfulTierCall(
+            offenderDetails.otherIds.crn,
+            tier,
+          )
+
+          hmppsTierMockSuccessfulV3TierCall(
+            offenderDetails.otherIds.crn,
+            tier,
+          )
+
+          val result = webTestClient.post()
+            .uri("/cas1/applications/create")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(Cas1CreateApplicationOutcome::class.java)
+            .responseBody
+            .blockFirst()
+
+          assertThat(result!!.applicationId).isNotNull
+          assertThat(result.tier!!.tierScore).isEqualTo(tier.tierScore)
+          assertThat(result.tier.calculationDate).isEqualTo(tier.calculationDate)
+          assertThat(result.tier.provisional).isNull()
+          assertThat(result.tier.version.name).isEqualTo(TierVersion.V2.name)
+        }
+      }
+    }
+
+    @Test
+    fun `Create new application without risks returns 201 with correct body and Location header`() {
+      givenAUser { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          apAndOASysMockSuccessfulRoshRatingsCall(
+            offenderDetails.otherIds.crn,
+            RoshRatingsFactory().produce(),
+          )
+
+          val tier = Tier(tierScore = "A1", calculationId = UUID.randomUUID(), calculationDate = LocalDateTime.now(), changeReason = "Change Reason")
+
+          hmppsTierMockSuccessfulTierCall(
+            offenderDetails.otherIds.crn,
+            tier,
+          )
+
+          hmppsTierMockSuccessfulV3TierCall(
+            offenderDetails.otherIds.crn,
+            tier,
+          )
+
+          apAndOASysMockSuccessfulNeedsDetailsCall(
+            offenderDetails.otherIds.crn,
+            NeedsDetailsFactory().produce(),
+          )
+
+          val result = webTestClient.post()
+            .uri("/cas1/applications/create?createWithRisks=false")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(Cas1CreateApplicationOutcome::class.java)
+            .responseBody
+            .blockFirst()
+
+          assertThat(result!!.applicationId).isNotNull
+          assertThat(result.tier!!.tierScore).isEqualTo(tier.tierScore)
+          assertThat(result.tier.calculationDate).isEqualTo(tier.calculationDate)
+          assertThat(result.tier.provisional).isNull()
+          assertThat(result.tier.version.name).isEqualTo(TierVersion.V2.name)
         }
       }
     }

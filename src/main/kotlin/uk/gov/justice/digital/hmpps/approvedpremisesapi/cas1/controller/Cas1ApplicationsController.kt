@@ -31,7 +31,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1CreateApplicationOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ExpireApplicationReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
@@ -47,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderDetailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationCreationService
@@ -88,6 +91,7 @@ class Cas1ApplicationsController(
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
   private val documentService: DocumentService,
   private val cas1ApplicationCreationService: Cas1ApplicationCreationService,
+  private val offenderService: OffenderService,
 ) {
 
   @Operation(summary = "Returns domain event summary")
@@ -230,6 +234,31 @@ class Cas1ApplicationsController(
     return ResponseEntity
       .created(URI.create("/cas1/applications/${application.id}"))
       .body(applicationsTransformer.transformCas1JpaToApi(application, personInfo))
+  }
+
+  @Operation(
+    summary = "Creates an application",
+  )
+  @PostMapping("/applications/create")
+  fun createEligibleApplication(
+    @RequestBody body: Cas1NewApplication,
+  ): ResponseEntity<Cas1CreateApplicationOutcome> {
+    val user = userService.getUserForRequest()
+    val crn = body.crn
+
+    offenderService.canAccessOffender(crn, user.cas1LaoStrategy())
+
+    val outcome = extractEntityFromCasResult(
+      cas1ApplicationCreationService.createApplication(
+        crn,
+        user,
+        body.convictionId,
+        body.deliusEventNumber,
+        body.offenceId,
+      ),
+    )
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(outcome)
   }
 
   @Operation(summary = "Updates an application")

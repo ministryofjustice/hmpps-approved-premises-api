@@ -43,7 +43,7 @@ class CaseService(
   private val useTierV3: Boolean
     get() = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
 
-  fun ensureCaseExists(crn: String): CaseEntity {
+  fun ensureCaseExists(crn: String): CaseDto {
     val caseSummary = getCaseSummary(crn)
     val tiers = fetchAvailableTiers(crn)
 
@@ -51,7 +51,7 @@ class CaseService(
       ?.updateFrom(caseSummary, tiers)
       ?: newCaseEntity(caseSummary, tiers)
 
-    return caseRepository.saveAndFlush(caseEntity)
+    return caseRepository.saveAndFlush(caseEntity).toDto()
   }
 
   fun reviseTier(crn: String): Boolean {

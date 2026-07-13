@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1CreateApplicationOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
@@ -107,7 +108,8 @@ class Cas1ApplicationCreationService(
         deliusEventNumber,
         offenceId,
         riskRatings,
-        offenderDetails,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}",
       ),
     )
 
@@ -126,6 +128,46 @@ class Cas1ApplicationCreationService(
     return success(createdApplication)
   }
 
+  fun createApplication(
+    crn: String,
+    user: UserEntity,
+    convictionId: Long,
+    deliusEventNumber: String,
+    offenceId: String,
+  ): CasResult<Cas1CreateApplicationOutcome> {
+    val case = caseService.ensureCaseExists(crn)
+
+    if (case.tier == null) {
+      return CasResult.Success(
+        Cas1CreateApplicationOutcome(
+          tier = null,
+        ),
+      )
+    } else {
+      val riskRatings = offenderRisksService.getPersonRisks(crn)
+
+      val createdApplicationId = applicationRepository.saveAndFlush(
+        createApprovedPremisesApplicationEntity(
+          crn,
+          user,
+          convictionId,
+          deliusEventNumber,
+          offenceId,
+          riskRatings,
+          case.nomsNumber,
+          case.name?.uppercase() ?: error("name is null"),
+        ),
+      ).id
+
+      return CasResult.Success(
+        Cas1CreateApplicationOutcome(
+          applicationId = createdApplicationId,
+          tier = case.tier,
+        ),
+      )
+    }
+  }
+
   fun createApprovedPremisesApplicationEntity(
     crn: String,
     user: UserEntity,
@@ -133,7 +175,8 @@ class Cas1ApplicationCreationService(
     deliusEventNumber: String?,
     offenceId: String?,
     riskRatings: PersonRisks,
-    offenderDetails: OffenderDetailSummary,
+    nomsNumber: String?,
+    name: String,
   ): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = UUID.randomUUID(),
     crn = crn,
@@ -160,8 +203,8 @@ class Cas1ApplicationCreationService(
     isWithdrawn = false,
     withdrawalReason = null,
     otherWithdrawalReason = null,
-    nomsNumber = offenderDetails.otherIds.nomsNumber,
-    name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}",
+    nomsNumber = nomsNumber,
+    name = name,
     targetLocation = null,
     status = ApprovedPremisesApplicationStatus.STARTED,
     sentenceType = null,

@@ -17,6 +17,10 @@ class TierDtoFactory : Factory<TierDto> {
     this.version = { version }
   }
 
+  fun withTierScore(tierScore: String) = apply {
+    this.tierScore = { tierScore }
+  }
+
   override fun produce(): TierDto = TierDto(
     tierScore = this.tierScore(),
     calculationDate = this.calculationDate(),
