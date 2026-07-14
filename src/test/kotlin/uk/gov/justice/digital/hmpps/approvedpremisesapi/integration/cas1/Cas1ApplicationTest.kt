@@ -75,6 +75,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessAddCase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextUserAccessSingleCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulV3TierCall
@@ -1790,6 +1791,68 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isUnauthorized
+    }
+
+    @Test
+    fun `Returns Forbidden and don't create application if user restricted is true`() {
+      givenAUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          apDeliusContextUserAccessSingleCase(
+            caseAccess = CaseAccessFactory()
+              .withUserRestricted(true)
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient.post()
+            .uri("/cas1/applications/create")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+
+    @Test
+    fun `Returns Forbidden and don't create application if user excluded is true`() {
+      givenAUser { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+
+          apDeliusContextUserAccessSingleCase(
+            caseAccess = CaseAccessFactory()
+              .withUserExcluded(true)
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient.post()
+            .uri("/cas1/applications/create")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas1NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
     }
 
     @Test

@@ -247,7 +247,9 @@ class Cas1ApplicationsController(
     val user = userService.getUserForRequest()
     val crn = body.crn
 
-    offenderService.canAccessOffender(crn, user.cas1LaoStrategy())
+    if (!offenderService.canAccessOffender(crn, user.cas1LaoStrategy())) {
+      throw ForbiddenProblem()
+    }
 
     val outcome = extractEntityFromCasResult(
       cas1ApplicationCreationService.createApplication(
