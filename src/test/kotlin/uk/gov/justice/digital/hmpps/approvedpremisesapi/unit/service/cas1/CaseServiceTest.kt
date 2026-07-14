@@ -58,6 +58,7 @@ class CaseServiceTest {
     @Test
     fun `existing case, update`() {
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+      every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val crn = "CRN123"
       val now = OffsetDateTime.now()
@@ -130,6 +131,7 @@ class CaseServiceTest {
     @Test
     fun `existing case, update, leaving tiers as current value if getting tiers fails`() {
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+      every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val crn = "CRN123"
       val now = OffsetDateTime.now()
@@ -172,6 +174,7 @@ class CaseServiceTest {
     @Test
     fun `no existing case, create new`() {
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+      every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val crn = "CRN123"
       val now = OffsetDateTime.now()
@@ -233,6 +236,7 @@ class CaseServiceTest {
     @Test
     fun `no existing case, create new, setting tiers to null if get tiers errors`() {
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+      every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val crn = "CRN123"
 
@@ -271,6 +275,7 @@ class CaseServiceTest {
       val crn = "CRN123"
       val now = OffsetDateTime.now()
       every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
+      every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       every { mockCaseRepository.findByCrn(crn) } returns null
       val createdCase = slot<CaseEntity>()
