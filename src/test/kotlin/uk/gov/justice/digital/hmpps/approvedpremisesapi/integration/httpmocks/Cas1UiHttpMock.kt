@@ -11,3 +11,13 @@ fun IntegrationTestBase.cas1UiMockRenderApplicationPost(
   requestBody = WireMock.equalToJson(request),
   responseBody = response,
 )
+
+fun IntegrationTestBase.cas1UiMockRenderApplicationPost500Error(
+  request: String,
+  response: String,
+) = mockSuccessfulPostCallWithJsonStringResponse(
+  url = "/render-application",
+  requestBody = WireMock.equalToJson(request),
+  responseBody = response,
+  responseStatus = 500,
+)

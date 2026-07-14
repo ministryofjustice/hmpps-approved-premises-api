@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.migration
 
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -9,13 +9,12 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpEntity
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.support.TransactionTemplate
-import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.postForEntity
+import org.springframework.web.reactive.function.client.bodyToMono
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -27,12 +26,11 @@ import java.util.UUID
 class Cas1BackfillApplicationDraftDocumentJob(
   private val repository: Cas1BackfillApplicationDraftDocumentJobRepository,
   private val transactionTemplate: TransactionTemplate,
-  @Value($$"${services.cas1-ui.base-url}") private val cas1UiBaseUrl: String,
   private val applicationsTransformer: ApplicationsTransformer,
   private val offenderDetailService: OffenderDetailService,
+  @Qualifier("cas1UiWebClient") private val webClientConfig: WebClientConfig,
 ) : MigrationJob() {
   override val shouldRunInTransaction = false
-  private val restTemplate = RestTemplate()
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -87,8 +85,13 @@ class Cas1BackfillApplicationDraftDocumentJob(
     )
 
     try {
-      val result = restTemplate.postForEntity<String>("$cas1UiBaseUrl/render-application", HttpEntity(cas1Application))
-      repository.updateDocument(applicationId, result.body!!)
+      webClientConfig.webClient.post()
+        .uri("/render-application")
+        .bodyValue(cas1Application)
+        .retrieve()
+        .bodyToMono<String>()
+        .block()
+        ?.let { repository.updateDocument(applicationId, it) } ?: throw IllegalStateException("empty body returned for application $applicationId")
     } catch (e: Exception) {
       throw Exception("Error rendering document for application $applicationId", e)
     }

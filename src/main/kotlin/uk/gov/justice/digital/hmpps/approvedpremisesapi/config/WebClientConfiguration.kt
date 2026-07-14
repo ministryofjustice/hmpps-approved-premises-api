@@ -44,6 +44,37 @@ class WebClientConfiguration(
     return manager
   }
 
+  @Bean(name = ["cas1UiWebClient"])
+  fun cas1UiWebClient(
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.cas1-ui.base-url}") cas1UiBaseUrl: String,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .baseUrl(cas1UiBaseUrl)
+        .filter(oauth2Client)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
+          ),
+        )
+        .exchangeStrategies(
+          ExchangeStrategies.builder().codecs {
+            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
+          }.build(),
+        )
+        .build(),
+      retryOnReadTimeout = true,
+    )
+  }
+
   @Bean(name = ["apDeliusContextApiWebClient"])
   fun apDeliusContextApiWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
