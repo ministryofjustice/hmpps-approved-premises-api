@@ -13,12 +13,13 @@ abstract class MigrationInBatchesJob(
     batchSize: Int,
     processBatch: (List<T>) -> Unit,
   ) {
-    items.chunked(batchSize).forEachIndexed { index, batch ->
-      migrationLogger.info("Processing batch ${index + 1} of ${items.size / batchSize}...")
+    val chunkedItems = items.chunked(batchSize)
+    chunkedItems.forEachIndexed { index, batch ->
+      migrationLogger.info("Processing batch ${index + 1} of ${chunkedItems.size}...")
       transactionTemplate.executeWithoutResult {
         processBatch(batch)
       }
-      if (index < items.chunked(batchSize).lastIndex) {
+      if (index < chunkedItems.lastIndex) {
         Thread.sleep(1000L)
       }
     }
