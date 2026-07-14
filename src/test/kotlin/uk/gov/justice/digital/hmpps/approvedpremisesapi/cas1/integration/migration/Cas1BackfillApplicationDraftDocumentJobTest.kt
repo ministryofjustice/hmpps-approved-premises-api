@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.cas1UiMockRenderApplicationPost
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.cas1UiMockRenderApplicationPost500Error
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -23,6 +24,31 @@ class Cas1BackfillApplicationDraftDocumentJobTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var applicationsTransformer: ApplicationsTransformer
+
+  @Test
+  fun `backfill applications log exception`() {
+    val (offender, inmateDetails) = givenAnOffender()
+    val app = TestApplication(
+      application = givenACas1Application(
+        submittedAt = null,
+        data = """{ "name" : "populated data" }""",
+        document = null,
+        crn = offender.otherIds.crn,
+      ),
+      offenderDetailSummary = offender,
+      inmateDetails = inmateDetails,
+    )
+
+    cas1UiMockRenderApplicationPost500Error(
+      request = app.toCas1ApplicationJson(),
+      response = """{ "crn": "${app.application.crn}", "name": "backfilled document" }""",
+    )
+
+    // note - this test has been added to ensure errors are logged. check logs to ensure this has happened
+    migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillAppDraftDoc)
+
+    assertThat(approvedPremisesApplicationRepository.findByIdOrNull(app.application.id)!!.document).isNull()
+  }
 
   @Test
   fun `backfill applications ignoring null data`() {
