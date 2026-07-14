@@ -53,7 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
@@ -392,7 +392,7 @@ class Cas2v2ApplicationServiceTest {
           Cas2ApplicationEntity
       }
 
-      every { mockCaseService.ensureCaseExists(any()) } returns CaseEntityFactory().produce()
+      every { mockCaseService.ensureCaseExists(any()) } returns CaseDtoFactory().produce()
 
       val result = cas2ApplicationService.createCas2Application(crn, user, ApplicationOrigin.prisonBail, bailHearingDate)
 
