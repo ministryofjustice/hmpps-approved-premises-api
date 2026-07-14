@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -1478,7 +1479,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1PremisesDaySummary::class.java).responseBody.blockFirst()!!
+        .returnResult<Cas1PremisesDaySummary>().responseBody.blockFirst()!!
 
       assertThat(summaries.spaceBookingSummaries).hasSize(3)
 

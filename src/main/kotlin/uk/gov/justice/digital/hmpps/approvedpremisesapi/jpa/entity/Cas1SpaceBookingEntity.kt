@@ -100,7 +100,9 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         b.actual_departure_date AS actualDepartureDate,
         b.actual_departure_time AS actualDepartureTime,
         b.non_arrival_confirmed_at AS nonArrivalConfirmedAtDateTime,
-        apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tier,
+        apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tierOnApplicationCreation,
+        (cases.tier_v2->>'tierScore')::text AS personTierV2Score,
+        (cases.tier_v3->>'tierScore')::text AS personTierV3Score,
         b.key_worker_staff_code AS keyWorkerStaffCode,
         b.key_worker_assigned_at AS keyWorkerAssignedAt,
         b.key_worker_name AS keyWorkerName,
@@ -131,6 +133,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       LEFT OUTER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       LEFT OUTER JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
       LEFT OUTER JOIN users key_worker_user ON b.key_worker_user_id = key_worker_user.id
+      LEFT OUTER JOIN cases ON cases.crn = b.crn
       WHERE 
       b.premises_id = :premisesId AND 
       b.cancellation_occurred_at IS NULL AND 
@@ -224,7 +227,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         END AS personName,
     b.delius_event_number AS deliusEventNumber,
     b.cancellation_occurred_at IS NOT NULL AS cancelled,
-      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tierOnApplicationCreation,
       CASE
         WHEN apa.id IS NOT NULL THEN apa.name
         ELSE offline_app.name
@@ -440,7 +443,7 @@ interface Cas1SpaceBookingSearchResult {
   val actualDepartureDate: LocalDate?
   val actualDepartureTime: LocalTime?
   val nonArrivalConfirmedAtDateTime: LocalDateTime?
-  val tier: String?
+  val tierOnApplicationCreation: String?
   val keyWorkerStaffCode: String?
   val keyWorkerAssignedAt: Instant?
   val keyWorkerName: String?

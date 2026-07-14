@@ -392,9 +392,10 @@ class CaseServiceTest {
   inner class GetCase {
 
     @Test
-    fun `should return tierV2`() {
+    fun `if feature flag 'use-tier-v3' is false, should return tierV2`() {
       val crn = "CRN123"
-      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns false
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+      every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns false
 
       val tierV2 = TierFactory().withTierScore("V2").withVersion(TierVersion.V2).produce()
       val tierV3 = TierFactory().withTierScore("V3").withVersion(TierVersion.V3).produce()
@@ -410,6 +411,28 @@ class CaseServiceTest {
 
       assertThat(result).isNotNull
       assertThat(result!!.tier?.tierScore).isEqualTo("V2")
+    }
+
+    @Test
+    fun `if feature flag 'use-tier-v3' is true, should return tierV3`() {
+      val crn = "CRN123"
+      every { mockFeatureFlagService.getBooleanFlag("include-tier-v3") } returns true
+      every { mockFeatureFlagService.getBooleanFlag("use-tier-v3") } returns true
+
+      val tierV2 = TierFactory().withTierScore("V2").withVersion(TierVersion.V2).produce()
+      val tierV3 = TierFactory().withTierScore("V3").withVersion(TierVersion.V3).produce()
+      val caseEntity = CaseEntityFactory()
+        .withCrn(crn)
+        .withTierV2(tierV2)
+        .withTierV3(tierV3)
+        .produce()
+
+      every { mockCaseRepository.findByCrn(crn) } returns caseEntity
+
+      val result = service.getCase(crn)
+
+      assertThat(result).isNotNull
+      assertThat(result!!.tier?.tierScore).isEqualTo("V3")
     }
   }
 }

@@ -253,7 +253,7 @@ class Cas1SpaceBookingTransformer(
       searchResult.actualArrivalDate != null -> false
       else -> null
     },
-    tier = searchResult.tier,
+    tier = searchResult.tierOnApplicationCreation,
     keyWorkerAllocation = searchResult.keyWorkerStaffCode?.let { _ ->
       Cas1KeyWorkerAllocation(
         allocatedAt = searchResult.keyWorkerAssignedAt?.toLocalDate(),
