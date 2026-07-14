@@ -23,8 +23,8 @@ class BackfillCasesJob(
   private val offenderService: OffenderService,
   private val hmppsTierApiClient: HMPPSTierApiClient,
   private val migrationLogger: MigrationLogger,
-  transactionTemplate: TransactionTemplate,
-) : MigrationInBatchesJob(migrationLogger, transactionTemplate) {
+  private val transactionTemplate: TransactionTemplate,
+) : MigrationJob() {
 
   override val shouldRunInTransaction = false
 
@@ -33,17 +33,35 @@ class BackfillCasesJob(
     val caseDtos = caseRepository.findUniqueCrnsForBackfill()
 
     processInBatches(caseDtos, pageSize) { batch ->
-
       val missingCases = batch.filter { !it.caseExists }
 
       val missingCasesSummary = fetchSummariesForMissingCases(missingCases)
 
       batch.forEach { dto ->
         runCatching {
-          processCase(dto, missingCasesSummary[dto.crn])
+          transactionTemplate.executeWithoutResult {
+            processCase(dto, missingCasesSummary[dto.crn])
+          }
         }.onFailure {
           migrationLogger.error("Unable to process case for CRN ${dto.crn}", it)
         }
+      }
+    }
+  }
+
+  @SuppressWarnings("MagicNumber")
+  private fun <T> processInBatches(
+    items: List<T>,
+    batchSize: Int,
+    processBatch: (List<T>) -> Unit,
+  ) {
+    val chunkedItems = items.chunked(batchSize)
+    chunkedItems.forEachIndexed { index, batch ->
+      migrationLogger.info("Processing batch ${index + 1} of ${chunkedItems.size}...")
+      processBatch(batch)
+
+      if (index < chunkedItems.lastIndex) {
+        Thread.sleep(500L)
       }
     }
   }
@@ -93,7 +111,7 @@ class BackfillCasesJob(
       lastUpdatedAt = OffsetDateTime.now()
     }
 
-    caseRepository.saveAndFlush(existingCase)
+    caseRepository.save(existingCase)
   }
 
   private fun createCase(
@@ -106,7 +124,7 @@ class BackfillCasesJob(
 
     val now = OffsetDateTime.now()
 
-    caseRepository.saveAndFlush(
+    caseRepository.save(
       CaseEntity(
         id = UUID.randomUUID(),
         crn = dto.crn,
