@@ -83,9 +83,9 @@ class BackfillCasesJob(
       return
     }
 
-    val existingCase = caseRepository.findByCrn(dto.crn)!!
-
     migrationLogger.info("Updating missing tiers for CRN ${dto.crn}")
+
+    val existingCase = caseRepository.findByCrn(dto.crn)!!
 
     existingCase.apply {
       if (!dto.hasTierV2) tierV2 = fetchTierOrNull(dto.crn, TierVersion.V2)
@@ -93,20 +93,20 @@ class BackfillCasesJob(
       lastUpdatedAt = OffsetDateTime.now()
     }
 
-    caseRepository.save(existingCase)
+    caseRepository.saveAndFlush(existingCase)
   }
 
   private fun createCase(
     dto: BackfillCaseSummaryMigrationDto,
     summaryResult: PersonSummaryInfoResult?,
   ) {
-    val personDetails = resolvePersonDetails(dto, summaryResult)
-
     migrationLogger.info("Creating case for CRN ${dto.crn}")
+
+    val personDetails = resolvePersonDetails(dto, summaryResult)
 
     val now = OffsetDateTime.now()
 
-    caseRepository.save(
+    caseRepository.saveAndFlush(
       CaseEntity(
         id = UUID.randomUUID(),
         crn = dto.crn,
