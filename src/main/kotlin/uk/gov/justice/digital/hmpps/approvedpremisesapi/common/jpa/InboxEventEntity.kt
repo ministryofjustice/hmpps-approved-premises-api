@@ -84,4 +84,9 @@ enum class ProcessedStatus {
   IGNORED,
   FAILED,
   FAILED_REVIEWED,
+  ;
+
+  companion object {
+    fun forValue(value: String): ProcessedStatus = entries.first { it.name.equals(value, ignoreCase = true) }
+  }
 }

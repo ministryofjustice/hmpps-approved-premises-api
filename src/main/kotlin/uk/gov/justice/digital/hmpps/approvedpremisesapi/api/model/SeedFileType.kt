@@ -37,6 +37,7 @@ enum class SeedFileType(@get:JsonValue val value: String) {
   approvedPremisesRemovePlacementNonArrivalData("approved_premises_remove_placement_non_arrival_data"),
   approvedPremisesUpdatePremisesEmail("approved_premises_update_premises_email"),
   approvedPremisesUpdatePremisesSupportSpaceBooking("approved_premises_update_support_space_booking"),
+  approvedPremisesUpdateInboxEventStatus("approved_premises_update_inbox_event_status"),
   temporaryAccommodationReferralRejection("temporary_accommodation_referral_rejection"),
   approvedPremisesRemapBedCodes("approved_premises_remap_bed_codes"),
   shortTermAccommodationCreateOmus("short_term_accommodation_create_omus"),
