@@ -19,7 +19,7 @@ class Cas3BedspaceSearchRepository(private val namedParameterJdbcTemplate: Named
              FROM cas3_bookings b
              INNER JOIN cas3_premises p ON b.premises_id = p.id
              INNER JOIN probation_delivery_units pdu on pdu.id = p.probation_delivery_unit_id
-             LEFT JOIN cancellations bc ON bc.booking_id = b.id
+             LEFT JOIN cas3_cancellations bc ON bc.booking_id = b.id
          WHERE pdu.probation_region_id = :probation_region_id
              AND (b.arrival_date, b.departure_date) OVERLAPS (:start_date, :end_date)
              AND bc.id IS NULL)
