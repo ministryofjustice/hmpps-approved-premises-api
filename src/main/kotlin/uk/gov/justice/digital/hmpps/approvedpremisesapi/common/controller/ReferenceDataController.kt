@@ -1,8 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.ArraySchema
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ReferenceDataApiDelegate
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
@@ -43,7 +54,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationReg
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
 import java.util.UUID
 
-@Service
+@RestController
+@Tag(name = "Reference Data")
 class ReferenceDataController(
   private val departureReasonRepository: DepartureReasonRepository,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
@@ -69,11 +81,27 @@ class ReferenceDataController(
   private val referralRejectionReasonTransformer: ReferralRejectionReasonTransformer,
   private val apAreaRepository: ApAreaRepository,
   private val apAreaTransformer: ApAreaTransformer,
-) : ReferenceDataApiDelegate {
+) {
 
-  override fun referenceDataCharacteristicsGet(
-    xServiceName: ServiceName?,
-    modelScope: String?,
+  @Operation(
+    summary = "Lists all available characteristics",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = Characteristic::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/characteristics"],
+    produces = ["application/json"],
+  )
+  fun referenceDataCharacteristicsGet(
+    @Parameter(
+      description = "If given, only characteristics for this service will be returned",
+      `in` = ParameterIn.HEADER,
+      schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"]),
+    )
+    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
+    @RequestParam(value = "modelScope", required = false) modelScope: String?,
   ): ResponseEntity<List<Characteristic>> = ResponseEntity.ok(
     characteristicRepository.findActiveByServiceScopeAndModelScope(
       serviceScope = xServiceName?.value ?: "*",
@@ -91,15 +119,42 @@ class ReferenceDataController(
     else -> Characteristic.ModelScope.star
   }
 
-  override fun referenceDataLocalAuthorityAreasGet(): ResponseEntity<List<LocalAuthorityArea>> {
+  @Operation(
+    summary = "Lists all local authorities",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = LocalAuthorityArea::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/local-authority-areas"],
+    produces = ["application/json"],
+  )
+  fun referenceDataLocalAuthorityAreasGet(): ResponseEntity<List<LocalAuthorityArea>> {
     val localAuthorities = localAuthorityAreaRepository.findAll()
 
     return ResponseEntity.ok(localAuthorities.map(localAuthorityAreaTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataDepartureReasonsGet(
-    xServiceName: ServiceName?,
-    includeInactive: Boolean?,
+  @Operation(
+    summary = "Lists all departure reasons",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = DepartureReason::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/departure-reasons"],
+    produces = ["application/json"],
+  )
+  fun referenceDataDepartureReasonsGet(
+    @Parameter(
+      description = "If given, only departure reasons for this service will be returned",
+      `in` = ParameterIn.HEADER,
+      schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"]),
+    )
+    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
+    @RequestParam(value = "includeInactive", required = false) includeInactive: Boolean?,
   ): ResponseEntity<List<DepartureReason>> {
     val reasons = when (xServiceName != null) {
       true -> when (includeInactive) {
@@ -116,9 +171,25 @@ class ReferenceDataController(
     return ResponseEntity.ok(reasons.map(departureReasonTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataMoveOnCategoriesGet(
-    xServiceName: ServiceName?,
-    includeInactive: Boolean?,
+  @Operation(
+    summary = "Lists all move-on categories for departures",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = MoveOnCategory::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/move-on-categories"],
+    produces = ["application/json"],
+  )
+  fun referenceDataMoveOnCategoriesGet(
+    @Parameter(
+      description = "If given, only move-on categories for this service will be returned",
+      `in` = ParameterIn.HEADER,
+      schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"]),
+    )
+    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
+    @RequestParam(value = "includeInactive", required = false) includeInactive: Boolean?,
   ): ResponseEntity<List<MoveOnCategory>> {
     val moveOnCategories = when {
       xServiceName == null && includeInactive == true -> moveOnCategoryRepository.findAll()
@@ -132,13 +203,42 @@ class ReferenceDataController(
     return ResponseEntity.ok(moveOnCategories.map(moveOnCategoryTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataDestinationProvidersGet(): ResponseEntity<List<DestinationProvider>> {
+  @Operation(
+    summary = "Lists all destination providers for departures",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = DestinationProvider::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/destination-providers"],
+    produces = ["application/json"],
+  )
+  fun referenceDataDestinationProvidersGet(): ResponseEntity<List<DestinationProvider>> {
     val destinationProviders = destinationProviderRepository.findAll()
 
     return ResponseEntity.ok(destinationProviders.map(destinationProviderTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataCancellationReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<CancellationReason>> {
+  @Operation(
+    summary = "Lists all cancellation reasons",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = CancellationReason::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/cancellation-reasons"],
+    produces = ["application/json"],
+  )
+  fun referenceDataCancellationReasonsGet(
+    @Parameter(
+      description = "If given, only departure reasons for this service will be returned",
+      `in` = ParameterIn.HEADER,
+      schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"]),
+    )
+    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
+  ): ResponseEntity<List<CancellationReason>> {
     val cancellationReasons = when (xServiceName != null) {
       true -> if (xServiceName == ServiceName.temporaryAccommodation) {
         cancellationReasonRepository.findAllByServiceScopeIsActive(xServiceName.value)
@@ -153,7 +253,25 @@ class ReferenceDataController(
   }
 
   @Deprecated("use /cas3/reference-data?VOID_BEDSPACE_REASONS")
-  override fun referenceDataLostBedReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<LostBedReason>> {
+  @Operation(
+    summary = "Lists all reasons for losing beds",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = LostBedReason::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/lost-bed-reasons"],
+    produces = ["application/json"],
+  )
+  fun referenceDataLostBedReasonsGet(
+    @Parameter(
+      description = "If given, only lost bed reasons for this service will be returned",
+      `in` = ParameterIn.HEADER,
+      schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"]),
+    )
+    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
+  ): ResponseEntity<List<LostBedReason>> {
     val voidBedspaceReasons = when (xServiceName == ServiceName.temporaryAccommodation) {
       true -> cas3VoidBedspaceReasonRepository.findAllActive()
       false -> throw ForbiddenProblem()
@@ -162,25 +280,72 @@ class ReferenceDataController(
     return ResponseEntity.ok(voidBedspaceReasons.map(cas3VoidBedspaceReasonTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataProbationRegionsGet(): ResponseEntity<List<ProbationRegion>> {
+  @Operation(
+    summary = "Lists all probation regions",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = ProbationRegion::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/probation-regions"],
+    produces = ["application/json"],
+  )
+  fun referenceDataProbationRegionsGet(): ResponseEntity<List<ProbationRegion>> {
     val probationRegions = probationRegionRepository.findAll()
 
     return ResponseEntity.ok(probationRegions.map(probationRegionTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataApAreasGet(): ResponseEntity<List<ApArea>> {
+  @Operation(
+    summary = "Lists all probation regions",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = ApArea::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/ap-areas"],
+    produces = ["application/json"],
+  )
+  fun referenceDataApAreasGet(): ResponseEntity<List<ApArea>> {
     val apAreas = apAreaRepository.findAll()
 
     return ResponseEntity.ok(apAreas.map(apAreaTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataNonArrivalReasonsGet(): ResponseEntity<List<NonArrivalReason>> {
+  @Operation(
+    summary = "Lists reasons for non-arrivals",
+    description = """deprecated, use /cas1/reference-data/non-arrival-reasons""",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = NonArrivalReason::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/non-arrival-reasons"],
+    produces = ["application/json"],
+  )
+  fun referenceDataNonArrivalReasonsGet(): ResponseEntity<List<NonArrivalReason>> {
     val reasons = nonArrivalReasonRepository.findAll().filter { it.isActive }
 
     return ResponseEntity.ok(reasons.map(nonArrivalReasonTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataProbationDeliveryUnitsGet(probationRegionId: UUID?): ResponseEntity<List<ProbationDeliveryUnit>> {
+  @Operation(
+    summary = "Lists probation delivery units, optionally filtered by region",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = ProbationDeliveryUnit::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/probation-delivery-units"],
+    produces = ["application/json"],
+  )
+  fun referenceDataProbationDeliveryUnitsGet(
+    @RequestParam(value = "probationRegionId", required = false) probationRegionId: UUID?,
+  ): ResponseEntity<List<ProbationDeliveryUnit>> {
     val probationDeliveryUnits = when (probationRegionId) {
       null -> probationDeliveryUnitRepository.findAll()
       else -> probationDeliveryUnitRepository.findAllByProbationRegionId(probationRegionId)
@@ -189,8 +354,24 @@ class ReferenceDataController(
     return ResponseEntity.ok(probationDeliveryUnits.map(probationDeliveryUnitTransformer::transformJpaToApi))
   }
 
-  override fun referenceDataReferralRejectionReasonsGet(
-    xServiceName: ServiceName?,
+  @Operation(
+    summary = "Lists all referral rejection reasons",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = ReferralRejectionReason::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/referral-rejection-reasons"],
+    produces = ["application/json"],
+  )
+  fun referenceDataReferralRejectionReasonsGet(
+    @Parameter(
+      description = "If given, only referral rejection reasons for this service will be returned",
+      `in` = ParameterIn.HEADER,
+      schema = Schema(allowableValues = ["approved-premises", "cas2", "cas2v2", "temporary-accommodation"]),
+    )
+    @RequestHeader(value = "X-Service-Name", required = false) xServiceName: ServiceName?,
   ): ResponseEntity<List<ReferralRejectionReason>> {
     val referralRejectionReasons = when (xServiceName == ServiceName.temporaryAccommodation) {
       true -> referralRejectionReasonRepository.findAllActive()
