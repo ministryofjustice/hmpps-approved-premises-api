@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS bookings RENAME TO cas3_bookings;
+ALTER TABLE IF EXISTS cas3_bookings DROP COLUMN IF EXISTS service;
