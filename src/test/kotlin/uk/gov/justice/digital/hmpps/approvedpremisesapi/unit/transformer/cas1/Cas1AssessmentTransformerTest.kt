@@ -15,13 +15,18 @@ import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1ReferralHistory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1StaffDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
@@ -45,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.JsonMapperFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
@@ -281,6 +287,62 @@ class Cas1AssessmentTransformerTest {
       assertThat(apiSummary.status).isEqualTo(Cas1AssessmentStatus.awaitingResponse)
       assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
       assertThat(apiSummary.person).isNotNull
+    }
+  }
+
+  @Nested
+  inner class TransformDomainToApiCas1ReferralHistory {
+    @Test
+    fun `transformDomainToApiCas1ReferralHistory transforms correctly`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.parse("2022-12-14T12:06:00Z"))
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withRejectionRationale("Not suitable")
+        .produce()
+
+      application.assessments.add(assessment)
+
+      val placementHistories = listOf(
+        Cas1ExternalApplicationService.Cas1PlacementHistory(
+          dateApplied = LocalDate.parse("2022-12-15"),
+          premises = null,
+          placementStatus = null,
+          requestForPlacementStatus = RequestForPlacementStatus.requestSubmitted,
+        ),
+      )
+
+      val result = cas1AssessmentTransformer.transformDomainToApiCas1ReferralHistory(application, placementHistories)
+
+      assertThat(result).hasSize(1)
+      assertThat(result[0]).isEqualTo(
+        Cas1ReferralHistory(
+          id = application.id,
+          applicationId = application.id,
+          date = LocalDate.parse("2022-12-15"),
+          applicationStatus = application.status,
+          type = ServiceType.CAS1,
+          referralRejectionReason = "Not suitable",
+          localAuthorityArea = application.apArea?.name,
+          pdu = application.cruManagementArea?.name,
+          referredBy = Cas1StaffDto(user.name, user.deliusUsername, user.deliusStaffCode),
+          placementAddress = null,
+          placementStatus = null,
+          requestForPlacementStatus = RequestForPlacementStatus.requestSubmitted,
+          uiUrl = "http://localhost:3000/applications/${application.id}",
+        ),
+      )
     }
   }
 }

@@ -42,6 +42,8 @@ class Cas1ApplicationService(
 ) {
   fun getApplication(applicationId: UUID) = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
 
+  fun getApplicationsByCrn(crn: String) = approvedPremisesApplicationRepository.findByCrn(crn)
+
   fun getApplicationForUsername(
     applicationId: UUID,
     userDistinguishedName: String,
