@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.time.LocalDateTime
 
 @Repository
@@ -14,7 +13,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-    serviceName: ServiceName = ServiceName.approvedPremises,
   ): String? {
     val result = jdbcTemplate.queryForMap(
       """
@@ -34,12 +32,10 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
               b.key_worker_staff_code,
               b.offender_name
           from
-              bookings b
-          left join premises p on
+              cas3_bookings b
+          left join cas3_premises p on
               b.premises_id = p.id
           where
-              b.service = :service_name
-          and 
               (b.crn = :crn
               or b.noms_number = :noms_number )
           and (:start_date::date is null or b.created_at >= :start_date) 
@@ -51,7 +47,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
         nomsNumber,
         startDate,
         endDate,
-      ).addValue("service_name", serviceName.value),
+      ),
     )
     return toJsonString(result)
   }
@@ -150,7 +146,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-    serviceName: ServiceName = ServiceName.approvedPremises,
   ): String? {
     var result = jdbcTemplate.queryForMap(
       """
@@ -165,14 +160,13 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
             e.created_at
         from
             cas3_extensions e
-        join bookings b on
+        join cas3_bookings b on
             b.id = e.booking_id
         left join applications a on
             a.id = b.application_id
         left join offline_applications oa on
             oa.id = b.offline_application_id
       where
-      b.service = :service_name and
         (b.crn = :crn
           or b.noms_number = :noms_number )
       and (:start_date::date is null or b.created_at >= :start_date)
@@ -184,7 +178,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
         nomsNumber,
         startDate,
         endDate,
-      ).addValue("service_name", serviceName.value),
+      ),
     )
     return toJsonString(result)
   }
@@ -194,7 +188,6 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     nomsNumber: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?,
-    serviceName: ServiceName = ServiceName.approvedPremises,
   ): String? {
     var result = jdbcTemplate.queryForMap(
       """
@@ -210,12 +203,11 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                   c.created_at
               from
                   cancellations c
-                  inner join bookings b on
+                  inner join cas3_bookings b on
                       b.id = c.booking_id
                   inner join cancellation_reasons cr on
                       c.cancellation_reason_id = cr.id
               where
-                  b.service = :service_name and
                   (b.crn = :crn
                       or b.noms_number = :noms_number )
                 and (:start_date::date is null or b.created_at >= :start_date)
@@ -227,7 +219,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
         nomsNumber,
         startDate,
         endDate,
-      ).addValue("service_name", serviceName.value),
+      ),
     )
     return toJsonString(result)
   }

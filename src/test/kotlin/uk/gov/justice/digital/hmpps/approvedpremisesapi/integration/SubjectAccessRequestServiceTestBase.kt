@@ -319,7 +319,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   protected fun bookingEntity(
     offenderDetails: OffenderDetailSummary,
     application: ApplicationEntity,
-    serviceName: ServiceName = ServiceName.temporaryAccommodation,
   ): Cas3BookingEntity {
     val user = userEntity()
     val (cas3Premises, cas3Bedspace) = givenCas3PremisesAndBedspace(user = user)
@@ -336,7 +335,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       withPremises(cas3Premises)
       withBedspace(cas3Bedspace)
       withStatus(Cas3BookingStatus.arrived)
-      withServiceName(serviceName)
       withOffenderName("${offenderDetails.firstName} ${offenderDetails.surname}")
     }
   }

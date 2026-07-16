@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -110,17 +111,10 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
         val probationRegion = givenAProbationRegion()
 
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(probationRegion)
-          withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
-        }
+        val premises = givenACas3Premises(probationRegion = probationRegion)
 
-        val room = roomEntityFactory.produceAndPersist {
+        val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
           withPremises(premises)
-        }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withRoom(room)
         }
 
         val nonSubmittedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
@@ -156,9 +150,9 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withResponse(null)
         }
 
-        bookingEntityFactory.produceAndPersist {
+        cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withBed(bed)
+          withBedspace(bedspace)
           withApplication(submittedApplication)
         }
 

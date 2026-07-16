@@ -3,13 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
 @Repository
-interface Cas3FutureBookingsReportRepository : JpaRepository<BookingEntity, UUID> {
+interface Cas3FutureBookingsReportRepository : JpaRepository<Cas3BookingEntity, UUID> {
 
   @Query(
     """
@@ -36,7 +35,7 @@ interface Cas3FutureBookingsReportRepository : JpaRepository<BookingEntity, UUID
         cas3_app.arrival_date AS accommodationRequiredDate,
         cas3_assessment.accommodation_required_from_date AS updatedAccommodationRequiredDate,
         CAST(confirmation.id AS VARCHAR) AS confirmationId
-    FROM bookings booking
+    FROM cas3_bookings booking
     INNER JOIN cas3_premises premises ON premises.id = booking.premises_id
     INNER JOIN probation_delivery_units pdu ON pdu.id = premises.probation_delivery_unit_id
     INNER JOIN probation_regions probation_region ON probation_region.id = pdu.probation_region_id

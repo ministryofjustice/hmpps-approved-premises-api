@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3ExternalPremisesDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3SuitableApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
@@ -136,7 +135,6 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withBedspace(bedspace)
             withApplication(application)
             withCrn(crn)
-            withServiceName(ServiceName.temporaryAccommodation)
             withArrivalDate(LocalDate.now())
             withDepartureDate(LocalDate.now().plusDays(7))
             withStatus(Cas3BookingStatus.confirmed)
@@ -267,7 +265,6 @@ class Cas3ExternalApplicationsTest : IntegrationTestBase() {
             withBedspace(bedspace)
             withApplication(application)
             withCrn(crn)
-            withServiceName(ServiceName.temporaryAccommodation)
             withArrivalDate(LocalDate.now())
             withDepartureDate(LocalDate.now().plusDays(7))
             withStatus(Cas3BookingStatus.arrived)

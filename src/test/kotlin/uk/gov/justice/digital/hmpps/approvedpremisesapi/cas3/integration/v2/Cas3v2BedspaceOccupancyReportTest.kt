@@ -7,7 +7,6 @@ import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
@@ -100,7 +99,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
     cas3BookingEntityFactory.produceAndPersist {
       withPremises(premisesOne)
       withBedspace(bedspaceOne)
-      withServiceName(ServiceName.temporaryAccommodation)
       withCrn(offenderDetails.otherIds.crn)
       withArrivalDate(LocalDate.parse("2023-03-25"))
       withDepartureDate(LocalDate.parse("2023-04-17"))
@@ -145,7 +143,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-04-05"))
           withDepartureDate(LocalDate.parse("2023-04-15"))
@@ -210,7 +207,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-03-25"))
           withDepartureDate(LocalDate.parse("2023-04-17"))
@@ -279,7 +275,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking1 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-03-02"))
           withDepartureDate(LocalDate.parse("2023-05-25"))
@@ -288,7 +283,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking2 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(randomStringLowerCase(10))
           withArrivalDate(LocalDate.parse("2023-02-18"))
           withDepartureDate(LocalDate.parse("2023-05-11"))
@@ -297,7 +291,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking3 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(randomStringLowerCase(10))
           withArrivalDate(LocalDate.parse("2023-02-15"))
           withDepartureDate(LocalDate.parse("2023-05-08"))
@@ -409,7 +402,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking1 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-03-25"))
           withDepartureDate(LocalDate.parse("2023-04-05"))
@@ -418,7 +410,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking2 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(randomStringLowerCase(10))
           withArrivalDate(LocalDate.parse("2023-04-07"))
           withDepartureDate(LocalDate.parse("2023-04-14"))
@@ -427,7 +418,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking3 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(randomStringLowerCase(10))
           withArrivalDate(LocalDate.parse("2023-04-08"))
           withDepartureDate(LocalDate.parse("2023-04-22"))
@@ -436,7 +426,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(randomStringLowerCase(10))
           withArrivalDate(LocalDate.parse("2023-04-24"))
           withDepartureDate(LocalDate.parse("2023-05-20"))
@@ -529,7 +518,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2024-04-05"))
           withDepartureDate(LocalDate.parse("2024-06-04"))
@@ -620,7 +608,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-03-25"))
           withDepartureDate(LocalDate.parse("2023-04-10"))
@@ -688,7 +675,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-04-07"))
           withDepartureDate(LocalDate.parse("2023-04-21"))
@@ -757,7 +743,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-03-25"))
           withDepartureDate(LocalDate.parse("2023-04-17"))
@@ -826,7 +811,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking1 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2024-06-24"))
           withDepartureDate(LocalDate.parse("2024-09-16"))
@@ -835,7 +819,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking2 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2024-03-21"))
           withDepartureDate(LocalDate.parse("2024-06-13"))
@@ -844,7 +827,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking3 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2024-03-22"))
           withDepartureDate(LocalDate.parse("2024-06-12"))
@@ -853,7 +835,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking4 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2024-03-15"))
           withDepartureDate(LocalDate.parse("2024-06-07"))
@@ -862,7 +843,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking5 = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2024-03-12"))
           withDepartureDate(LocalDate.parse("2024-06-04"))
@@ -1072,7 +1052,6 @@ class Cas3v2BedspaceOccupancyReportTest : IntegrationTestBase() {
         val booking = cas3BookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withBedspace(bedspace)
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn(offenderDetails.otherIds.crn)
           withArrivalDate(LocalDate.parse("2023-03-28"))
           withDepartureDate(LocalDate.parse("2023-04-04"))

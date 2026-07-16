@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
+interface BookingsReportRepository : JpaRepository<Cas3BookingEntity, UUID> {
 
   @Query(
     """
@@ -45,7 +45,7 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       overstay.reason AS overstayReason,
       extension.created_at AS extensionCreatedAt
     FROM
-      bookings booking
+      cas3_bookings booking
     LEFT JOIN
       cas3_premises premises ON premises.id = booking.premises_id
     LEFT JOIN

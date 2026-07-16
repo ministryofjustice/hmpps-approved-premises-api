@@ -87,7 +87,7 @@ class Cas3AssessmentTransformer(
   fun transformAssessmentToCas3ReferralHistory(a: TemporaryAccommodationAssessmentEntity): List<Cas3ReferralHistory> {
     val application = a.typedApplication<TemporaryAccommodationApplicationEntity>()
 
-    val bookings = bookingRepository.findAllCas3BookingEntity(application.id, ServiceName.temporaryAccommodation.value)
+    val bookings = bookingRepository.findAllCas3BookingEntity(application.id)
 
     val referralHistory = Cas3ReferralHistory(
       id = a.id,

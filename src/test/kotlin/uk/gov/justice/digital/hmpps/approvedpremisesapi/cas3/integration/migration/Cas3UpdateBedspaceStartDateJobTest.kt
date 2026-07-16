@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.migrat
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
@@ -59,7 +58,6 @@ class Cas3UpdateBedspaceStartDateJobTest : MigrationJobTestBase() {
     withPremises(premises)
     withArrivalDate(arrivalDate)
     withDepartureDate(arrivalDate.plusDays(90))
-    withServiceName(ServiceName.temporaryAccommodation)
     withCrn(randomStringMultiCaseWithNumbers(10))
   }
 }

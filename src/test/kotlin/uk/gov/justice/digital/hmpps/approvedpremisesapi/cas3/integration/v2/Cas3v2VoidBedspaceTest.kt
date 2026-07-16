@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.Cas3IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
@@ -250,7 +249,6 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
         val endDate = LocalDate.now().plusDays(20)
 
         val existingBooking = cas3BookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn("CRN123")
           withYieldedPremises { premises }
           withBedspace(bedspace)
@@ -283,7 +281,6 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
         val departureDate = LocalDate.now().plusDays(15)
 
         val existingBooking = cas3BookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn("CRN123")
           withYieldedPremises { premises }
           withBedspace(bedspace)
@@ -508,7 +505,6 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
 
         // add a canceled booking - should pass validation
         val existingBooking = cas3BookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn("CRN")
           withYieldedPremises { premises }
           withBedspace(existingVoidBedspace.bedspace!!)
@@ -593,7 +589,6 @@ class Cas3v2VoidBedspaceTest : Cas3IntegrationTestBase() {
         val voidBedspaceEntity = createVoidBedspaces(premises).first()
 
         val existingBooking = cas3BookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
           withCrn("CRN123")
           withYieldedPremises { premises }
           withBedspace(voidBedspaceEntity.bedspace!!)

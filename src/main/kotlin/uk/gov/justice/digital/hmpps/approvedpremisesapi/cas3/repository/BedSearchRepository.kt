@@ -16,12 +16,11 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
     """
     WITH BookedBedspaces AS
         (SELECT distinct b.bed_id, b.premises_id 
-             FROM bookings b
+             FROM cas3_bookings b
              INNER JOIN premises p ON b.premises_id = p.id
              LEFT JOIN cancellations bc ON bc.booking_id = b.id
          WHERE
-             b.service = 'temporary-accommodation'
-             AND p.probation_region_id = :probation_region_id
+             p.probation_region_id = :probation_region_id
              AND (b.arrival_date, b.departure_date) OVERLAPS (:start_date, :end_date)
              AND bc.id IS NULL)
                              

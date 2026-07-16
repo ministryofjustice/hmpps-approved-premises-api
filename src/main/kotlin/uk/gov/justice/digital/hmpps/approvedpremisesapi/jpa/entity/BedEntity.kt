@@ -50,9 +50,8 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
       from beds b
       inner join (
       select bk.bed_id,min(bk.arrival_date) earliest_arrival
-      from bookings bk
+      from cas3_bookings bk
       inner join beds b on bk.bed_id = b.id
-      where bk.service = 'temporary-accommodation'
       group by bk.bed_id) earliest_bookings on b.id = earliest_bookings.bed_id
       where b.start_date > earliest_bookings.earliest_arrival
     """,
@@ -162,7 +161,7 @@ const val BED_SUMMARY_QUERY =
       r.id as roomId,
       (
         select count(booking.id)
-        from bookings booking
+        from cas3_bookings booking
           left join cancellations cancellation
             on booking.id = cancellation.booking_id
           left join cas3_non_arrivals non_arrival 

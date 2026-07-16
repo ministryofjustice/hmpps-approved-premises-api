@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
@@ -20,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -41,7 +39,6 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
   private var extensions: Yielded<MutableList<Cas3ExtensionEntity>>? = null
   private var overstays: Yielded<MutableList<Cas3OverstayEntity>>? = null
   private var premises: Yielded<Cas3PremisesEntity>? = null
-  private var serviceName: Yielded<ServiceName> = { randomOf(listOf(ServiceName.approvedPremises, ServiceName.temporaryAccommodation)) }
   private var bedspace: Yielded<Cas3BedspacesEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }
   private var application: Yielded<TemporaryAccommodationApplicationEntity?> = { null }
@@ -139,10 +136,6 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
     this.premises = { premises }
   }
 
-  fun withServiceName(serviceName: ServiceName) = apply {
-    this.serviceName = { serviceName }
-  }
-
   fun withBedspace(bedspace: Cas3BedspacesEntity) = apply {
     this.bedspace = { bedspace }
   }
@@ -200,7 +193,6 @@ class Cas3BookingEntityFactory : Factory<Cas3BookingEntity> {
     overstays = this.overstays?.invoke() ?: mutableListOf(),
     premises = this.premises?.invoke() ?: throw RuntimeException("Must provide a Premises"),
     bedspace = this.bedspace?.invoke() ?: throw RuntimeException("Must provide a Bedspace"),
-    service = this.serviceName.invoke().value,
     originalArrivalDate = this.originalArrivalDate?.invoke() ?: this.arrivalDate(),
     originalDepartureDate = this.originalDepartureDate?.invoke() ?: this.departureDate(),
     createdAt = this.createdAt(),

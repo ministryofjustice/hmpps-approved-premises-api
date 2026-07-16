@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity
 
 import jakarta.persistence.CascadeType
+import jakarta.persistence.ColumnResult
+import jakarta.persistence.ConstructorResult
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -10,10 +12,12 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
+import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.Fetch
 import org.hibernate.annotations.FetchMode
+import org.hibernate.annotations.NamedNativeQuery
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -23,6 +27,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BookingRecord
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import java.time.Instant
 import java.time.LocalDate
@@ -30,8 +35,43 @@ import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 
+@NamedNativeQuery(
+  name = "Cas3BookingEntity.getBookingsV2",
+  query = """
+      SELECT 
+          b.bed_id AS bedId,
+          b.arrival_date AS arrivalDate,
+          b.departure_date AS departureDate,
+          t.working_day_count AS turnaroundDays
+      FROM cas3_bookings b
+      LEFT JOIN cancellations c ON c.booking_id = b.id
+      LEFT JOIN (
+          SELECT DISTINCT ON (booking_id) booking_id, working_day_count
+          FROM cas3_turnarounds
+          ORDER BY booking_id, created_at DESC
+      ) t ON t.booking_id = b.id
+      WHERE c.id IS NULL 
+        AND b.arrival_date <= :endDate 
+        AND b.departure_date >= :startDate
+    """,
+  resultSetMapping = "BookingRecordMapping",
+)
+@SqlResultSetMapping(
+  name = "BookingRecordMapping",
+  classes = [
+    ConstructorResult(
+      targetClass = BookingRecord::class,
+      columns = [
+        ColumnResult(name = "bedId", type = UUID::class),
+        ColumnResult(name = "arrivalDate", type = LocalDate::class),
+        ColumnResult(name = "departureDate", type = LocalDate::class),
+        ColumnResult(name = "turnaroundDays", type = Int::class),
+      ],
+    ),
+  ],
+)
 @Entity
-@Table(name = "bookings")
+@Table(name = "cas3_bookings")
 data class Cas3BookingEntity(
   @Id
   val id: UUID,
@@ -59,7 +99,6 @@ data class Cas3BookingEntity(
   @Fetch(FetchMode.SUBSELECT)
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var overstays: MutableList<Cas3OverstayEntity>,
-  var service: String,
   var originalArrivalDate: LocalDate,
   var originalDepartureDate: LocalDate,
   val createdAt: OffsetDateTime,
@@ -139,7 +178,7 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
   fun updateBookingStatus(bookingId: UUID, status: Cas3BookingStatus)
 
   @Query(
-    "SELECT * FROM bookings WHERE status IS NULL AND service='temporary-accommodation' ",
+    "SELECT * FROM cas3_bookings WHERE status IS NULL",
     nativeQuery = true,
   )
   fun findAllCas3bookingsWithNullStatus(pageable: Pageable?): Slice<Cas3BookingEntity>
@@ -160,18 +199,17 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
   fun getDistinctNomsNumbers(): List<String>
 
   @Query(
-    "SELECT * FROM bookings WHERE bed_id = :bedId ORDER BY arrival_date ASC LIMIT 1",
+    "SELECT * FROM cas3_bookings WHERE bed_id = :bedId ORDER BY arrival_date ASC LIMIT 1",
     nativeQuery = true,
   )
   fun findFirstBookingByBedId(bedId: UUID): Cas3BookingEntity?
 
   @Query(
-    "SELECT * FROM bookings WHERE application_id = :applicationId AND service = :service ORDER BY created_at DESC",
+    "SELECT * FROM cas3_bookings WHERE application_id = :applicationId ORDER BY created_at DESC",
     nativeQuery = true,
   )
   fun findAllCas3BookingEntity(
     applicationId: UUID,
-    service: String,
   ): List<Cas3BookingEntity>
 
   @Query(
@@ -192,23 +230,21 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
         p.postcode AS premisesPostcode,
         b2.id bedspaceId,
         b2.reference AS bedspaceReference
-      FROM bookings b
+      FROM cas3_bookings b
       LEFT JOIN cas3_bedspaces b2 ON b.bed_id = b2.id
       LEFT JOIN cas3_premises p ON b.premises_id = p.id
       LEFT JOIN probation_delivery_units pdu ON p.probation_delivery_unit_id = pdu.id
-      WHERE b.service = 'temporary-accommodation'
-      AND (:status is null or b.status = :status)
+      WHERE (:status is null or b.status = :status)
       AND (:probationRegionId is null or pdu.probation_region_id = :probationRegionId)
       AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(b.offender_name) LIKE CONCAT('%', lower(:crnOrName),'%'))
     """,
     countQuery = """      
       SELECT count(1)
-      FROM bookings b
+      FROM cas3_bookings b
       LEFT JOIN cas3_bedspaces b2 ON b.bed_id = b2.id
       LEFT JOIN cas3_premises p ON b.premises_id = p.id
       LEFT JOIN probation_delivery_units pdu ON p.probation_delivery_unit_id = pdu.id
-      WHERE b.service = 'temporary-accommodation'
-      AND (:status is null or b.status = :status)
+      WHERE (:status is null or b.status = :status)
       AND (:probationRegionId is null or pdu.probation_region_id = :probationRegionId)
       AND (:crnOrName is null OR lower(b.crn) = lower(:crnOrName) OR lower(b.offender_name) LIKE CONCAT('%', lower(:crnOrName),'%'))
     """,
@@ -223,8 +259,7 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
 
   @Query(
     """
-      SELECT * FROM  bookings b 
-      WHERE b.service='temporary-accommodation'
+      SELECT * FROM  cas3_bookings b 
       ORDER BY b.crn
       """,
     nativeQuery = true,
@@ -278,7 +313,7 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
     """
       WITH ClosestBooking AS
          (SELECT b.bed_id, MAX(b.departure_date) departure_date
-          FROM bookings b
+          FROM cas3_bookings b
           LEFT JOIN cancellations c ON b.id = c.booking_id
           WHERE b.departure_date <= :date
             AND b.bed_id IN :bedIds
@@ -290,7 +325,7 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
       cas3_bedspaces.reference as bedspace_reference,
       cas3_bedspaces.created_at as bed_created_at,
       cas3_bedspaces.end_date as bed_end_date
-      FROM bookings b
+      FROM cas3_bookings b
       LEFT JOIN cas3_bedspaces ON b.bed_id = cas3_bedspaces.id  
       INNER JOIN ClosestBooking cb ON b.bed_id = cb.bed_id AND b.departure_date = cb.departure_date
       """,
@@ -315,7 +350,7 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
          THEN TRUE 
         ELSE FALSE 
         END as sexualRisk
-    FROM bookings bk
+    FROM cas3_bookings bk
              INNER JOIN cas3_premises p ON bk.premises_id = p.id
              INNER JOIN cas3_bedspaces b ON bk.bed_id = b.id
              LEFT JOIN temporary_accommodation_applications ap ON bk.application_id = ap.id

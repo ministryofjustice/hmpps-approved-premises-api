@@ -5,7 +5,7 @@
 --- Add a Booking arriving soon ---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -14,7 +14,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -29,7 +28,6 @@ VALUES
     CURRENT_DATE + 84,
     'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
     'e8887df9-b31b-4e9c-931a-e063d778ab0d',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'provisional'
@@ -55,7 +53,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add a confirmed booking ---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -64,7 +62,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number"
   )
@@ -78,7 +75,6 @@ VALUES
     CURRENT_DATE + 178,
     'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
     'e8887df9-b31b-4e9c-931a-e063d778ab0d',
-    'temporary-accommodation',
     CURRENT_DATE + 80,
     NULL
   )
@@ -121,7 +117,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add a Booking departing today ---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -130,7 +126,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number"
   )
@@ -144,7 +139,6 @@ VALUES
     CURRENT_DATE,
     'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
     'e8887df9-b31b-4e9c-931a-e063d778ab0d',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL
   )
@@ -206,7 +200,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add a Booking departing soon ---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -215,7 +209,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number"
   )
@@ -229,7 +222,6 @@ VALUES
     CURRENT_DATE + 3,
     'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
     '135812b4-e6c0-4ccf-9502-4bfea66f3bd3',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL
   )
@@ -274,7 +266,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some arrived Bookings ---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -283,7 +275,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number"
   )
@@ -297,7 +288,6 @@ VALUES
     CURRENT_DATE + 51,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL
   )
@@ -342,7 +332,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add a departure ---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -351,7 +341,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number"
   )
@@ -365,7 +354,6 @@ VALUES
     CURRENT_DATE - 100,
     'd6447105-4bfe-4f1e-add7-4668e1ca28b0',
     'e8887df9-b31b-4e9c-931a-e063d778ab0d',
-    'temporary-accommodation',
     CURRENT_DATE - 200,
     NULL
   )
@@ -414,7 +402,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -423,7 +411,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -438,7 +425,6 @@ VALUES
     CURRENT_DATE - (5 * 2) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'
@@ -488,7 +474,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -497,7 +483,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -512,7 +497,6 @@ VALUES
     CURRENT_DATE - (5 * 3) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'
@@ -562,7 +546,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -571,7 +555,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -586,7 +569,6 @@ VALUES
     CURRENT_DATE - (5 * 4) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'
@@ -636,7 +618,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -645,7 +627,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -660,7 +641,6 @@ VALUES
     CURRENT_DATE - (5 * 5) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'
@@ -710,7 +690,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -719,7 +699,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -734,7 +713,6 @@ VALUES
     CURRENT_DATE - (5 * 6) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'
@@ -784,7 +762,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -793,7 +771,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -808,7 +785,6 @@ VALUES
     CURRENT_DATE - (5 * 7) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'
@@ -858,7 +834,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -867,7 +843,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -882,7 +857,6 @@ VALUES
     CURRENT_DATE - (5 * 8) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'
@@ -932,7 +906,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -941,7 +915,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -956,7 +929,6 @@ VALUES
     CURRENT_DATE - (5 * 9) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'
@@ -1006,7 +978,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -1015,7 +987,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -1030,7 +1001,6 @@ VALUES
     CURRENT_DATE - (5 * 10) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'
@@ -1080,7 +1050,7 @@ ON CONFLICT(id) DO NOTHING;
 --- Add some departed Bookings for E2E---
 
 INSERT INTO
-  bookings (
+  cas3_bookings (
     "id",
     "arrival_date",
     "departure_date",
@@ -1089,7 +1059,6 @@ INSERT INTO
     "original_departure_date",
     "premises_id",
     "bed_id",
-    "service",
     "created_at",
     "noms_number",
     "status"
@@ -1104,7 +1073,6 @@ VALUES
     CURRENT_DATE - (5 * 11) + 2,
     'e2543d2f-33a9-454b-ae15-03ca0475faa3',
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
-    'temporary-accommodation',
     CURRENT_DATE,
     NULL,
     'departed'

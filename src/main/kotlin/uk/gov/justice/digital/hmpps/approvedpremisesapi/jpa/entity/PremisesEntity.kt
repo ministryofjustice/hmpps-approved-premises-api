@@ -152,8 +152,6 @@ abstract class PremisesEntity(
   @JoinColumn(name = "local_authority_area_id")
   var localAuthorityArea: LocalAuthorityAreaEntity?,
   @OneToMany(mappedBy = "premises")
-  val bookings: MutableList<BookingEntity>,
-  @OneToMany(mappedBy = "premises")
   val voidBedspaces: MutableList<Cas3VoidBedspaceEntity>,
   @OneToMany(mappedBy = "premises")
   val rooms: MutableList<RoomEntity>,
@@ -188,7 +186,6 @@ class ApprovedPremisesEntity(
   emailAddress: String?,
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity,
-  bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<Cas3VoidBedspaceEntity>,
   var apCode: String,
   var qCode: String,
@@ -226,7 +223,6 @@ class ApprovedPremisesEntity(
   emailAddress,
   probationRegion,
   localAuthorityArea,
-  bookings,
   lostBeds,
   rooms,
   characteristics,
@@ -276,7 +272,6 @@ class TemporaryAccommodationPremisesEntity(
   emailAddress: String?,
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity?,
-  bookings: MutableList<BookingEntity>,
   lostBeds: MutableList<Cas3VoidBedspaceEntity>,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
@@ -301,7 +296,6 @@ class TemporaryAccommodationPremisesEntity(
   emailAddress,
   probationRegion,
   localAuthorityArea,
-  bookings,
   lostBeds,
   rooms,
   characteristics,

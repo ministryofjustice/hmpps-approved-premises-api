@@ -5,10 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
@@ -85,7 +82,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(createdPremise.emailAddress).isNull()
     assertThat(createdPremise.probationRegion.name).isEqualTo("Yorkshire & The Humber")
     assertThat(createdPremise.localAuthorityArea?.name).isEqualTo("Bournemouth, Christchurch and Poole")
-    assertThat(createdPremise.bookings).isEmpty()
     assertThat(createdPremise.voidBedspaces).isEmpty()
     assertThat(createdPremise.rooms).isEmpty()
     assertThat(createdPremise.status).isEqualTo(PropertyStatus.active)
@@ -181,7 +177,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(createdPremise.emailAddress).isNull()
     assertThat(createdPremise.probationRegion.name).isEqualTo("North West")
     assertThat(createdPremise.localAuthorityArea?.name).isEqualTo("Bristol, City of")
-    assertThat(createdPremise.bookings).isEmpty()
     assertThat(createdPremise.voidBedspaces).isEmpty()
     assertThat(createdPremise.rooms).isEmpty()
     assertThat(createdPremise.status).isEqualTo(PropertyStatus.active)
@@ -346,14 +341,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       withCode("rc1")
     }
 
-    givenABooking(
-      crn = "CRN1",
-      premises = existingPremises,
-      application = givenAnApplication(
-        createdByUser = givenAUser().first,
-      ),
-    )
-
     val dataFrame = createNameValueDataFrame(
       "Name of AP", "The Premise Name",
       "AP Identifier (Q No.)", "QExisting",
@@ -411,7 +398,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(createdPremise.emailAddress).isEqualTo("existing@local")
     assertThat(createdPremise.probationRegion.name).isEqualTo("Yorkshire & The Humber")
     assertThat(createdPremise.localAuthorityArea?.name).isEqualTo("Windsor and Maidenhead")
-    assertThat(createdPremise.bookings).hasSize(1)
     assertThat(createdPremise.voidBedspaces).isEmpty()
     assertThat(createdPremise.rooms).hasSize(1)
     assertThat(createdPremise.status).isEqualTo(PropertyStatus.active)

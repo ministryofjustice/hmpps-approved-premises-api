@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.github.tomakehurst.wiremock.client.WireMock
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.integration.givens.givenACas3Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -78,22 +79,15 @@ class CacheClearTest : IntegrationTestBase() {
   }
 
   private fun setupBookingForOffender(offenderDetails: OffenderDetailSummary) {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withProbationRegion(givenAProbationRegion())
-      withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
-    }
+    val premises = givenACas3Premises(probationRegion = givenAProbationRegion())
 
-    val room = roomEntityFactory.produceAndPersist {
+    val bedspace = cas3BedspaceEntityFactory.produceAndPersist {
       withPremises(premises)
     }
 
-    val bed = bedEntityFactory.produceAndPersist {
-      withRoom(room)
-    }
-
-    bookingEntityFactory.produceAndPersist {
+    cas3BookingEntityFactory.produceAndPersist {
       withPremises(premises)
-      withBed(bed)
+      withBedspace(bedspace)
       withCrn(offenderDetails.otherIds.crn)
     }
   }

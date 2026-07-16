@@ -1758,7 +1758,6 @@ class Cas3BookingServiceTest {
       val bookingEntity = Cas3BookingEntityFactory()
         .withPremises(premises)
         .withBedspace(bedspace)
-        .withServiceName(ServiceName.temporaryAccommodation)
         .withApplication(application)
         .produce()
 
@@ -2390,7 +2389,6 @@ class Cas3BookingServiceTest {
     return Cas3BookingEntityFactory()
       .withPremises(premises)
       .withBedspace(bedspace)
-      .withServiceName(ServiceName.temporaryAccommodation)
       .withArrivalDate(arrivalDate)
       .withDepartureDate(departureDate)
       .withApplication(application)
