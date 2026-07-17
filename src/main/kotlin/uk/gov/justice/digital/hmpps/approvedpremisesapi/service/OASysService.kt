@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApAndOASysClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.AssessmentInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.HealthDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys.OASysAssessmentSummary
@@ -39,69 +40,45 @@ class OASysService(
   fun getNeedsDetails(
     crn: String,
     suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
-  ): CasResult<NeedsDetails> = handleResponse(
-    crn = crn,
-    response = apAndOASysClient.getNeedsDetails(crn),
-    suitabilityStrategy = suitabilityStrategy,
-    toAssessmentDates = { it.toAssessmentDates(crn) },
-  )
+  ): CasResult<NeedsDetails> = handleAssessmentInfoResponse(crn, suitabilityStrategy, apAndOASysClient.getNeedsDetails(crn))
 
   fun getOffenceDetails(
     crn: String,
     suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
-  ): CasResult<OffenceDetails> = handleResponse(
-    crn = crn,
-    response = apAndOASysClient.getOffenceDetails(crn),
-    suitabilityStrategy = suitabilityStrategy,
-    toAssessmentDates = { it.toAssessmentDates(crn) },
-  )
+  ): CasResult<OffenceDetails> = handleAssessmentInfoResponse(crn, suitabilityStrategy, apAndOASysClient.getOffenceDetails(crn))
 
   fun getRiskManagementPlan(
     crn: String,
     suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
-  ): CasResult<RiskManagementPlan> = handleResponse(
-    crn = crn,
-    response = apAndOASysClient.getRiskManagementPlan(crn),
-    suitabilityStrategy = suitabilityStrategy,
-    toAssessmentDates = { it.toAssessmentDates(crn) },
-  )
+  ): CasResult<RiskManagementPlan> = handleAssessmentInfoResponse(crn, suitabilityStrategy, apAndOASysClient.getRiskManagementPlan(crn))
 
   fun getRoshSummary(
     crn: String,
     suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
-  ): CasResult<RoshSummary> = handleResponse(
-    crn = crn,
-    response = apAndOASysClient.getRoshSummary(crn),
-    suitabilityStrategy = suitabilityStrategy,
-    toAssessmentDates = { it.toAssessmentDates(crn) },
-  )
+  ): CasResult<RoshSummary> = handleAssessmentInfoResponse(crn, suitabilityStrategy, apAndOASysClient.getRoshSummary(crn))
 
   fun getRiskToTheIndividual(
     crn: String,
     suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
-  ): CasResult<RisksToTheIndividual> = handleResponse(
-    crn = crn,
-    response = apAndOASysClient.getRiskToTheIndividual(crn),
-    suitabilityStrategy = suitabilityStrategy,
-    toAssessmentDates = { it.toAssessmentDates(crn) },
-  )
+  ): CasResult<RisksToTheIndividual> = handleAssessmentInfoResponse(crn, suitabilityStrategy, apAndOASysClient.getRiskToTheIndividual(crn))
 
   fun getHealthDetails(
     crn: String,
     suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
-  ): CasResult<HealthDetails> = handleResponse(
-    crn = crn,
-    response = apAndOASysClient.getHealth(crn),
-    suitabilityStrategy = suitabilityStrategy,
-    toAssessmentDates = { it.toAssessmentDates(crn) },
-  )
+  ): CasResult<HealthDetails> = handleAssessmentInfoResponse(crn, suitabilityStrategy, apAndOASysClient.getHealth(crn))
 
   fun getRoshRatings(
     crn: String,
     suitabilityStrategy: SuitabilityStrategy = SuitabilityStrategy.CompletedInLastSixMonths,
-  ): CasResult<RoshRatings> = handleResponse(
+  ): CasResult<RoshRatings> = handleAssessmentInfoResponse(crn, suitabilityStrategy, apAndOASysClient.getRoshRatings(crn))
+
+  private fun <T : AssessmentInfo> handleAssessmentInfoResponse(
+    crn: String,
+    suitabilityStrategy: SuitabilityStrategy,
+    response: ClientResult<T>,
+  ): CasResult<T> = handleResponse(
     crn = crn,
-    response = apAndOASysClient.getRoshRatings(crn),
+    response = response,
     suitabilityStrategy = suitabilityStrategy,
     toAssessmentDates = { it.toAssessmentDates(crn) },
   )
