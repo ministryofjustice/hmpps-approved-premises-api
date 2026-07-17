@@ -162,7 +162,7 @@ const val BED_SUMMARY_QUERY =
       (
         select count(booking.id)
         from cas3_bookings booking
-          left join cancellations cancellation
+          left join cas3_cancellations cancellation
             on booking.id = cancellation.booking_id
           left join cas3_non_arrivals non_arrival 
             on non_arrival.booking_id = booking.id

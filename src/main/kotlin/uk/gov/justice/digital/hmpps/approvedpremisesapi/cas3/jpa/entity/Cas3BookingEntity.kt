@@ -44,7 +44,7 @@ import java.util.UUID
           b.departure_date AS departureDate,
           t.working_day_count AS turnaroundDays
       FROM cas3_bookings b
-      LEFT JOIN cancellations c ON c.booking_id = b.id
+      LEFT JOIN cas3_cancellations c ON c.booking_id = b.id
       LEFT JOIN (
           SELECT DISTINCT ON (booking_id) booking_id, working_day_count
           FROM cas3_turnarounds
@@ -314,7 +314,7 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
       WITH ClosestBooking AS
          (SELECT b.bed_id, MAX(b.departure_date) departure_date
           FROM cas3_bookings b
-          LEFT JOIN cancellations c ON b.id = c.booking_id
+          LEFT JOIN cas3_cancellations c ON b.id = c.booking_id
           WHERE b.departure_date <= :date
             AND b.bed_id IN :bedIds
             AND c.id IS NULL
@@ -355,7 +355,7 @@ interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
              INNER JOIN cas3_bedspaces b ON bk.bed_id = b.id
              LEFT JOIN temporary_accommodation_applications ap ON bk.application_id = ap.id
              LEFT JOIN assessments a ON ap.id = a.application_id
-             LEFT JOIN cancellations c ON bk.id = c.booking_id
+             LEFT JOIN cas3_cancellations c ON bk.id = c.booking_id
     WHERE bk.premises_id IN (:premisesIds) AND bk.arrival_date <= :endDate AND bk.departure_date >= :startDate AND c.id IS NULL
     """,
     nativeQuery = true,

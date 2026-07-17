@@ -18,7 +18,7 @@ import java.util.UUID
 interface Cas3CancellationRepository : JpaRepository<Cas3CancellationEntity, UUID>
 
 @Entity
-@Table(name = "cancellations")
+@Table(name = "cas3_cancellations")
 data class Cas3CancellationEntity(
   @Id
   val id: UUID,

@@ -202,7 +202,7 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
                   c.other_reason,
                   c.created_at
               from
-                  cancellations c
+                  cas3_cancellations c
                   inner join cas3_bookings b on
                       b.id = c.booking_id
                   inner join cancellation_reasons cr on

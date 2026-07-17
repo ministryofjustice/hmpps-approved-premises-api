@@ -75,7 +75,7 @@ interface BedspaceOccupancyReportRepository : JpaRepository<BedEntity, UUID> {
       CAST(bedspace.id AS VARCHAR) AS bedspaceId,
       CAST(booking.id AS VARCHAR) AS bookingId,
       cancellation.created_at AS createdAt
-    From cancellations cancellation
+    From cas3_cancellations cancellation
     INNER JOIN cas3_bookings booking ON cancellation.booking_id = booking.id
     INNER JOIN cas3_bedspaces bedspace ON bedspace.id = booking.bed_id
     INNER JOIN cas3_premises premises ON booking.premises_id = premises.id
