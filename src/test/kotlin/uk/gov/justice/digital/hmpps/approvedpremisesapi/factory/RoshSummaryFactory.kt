@@ -56,6 +56,7 @@ class RoshSummaryFactory : AssessmentInfoFactory<RoshSummary>() {
     assessmentStatus = this.assessmentStatus(),
     superStatus = this.superStatus(),
     limitedAccessOffender = this.limitedAccessOffender(),
+    lastUpdatedDate = this.lastUpdatedDate(),
     roshSummary = RoshSummaryInner(
       whoIsAtRisk = this.whoAtRisk(),
       natureOfRisk = this.natureOfRisk(),

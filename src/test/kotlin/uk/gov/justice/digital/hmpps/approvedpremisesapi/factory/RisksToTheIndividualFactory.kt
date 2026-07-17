@@ -71,6 +71,7 @@ class RisksToTheIndividualFactory : AssessmentInfoFactory<RisksToTheIndividual>(
     assessmentStatus = this.assessmentStatus(),
     superStatus = this.superStatus(),
     limitedAccessOffender = this.limitedAccessOffender(),
+    lastUpdatedDate = this.lastUpdatedDate(),
     riskToTheIndividual = RiskToTheIndividualInner(
       currentConcernsSelfHarmSuicide = this.currentConcernsSelfHarmSuicide(),
       previousConcernsSelfHarmSuicide = this.previousConcernsSelfHarmSuicide(),

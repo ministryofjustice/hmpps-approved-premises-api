@@ -56,6 +56,7 @@ class RiskManagementPlanFactory : AssessmentInfoFactory<RiskManagementPlan>() {
     assessmentStatus = this.assessmentStatus(),
     superStatus = this.superStatus(),
     limitedAccessOffender = this.limitedAccessOffender(),
+    lastUpdatedDate = this.lastUpdatedDate(),
     riskManagementPlan = RiskManagementPlanInner(
       furtherConsiderations = this.furtherConsiderations(),
       additionalComments = this.additionalComments(),

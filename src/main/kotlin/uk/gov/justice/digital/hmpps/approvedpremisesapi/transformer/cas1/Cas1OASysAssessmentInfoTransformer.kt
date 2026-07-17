@@ -12,6 +12,7 @@ class Cas1OASysAssessmentInfoTransformer {
       hasApplicableAssessment = true,
       dateStarted = assessmentInfo.initiationDate.toInstant(),
       dateCompleted = assessmentInfo.dateCompleted?.toInstant(),
+      lastUpdatedDate = assessmentInfo.lastUpdatedDate?.toInstant(),
     )
   } ?: Cas1OASysAssessmentMetadata(hasApplicableAssessment = false)
 }

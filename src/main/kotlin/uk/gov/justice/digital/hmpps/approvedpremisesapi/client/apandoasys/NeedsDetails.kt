@@ -12,6 +12,7 @@ class NeedsDetails(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
+  lastUpdatedDate: OffsetDateTime?,
   val needs: NeedsDetailsInner?,
   val linksToHarm: LinksToHarm?,
   val linksToReOffending: LinksToReOffending?,
@@ -24,6 +25,7 @@ class NeedsDetails(
   assessmentStatus,
   superStatus,
   limitedAccessOffender,
+  lastUpdatedDate = lastUpdatedDate,
 )
 
 data class NeedsDetailsInner(

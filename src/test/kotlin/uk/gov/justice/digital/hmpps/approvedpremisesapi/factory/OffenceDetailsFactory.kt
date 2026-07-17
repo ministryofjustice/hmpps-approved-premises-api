@@ -61,6 +61,7 @@ class OffenceDetailsFactory : AssessmentInfoFactory<OffenceDetails>() {
     assessmentStatus = this.assessmentStatus(),
     superStatus = this.superStatus(),
     limitedAccessOffender = this.limitedAccessOffender(),
+    lastUpdatedDate = this.lastUpdatedDate(),
     offence = OffenceDetailsInner(
       offenceAnalysis = this.offenceAnalysis(),
       othersInvolved = this.othersInvolved(),
