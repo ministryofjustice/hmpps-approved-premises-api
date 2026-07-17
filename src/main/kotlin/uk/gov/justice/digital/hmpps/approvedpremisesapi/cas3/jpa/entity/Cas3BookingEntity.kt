@@ -172,7 +172,7 @@ data class Cas3BookingEntity(
 }
 
 @Repository
-interface Cas3v2BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
+interface Cas3BookingRepository : JpaRepository<Cas3BookingEntity, UUID> {
   @Modifying
   @Query("UPDATE Cas3BookingEntity b set b.status = :status where b.id = :bookingId")
   fun updateBookingStatus(bookingId: UUID, status: Cas3BookingStatus)

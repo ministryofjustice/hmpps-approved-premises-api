@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Premise
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceUsageReportGenerator
@@ -36,7 +36,7 @@ import java.time.OffsetDateTime
 
 class Cas3BedspaceUsageReportGeneratorTest {
   private val mockBookingTransformer = mockk<Cas3BookingTransformer>()
-  private val mockBookingRepository = mockk<Cas3v2BookingRepository>()
+  private val mockBookingRepository = mockk<Cas3BookingRepository>()
   private val mockLostBedsRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 

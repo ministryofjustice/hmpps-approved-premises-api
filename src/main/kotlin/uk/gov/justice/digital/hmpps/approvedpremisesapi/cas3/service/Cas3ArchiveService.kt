@@ -7,11 +7,11 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceArchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3BedspaceUnarchiveEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.CAS3PremisesArchiveEvent
@@ -50,7 +50,7 @@ import java.util.UUID
 class Cas3ArchiveService(
   private val cas3BedspacesRepository: Cas3BedspacesRepository,
   private val cas3PremisesRepository: Cas3PremisesRepository,
-  private val cas3v2BookingRepository: Cas3v2BookingRepository,
+  private val cas3BookingRepository: Cas3BookingRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val domainEventRepository: DomainEventRepository,
   private val cas3v2DomainEventService: Cas3v2DomainEventService,
@@ -164,7 +164,7 @@ class Cas3ArchiveService(
     val maximumPremisesArchiveDate = LocalDate.now(clock).plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
     var affectedBedspaces = mutableListOf<Cas3ValidationResult>()
 
-    val overlapBookings = cas3v2BookingRepository.findActiveOverlappingBookingByPremisesId(premisesId, LocalDate.now(clock))
+    val overlapBookings = cas3BookingRepository.findActiveOverlappingBookingByPremisesId(premisesId, LocalDate.now(clock))
 
     overlapBookings.map {
       val bookingTurnaround = workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
@@ -557,7 +557,7 @@ class Cas3ArchiveService(
     val threeMonthsFromToday = LocalDate.now(clock).plusMonths(MAX_MONTHS_ARCHIVE_PREMISES_IN_FUTURE)
     val blockingArchiveDates = mutableListOf<LocalDate>()
 
-    val overlapBookings = cas3v2BookingRepository.findActiveOverlappingBookingByBedspace(bedspaceId, LocalDate.now(clock))
+    val overlapBookings = cas3BookingRepository.findActiveOverlappingBookingByBedspace(bedspaceId, LocalDate.now(clock))
 
     overlapBookings.map {
       val bookingTurnaround = workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0)
@@ -615,8 +615,8 @@ class Cas3ArchiveService(
   @SuppressWarnings("CyclomaticComplexMethod")
   private fun canArchiveBedspace(filterByPremisesId: UUID?, filterByBedspaceId: UUID?, endDate: LocalDate): Cas3FieldValidationError<Cas3BedspacesEntity>? {
     val allBookings = when {
-      filterByPremisesId != null -> cas3v2BookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
-      filterByBedspaceId != null -> cas3v2BookingRepository.findActiveOverlappingBookingByBedspace(filterByBedspaceId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
+      filterByPremisesId != null -> cas3BookingRepository.findActiveOverlappingBookingByPremisesId(filterByPremisesId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
+      filterByBedspaceId != null -> cas3BookingRepository.findActiveOverlappingBookingByBedspace(filterByBedspaceId, LocalDate.now(clock)).sortedByDescending { it.departureDate }
       else -> emptyList()
     }
     val overlapBookings = allBookings.filter { it.departureDate > endDate }

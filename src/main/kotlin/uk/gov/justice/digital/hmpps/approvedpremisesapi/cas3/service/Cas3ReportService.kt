@@ -8,9 +8,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.CsvObjectListConsumer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3FutureBookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceOccupancyReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BedspaceUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.BookingGapReportGenerator
@@ -57,7 +57,7 @@ class Cas3ReportService(
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val cas3BookingTransformer: Cas3BookingTransformer,
   private val workingDayService: WorkingDayService,
-  private val cas3v2BookingRepository: Cas3v2BookingRepository,
+  private val cas3BookingRepository: Cas3BookingRepository,
   private val bedUsageRepository: BedUsageRepository,
   private val bedspaceOccupancyReportRepository: BedspaceOccupancyReportRepository,
   private val cas3FutureBookingsReportRepository: Cas3FutureBookingsReportRepository,
@@ -141,7 +141,7 @@ class Cas3ReportService(
     )
     val bedspaceIds = bedspacesInScope.map { it.id }
     val bookings =
-      if (bedspaceIds.isEmpty()) emptyList() else cas3v2BookingRepository.findAllByOverlappingDateForBedspaceIds(properties.startDate, properties.endDate, bedspaceIds)
+      if (bedspaceIds.isEmpty()) emptyList() else cas3BookingRepository.findAllByOverlappingDateForBedspaceIds(properties.startDate, properties.endDate, bedspaceIds)
     val voids =
       if (bedspaceIds.isEmpty()) emptyList() else cas3VoidBedspacesRepository.findAllByOverlappingDateForBedspaceIds(properties.startDate, properties.endDate, bedspaceIds)
 

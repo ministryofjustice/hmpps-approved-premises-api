@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3BedspaceSearchRepository
@@ -30,7 +30,7 @@ import java.util.UUID
 @Service
 class Cas3BedspaceSearchService(
   private val cas3BedspaceSearchRepository: Cas3BedspaceSearchRepository,
-  private val cas3v2BookingRepository: Cas3v2BookingRepository,
+  private val cas3BookingRepository: Cas3BookingRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
   private val workingDayService: WorkingDayService,
@@ -81,14 +81,14 @@ class Cas3BedspaceSearchService(
       )
 
     val bedspaceIds = candidateResults.map { it.bedspaceId }
-    val bedspacesWithABookingInTurnaround = cas3v2BookingRepository.findClosestBookingBeforeDateForBedspaces(searchParams.startDate, bedspaceIds)
+    val bedspacesWithABookingInTurnaround = cas3BookingRepository.findClosestBookingBeforeDateForBedspaces(searchParams.startDate, bedspaceIds)
       .filter { workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0) >= searchParams.startDate }
       .map { it.bedspace.id }
 
     val results = candidateResults.filter { !bedspacesWithABookingInTurnaround.contains(it.bedspaceId) }
 
     val distinctIds = results.map { it.premisesId }.distinct()
-    val overlappedBookings = cas3v2BookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(distinctIds, searchParams.startDate, endDate)
+    val overlappedBookings = cas3BookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(distinctIds, searchParams.startDate, endDate)
     val crns = overlappedBookings.map { it.crn }.distinct().toSet()
     val offenderSummaries = offenderService.getPersonSummaryInfoResults(
       crns = crns.toSet(),

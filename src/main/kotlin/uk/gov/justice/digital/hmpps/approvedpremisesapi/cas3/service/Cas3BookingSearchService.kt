@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingSearchResultDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingSearchSortField
@@ -23,7 +23,7 @@ import java.time.ZoneOffset
 
 @Service
 class Cas3BookingSearchService(
-  private val cas3BookingRepository: Cas3v2BookingRepository,
+  private val cas3BookingRepository: Cas3BookingRepository,
   private val offenderService: OffenderService,
   private val userService: UserService,
   @Value("\${pagination.cas3.booking-search-page-size}") private val cas3BookingSearchPageSize: Int,

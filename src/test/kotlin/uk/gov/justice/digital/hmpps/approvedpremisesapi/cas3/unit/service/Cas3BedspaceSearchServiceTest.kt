@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3Bedspac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3PremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3TurnaroundEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.repository.Cas3BedspaceSearchRepository
@@ -33,14 +33,14 @@ import java.util.UUID
 class Cas3BedspaceSearchServiceTest {
   private val mockCas3BedspaceSearchRepository = mockk<Cas3BedspaceSearchRepository>()
   private val mockCharacteristicService = mockk<CharacteristicService>()
-  private val mockCas3v2BookingRepository = mockk<Cas3v2BookingRepository>()
+  private val mockCas3BookingRepository = mockk<Cas3BookingRepository>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockOffenderService = mockk<OffenderService>()
 
   private val cas3v2BedspaceSearchService = Cas3BedspaceSearchService(
     mockCas3BedspaceSearchRepository,
-    mockCas3v2BookingRepository,
+    mockCas3BookingRepository,
     mockProbationDeliveryUnitRepository,
     mockCharacteristicService,
     mockWorkingDayService,
@@ -212,9 +212,9 @@ class Cas3BedspaceSearchServiceTest {
       )
     } returns candidateBedspaces
 
-    every { mockCas3v2BookingRepository.findClosestBookingBeforeDateForBedspaces(any(), any()) } returns listOf()
+    every { mockCas3BookingRepository.findClosestBookingBeforeDateForBedspaces(any(), any()) } returns listOf()
     every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockCas3v2BookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns
+    every { mockCas3BookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns
       listOf(overlapBookingsSearchResult)
     every {
       mockProbationDeliveryUnitRepository.existsById(probationDeliveryUnit.id)
@@ -386,7 +386,7 @@ class Cas3BedspaceSearchServiceTest {
     unexpectedResultBooking.turnarounds = mutableListOf(unexpectedTurnaround)
 
     every {
-      mockCas3v2BookingRepository.findClosestBookingBeforeDateForBedspaces(
+      mockCas3BookingRepository.findClosestBookingBeforeDateForBedspaces(
         date = any(),
         bedIds = any(),
       )
@@ -399,7 +399,7 @@ class Cas3BedspaceSearchServiceTest {
       (it.invocation.args[0] as LocalDate).plusDays((it.invocation.args[1] as Int).toLong())
     }
 
-    every { mockCas3v2BookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns listOf()
+    every { mockCas3BookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns listOf()
 
     every { mockOffenderService.getPersonSummaryInfoResults(any(), any()) } returns listOf()
 

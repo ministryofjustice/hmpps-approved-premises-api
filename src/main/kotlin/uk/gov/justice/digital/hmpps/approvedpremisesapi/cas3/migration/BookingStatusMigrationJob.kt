@@ -6,13 +6,13 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
 
 @Component
 class BookingStatusMigrationJob(
-  private val bookingRepository: Cas3v2BookingRepository,
+  private val bookingRepository: Cas3BookingRepository,
   private val entityManager: EntityManager,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)

@@ -6,9 +6,9 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3FutureBookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.generator.TransitionalAccommodationReferralReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.BedspaceInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
@@ -44,7 +44,7 @@ class Cas3ReportServiceTest {
   private val mockLostBedsRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockCas3BookingTransformer = mockk<Cas3BookingTransformer>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
-  private val mockCas3v2BookingRepository = mockk<Cas3v2BookingRepository>()
+  private val mockCas3BookingRepository = mockk<Cas3BookingRepository>()
   private val mockBedUsageRepository = mockk<BedUsageRepository>()
   private val mockBedspaceOccupancyReportRepository = mockk<BedspaceOccupancyReportRepository>()
   private val mockCas3BookingGapReportRepository = mockk<Cas3BookingGapReportRepository>()
@@ -58,7 +58,7 @@ class Cas3ReportServiceTest {
     mockLostBedsRepository,
     mockCas3BookingTransformer,
     mockWorkingDayService,
-    mockCas3v2BookingRepository,
+    mockCas3BookingRepository,
     mockBedUsageRepository,
     mockBedspaceOccupancyReportRepository,
     mockCas3FutureBookingsReportRepository,
@@ -128,7 +128,7 @@ class Cas3ReportServiceTest {
       mockLostBedsRepository,
       mockCas3BookingTransformer,
       mockWorkingDayService,
-      mockCas3v2BookingRepository,
+      mockCas3BookingRepository,
       mockBedUsageRepository,
       mockBedspaceOccupancyReportRepository,
       mockCas3FutureBookingsReportRepository,

@@ -2,14 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationLogger
 
 @Component
 class Cas3UpdateBedspaceStartDateJob(
   private val bedspaceRepository: Cas3BedspacesRepository,
-  private val bookingRepository: Cas3v2BookingRepository,
+  private val bookingRepository: Cas3BookingRepository,
   private val migrationLogger: MigrationLogger,
 ) : MigrationJob() {
   override val shouldRunInTransaction = true
