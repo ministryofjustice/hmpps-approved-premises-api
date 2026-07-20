@@ -66,8 +66,18 @@ class Cas3VoidBedspaceJobTest : MigrationJobTestBase() {
       val premises = createPremises(user)
       val voidBedspaces = createVoidBedspaces(premises, 50)
 
-      // this job needs to have ran first.
-      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceModelData)
+      val cas3Premises = cas3PremisesEntityFactory.produceAndPersist {
+        withId(premises.id)
+        withProbationDeliveryUnit(premises.probationDeliveryUnit!!)
+        withLocalAuthorityArea(premises.localAuthorityArea!!)
+      }
+      voidBedspaces.forEach { voidBedspace ->
+        cas3BedspaceEntityFactory.produceAndPersist {
+          withId(voidBedspace.bed!!.id)
+          withPremises(cas3Premises)
+        }
+      }
+
       val bedspaces = cas3BedspacesRepository.findAll().filter { it.premises.id == premises.id }
       assertThat(bedspaces).hasSize(voidBedspaces.size)
 
