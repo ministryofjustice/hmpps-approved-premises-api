@@ -14,7 +14,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3v2BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BookingSearchSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.Cas3BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.unit.service.TestCas3BookingSearchResult
@@ -30,13 +30,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.OffsetDateTime
 
 class Cas3BookingSearchServiceTest {
-  private val mockCas3v2BookingRepository = mockk<Cas3v2BookingRepository>()
+  private val mockCas3BookingRepository = mockk<Cas3BookingRepository>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
   private val cas3BookingSearchPageSize = 50
 
   private val cas3BookingSearchService = Cas3BookingSearchService(
-    mockCas3v2BookingRepository,
+    mockCas3BookingRepository,
     mockOffenderService,
     mockUserService,
     cas3BookingSearchPageSize,
@@ -61,7 +61,7 @@ class Cas3BookingSearchServiceTest {
       }
       .produce()
 
-    every { mockCas3v2BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockCas3BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       crns.map { TestCas3BookingSearchResult().withPersonCrn(it) },
     )
 
@@ -94,7 +94,7 @@ class Cas3BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockCas3v2BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockCas3BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
         TestCas3BookingSearchResult()
           .withPersonCrn("crn1")
@@ -127,7 +127,7 @@ class Cas3BookingSearchServiceTest {
     }
     assertThat(metadata).isNotNull()
     verify(exactly = 1) {
-      mockCas3v2BookingRepository.findBookings(any(), any(), any(), any())
+      mockCas3BookingRepository.findBookings(any(), any(), any(), any())
     }
   }
 
@@ -142,7 +142,7 @@ class Cas3BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockCas3v2BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockCas3BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
         TestCas3BookingSearchResult()
           .withPersonCrn("crn1")
@@ -177,7 +177,7 @@ class Cas3BookingSearchServiceTest {
     assertThat(results.last().personName).isEqualTo("Unknown")
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockCas3v2BookingRepository.findBookings(any(), any(), any(), any())
+      mockCas3BookingRepository.findBookings(any(), any(), any(), any())
     }
   }
 
@@ -198,7 +198,7 @@ class Cas3BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockCas3v2BookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
+    every { mockCas3BookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestCas3BookingSearchResult().withPersonCrn("crn1"),
         TestCas3BookingSearchResult().withPersonCrn("crn2"),
@@ -229,7 +229,7 @@ class Cas3BookingSearchServiceTest {
     }
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockCas3v2BookingRepository.findBookings(any(), any(), any(), pageable)
+      mockCas3BookingRepository.findBookings(any(), any(), any(), pageable)
     }
   }
 
@@ -250,7 +250,7 @@ class Cas3BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockCas3v2BookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
+    every { mockCas3BookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestCas3BookingSearchResult().withPersonCrn("crn1"),
         TestCas3BookingSearchResult().withPersonCrn("crn2"),
@@ -281,7 +281,7 @@ class Cas3BookingSearchServiceTest {
     }
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockCas3v2BookingRepository.findBookings(any(), any(), any(), pageable)
+      mockCas3BookingRepository.findBookings(any(), any(), any(), pageable)
     }
   }
 
@@ -302,7 +302,7 @@ class Cas3BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockCas3v2BookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
+    every { mockCas3BookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestCas3BookingSearchResult().withPersonCrn("crn1"),
         TestCas3BookingSearchResult().withPersonCrn("crn2"),
@@ -327,7 +327,7 @@ class Cas3BookingSearchServiceTest {
     assertThat(results).hasSize(3)
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockCas3v2BookingRepository.findBookings(any(), any(), any(), pageable)
+      mockCas3BookingRepository.findBookings(any(), any(), any(), pageable)
     }
   }
 
@@ -342,7 +342,7 @@ class Cas3BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockCas3v2BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
+    every { mockCas3BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
     every { mockOffenderService.getPersonSummaryInfoResults(emptySet(), any()) } returns emptyList()
 
     val (results, metaData) = cas3BookingSearchService.findBookings(
@@ -356,7 +356,7 @@ class Cas3BookingSearchServiceTest {
     assertThat(results).hasSize(0)
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockCas3v2BookingRepository.findBookings(any(), any(), any(), any())
+      mockCas3BookingRepository.findBookings(any(), any(), any(), any())
     }
   }
 
@@ -371,7 +371,7 @@ class Cas3BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockCas3v2BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
+    every { mockCas3BookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
     every { mockOffenderService.getPersonSummaryInfoResults(emptySet(), any()) } returns emptyList()
 
     val (results, metaData) = cas3BookingSearchService.findBookings(
@@ -385,7 +385,7 @@ class Cas3BookingSearchServiceTest {
     assertThat(results).hasSize(0)
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockCas3v2BookingRepository.findBookings(any(), any(), any(), any())
+      mockCas3BookingRepository.findBookings(any(), any(), any(), any())
     }
   }
 
@@ -400,7 +400,7 @@ class Cas3BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockCas3v2BookingRepository.findBookings(any(), any(), any(), any()) }.throws(
+    every { mockCas3BookingRepository.findBookings(any(), any(), any(), any()) }.throws(
       DataRetrievalFailureException(
         "some-exception",
       ),
@@ -416,7 +416,7 @@ class Cas3BookingSearchServiceTest {
       )
     }
     verify(exactly = 1) {
-      mockCas3v2BookingRepository.findBookings(any(), any(), any(), any())
+      mockCas3BookingRepository.findBookings(any(), any(), any(), any())
     }
   }
 }
