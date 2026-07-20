@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.C
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcNoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jobs.migration.Cas2HdcStatusUpdateMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.BookingStatusMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3AdjustPremisesDomainEventDatesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3FixWalesHptPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.migration.Cas3UpdateArchiveUnarchiveDomainEventDetailsJob
@@ -66,7 +65,6 @@ class MigrationJobService(
         MigrationJobType.updateCas3DomainEventArchiveUnarchiveTransaction -> getBean(Cas3UpdateArchiveUnarchiveDomainEventTransactionJob::class)
         MigrationJobType.updateCas3ArchiveUnarchiveDomainEventDetails -> getBean(Cas3UpdateArchiveUnarchiveDomainEventDetailsJob::class)
         MigrationJobType.updateCas3BedspaceStartDate -> getBean(Cas3UpdateBedspaceStartDateJob::class)
-        MigrationJobType.updateCas3PremisesDomainEventDates -> getBean(Cas3AdjustPremisesDomainEventDatesJob::class)
         MigrationJobType.cas2BackfillApplicationCohorts -> getBean(Cas2HdcBackfillApplicationCohortJob::class)
         MigrationJobType.backfillCases -> getBean(BackfillCasesJob::class)
         MigrationJobType.replayFailedInboxEvents -> getBean(ReplayFailedInboxEventsMigrationJob::class)
