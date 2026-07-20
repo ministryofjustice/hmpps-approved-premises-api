@@ -72,8 +72,6 @@ class Cas1PeopleController(
   @Operation(summary = "Returns a risk profile for a Person.")
   @GetMapping("/people/{crn}/risk-profile")
   fun getPersonRiskProfile(@PathVariable crn: String): ResponseEntity<PersonRisks> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_AP_RESIDENT_PROFILE)
-
     val personRisks = offenderRiskService.getPersonRisks(crn)
     return ResponseEntity.ok(personRisks)
   }
