@@ -186,7 +186,6 @@ class Cas1SeedPremisesFromCsvJob(
         emailAddress = row.emailAddress,
         probationRegion = probationRegion,
         localAuthorityArea = localAuthorityArea,
-        lostBeds = mutableListOf(),
         apCode = row.apCode,
         qCode = row.qCode,
         rooms = mutableListOf(),

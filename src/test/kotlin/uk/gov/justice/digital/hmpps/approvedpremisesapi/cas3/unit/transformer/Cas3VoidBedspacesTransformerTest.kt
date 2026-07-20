@@ -63,8 +63,6 @@ class Cas3VoidBedspacesTransformerTest {
       cancellationDate = cancellationDate,
       cancellationNotes = cancellationNotes,
       premises = null,
-      cancellation = null,
-      bed = null,
       costCentre = Cas3CostCentre.HMPPS,
     )
 

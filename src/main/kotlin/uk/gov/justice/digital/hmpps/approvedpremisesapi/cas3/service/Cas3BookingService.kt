@@ -547,7 +547,7 @@ class Cas3BookingService(
     bedspaceId: UUID,
     excludeVoidBedspaceId: UUID? = null,
   ) {
-    val voidBedspaces = cas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+    val voidBedspaces = cas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
       bedspaceId,
       startDate,
       endDate,

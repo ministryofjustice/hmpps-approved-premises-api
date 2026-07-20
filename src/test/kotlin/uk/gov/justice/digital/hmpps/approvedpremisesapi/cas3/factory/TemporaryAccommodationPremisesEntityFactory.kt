@@ -146,7 +146,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     longitude = null,
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     localAuthorityArea = this.localAuthorityArea?.invoke(),
-    lostBeds = mutableListOf(),
     addressLine1 = this.addressLine1(),
     addressLine2 = this.addressLine2?.invoke(),
     town = this.town?.invoke(),
