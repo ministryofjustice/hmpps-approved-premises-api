@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
@@ -29,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3v2Bedspac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.BedspaceFilters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.Cas3BedspaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.PremisesFilters
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -56,9 +53,6 @@ import java.util.UUID
 
 @SuppressWarnings("LargeClass")
 class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
-  @Autowired
-  private lateinit var migrationJobService: MigrationJobService
-
   lateinit var probationRegion: ProbationRegionEntity
 
   companion object Constants {
@@ -2348,9 +2342,6 @@ class Cas3v2BedspaceSearchTest : IntegrationTestBase() {
       localAuthorityArea: LocalAuthorityAreaEntity,
       pdu: ProbationDeliveryUnitEntity,
     ): List<Cas3PremisesEntity> {
-      // migrates characteristics
-      migrationJobService.runMigrationJob(MigrationJobType.updateCas3BedspaceModelData)
-
       val premisesSingleOccupancyCharacteristic = getPremisesSingleOccupancyCharacteristic()
       val premisesSharedPropertyCharacteristic = getPremisesSharedPropertyCharacteristic()
       val premisesMenOnlyCharacteristic = getPremisesMenOnlyCharacteristic()
