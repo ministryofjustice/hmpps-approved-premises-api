@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 enum class Cas1SpaceBookingDaySummarySortField(@get:JsonValue val value: String) {
 
   PERSON_NAME("personName"),
+  PERSON_TIER("personTier"),
   TIER("tier"),
   CANONICAL_ARRIVAL_DATE("canonicalArrivalDate"),
   CANONICAL_DEPARTURE_DATE("canonicalDepartureDate"),
