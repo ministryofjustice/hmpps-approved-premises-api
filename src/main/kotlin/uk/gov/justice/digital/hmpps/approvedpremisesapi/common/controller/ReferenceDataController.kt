@@ -29,7 +29,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralReject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspaceReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.AvailableTierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.TierService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
@@ -81,6 +83,7 @@ class ReferenceDataController(
   private val referralRejectionReasonTransformer: ReferralRejectionReasonTransformer,
   private val apAreaRepository: ApAreaRepository,
   private val apAreaTransformer: ApAreaTransformer,
+  private val tierService: TierService,
 ) {
 
   @Operation(
@@ -380,4 +383,17 @@ class ReferenceDataController(
 
     return ResponseEntity.ok(referralRejectionReasons.map(referralRejectionReasonTransformer::transformJpaToApi))
   }
+
+  @Operation(
+    summary = "Lists all available tiers",
+    responses = [
+      ApiResponse(responseCode = "200", description = "successful operation", content = [Content(array = ArraySchema(schema = Schema(implementation = AvailableTierDto::class)))]),
+    ],
+  )
+  @RequestMapping(
+    method = [RequestMethod.GET],
+    value = ["/reference-data/tiers"],
+    produces = ["application/json"],
+  )
+  fun referenceDataTiersGet(): ResponseEntity<List<AvailableTierDto>> = ResponseEntity.ok(tierService.getAvailableTiers())
 }

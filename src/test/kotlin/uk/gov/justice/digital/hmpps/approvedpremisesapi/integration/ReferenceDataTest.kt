@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.transformer.Cas3VoidBedspaceReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.AvailableTierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
@@ -952,6 +953,41 @@ class ReferenceDataTest : IntegrationTestBase() {
       .uri("/reference-data/referral-rejection-reasons")
       .header("Authorization", "Bearer $jwt")
       .header("X-Service-Name", "temporary-accommodation")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Available Tiers returns 200 with correct body`() {
+    val expectedJson = jsonMapper.writeValueAsString(
+      listOf(
+        AvailableTierDto("D0"),
+        AvailableTierDto("D1"),
+        AvailableTierDto("D2"),
+        AvailableTierDto("D3"),
+        AvailableTierDto("C0"),
+        AvailableTierDto("C1"),
+        AvailableTierDto("C2"),
+        AvailableTierDto("C3"),
+        AvailableTierDto("B0"),
+        AvailableTierDto("B1"),
+        AvailableTierDto("B2"),
+        AvailableTierDto("B3"),
+        AvailableTierDto("A0"),
+        AvailableTierDto("A1"),
+        AvailableTierDto("A2"),
+        AvailableTierDto("A3"),
+      ),
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/tiers")
+      .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
       .isOk
