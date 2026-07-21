@@ -175,12 +175,10 @@ const val BED_SUMMARY_QUERY =
       (
         select count(void_bedspace.id)
         from cas3_void_bedspaces void_bedspace
-          left join cas3_void_bedspace_cancellations cancellation
-            on void_bedspace.id = cancellation.cas3_void_bedspace_id
         where void_bedspace.bed_id = b.id
           and void_bedspace.start_date <= CURRENT_DATE
           and void_bedspace.end_date >= CURRENT_DATE
-          and cancellation IS NULL
+          and void_bedspace.cancellation_date IS NULL
       ) > 0 as bedOutOfService
       from beds b
            join rooms r on b.room_id = r.id

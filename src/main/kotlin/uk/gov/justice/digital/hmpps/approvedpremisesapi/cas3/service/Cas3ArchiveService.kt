@@ -179,7 +179,7 @@ class Cas3ArchiveService(
       }
     }
 
-    val overlappingVoids = cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesIdV2(premisesId, maximumPremisesArchiveDate)
+    val overlappingVoids = cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesId(premisesId, maximumPremisesArchiveDate)
 
     overlappingVoids.map {
       affectedBedspaces.add(
@@ -566,7 +566,7 @@ class Cas3ArchiveService(
       }
     }
 
-    val overlappingVoid = cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateV2(
+    val overlappingVoid = cas3VoidBedspacesRepository.findOverlappingBedspaceEndDate(
       bedspaceId,
       threeMonthsFromToday,
     ).maxByOrNull { it.endDate }
@@ -622,7 +622,7 @@ class Cas3ArchiveService(
     val overlapBookings = allBookings.filter { it.departureDate > endDate }
     val lastOverlapVoid = when {
       filterByPremisesId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateByPremisesId(filterByPremisesId, endDate).maxByOrNull { it.endDate }
-      filterByBedspaceId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDateV2(filterByBedspaceId, endDate).maxByOrNull { it.endDate }
+      filterByBedspaceId != null -> cas3VoidBedspacesRepository.findOverlappingBedspaceEndDate(filterByBedspaceId, endDate).maxByOrNull { it.endDate }
       else -> null
     }
 

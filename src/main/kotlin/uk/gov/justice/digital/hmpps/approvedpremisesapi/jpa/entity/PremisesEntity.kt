@@ -24,7 +24,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity.Companion.resolveFullAddress
 import java.time.LocalDate
@@ -152,8 +151,6 @@ abstract class PremisesEntity(
   @JoinColumn(name = "local_authority_area_id")
   var localAuthorityArea: LocalAuthorityAreaEntity?,
   @OneToMany(mappedBy = "premises")
-  val voidBedspaces: MutableList<Cas3VoidBedspaceEntity>,
-  @OneToMany(mappedBy = "premises")
   val rooms: MutableList<RoomEntity>,
   @ManyToMany
   @JoinTable(
@@ -186,7 +183,6 @@ class ApprovedPremisesEntity(
   emailAddress: String?,
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity,
-  lostBeds: MutableList<Cas3VoidBedspaceEntity>,
   var apCode: String,
   var qCode: String,
   rooms: MutableList<RoomEntity>,
@@ -223,7 +219,6 @@ class ApprovedPremisesEntity(
   emailAddress,
   probationRegion,
   localAuthorityArea,
-  lostBeds,
   rooms,
   characteristics,
   status,
@@ -272,7 +267,6 @@ class TemporaryAccommodationPremisesEntity(
   emailAddress: String?,
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity?,
-  lostBeds: MutableList<Cas3VoidBedspaceEntity>,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,
@@ -296,7 +290,6 @@ class TemporaryAccommodationPremisesEntity(
   emailAddress,
   probationRegion,
   localAuthorityArea,
-  lostBeds,
   rooms,
   characteristics,
   status,

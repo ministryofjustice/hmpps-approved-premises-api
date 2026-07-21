@@ -99,7 +99,7 @@ class Cas3ArchiveServiceTest {
       every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspaceOne.id, listOf(CAS3_BEDSPACE_ARCHIVED)) } returns emptyList()
       every { cas3BedspaceRepositoryMock.findByIdOrNull(bedspaceOne.id) } returns bedspaceOne
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspaceOne.id, LocalDate.now()) } returns emptyList()
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspaceOne.id, archiveDate) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceOne.id, archiveDate) } returns emptyList()
       every { cas3BedspaceRepositoryMock.save(any()) } returns bedspaceOne
       every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(bedspaceOne, premises.id, null, any()) } returns Unit
       every { cas3BedspaceRepositoryMock.findByPremisesId(premises.id) } returns listOf(archivedBedspaceOne, bedspaceTwo)
@@ -129,7 +129,7 @@ class Cas3ArchiveServiceTest {
       every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspaceOne.id, listOf(CAS3_BEDSPACE_ARCHIVED)) } returns emptyList()
       every { cas3BedspaceRepositoryMock.findByIdOrNull(bedspaceOne.id) } returns bedspaceOne
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspaceOne.id, LocalDate.now()) } returns emptyList()
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspaceOne.id, archiveDate) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspaceOne.id, archiveDate) } returns emptyList()
       every { cas3BedspaceRepositoryMock.save(match { it.id == bedspaceOne.id }) } returns bedspaceOne
       every { cas3DomainEventServiceMock.saveBedspaceArchiveEvent(bedspaceOne, premises.id, null, any()) } returns Unit
       every { cas3BedspaceRepositoryMock.findByPremisesId(premises.id) } returns listOf(archivedBedspaceOne, bedspaceTwo, bedspaceThree)
@@ -237,7 +237,7 @@ class Cas3ArchiveServiceTest {
       every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_ARCHIVED)) } returns emptyList()
       every { cas3BedspaceRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, LocalDate.now()) } returns listOf()
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, archiveDate) } returns listOf(voidBedspace)
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf(voidBedspace)
 
       val result = cas3v2ArchiveService.archiveBedspace(bedspace.id, premises, archiveDate)
 
@@ -254,7 +254,7 @@ class Cas3ArchiveServiceTest {
       every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_ARCHIVED)) } returns emptyList()
       every { cas3BedspaceRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, LocalDate.now()) } returns listOf(booking)
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, archiveDate) } returns listOf()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf()
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate
 
       val result = cas3v2ArchiveService.archiveBedspace(bedspace.id, premises, archiveDate)
@@ -273,7 +273,7 @@ class Cas3ArchiveServiceTest {
       every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_ARCHIVED)) } returns emptyList()
       every { cas3BedspaceRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, LocalDate.now()) } returns listOf(booking)
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, archiveDate) } returns listOf()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf()
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate.plusDays(2)
 
       val result = cas3v2ArchiveService.archiveBedspace(bedspace.id, premises, archiveDate)
@@ -291,7 +291,7 @@ class Cas3ArchiveServiceTest {
       every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_ARCHIVED)) } returns emptyList()
       every { cas3BedspaceRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, LocalDate.now()) } returns listOf(booking)
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, archiveDate) } returns listOf(voidBedspace)
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf(voidBedspace)
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate
 
       val result = cas3v2ArchiveService.archiveBedspace(bedspace.id, premises, archiveDate)
@@ -310,7 +310,7 @@ class Cas3ArchiveServiceTest {
       every { cas3DomainEventServiceMock.getBedspaceActiveDomainEvents(bedspace.id, listOf(CAS3_BEDSPACE_ARCHIVED)) } returns emptyList()
       every { cas3BedspaceRepositoryMock.findByIdOrNull(bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, LocalDate.now()) } returns listOf(booking)
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, archiveDate) } returns listOf()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, archiveDate) } returns listOf()
       every { workingDayServiceMock.addWorkingDays(booking.departureDate, any()) } returns booking.departureDate.plusDays(2)
 
       val result = cas3v2ArchiveService.archiveBedspace(bedspace.id, premises, archiveDate)
@@ -1723,7 +1723,7 @@ class Cas3ArchiveServiceTest {
 
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns emptyList()
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns emptyList()
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1745,7 +1745,7 @@ class Cas3ArchiveServiceTest {
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns listOf(booking)
       every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns expectedTurnaroundDate
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns emptyList()
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1770,7 +1770,7 @@ class Cas3ArchiveServiceTest {
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns listOf(booking)
       every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns expectedTurnaroundDate
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns emptyList()
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1792,7 +1792,7 @@ class Cas3ArchiveServiceTest {
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns listOf(booking)
       every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns expectedTurnaroundDate
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns emptyList()
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1813,7 +1813,7 @@ class Cas3ArchiveServiceTest {
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns listOf(booking)
       every { workingDayServiceMock.addWorkingDays(departureDate, 0) } returns departureDate
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns emptyList()
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1831,7 +1831,7 @@ class Cas3ArchiveServiceTest {
 
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns emptyList()
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns listOf(voidEntity)
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns listOf(voidEntity)
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1852,7 +1852,7 @@ class Cas3ArchiveServiceTest {
 
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns emptyList()
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns listOf(voidEntity)
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns listOf(voidEntity)
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1880,7 +1880,7 @@ class Cas3ArchiveServiceTest {
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns listOf(booking)
       every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns bookingTurnaroundDate
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns listOf(voidEntity)
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns listOf(voidEntity)
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1911,7 +1911,7 @@ class Cas3ArchiveServiceTest {
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns listOf(bookingOne, bookingTwo)
       every { workingDayServiceMock.addWorkingDays(departureDateBookingOne, any()) } returns bookingTurnaroundDateOne
       every { workingDayServiceMock.addWorkingDays(departureDateBookingTwo, any()) } returns bookingTurnaroundDateTwo
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns emptyList()
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1935,7 +1935,7 @@ class Cas3ArchiveServiceTest {
 
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns emptyList()
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns listOf(voidEntityOne, voidEntityTwo)
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns listOf(voidEntityOne, voidEntityTwo)
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 
@@ -1960,7 +1960,7 @@ class Cas3ArchiveServiceTest {
       every { cas3BedspaceRepositoryMock.findCas3Bedspace(premises.id, bedspace.id) } returns bedspace
       every { cas3BookingRepositoryMock.findActiveOverlappingBookingByBedspace(bedspace.id, any()) } returns listOf(booking)
       every { workingDayServiceMock.addWorkingDays(departureDate, any()) } returns expectedTurnaroundDate
-      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDateV2(bedspace.id, any()) } returns emptyList()
+      every { cas3VoidBedspacesRepositoryMock.findOverlappingBedspaceEndDate(bedspace.id, any()) } returns emptyList()
 
       val result = cas3v2ArchiveService.canArchiveBedspaceInFuture(premises.id, bedspace.id)
 

@@ -280,11 +280,11 @@ class Cas3BookingServiceTest {
       every { mockBedspaceRepository.findByIdOrNull(bedspace.id) } returns null
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
@@ -321,11 +321,11 @@ class Cas3BookingServiceTest {
       every { mockBedspaceRepository.findByIdOrNull(bedspace.id) } returns null
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
@@ -363,11 +363,11 @@ class Cas3BookingServiceTest {
       every { mockBedspaceRepository.findByIdOrNull(bedspace.id) } returns bedspace
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -409,11 +409,11 @@ class Cas3BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as Cas3BookingEntity }
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
@@ -456,11 +456,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -531,11 +531,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
 
@@ -600,11 +600,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -673,11 +673,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -745,11 +745,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -825,11 +825,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -901,11 +901,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -977,11 +977,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
@@ -1024,11 +1024,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -1101,11 +1101,11 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(bedspace.id, departureDate, excludeBookingId = null) } returns listOf()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           bedspace.id,
           arrivalDate,
           departureDate,
-          bookingId = null,
+          thisEntityId = null,
         )
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessment.id) } returns assessment
@@ -2258,7 +2258,7 @@ class Cas3BookingServiceTest {
       every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as Cas3ExtensionEntity }
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
+      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
     }
 
     @Test
@@ -2302,7 +2302,7 @@ class Cas3BookingServiceTest {
     fun `createTurnaround returns FieldValidationError if the number of working days is a negative integer`() {
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
+      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       val result = cas3BookingService.createTurnaround(booking, -1)
@@ -2315,7 +2315,7 @@ class Cas3BookingServiceTest {
     fun `createTurnaround returns Success with the persisted entity if the number of working days is a positive integer`() {
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
+      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
       every { mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       val result = cas3BookingService.createTurnaround(booking, 2)
@@ -2335,7 +2335,7 @@ class Cas3BookingServiceTest {
       every { mockOverstayRepository.save(any()) } answers { it.invocation.args[0] as Cas3OverstayEntity }
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedspaceIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(any(), any(), any(), any()) } returns listOf()
+      every { mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
     }
 
     @Test
@@ -2454,7 +2454,7 @@ class Cas3BookingServiceTest {
       val voidBedspace =
         Cas3VoidBedspaceEntityFactory().withYieldedReason { mockk<Cas3VoidBedspaceReasonEntity>() }.produce()
       every {
-        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDateV2(
+        mockCas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
           any(),
           any(),
           any(),

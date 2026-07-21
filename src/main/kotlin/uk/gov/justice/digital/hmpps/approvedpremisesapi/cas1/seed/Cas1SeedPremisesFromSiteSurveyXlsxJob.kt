@@ -181,7 +181,6 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
         emailAddress = null,
         probationRegion = region,
         localAuthorityArea = premisesInfo.localAuthorityArea,
-        lostBeds = mutableListOf(),
         // A new row is required in site surveys to capture this
         apCode = qCode,
         qCode = qCode,

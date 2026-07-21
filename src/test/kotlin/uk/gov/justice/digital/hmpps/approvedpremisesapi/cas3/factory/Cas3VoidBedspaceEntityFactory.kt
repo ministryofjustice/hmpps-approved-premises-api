@@ -3,12 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspacesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceCancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3VoidBedspaceReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3CostCentre
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -23,9 +21,7 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
   private var reason: Yielded<Cas3VoidBedspaceReasonEntity>? = null
   private var referenceNumber: Yielded<String?> = { UUID.randomUUID().toString() }
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
-  private var premises: Yielded<PremisesEntity>? = null
-  private var voidBedspaceCancellation: Yielded<Cas3VoidBedspaceCancellationEntity>? = null
-  private var bed: Yielded<BedEntity>? = null
+  private var premises: Yielded<Cas3PremisesEntity>? = null
   private var bedspace: Yielded<Cas3BedspacesEntity>? = null
   private var costCentre: Yielded<Cas3CostCentre>? = { Cas3CostCentre.HMPPS }
   private var cancellationDate: Yielded<OffsetDateTime>? = null
@@ -55,24 +51,16 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     this.notes = { notes }
   }
 
-  fun withYieldedPremises(premises: Yielded<PremisesEntity>) = apply {
+  fun withYieldedPremises(premises: Yielded<Cas3PremisesEntity>) = apply {
     this.premises = premises
   }
 
-  fun withPremises(premises: PremisesEntity) = apply {
+  fun withPremises(premises: Cas3PremisesEntity) = apply {
     this.premises = { premises }
-  }
-
-  fun withBed(bed: BedEntity) = apply {
-    this.bed = { bed }
   }
 
   fun withBedspace(bedspace: Cas3BedspacesEntity) = apply {
     this.bedspace = { bedspace }
-  }
-
-  fun withYieldedBed(bed: Yielded<BedEntity>) = apply {
-    this.bed = bed
   }
 
   fun withCancellationDate(cancellationDate: OffsetDateTime) = apply {
@@ -97,8 +85,6 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     referenceNumber = this.referenceNumber(),
     notes = this.notes(),
     premises = this.premises?.let { it() },
-    bed = this.bed?.let { it() },
-    cancellation = this.voidBedspaceCancellation?.invoke(),
     bedspace = this.bedspace?.let { it() },
     costCentre = this.costCentre?.let { it() },
     cancellationDate = this.cancellationDate?.let { it() },
@@ -114,8 +100,6 @@ class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
     referenceNumber = this.referenceNumber(),
     notes = this.notes(),
     premises = null,
-    bed = null,
-    cancellation = null,
     bedspace = this.bedspace?.let { it() } ?: Cas3BedspaceEntityFactory().produce(),
     costCentre = this.costCentre?.let { it() },
     cancellationDate = this.cancellationDate?.let { it() },

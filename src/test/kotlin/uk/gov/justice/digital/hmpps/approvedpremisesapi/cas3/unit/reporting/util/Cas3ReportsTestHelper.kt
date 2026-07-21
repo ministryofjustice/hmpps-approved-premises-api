@@ -51,7 +51,7 @@ fun convertToCas3BedspaceOccupancyVoidBedspaceReportData(voidBedspace: Cas3VoidB
   bedspaceId = voidBedspace.bedspace!!.id.toString(),
   startDate = voidBedspace.startDate,
   endDate = voidBedspace.endDate,
-  cancellationId = voidBedspace.cancellation?.id?.toString(),
+  cancellationId = null,
 )
 
 fun convertToCas3BedspaceOccupancyVoidBedpaceReportData(voidBedspace: Cas3VoidBedspaceEntity) = Cas3BedspaceOccupancyVoidBedspaceReportData(

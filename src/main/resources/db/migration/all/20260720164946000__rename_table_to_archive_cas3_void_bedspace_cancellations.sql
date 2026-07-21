@@ -1,0 +1,1 @@
+ALTER TABLE IF EXISTS cas3_void_bedspace_cancellations RENAME TO archived_cas3_void_bedspace_cancellations;
