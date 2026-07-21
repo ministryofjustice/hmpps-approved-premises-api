@@ -8,4 +8,7 @@ TESTS="$(find src/test/kotlin -type d -name integration | \
   awk -v splitTotal=$SPLIT_TOTAL -v splitIndex=$SPLIT_INDEX 'NR % splitTotal == splitIndex % splitTotal' | \
   tr '\n' ',' | sed 's/,$//')"
 
+echo "DEBUG: GITHUB_OUTPUT=$GITHUB_OUTPUT"
+echo "DEBUG: SPLIT_INDEX=$SPLIT_INDEX, SPLIT_TOTAL=$SPLIT_TOTAL"
+echo "DEBUG: TESTS=$TESTS"
 echo "test-suite=$TESTS" >> "$GITHUB_OUTPUT"
