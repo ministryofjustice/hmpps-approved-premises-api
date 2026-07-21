@@ -7,9 +7,14 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1RequestsForPlacementDurationsCalculationResponseDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import java.time.Period
 import java.util.UUID
 
 class Cas1RequestsForPlacementIT : IntegrationTestBase() {
@@ -28,18 +33,21 @@ class Cas1RequestsForPlacementIT : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns correct response body for ApType`() {
+    fun `returns correct response body for apType rfap, sentence type ipp, tier B`() {
       val (_, jwt) = givenAUser()
 
+      val application = givenACas1Application(apType = ApprovedPremisesType.RFAP)
+      val case = givenACase(application.crn, tierV3 = TierFactory().produce())
+
       val response = webTestClient.get()
-        .uri("/cas1/applications/${UUID.randomUUID()}/requests-for-placement/calc/durations?apType=${ApType.mhapElliottHouse}&sentenceType=${SentenceTypeOption.standardDeterminate}")
+        .uri("/cas1/applications/${application.id}/requests-for-placement/calc/durations?apType=${ApType.mhapElliottHouse}&sentenceType=${SentenceTypeOption.standardDeterminate}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
         .isOk
         .bodyAsObject<Cas1RequestsForPlacementDurationsCalculationResponseDto>()
 
-      assertThat(response.defaultDurationDays).isEqualTo(84)
+      assertThat(response.defaultDurationDays).isEqualTo(Period.ofWeeks(16).days)
       assertThat(response.maxDurationDays).isNull()
     }
   }
