@@ -6,11 +6,19 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection.asc
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection.desc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewEmergencyTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewPlannedTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingDaySummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingDaySummarySortField.CANONICAL_ARRIVAL_DATE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingDaySummarySortField.CANONICAL_DEPARTURE_DATE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingDaySummarySortField.PERSON_NAME
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingDaySummarySortField.PERSON_TIER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingDaySummarySortField.RELEASE_TYPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingDaySummarySortField.TIER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingSummarySortField
@@ -430,18 +438,10 @@ class Cas1SpaceBookingService(
     excludeSpaceBookingId: UUID? = null,
     user: UserEntity,
   ): List<Cas1SpaceBookingSummary> {
+    val useTierV3 = featureFlagService.getBooleanFlag(FEATURE_FLAG_USE_TIER_V3)
     val sort = Sort.by(
-      when (bookingsSortDirection) {
-        SortDirection.desc -> Sort.Direction.DESC
-        SortDirection.asc -> Sort.Direction.ASC
-      },
-      when (bookingsSortBy) {
-        Cas1SpaceBookingDaySummarySortField.PERSON_NAME -> "personName"
-        Cas1SpaceBookingDaySummarySortField.TIER -> "tierOnApplicationCreation"
-        Cas1SpaceBookingDaySummarySortField.CANONICAL_ARRIVAL_DATE -> "canonicalArrivalDate"
-        Cas1SpaceBookingDaySummarySortField.CANONICAL_DEPARTURE_DATE -> "canonicalDepartureDate"
-        Cas1SpaceBookingDaySummarySortField.RELEASE_TYPE -> "releaseType"
-      },
+      bookingsSortDirection.toSpringDirection(),
+      bookingsSortBy.toRepositoryProperty(useTierV3),
     )
 
     val spaceBookingsForDate = cas1SpaceBookingRepository.findSpaceBookingsByPremisesIdAndCriteriaForDate(
@@ -454,15 +454,27 @@ class Cas1SpaceBookingService(
 
     val offenderSummaries = getOffenderSummariesForBookings(spaceBookingsForDate, user)
 
-    val spaceBookingSummaries =
-      spaceBookingsForDate.map { bookingSummary ->
-        spaceBookingTransformer.transformSearchResultToSummary(
-          searchResult = bookingSummary,
-          premises = premises,
-          personSummaryInfo = offenderSummaries.forCrn(bookingSummary.crn),
-        )
-      }
-    return spaceBookingSummaries
+    return spaceBookingsForDate.map { bookingSummary ->
+      spaceBookingTransformer.transformSearchResultToSummary(
+        searchResult = bookingSummary,
+        premises = premises,
+        personSummaryInfo = offenderSummaries.forCrn(bookingSummary.crn),
+      )
+    }
+  }
+
+  fun SortDirection.toSpringDirection() = when (this) {
+    desc -> Sort.Direction.DESC
+    asc -> Sort.Direction.ASC
+  }
+
+  private fun Cas1SpaceBookingDaySummarySortField.toRepositoryProperty(useTierV3: Boolean) = when (this) {
+    PERSON_NAME -> "personName"
+    PERSON_TIER -> if (useTierV3) "personTierV3Score" else "personTierV2Score"
+    TIER -> "tierOnApplicationCreation"
+    CANONICAL_ARRIVAL_DATE -> "canonicalArrivalDate"
+    CANONICAL_DEPARTURE_DATE -> "canonicalDepartureDate"
+    RELEASE_TYPE -> "releaseType"
   }
 
   fun findAllBookingsForCrn(crn: String, includeCancelled: Boolean): List<Cas1SpaceBookingEntity> = cas1SpaceBookingRepository.findAllSpaceBookingsForCrn(crn, includeCancelled)

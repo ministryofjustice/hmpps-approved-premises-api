@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PremisesDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TierFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -58,6 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_JANITOR
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService.Companion.FEATURE_FLAG_USE_TIER_V3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
@@ -336,7 +338,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
             it.apCode == premises1ManInArea1.apCode &&
             it.apArea.name == "the ap area name 1" &&
             it.bedCount == 6 &&
-            it.supportsSpaceBookings == false
+            !it.supportsSpaceBookings
         }
         .anyMatch {
           it.id == premises2WomanInArea2.id &&
@@ -344,7 +346,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
             it.apCode == premises2WomanInArea2.apCode &&
             it.apArea.name == "the ap area name 2" &&
             it.bedCount == 3 &&
-            it.supportsSpaceBookings == false
+            !it.supportsSpaceBookings
         }
         .anyMatch {
           it.id == premises3ManInArea2.id &&
@@ -352,7 +354,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
             it.apCode == premises3ManInArea2.apCode &&
             it.apArea.name == "the ap area name 2" &&
             it.bedCount == 0 &&
-            it.supportsSpaceBookings == true
+            it.supportsSpaceBookings
         }
     }
 
@@ -1079,6 +1081,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
         crn = offenderA.crn,
         placementRequest = this.placementRequestA,
         application = applicationA,
+        caseTierV2 = "A",
+        caseTierV3 = "G",
       ) {
         withPremises(premises)
         withCanonicalArrivalDate(now.minusDays(3))
@@ -1103,6 +1107,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
         crn = offenderB.crn,
         placementRequest = this.placementRequestA,
         application = applicationB,
+        caseTierV2 = "B",
+        caseTierV3 = "F",
       ) {
         withPremises(premises)
         withCanonicalArrivalDate(now.minusDays(6))
@@ -1332,6 +1338,49 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `return bookings sorted by person tier (V2)`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
+
+      val summaries = webTestClient.get()
+        .uri("/cas1/premises/${premises.id}/day-summary/$summaryDate?bookingsSortBy=personTier&bookingsSortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<Cas1PremisesDaySummary>().responseBody.blockFirst()!!
+
+      assertThat(summaries.spaceBookingSummaries).hasSize(3)
+
+      // V2 scores are A (offenderA), B (offenderB), and null (offenderOffline)
+      // ASC order: A, B, null
+      assertThat(summaries.spaceBookingSummaries[0].id).isEqualTo(spaceBookingEarly.id)
+      assertThat(summaries.spaceBookingSummaries[1].id).isEqualTo(spaceBookingLate.id)
+      assertThat(summaries.spaceBookingSummaries[2].id).isEqualTo(spaceBookingOfflineApplication.id)
+    }
+
+    @Test
+    fun `return bookings sorted by person tier (V3)`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
+      mockFeatureFlagService.setFlag(FEATURE_FLAG_USE_TIER_V3, true)
+
+      val summaries = webTestClient.get()
+        .uri("/cas1/premises/${premises.id}/day-summary/$summaryDate?bookingsSortBy=personTier&bookingsSortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<Cas1PremisesDaySummary>().responseBody.blockFirst()!!
+
+      assertThat(summaries.spaceBookingSummaries).hasSize(3)
+
+      // V3 scores are G (offenderA), F (offenderB), and null (offenderOffline)
+      // ASC order: F, G, null
+      assertThat(summaries.spaceBookingSummaries[0].id).isEqualTo(spaceBookingLate.id)
+      assertThat(summaries.spaceBookingSummaries[1].id).isEqualTo(spaceBookingEarly.id)
+      assertThat(summaries.spaceBookingSummaries[2].id).isEqualTo(spaceBookingOfflineApplication.id)
+    }
+
+    @Test
     fun `return out of service beds applicable to given date`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
@@ -1513,9 +1562,23 @@ class Cas1PremisesTest : IntegrationTestBase() {
       crn: String,
       placementRequest: PlacementRequestEntity,
       application: ApprovedPremisesApplicationEntity,
+      caseTierV2: String? = null,
+      caseTierV3: String? = null,
       configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
     ): Cas1SpaceBookingEntity {
       val (user) = givenAUser()
+
+      if (caseTierV2 != null || caseTierV3 != null) {
+        caseEntityFactory.produceAndPersist {
+          withCrn(crn)
+          if (caseTierV2 != null) {
+            withTierV2(TierFactory().withTierScore(caseTierV2).produce())
+          }
+          if (caseTierV3 != null) {
+            withTierV3(TierFactory().withTierScore(caseTierV3).produce())
+          }
+        }
+      }
 
       return cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn(crn)

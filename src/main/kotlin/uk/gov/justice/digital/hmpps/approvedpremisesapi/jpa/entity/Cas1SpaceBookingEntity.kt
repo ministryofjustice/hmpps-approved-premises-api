@@ -228,6 +228,8 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     b.delius_event_number AS deliusEventNumber,
     b.cancellation_occurred_at IS NOT NULL AS cancelled,
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tierOnApplicationCreation,
+      (cases.tier_v2->>'tierScore')::text AS personTierV2Score,
+      (cases.tier_v3->>'tierScore')::text AS personTierV3Score,
       CASE
         WHEN apa.id IS NOT NULL THEN apa.name
         ELSE offline_app.name
@@ -249,6 +251,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       LEFT JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       LEFT JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
       LEFT OUTER JOIN users key_worker_user ON b.key_worker_user_id = key_worker_user.id
+      LEFT OUTER JOIN cases ON cases.crn = b.crn
       WHERE 
         b.canonical_arrival_date <= :date AND 
         b.canonical_departure_date > :date AND
