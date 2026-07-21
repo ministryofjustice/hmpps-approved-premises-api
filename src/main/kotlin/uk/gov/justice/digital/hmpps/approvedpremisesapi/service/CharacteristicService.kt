@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
@@ -12,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import java.util.UUID
 
 @Service
@@ -21,10 +19,6 @@ class CharacteristicService(
   val bedspaceCharacteristicRepository: Cas3BedspaceCharacteristicRepository,
   val premisesCharacteristicRepository: Cas3PremisesCharacteristicRepository,
 ) {
-  fun getCharacteristic(characteristicId: UUID): CharacteristicEntity? = characteristicRepository.findByIdOrNull(characteristicId)
-
-  fun getCharacteristics(characteristicName: String): List<CharacteristicEntity> = characteristicRepository.findAllByName(characteristicName)
-
   fun getCharacteristicsByPropertyNames(requiredCharacteristics: List<String>, serviceName: ServiceName) = characteristicRepository.findAllWherePropertyNameIn(requiredCharacteristics, serviceName.value)
 
   fun serviceScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean {
@@ -43,11 +37,6 @@ class CharacteristicService(
 
   fun getCas3PremisesCharacteristics() = premisesCharacteristicRepository.findByActive(active = true)
 
-  fun getCas3Characteristics(): List<CharacteristicEntity> = characteristicRepository.findActiveByServiceScopeAndModelScope(
-    ServiceName.temporaryAccommodation.value,
-    Characteristic.ModelScope.star.value,
-  )
-
   fun modelScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean = when (characteristic.modelScope) {
     "*" -> true
     "room" -> target is RoomEntity
@@ -58,7 +47,6 @@ class CharacteristicService(
   private fun getServiceForTarget(target: Any): String? = when (target) {
     is RoomEntity -> getServiceForTarget(target.premises)
     is ApprovedPremisesEntity -> ServiceName.approvedPremises.value
-    is TemporaryAccommodationPremisesEntity -> ServiceName.temporaryAccommodation.value
     else -> null
   }
 }

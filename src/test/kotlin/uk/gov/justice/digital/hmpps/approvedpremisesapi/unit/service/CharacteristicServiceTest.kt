@@ -4,7 +4,6 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3PremisesCharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -28,12 +27,7 @@ class CharacteristicServiceTest {
     val characteristicEntityFactory = CharacteristicEntityFactory()
     val roomEntityFactory = RoomEntityFactory()
 
-    val characteristic1 = characteristicEntityFactory
-      .withModelScope("*")
-      .withServiceScope(ServiceName.approvedPremises.value)
-      .produce()
-
-    val characteristic2 = characteristicEntityFactory
+    val characteristic = characteristicEntityFactory
       .withModelScope("*")
       .withServiceScope(ServiceName.temporaryAccommodation.value)
       .produce()
@@ -44,16 +38,7 @@ class CharacteristicServiceTest {
 
     val localAuthorityArea = LocalAuthorityEntityFactory().produce()
 
-    val room1: RoomEntity = roomEntityFactory
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion { probationRegion }
-          .withYieldedLocalAuthorityArea { localAuthorityArea }
-          .produce()
-      }
-      .produce()
-
-    val room2: RoomEntity = roomEntityFactory
+    val room: RoomEntity = roomEntityFactory
       .withYieldedPremises {
         ApprovedPremisesEntityFactory()
           .withYieldedProbationRegion { probationRegion }
@@ -62,8 +47,7 @@ class CharacteristicServiceTest {
       }
       .produce()
 
-    assertThat(characteristicService.serviceScopeMatches(characteristic1, room1)).isFalse
-    assertThat(characteristicService.serviceScopeMatches(characteristic2, room2)).isFalse
+    assertThat(characteristicService.serviceScopeMatches(characteristic, room)).isFalse
   }
 
   @Test
@@ -109,11 +93,6 @@ class CharacteristicServiceTest {
       .withServiceScope(ServiceName.approvedPremises.value)
       .produce()
 
-    val characteristic2 = characteristicEntityFactory
-      .withModelScope("*")
-      .withServiceScope(ServiceName.temporaryAccommodation.value)
-      .produce()
-
     val probationRegion = ProbationRegionEntityFactory()
       .withYieldedApArea { ApAreaEntityFactory().produce() }
       .produce()
@@ -125,23 +104,12 @@ class CharacteristicServiceTest {
       .withYieldedLocalAuthorityArea { localAuthorityArea }
       .produce()
 
-    val premises2 = TemporaryAccommodationPremisesEntityFactory()
-      .withYieldedProbationRegion { probationRegion }
-      .withYieldedLocalAuthorityArea { localAuthorityArea }
-      .produce()
-
     val room1: RoomEntity = roomEntityFactory
       .withYieldedPremises { premises1 }
       .produce()
 
-    val room2: RoomEntity = roomEntityFactory
-      .withYieldedPremises { premises2 }
-      .produce()
-
     assertThat(characteristicService.serviceScopeMatches(characteristic1, room1)).isTrue
     assertThat(characteristicService.serviceScopeMatches(characteristic1, premises1)).isTrue
-    assertThat(characteristicService.serviceScopeMatches(characteristic2, room2)).isTrue
-    assertThat(characteristicService.serviceScopeMatches(characteristic2, premises2)).isTrue
   }
 
   @Test
@@ -170,18 +138,12 @@ class CharacteristicServiceTest {
       .withYieldedLocalAuthorityArea { localAuthorityArea }
       .produce()
 
-    val premises2 = TemporaryAccommodationPremisesEntityFactory()
-      .withYieldedProbationRegion { probationRegion }
-      .withYieldedLocalAuthorityArea { localAuthorityArea }
-      .produce()
-
     val room: RoomEntity = roomEntityFactory
       .withYieldedPremises { premises1 }
       .produce()
 
     assertThat(characteristicService.modelScopeMatches(characteristic1, room)).isTrue
     assertThat(characteristicService.modelScopeMatches(characteristic2, premises1)).isTrue
-    assertThat(characteristicService.modelScopeMatches(characteristic2, premises2)).isTrue
   }
 
   @Test
@@ -202,19 +164,12 @@ class CharacteristicServiceTest {
       .withYieldedLocalAuthorityArea { localAuthorityArea }
       .produce()
 
-    val premises2 = TemporaryAccommodationPremisesEntityFactory()
-      .withYieldedProbationRegion { probationRegion }
-      .withYieldedLocalAuthorityArea { localAuthorityArea }
-      .produce()
-
     val room: RoomEntity = RoomEntityFactory()
       .withYieldedPremises { premises1 }
       .produce()
 
     assertThat(characteristicService.serviceScopeMatches(characteristic, room)).isTrue
     assertThat(characteristicService.serviceScopeMatches(characteristic, premises1)).isTrue
-    assertThat(characteristicService.serviceScopeMatches(characteristic, premises1)).isTrue
-    assertThat(characteristicService.serviceScopeMatches(characteristic, premises2)).isTrue
   }
 
   @Test
@@ -235,18 +190,11 @@ class CharacteristicServiceTest {
       .withYieldedLocalAuthorityArea { localAuthorityArea }
       .produce()
 
-    val premises2 = TemporaryAccommodationPremisesEntityFactory()
-      .withYieldedProbationRegion { probationRegion }
-      .withYieldedLocalAuthorityArea { localAuthorityArea }
-      .produce()
-
     val room: RoomEntity = RoomEntityFactory()
       .withYieldedPremises { premises1 }
       .produce()
 
     assertThat(characteristicService.modelScopeMatches(characteristic, room)).isTrue
     assertThat(characteristicService.modelScopeMatches(characteristic, premises1)).isTrue
-    assertThat(characteristicService.modelScopeMatches(characteristic, premises1)).isTrue
-    assertThat(characteristicService.modelScopeMatches(characteristic, premises2)).isTrue
   }
 }

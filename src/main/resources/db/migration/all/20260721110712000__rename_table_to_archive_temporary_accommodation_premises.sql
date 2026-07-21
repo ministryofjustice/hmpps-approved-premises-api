@@ -1,0 +1,1 @@
+ALTER TABLE temporary_accommodation_premises RENAME TO archived_temporary_accommodation_premises;

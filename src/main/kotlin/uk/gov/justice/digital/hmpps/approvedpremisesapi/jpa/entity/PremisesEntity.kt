@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
-import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorColumn
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
@@ -24,9 +23,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity.Companion.resolveFullAddress
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -247,58 +244,6 @@ class ApprovedPremisesEntity(
 enum class ApprovedPremisesGender {
   MAN,
   WOMAN,
-}
-
-@SuppressWarnings("LongParameterList")
-@Entity
-@DiscriminatorValue("temporary-accommodation")
-@Table(name = "temporary_accommodation_premises")
-@PrimaryKeyJoinColumn(name = "premises_id")
-class TemporaryAccommodationPremisesEntity(
-  id: UUID,
-  name: String,
-  addressLine1: String,
-  addressLine2: String?,
-  town: String?,
-  postcode: String,
-  longitude: Double?,
-  latitude: Double?,
-  notes: String,
-  emailAddress: String?,
-  probationRegion: ProbationRegionEntity,
-  localAuthorityArea: LocalAuthorityAreaEntity?,
-  rooms: MutableList<RoomEntity>,
-  characteristics: MutableList<CharacteristicEntity>,
-  status: PropertyStatus,
-  var startDate: LocalDate,
-  var endDate: LocalDate?,
-  @ManyToOne
-  @JoinColumn(name = "probation_delivery_unit_id")
-  var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
-  @Column(name = "turnaround_working_day_count")
-  var turnaroundWorkingDays: Int,
-) : PremisesEntity(
-  id,
-  name,
-  addressLine1,
-  addressLine2,
-  town,
-  postcode,
-  longitude,
-  latitude,
-  notes,
-  emailAddress,
-  probationRegion,
-  localAuthorityArea,
-  rooms,
-  characteristics,
-  status,
-) {
-  val cas3PremisesStatus: Cas3PremisesStatus
-    get() = when (this.status) {
-      PropertyStatus.active -> Cas3PremisesStatus.online
-      PropertyStatus.archived -> Cas3PremisesStatus.archived
-    }
 }
 
 data class ApprovedPremisesBasicSummary(

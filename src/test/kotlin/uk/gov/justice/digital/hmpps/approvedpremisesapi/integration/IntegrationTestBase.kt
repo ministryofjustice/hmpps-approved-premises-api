@@ -28,7 +28,6 @@ import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTest
 import org.springframework.cache.CacheManager
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpHeaders
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -42,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2Stat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.Cas2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas2hdc.jpa.entity.Cas2ApplicationNoteRepository
@@ -76,7 +74,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.Cas3VoidBedspaceReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.jpa.entity.Cas3BedspaceCharacteristicRepository
@@ -228,7 +225,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
@@ -268,9 +264,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PostCodeDistr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationAreaProbationRegionMappingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationDeliveryUnitTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationRegionTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.RoomTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationApplicationTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationPremisesTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserQualificationAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
@@ -315,9 +309,6 @@ abstract class IntegrationTestBase {
   }
 
   @Autowired
-  lateinit var jdbcTemplate: JdbcTemplate
-
-  @Autowired
   private lateinit var cacheManager: CacheManager
 
   @Autowired
@@ -346,9 +337,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var approvedPremisesRepository: ApprovedPremisesTestRepository
-
-  @Autowired
-  lateinit var temporaryAccommodationPremisesRepository: TemporaryAccommodationPremisesTestRepository
 
   @Autowired
   lateinit var cas3ArrivalTestRepository: Cas3ArrivalTestRepository
@@ -403,9 +391,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var cas2ApplicationRepository: Cas2ApplicationRepository
-
-  @Autowired
-  lateinit var cas2ApplicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   @Autowired
   lateinit var offenderManagementUnitRepository: OffenderManagementUnitRepository
@@ -504,9 +489,6 @@ abstract class IntegrationTestBase {
   lateinit var probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingTestRepository
 
   @Autowired
-  lateinit var roomTestRepository: RoomTestRepository
-
-  @Autowired
   lateinit var assessmentTestRepository: AssessmentTestRepository
 
   @Autowired
@@ -592,7 +574,6 @@ abstract class IntegrationTestBase {
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
   lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>
   lateinit var approvedPremisesEntityFactory: PersistedFactory<ApprovedPremisesEntity, UUID, ApprovedPremisesEntityFactory>
-  lateinit var temporaryAccommodationPremisesEntityFactory: PersistedFactory<TemporaryAccommodationPremisesEntity, UUID, TemporaryAccommodationPremisesEntityFactory>
   lateinit var cas3ArrivalEntityFactory: PersistedFactory<Cas3ArrivalEntity, UUID, Cas3ArrivalEntityFactory>
   lateinit var cas3BedspaceEntityFactory: PersistedFactory<Cas3BedspacesEntity, UUID, Cas3BedspaceEntityFactory>
   lateinit var cas3BookingEntityFactory: PersistedFactory<Cas3BookingEntity, UUID, Cas3BookingEntityFactory>
@@ -710,7 +691,6 @@ abstract class IntegrationTestBase {
     apAreaEntityFactory = PersistedFactory({ ApAreaEntityFactory() }, apAreaRepository)
     localAuthorityEntityFactory = PersistedFactory({ LocalAuthorityEntityFactory() }, localAuthorityAreaRepository)
     approvedPremisesEntityFactory = PersistedFactory({ ApprovedPremisesEntityFactory() }, approvedPremisesRepository)
-    temporaryAccommodationPremisesEntityFactory = PersistedFactory({ TemporaryAccommodationPremisesEntityFactory() }, temporaryAccommodationPremisesRepository)
     cas3ArrivalEntityFactory = PersistedFactory({ Cas3ArrivalEntityFactory() }, cas3ArrivalTestRepository)
     cas3BedspaceEntityFactory = PersistedFactory({ Cas3BedspaceEntityFactory() }, cas3BedspaceTestRepository)
     cas3BookingEntityFactory = PersistedFactory({ Cas3BookingEntityFactory() }, cas3BookingRepository)
@@ -920,16 +900,6 @@ abstract class IntegrationTestBase {
   fun mockUnsuccessfulGetCall(url: String, responseStatus: Int) = mockOAuth2ClientCredentialsCallIfRequired {
     wiremockServer.stubFor(
       WireMock.get(urlEqualTo(url))
-        .willReturn(
-          aResponse()
-            .withStatus(responseStatus),
-        ),
-    )
-  }
-
-  fun mockUnsuccessfulPostCall(url: String, responseStatus: Int) = mockOAuth2ClientCredentialsCallIfRequired {
-    wiremockServer.stubFor(
-      post(urlEqualTo(url))
         .willReturn(
           aResponse()
             .withStatus(responseStatus),
