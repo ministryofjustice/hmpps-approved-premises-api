@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.client.apandoasys
 
 import java.time.OffsetDateTime
 
+@Suppress("LongParameterList")
 class RiskManagementPlan(
   assessmentId: Long,
   assessmentType: String,
@@ -11,6 +12,7 @@ class RiskManagementPlan(
   assessmentStatus: String,
   superStatus: String?,
   limitedAccessOffender: Boolean,
+  lastUpdatedDate: OffsetDateTime?,
   val riskManagementPlan: RiskManagementPlanInner,
 ) : AssessmentInfo(
   assessmentId,
@@ -21,6 +23,7 @@ class RiskManagementPlan(
   assessmentStatus,
   superStatus,
   limitedAccessOffender,
+  lastUpdatedDate = lastUpdatedDate,
 )
 
 data class RiskManagementPlanInner(

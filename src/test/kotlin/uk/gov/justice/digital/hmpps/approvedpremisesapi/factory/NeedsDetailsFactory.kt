@@ -109,6 +109,7 @@ class NeedsDetailsFactory : AssessmentInfoFactory<NeedsDetails>() {
     assessmentStatus = this.assessmentStatus(),
     superStatus = this.superStatus(),
     limitedAccessOffender = this.limitedAccessOffender(),
+    lastUpdatedDate = this.lastUpdatedDate(),
     needs = NeedsDetailsInner(
       offenceAnalysisDetails = this.offenceAnalysisDetails(),
       emotionalIssuesDetails = this.emotionalIssuesDetails(),

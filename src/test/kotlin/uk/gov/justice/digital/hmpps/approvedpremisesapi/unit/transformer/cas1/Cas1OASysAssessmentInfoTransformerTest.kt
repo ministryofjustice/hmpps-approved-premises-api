@@ -19,17 +19,32 @@ class Cas1OASysAssessmentInfoTransformerTest {
     fun `has applicable assessment`() {
       val initiationDate = OffsetDateTime.parse("2020-05-02T12:01:00+00:00")
       val completionDate = OffsetDateTime.parse("2021-05-02T12:02:00+00:00")
+      val lastUpdatedDate = OffsetDateTime.parse("2021-06-03T09:04:00+00:00")
 
       val result = transformer.toAssessmentMetadata(
         OffenceDetailsFactory()
           .withInitiationDate(initiationDate)
           .withDateCompleted(completionDate)
+          .withLastUpdatedDate(lastUpdatedDate)
           .produce(),
       )
 
       assertThat(result.hasApplicableAssessment).isTrue()
       assertThat(result.dateStarted).isEqualTo(Instant.parse("2020-05-02T12:01:00+00:00"))
       assertThat(result.dateCompleted).isEqualTo(Instant.parse("2021-05-02T12:02:00+00:00"))
+      assertThat(result.lastUpdatedDate).isEqualTo(Instant.parse("2021-06-03T09:04:00Z"))
+    }
+
+    @Test
+    fun `has applicable assessment with no last updated date`() {
+      val result = transformer.toAssessmentMetadata(
+        OffenceDetailsFactory()
+          .withLastUpdatedDate(null)
+          .produce(),
+      )
+
+      assertThat(result.hasApplicableAssessment).isTrue()
+      assertThat(result.lastUpdatedDate).isNull()
     }
 
     @Test
@@ -39,6 +54,7 @@ class Cas1OASysAssessmentInfoTransformerTest {
       assertThat(result.hasApplicableAssessment).isFalse()
       assertThat(result.dateStarted).isNull()
       assertThat(result.dateCompleted).isNull()
+      assertThat(result.lastUpdatedDate).isNull()
     }
   }
 }

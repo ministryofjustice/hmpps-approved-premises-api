@@ -33,9 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apAndOASysMockSuccessfulRoSHSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysAssessmentInfoTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysNeedsQuestionTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysOffenceDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.OffsetDateTime
 
@@ -43,14 +41,9 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var oaSysNeedsQuestionTransformer: Cas1OASysNeedsQuestionTransformer
 
-  @Autowired
-  lateinit var oaSysOffenceDetailsTransformer: Cas1OASysOffenceDetailsTransformer
-
-  @Autowired
-  lateinit var cas1OASysAssessmentInfoTransformer: Cas1OASysAssessmentInfoTransformer
-
   companion object {
     const val CRN = "CRN123"
+    val LAST_UPDATED_DATE: OffsetDateTime = OffsetDateTime.now().minusMonths(1)
   }
 
   @Nested
@@ -83,6 +76,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysMetadata>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.supportingInformation).isEmpty()
     }
 
@@ -111,7 +105,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
-      val needsDetails = NeedsDetailsFactory().produce()
+      val needsDetails = NeedsDetailsFactory().withLastUpdatedDate(LAST_UPDATED_DATE).produce()
       apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
       val result = webTestClient.get()
@@ -123,6 +117,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysMetadata>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.supportingInformation).isEqualTo(oaSysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails))
     }
 
@@ -134,6 +129,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       val needsDetails = NeedsDetailsFactory()
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
@@ -146,6 +142,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysMetadata>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.supportingInformation).isEmpty()
     }
 
@@ -157,6 +154,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       val needsDetails = NeedsDetailsFactory()
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulNeedsDetailsCall(CRN, needsDetails)
 
@@ -169,6 +167,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysMetadata>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.supportingInformation).isEqualTo(oaSysNeedsQuestionTransformer.transformToSupportingInformationMetadata(needsDetails))
     }
   }
@@ -220,6 +219,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -239,6 +239,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val riskManagementPlan = RiskManagementPlanFactory()
         .withSupervision("The supervision answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(5))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulRiskManagementPlanCall(CRN, riskManagementPlan)
 
@@ -251,6 +252,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -270,6 +272,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val riskManagementPlan = RiskManagementPlanFactory()
         .withSupervision("The supervision answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulRiskManagementPlanCall(CRN, riskManagementPlan)
 
@@ -282,6 +285,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -301,6 +305,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val riskManagementPlan = RiskManagementPlanFactory()
         .withSupervision("The supervision answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulRiskManagementPlanCall(CRN, riskManagementPlan)
 
@@ -313,6 +318,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -339,6 +345,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -358,6 +365,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val offenceDetails = OffenceDetailsFactory()
         .withVictimImpact("Victim impact answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(5))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
 
@@ -370,6 +378,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -389,6 +398,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val offenceDetails = OffenceDetailsFactory()
         .withVictimImpact("Victim impact answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
 
@@ -401,6 +411,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -420,6 +431,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val offenceDetails = OffenceDetailsFactory()
         .withVictimImpact("Victim impact answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulOffenceDetailsCall(CRN, offenceDetails)
 
@@ -432,6 +444,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.OFFENCE_DETAILS)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -459,6 +472,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.ROSH_SUMMARY)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -478,6 +492,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val roshSummary = RoshSummaryFactory()
         .withWhoAtRisk("Who at risk answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(5))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulRoSHSummaryCall(CRN, roshSummary)
 
@@ -490,6 +505,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.ROSH_SUMMARY)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -509,6 +525,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val roshSummary = RoshSummaryFactory()
         .withWhoAtRisk("Who at risk answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulRoSHSummaryCall(CRN, roshSummary)
 
@@ -521,6 +538,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.ROSH_SUMMARY)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -540,6 +558,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val roshSummary = RoshSummaryFactory()
         .withWhoAtRisk("Who at risk answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulRoSHSummaryCall(CRN, roshSummary)
 
@@ -552,6 +571,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.ROSH_SUMMARY)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -578,6 +598,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -597,6 +618,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val riskToIndividual = RisksToTheIndividualFactory()
         .withCurrentVulnerability("Current vuln answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(5))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, riskToIndividual)
 
@@ -609,6 +631,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -628,6 +651,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val riskToIndividual = RisksToTheIndividualFactory()
         .withCurrentVulnerability("Current vuln answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, riskToIndividual)
 
@@ -640,6 +664,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -659,6 +684,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val riskToIndividual = RisksToTheIndividualFactory()
         .withCurrentVulnerability("Current vuln answer")
         .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
       apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, riskToIndividual)
 
@@ -671,6 +697,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_TO_SELF)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -697,6 +724,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -724,6 +752,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
       val needsDetails = NeedsDetailsFactory().apply {
+        withLastUpdatedDate(LAST_UPDATED_DATE)
         withDateCompleted(OffsetDateTime.now().minusMonths(5))
         withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
         withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
@@ -731,6 +760,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       }.produce()
 
       val healthDetails = HealthDetailsFactory().apply {
+        withLastUpdatedDate(LAST_UPDATED_DATE)
         withDateCompleted(OffsetDateTime.now().minusMonths(5))
         withGeneralHealth(generalHealth = false, generalHealthSpecify = "health answer")
       }.produce()
@@ -747,6 +777,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -776,6 +807,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
       val needsDetails = NeedsDetailsFactory().apply {
+        withLastUpdatedDate(LAST_UPDATED_DATE)
         withDateCompleted(OffsetDateTime.now().minusMonths(7))
         withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
         withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
@@ -783,6 +815,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       }.produce()
 
       val healthDetails = HealthDetailsFactory().apply {
+        withLastUpdatedDate(LAST_UPDATED_DATE)
         withDateCompleted(OffsetDateTime.now().minusMonths(7))
         withGeneralHealth(generalHealth = false, generalHealthSpecify = "health answer")
       }.produce()
@@ -799,6 +832,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -826,6 +860,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
 
       val needsDetails = NeedsDetailsFactory().apply {
+        withLastUpdatedDate(LAST_UPDATED_DATE)
         withDateCompleted(OffsetDateTime.now().minusMonths(7))
         withRelationshipIssuesDetails(linkedToHarm = true, relationshipIssuesDetails = "relationship answer")
         withLifestyleIssuesDetails(linkedToHarm = false, lifestyleIssuesDetails = "lifestyle answer")
@@ -833,6 +868,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       }.produce()
 
       val healthDetails = HealthDetailsFactory().apply {
+        withLastUpdatedDate(LAST_UPDATED_DATE)
         withDateCompleted(OffsetDateTime.now().minusMonths(7))
         withGeneralHealth(generalHealth = false, generalHealthSpecify = "health answer")
       }.produce()
@@ -849,6 +885,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .bodyAsObject<Cas1OASysGroup>()
 
       assertThat(result.assessmentMetadata.hasApplicableAssessment).isTrue()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isEqualTo(LAST_UPDATED_DATE.toInstant())
       assertThat(result.group).isEqualTo(Cas1OASysGroupName.SUPPORTING_INFORMATION)
       assertThat(result.answers).contains(
         OASysQuestion(
@@ -886,7 +923,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     @Test
     fun `Returns OK with correct body`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
-      val risksToTheIndividual = RisksToTheIndividualFactory().produce()
+      val risksToTheIndividual = RisksToTheIndividualFactory().withLastUpdatedDate(LAST_UPDATED_DATE).produce()
 
       apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, risksToTheIndividual)
 
@@ -907,6 +944,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
       val risksToTheIndividual = RisksToTheIndividualFactory()
         .withDateCompleted(OffsetDateTime.now().minusMonths(10))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
 
       apAndOASysMockSuccessfulRiskToTheIndividualCall(CRN, risksToTheIndividual)
@@ -966,6 +1004,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
         .withGeneralHealth(true, "some health issues")
         .withDrugsMisuse(drugsMisuse)
         .withAlcoholMisuse(alcoholMisuse)
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
 
       apAndOASysMockSuccessfulHealthDetailsCall(CRN, healthDetails)
@@ -994,6 +1033,7 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
 
       val healthDetails = HealthDetailsFactory()
         .withDateCompleted(OffsetDateTime.now().minusMonths(10))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
         .produce()
 
       apAndOASysMockSuccessfulHealthDetailsCall(CRN, healthDetails)
