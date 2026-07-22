@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.Cas1RequestedPlacementPeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -15,16 +16,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBookingShortSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.factory.TierDtoFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
@@ -36,17 +42,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.Period
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class Cas1RequestForPlacementServiceTest {
-  private val applicationService = mockk<ApplicationService>()
+  private val applicationService = mockk<Cas1ApplicationService>()
   private val cas1PlacementApplicationService = mockk<Cas1PlacementApplicationService>()
   private val placementRequestService = mockk<Cas1PlacementRequestService>()
   private val requestForPlacementTransformer = mockk<RequestForPlacementTransformer>()
   private val cas1WithdrawableService = mockk<Cas1WithdrawableService>()
   private val cas1SpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
   private val cas1SpaceBookingTransformer = mockk<Cas1SpaceBookingTransformer>()
+  private val caseService = mockk<CaseService>()
 
   private val cas1RequestForPlacementService = Cas1RequestForPlacementService(
     applicationService,
@@ -56,6 +64,7 @@ class Cas1RequestForPlacementServiceTest {
     cas1WithdrawableService,
     cas1SpaceBookingRepository,
     cas1SpaceBookingTransformer,
+    caseService,
   )
 
   @BeforeEach
@@ -259,41 +268,621 @@ class Cas1RequestForPlacementServiceTest {
 
   @Nested
   inner class GetRequestsForPlacementDurations {
-    @ParameterizedTest
-    @ValueSource(
-      strings = [
-        "normal",
-        "mhapElliottHouse",
-        "mhapStJosephs",
-        "rfap",
-      ],
-    )
-    fun `returns duration 84 (12 x 7) when apType is normal or mhapElliottHouse or mhapStJosephs or rfap`(apType: String) {
-      val result = cas1RequestForPlacementService.defaultDurations(ApType.valueOf(apType))
+    @Test
+    fun `returns not found when application not found for applicationId`() {
+      val applicationId = UUID.randomUUID()
 
-      assertThatCasResult(result).isSuccess().with {
-        assertThat(it.defaultDurationDays).isEqualTo(84)
-        assertThat(it.maxDurationDays).isNull()
-      }
+      val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+      every { applicationService.getApplication(applicationId) } returns null
+
+      val defaultDuration = cas1RequestForPlacementService.defaultDurations(applicationId, mockk<ApType>(), sentenceType = sentenceType)
+
+      assertThatCasResult(defaultDuration).isNotFound(
+        "Application",
+        expectedId = applicationId,
+      )
     }
 
     @Test
-    fun `returns duration 182 (26 x 7) when apType is pipe`() {
-      val result = cas1RequestForPlacementService.defaultDurations(ApType.pipe)
+    fun `returns validation error when case not found for crn`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn("CRN123")
+        .withDefaults()
+        .produce()
 
-      assertThatCasResult(result).isSuccess().with {
-        assertThat(it.defaultDurationDays).isEqualTo(182)
-        assertThat(it.maxDurationDays).isNull()
-      }
+      val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+      every { applicationService.getApplication(application.id) } returns application
+      every { caseService.getCase(application.crn) } returns null
+
+      val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, mockk<ApType>(), sentenceType)
+
+      assertThatCasResult(defaultDuration).isGeneralValidationError(
+        "Case is null for application crn CRN123",
+      )
     }
 
     @Test
-    fun `returns duration 364 (52 x 7) when apType is esap`() {
-      val result = cas1RequestForPlacementService.defaultDurations(ApType.esap)
+    fun `returns not found error when case tier is null`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .produce()
 
-      assertThatCasResult(result).isSuccess().with {
-        assertThat(it.defaultDurationDays).isEqualTo(364)
-        assertThat(it.maxDurationDays).isNull()
+      val case = CaseDtoFactory().withTier(null).produce()
+
+      every { applicationService.getApplication(application.id) } returns application
+      every { caseService.getCase(application.crn) } returns case
+
+      val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, mockk<ApType>(), SentenceTypeOption.entries.toTypedArray().random().value)
+
+      assertThatCasResult(defaultDuration).isNotFound(
+        "Version for live tier associated with case CRN",
+        expectedId = application.crn,
+      )
+    }
+
+    @Nested
+    inner class V2 {
+      @ParameterizedTest
+      @ValueSource(
+        strings = [
+          "normal",
+          "mhapElliottHouse",
+          "mhapStJosephs",
+          "rfap",
+        ],
+      )
+      fun `returns duration 12 weeks when apType is normal or mhapElliottHouse or mhapStJosephs or rfap`(apType: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory().withVersion(
+            TierVersionDto.V2,
+          ).produce(),
+        )
+          .produce()
+
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(12).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @Test
+      fun `returns duration 26 weeks when apType is pipe`() {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory().withVersion(
+            TierVersionDto.V2,
+          ).produce(),
+        )
+          .produce()
+
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.pipe, sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(26).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @Test
+      fun `returns duration 52 weeks when apType is esap`() {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory().withVersion(
+            TierVersionDto.V2,
+          ).produce(),
+        )
+          .produce()
+
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.esap, sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(52).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+    }
+
+    @Nested
+    inner class V3 {
+      @Test
+      fun `returns duration 26 weeks when apType is pipe`() {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory().withVersion(
+            TierVersionDto.V3,
+          ).produce(),
+        )
+          .produce()
+
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.pipe, sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(26).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @Test
+      fun `returns duration 62 weeks when apType is esap`() {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory().withVersion(
+            TierVersionDto.V3,
+          ).produce(),
+        )
+          .produce()
+
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.esap, sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(62).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @ParameterizedTest
+      @ValueSource(
+        strings = [
+          "mhapElliottHouse",
+          "mhapStJosephs",
+        ],
+      )
+      fun `returns general validation error when apType is mhap st josephs or mhap elliott house and womens`(apType: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withDefaults()
+          .withIsWomensApplication(true)
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory().withVersion(
+            TierVersionDto.V3,
+          ).produce(),
+        )
+          .produce()
+
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isGeneralValidationError(
+          "MHAP not supported for women's applications",
+        )
+      }
+
+      @ParameterizedTest
+      @ValueSource(
+        strings = [
+          "mhapElliottHouse",
+          "mhapStJosephs",
+        ],
+      )
+      fun `returns duration 26 weeks when apType is mhap st josephs or mhap elliott house and mens`(apType: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withIsWomensApplication(false)
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory().withVersion(
+            TierVersionDto.V3,
+          ).produce(),
+        )
+          .produce()
+
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(26).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @ParameterizedTest
+      @ValueSource(
+        strings = [
+          "normal",
+          "rfap",
+        ],
+      )
+      fun `returns duration 16 weeks when apType is normal or rfap and womens`(apType: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withDefaults()
+          .withIsWomensApplication(true)
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory().withVersion(
+            TierVersionDto.V3,
+          ).produce(),
+        )
+          .produce()
+
+        val sentenceType = SentenceTypeOption.entries.toTypedArray().random().value
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(16).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @ParameterizedTest
+      @CsvSource(
+        value = [
+          "normal,life,A",
+          "normal,life,B",
+          "normal,life,C",
+          "normal,ipp,A",
+          "normal,ipp,B",
+          "normal,ipp,C",
+          "rfap,life,A",
+          "rfap,life,B",
+          "rfap,life,C",
+          "rfap,ipp,A",
+          "rfap,ipp,B",
+          "rfap,ipp,C",
+        ],
+      )
+      fun `returns duration 16 weeks when apType is normal or rfap and mens and sentence type is life or ipp and live tier is A, B, or C`(apType: String, sentenceType: String, liveTierScore: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withIsWomensApplication(false)
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory()
+            .withVersion(TierVersionDto.V3)
+            .withTierScore(liveTierScore).produce(),
+        )
+          .produce()
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(16).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @ParameterizedTest
+      @CsvSource(
+        value = [
+          "normal,life,D",
+          "normal,life,E",
+          "normal,life,F",
+          "normal,life,G",
+          "normal,ipp,D",
+          "normal,ipp,E",
+          "normal,ipp,F",
+          "normal,ipp,G",
+          "rfap,life,D",
+          "rfap,life,E",
+          "rfap,life,F",
+          "rfap,life,G",
+          "rfap,ipp,D",
+          "rfap,ipp,E",
+          "rfap,ipp,F",
+          "rfap,ipp,G",
+        ],
+      )
+      fun `returns general validation error when apType is normal or rfap and mens and sentence type is life or ipp and live tier is D, E, F or G`(apType: String, sentenceType: String, liveTierScore: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withIsWomensApplication(false)
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory()
+            .withVersion(TierVersionDto.V3)
+            .withTierScore(liveTierScore).produce(),
+        )
+          .produce()
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isGeneralValidationError(
+          "Only tier A, B or C is eligible for life and ipp sentence type",
+        )
+      }
+
+      @ParameterizedTest
+      @CsvSource(
+        value = [
+          "normal,standardDeterminate",
+          "normal,extendedDeterminate",
+          "normal,communityOrder",
+          "normal,bailPlacement",
+          "normal,nonStatutory",
+          "rfap,standardDeterminate",
+          "rfap,extendedDeterminate",
+          "rfap,communityOrder",
+          "rfap,bailPlacement",
+          "rfap,nonStatutory",
+        ],
+      )
+      @SuppressWarnings("MaxLineLength")
+      fun `returns duration 16 weeks when apType is normal or rfap and mens and sentence type is standardDeterminate, extendedDeterminate, communityOrder, bailPlacement or nonStatutory and live tier is A`(apType: String, sentenceType: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withIsWomensApplication(false)
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory()
+            .withVersion(TierVersionDto.V3)
+            .withTierScore("A").produce(),
+        )
+          .produce()
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(16).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @ParameterizedTest
+      @CsvSource(
+        value = [
+          "normal,standardDeterminate",
+          "normal,extendedDeterminate",
+          "normal,communityOrder",
+          "normal,bailPlacement",
+          "normal,nonStatutory",
+          "rfap,standardDeterminate",
+          "rfap,extendedDeterminate",
+          "rfap,communityOrder",
+          "rfap,bailPlacement",
+          "rfap,nonStatutory",
+        ],
+      )
+      @SuppressWarnings("MaxLineLength")
+      fun `returns duration 12 weeks when apType is normal or rfap and mens and sentence type is standardDeterminate, extendedDeterminate, communityOrder, bailPlacement or nonStatutory and live tier is B`(apType: String, sentenceType: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withIsWomensApplication(false)
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory()
+            .withVersion(TierVersionDto.V3)
+            .withTierScore("B").produce(),
+        )
+          .produce()
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(12).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @ParameterizedTest
+      @CsvSource(
+        value = [
+          "normal,standardDeterminate,C",
+          "normal,extendedDeterminate,C",
+          "normal,communityOrder,C",
+          "normal,bailPlacement,C",
+          "normal,nonStatutory,C",
+          "rfap,standardDeterminate,C",
+          "rfap,extendedDeterminate,C",
+          "rfap,communityOrder,C",
+          "rfap,bailPlacement,C",
+          "rfap,nonStatutory,C",
+          "normal,standardDeterminate,D",
+          "normal,extendedDeterminate,D",
+          "normal,communityOrder,D",
+          "normal,bailPlacement,D",
+          "normal,nonStatutory,D",
+          "rfap,standardDeterminate,D",
+          "rfap,extendedDeterminate,D",
+          "rfap,communityOrder,D",
+          "rfap,bailPlacement,D",
+          "rfap,nonStatutory,D",
+        ],
+      )
+      @SuppressWarnings("MaxLineLength")
+      fun `returns duration 8 weeks when apType is normal or rfap and mens and sentence type is standardDeterminate, extendedDeterminate, communityOrder, bailPlacement or nonStatutory and live tier is C or D`(apType: String, sentenceType: String, liveTierScore: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withIsWomensApplication(false)
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory()
+            .withVersion(TierVersionDto.V3)
+            .withTierScore(liveTierScore).produce(),
+        )
+          .produce()
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isSuccess().with {
+          assertThat(it.defaultDurationDays).isEqualTo(Period.ofWeeks(8).days)
+          assertThat(it.maxDurationDays).isNull()
+        }
+      }
+
+      @ParameterizedTest
+      @CsvSource(
+        value = [
+          "normal,standardDeterminate,E",
+          "normal,extendedDeterminate,E",
+          "normal,communityOrder,E",
+          "normal,bailPlacement,E",
+          "normal,nonStatutory,E",
+          "rfap,standardDeterminate,E",
+          "rfap,extendedDeterminate,E",
+          "rfap,communityOrder,E",
+          "rfap,bailPlacement,E",
+          "rfap,nonStatutory,E",
+          "normal,standardDeterminate,F",
+          "normal,extendedDeterminate,F",
+          "normal,communityOrder,F",
+          "normal,bailPlacement,F",
+          "normal,nonStatutory,F",
+          "rfap,standardDeterminate,F",
+          "rfap,extendedDeterminate,F",
+          "rfap,communityOrder,F",
+          "rfap,bailPlacement,F",
+          "rfap,nonStatutory,F",
+          "normal,standardDeterminate,G",
+          "normal,extendedDeterminate,G",
+          "normal,communityOrder,G",
+          "normal,bailPlacement,G",
+          "normal,nonStatutory,G",
+          "rfap,standardDeterminate,G",
+          "rfap,extendedDeterminate,G",
+          "rfap,communityOrder,G",
+          "rfap,bailPlacement,G",
+          "rfap,nonStatutory,G",
+        ],
+      )
+      @SuppressWarnings("MaxLineLength")
+      fun `returns general validation error when apType is normal or rfap and mens and sentence type is standardDeterminate, extendedDeterminate, communityOrder, bailPlacement or nonStatutory and live tier is E, F or G`(apType: String, sentenceType: String, liveTierScore: String) {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withIsWomensApplication(false)
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory()
+            .withVersion(TierVersionDto.V3)
+            .withTierScore(liveTierScore).produce(),
+        )
+          .produce()
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.valueOf(apType), sentenceType)
+
+        assertThatCasResult(defaultDuration).isGeneralValidationError(
+          "Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score $liveTierScore",
+        )
+      }
+
+      @Test
+      fun `returns general validation error when apType is normal and mens and sentence type is standardDeterminate and live tier is H`() {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withIsWomensApplication(false)
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory()
+            .withVersion(TierVersionDto.V3)
+            .withTierScore("H").produce(),
+        )
+          .produce()
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.normal, SentenceTypeOption.standardDeterminate.value)
+
+        assertThatCasResult(defaultDuration).isGeneralValidationError(
+          "Cannot calculate duration for ap type normal, sentence type standardDeterminate, tier score H",
+        )
+      }
+
+      @Test
+      fun `returns general validation error when apType is normal and mens and sentence type is invalidSentenceType and live tier is A`() {
+        val application = ApprovedPremisesApplicationEntityFactory()
+          .withIsWomensApplication(false)
+          .withDefaults()
+          .produce()
+
+        val case = CaseDtoFactory().withTier(
+          TierDtoFactory()
+            .withVersion(TierVersionDto.V3)
+            .withTierScore("A").produce(),
+        )
+          .produce()
+
+        every { applicationService.getApplication(application.id) } returns application
+        every { caseService.getCase(application.crn) } returns case
+
+        val defaultDuration = cas1RequestForPlacementService.defaultDurations(application.id, ApType.normal, "invalidSentenceType")
+
+        assertThatCasResult(defaultDuration).isGeneralValidationError(
+          "Cannot calculate duration for ap type normal, sentence type invalidSentenceType, tier score A",
+        )
       }
     }
   }

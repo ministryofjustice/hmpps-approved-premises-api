@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -54,6 +55,7 @@ fun IntegrationTestBase.givenACas1Application(
   createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   duration: Int? = null,
   document: String? = "{}",
+  sentenceType: String? = null,
   block: (application: ApplicationEntity) -> Unit = {},
 ) = givenAnApplication(
   createdByUser,
@@ -72,6 +74,7 @@ fun IntegrationTestBase.givenACas1Application(
   createdAt,
   duration,
   document,
+  sentenceType,
   block,
 )
 
@@ -93,6 +96,7 @@ fun IntegrationTestBase.givenAnApplication(
   createdAt: OffsetDateTime = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   duration: Int? = null,
   document: String? = "{}",
+  sentenceType: String? = SentenceTypeOption.standardDeterminate.value,
   block: (application: ApplicationEntity) -> Unit = {},
 ): ApprovedPremisesApplicationEntity {
   val riskRatings = tier?.let {
@@ -117,6 +121,7 @@ fun IntegrationTestBase.givenAnApplication(
     withData(data)
     withDocument(document)
     withApType(apType)
+    withSentenceType(sentenceType ?: SentenceTypeOption.standardDeterminate.value)
   }
 
   block(application)

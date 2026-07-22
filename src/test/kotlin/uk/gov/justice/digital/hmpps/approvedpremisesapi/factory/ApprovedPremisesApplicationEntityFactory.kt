@@ -143,7 +143,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.releaseType = { releaseType }
   }
 
-  fun withSentenceType(sentenceType: String) = apply {
+  fun withSentenceType(sentenceType: String?) = apply {
     this.sentenceType = { sentenceType }
   }
 
