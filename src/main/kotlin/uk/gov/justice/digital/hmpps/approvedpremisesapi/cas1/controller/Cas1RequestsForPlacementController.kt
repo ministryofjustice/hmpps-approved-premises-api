@@ -29,7 +29,7 @@ class Cas1RequestsForPlacementController(
     @RequestParam("apType") apType: ApType,
     @RequestParam("sentenceType") sentenceType: SentenceTypeOption,
   ): ResponseEntity<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
-    val result = cas1RequestForPlacementService.defaultDurations(apType)
+    val result = cas1RequestForPlacementService.defaultDurations(applicationId, apType)
 
     return ResponseEntity.ok(extractEntityFromCasResult(result))
   }
