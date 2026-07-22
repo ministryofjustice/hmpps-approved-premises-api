@@ -4,7 +4,8 @@ SPLIT_INDEX=$1
 SPLIT_TOTAL=$2
 
 TESTS="$(find src/test/kotlin -type d -name integration | \
-  xargs -I{} find "{}" -type f -name "*Test.kt" | \
+  xargs -I{} find "{}" -type f \( -name "*Test.kt" -o -name "*IT.kt" \) | \
+  LC_ALL=C sort | \
   awk -v splitTotal=$SPLIT_TOTAL -v splitIndex=$SPLIT_INDEX 'NR % splitTotal == splitIndex % splitTotal' | \
   tr '\n' ',' | sed 's/,$//')"
 
