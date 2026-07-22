@@ -792,6 +792,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .jsonPath("$.bedspace.id").isEqualTo(bedspace.id.toString())
           .jsonPath("$.bedspace.reference").isEqualTo("test-bed")
           .jsonPath("$.assessmentId").isEqualTo("${assessment.id}")
+
+        assertThat(caseRepository.findByCrn(offenderDetails.otherIds.crn)).isNotNull
       }
     }
   }
@@ -854,6 +856,8 @@ class Cas3v2BookingTest : IntegrationTestBase() {
           .jsonPath("$.bedspace.id").isEqualTo(bedspace.id.toString())
           .jsonPath("$.bedspace.reference").isEqualTo("test-bed")
           .jsonPath("$.assessmentId").isEqualTo("${assessment.id}")
+
+        assertThat(caseRepository.findByCrn(offenderDetails.otherIds.crn)).isNotNull
       }
     }
   }
