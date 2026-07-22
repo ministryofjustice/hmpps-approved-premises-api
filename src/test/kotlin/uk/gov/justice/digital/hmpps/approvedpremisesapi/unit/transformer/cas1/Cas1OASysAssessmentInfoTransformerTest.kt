@@ -5,12 +5,17 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OASysAssessmentInfoTransformer
+import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class Cas1OASysAssessmentInfoTransformerTest {
 
-  private val transformer = Cas1OASysAssessmentInfoTransformer()
+  private val importedDate = LocalDate.parse("2021-07-15")
+  private val clock = Clock.fixed(importedDate.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneOffset.UTC)
+  private val transformer = Cas1OASysAssessmentInfoTransformer(clock)
 
   @Nested
   inner class ToAssessmentMetadata {
@@ -33,6 +38,7 @@ class Cas1OASysAssessmentInfoTransformerTest {
       assertThat(result.dateStarted).isEqualTo(Instant.parse("2020-05-02T12:01:00+00:00"))
       assertThat(result.dateCompleted).isEqualTo(Instant.parse("2021-05-02T12:02:00+00:00"))
       assertThat(result.lastUpdatedDate).isEqualTo(Instant.parse("2021-06-03T09:04:00Z"))
+      assertThat(result.importedDate).isEqualTo(importedDate)
     }
 
     @Test
@@ -45,6 +51,7 @@ class Cas1OASysAssessmentInfoTransformerTest {
 
       assertThat(result.hasApplicableAssessment).isTrue()
       assertThat(result.lastUpdatedDate).isNull()
+      assertThat(result.importedDate).isEqualTo(importedDate)
     }
 
     @Test
@@ -55,6 +62,7 @@ class Cas1OASysAssessmentInfoTransformerTest {
       assertThat(result.dateStarted).isNull()
       assertThat(result.dateCompleted).isNull()
       assertThat(result.lastUpdatedDate).isNull()
+      assertThat(result.importedDate).isNull()
     }
   }
 }

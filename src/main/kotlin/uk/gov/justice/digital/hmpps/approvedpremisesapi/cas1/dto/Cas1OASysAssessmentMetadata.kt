@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
+import java.time.LocalDate
 
 data class Cas1OASysAssessmentMetadata(
 
@@ -11,4 +12,5 @@ data class Cas1OASysAssessmentMetadata(
 
   @get:JsonProperty("dateCompleted") val dateCompleted: Instant? = null,
   @get:JsonProperty("lastUpdatedDate") val lastUpdatedDate: Instant? = null,
+  @get:JsonProperty("importedDate") val importedDate: LocalDate? = null,
 )
