@@ -92,11 +92,11 @@ class Cas1OasysController(
     @PathVariable @Parameter(description = "CRN of the Person to fetch latest OASys selection") crn: String,
     @RequestParam group: Cas1OASysGroupName,
     @RequestParam includeOptionalSections: List<Int>?,
-    @RequestParam(defaultValue = "completed_in_last_six_months", name = "suitabilityStrategy") suitabilityStrategyDto: Cas1OASysAssessmentSuitabilityStrategyDto,
+    @RequestParam(required = false, defaultValue = "completed_in_last_six_months", name = "suitabilityStrategy") suitabilityStrategyDto: Cas1OASysAssessmentSuitabilityStrategyDto?,
   ): ResponseEntity<Cas1OASysGroup> {
     ensureOffenderAccess(crn)
 
-    val suitabilityStrategy = suitabilityStrategyDto.toSuitabilityStrategy()
+    val suitabilityStrategy = (suitabilityStrategyDto ?: Cas1OASysAssessmentSuitabilityStrategyDto.COMPLETED_IN_LAST_SIX_MONTHS).toSuitabilityStrategy()
 
     val group = when (group) {
       Cas1OASysGroupName.RISK_MANAGEMENT_PLAN -> {
