@@ -49,93 +49,80 @@ class Cas1RequestForPlacementService(
   fun defaultDurations(
     applicationId: UUID,
     apType: ApType,
+    sentenceType: String,
   ): CasResult<Cas1RequestsForPlacementDurationsCalculationResponseDto> {
     val application = applicationService.getApplication(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
-    val liveTier = (caseService.getCase(application.crn) ?: return CasResult.NotFound("Case", application.crn)).tier
+    val liveTier = (caseService.getCase(application.crn) ?: return CasResult.GeneralValidationError("Case is null for application crn ${application.crn}")).tier
     val liveTierVersion = liveTier?.version
       ?: return CasResult.NotFound("Version for live tier associated with case CRN", application.crn)
 
     return when (liveTierVersion) {
-      TierVersionDto.V2 -> CasResult.Success(
+      TierVersionDto.V2 ->
         when (apType) {
-          ApType.pipe -> Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(26).days, maxDurationDays = null)
-          ApType.esap -> Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(52).days, maxDurationDays = null)
+          ApType.pipe -> createDurationCalculation(Period.ofWeeks(26), null)
+          ApType.esap -> createDurationCalculation(Period.ofWeeks(52), null)
           ApType.normal,
           ApType.rfap,
           ApType.mhapStJosephs,
           ApType.mhapElliottHouse,
-          -> Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(12).days, maxDurationDays = null)
-        },
-      )
+          -> createDurationCalculation(Period.ofWeeks(12), null)
+        }
 
       TierVersionDto.V3 -> {
         when (apType) {
-          ApType.pipe -> CasResult.Success(
-            Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(26).days, maxDurationDays = null),
-          )
+          ApType.pipe -> createDurationCalculation(Period.ofWeeks(26), null)
 
-          ApType.esap -> CasResult.Success(
-            Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(62).days, maxDurationDays = null),
-          )
+          ApType.esap -> createDurationCalculation(Period.ofWeeks(62), null)
 
           ApType.mhapStJosephs,
           ApType.mhapElliottHouse,
           -> if (application.isWomensApplication == true) {
             CasResult.GeneralValidationError("MHAP not supported for women's applications")
           } else {
-            CasResult.Success(
-              Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(26).days, maxDurationDays = null),
-            )
+            createDurationCalculation(Period.ofWeeks(26), null)
           }
 
           ApType.normal,
           ApType.rfap,
           -> if (application.isWomensApplication == true) {
-            CasResult.Success(
-              Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(16).days, maxDurationDays = null),
-            )
+            createDurationCalculation(Period.ofWeeks(16), null)
           } else {
-            if (application.sentenceType == SentenceTypeOption.life.value || application.sentenceType == SentenceTypeOption.ipp.value) {
+            if (sentenceType == SentenceTypeOption.life.value || sentenceType == SentenceTypeOption.ipp.value) {
               if (liveTier.tierScore in listOf("A", "B", "C")) {
-                CasResult.Success(
-                  Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(16).days, maxDurationDays = null),
-                )
+                createDurationCalculation(Period.ofWeeks(16), null)
               } else {
                 CasResult.GeneralValidationError("Only tier A, B or C is eligible for life and ipp sentence type")
               }
             } else if (
-              application.sentenceType == SentenceTypeOption.standardDeterminate.value ||
-              application.sentenceType == SentenceTypeOption.extendedDeterminate.value ||
-              application.sentenceType == SentenceTypeOption.communityOrder.value ||
-              application.sentenceType == SentenceTypeOption.bailPlacement.value ||
-              application.sentenceType == SentenceTypeOption.nonStatutory.value
+              sentenceType == SentenceTypeOption.standardDeterminate.value ||
+              sentenceType == SentenceTypeOption.extendedDeterminate.value ||
+              sentenceType == SentenceTypeOption.communityOrder.value ||
+              sentenceType == SentenceTypeOption.bailPlacement.value ||
+              sentenceType == SentenceTypeOption.nonStatutory.value
             ) {
               if (liveTier.tierScore == "A") {
-                CasResult.Success(
-                  Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(16).days, maxDurationDays = null),
-                )
+                createDurationCalculation(Period.ofWeeks(16), null)
               } else if (liveTier.tierScore == "B") {
-                CasResult.Success(
-                  Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(12).days, maxDurationDays = null),
-                )
+                createDurationCalculation(Period.ofWeeks(12), null)
               } else if (liveTier.tierScore == "C" || liveTier.tierScore == "D") {
-                CasResult.Success(
-                  Cas1RequestsForPlacementDurationsCalculationResponseDto(Period.ofWeeks(8).days, maxDurationDays = null),
-                )
+                createDurationCalculation(Period.ofWeeks(8), null)
               } else if (liveTier.tierScore in listOf("E", "F", "G")) {
-                CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type ${application.sentenceType}, tier score ${liveTier.tierScore}")
+                CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
               } else {
-                CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type ${application.sentenceType}, tier score ${liveTier.tierScore}")
+                CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
               }
             } else {
-              CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type ${application.sentenceType}, tier score ${liveTier.tierScore}")
+              CasResult.GeneralValidationError("Cannot calculate duration for ap type $apType, sentence type $sentenceType, tier score ${liveTier.tierScore}")
             }
           }
         }
       }
     }
   }
+
+  @SuppressWarnings("MaxLineLength")
+  private fun createDurationCalculation(period: Period, maxDurationDays: Int?): CasResult.Success<Cas1RequestsForPlacementDurationsCalculationResponseDto> = CasResult.Success(Cas1RequestsForPlacementDurationsCalculationResponseDto(period.days, maxDurationDays))
 
   private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity?) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
     placementApplication,

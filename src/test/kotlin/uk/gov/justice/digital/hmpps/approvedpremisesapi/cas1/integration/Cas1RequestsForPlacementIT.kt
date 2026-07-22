@@ -40,7 +40,7 @@ class Cas1RequestsForPlacementIT : IntegrationTestBase() {
         mockFeatureFlagService.setFlag("use-tier-v3", false)
 
         val (_, jwt) = givenAUser()
-        val application = givenACas1Application(apType = ApprovedPremisesType.MHAP_ELLIOTT_HOUSE, sentenceType = SentenceTypeOption.standardDeterminate.value)
+        val application = givenACas1Application(apType = ApprovedPremisesType.MHAP_ELLIOTT_HOUSE, sentenceType = SentenceTypeOption.ipp.value)
         givenACase(application.crn, tierV2 = TierFactory().produce(), tierV3 = null)
 
         val response = webTestClient.get()
@@ -63,7 +63,7 @@ class Cas1RequestsForPlacementIT : IntegrationTestBase() {
         mockFeatureFlagService.setFlag("use-tier-v3", true)
 
         val (_, jwt) = givenAUser()
-        val application = givenACas1Application(apType = ApprovedPremisesType.RFAP, sentenceType = SentenceTypeOption.ipp.value)
+        val application = givenACas1Application(apType = ApprovedPremisesType.RFAP, sentenceType = SentenceTypeOption.nonStatutory.value)
         givenACase(application.crn, tierV2 = null, tierV3 = TierFactory().withVersion(TierVersion.V3).withTierScore("B").produce())
 
         val response = webTestClient.get()
