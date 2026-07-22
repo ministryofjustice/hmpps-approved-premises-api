@@ -330,6 +330,39 @@ class Cas1OAsysTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
+    fun `Risk Management - suitabilityStrategy is optional, a blank value defaults to the 6 month strategy`() {
+      val (_, jwt) = givenAUser()
+
+      apDeliusContextMockUserAccess(CaseAccessFactory().withCrn(CRN).produce())
+
+      val riskManagementPlan = RiskManagementPlanFactory()
+        .withSupervision("The supervision answer")
+        .withDateCompleted(OffsetDateTime.now().minusMonths(7))
+        .withLastUpdatedDate(LAST_UPDATED_DATE)
+        .produce()
+      apAndOASysMockSuccessfulRiskManagementPlanCall(CRN, riskManagementPlan)
+
+      val result = webTestClient.get()
+        .uri("/cas1/people/$CRN/oasys/answers?group=riskManagementPlan&suitabilityStrategy=")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsObject<Cas1OASysGroup>()
+
+      assertThat(result.assessmentMetadata.hasApplicableAssessment).isFalse()
+      assertThat(result.assessmentMetadata.lastUpdatedDate).isNull()
+      assertThat(result.group).isEqualTo(Cas1OASysGroupName.RISK_MANAGEMENT_PLAN)
+      assertThat(result.answers).contains(
+        OASysQuestion(
+          label = "Supervision",
+          questionNumber = "RM30",
+          answer = null,
+        ),
+      )
+    }
+
+    @Test
     fun `Offence Details - Not Found, return empty answers`() {
       val (_, jwt) = givenAUser()
 
