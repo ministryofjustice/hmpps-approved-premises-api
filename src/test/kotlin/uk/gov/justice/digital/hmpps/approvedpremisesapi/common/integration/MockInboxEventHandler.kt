@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.common.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.test.context.event.annotation.BeforeTestMethod
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.domainevent.listener.InboxEventHandler
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jpa.InboxEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
+import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.map
 import kotlin.jvm.java
@@ -24,11 +26,13 @@ class MockInboxEventHandler(
   val maxConcurrent: AtomicInteger = AtomicInteger(0),
 ) : InboxEventHandler {
 
+  private val log = LoggerFactory.getLogger(javaClass)
+
   companion object {
     const val EVENT_TYPE: String = "mock.event.handler"
   }
 
-  val processedEvents: MutableList<InboxEventHandler.InboxEvent> = mutableListOf()
+  val processedEvents: MutableList<InboxEventHandler.InboxEvent> = Collections.synchronizedList(mutableListOf())
 
   override fun getPartitionKey(inboxEvent: InboxEventHandler.InboxEvent): String? {
     val snsDomainEvent = jsonMapper.readValue(inboxEvent.payload, SnsEvent::class.java)
@@ -45,6 +49,7 @@ class MockInboxEventHandler(
       Thread.sleep(150)
 
       processedEvents.add(inboxEvent)
+      log.info("Have handled event. Processed events size is now ${processedEvents.size}")
 
       return InboxEventHandler.Result.PROCESSED
     } finally {
