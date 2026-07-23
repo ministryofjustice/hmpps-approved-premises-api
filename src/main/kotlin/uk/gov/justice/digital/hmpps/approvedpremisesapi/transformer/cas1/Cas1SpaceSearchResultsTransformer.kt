@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1PremisesSearchResultSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceSearchResults
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceSearchResult as ApiSpaceSearchResult

@@ -9,6 +9,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.hibernate.annotations.Immutable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
 import java.util.UUID
 
 @Repository
@@ -28,7 +29,7 @@ data class ProbationRegionEntity(
    * If the AP Area for a user is required, instead use [UserEntity.apArea]
    *
    * This will only ever be null for the 'National' region, which will
-   * never be associated with a corresponding [PremisesEntity]. This
+   * never be associated with a corresponding [Cas1PremisesBaseEntity]. This
    * model inconsistency could be removed by using separate models
    * for premises regions and user regions
    */

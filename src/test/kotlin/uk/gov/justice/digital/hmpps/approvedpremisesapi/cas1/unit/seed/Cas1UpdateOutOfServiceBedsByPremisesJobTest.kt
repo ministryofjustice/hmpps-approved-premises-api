@@ -21,8 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import java.time.LocalDate
 import java.util.UUID
 
@@ -32,7 +32,7 @@ class Cas1UpdateOutOfServiceBedsByPremisesJobTest {
   private lateinit var cas1OutOfServiceBedService: Cas1OutOfServiceBedService
 
   @MockK
-  private lateinit var premisesService: PremisesService
+  private lateinit var premisesService: Cas1PremisesService
 
   @MockK
   private lateinit var cas1OutOfServiceBedReasonRepository: Cas1OutOfServiceBedReasonRepository

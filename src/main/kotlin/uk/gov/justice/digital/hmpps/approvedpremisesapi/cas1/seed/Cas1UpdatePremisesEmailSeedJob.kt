@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import java.util.UUID
 
 @Component

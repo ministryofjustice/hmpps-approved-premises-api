@@ -7,16 +7,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1Prem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1OccupancyReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesJdbcRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesJdbcRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
@@ -32,7 +32,6 @@ class Cas1PremisesService(
   val premisesRepository: ApprovedPremisesRepository,
   val premisesJdbcRepository: ApprovedPremisesJdbcRepository,
   val bedRepository: BedRepository,
-  val premisesService: PremisesService,
   val outOfServiceBedService: Cas1OutOfServiceBedService,
   val spacePlanningService: SpacePlanningService,
   val spaceBookingRepository: Cas1SpaceBookingRepository,
@@ -43,6 +42,10 @@ class Cas1PremisesService(
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  fun getPremises(premisesId: UUID): Cas1PremisesBaseEntity? = findPremisesById(premisesId)
+
+  fun getBedCount(premises: ApprovedPremisesEntity): Int = premisesRepository.getBedCount(premises)
 
   @SuppressWarnings("MagicNumber")
   fun createOccupancyReport(outputStream: OutputStream) {
@@ -63,7 +66,7 @@ class Cas1PremisesService(
     val premise = premisesRepository.findByIdOrNull(premisesId)
       ?: return CasResult.NotFound("premises", premisesId.toString())
 
-    val bedCount = premisesService.getBedCount(premise)
+    val bedCount = getBedCount(premise)
     val outOfServiceBedsCount = outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(premisesId)
     val activeSpaceBookingCount = spaceBookingRepository.countActiveSpaceBookings(premisesId).toInt()
     val localRestrictions = cas1PremisesLocalRestrictionRepository.findAllByApprovedPremisesIdAndArchivedFalseOrderByCreatedAtDesc(premisesId)

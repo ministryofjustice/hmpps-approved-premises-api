@@ -5,15 +5,15 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.trimToNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import java.util.UUID
 
 @Component
 class Cas1CancelOutOfServiceBedsByPremisesJob(
   private val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
-  private val premisesService: PremisesService,
+  private val premisesService: Cas1PremisesService,
 ) : SeedJob<Cas1CancelOutOfServiceBedsByPremisesCsvRow>(
   requiredHeaders = setOf(
     "premisesId",

@@ -5,7 +5,7 @@
     <ID>CyclomaticComplexMethod:BookingTransformer.kt:BookingTransformer$private fun determineTemporaryAccommodationStatus: BookingStatus</ID>
     <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt:DomainEventUrlConfig$fun getUrlForDomainEventId: String</ID>
     <ID>CyclomaticComplexMethod:GetAllApprovedPremisesApplicationsTest.kt:GetAllApprovedPremisesApplicationsTest$private fun ApprovedPremisesApplicationSummary.matches: Boolean</ID>
-    <ID>ForbiddenComment:PremisesEntity.kt:ApprovedPremisesEntity$// TODO: Make not-null once Premises have had point added in all environments</ID>
+    <ID>ForbiddenComment:Cas1PremisesBaseEntity.kt:ApprovedPremisesEntity$// TODO: Make not-null once Premises have had point added in all environments</ID>
     <ID>ForbiddenComment:UserAccessService.kt:UserAccessService$// TODO: Revisit if Approved Premises introduces region-limited access</ID>
     <ID>ForbiddenComment:UserAccessService.kt:UserAccessService$// TODO: Revisit once Temporary Accommodation introduces user roles</ID>
     <ID>InvalidPackageDeclaration:UserSpecifications.kt:package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification</ID>

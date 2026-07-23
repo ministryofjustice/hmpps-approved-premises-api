@@ -16,14 +16,13 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.controller.Cas1PremisesLocalRestrictionSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.reporting.Cas1OccupancyReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesJdbcRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesJdbcRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesLocalRestrictionRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
@@ -40,9 +39,6 @@ class Cas1PremisesServiceTest {
 
   @MockK
   lateinit var approvedPremisesRepository: ApprovedPremisesRepository
-
-  @MockK
-  lateinit var premisesService: PremisesService
 
   @MockK
   lateinit var outOfServiceBedService: Cas1OutOfServiceBedService
@@ -127,7 +123,7 @@ class Cas1PremisesServiceTest {
 
       every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
 
-      every { premisesService.getBedCount(premises) } returns 56
+      every { approvedPremisesRepository.getBedCount(premises) } returns 56
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { spacePlanningService.capacity(PREMISES_ID, any(), null) } returns premisesCapacitySummary
       every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 4

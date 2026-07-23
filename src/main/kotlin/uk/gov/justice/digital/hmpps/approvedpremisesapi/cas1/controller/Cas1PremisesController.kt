@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.ContentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService

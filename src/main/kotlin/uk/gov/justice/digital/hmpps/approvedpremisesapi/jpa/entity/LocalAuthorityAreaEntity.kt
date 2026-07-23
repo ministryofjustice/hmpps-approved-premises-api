@@ -8,6 +8,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.hibernate.annotations.Immutable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
 import java.util.UUID
 @Repository
 interface LocalAuthorityAreaRepository : JpaRepository<LocalAuthorityAreaEntity, UUID> {
@@ -24,5 +25,5 @@ data class LocalAuthorityAreaEntity(
   var identifier: String,
   var name: String,
   @OneToMany(mappedBy = "localAuthorityArea")
-  var premises: MutableList<PremisesEntity>,
+  var premises: MutableList<Cas1PremisesBaseEntity>,
 )

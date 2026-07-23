@@ -4,8 +4,8 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -16,7 +16,7 @@ class RoomEntityFactory : Factory<RoomEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var code: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
-  private var premises: Yielded<PremisesEntity>? = null
+  private var premises: Yielded<Cas1PremisesBaseEntity>? = null
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
   private var beds: Yielded<MutableList<BedEntity>> = { mutableListOf() }
 
@@ -40,11 +40,11 @@ class RoomEntityFactory : Factory<RoomEntity> {
     this.notes = { notes }
   }
 
-  fun withPremises(premises: PremisesEntity) = apply {
+  fun withPremises(premises: Cas1PremisesBaseEntity) = apply {
     this.premises = { premises }
   }
 
-  fun withYieldedPremises(premises: Yielded<PremisesEntity>) = apply {
+  fun withYieldedPremises(premises: Yielded<Cas1PremisesBaseEntity>) = apply {
     this.premises = premises
   }
 

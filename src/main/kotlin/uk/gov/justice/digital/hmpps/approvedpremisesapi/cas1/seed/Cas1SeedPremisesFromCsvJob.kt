@@ -4,16 +4,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.GisUtil
 import java.util.UUID
 
@@ -24,7 +24,7 @@ import java.util.UUID
  */
 @Component
 class Cas1SeedPremisesFromCsvJob(
-  private val premisesRepository: PremisesRepository,
+  private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val characteristicRepository: CharacteristicRepository,
@@ -120,7 +120,7 @@ class Cas1SeedPremisesFromCsvJob(
 
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun processRow(row: ApprovedPremisesSeedCsvRow) {
-    val existingPremises = premisesRepository.findByApCode(row.apCode)
+    val existingPremises = approvedPremisesRepository.findByApCode(row.apCode)
 
     val probationRegion = probationRegionRepository.findByName(row.probationRegion)
       ?: throw RuntimeException("Probation Region ${row.probationRegion} does not exist")
@@ -174,7 +174,7 @@ class Cas1SeedPremisesFromCsvJob(
   ) {
     log.info("Creating new Approved Premises: ${row.apCode} ${row.name}")
 
-    val approvedPremises = premisesRepository.save(
+    val approvedPremises = approvedPremisesRepository.save(
       ApprovedPremisesEntity(
         id = UUID.randomUUID(),
         name = row.name,
@@ -205,7 +205,7 @@ class Cas1SeedPremisesFromCsvJob(
 
     approvedPremises.characteristics.addAll(characteristics)
 
-    premisesRepository.save(approvedPremises)
+    approvedPremisesRepository.save(approvedPremises)
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -255,7 +255,7 @@ class Cas1SeedPremisesFromCsvJob(
       }
     }
 
-    premisesRepository.save(existingApprovedPremises)
+    approvedPremisesRepository.save(existingApprovedPremises)
   }
 }
 
