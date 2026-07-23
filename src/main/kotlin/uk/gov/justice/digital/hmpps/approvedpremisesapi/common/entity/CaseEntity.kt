@@ -55,6 +55,15 @@ interface CaseRepository : JpaRepository<CaseEntity, UUID> {
                 ON ta.id = a.id
             LEFT JOIN approved_premises_applications ap
                 ON ap.id = a.id
+
+            UNION ALL
+            
+            SELECT
+                crn,
+                offender_name AS name,
+                noms_number,
+                created_at
+            FROM cas3_bookings
             ),
         latest_applications_crn AS (
               SELECT
