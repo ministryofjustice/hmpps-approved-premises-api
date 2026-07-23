@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2Do
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.validatedCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
@@ -70,6 +71,7 @@ class Cas3BookingService(
   private val workingDayService: WorkingDayService,
   private val userAccessService: UserAccessService,
   private val cas3AssessmentService: Cas3AssessmentService,
+  private val caseService: CaseService,
 ) {
   companion object {
     const val ARRIVAL_AFTER_LATEST_DATE_LIMIT_DAYS: Long = 14
@@ -176,6 +178,8 @@ class Cas3BookingService(
         offenderName = offenderName,
       ),
     )
+
+    caseService.ensureCaseExists(crn)
 
     val turnaround = cas3TurnaroundRepository.save(
       Cas3TurnaroundEntity(

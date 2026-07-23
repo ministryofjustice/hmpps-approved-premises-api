@@ -55,8 +55,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.service.v2.Cas3v2Do
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.service.CaseService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDtoFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
@@ -105,6 +107,7 @@ class Cas3BookingServiceTest {
   private val mockMoveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
   private val mockExtensionRepository = mockk<Cas3ExtensionRepository>()
   private val mockOverstayRepository = mockk<Cas3OverstayRepository>()
+  private val mockCaseService = mockk<CaseService>()
 
   private fun createCas3BookingService(): Cas3BookingService = Cas3BookingService(
     cas3BookingRepository = mockBookingRepository,
@@ -126,6 +129,7 @@ class Cas3BookingServiceTest {
     cas3DomainEventService = mockCas3DomainEventService,
     userAccessService = mockUserAccessService,
     cas3AssessmentService = mockCas3AssessmentService,
+    caseService = mockCaseService,
   )
 
   private val cas3BookingService = createCas3BookingService()
@@ -471,6 +475,8 @@ class Cas3BookingServiceTest {
 
       every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
 
+      every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
+
       val authorisableResult = cas3BookingService.createBooking(
         user,
         premises,
@@ -510,6 +516,10 @@ class Cas3BookingServiceTest {
           user,
         )
       }
+
+      verify(exactly = 1) {
+        mockCaseService.ensureCaseExists(crn)
+      }
     }
 
     @Test
@@ -545,6 +555,8 @@ class Cas3BookingServiceTest {
 
       every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
 
+      every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
+
       mockkStatic(Sentry::class)
 
       val authorisableResult = cas3BookingService.createBooking(
@@ -572,6 +584,10 @@ class Cas3BookingServiceTest {
               it.status == Cas3BookingStatus.provisional
           },
         )
+      }
+
+      verify(exactly = 1) {
+        mockCaseService.ensureCaseExists(crn)
       }
 
       verify(exactly = 0) {
@@ -615,6 +631,8 @@ class Cas3BookingServiceTest {
 
       every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
 
+      every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
+
       val authorisableResult = cas3BookingService.createBooking(
         user,
         premises,
@@ -649,6 +667,10 @@ class Cas3BookingServiceTest {
               it.workingDayCount == 0
           },
         )
+      }
+
+      verify(exactly = 1) {
+        mockCaseService.ensureCaseExists(crn)
       }
     }
 
@@ -688,6 +710,8 @@ class Cas3BookingServiceTest {
 
       every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
 
+      every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
+
       val authorisableResult = cas3BookingService.createBooking(
         user,
         premises,
@@ -722,6 +746,10 @@ class Cas3BookingServiceTest {
               it.workingDayCount == premises.turnaroundWorkingDays
           },
         )
+      }
+
+      verify(exactly = 1) {
+        mockCaseService.ensureCaseExists(crn)
       }
     }
 
@@ -759,6 +787,8 @@ class Cas3BookingServiceTest {
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+
+      every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
       mockkStatic(Sentry::class)
       every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
@@ -803,6 +833,10 @@ class Cas3BookingServiceTest {
           user,
         )
       }
+
+      verify(exactly = 1) {
+        mockCaseService.ensureCaseExists(crn)
+      }
     }
 
     @Test
@@ -839,6 +873,8 @@ class Cas3BookingServiceTest {
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
+
+      every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
       val authorisableResult = cas3BookingService.createBooking(
         user,
@@ -878,6 +914,10 @@ class Cas3BookingServiceTest {
           },
           user,
         )
+      }
+
+      verify(exactly = 1) {
+        mockCaseService.ensureCaseExists(crn)
       }
     }
 
@@ -916,6 +956,8 @@ class Cas3BookingServiceTest {
 
       every { mockCas3DomainEventService.saveCas3BookingProvisionallyMadeEvent(any(), user) } just Runs
 
+      every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
+
       val authorisableResult = cas3BookingService.createBooking(
         user,
         premises,
@@ -955,6 +997,10 @@ class Cas3BookingServiceTest {
           user,
         )
       }
+
+      verify(exactly = 1) {
+        mockCaseService.ensureCaseExists(crn)
+      }
     }
 
     @Test
@@ -988,6 +1034,8 @@ class Cas3BookingServiceTest {
       every { this@Cas3BookingServiceTest.mockCas3TurnaroundRepository.save(any()) } answers { it.invocation.args[0] as Cas3TurnaroundEntity }
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      every { mockCaseService.ensureCaseExists(crn) } returns CaseDtoFactory().withCrn(crn).produce()
 
       val authorisableResult = cas3BookingService.createBooking(
         user,
@@ -1079,6 +1127,10 @@ class Cas3BookingServiceTest {
           user,
         )
       }
+
+      verify(exactly = 0) {
+        mockCaseService.ensureCaseExists(crn)
+      }
     }
 
     @Test
@@ -1156,6 +1208,10 @@ class Cas3BookingServiceTest {
           },
           user,
         )
+      }
+
+      verify(exactly = 0) {
+        mockCaseService.ensureCaseExists(crn)
       }
 
       verify {
