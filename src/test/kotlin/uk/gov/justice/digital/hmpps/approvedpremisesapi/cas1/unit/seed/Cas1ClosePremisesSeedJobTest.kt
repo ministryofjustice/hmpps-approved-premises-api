@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import java.time.LocalDate
 import java.util.UUID

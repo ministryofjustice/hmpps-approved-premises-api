@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
 import jakarta.persistence.DiscriminatorColumn
 import jakarta.persistence.DiscriminatorValue
@@ -23,21 +23,15 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity.Companion.resolveFullAddress
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity.Companion.resolveFullAddress
 import java.time.OffsetDateTime
 import java.util.UUID
-
-@Repository
-interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
-  @Query("SELECT p FROM PremisesEntity p WHERE p.name = :name AND TYPE(p) = :type")
-  fun <T : PremisesEntity> findByName(name: String, type: Class<T>): PremisesEntity?
-
-  @Query("SELECT p FROM ApprovedPremisesEntity p WHERE p.apCode = :apCode")
-  fun findByApCode(apCode: String): ApprovedPremisesEntity?
-
-  @Query("SELECT CAST(COUNT(b) as int) FROM PremisesEntity p JOIN p.rooms r JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) WHERE r.premises = :premises")
-  fun getBedCount(premises: PremisesEntity): Int
-}
 
 @Repository
 class ApprovedPremisesJdbcRepository(private val jdbcTemplate: NamedParameterJdbcTemplate) {
@@ -76,7 +70,7 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
   @Query(
     """
         SELECT
-          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesBasicSummary(
+          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesBasicSummary(
               p.id,
               p.name,
               p.apCode,
@@ -112,7 +106,11 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
   @Query("SELECT id FROM ApprovedPremisesEntity")
   fun findAllIds(): List<UUID>
 
-  fun findByName(name: String): ApprovedPremisesEntity
+  @Query("SELECT p FROM ApprovedPremisesEntity p WHERE p.apCode = :apCode")
+  fun findByApCode(apCode: String): ApprovedPremisesEntity?
+
+  @Query("SELECT CAST(COUNT(b) as int) FROM Cas1PremisesBaseEntity p JOIN p.rooms r JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) WHERE r.premises = :premises")
+  fun getBedCount(premises: ApprovedPremisesEntity): Int
 }
 
 @SuppressWarnings("LongParameterList")
@@ -120,7 +118,7 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
 @Table(name = "premises")
 @DiscriminatorColumn(name = "service")
 @Inheritance(strategy = InheritanceType.JOINED)
-abstract class PremisesEntity(
+abstract class Cas1PremisesBaseEntity(
   @Id
   val id: UUID,
   var name: String,
@@ -203,7 +201,7 @@ class ApprovedPremisesEntity(
   @JoinColumn(name = "cas1_cru_management_area_id")
   var cruManagementArea: Cas1CruManagementAreaEntity,
   var allowNewSpaceBookings: Boolean,
-) : PremisesEntity(
+) : Cas1PremisesBaseEntity(
   id,
   name,
   addressLine1,

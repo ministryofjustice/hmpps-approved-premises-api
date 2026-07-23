@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedExc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.trimToNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import java.time.LocalDate
 import java.util.UUID
@@ -16,7 +16,7 @@ import java.util.UUID
 @Component
 class Cas1UpdateOutOfServiceBedsByPremisesJob(
   private val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
-  private val premisesService: PremisesService,
+  private val premisesService: Cas1PremisesService,
   private val cas1OutOfServiceBedReasonRepository: Cas1OutOfServiceBedReasonRepository,
 ) : SeedJob<Cas1UpdateOutOfServiceBedsByPremisesCsvRow>(
   requiredHeaders = setOf(

@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomPostCode

@@ -50,7 +50,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -60,6 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import java.io.StringReader
 import java.time.LocalDate

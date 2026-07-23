@@ -9,14 +9,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesBed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.util.UUID
 
 class Cas1BedSummaryTest : InitialiseDatabasePerClassTestBase() {
-  lateinit var premises: PremisesEntity
+  lateinit var premises: Cas1PremisesBaseEntity
 
   @BeforeEach
   fun setup() {

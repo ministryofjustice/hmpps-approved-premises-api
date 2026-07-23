@@ -13,11 +13,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedTransformer
@@ -29,7 +29,7 @@ import java.util.UUID
 @Service
 class Cas1OutOfServiceBedsController(
   private val userAccessService: Cas1UserAccessService,
-  private val premisesService: PremisesService,
+  private val premisesService: Cas1PremisesService,
   private val outOfServiceBedService: Cas1OutOfServiceBedService,
   private val outOfServiceBedTransformer: Cas1OutOfServiceBedTransformer,
   private val outOfServiceBedCancellationTransformer: Cas1OutOfServiceBedCancellationTransformer,

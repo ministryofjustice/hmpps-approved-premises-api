@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.migration.MigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult

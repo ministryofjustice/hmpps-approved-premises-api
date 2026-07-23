@@ -4,7 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TransferReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -16,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.Instant
 import java.time.LocalDate

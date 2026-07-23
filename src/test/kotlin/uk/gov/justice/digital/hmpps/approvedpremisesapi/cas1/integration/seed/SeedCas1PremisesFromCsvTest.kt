@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.GisUtil
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDouble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers

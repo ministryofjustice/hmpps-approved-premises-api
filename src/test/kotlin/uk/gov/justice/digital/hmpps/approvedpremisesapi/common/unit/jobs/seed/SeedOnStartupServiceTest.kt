@@ -29,9 +29,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
@@ -140,14 +140,14 @@ class SeedOnStartupServiceTest {
 
     every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
-    val mockPremisesRepository = mockk<PremisesRepository>()
+    val mockApprovedPremisesRepository = mockk<ApprovedPremisesRepository>()
     val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
     val mockLocalAuthorityAreaRepository = mockk<LocalAuthorityAreaRepository>()
     val mockCharacteristicRepository = mockk<CharacteristicRepository>()
     val mockRoomRepository = mockk<RoomRepository>()
     val mockBedRepository = mockk<BedRepository>()
 
-    every { mockApplicationContext.getBean(PremisesRepository::class.java) } returns mockPremisesRepository
+    every { mockApplicationContext.getBean(ApprovedPremisesRepository::class.java) } returns mockApprovedPremisesRepository
     every { mockApplicationContext.getBean(ProbationRegionRepository::class.java) } returns mockProbationRegionRepository
     every { mockApplicationContext.getBean(LocalAuthorityAreaRepository::class.java) } returns mockLocalAuthorityAreaRepository
     every { mockApplicationContext.getBean(CharacteristicRepository::class.java) } returns mockCharacteristicRepository
@@ -188,7 +188,7 @@ class SeedOnStartupServiceTest {
 
     val approvedPremisesFilename = approvedPremisesLambda.captured.invoke(
       Cas1SeedPremisesFromCsvJob(
-        mockApplicationContext.getBean(PremisesRepository::class.java),
+        mockApplicationContext.getBean(ApprovedPremisesRepository::class.java),
         mockApplicationContext.getBean(ProbationRegionRepository::class.java),
         mockApplicationContext.getBean(LocalAuthorityAreaRepository::class.java),
         mockApplicationContext.getBean(CharacteristicRepository::class.java),
@@ -198,7 +198,7 @@ class SeedOnStartupServiceTest {
 
     val approvedPremisesRoomsFilename = approvedPremisesRoomLambda.captured.invoke(
       ApprovedPremisesRoomsSeedJob(
-        mockApplicationContext.getBean(PremisesRepository::class.java),
+        mockApplicationContext.getBean(ApprovedPremisesRepository::class.java),
         mockApplicationContext.getBean(RoomRepository::class.java),
         mockApplicationContext.getBean(BedRepository::class.java),
         mockApplicationContext.getBean(CharacteristicRepository::class.java),

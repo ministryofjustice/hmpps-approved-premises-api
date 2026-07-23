@@ -5,8 +5,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import java.time.LocalDate

@@ -19,8 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import java.time.LocalDate
 import java.util.UUID
 
@@ -33,7 +33,7 @@ class Cas1OutOfServiceBedSeedJobTest {
   private lateinit var cas1OutOfServiceBedService: Cas1OutOfServiceBedService
 
   @MockK
-  private lateinit var premisesService: PremisesService
+  private lateinit var premisesService: Cas1PremisesService
 
   @InjectMockKs
   private lateinit var seedJob: Cas1OutOfServiceBedSeedJob
