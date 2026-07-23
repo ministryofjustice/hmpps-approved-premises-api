@@ -362,8 +362,8 @@ domain-events:
     enabled: true
   inbox:
     dispatcher:
-      # every 10 seconds
-      cron: '*/10 * * * * *'
+      # every 5 seconds
+      cron: '*/5 * * * * *'
       max-events-per-batch: 10
       max-concurrent-events: 4
       shedlock:
