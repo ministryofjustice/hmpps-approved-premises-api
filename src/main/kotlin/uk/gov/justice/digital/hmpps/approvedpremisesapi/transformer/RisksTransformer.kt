@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.TierVersionDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskEnvelopeStatusDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.dto.RiskTierEnvelopeDto
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTierVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 
@@ -24,7 +26,7 @@ class RisksTransformer {
     flags = transformFlagsDomainToApi(domain.flags),
   )
 
-  fun transformRoshDomainToApi(domain: RiskWithStatus<RoshRisks>) = RoshRisksEnvelope(
+  private fun transformRoshDomainToApi(domain: RiskWithStatus<RoshRisks>) = RoshRisksEnvelope(
     status = transformStatusDomainToApi(domain.status),
     value = domain.value?.let {
       uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks(
@@ -38,7 +40,7 @@ class RisksTransformer {
     },
   )
 
-  fun transformMappaDomainToApi(domain: RiskWithStatus<Mappa>) = MappaEnvelope(
+  private fun transformMappaDomainToApi(domain: RiskWithStatus<Mappa>) = MappaEnvelope(
     status = transformStatusDomainToApi(domain.status),
     value = domain.value?.let {
       uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Mappa(
@@ -54,6 +56,10 @@ class RisksTransformer {
       RiskTierDto(
         level = it.level,
         lastUpdated = it.lastUpdated,
+        version = when (it.version) {
+          RiskTierVersion.V2 -> TierVersionDto.V2
+          RiskTierVersion.V3 -> TierVersionDto.V3
+        },
       )
     },
   )
