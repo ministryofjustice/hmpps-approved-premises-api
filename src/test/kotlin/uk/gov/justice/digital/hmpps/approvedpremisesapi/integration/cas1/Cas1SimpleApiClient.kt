@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewBookingNotMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceBooking
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -386,6 +388,29 @@ class Cas1SimpleApiClient {
         Cas1NewArrival(
           arrivalDate = arrivalDate,
           arrivalTime = arrivalTime.toString(),
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun recordDeparture(
+    integrationTestBase: IntegrationTestBase,
+    premisesId: UUID,
+    bookingId: UUID,
+    departureDateTime: Instant,
+    reasonId: UUID,
+  ) {
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)).second
+
+    integrationTestBase.webTestClient.post()
+      .uri("/cas1/premises/$premisesId/space-bookings/$bookingId/departure")
+      .header("Authorization", "Bearer $managerJwt")
+      .bodyValue(
+        Cas1NewDeparture(
+          reasonId = reasonId,
+          departureDateTime = departureDateTime,
         ),
       )
       .exchange()
