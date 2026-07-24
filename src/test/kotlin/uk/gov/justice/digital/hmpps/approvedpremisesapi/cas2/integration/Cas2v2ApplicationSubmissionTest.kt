@@ -45,7 +45,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2v2SubmissionTest : IntegrationTestBase() {
+class Cas2v2ApplicationSubmissionTest : IntegrationTestBase() {
   @MockkSpyBean
   lateinit var cas2RealApplicationRepository: Cas2ApplicationRepository
 
