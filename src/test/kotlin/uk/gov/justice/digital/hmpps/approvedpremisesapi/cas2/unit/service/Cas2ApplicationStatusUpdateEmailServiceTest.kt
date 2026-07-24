@@ -17,7 +17,7 @@ import java.util.UUID
 
 class Cas2ApplicationStatusUpdateEmailServiceTest {
   private val mockCas2EmailService = mockk<Cas2EmailService>(relaxed = true)
-  private val applicationOverviewUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId")
+  private val applicationOverviewUrlTemplate = UrlTemplate("http://frontend/applications/#id")
 
   private val service = Cas2ApplicationStatusUpdateEmailService(
     cas2EmailService = mockCas2EmailService,
