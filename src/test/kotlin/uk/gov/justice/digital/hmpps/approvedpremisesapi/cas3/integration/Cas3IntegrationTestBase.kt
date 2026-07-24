@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3BedspaceS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.Cas3PremisesStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas3.model.generated.events.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
@@ -187,41 +186,6 @@ abstract class Cas3IntegrationTestBase : IntegrationTestBase() {
             premisesId = premisesId,
             currentEndDate = currentEndDate,
             endDate = endDate,
-            userId = userId,
-            transactionId = transactionId,
-          ),
-        ),
-      ),
-    )
-  }
-
-  @SuppressWarnings("LongParameterList")
-  protected fun createBedspaceUnarchiveDomainEvent(
-    bedspace: BedEntity,
-    premisesId: UUID,
-    userId: UUID,
-    newStartDate: LocalDate,
-    cancelledAt: OffsetDateTime? = null,
-    transactionId: UUID = UUID.randomUUID(),
-  ) = domainEventFactory.produceAndPersist {
-    withService(ServiceName.temporaryAccommodation)
-    withCas3BedspaceId(bedspace.id)
-    withCas3PremisesId(premisesId)
-    withType(DomainEventType.CAS3_BEDSPACE_UNARCHIVED)
-    withCas3TransactionId(transactionId)
-    withCas3CancelledAt(cancelledAt)
-    withData(
-      jsonMapper.writeValueAsString(
-        CAS3BedspaceUnarchiveEvent(
-          id = UUID.randomUUID(),
-          timestamp = OffsetDateTime.now().toInstant(),
-          eventType = EventType.bedspaceUnarchived,
-          eventDetails = CAS3BedspaceUnarchiveEventDetails(
-            bedspaceId = bedspace.id,
-            premisesId = premisesId,
-            currentStartDate = bedspace.startDate!!,
-            currentEndDate = bedspace.endDate!!,
-            newStartDate = newStartDate,
             userId = userId,
             transactionId = transactionId,
           ),

@@ -166,7 +166,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         cancellationOccurredAt = now(),
       )
 
-      val beds = bedEntityFactory.produceAndPersistMultiple(5) {
+      val beds = cas1BedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }
@@ -1031,7 +1031,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     fun setupBookings() {
       val now = now()
 
-      bedEntityFactory.produceAndPersistMultiple(5) {
+      cas1BedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }
