@@ -261,7 +261,7 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
     preExistingRoom.characteristics.add(arsonCharacteristic)
     roomRepository.save(preExistingRoom)
 
-    bedEntityFactory.produceAndPersist {
+    cas1BedEntityFactory.produceAndPersist {
       withRoom(preExistingRoom)
       withCode("NEABC04")
       withName("Original Name")

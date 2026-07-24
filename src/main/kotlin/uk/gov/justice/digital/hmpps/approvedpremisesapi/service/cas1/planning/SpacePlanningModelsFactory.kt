@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository.OutOfServiceBedSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlanningBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlanningBedSummary
 import java.time.LocalDate
 
 @Service
@@ -15,7 +15,7 @@ class SpacePlanningModelsFactory {
     beds: List<Cas1PlanningBedSummary>,
     outOfServiceBedRecordsToConsider: List<OutOfServiceBedSummary>,
   ): List<BedDayState> = beds
-    .filter { BedEntity.isActive(day, it.bedEndDate) }
+    .filter { Cas1BedEntity.isActive(day, it.bedEndDate) }
     .map { bedSummary ->
       BedDayState(
         bed = bedSummary,

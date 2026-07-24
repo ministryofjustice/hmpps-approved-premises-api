@@ -4,11 +4,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
 
 class BedDetailQueryTest : IntegrationTestBase() {
   @Autowired
-  lateinit var realBedRepository: BedRepository
+  lateinit var cas1BedRepository: Cas1BedRepository
 
   @Test
   fun `summary works as expected`() {
@@ -18,11 +18,11 @@ class BedDetailQueryTest : IntegrationTestBase() {
       withPremises(premises)
     }
 
-    val bed = bedEntityFactory.produceAndPersist {
+    val bed = cas1BedEntityFactory.produceAndPersist {
       withRoom(room)
     }
 
-    val result = realBedRepository.getDetailById(bed.id)!!
+    val result = cas1BedRepository.getDetailById(bed.id)!!
 
     assertThat(result.id).isEqualTo(bed.id)
     assertThat(result.name).isEqualTo(bed.name)

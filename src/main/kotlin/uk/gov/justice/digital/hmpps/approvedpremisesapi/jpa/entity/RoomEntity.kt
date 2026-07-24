@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PremisesBaseEntity
 import java.util.UUID
 
@@ -36,7 +37,7 @@ data class RoomEntity(
   @JoinColumn(name = "premises_id")
   val premises: Cas1PremisesBaseEntity,
   @OneToMany(mappedBy = "room")
-  val beds: MutableList<BedEntity>,
+  val beds: MutableList<Cas1BedEntity>,
   @ManyToMany
   @JoinTable(
     name = "room_characteristics",

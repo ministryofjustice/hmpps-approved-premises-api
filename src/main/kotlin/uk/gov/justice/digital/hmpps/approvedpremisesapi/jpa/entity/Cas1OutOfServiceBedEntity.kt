@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -42,7 +43,7 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     ON p.probation_region_id = pr.id
     LEFT JOIN ap_areas apa
     ON pr.ap_area_id = apa.id
-    LEFT JOIN beds b
+    LEFT JOIN cas1_beds b
     ON oosb.bed_id = b.id
     LEFT JOIN rooms r
     ON b.room_id = r.id
@@ -140,7 +141,7 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     ON oosb.id = latest_revision.out_of_service_bed_id
     LEFT JOIN cas1_out_of_service_bed_cancellations c
     ON oosb.id = c.out_of_service_bed_id
-    LEFT JOIN beds b
+    LEFT JOIN cas1_beds b
     ON oosb.bed_id = b.id
     WHERE
       b.id = :bedId AND
@@ -213,7 +214,7 @@ data class Cas1OutOfServiceBedEntity(
   val premises: ApprovedPremisesEntity,
   @ManyToOne
   @JoinColumn(name = "bed_id")
-  val bed: BedEntity,
+  val bed: Cas1BedEntity,
   val createdAt: OffsetDateTime,
   @OneToOne(mappedBy = "outOfServiceBed")
   var cancellation: Cas1OutOfServiceBedCancellationEntity?,

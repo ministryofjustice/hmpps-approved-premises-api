@@ -54,7 +54,7 @@ class Cas1OutOfServiceBedsReportRepository(
               E'\n\n' ORDER BY revision.created_at
           ) AS notes
         FROM cas1_out_of_service_beds AS oos_bed
-            JOIN beds ON oos_bed.bed_id = beds.id
+            JOIN cas1_beds beds ON oos_bed.bed_id = beds.id
             JOIN rooms ON beds.room_id = rooms.id
             JOIN premises ON rooms.premises_id = premises.id
             JOIN approved_premises ap ON premises.id = ap.premises_id

@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.scheduled.Cas1CancelBedOnHoldScheduledJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
@@ -27,13 +27,13 @@ class Cas1CancelBedOnHoldScheduledJobTest : IntegrationTestBase() {
       val reason = cas1OutOfServiceBedReasonTestRepository.getReferenceById(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID)
 
       val premises1 = givenAnApprovedPremises(supportsSpaceBookings = true)
-      val bed1 = bedEntityFactory.produceAndPersist {
+      val bed1 = cas1BedEntityFactory.produceAndPersist {
         withRoom(roomEntityFactory.produceAndPersist { withPremises(premises1) })
       }
       val boh1 = createBedOnHold(bed1, user, LocalDate.now().minusDays(2), LocalDate.now().plusDays(10), reason)
 
       val premises2 = givenAnApprovedPremises(supportsSpaceBookings = true)
-      val bed2 = bedEntityFactory.produceAndPersist {
+      val bed2 = cas1BedEntityFactory.produceAndPersist {
         withRoom(roomEntityFactory.produceAndPersist { withPremises(premises2) })
       }
       val boh2 = createBedOnHold(bed2, user, LocalDate.now().minusDays(3), LocalDate.now().plusDays(10), reason)
@@ -62,7 +62,7 @@ class Cas1CancelBedOnHoldScheduledJobTest : IntegrationTestBase() {
   }
 
   private fun createBedOnHold(
-    bed: BedEntity,
+    bed: Cas1BedEntity,
     user: UserEntity,
     startDate: LocalDate,
     endDate: LocalDate,
