@@ -187,7 +187,7 @@ class Cas2ApplicationNoteServiceTest {
 
       service.createAssessmentNote(assessment.id, NewCas2ApplicationNote(note = "some note"))
 
-      verify(exactly = 1) { mockCas2ApplicationNoteEmailService.assessorNoteAdded(application, any()) }
+      verify(exactly = 1) { mockCas2ApplicationNoteEmailService.assessorNoteAdded(application, assessment, any()) }
     }
 
     @Test
@@ -202,7 +202,7 @@ class Cas2ApplicationNoteServiceTest {
 
       service.createAssessmentNote(assessment.id, NewCas2ApplicationNote(note = "some note"))
 
-      verify(exactly = 1) { mockCas2ApplicationNoteEmailService.refererNoteAdded(application, any()) }
+      verify(exactly = 1) { mockCas2ApplicationNoteEmailService.refererNoteAdded(application, assessment, any()) }
     }
 
     @Test

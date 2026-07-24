@@ -61,7 +61,7 @@ class Cas2ApplicationNoteService(
     }
 
     val savedNote = saveNote(application, assessment, note.note, user)
-    sendEmail(user.isExternal(), application, savedNote)
+    sendEmail(user.isExternal(), application, assessment, savedNote)
 
     return CasResult.Success(savedNote)
   }
@@ -69,16 +69,17 @@ class Cas2ApplicationNoteService(
   private fun sendEmail(
     isExternalUser: Boolean,
     application: Cas2ApplicationEntity,
+    assessment: Cas2AssessmentEntity,
     savedNote: Cas2ApplicationNoteEntity,
   ) {
     val emailChangesEnabled = futureFlagService.getBooleanFlag("isr-email-changes-enabled")
 
     when {
       emailChangesEnabled && isExternalUser ->
-        cas2ApplicationNoteEmailService.assessorNoteAdded(application, savedNote)
+        cas2ApplicationNoteEmailService.assessorNoteAdded(application, assessment, savedNote)
 
       emailChangesEnabled ->
-        cas2ApplicationNoteEmailService.refererNoteAdded(application, savedNote)
+        cas2ApplicationNoteEmailService.refererNoteAdded(application, assessment, savedNote)
 
       isExternalUser ->
         sendEmailToReferrer(application, savedNote)

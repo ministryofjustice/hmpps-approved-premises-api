@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.format.DateTimeFormatter
-import kotlin.io.resolve
 
 @Service
 class Cas2ApplicationNoteEmailService(
@@ -30,12 +29,14 @@ class Cas2ApplicationNoteEmailService(
 
   fun assessorNoteAdded(
     cas2Application: Cas2ApplicationEntity,
+    assessment: Cas2AssessmentEntity,
     applicationNote: Cas2ApplicationNoteEntity,
   ) {
     val recipientEmail = cas2Application.createdByUser.email ?: return
 
     sendNoteAddedEmail(
       cas2Application = cas2Application,
+      assessment = assessment,
       applicationNote = applicationNote,
       recipientEmail = recipientEmail,
       resolvedUrl = applicationUrlTemplate.resolve(mapOf("id" to cas2Application.id.toString())),
@@ -45,10 +46,12 @@ class Cas2ApplicationNoteEmailService(
 
   fun refererNoteAdded(
     cas2Application: Cas2ApplicationEntity,
+    assessment: Cas2AssessmentEntity,
     applicationNote: Cas2ApplicationNoteEntity,
   ) {
     sendNoteAddedEmail(
       cas2Application = cas2Application,
+      assessment = assessment,
       applicationNote = applicationNote,
       recipientEmail = notifyConfig.emailAddresses.cas2Assessors,
       resolvedUrl = assessmentUrlTemplate.resolve(mapOf("applicationId" to cas2Application.id.toString())),
@@ -58,6 +61,7 @@ class Cas2ApplicationNoteEmailService(
 
   private fun sendNoteAddedEmail(
     cas2Application: Cas2ApplicationEntity,
+    assessment: Cas2AssessmentEntity,
     applicationNote: Cas2ApplicationNoteEntity,
     recipientEmail: String,
     resolvedUrl: String,
@@ -73,8 +77,8 @@ class Cas2ApplicationNoteEmailService(
       "crn" to cas2Application.crn,
       "timeApplicationReceived" to submittedAt.format(TIME_FORMAT),
       "dateApplicationReceived" to submittedAt.format(DATE_FORMAT),
-      "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(cas2Application.assessment!!),
-      "nacroReferenceIdInSubject" to getSubjectLineReferenceIdOrPlaceholder(cas2Application.assessment!!),
+      "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(assessment),
+      "nacroReferenceIdInSubject" to getSubjectLineReferenceIdOrPlaceholder(assessment),
       "viewSubmittedApplicationUrl" to resolvedUrl,
     )
 

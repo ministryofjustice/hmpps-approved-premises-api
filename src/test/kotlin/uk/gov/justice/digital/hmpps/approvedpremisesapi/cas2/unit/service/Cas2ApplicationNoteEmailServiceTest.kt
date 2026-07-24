@@ -68,7 +68,7 @@ class Cas2ApplicationNoteEmailServiceTest {
   inner class Assessor {
     @Test
     fun `when assessor note is added then referrer is notified`() {
-      service.assessorNoteAdded(application, note)
+      service.assessorNoteAdded(application, assessment, note)
 
       verify(exactly = 1) {
         mockCas2EmailService.sendEmail(
@@ -94,7 +94,7 @@ class Cas2ApplicationNoteEmailServiceTest {
     fun `when assessor note is added then referrer is notified, no nacro reference`() {
       assessment.nacroReferralId = null
 
-      service.assessorNoteAdded(application, note)
+      service.assessorNoteAdded(application, assessment, note)
 
       verify(exactly = 1) {
         mockCas2EmailService.sendEmail(
@@ -129,7 +129,7 @@ class Cas2ApplicationNoteEmailServiceTest {
         .withCohort(Cas2Cohort.PRISON_BAIL)
         .produce()
 
-      service.assessorNoteAdded(applicationNoEmail, note)
+      service.assessorNoteAdded(applicationNoEmail, assessment, note)
 
       verify(exactly = 0) {
         mockCas2EmailService.sendEmail(any(), any(), any(), any())
@@ -141,7 +141,7 @@ class Cas2ApplicationNoteEmailServiceTest {
   inner class Referrer {
     @Test
     fun `when referer note is added then assessors are notified`() {
-      service.refererNoteAdded(application, note)
+      service.refererNoteAdded(application, assessment, note)
 
       verify(exactly = 1) {
         mockCas2EmailService.sendEmail(
@@ -167,7 +167,7 @@ class Cas2ApplicationNoteEmailServiceTest {
     fun `when referer note is added then assessors are notified, no nacro reference`() {
       assessment.nacroReferralId = null
 
-      service.refererNoteAdded(application, note)
+      service.refererNoteAdded(application, assessment, note)
 
       verify(exactly = 1) {
         mockCas2EmailService.sendEmail(
