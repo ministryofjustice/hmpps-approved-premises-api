@@ -536,7 +536,7 @@ class SpacePlanningServiceTest : IntegrationTestBase() {
 
     beds.forEach { bed ->
       room.beds.add(
-        bedEntityFactory.produceAndPersist {
+        cas1BedEntityFactory.produceAndPersist {
           withName(bed.name)
           withEndDate { bed.endDate }
           withYieldedRoom { room }

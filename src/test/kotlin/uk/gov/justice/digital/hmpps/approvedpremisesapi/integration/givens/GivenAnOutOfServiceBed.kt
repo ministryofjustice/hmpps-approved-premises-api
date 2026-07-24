@@ -1,14 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
 fun IntegrationTestBase.givenAnOutOfServiceBedWithMultipleRevisions(
-  bed: BedEntity,
+  bed: Cas1BedEntity,
   revisions: List<OutOfServiceBedRevision>,
 ): Cas1OutOfServiceBedEntity {
   val outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
@@ -35,7 +35,7 @@ fun IntegrationTestBase.givenAnOutOfServiceBedWithMultipleRevisions(
 }
 
 fun IntegrationTestBase.givenAnOutOfServiceBed(
-  bed: BedEntity,
+  bed: Cas1BedEntity,
   startDate: LocalDate = LocalDate.now(),
   endDate: LocalDate = LocalDate.now(),
   cancelled: Boolean = false,

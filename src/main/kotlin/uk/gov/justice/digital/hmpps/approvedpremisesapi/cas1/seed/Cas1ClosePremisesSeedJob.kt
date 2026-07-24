@@ -5,8 +5,8 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import java.time.LocalDate
@@ -15,7 +15,7 @@ import java.util.UUID
 @Component
 class Cas1ClosePremisesSeedJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
-  private val bedRepository: BedRepository,
+  private val cas1BedRepository: Cas1BedRepository,
   private val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
 ) : SeedJob<Cas1ClosePremisesSeedJob.CsvRow>(
   requiredHeaders = setOf(
@@ -46,11 +46,11 @@ class Cas1ClosePremisesSeedJob(
     val approvedPremises = approvedPremisesRepository.findByIdOrNull(premisesId)
       ?: error("Could not find approved premises with id $premisesId")
 
-    val beds = bedRepository.findByRoomPremisesId(premisesId)
+    val beds = cas1BedRepository.findByRoomPremisesId(premisesId)
     log.info("Setting end date for ${beds.size} beds for premises id $premisesId to $closureDate")
     beds.forEach { bed ->
       bed.endDate = closureDate
-      bedRepository.save(bed)
+      cas1BedRepository.save(bed)
     }
 
     val activeOutOfServiceBeds = cas1OutOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(premisesId)

@@ -7,23 +7,23 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1BedSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainBedSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DomainBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
 
 class Cas1BedDetailTransformerTest {
-  private val bedSummaryTransformer = mockk<BedSummaryTransformer>()
-  private val cas1BedDetailTransformer = Cas1BedDetailTransformer(bedSummaryTransformer)
+  private val cas1BedSummaryTransformer = mockk<Cas1BedSummaryTransformer>()
+  private val cas1BedDetailTransformer = Cas1BedDetailTransformer(cas1BedSummaryTransformer)
 
   @Test
   fun `transformToApi transforms correctly`() {
-    val domainSummary = BedSummaryFactory()
+    val domainSummary = Cas1BedSummaryFactory()
       .withName("bed name")
       .produce()
 
-    every { bedSummaryTransformer.transformToApi(any()) } returns BedSummary(
+    every { cas1BedSummaryTransformer.transformToApi(any()) } returns BedSummary(
       id = domainSummary.id,
       name = domainSummary.name,
       roomName = domainSummary.roomName,
@@ -44,7 +44,7 @@ class Cas1BedDetailTransformerTest {
     Assertions.assertThat(result.characteristics).containsExactlyInAnyOrder(Cas1SpaceCharacteristic.arsonOffences, Cas1SpaceCharacteristic.hasWheelChairAccessibleBathrooms)
   }
 
-  private fun getStatus(summary: DomainBedSummary): BedStatus {
+  private fun getStatus(summary: Cas1DomainBedSummary): BedStatus {
     if (summary.bedBooked) {
       return BedStatus.occupied
     } else if (summary.bedOutOfService) {

@@ -84,7 +84,7 @@ class Cas1BedSummaryTest : InitialiseDatabasePerClassTestBase() {
 
       val otherPremises = givenAnApprovedPremises()
 
-      bedEntityFactory.produceAndPersist {
+      cas1BedEntityFactory.produceAndPersist {
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
             withYieldedPremises { otherPremises }

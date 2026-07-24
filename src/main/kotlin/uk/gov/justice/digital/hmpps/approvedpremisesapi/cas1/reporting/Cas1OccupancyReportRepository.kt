@@ -65,7 +65,7 @@ class Cas1OccupancyReportRepository(
     			p.id as premises_id,
     			concat(cma.name,' - ',p.name) as premises_name,
     			(
-    				select count(*) from beds 
+    				select count(*) from cas1_beds beds 
     				inner join rooms on beds.room_id = rooms.id
     				where 
     				rooms.premises_id = premises_and_days.premises_id AND

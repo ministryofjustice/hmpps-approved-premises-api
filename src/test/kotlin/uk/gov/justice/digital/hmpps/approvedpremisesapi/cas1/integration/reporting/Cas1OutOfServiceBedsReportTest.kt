@@ -41,7 +41,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
           region = givenAProbationRegion(name = "the region"),
         )
 
-        val bed1 = bedEntityFactory.produceAndPersist {
+        val bed1 = cas1BedEntityFactory.produceAndPersist {
           withName("bed1")
           withRoom(
             roomEntityFactory.produceAndPersist {
@@ -51,7 +51,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
           )
         }
 
-        val bed2 = bedEntityFactory.produceAndPersist {
+        val bed2 = cas1BedEntityFactory.produceAndPersist {
           withName("bed2")
           withRoom(
             roomEntityFactory.produceAndPersist {
@@ -61,7 +61,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
           )
         }
 
-        val bed3 = bedEntityFactory.produceAndPersist {
+        val bed3 = cas1BedEntityFactory.produceAndPersist {
           withName("bed3")
           withRoom(
             roomEntityFactory.produceAndPersist {
@@ -71,7 +71,7 @@ class Cas1OutOfServiceBedsReportTest : InitialiseDatabasePerClassTestBase() {
           )
         }
 
-        val bed4 = bedEntityFactory.produceAndPersist {
+        val bed4 = cas1BedEntityFactory.produceAndPersist {
           withName("bed4")
           withRoom(
             roomEntityFactory.produceAndPersist {

@@ -25,13 +25,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedLog
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedOnStartupService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
@@ -145,14 +145,14 @@ class SeedOnStartupServiceTest {
     val mockLocalAuthorityAreaRepository = mockk<LocalAuthorityAreaRepository>()
     val mockCharacteristicRepository = mockk<CharacteristicRepository>()
     val mockRoomRepository = mockk<RoomRepository>()
-    val mockBedRepository = mockk<BedRepository>()
+    val mockBedRepository = mockk<Cas1BedRepository>()
 
     every { mockApplicationContext.getBean(ApprovedPremisesRepository::class.java) } returns mockApprovedPremisesRepository
     every { mockApplicationContext.getBean(ProbationRegionRepository::class.java) } returns mockProbationRegionRepository
     every { mockApplicationContext.getBean(LocalAuthorityAreaRepository::class.java) } returns mockLocalAuthorityAreaRepository
     every { mockApplicationContext.getBean(CharacteristicRepository::class.java) } returns mockCharacteristicRepository
     every { mockApplicationContext.getBean(RoomRepository::class.java) } returns mockRoomRepository
-    every { mockApplicationContext.getBean(BedRepository::class.java) } returns mockBedRepository
+    every { mockApplicationContext.getBean(Cas1BedRepository::class.java) } returns mockBedRepository
     every { mockApplicationContext.getBean(Cas1CruManagementAreaRepository::class.java) } returns mockCruManagementAreaRepository
 
     val spy = spyk(seedService, recordPrivateCalls = true)
@@ -200,7 +200,7 @@ class SeedOnStartupServiceTest {
       ApprovedPremisesRoomsSeedJob(
         mockApplicationContext.getBean(ApprovedPremisesRepository::class.java),
         mockApplicationContext.getBean(RoomRepository::class.java),
-        mockApplicationContext.getBean(BedRepository::class.java),
+        mockApplicationContext.getBean(Cas1BedRepository::class.java),
         mockApplicationContext.getBean(CharacteristicRepository::class.java),
       ),
     ).split("/").last()

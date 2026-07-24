@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.dto.Cas1OutOfServiceBedReasonReferenceType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
@@ -45,7 +45,7 @@ class Cas1OutOfServiceBedSummaryTransformerTest {
       .produce()
     val startDate = LocalDate.now().plusDays(1)
     val endDate = startDate.plusDays(10)
-    val bed = BedEntityFactory()
+    val bed = Cas1BedEntityFactory()
       .withDefaults()
       .withRoom(room)
       .produce()

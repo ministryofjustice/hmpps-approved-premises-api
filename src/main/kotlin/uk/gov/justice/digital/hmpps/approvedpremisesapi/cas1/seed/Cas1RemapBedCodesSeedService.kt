@@ -4,11 +4,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.jobs.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
 
 @Component
 class Cas1RemapBedCodesSeedService(
-  private val bedRepository: BedRepository,
+  private val cas1BedRepository: Cas1BedRepository,
 ) : SeedJob<Cas1RemapBedCodesSeedCsvRow>(
   requiredHeaders = setOf(
     "premises_name",
@@ -33,7 +33,7 @@ class Cas1RemapBedCodesSeedService(
     val oldCode = row.oldBedCode
     val newCode = row.newBedCode
 
-    val bed = bedRepository.findByCode(oldCode) ?: error("No bed found for code '$oldCode'")
+    val bed = cas1BedRepository.findByCode(oldCode) ?: error("No bed found for code '$oldCode'")
 
     val premises = bed.room.premises
     if (premises.name != premisesName) {
@@ -41,7 +41,7 @@ class Cas1RemapBedCodesSeedService(
     }
 
     log.info("Updating bed code '$oldCode' in premise '$premisesName' to '$newCode'")
-    bedRepository.updateCode(bed.id, newCode)
+    cas1BedRepository.updateCode(bed.id, newCode)
   }
 }
 

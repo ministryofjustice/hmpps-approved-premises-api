@@ -453,7 +453,7 @@ class Cas1SpaceBookingTest {
 
           val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
-          val bed1 = bedEntityFactory.produceAndPersist {
+          val bed1 = cas1BedEntityFactory.produceAndPersist {
             withName("bed1")
             withRoom(
               roomEntityFactory.produceAndPersist {
@@ -575,7 +575,7 @@ class Cas1SpaceBookingTest {
 
           val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
 
-          val bed1 = bedEntityFactory.produceAndPersist {
+          val bed1 = cas1BedEntityFactory.produceAndPersist {
             withName("bed1")
             withRoom(
               roomEntityFactory.produceAndPersist {

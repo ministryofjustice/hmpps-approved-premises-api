@@ -14,12 +14,12 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.cas1.seed.Cas1ClosePremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.common.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import java.time.LocalDate
 import java.util.UUID
@@ -30,7 +30,7 @@ class Cas1ClosePremisesSeedJobTest {
   private lateinit var approvedPremisesRepository: ApprovedPremisesRepository
 
   @MockK
-  private lateinit var bedRepository: BedRepository
+  private lateinit var cas1BedRepository: Cas1BedRepository
 
   @MockK
   private lateinit var cas1OutOfServiceBedService: Cas1OutOfServiceBedService
@@ -78,13 +78,13 @@ class Cas1ClosePremisesSeedJobTest {
         .withPremises(premises)
         .produce()
 
-      val bed1 = BedEntityFactory()
+      val bed1 = Cas1BedEntityFactory()
         .withDefaults()
         .withRoom(room)
         .withEndDate(null)
         .produce()
 
-      val bed2 = BedEntityFactory()
+      val bed2 = Cas1BedEntityFactory()
         .withDefaults()
         .withRoom(room)
         .withEndDate(LocalDate.of(2026, 1, 1))
@@ -99,8 +99,8 @@ class Cas1ClosePremisesSeedJobTest {
 
       every { approvedPremisesRepository.findByIdOrNull(premisesId) } returns premises
       every { approvedPremisesRepository.save(any()) } returnsArgument 0
-      every { bedRepository.findByRoomPremisesId(premisesId) } returns listOf(bed1, bed2)
-      every { bedRepository.save(any()) } returnsArgument 0
+      every { cas1BedRepository.findByRoomPremisesId(premisesId) } returns listOf(bed1, bed2)
+      every { cas1BedRepository.save(any()) } returnsArgument 0
       every { cas1OutOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(premisesId) } returns listOf(oosb1)
       every {
         cas1OutOfServiceBedService.updateOutOfServiceBed(
@@ -118,9 +118,9 @@ class Cas1ClosePremisesSeedJobTest {
 
       verifyOrder {
         approvedPremisesRepository.findByIdOrNull(premisesId)
-        bedRepository.findByRoomPremisesId(premisesId)
-        bedRepository.save(match { it.id == bed1.id && it.endDate?.isEqual(closureDate) == true })
-        bedRepository.save(match { it.id == bed2.id && it.endDate?.isEqual(closureDate) == true })
+        cas1BedRepository.findByRoomPremisesId(premisesId)
+        cas1BedRepository.save(match { it.id == bed1.id && it.endDate?.isEqual(closureDate) == true })
+        cas1BedRepository.save(match { it.id == bed2.id && it.endDate?.isEqual(closureDate) == true })
         cas1OutOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(premisesId)
         cas1OutOfServiceBedService.updateOutOfServiceBed(
           outOfServiceBedId = oosb1.id,
